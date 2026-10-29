@@ -1,0 +1,34 @@
+/* ═══ css/81-set-tools ═══ Progresión, calentamiento, RPE, descarga, progreso y flechas animadas */
+
+/* v21 */
+.seg.s2{grid-template-columns:repeat(2,1fr)}
+.wsn{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;margin:0 0 4px;padding:5px 12px;border-radius:12px;background:color-mix(in srgb,var(--a2) 12%,transparent);border:0;text-align:left;color:var(--tx);box-shadow:none;min-height:0;-webkit-tap-highlight-color:transparent}
+.wsn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650;font-size:14px}
+.wsn small{flex:none;color:var(--mu);font-size:12px}
+.wsn.done{justify-content:center;cursor:default}
+.sgb{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:6px 0 2px;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,var(--a2) 12%,transparent);font-size:12.5px;line-height:1.35}
+.sgb>span{flex:1 1 140px;min-width:0}.sgb b{color:var(--a1)}.sgb .chip{margin:0}
+.wup{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0 0}
+.wup>span{flex:0 0 100%;font-size:12px;color:var(--mu)}.wup .chip{margin:0;font-size:12.5px}
+.rpe{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:2px 0 4px;padding:6px 8px;border-radius:12px;background:color-mix(in srgb,var(--a2) 8%,transparent)}
+.rpe>span{font-size:12px;font-weight:700;color:var(--mu);margin-right:2px}.rpe .chip{margin:0;min-width:34px;justify-content:center;padding:6px 8px}
+.dlc{margin:12px 0 0}
+.pgs svg{display:block;width:100%;height:auto;margin-top:6px;overflow:visible}
+.pga{font-size:9.5px;fill:var(--mu)}
+.pgt2{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pgt2 b{font-size:20px}.pgt2 small{color:var(--mu)}
+.pgr{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--a1);margin-left:4px}
+.pgsum{font-size:12.5px;margin-top:8px}
+.pgs .seg{margin-top:0}
+.btnl{display:flex;align-items:center;justify-content:center;margin:0;padding:9px 12px;border-radius:12px;background:var(--cd);border:1px solid var(--ln);color:var(--tx);font-size:inherit;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hab{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.hab .chip{margin:0}
+
+/* v21.1: flechas animadas junto a la letra de la serie */
+.sl .arw{display:inline-flex}
+.sl .arw>span{display:inline-block}
+.sl .arw.live>span{color:var(--a1);animation:arwF 1.4s ease-in-out infinite}
+.sl .arw.live>span:nth-child(2){animation-delay:.2s}
+.sl .arw.live>span:nth-child(3){animation-delay:.4s}
+@keyframes arwF{0%{color:var(--a1);text-shadow:none}20%{color:var(--tx);text-shadow:0 0 7px color-mix(in srgb,var(--tx) 55%,transparent)}58%,100%{color:var(--a1);text-shadow:none}}
+@media(prefers-reduced-motion:reduce){.sl .arw.live>span{animation:none}}
+.ver.v1{margin-bottom:3px}.ver.v2{margin:0 0 3px}.ver.v3{margin:0 0 8px;line-height:1.35}

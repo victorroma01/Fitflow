@@ -1,0 +1,57 @@
+/* ═══ css/93-glass-shapes ═══ Esquinas redondeadas y ajustes de forma bajo Cristal */
+/* toque más rápido: sin esperas ni zoom por doble toque */
+button,summary,label,select,[data-a],[data-c]{touch-action:manipulation}
+/* esquinas más redondeadas: solo en Cristal */
+html.gl button{border-radius:17px}
+html.gl input,html.gl select,html.gl textarea{border-radius:14px}
+html.gl .cd{border-radius:22px}
+html.gl nav{border-radius:34px}
+html.gl nav button{border-radius:28px}
+html.gl .rb{border-radius:20px}
+html.gl .sp{border-radius:28px 28px 0 0}
+html.gl .bar{border-radius:8px}
+html.gl .cal i{border-radius:11px}
+html.gl .cd{border-radius:28px}
+html.gl .dy{border-radius:20px}
+html.gl input,html.gl select,html.gl textarea{border-radius:17px}
+html.gl .rb{border-radius:25px}
+html.gl .sp{border-radius:34px 34px 0 0}
+html.gl .gg button{border-radius:25px}
+html.gl .mb{border-radius:22px}
+html.gl .th{border-radius:20px}
+html.gl .r2{border-radius:17px}
+html.gl .wk2{border-radius:11px}
+html.gl .rr{border-radius:20px}
+html.gl .pb{border-radius:34px 34px 0 0}
+html.gl .seg{border-radius:20px}
+html.gl .seg button{border-radius:15px}
+html.gl .tg{border-radius:17px}
+html.gl .dgc{border-radius:30px}
+html.gl .mst{border-radius:0 0 32px 32px}
+html.gl .mrow button{border-radius:22px}
+html.gl .mi{border-radius:20px}
+html.gl .eqb{border-radius:20px}
+html.gl .eqp{border-radius:25px}
+html.gl .eqi{border-radius:17px}
+html.gl .eqi i{border-radius:9px}
+html.gl .eqf button{border-radius:17px}
+html.gl .anf{border-radius:28px}
+html.gl .anb{border-radius:22px}
+html.gl .exth{border-radius:17px}
+html.gl .cpo{border-radius:28px}
+html.gl .cpi{border-radius:20px}
+html.gl .cpw{border-radius:20px}
+html.gl .cpw i{border-radius:9px}
+html.gl .cpm button{border-radius:14px}
+html.gl .lvm{border-radius:28px}
+html.gl .lvi{border-radius:20px}
+html.gl .lvs button{border-radius:20px}
+html.gl .wsn{border-radius:17px}
+html.gl .sgb{border-radius:17px}
+html.gl .rpe{border-radius:17px}
+html.gl .btnl{border-radius:17px}
+html.gl [style*="border-radius:16px;"],html.gl [style$="border-radius:16px"]{border-radius:22px!important}
+html.gl [style*="border-radius:14px;"],html.gl [style$="border-radius:14px"]{border-radius:20px!important}
+html.gl [style*="border-radius:12px;"],html.gl [style$="border-radius:12px"]{border-radius:17px!important}
+html.gl nav{border-radius:34px}html.gl nav button{border-radius:26px}html.gl .seg button{border-radius:15px}html.gl .gso{border-radius:22px}html.gl .gpv{border-radius:15px}html.gl .gpv.fl::after{border-radius:11px}html.gl #upd{border-radius:26px}html.gl #upd button{border-radius:19px}
+#sh>.sb{z-index:10;animation:fdi .3s ease}

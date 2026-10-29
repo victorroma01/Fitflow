@@ -1,0 +1,71 @@
+/* ═══ extras/summary ═══
+   Resumen del entreno e imagen para compartir.
+   Define: f2dl, f2sg, f2SumData, f2dc, f2Sum, f2Img  · acciones/registros: 1
+*/
+const f2dl=(a,b)=>{if(!(b>0))return null;return Math.round((a-b)/b*100)};
+const f2sg=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
+function f2SumData(){const l=S.logs[S.logs.length-1];if(!l)return null;const sn=FFS&&FFS.n==l.n?FFS:null;
+ const o={l,n:l.n,d:l.d,pr:[],ex:[],dv:null,ds:null,dm:null,volRec:false,st:0};
+ if(sn){
+  sn.ex.forEach(e=>{let b=null;e.sets.forEach(s=>{if(s[1]>0&&(!b||e1(s[1],s[0])>e1(b[1],b[0])))b=s});
+   const isPr=(ZPR||[]).indexOf(e.n)>=0;o.ex.push({n:e.n,k:e.sets.length,b,u:e.u,pr:isPr});if(isPr&&b)o.pr.push({n:e.n,w:b[1],r:b[0]})});
+  if(sn.pv){o.dv=f2dl(l.v,sn.pv.v);o.ds=l.s-sn.pv.s;o.dm=(+l.m||0)-(+sn.pv.m||0)}
+  if(sn.old.length>=2&&l.v>0&&sn.old.every(x=>x.v<l.v))o.volRec=true;
+ }
+ try{o.st=wkStats().st}catch(e){}
+ return o}
+const f2dc=(txt,cl)=>'<span class="f2dc '+(cl||'')+'">'+txt+'</span>';
+function f2Sum(){
+ try{const o=f2SumData();if(!o)return;FFS=FFS||{};FFS.sm=o;const l=o.l;
+  let h='<h3 style="margin:0">Entreno guardado</h3><small class="mu">'+X(l.n)+' · '+f2d(l.d,{weekday:'long',day:'numeric',month:'long'})+'</small>'
+  +'<div class="g2 f2tl"><div class="cd"><b>'+l.s+'</b><small>'+(l.s==1?'Serie':'Series')+'</small></div><div class="cd"><b>'+ffVT(l.v,1)+'</b><small>Volumen</small></div><div class="cd"><b>'+l.m+' min</b><small>Tiempo</small></div><div class="cd"><b>'+(l.q>0?l.q:'—')+'</b><small>Esfuerzo (RPE)</small></div></div>';
+  const ch=[];
+  if(o.dv!=null)ch.push(f2dc(f2sg(o.dv)+' % volumen',o.dv>0?'up':o.dv<0?'dn':''));
+  if(o.ds)ch.push(f2dc(f2sg(o.ds)+(Math.abs(o.ds)==1?' serie':' series')));
+  if(o.dm)ch.push(f2dc(f2sg(o.dm)+' min'));
+  if(o.volRec)ch.push(f2dc('Más volumen que nunca en este entreno','up'));
+  if(ch.length)h+='<div class="f2cmp"><small class="mu">Frente al entreno anterior</small><div>'+ch.join('')+'</div></div>';
+  if(o.pr.length)h+='<div class="cd f2prc"><b>'+(o.pr.length==1?'Récord personal':o.pr.length+' récords personales')+'</b>'+o.pr.map(p=>'<div class="it" style="grid-template-columns:1fr auto"><span>'+X(p.n)+'</span><b>'+ffDW(p.w)+' '+ffUL()+' × '+p.r+'</b></div>').join('')+'</div>';
+  if(o.ex.length)h+='<details class="cd"'+(o.pr.length?'':' open')+'><summary>Resumen por ejercicio</summary>'+o.ex.slice(0,14).map(e=>'<div class="it" style="grid-template-columns:1fr auto"><span>'+X(e.n)+'<br><small>'+e.k+(e.k==1?' serie':' series')+'</small></span><small>'+(e.b&&!e.u?ffDW(e.b[1])+' '+ffUL()+' × '+e.b[0]:'')+'</small></div>').join('')+'</details>';
+  if(o.st>=2)h+='<p class="mu" style="font-size:13px;margin:6px 2px">Llevas '+o.st+' semanas seguidas cumpliendo tu objetivo.</p>';
+  h+='<div class="g2" style="margin-top:12px"><button data-a="f2sh">'+ic('shr',18)+' Compartir</button><button class="pr" data-a="cl">Listo</button></div>';
+  sh(h);
+  f2Img(o).then(b=>{if(FFS)FFS.blob=b}).catch(()=>{});
+  setTimeout(f2Ach,400);
+ }catch(e){const l=S.logs[S.logs.length-1];if(l)dlg('Entreno guardado',l.s+' series · '+l.m+' min',[['Listo','zno','pr']])}}
+function f2Img(o){return new Promise((res,rej)=>{try{
+ const W_=1080,H_=1350,c=document.createElement('canvas');c.width=W_;c.height=H_;const g=c.getContext('2d');
+ const st=getComputedStyle(document.documentElement),a1=st.getPropertyValue('--a1').trim()||'#b183ff',a2=st.getPropertyValue('--a2').trim()||'#7a45ee';
+ const FNT='system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+ let bg=g.createLinearGradient(0,0,0,H_);bg.addColorStop(0,'#0e0d14');bg.addColorStop(1,'#07070a');g.fillStyle=bg;g.fillRect(0,0,W_,H_);
+ let gl=g.createRadialGradient(180,60,0,180,60,900);gl.addColorStop(0,a2+'aa');gl.addColorStop(1,'#0000');g.fillStyle=gl;g.fillRect(0,0,W_,H_);
+ const rr=(x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()};
+ const tx=(t,x,y,sz,wt,col,al)=>{g.font=wt+' '+sz+'px '+FNT;g.fillStyle=col;g.textAlign=al||'left';g.textBaseline='alphabetic';g.fillText(t,x,y)};
+ const fit=(t,max,sz,wt)=>{g.font=wt+' '+sz+'px '+FNT;if(g.measureText(t).width<=max)return t;while(t.length>1&&g.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…'};
+ const P=84;
+ let x=P;'STRATAFIT'.split('').forEach(ch=>{tx(ch,x,128,34,800,a1);g.font='800 34px '+FNT;x+=g.measureText(ch).width+9});
+ const l=o.l;
+ const words=String(l.n).split(' ');let ln=[''],mw=W_-2*P;g.font='800 92px '+FNT;
+ words.forEach(w=>{const t=(ln[ln.length-1]+' '+w).trim();if(g.measureText(t).width<=mw||!ln[ln.length-1])ln[ln.length-1]=t;else ln.push(w)});
+ ln=ln.slice(0,2);let y=250;ln.forEach(t=>{tx(fit(t,mw,92,800),P,y,92,800,'#fff');y+=104});
+ tx(f2d(l.d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}),P,y-10,38,500,'#a9a9b8');
+ const ty=ln.length>1?500:430,TW=(W_-2*P-36)/2,TH=230;
+ const tiles=[[String(l.s),l.s==1?'serie':'series'],[ffVT(l.v,1),'volumen'],[l.m+' min','tiempo'],[l.q>0?String(l.q):'—','esfuerzo (RPE)']];
+ tiles.forEach((t,i)=>{const tx0=P+(i%2)*(TW+36),ty0=ty+Math.floor(i/2)*(TH+36);rr(tx0,ty0,TW,TH,36);g.fillStyle='#ffffff12';g.fill();g.strokeStyle='#ffffff22';g.lineWidth=2;g.stroke();
+  tx(t[0],tx0+40,ty0+128,92,800,'#fff');tx(t[1],tx0+40,ty0+190,34,500,'#a9a9b8')});
+ let yy=ty+2*TH+36+90;
+ const lines=[];
+ if(o.pr.length){lines.push(['Récords personales',a1]);o.pr.slice(0,3).forEach(p=>lines.push([fit(p.n,560,40,600)+'|'+ffDW(p.w)+' '+ffUL()+' × '+p.r,'#fff']))}
+ else if(o.ex.length){lines.push(['Mejores series',a1]);o.ex.filter(e=>e.b&&!e.u).slice(0,3).forEach(e=>lines.push([fit(e.n,560,40,600)+'|'+ffDW(e.b[1])+' '+ffUL()+' × '+e.b[0],'#fff']))}
+ lines.forEach((r,i)=>{if(i==0){tx(r[0],P,yy,36,800,r[1]);yy+=62}else{const p=r[0].split('|');tx(p[0],P,yy,40,600,'#fff');tx(p[1],W_-P,yy,40,800,'#fff','right');yy+=62}});
+ const cm=[];if(o.dv!=null)cm.push(f2sg(o.dv)+' % de volumen');if(o.ds)cm.push(f2sg(o.ds)+(Math.abs(o.ds)==1?' serie':' series'));
+ if(cm.length)tx(cm.join('  ·  ')+' vs. el entreno anterior',P,Math.max(yy+30,1215),34,600,'#7ee0b5');
+ tx('Registrado con StrataFit',W_/2,1295,28,500,'#7c7c8c','center');
+ c.toBlob(b=>b?res(b):rej('blob'),'image/png');
+}catch(e){rej(e)}})}
+A.f2sh=async()=>{try{
+ let b=FFS&&FFS.blob;if(!b){const o=FFS&&FFS.sm||f2SumData();b=await f2Img(o);if(FFS)FFS.blob=b}
+ const f=new File([b],'stratafit-entreno.png',{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Mi entreno'});return}catch(e){if(e&&e.name=='AbortError')return}}
+ const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='stratafit-entreno.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);zt('Imagen guardada')
+}catch(e){zt('No se pudo crear la imagen')}};

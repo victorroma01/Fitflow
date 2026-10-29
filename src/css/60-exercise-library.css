@@ -1,0 +1,10 @@
+/* ═══ css/60-exercise-library ═══ Librería de ejercicios y filtros de equipo */
+.ph{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mu);margin:18px 0 4px}
+.exr{grid-template-columns:1fr auto!important;align-items:start;gap:10px}.exr>span{line-height:1.4;cursor:pointer}.exr b{font-size:15px}
+.mc{display:inline-block;margin:3px 5px 3px 0;padding:6px 11px;border-radius:999px;border:1px solid var(--ln);font-size:13px}.mc.on{background:color-mix(in srgb,var(--a2) 22%,transparent);border-color:var(--a2)}
+.pgt{font-size:30px;letter-spacing:-.03em;margin:6px 0 14px;line-height:1.1}
+.eqd{position:relative;margin:8px 0 4px}.eqb{width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:14px;text-align:left}.eqb span{color:var(--mu);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.08em}.eqb b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}.eqb svg{flex:none;transition:transform .2s;color:var(--mu)}.eqb[aria-expanded="true"] svg{transform:rotate(180deg)}.eqb.on{border-color:var(--a2)}.eqb.on b{color:var(--a1)}
+.eqp{position:absolute;z-index:6;left:0;right:0;top:calc(100% + 6px);background:var(--cd);border:1px solid var(--ln);border-radius:18px;padding:6px;box-shadow:0 18px 44px #0007;animation:rsi .2s both}.eqp[hidden]{display:none}
+.eqi{width:100%;display:flex;align-items:center;gap:12px;border:0;background:none;padding:11px 10px;border-radius:12px;text-align:left}.eqi:active{background:var(--ln)}.eqi i{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--mu);display:grid;place-items:center;flex:none;color:var(--ft);font-style:normal}.eqi.on i{background:var(--a2);border-color:var(--a2)}.eqi span{flex:1;font-weight:600}.eqi small{color:var(--mu)}
+.eqg{display:grid;grid-template-columns:1fr 1fr;gap:2px}.eqi{padding:10px 8px!important;gap:10px!important}
+.eqf{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 4px 4px;border-top:1px solid var(--ln);margin-top:4px}.eqf button{padding:10px;border-radius:12px}.eqf button:disabled{opacity:.4}
