@@ -352,6 +352,53 @@ html.gl [style*="border-radius:14px;"],html.gl [style$="border-radius:14px"]{bor
 html.gl [style*="border-radius:12px;"],html.gl [style$="border-radius:12px"]{border-radius:17px!important}
 html.gl nav{border-radius:34px}html.gl nav button{border-radius:26px}html.gl .seg button{border-radius:15px}html.gl .gso{border-radius:22px}html.gl .gpv{border-radius:15px}html.gl .gpv.fl::after{border-radius:11px}html.gl #upd{border-radius:26px}html.gl #upd button{border-radius:19px}
 #sh>.sb{z-index:10;animation:fdi .3s ease}
+
+/* ===== v1.17 ===== */
+.f2lk{width:100%;text-align:left;display:flex;gap:14px;align-items:center;font-weight:400}
+.f2lk>span{min-width:0}.f2lk b{font-size:17px}.f2lk svg{flex:none}
+#f2w{--bg:#0b0b0d;--cd:#17171b;--tx:#f4f4f6;--mu:#b4b4c0;--ln:#2a2a31;--ib:#0b0b0d;position:fixed;inset:0;z-index:12;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 8px) 18px calc(env(safe-area-inset-bottom,0px) + 18px);background:var(--bg);color:var(--tx);overflow:auto;-webkit-overflow-scrolling:touch;transition:background .35s}
+#f2w[data-ph="pre"]{background:radial-gradient(130% 80% at 50% 0,color-mix(in srgb,var(--a2) 60%,#0b0b0d),#0b0b0d 78%)}
+#f2w[data-ph="work"]{background:radial-gradient(130% 80% at 50% 0,#0d8f64,#0b0b0d 78%)}
+#f2w[data-ph="rest"]{background:radial-gradient(130% 80% at 50% 0,#b86e08,#0b0b0d 78%)}
+#f2w[data-ph="done"]{background:radial-gradient(130% 80% at 50% 0,color-mix(in srgb,var(--a2) 70%,#0b0b0d),#0b0b0d 78%)}
+#f2w.pz{filter:saturate(.4)}
+.f2hd{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;text-align:center;gap:6px;min-height:48px}
+.f2hd b{font-size:15px;letter-spacing:.02em}
+#f2w .f2cl{width:44px;height:44px;padding:0;border-radius:50%;background:#ffffff1a;border-color:#ffffff22;display:grid;place-items:center}
+.f2p{margin-top:clamp(10px,4vh,36px);text-align:center;font-size:15px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;opacity:.9}
+.f2t{font-size:clamp(80px,27vw,170px);font-weight:800;letter-spacing:-.045em;text-align:center;font-variant-numeric:tabular-nums;line-height:1.02;margin:6px 0 2px}
+.f2s{text-align:center;font-size:18px;font-weight:700;min-height:26px;opacity:.92}
+.f2b{height:10px;border-radius:8px;background:#ffffff26;overflow:hidden;margin:16px 4px}.f2b i{display:block;height:100%;width:0;background:#fff;border-radius:8px;transition:width .25s linear}
+.f2sp{flex:1;min-height:12px}
+#f2w .f2big{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;padding:18px 10px;border-radius:26px;background:#ffffff26;border:2px solid #ffffff44;color:#fff;margin-bottom:10px;backdrop-filter:none;-webkit-backdrop-filter:none}
+#f2w .f2big b{font-size:clamp(54px,20vw,84px);line-height:1;font-weight:800;font-variant-numeric:tabular-nums}#f2w .f2big small{color:#ffffffcc;font-size:14px}
+#f2w .f2big:active{background:#ffffff38}
+#f2w .f2sm{background:none;border:0;color:#ffffffb8;font-size:14px;padding:8px 14px}
+#f2w .f2ct{margin-top:8px}#f2w .f2ct button{padding:15px;font-size:16px;border-radius:18px;background:#ffffff1a;border-color:#ffffff30;color:#fff}
+.f2dn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:10px 0 20px}
+.f2dn>small{font-size:14px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;opacity:.9}
+.f2rs{font-size:clamp(44px,15vw,72px);font-weight:800;letter-spacing:-.03em;line-height:1.05}
+#f2w .f2dn input{text-align:center;background:#00000055;border-color:#ffffff33;color:#fff}#f2w .f2dn label{color:#ffffffcc}
+#f2w .f2dn button{padding:14px;border-radius:16px;background:#ffffff1a;border-color:#ffffff30;color:#fff}#f2w .f2dn button.pr{background:#fff;color:#111;border:0;box-shadow:none}
+.f2tl{margin:12px 0 4px}.f2tl .cd{margin:0;text-align:center;padding:14px 6px}.f2tl b{font-size:24px;display:block;font-weight:800}.f2tl small{color:var(--mu)}
+.f2cmp{margin:6px 2px 4px}.f2cmp>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.f2dc{display:inline-block;padding:5px 11px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid var(--ln);background:var(--cd)}
+.f2dc.up{color:#34d399;border-color:#34d39955}.f2dc.dn{color:var(--c);border-color:color-mix(in srgb,var(--c) 45%,transparent)}
+.f2prc{border-color:color-mix(in srgb,var(--a2) 55%,var(--ln))}.f2prc>b{color:var(--a1)}
+.f2cs{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;margin:12px 0 4px}.f2cs b{font-size:24px;display:block;font-weight:800}.f2cs small{color:var(--mu)}
+.f2bars{display:flex;gap:10px;align-items:flex-end;justify-content:space-around;height:84px;margin-top:10px}.f2bars>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%}.f2bars i{display:block;width:100%;max-width:44px;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,var(--a1),var(--a2))}.f2bars small{font-size:11px;color:var(--mu)}
+.f2ac{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--ln)}
+.f2ai{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--ln);color:var(--mu)}.f2ac.on .f2ai{background:linear-gradient(135deg,var(--a1),var(--a2));color:var(--ft)}
+.f2ac .bar{margin-top:6px}.f2ac:not(.on) b{color:var(--tx)}
+.f2ch{width:100%;height:auto;display:block}
+.f2gr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.f2th{position:relative;padding:0;border-radius:14px;overflow:hidden;aspect-ratio:3/4;border:2px solid var(--ln);background:var(--ib)}.f2th img{width:100%;height:100%;object-fit:cover;display:block}
+.f2th span{position:absolute;left:0;right:0;bottom:0;padding:16px 4px 4px;background:linear-gradient(0deg,#000a,#0000);color:#fff;font-size:10.5px;font-weight:700;text-align:center}
+.f2th.sl{border-color:var(--a2);box-shadow:0 0 0 3px color-mix(in srgb,var(--a2) 40%,transparent)}
+.f2pv{border-radius:16px;overflow:hidden;background:var(--ib);border:1px solid var(--ln)}.f2pv img{width:100%;display:block;max-height:68vh;object-fit:contain;background:#000}
+.f2cm{display:grid;grid-template-columns:1fr 1fr;gap:10px}.f2cm>div{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center}.f2cm .f2pv{width:100%}.f2cm img{max-height:50vh}
+.f2sv{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-top:8px}.f2sv video{width:100%;height:100%;object-fit:cover;display:block}
+.f2gd{position:absolute;left:10%;right:10%;top:30%;bottom:30%;border:2px solid #fff;border-radius:14px;box-shadow:0 0 0 999px #0005;pointer-events:none}
 </style></head><body><div id="app"></div><div id="sh"></div>
 <script>
 (function(){var shown=0,T=function(m){var d=document.createElement('div');d.textContent=m;return d.innerHTML};
@@ -423,7 +470,7 @@ if(a.tab==0)return h+habUI(a.m)+'<input placeholder="Buscar alimento" data-u="fs
 if(a.tab==1)return h+(S.lib.length?S.lib.map((p,i)=>'<div class="it" style="grid-template-columns:1fr auto auto"><span>'+X(p.n)+'<br><small>'+Z(sum(p.it.map(T))[0])+' kcal</small></span><button data-a="la" data-i="'+i+'">Añadir</button><button data-a="lx" data-i="'+i+'" style="padding:6px">✕</button></div>').join(''):'<p class="mu">Aún no hay platos. Pulsa ★ Guardar plato en una comida.</p>');
 return h+'<label>Nombre</label><input id="n0">'+[['Kcal','k'],['Hidratos g','c'],['Proteínas g','p'],['Grasas g','f'],['Fibra g','fi'],['Sal g','s']].map(x=>'<label>'+x[0]+' (por 100 g)</label><input type="number" id="n_'+x[1]+'">').join('')+'<button class="pr" data-a="nf" style="width:100%;margin-top:10px">Guardar alimento</button>'}
 function fl(q){const e=$('#rs');if(e)e.innerHTML=FA().map((f,i)=>({f,i})).filter(o=>o.f.n.toLowerCase().includes(q.toLowerCase())).slice(0,30).map(o=>'<div class="it" style="grid-template-columns:1fr auto" data-a="pk" data-i="'+o.i+'"><span>'+X(o.f.n)+'</span><small>'+o.f.b[0]+' kcal/100 g</small></div>').join('')}
-function DB(){const lg=S.logs,now=new Date(),wkc=lg.filter(l=>(now-new Date(l.d))<7*864e5).length,vol=lg.reduce((s,l)=>s+l.v,0),last=lg.slice(-8),mx=Math.max(1,...last.map(l=>l.v));
+function DB(){const lg=S.logs,now=new Date(),wkc=lg.filter(l=>(now-new Date(l.d))<7*864e5).length,vol=lg.reduce((s,l)=>s+l.v,0),last=lg.filter(l=>!l.k).slice(-8),mx=Math.max(1,...last.map(l=>l.v));
 return '<div class="hd"><h1>Dashboard</h1><button data-a="zwv" style="padding:8px 12px">'+ic('dash',24)+'</button></div><div class="g2" style="margin-top:12px"><div class="cd"><b style="font-size:26px">'+lg.length+'</b><br><small>Entrenos totales</small></div><div class="cd"><b style="font-size:26px">'+wkc+'</b><br><small>Últimos 7 días</small></div><div class="cd"><b style="font-size:26px">'+ffVT(vol)+'</b><br><small>Volumen total</small></div><div class="cd"><b style="font-size:26px">'+Z(sum((S.meals[dk(now)]&&Object.values(S.meals[dk(now)]).flat()||[]).map(T))[0])+'</b><br><small>kcal hoy</small></div></div><div class="cd"><b>Volumen por sesión</b><div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:8px">'+(last.length?last.map(l=>'<div style="flex:1;background:var(--ac);border-radius:4px;height:'+Math.max(6,l.v/mx*100)+'%"></div>').join(''):'<small>Completa un entreno para ver tu progreso.</small>')+'</div></div><div class="cd">'+calUI()+'</div>'}
 function calUI(){const b=new Date(),d=new Date(b.getFullYear(),b.getMonth()+CM,1),n=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(),o=(d.getDay()+6)%7,ds=new Set(S.logs.map(l=>l.d));let c='';for(let i=0;i<o;i++)c+='<i></i>';for(let i=1;i<=n;i++)c+='<i class="'+(ds.has(dk(new Date(d.getFullYear(),d.getMonth(),i)))?'on':'')+'">'+i+'</i>';
 return '<div class="row"><button data-a="cm" data-i="-1">‹</button><b>'+d.toLocaleDateString('es',{month:'long',year:'numeric'})+'</b><button data-a="cm" data-i="1">›</button></div><div class="cal" style="margin-top:8px">'+'LMXJVSD'.split('').map(x=>'<small>'+x+'</small>').join('')+c+'</div>'}
@@ -609,7 +656,7 @@ A.crim=(i,b)=>{S.cr[CR.i].img=b.dataset.v;sv();sh(crEd())};
 const crday=i=>{const r=S.cr[i],ex=[];r.bl.forEach((b,j)=>{const u='b'+Date.now()+j;b.ex.forEach((n,k)=>{const o={n,s:b.s,r:k<b.ex.length-1?10:b.r};if(b.ex.length>1)o.b=u;ex.push(o)})});return{n:r.n,ex,cu:1,img:zimg(r)}};
 const pbr=()=>{if(S.pbk){S.plan[S.pbk.sel]=S.pbk.day;S.pbk=null;sv()}};pbr();S.plan.forEach(d=>{if(!d.cu&&d.img)delete d.img});
 A.crgo=i=>{if(!S.cr[i].bl.length)return;S.pbk={sel:S.sel,day:S.plan[S.sel]};S.plan[S.sel]=crday(i);sv();sh();A.go()};
-const ze0=A.zend;A.zend=()=>{const one=S.pbk,k=S.wk+'-'+S.sel,had=S.done[k],n0=S.logs.length;ze0();if(one&&!had)delete S.done[k];if(S.logs.length>n0){const l=S.logs[S.logs.length-1];setTimeout(()=>dlg('Entreno guardado',l.s+(l.s==1?' serie':' series')+' · '+Z(ffDW(l.v))+' '+ffUL()+' de volumen · '+l.m+' min'+(ZPR.length?' · '+ZPR.length+'\u00a0'+(ZPR.length>1?'récords: ':'récord: ')+ZPR.join(', '):''),[['Listo','zno','pr']]),50)}pbr();sv();R()};
+const ze0=A.zend;A.zend=()=>{const one=S.pbk,k=S.wk+'-'+S.sel,had=S.done[k],n0=S.logs.length;ze0();if(one&&!had)delete S.done[k];if(S.logs.length>n0){const l=S.logs[S.logs.length-1];setTimeout(f2Sum,50)}pbr();sv();R()};
 const zd0=A.zdc;A.zdc=()=>{zd0();pbr();R()};
 const zv0=A.zove,zb0=A.zovb;
 A.zove=()=>{if(zOV==1){OVS=JSON.stringify(S.plan[S.sel]);zv0();return}if(JSON.stringify(S.plan[S.sel])!=OVS)dlg('¿Guardar los cambios?','Se aplicarán a este día de tu programa.',[['Descartar','zovd',''],['Guardar','zovs','pr']]);else zv0()};
@@ -819,7 +866,7 @@ A.pv=(i,b)=>{PGI=i;if(b)PVL=lvOk(S.lv)?S.lv:'int';if(!lvOk(PVL))PVL='int';const 
 const sp20=A.sp2;A.sp2=i=>{PGI=i;zcf('¿Cambiar de plan?','Pasarás a «'+PN[i]+'» y se reiniciará el progreso de la semana.','sp2c','Cambiar')};A.sp2c=()=>{cpSync();sp20(PGI);S.cpi=-1;sv()};
 const lgUI=()=>{const L=S.logs.map((l,i)=>({l,i})).reverse(),tv=S.logs.reduce((s,l)=>s+l.v,0),tm=S.logs.reduce((s,l)=>s+(+l.m||0),0);let h=pgHead('Registros')+'<div class="g2" style="grid-template-columns:repeat(3,1fr);gap:8px"><div class="cd" style="margin:0;text-align:center;padding:12px 6px"><b style="font-size:22px">'+S.logs.length+'</b><br><small>Entrenos</small></div><div class="cd" style="margin:0;text-align:center;padding:12px 6px"><b style="font-size:22px">'+ffVT(tv,1)+'</b><br><small>Volumen</small></div><div class="cd" style="margin:0;text-align:center;padding:12px 6px"><b style="font-size:22px">'+R1(tm/60)+' h</b><br><small>Tiempo</small></div></div>',last='';
 if(!L.length)return h+'<p class="mu" style="margin-top:18px">Aún no hay entrenos guardados. Se registran al pulsar Log out.</p>';
-L.forEach(o=>{const d=new Date(o.l.d+'T00:00:00'),m=d.toLocaleDateString('es',{month:'long',year:'numeric'});if(m!=last){last=m;h+='<div class="ph">'+X(m)+'</div>'}h+='<div class="it exr" data-a="lgx" data-i="'+o.i+'" style="cursor:pointer"><span><b>'+X(o.l.n)+'</b><br><small>'+d.toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'})+' · '+o.l.s+' series · '+o.l.m+' min</small></span><b>'+Z(ffDW(o.l.v))+' '+ffUL()+'</b></div>'});
+L.forEach(o=>{const d=new Date(o.l.d+'T00:00:00'),m=d.toLocaleDateString('es',{month:'long',year:'numeric'});if(m!=last){last=m;h+='<div class="ph">'+X(m)+'</div>'}h+='<div class="it exr" data-a="lgx" data-i="'+o.i+'" style="cursor:pointer"><span><b>'+X(o.l.n)+'</b><br><small>'+d.toLocaleDateString('es',{weekday:'short',day:'numeric',month:'short'})+f2LgTx(o.l)+'</small></span><b>'+f2LgRt(o.l)+'</b></div>'});
 return h+'<p class="mu" style="font-size:12px;margin-top:14px">Toca un registro para borrarlo.</p>'};
 A.lg=()=>fullPage(lgUI());A.lgx=i=>{LGI=i;const l=S.logs[i];if(l)zcf('¿Borrar este registro?',l.n+' · '+l.d,'lgd','Borrar')};let LGI=-1;A.lgd=()=>{if(S.logs[LGI]){S.logs.splice(LGI,1);sv()}LGI=-1;sh(lgUI());R()};
 A.cl2=()=>fullPage(pgHead('Calendario')+'<div class="cd" id="cl">'+calUI()+'</div><p class="mu" style="font-size:13px">Los días marcados son los que registraste un entreno.</p>');
@@ -829,7 +876,7 @@ const wo2=WO;WO=()=>{const h=wo2();if(VW)return h;const tr=S.plan.filter(d=>d.ex
 const prCard=()=>{const ks=new Set(Object.keys(S.pr||{}).concat(Object.keys(S.hist||{}))),l=[...ks].map(n=>[n,prOf(n)]).filter(x=>x[1]).sort((a,b)=>b[1].e-a[1].e).slice(0,6);return '<div class="cd"><b>Récords personales</b>'+(l.length?l.map(x=>'<div class="it" style="grid-template-columns:1fr auto"><span>'+X(x[0])+'<br><small>'+x[1].d+'</small></span><span style="text-align:right"><b>'+ffDW(x[1].w)+' '+ffUL()+' × '+x[1].r+'</b><br><small>1RM est. '+Z(ffDW(x[1].e))+' '+ffUL()+'</small></span></div>').join(''):'<p class="mu" style="margin:8px 0 0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>')+'</div>'};
 const db1=DB;DB=()=>db1()+prCard();
 /* ===== v1.8: filtro de grupo, programas propios, asistente, plegado, versión ===== */
-const APPV='1.16.1';
+const APPV='1.17.0';
 (function(){try{const n0=(S.cp||[]).length,okd=d=>d&&typeof d.n=='string'&&Array.isArray(d.ex)&&d.ex.every(e=>e&&typeof e.n=='string'&&+e.s>0);
 if(!Array.isArray(S.cp))S.cp=[];S.cp=S.cp.filter(p=>p&&typeof p.n=='string'&&Array.isArray(p.plan)&&p.plan.length&&p.plan.every(okd));
 if(S.cp.length!=n0||!(S.cpi>=0&&S.cpi<S.cp.length))S.cpi=-1;
@@ -1156,14 +1203,14 @@ const setX=()=>'<label>Avisos de descanso</label>'
 const ck9=A.ck;A.ck=(i,b)=>{ck9(i,b);if(S.ar===0&&W&&W.re&&W.x[i][+b.dataset.j].ok){W.re=0;R()}};
 const nx9=A.znx;A.znx=()=>{nx9();if(S.ar===0&&W&&W.re){W.re=0;R()}};
 let ffWL=null;
-const ffWake=async()=>{try{const want=!!(W&&!W.p&&S.awk!==0&&document.visibilityState=='visible');if(want&&!ffWL&&navigator.wakeLock){const l=await navigator.wakeLock.request('screen');ffWL=l;l.addEventListener('release',()=>{if(ffWL===l)ffWL=null})}else if(!want&&ffWL){const l=ffWL;ffWL=null;await l.release()}}catch(e){ffWL=null}};
+const ffWake=async()=>{try{const want=!!(((W&&!W.p&&S.awk!==0)||(WDS&&!WDS.pa&&!WDS.done))&&document.visibilityState=='visible');if(want&&!ffWL&&navigator.wakeLock){const l=await navigator.wakeLock.request('screen');ffWL=l;l.addEventListener('release',()=>{if(ffWL===l)ffWL=null})}else if(!want&&ffWL){const l=ffWL;ffWL=null;await l.release()}}catch(e){ffWL=null}};
 setInterval(ffWake,2500);document.addEventListener('visibilitychange',ffWake);
 
 /* --- descarga por nivel (automática) --- */
 const dlCad=()=>({ini:6,int:5,ava:4})[S.lv||'int']||5;
 const dlOn=wk=>S.dl&&S.dl[wk]!=null?!!S.dl[wk]:(wk>1&&wk%dlCad()==0);
 let ffLW=S.wk;const R9=R;R=()=>{if(S.wk<ffLW){S.dl={};S.dq={}}ffLW=S.wk;R9()};
-const dlQ=()=>{const l=S.logs.slice(-2);return l.length==2&&l.every(x=>+x.q>=9)};
+const dlQ=()=>{const l=S.logs.filter(x=>!x.k).slice(-2);return l.length==2&&l.every(x=>+x.q>=9)};
 const dlCard=()=>{const on=dlOn(S.wk),L=LVN&&LVN[S.lv||'int']?LVN[S.lv||'int'].toLowerCase():'intermedio';
  if(on)return '<div class="cd dlc"><b>Semana de descarga</b><div class="mu" style="font-size:13px;margin-top:4px">Esta semana haces la mitad de series, sin subir el peso y con 3-4 repeticiones en reserva. Se aplica solo al empezar cada entreno. Nivel '+L+': descarga cada '+dlCad()+' semanas.</div><button data-a="dloff" style="margin-top:10px;width:100%">Hacer la semana normal</button></div>';
  if(S.wk>1&&dlQ()&&!(S.dq&&S.dq[S.wk]))return '<div class="cd dlc"><b>Esfuerzo muy alto</b><div class="mu" style="font-size:13px;margin-top:4px">Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.</div><div class="g2" style="margin-top:10px"><button data-a="dlno">Ahora no</button><button class="pr" data-a="dlon">Activar descarga</button></div></div>';
@@ -1350,7 +1397,7 @@ A.hay=()=>{if(!AD)return;const yk=dk(new Date(Date.now()+(ND-1)*864e5)),ys=(S.me
 const fa9=A.fa;A.fa=()=>{const f=AD&&AD.pick,e=$('#gr'),g=e?(+e.value||100):100;fa9();if(f&&f.n&&f.n!='__proto__'&&Array.isArray(f.b)){S.fq=S.fq||{};const q=S.fq[f.n]||{c:0};S.fq[f.n]={c:(q.c||0)+1,g,b:f.b,t:Date.now()};sv()}};
 
 /* --- dashboard --- */
-const db21=DB;DB=()=>db21()+pgCard()+prTl()+bkWarn();
+const db21=DB;DB=()=>db21()+f2StzCard()+f2CdCard()+pgCard()+prTl()+bkWarn();
 
 /* --- uso sin conexión e icono de pantalla de inicio --- */
 const ffIcoSvg="<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1024 1024\"><defs> <radialGradient id=\"b1\" cx=\"22%\" cy=\"18%\" r=\"62%\"><stop offset=\"0\" stop-color=\"#8b55ff\"/><stop offset=\"1\" stop-color=\"#8b55ff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b2\" cx=\"88%\" cy=\"28%\" r=\"60%\"><stop offset=\"0\" stop-color=\"#3f7bff\"/><stop offset=\"1\" stop-color=\"#3f7bff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b3\" cx=\"62%\" cy=\"98%\" r=\"68%\"><stop offset=\"0\" stop-color=\"#f0507f\"/><stop offset=\"1\" stop-color=\"#f0507f\" stop-opacity=\"0\"/></radialGradient> <linearGradient id=\"gs\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".30\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".06\"/></linearGradient> <linearGradient id=\"ge\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".85\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".35\"/></linearGradient> <linearGradient id=\"wh\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#ffffff\"/><stop offset=\"1\" stop-color=\"#ddd0ff\"/></linearGradient><filter id=\"sh\" x=\"-30%\" y=\"-30%\" width=\"160%\" height=\"170%\"><feDropShadow dx=\"0\" dy=\"22\" stdDeviation=\"26\" flood-color=\"#1a0a55\" flood-opacity=\".45\"/></filter> <filter id=\"sh2\" x=\"-20%\" y=\"-30%\" width=\"140%\" height=\"180%\"><feDropShadow dx=\"0\" dy=\"12\" stdDeviation=\"12\" flood-color=\"#2a1180\" flood-opacity=\".55\"/></filter></defs> <rect width=\"1024\" height=\"1024\" fill=\"#140f3a\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b1)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b2)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b3)\" opacity=\".9\"/> <g filter=\"url(#sh)\"><circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"url(#gs)\"/></g> <circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"none\" stroke=\"url(#ge)\" stroke-width=\"5\"/> <g filter=\"url(#sh2)\"><rect x=\"362.0\" y=\"498.0\" width=\"300.0\" height=\"28.0\" rx=\"14.0\" fill=\"url(#wh)\"/><rect x=\"343.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"643.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"295.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/><rect x=\"695.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/></g></svg>";
@@ -1408,20 +1455,20 @@ const bxRows=(s,wip)=>{
   'Comidas de '+bxP(bxN(s.meals),'día','días')+' ('+bxP(it,'alimento anotado','alimentos anotados')+') y agua de '+bxP(bxN(s.wt),'día','días'),
   bxP(bxN(s.cf),'alimento nuevo','alimentos nuevos')+', '+bxP(bxN(s.lib),'plato guardado','platos guardados')+' y '+bxP(Object.keys(s.tp||{}).length,'plantilla de día','plantillas de día'),
   bxP(bxN(s.cr),'rutina personalizada','rutinas personalizadas')+', '+bxP(bxN(s.cp),'programa guardado','programas guardados')+' y '+bxP(bxN(s.cx),'ejercicio propio','ejercicios propios'),
-  'Notas de '+bxP(bxN(s.notes),'ejercicio','ejercicios'),
+  'Notas de '+bxP(bxN(s.notes),'ejercicio','ejercicios'),...f2BxRows(s),
   'Perfil, objetivos de nutrición, nivel y ajustes (tema, acento, estilo, unidades, avisos)'];
  if(wip)r.push('Entreno en curso, para retomarlo');
  return r};
 const bxLine=s=>[bxP(bxN(s.logs),'entreno','entrenos'),bxP(bxN(s.cr),'rutina','rutinas'),bxP(bxN(s.cf),'alimento nuevo','alimentos nuevos'),'comidas de '+bxP(bxN(s.meals),'día','días')].join(' · ');
 const bxBuild=()=>{const wip=bxWip();return JSON.stringify(Object.assign({_sf:{app:'StrataFit',fmt:BXV,ver:APPV,at:new Date().toISOString(),wip:wip||undefined,sum:bxRows(S,wip)}},S))};
 const BXE={vacio:'El archivo está vacío',prog:'Eso es un código de programa, no una copia: impórtalo en Programas',grande:'El archivo es demasiado grande para ser una copia de StrataFit',formato:'El archivo no es una copia válida de StrataFit',plan:'La copia está dañada: no tiene un programa de entrenamiento válido'};
-const bxParse=txt=>{txt=String(txt||'').trim();if(!txt)throw 'vacio';if(/^FFP1:/.test(txt))throw 'prog';if(txt.length>2e7)throw 'grande';
+const bxParse=txt=>{txt=String(txt||'').trim();if(!txt)throw 'vacio';if(/^FFP1:/.test(txt))throw 'prog';if(txt.length>4e7)throw 'grande';
  let o;try{o=JSON.parse(txt,(k,v)=>k=='__proto__'?undefined:v)}catch(e){throw 'formato'}
  const A_=Array.isArray,O_=x=>x&&typeof x=='object'&&!A_(x);
  if(!O_(o))throw 'formato';
  const meta=O_(o._sf)?o._sf:null;delete o._sf;
  if(!A_(o.plan)||!o.plan.length||!o.plan.every(d=>d&&typeof d.n=='string'&&A_(d.ex)&&d.ex.every(e=>e&&typeof e.n=='string'&&+e.s>0)))throw 'plan';
- let fix=0;const L1=['logs','cr','cx','cf','lib','cp','wl'],O1=['done','last','meals','hist','pr','notes','bio','pf','nu','wt','tp','dt','fq','dl','dq'];
+ let fix=0;const L1=['logs','cr','cx','cf','lib','cp','wl','ms'],O1=['done','last','meals','hist','pr','notes','bio','pf','nu','wt','tp','dt','fq','dl','dq','ach','bc','wdc','stz'];
  L1.forEach(k=>{if(o[k]!=null){if(!A_(o[k])){o[k]=[];fix++}else{const n=o[k].length;o[k]=o[k].filter(x=>x&&typeof x=='object');fix+=n-o[k].length}}});
  O1.forEach(k=>{if(o[k]!=null&&!O_(o[k])){delete o[k];fix++}});
  let wip=null;const w=meta&&meta.wip;if(O_(w)&&O_(w.W)&&A_(w.W.x)&&O_(w.d)&&A_(w.d.ex)&&w.W.x.length==w.d.ex.length)wip=w;
@@ -1429,7 +1476,7 @@ const bxParse=txt=>{txt=String(txt||'').trim();if(!txt)throw 'vacio';if(/^FFP1:/
 const bxDate=(t,l)=>{const d=new Date(t);return isNaN(d)?'':d.toLocaleDateString('es',l?{day:'numeric',month:'long',year:'numeric'}:{day:'numeric',month:'short'})};
 const bxAsk=txt=>{let r;try{r=bxParse(txt)}catch(x){zt(BXE[x]||BXE.formato);return}
  BKP=r;const ds=r.meta&&r.meta.at?bxDate(r.meta.at,1):'';
- zcf('¿Restaurar esta copia?','<b>Copia'+(ds?' del '+X(ds):'')+'</b><br>'+X(bxLine(r.s))+(r.wip?'<br>Incluye un entreno en curso.':'')+'<br><br><b>Ahora tienes</b><br>'+X(bxLine(S))+'<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.','bkok','Restaurar')};
+ zcf('¿Restaurar esta copia?','<b>Copia'+(ds?' del '+X(ds):'')+'</b><br>'+X(bxLine(r.s))+(r.wip?'<br>Incluye un entreno en curso.':'')+(r.meta&&Array.isArray(r.meta.ph)&&r.meta.ph.length?'<br>Incluye '+r.meta.ph.length+' fotos de progreso (se añaden a las que ya tienes).':'')+'<br><br><b>Ahora tienes</b><br>'+X(bxLine(S))+'<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.','bkok','Restaurar')};
 const bxPre=()=>{try{const p=JSON.parse(localStorage.getItem('ffpre'));if(p&&p.s&&Array.isArray(p.s.plan)&&Date.now()-p.t<30*864e5)return p}catch(e){}return null};
 A.bkok=()=>{const r=BKP;if(!r||!r.s)return;BKP=null;let pre;
  try{pre=JSON.stringify({t:Date.now(),v:APPV,s:S,w:localStorage.getItem(ZK)});localStorage.setItem('ffpre',pre)}catch(e){zt('No hay espacio para guardar tus datos actuales: no se restauró nada');return}
@@ -1445,15 +1492,15 @@ A.bkun2=()=>{const p=bxPre();if(!p)return;
   localStorage.setItem('ffrs',JSON.stringify({s:bxRows(p.s,null),f:0,u:1}))}
  catch(e){try{localStorage.setItem('ff',JSON.stringify(S))}catch(_){}zt('No se pudo deshacer');return}
  location.reload()};
-C.bkim=e=>{const f=e.files&&e.files[0];if(!f)return;if(f.size>2e7){zt(BXE.grande);e.value='';return}const r=new FileReader();r.onload=()=>bxAsk(String(r.result));r.onerror=()=>zt('No se pudo leer el archivo');r.readAsText(f);e.value=''};
+C.bkim=e=>{const f=e.files&&e.files[0];if(!f)return;if(f.size>4e7){zt(BXE.grande);e.value='';return}const r=new FileReader();r.onload=()=>bxAsk(String(r.result));r.onerror=()=>zt('No se pudo leer el archivo');r.readAsText(f);e.value=''};
 A.zbr=()=>{const e=$('#bk');bxAsk(e?e.value:'')};
-A.bkf=async()=>{const pv=S.bkd;S.bkd=Date.now();sv();const r=await ffDl('stratafit-copia-'+dk(new Date)+'.json',bxBuild());
+A.bkf=async()=>{const pv=S.bkd;S.bkd=Date.now();sv();const r=await ffDl('stratafit-copia-'+dk(new Date)+'.json',await f2Full());
  if(r=='saved'||r=='delivered')zt('Copia guardada');else{S.bkd=pv;sv();zt(r=='declined'?'No se guardó la copia':'No se pudo guardar el archivo. Usa la opción de texto.')}};
 A.zbk=()=>{const p=bxPre();
  sh('<h3>Copia de seguridad</h3><p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">'+bkAgo()+'</p>'
  +'<div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div>'
  +'<details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">'+bxRows(S,bxWip()).map(x=>'<div>· '+X(x)+'</div>').join('')+'</div></details>'
- +'<details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto</summary><textarea id="bk" rows="5" style="margin-top:8px">'+X(bxBuild())+'</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details>'
+ +'<details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto (sin fotos)</summary><textarea id="bk" rows="5" style="margin-top:8px">'+X(bxBuild())+'</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details>'
  +(p?'<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración ('+X(bxDate(p.t))+')</button>':''))};
 /* aviso tras restaurar: qué se ha recuperado */
 try{const q=localStorage.getItem('ffrs');if(q){localStorage.removeItem('ffrs');const o=JSON.parse(q);
@@ -1462,6 +1509,562 @@ try{const q=localStorage.getItem('ffrs');if(q){localStorage.removeItem('ffrs');c
 const bxNew=()=>!S.nbk&&!S.logs.length&&!S.bkd&&!(S.cp||[]).length&&!(S.cr||[]).length&&!bxN(S.meals)&&!(S.wl||[]).length;
 A.bknx=()=>{S.nbk=1;sv();R()};
 const bxWo=WO;WO=()=>(bxNew()&&!W?'<div class="cd" style="margin:0 0 12px"><b>¿Ya usabas StrataFit?</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="zbk">Importar copia</button><button data-a="bknx">Ahora no</button></div></div>':'')+bxWo();
+
+/* ===== v1.17 · versión final ===== */
+/* iconos nuevos */
+IC.timer='<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>';
+IC.pulse='<path d="M3 12h4l2-6 4 12 2-6h6"/>';
+IC.ruler='<path d="M3 17L17 3l4 4L7 21zM8 12l2 2M11 9l2 2M14 6l2 2"/>';
+IC.trf='<path d="M8 4h8v5a4 4 0 01-8 0zM8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3M12 13v4M8 21h8M10 17h4"/>';
+IC.dwn='<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>';
+IC.scan='<path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M7 12h10"/>';
+IC.shr='<path d="M12 15V3M8 7l4-4 4 4M5 12v8h14v-8"/>';
+IC.globe='<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>';
+IC.trnd='<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>';
+const f2n=(v,a,b,d)=>{v=Math.round(+v);return v>=a&&v<=b?v:d};
+const f2f=(v,a,b,d)=>{v=+v;return v>=a&&v<=b?v:d};
+const f2h=s=>{s=Math.max(0,Math.round(s));return s>=3600?Math.floor(s/3600)+':'+String(Math.floor(s%3600/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'):Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const f2d=(d,o)=>{const t=new Date(d+'T12:00:00');return isNaN(t)?String(d||''):t.toLocaleDateString('es',o||{day:'numeric',month:'short'})};
+const f2row=(ico,t,s,a,i)=>'<button class="cd f2lk" data-a="'+a+'"'+(i!=null?' data-i="'+i+'"':'')+'>'+ic(ico,30)+'<span><b>'+t+'</b><br><small>'+s+'</small></span></button>';
+const f2id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---- temporizadores de WOD ---- */
+const WDM=[['amrap','AMRAP'],['emom','EMOM'],['tabata','Tabata'],['ft','For time']];
+const WDD={m:'amrap',a:12,en:10,ei:60,tw:20,tr:10,tn:8,ct:0,pre:10};
+const WDI={amrap:'Tantas rondas como puedas en el tiempo marcado. Cuenta cada ronda con un toque.',emom:'Cada intervalo empieza un trabajo nuevo. Lo que te sobra del intervalo es descanso.',tabata:'Trabajo y descanso en intervalos cortos. El clásico: 20 s de trabajo, 10 s de descanso, 8 rondas.',ft:'Cronómetro hacia arriba. Completa el trabajo lo antes posible; opcionalmente con tiempo límite.'};
+let WDS=null;
+const wdC=()=>{const c=Object.assign({},WDD,S.wdc&&typeof S.wdc=='object'?S.wdc:{});
+ return{m:WDM.some(x=>x[0]==c.m)?c.m:'amrap',a:f2n(c.a,1,180,12),en:f2n(c.en,1,120,10),ei:f2n(c.ei,10,600,60),tw:f2n(c.tw,5,600,20),tr:f2n(c.tr,0,600,10),tn:f2n(c.tn,1,99,8),ct:f2n(c.ct,0,180,0),pre:f2n(c.pre,0,30,10)}};
+const wdTot=c=>c.m=='amrap'?c.a*60:c.m=='emom'?c.en*c.ei:c.m=='tabata'?(c.tw+c.tr)*c.tn-c.tr:c.ct*60;
+const wdUI=()=>{const c=wdC(),m=c.m;
+ const num=(l,k,mn,mx)=>'<div><label>'+l+'</label><input type="number" inputmode="numeric" min="'+mn+'" max="'+mx+'" value="'+c[k]+'" data-c="wdv" data-k="'+k+'"></div>';
+ const sel=(l,k,o)=>'<div><label>'+l+'</label><select data-c="wdv" data-k="'+k+'">'+o.map(x=>'<option value="'+x[0]+'"'+(c[k]==x[0]?' selected':'')+'>'+x[1]+'</option>').join('')+'</select></div>';
+ let f='';
+ if(m=='amrap')f=num('Duración (min)','a',1,180);
+ else if(m=='emom')f='<div class="g2">'+num('Rondas','en',1,120)+sel('Intervalo','ei',[[30,'30 s'],[45,'45 s'],[60,'1 min'],[90,'1:30'],[120,'2 min'],[180,'3 min']])+'</div>';
+ else if(m=='tabata')f='<div class="g2" style="grid-template-columns:repeat(3,1fr)">'+num('Trabajo (s)','tw',5,600)+num('Descanso (s)','tr',0,600)+num('Rondas','tn',1,99)+'</div>';
+ else f=num('Tiempo límite (min, 0 = sin límite)','ct',0,180);
+ const t=wdTot(c);
+ return pgHead('Temporizador WOD')
+ +'<div class="seg" style="grid-template-columns:repeat(4,1fr)">'+WDM.map(x=>'<button class="'+(m==x[0]?'on':'')+'" data-a="wdm" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
+ +'<p class="mu" style="font-size:13px;margin:10px 2px 4px">'+WDI[m]+'</p>'+f
+ +'<div class="g2" style="margin-top:2px">'+sel('Cuenta atrás inicial','pre',[[0,'Sin cuenta atrás'],[5,'5 s'],[10,'10 s'],[15,'15 s'],[30,'30 s']])+'<div><label>Duración total</label><div class="cd" style="margin:0;padding:10px;text-align:center"><b id="f2tt">'+(t?f2h(t):'Sin límite')+'</b></div></div></div>'
+ +'<p class="mu" style="font-size:12px;margin:12px 2px 0">Suena un aviso en los últimos 3 segundos de cada tramo y al empezar el siguiente. La pantalla se mantiene encendida. Si bloqueas el móvil, el tiempo sigue corriendo pero el sonido solo se oye con la app abierta.</p>'
+ +'<div style="height:90px"></div><div class="sb"><button class="pr" data-a="wdgo" style="width:100%;padding:14px">Empezar</button></div>'};
+A.wod=()=>fullPage(wdUI());
+A.wdm=(i,b)=>{S.wdc=Object.assign(wdC(),{m:b.dataset.v});sv();sh(wdUI())};
+C.wdv=e=>{const k=e.dataset.k;if(!(k in WDD))return;const c=wdC();c[k]=+e.value;S.wdc=c;sv();e.value=wdC()[k];const t=document.getElementById('f2tt');if(t){const T=wdTot(wdC());t.textContent=T?f2h(T):'Sin límite'}};
+function wdState(){const c=WDS.c,e=((WDS.pa||Date.now())-WDS.t0-WDS.pt)/1000;
+ if(e<c.pre)return{ph:'pre',rem:Math.ceil(c.pre-e),id:'p',len:c.pre,el:e};
+ const t=e-c.pre;
+ if(c.m=='amrap'){const T=c.a*60;if(t>=T)return{fin:1,t:T};return{ph:'work',rem:Math.ceil(T-t),id:'a',len:T,el:t}}
+ if(c.m=='ft'){const T=c.ct*60;if(T&&t>=T)return{fin:1,t:T,cap:1};return{ph:'work',up:Math.floor(t),id:'f',len:T,el:t}}
+ if(c.m=='emom'){const T=c.en*c.ei;if(t>=T)return{fin:1,t:T,rd:c.en};const i=Math.floor(t/c.ei),w=t-i*c.ei;return{ph:'work',rem:Math.ceil(c.ei-w),id:'r'+i,len:c.ei,el:w,rd:i+1,tot:c.en,t}}
+ const cy=c.tw+c.tr,T=cy*c.tn-c.tr;if(t>=T)return{fin:1,t:T,rd:c.tn};
+ const i=Math.floor(t/cy),w=t-i*cy;
+ if(w<c.tw)return{ph:'work',rem:Math.ceil(c.tw-w),id:'w'+i,len:c.tw,el:w,rd:i+1,tot:c.tn,t};
+ return{ph:'rest',rem:Math.ceil(cy-w),id:'x'+i,len:c.tr,el:w-c.tw,rd:i+1,tot:c.tn,t}}
+const wdName=c=>c.m=='amrap'?'AMRAP '+c.a+' min':c.m=='emom'?'EMOM '+(c.ei==60?c.en+' min':c.en+' × '+c.ei+' s'):c.m=='tabata'?'Tabata '+c.tw+'/'+c.tr+' · '+c.tn+' rondas':'For time'+(c.ct?' · tope '+c.ct+' min':'');
+function wdSkel(){const o=document.getElementById('f2w');if(!o||!WDS)return;const c=WDS.c,m=c.m;
+ o.dataset.ph=WDS.done?'done':WDS.ph||'pre';o.classList.toggle('pz',!!WDS.pa);
+ let h='<div class="f2hd"><button data-a="wdx" aria-label="Cerrar" class="f2cl">'+ic('x',22)+'</button><b>'+X(wdName(c))+'</b><span></span></div>';
+ if(WDS.done){const f=WDS.fin;
+  h+='<div class="f2dn"><small>Terminado</small>';
+  if(m=='amrap')h+='<b class="f2rs" id="f2rs">'+WDS.r+(WDS.r==1?' ronda':' rondas')+'</b><div class="g2" style="width:100%;margin-top:6px"><div><label>Rondas</label><input id="f2r" type="number" inputmode="numeric" min="0" max="999" value="'+WDS.r+'"></div><div><label>Repeticiones extra</label><input id="f2e" type="number" inputmode="numeric" min="0" max="999" value="0"></div></div>';
+  else if(m=='ft')h+='<b class="f2rs">'+f2h(Math.round(f.t))+'</b><small>'+(f.cap?'Tiempo límite alcanzado':WDS.r?WDS.r+(WDS.r==1?' vuelta':' vueltas'):'')+'</small>';
+  else h+='<b class="f2rs">'+(f.rd||'')+(f.rd?(f.rd==1?' ronda':' rondas'):'')+'</b><small>'+(f.early?'Terminado antes de tiempo':'Completado')+' · '+f2h(Math.round(f.t))+'</small>';
+  h+='<input id="f2n" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" style="margin-top:12px"><div class="g2" style="width:100%;margin-top:12px"><button data-a="wdd">Descartar</button><button class="pr" data-a="wds">Guardar</button></div></div>';
+ }else{
+  h+='<div class="f2p" id="f2p"></div><div class="f2t" id="f2t">0:00</div><div class="f2s" id="f2s"></div><div class="f2b"><i id="f2bar"></i></div><div class="f2sp"></div>';
+  if(m=='amrap')h+='<button class="f2big" data-a="wdr" aria-label="Sumar una ronda"><small>Rondas</small><b id="f2rn">'+WDS.r+'</b><small>Toca para sumar una</small></button><div style="text-align:center"><button data-a="wdu" class="f2sm">Restar una ronda</button></div>';
+  else if(m=='ft')h+='<button class="f2big" data-a="wdr" aria-label="Marcar vuelta"><small>Vueltas</small><b id="f2rn">'+WDS.r+'</b><small id="f2lp">'+(WDS.laps.length?'Última: '+f2h(WDS.laps[WDS.laps.length-1]-(WDS.laps[WDS.laps.length-2]||0)):'Toca para marcar una vuelta')+'</small></button>';
+  h+='<div class="g2 f2ct"><button data-a="wdp" id="f2pb">'+(WDS.pa?'Seguir':'Pausa')+'</button><button data-a="wdf">Terminar</button></div>';
+ }
+ o.innerHTML=h}
+function wdTick(){if(!WDS||WDS.done)return;const s=wdState();if(s.fin){wdEnd(s,0);return}
+ const o=document.getElementById('f2w');if(!o)return;
+ if(o.dataset.ph!==s.ph)o.dataset.ph=s.ph;WDS.ph=s.ph;
+ const set=(id,v)=>{const e=document.getElementById(id);if(e&&e.textContent!==v)e.textContent=v};
+ set('f2t',s.up!=null?f2h(s.up):f2h(s.rem));
+ set('f2p',s.ph=='pre'?'Prepárate':s.ph=='rest'?'Descanso':WDS.c.m=='ft'?'Cronómetro':'Trabajo');
+ set('f2s',s.rd?'Ronda '+s.rd+' de '+s.tot:s.ph=='pre'?'Empieza en '+s.rem+' s':WDS.c.m=='ft'&&WDS.c.ct?'Límite '+f2h(WDS.c.ct*60):'');
+ const bar=document.getElementById('f2bar');if(bar)bar.style.width=(s.len?Math.min(100,Math.max(0,s.el/s.len*100)):0)+'%';
+ if(!WDS.pa){
+  if(WDS.sg!==s.id){if(WDS.sg!==''){zbp(1);ffVib([120])}WDS.sg=s.id}
+  if(s.rem!=null&&s.rem<=3&&s.rem>=1){const k=s.id+':'+s.rem;if(WDS.bk!==k){WDS.bk=k;zbp(0)}}
+ }}
+function wdStart(){const c=wdC();S.wdc=c;sv();
+ WDS={c,t0:Date.now(),pt:0,pa:0,r:0,laps:[],sg:'',bk:'',done:0,ph:'pre',fin:null};
+ sh();let o=document.getElementById('f2w');if(!o){o=document.createElement('div');o.id='f2w';document.body.appendChild(o)}
+ wdSkel();clearInterval(wdTick.iv);wdTick.iv=setInterval(wdTick,200);wdTick();zbp(1);ffVib([60]);ffWake()}
+function wdClose(){clearInterval(wdTick.iv);WDS=null;const o=document.getElementById('f2w');if(o)o.remove();ffWake()}
+function wdEnd(s,early){if(!WDS||WDS.done)return;clearInterval(wdTick.iv);
+ const c=WDS.c;let t=s.t;
+ if(early){const e=((WDS.pa||Date.now())-WDS.t0-WDS.pt)/1000-c.pre;t=Math.max(0,Math.min(e,wdTot(c)||e))}
+ WDS.done=1;WDS.fin={t,cap:!!s.cap,rd:s.rd||0,early:!!early};
+ if(early&&s.rd&&c.m!='amrap'&&c.m!='ft')WDS.fin.rd=Math.max(0,s.rd-1+(s.ph=='rest'?1:0));
+ if(!early){zbp(1);setTimeout(()=>zbp(1),500);ffVib([200,80,200])}
+ wdSkel();ffWake()}
+A.wdgo=()=>wdStart();
+A.wdr=()=>{if(!WDS||WDS.done||WDS.pa)return;const s=wdState();if(s.ph=='pre')return;WDS.r++;
+ if(WDS.c.m=='ft'){WDS.laps.push(Math.round(s.up!=null?s.up:0));const l=document.getElementById('f2lp');if(l)l.textContent='Última: '+f2h(WDS.laps[WDS.laps.length-1]-(WDS.laps[WDS.laps.length-2]||0))}
+ const n=document.getElementById('f2rn');if(n)n.textContent=WDS.r;ffVib(25)};
+A.wdu=()=>{if(!WDS||WDS.done||!WDS.r)return;WDS.r--;const n=document.getElementById('f2rn');if(n)n.textContent=WDS.r};
+A.wdp=()=>{if(!WDS||WDS.done)return;if(WDS.pa){WDS.pt+=Date.now()-WDS.pa;WDS.pa=0}else WDS.pa=Date.now();
+ const o=document.getElementById('f2w');if(o)o.classList.toggle('pz',!!WDS.pa);const b=document.getElementById('f2pb');if(b)b.textContent=WDS.pa?'Seguir':'Pausa';ffWake()};
+A.wdf=()=>{if(!WDS||WDS.done)return;const s=wdState();if(s.fin){wdEnd(s,0);return}
+ if(s.ph=='pre'){wdClose();return}
+ if(WDS.c.m=='ft'){wdEnd({t:s.el},0);return}
+ zcf('¿Terminar antes de tiempo?','Podrás guardar lo que llevas hecho.','wdf2','Terminar')};
+A.wdf2=()=>{if(!WDS||WDS.done)return;const s=wdState();if(s.fin){wdEnd(s,0);return}wdEnd(s,1)};
+A.wdx=()=>{if(!WDS)return;if(WDS.done||WDS.ph=='pre'&&!WDS.r)wdClose();else zcf('¿Salir del temporizador?','Se perderá lo que llevas.','wdq','Salir')};
+A.wdq=()=>wdClose();
+A.wdd=()=>wdClose();
+A.wds=()=>{if(!WDS||!WDS.done)return;const c=WDS.c,f=WDS.fin,nt=((document.getElementById('f2n')||{}).value||'').trim().slice(0,80),mins=Math.max(1,Math.round(f.t/60));
+ let x,w={md:c.m};
+ if(c.m=='amrap'){const r=f2n((document.getElementById('f2r')||{}).value,0,999,WDS.r),ex=f2n((document.getElementById('f2e')||{}).value,0,999,0);x=r+(r==1?' ronda':' rondas')+(ex?' + '+ex+' reps':'');w.r=r;w.e=ex}
+ else if(c.m=='ft'){x=f2h(Math.round(f.t))+(f.cap?' (tope)':'')+(WDS.r?' · '+WDS.r+(WDS.r==1?' vuelta':' vueltas'):'');w.t=Math.round(f.t);w.r=WDS.r}
+ else{const rd=f.rd||0;x=rd+(rd==1?' ronda':' rondas')+(f.early?' (antes de tiempo)':'')+' · '+f2h(Math.round(f.t));w.r=rd;w.t=Math.round(f.t)}
+ const l={d:dk(new Date),n:'WOD · '+wdName(c),v:0,s:0,m:mins,q:0,k:'w',x,w};if(nt)l.nt=nt;
+ S.logs.push(l);sv();wdClose();zt('WOD guardado');f2Ach();R()};
+
+/* ---- resumen del entreno ---- */
+let FFS=null;
+const f2zen=A.zend;
+A.zend=()=>{let sn=null;
+ try{if(W){const d=S.plan[S.sel];
+  sn={n:d.n,dt:dk(new Date),ex:d.ex.map((e,i)=>{const a=(W.x[i]||[]).filter(s=>s.ok),h=(S.hist||{})[e.n]||[];let pw=0,pe=0;
+   h.forEach(x=>(x&&Array.isArray(x.s)?x.s:[]).forEach(q=>{const w=+q[1]||0,r=+q[0]||0;if(w>0){pw=Math.max(pw,w);pe=Math.max(pe,e1(w,r))}}));
+   return{n:e.n,u:!!uX(e),sets:a.map(s=>[+s.r||0,+s.w||0]),pw,pe}}).filter(e=>e.sets.length),pv:null,old:[]};
+  for(let i=S.logs.length-1;i>=0;i--){const l=S.logs[i];if(l&&!l.k&&l.n==d.n){if(!sn.pv)sn.pv=l;sn.old.push(l)}}}}catch(e){sn=null}
+ FFS=sn;const n0=S.logs.length;f2zen();
+ if(S.logs.length>n0){try{S.pc=(S.pc||0)+(Array.isArray(ZPR)?ZPR.length:0)}catch(e){}}};
+const f2dl=(a,b)=>{if(!(b>0))return null;return Math.round((a-b)/b*100)};
+const f2sg=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
+function f2SumData(){const l=S.logs[S.logs.length-1];if(!l)return null;const sn=FFS&&FFS.n==l.n?FFS:null;
+ const o={l,n:l.n,d:l.d,pr:[],ex:[],dv:null,ds:null,dm:null,volRec:false,st:0};
+ if(sn){
+  sn.ex.forEach(e=>{let b=null;e.sets.forEach(s=>{if(s[1]>0&&(!b||e1(s[1],s[0])>e1(b[1],b[0])))b=s});
+   const isPr=(ZPR||[]).indexOf(e.n)>=0;o.ex.push({n:e.n,k:e.sets.length,b,u:e.u,pr:isPr});if(isPr&&b)o.pr.push({n:e.n,w:b[1],r:b[0]})});
+  if(sn.pv){o.dv=f2dl(l.v,sn.pv.v);o.ds=l.s-sn.pv.s;o.dm=(+l.m||0)-(+sn.pv.m||0)}
+  if(sn.old.length>=2&&l.v>0&&sn.old.every(x=>x.v<l.v))o.volRec=true;
+ }
+ try{o.st=wkStats().st}catch(e){}
+ return o}
+const f2dc=(txt,cl)=>'<span class="f2dc '+(cl||'')+'">'+txt+'</span>';
+function f2Sum(){
+ try{const o=f2SumData();if(!o)return;FFS=FFS||{};FFS.sm=o;const l=o.l;
+  let h='<h3 style="margin:0">Entreno guardado</h3><small class="mu">'+X(l.n)+' · '+f2d(l.d,{weekday:'long',day:'numeric',month:'long'})+'</small>'
+  +'<div class="g2 f2tl"><div class="cd"><b>'+l.s+'</b><small>'+(l.s==1?'Serie':'Series')+'</small></div><div class="cd"><b>'+ffVT(l.v,1)+'</b><small>Volumen</small></div><div class="cd"><b>'+l.m+' min</b><small>Tiempo</small></div><div class="cd"><b>'+(l.q>0?l.q:'—')+'</b><small>Esfuerzo (RPE)</small></div></div>';
+  const ch=[];
+  if(o.dv!=null)ch.push(f2dc(f2sg(o.dv)+' % volumen',o.dv>0?'up':o.dv<0?'dn':''));
+  if(o.ds)ch.push(f2dc(f2sg(o.ds)+(Math.abs(o.ds)==1?' serie':' series')));
+  if(o.dm)ch.push(f2dc(f2sg(o.dm)+' min'));
+  if(o.volRec)ch.push(f2dc('Más volumen que nunca en este entreno','up'));
+  if(ch.length)h+='<div class="f2cmp"><small class="mu">Frente al entreno anterior</small><div>'+ch.join('')+'</div></div>';
+  if(o.pr.length)h+='<div class="cd f2prc"><b>'+(o.pr.length==1?'Récord personal':o.pr.length+' récords personales')+'</b>'+o.pr.map(p=>'<div class="it" style="grid-template-columns:1fr auto"><span>'+X(p.n)+'</span><b>'+ffDW(p.w)+' '+ffUL()+' × '+p.r+'</b></div>').join('')+'</div>';
+  if(o.ex.length)h+='<details class="cd"'+(o.pr.length?'':' open')+'><summary>Resumen por ejercicio</summary>'+o.ex.slice(0,14).map(e=>'<div class="it" style="grid-template-columns:1fr auto"><span>'+X(e.n)+'<br><small>'+e.k+(e.k==1?' serie':' series')+'</small></span><small>'+(e.b&&!e.u?ffDW(e.b[1])+' '+ffUL()+' × '+e.b[0]:'')+'</small></div>').join('')+'</details>';
+  if(o.st>=2)h+='<p class="mu" style="font-size:13px;margin:6px 2px">Llevas '+o.st+' semanas seguidas cumpliendo tu objetivo.</p>';
+  h+='<div class="g2" style="margin-top:12px"><button data-a="f2sh">'+ic('shr',18)+' Compartir</button><button class="pr" data-a="cl">Listo</button></div>';
+  sh(h);
+  f2Img(o).then(b=>{if(FFS)FFS.blob=b}).catch(()=>{});
+  setTimeout(f2Ach,400);
+ }catch(e){const l=S.logs[S.logs.length-1];if(l)dlg('Entreno guardado',l.s+' series · '+l.m+' min',[['Listo','zno','pr']])}}
+function f2Img(o){return new Promise((res,rej)=>{try{
+ const W_=1080,H_=1350,c=document.createElement('canvas');c.width=W_;c.height=H_;const g=c.getContext('2d');
+ const st=getComputedStyle(document.documentElement),a1=st.getPropertyValue('--a1').trim()||'#b183ff',a2=st.getPropertyValue('--a2').trim()||'#7a45ee';
+ const FNT='system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+ let bg=g.createLinearGradient(0,0,0,H_);bg.addColorStop(0,'#0e0d14');bg.addColorStop(1,'#07070a');g.fillStyle=bg;g.fillRect(0,0,W_,H_);
+ let gl=g.createRadialGradient(180,60,0,180,60,900);gl.addColorStop(0,a2+'aa');gl.addColorStop(1,'#0000');g.fillStyle=gl;g.fillRect(0,0,W_,H_);
+ const rr=(x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()};
+ const tx=(t,x,y,sz,wt,col,al)=>{g.font=wt+' '+sz+'px '+FNT;g.fillStyle=col;g.textAlign=al||'left';g.textBaseline='alphabetic';g.fillText(t,x,y)};
+ const fit=(t,max,sz,wt)=>{g.font=wt+' '+sz+'px '+FNT;if(g.measureText(t).width<=max)return t;while(t.length>1&&g.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…'};
+ const P=84;
+ let x=P;'STRATAFIT'.split('').forEach(ch=>{tx(ch,x,128,34,800,a1);g.font='800 34px '+FNT;x+=g.measureText(ch).width+9});
+ const l=o.l;
+ const words=String(l.n).split(' ');let ln=[''],mw=W_-2*P;g.font='800 92px '+FNT;
+ words.forEach(w=>{const t=(ln[ln.length-1]+' '+w).trim();if(g.measureText(t).width<=mw||!ln[ln.length-1])ln[ln.length-1]=t;else ln.push(w)});
+ ln=ln.slice(0,2);let y=250;ln.forEach(t=>{tx(fit(t,mw,92,800),P,y,92,800,'#fff');y+=104});
+ tx(f2d(l.d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}),P,y-10,38,500,'#a9a9b8');
+ const ty=ln.length>1?500:430,TW=(W_-2*P-36)/2,TH=230;
+ const tiles=[[String(l.s),l.s==1?'serie':'series'],[ffVT(l.v,1),'volumen'],[l.m+' min','tiempo'],[l.q>0?String(l.q):'—','esfuerzo (RPE)']];
+ tiles.forEach((t,i)=>{const tx0=P+(i%2)*(TW+36),ty0=ty+Math.floor(i/2)*(TH+36);rr(tx0,ty0,TW,TH,36);g.fillStyle='#ffffff12';g.fill();g.strokeStyle='#ffffff22';g.lineWidth=2;g.stroke();
+  tx(t[0],tx0+40,ty0+128,92,800,'#fff');tx(t[1],tx0+40,ty0+190,34,500,'#a9a9b8')});
+ let yy=ty+2*TH+36+90;
+ const lines=[];
+ if(o.pr.length){lines.push(['Récords personales',a1]);o.pr.slice(0,3).forEach(p=>lines.push([fit(p.n,560,40,600)+'|'+ffDW(p.w)+' '+ffUL()+' × '+p.r,'#fff']))}
+ else if(o.ex.length){lines.push(['Mejores series',a1]);o.ex.filter(e=>e.b&&!e.u).slice(0,3).forEach(e=>lines.push([fit(e.n,560,40,600)+'|'+ffDW(e.b[1])+' '+ffUL()+' × '+e.b[0],'#fff']))}
+ lines.forEach((r,i)=>{if(i==0){tx(r[0],P,yy,36,800,r[1]);yy+=62}else{const p=r[0].split('|');tx(p[0],P,yy,40,600,'#fff');tx(p[1],W_-P,yy,40,800,'#fff','right');yy+=62}});
+ const cm=[];if(o.dv!=null)cm.push(f2sg(o.dv)+' % de volumen');if(o.ds)cm.push(f2sg(o.ds)+(Math.abs(o.ds)==1?' serie':' series'));
+ if(cm.length)tx(cm.join('  ·  ')+' vs. el entreno anterior',P,Math.max(yy+30,1215),34,600,'#7ee0b5');
+ tx('Registrado con StrataFit',W_/2,1295,28,500,'#7c7c8c','center');
+ c.toBlob(b=>b?res(b):rej('blob'),'image/png');
+}catch(e){rej(e)}})}
+A.f2sh=async()=>{try{
+ let b=FFS&&FFS.blob;if(!b){const o=FFS&&FFS.sm||f2SumData();b=await f2Img(o);if(FFS)FFS.blob=b}
+ const f=new File([b],'stratafit-entreno.png',{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Mi entreno'});return}catch(e){if(e&&e.name=='AbortError')return}}
+ const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='stratafit-entreno.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);zt('Imagen guardada')
+}catch(e){zt('No se pudo crear la imagen')}};
+
+/* ---- aviso de estancamiento ---- */
+function f2Stag(){const out=[];if(typeof dlOn=='function'&&dlOn(S.wk))return out;
+ const h=S.hist||{},inPlan=new Set((S.plan||[]).flatMap(d=>(d.ex||[]).map(e=>e.n))),now=Date.now(),hide=S.stz||{};
+ Object.keys(h).forEach(n=>{if(!inPlan.has(n))return;if(hide[n]&&now-hide[n]<14*864e5)return;
+  const L=Array.isArray(h[n])?h[n]:[];
+  const ses=L.slice(0,12).map(x=>{let m=0,b=null;(x&&Array.isArray(x.s)?x.s:[]).forEach(q=>{const w=+q[1]||0,r=+q[0]||0;if(w>0&&r>0){const v=e1(w,r);if(v>m){m=v;b=[r,w]}}});return{d:x&&x.d,e:m,b}}).filter(s=>s.e>0);
+  if(ses.length<4)return;
+  const mx=Math.max(...ses.map(s=>s.e));let bi=0;while(bi<ses.length&&ses[bi].e<mx*.995)bi++;
+  if(bi<3)return;
+  const d0=new Date(ses[0].d+'T12:00:00'),d1=new Date(ses[bi].d+'T12:00:00');
+  if(isNaN(d0)||isNaN(d1))return;
+  if(now-d0>35*864e5)return;if((d0-d1)/864e5<14)return;
+  out.push({n,k:bi,mx,d:ses[bi].d,b:ses[bi].b,ses:ses.slice(0,4)})});
+ return out.sort((a,b)=>b.k-a.k).slice(0,3)}
+function f2StzCard(){try{const L=f2Stag();if(!L.length)return '';
+ return '<div class="cd"><div class="row"><b>Posible estancamiento</b><small>'+L.length+(L.length==1?' ejercicio':' ejercicios')+'</small></div><div class="mu" style="font-size:13px;margin:4px 0 6px">No superas tu mejor marca desde hace varias sesiones.</div>'
+ +L.map((x,i)=>'<div class="it exr" data-a="f2sz" data-i="'+i+'" style="cursor:pointer"><span><b>'+X(x.n)+'</b><br><small>Sin récord en '+x.k+' sesiones</small></span><span class="mu" style="align-self:center">›</span></div>').join('')+'</div>'}catch(e){return ''}}
+A.f2sz=i=>{const x=f2Stag()[i];if(!x)return;
+ sh('<h3>'+X(x.n)+'</h3><p class="mu" style="margin:0 0 10px">Tu mejor marca estimada fue el '+f2d(x.d,{day:'numeric',month:'long'})+(x.b?': '+ffDW(x.b[1])+' '+ffUL()+' × '+x.b[0]:'')+' (1RM estimado '+R1(ffDW(x.mx))+' '+ffUL()+'). Desde entonces llevas '+x.k+' sesiones sin superarla.</p>'
+ +'<div class="cd" style="margin:0 0 10px"><small class="mu">Últimas sesiones</small>'+x.ses.map(s=>'<div class="it" style="grid-template-columns:1fr auto"><span>'+f2d(s.d,{day:'numeric',month:'short'})+'</span><b>'+(s.b?ffDW(s.b[1])+' '+ffUL()+' × '+s.b[0]:'')+'</b></div>').join('')+'</div>'
+ +'<b>Qué probar</b><div class="mu" style="font-size:14px;display:grid;gap:7px;margin:6px 0 12px"><div>· Cambia el rango de repeticiones durante 3 o 4 semanas, por ejemplo de 8-12 a 4-6 con más peso.</div><div>· Añade una serie a este ejercicio o descansa un poco más entre series.</div><div>· Revisa el sueño y la comida: dormir poco o comer en déficit frena la fuerza.</div><div>· Prueba una variante del ejercicio (opción Swap) durante un bloque.</div><div>· Una semana de descarga (mitad de series, sin subir peso) suele desbloquear el progreso.</div></div>'
+ +'<div class="g2"><button data-a="f2sx" data-i="'+i+'">Ocultar 2 semanas</button><button class="pr" data-a="dlon2">Activar descarga</button></div>')};
+A.f2sx=i=>{const x=f2Stag()[i];if(x){S.stz=S.stz||{};S.stz[x.n]=Date.now();sv()}sh();R()};
+A.dlon2=()=>{A.dlon();sh();zt('Semana de descarga activada')};
+
+/* ---- cardio ---- */
+const CDT=[['run','Carrera'],['walk','Caminata'],['bike','Bici'],['row','Remo'],['swim','Natación'],['ell','Elíptica'],['oth','Otro']];
+let CDS={t:'run'};
+const cdLbl=t=>(CDT.find(x=>x[0]==t)||CDT[6])[1];
+function cdPace(t,km,sec){if(!(km>0&&sec>0))return '';
+ if(t=='bike'||t=='ell'||t=='oth')return R1(km/(sec/3600))+' km/h';
+ if(t=='row')return f2h(sec/(km*2))+' /500 m';
+ if(t=='swim')return f2h(sec/(km*10))+' /100 m';
+ return f2h(sec/km)+' /km'}
+const cdLb=t=>t=='bike'||t=='ell'||t=='oth'?'Velocidad media':'Ritmo';
+function cdUI(){const t=CDS.t,td=dk(new Date);
+ return '<h3>Registrar cardio</h3><div>'+CDT.map(x=>'<button class="chip '+(t==x[0]?'on':'')+'" data-a="cdt" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
+ +'<label>Fecha</label><input id="f2cdd" type="date" value="'+td+'" max="'+td+'">'
+ +'<div class="g2"><div><label>Distancia (km, opcional)</label><input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cdp"></div><div><label>Tiempo (min y s)</label><div class="g2" style="gap:6px"><input id="f2cdm" type="number" inputmode="numeric" min="0" max="999" placeholder="min" data-u="cdp"><input id="f2cds" type="number" inputmode="numeric" min="0" max="59" placeholder="s" data-u="cdp"></div></div></div>'
+ +'<div class="cd" style="margin:12px 0 0;text-align:center"><small id="f2cdl" class="mu">'+cdLb(t)+'</small><br><b id="f2cdr" style="font-size:22px">—</b></div>'
+ +'<button class="pr" data-a="cdsv" style="width:100%;margin-top:12px">Guardar</button>'}
+function cdRead(){const g=id=>document.getElementById(id),km=f2f(g('f2cdk')&&g('f2cdk').value,0,1000,0),mn=f2n(g('f2cdm')&&g('f2cdm').value,0,999,0),sc=f2n(g('f2cds')&&g('f2cds').value,0,59,0);return{km:Math.round(km*100)/100,sec:mn*60+sc,d:(g('f2cdd')||{}).value||dk(new Date)}}
+U.cdp=()=>{const r=cdRead(),e=document.getElementById('f2cdr');if(e)e.textContent=cdPace(CDS.t,r.km,r.sec)||'—'};
+A.cardio=()=>{CDS={t:CDS.t||'run'};sh(cdUI())};
+A.cdt=(i,b)=>{const r=cdRead();CDS.t=b.dataset.v;sh(cdUI());const g=id=>document.getElementById(id);if(r.km)g('f2cdk').value=r.km;if(r.sec){g('f2cdm').value=Math.floor(r.sec/60);g('f2cds').value=r.sec%60}if(r.d)g('f2cdd').value=r.d;U.cdp()};
+A.cdsv=()=>{const r=cdRead();if(r.sec<60){zt('Indica al menos 1 minuto');return}
+ const d=/^\d{4}-\d{2}-\d{2}$/.test(r.d)&&r.d<=dk(new Date)?r.d:dk(new Date),pc=cdPace(CDS.t,r.km,r.sec);
+ const x=(r.km?R1(r.km)+' km · ':'')+f2h(r.sec)+(pc?' · '+pc:'');
+ S.logs.push({d,n:'Cardio · '+cdLbl(CDS.t),v:0,s:0,m:Math.max(1,Math.round(r.sec/60)),q:0,k:'c',x,c:{t:CDS.t,km:r.km,sec:r.sec}});
+ S.logs.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+ sv();sh();zt('Cardio guardado');f2Ach();R()};
+function cdAll(){return (S.logs||[]).filter(l=>l&&l.k=='c'&&l.c&&typeof l.c=='object'&&typeof l.d=='string')}
+function f2CdCard(){try{const L=cdAll();if(!L.length)return '';
+ const m0=wkMon(new Date()),wk=k=>dk(new Date(m0.getFullYear(),m0.getMonth(),m0.getDate()-7*k)),W4=[3,2,1,0].map(k=>{const key=wk(k),a=L.filter(l=>dk(wkMon(new Date(l.d+'T12:00:00')))==key);return{k,n:a.length,km:a.reduce((s,l)=>s+(+l.c.km||0),0),sec:a.reduce((s,l)=>s+(+l.c.sec||0),0)}});
+ const cur=W4[3],mx=Math.max(1,...W4.map(w=>w.km||w.sec/600)),tot=L.reduce((s,l)=>s+(+l.c.km||0),0);
+ return '<div class="cd"><div class="row"><b>Cardio</b><small>'+R1(tot)+' km en total</small></div><div class="f2cs"><div><b>'+R1(cur.km)+'</b><small>km esta semana</small></div><div><b>'+f2h(cur.sec)+'</b><small>tiempo</small></div><div><b>'+cur.n+'</b><small>'+(cur.n==1?'sesión':'sesiones')+'</small></div></div>'
+ +'<div class="f2bars">'+W4.map(w=>'<div><i style="height:'+Math.max(4,Math.round((w.km||w.sec/600)/mx*56))+'px"></i><small>'+(w.k?'−'+w.k+' sem':'Ahora')+'</small></div>').join('')+'</div></div>'}catch(e){return ''}}
+
+/* ---- medidas corporales y fotos de progreso ---- */
+const MSK=[['cu','Cuello'],['ho','Hombros'],['pe','Pecho'],['br','Brazo'],['ci','Cintura'],['ca','Cadera'],['mu','Muslo'],['ge','Gemelo']];
+const PHA={f:'Frente',s:'Lado',b:'Espalda'};
+let MPS={tab:0,ang:'f',k:'ci',cmp:0,sel:[]};
+let PHC=[],PHN=0,phP=null;
+const phOpen=()=>new Promise((res,rej)=>{try{if(!window.indexedDB)return rej('no');const r=indexedDB.open('ffph',1);
+ r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains('m'))db.createObjectStore('m',{keyPath:'id'});if(!db.objectStoreNames.contains('f'))db.createObjectStore('f',{keyPath:'id'})};
+ r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error||'err');r.onblocked=()=>rej('blk')}catch(e){rej(e)}});
+const phDb=()=>phP||(phP=phOpen().catch(e=>{phP=null;throw e}));
+const phDo=(st,mode,fn)=>phDb().then(db=>new Promise((res,rej)=>{let tx;try{tx=db.transaction(st,mode)}catch(e){rej(e);return}let rq;
+ tx.oncomplete=()=>res(rq&&'result' in rq?rq.result:undefined);tx.onerror=()=>rej(tx.error||'tx');tx.onabort=()=>rej(tx.error||'abort');
+ try{rq=fn(tx)}catch(e){try{tx.abort()}catch(_){}rej(e)}}));
+const msShown=()=>!!document.querySelector('#sh.full #f2ms');
+const phLoad=()=>phDo('m','readonly',tx=>tx.objectStore('m').getAll()).then(a=>{PHC=(a||[]).filter(x=>x&&x.id&&typeof x.t=='string').sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:(a.id<b.id?1:-1));PHN=PHC.length;if(msShown()&&MPS.tab==1&&!MPS.view)fullPage(msUI())}).catch(()=>{});
+phLoad();
+async function phPrep(f){let bm;
+ try{bm=await createImageBitmap(f,{imageOrientation:'from-image'})}catch(e){bm=await new Promise((res,rej)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej('img')};im.src=u})}
+ const W0=bm.width||bm.naturalWidth,H0=bm.height||bm.naturalHeight;if(!W0||!H0)throw 'dim';
+ const enc=(mx,q)=>{const k=Math.min(1,mx/Math.max(W0,H0)),w=Math.max(1,Math.round(W0*k)),h=Math.max(1,Math.round(H0*k)),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,w,h);g.drawImage(bm,0,0,w,h);return c.toDataURL('image/jpeg',q)};
+ const r={u:enc(960,.72),t:enc(300,.65)};if(bm.close)bm.close();return r}
+C.f2ph=async e=>{const f=e.files&&e.files[0];e.value='';if(!f)return;
+ if(PHN>=60){zt('Límite de 60 fotos: borra alguna antes');return}
+ zt('Guardando foto…');
+ try{const r=await phPrep(f),id=f2id(),d=dk(new Date),a=MPS.ang;
+  await phDo(['m','f'],'readwrite',tx=>{tx.objectStore('m').put({id,d,a,t:r.t});tx.objectStore('f').put({id,u:r.u})});
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+  await phLoad();f2Ach();if(msShown())fullPage(msUI());zt('Foto guardada')}
+ catch(x){zt('No se pudo guardar la foto en este dispositivo')}};
+const phFull=id=>phDo('f','readonly',tx=>tx.objectStore('f').get(id)).then(r=>r&&r.u);
+const phAllFull=async()=>{const[m,f]=await Promise.all([phDo('m','readonly',tx=>tx.objectStore('m').getAll()),phDo('f','readonly',tx=>tx.objectStore('f').getAll())]);const fm={};(f||[]).forEach(x=>{if(x&&x.id)fm[x.id]=x.u});return (m||[]).filter(x=>x&&x.id&&fm[x.id]).map(x=>({id:x.id,d:x.d,a:x.a,t:x.t,u:fm[x.id]}))};
+const phOk=p=>p&&typeof p.id=='string'&&p.id.length<=40&&/^[\w-]+$/.test(p.id)&&/^\d{4}-\d{2}-\d{2}$/.test(p.d||'')&&PHA[p.a]&&typeof p.t=='string'&&typeof p.u=='string'&&p.t.length<4e5&&p.u.length<2.5e6&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p.t)&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p.u);
+const phMerge=async arr=>{const L=(Array.isArray(arr)?arr:[]).filter(phOk).slice(0,80);if(!L.length)return 0;
+ await phDo(['m','f'],'readwrite',tx=>{L.forEach(p=>{tx.objectStore('m').put({id:p.id,d:p.d,a:p.a,t:p.t});tx.objectStore('f').put({id:p.id,u:p.u})})});await phLoad();return L.length};
+function msList(){return (Array.isArray(S.ms)?S.ms:[]).filter(m=>m&&typeof m.d=='string'&&m.v&&typeof m.v=='object')}
+function msDelta(k){const L=msList().filter(m=>+m.v[k]>0);if(!L.length)return null;const a=L[L.length-1],b=L[L.length-2];return{v:+a.v[k],d:a.d,p:b?+b.v[k]:null,pd:b?b.d:null}}
+function msChart(k){const nm=(MSK.find(x=>x[0]==k)||[0,''])[1],pts=msList().filter(m=>+m.v[k]>0).map(m=>({d:m.d,y:+m.v[k]}));
+ if(pts.length<2)return '<p class="mu" style="font-size:13px;margin:8px 2px">Con dos mediciones de «'+nm+'» verás aquí su evolución.</p>';
+ const w=300,h=120,px=14,py=18,ys=pts.map(p=>p.y),lo=Math.min(...ys),hi=Math.max(...ys),sp=Math.max(1,hi-lo),
+ xx=i=>px+i*(w-2*px)/(pts.length-1),yy=y=>h-py-(y-lo)/sp*(h-2*py),
+ d=pts.map((p,i)=>(i?'L':'M')+xx(i).toFixed(1)+' '+yy(p.y).toFixed(1)).join(' ');
+ return '<svg viewBox="0 0 '+w+' '+h+'" class="f2ch" role="img" aria-label="Evolución de '+nm+'"><path d="'+d+'" fill="none" stroke="var(--a1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+ +pts.map((p,i)=>'<circle cx="'+xx(i).toFixed(1)+'" cy="'+yy(p.y).toFixed(1)+'" r="'+(i==pts.length-1?4.5:3)+'" fill="'+(i==pts.length-1?'var(--a1)':'var(--bg)')+'" stroke="var(--a1)" stroke-width="2"/>').join('')
+ +'<text x="'+px+'" y="'+(h-2)+'" font-size="10" fill="var(--mu)">'+f2d(pts[0].d,{day:'numeric',month:'short'})+'</text><text x="'+(w-px)+'" y="'+(h-2)+'" font-size="10" text-anchor="end" fill="var(--mu)">'+f2d(pts[pts.length-1].d,{day:'numeric',month:'short'})+'</text>'
+ +'<text x="'+(w-px)+'" y="11" font-size="11" font-weight="700" text-anchor="end" fill="var(--tx)">'+R1(pts[pts.length-1].y)+' cm</text></svg>'}
+function msTab(){const L=msList(),has=MSK.filter(x=>msDelta(x[0]));
+ let h='<button class="pr" data-a="msnew" style="width:100%;margin-top:12px">Nueva medición</button>';
+ if(!L.length)return h+'<p class="mu" style="margin:14px 2px;font-size:14px">Mide con una cinta métrica, siempre en el mismo punto y a la misma hora. Cada pocas semanas basta para ver cómo cambia tu cuerpo, aunque el peso no se mueva.</p>';
+ if(!has.some(x=>x[0]==MPS.k))MPS.k=has[0][0];
+ h+='<div style="margin-top:10px">'+has.map(x=>'<button class="chip '+(MPS.k==x[0]?'on':'')+'" data-a="msk" data-v="'+x[0]+'">'+x[1]+'</button>').join('')+'</div><div class="cd" style="margin-top:8px">'+msChart(MPS.k)+'</div>';
+ h+='<div class="cd"><div class="row"><b>Última medición</b><small>'+f2d(L[L.length-1].d,{day:'numeric',month:'long'})+'</small></div>'+has.map(x=>{const t=msDelta(x[0]),df=t.p!=null?Math.round((t.v-t.p)*10)/10:null;
+  return '<div class="it" style="grid-template-columns:1fr auto auto;gap:12px"><span>'+x[1]+'</span><b>'+R1(t.v)+' cm</b><small style="min-width:52px;text-align:right">'+(df==null?'':df==0?'igual':(df>0?'+':'−')+Math.abs(df))+'</small></div>'}).join('')+'</div>';
+ h+='<details class="cd"><summary>Historial ('+L.length+')</summary>'+L.slice().reverse().map((m,i)=>'<div class="it exr" data-a="msdel" data-i="'+(L.length-1-i)+'" style="cursor:pointer"><span><b>'+f2d(m.d,{day:'numeric',month:'long',year:'numeric'})+'</b><br><small>'+MSK.filter(x=>+m.v[x[0]]>0).map(x=>x[1]+' '+R1(+m.v[x[0]])).join(' · ')+'</small></span></div>').join('')+'<p class="mu" style="font-size:12px;margin:8px 0 0">Toca una medición para borrarla.</p></details>';
+ return h}
+function phTab(){
+ let h='<div class="seg" style="margin-top:12px">'+Object.keys(PHA).map(k=>'<button class="'+(MPS.ang==k?'on':'')+'" data-a="pha" data-v="'+k+'">'+PHA[k]+'</button>').join('')+'</div>'
+ +'<div class="g2" style="margin-top:10px"><label class="btnl pr" style="margin:0;font-weight:700">'+ic('camera',18)+'&nbsp;Añadir foto<input type="file" accept="image/*" hidden data-c="f2ph"></label><button data-a="phcmp" class="'+(MPS.cmp?'on':'')+'" style="'+(MPS.cmp?'background:var(--a2);color:var(--ft);border-color:var(--a2)':'')+'">'+(MPS.cmp?'Cancelar':'Comparar')+'</button></div>'
+ +'<p class="mu" style="font-size:12px;margin:8px 2px">Las fotos se guardan solo en este dispositivo. Entran en la copia de seguridad en archivo, no en la copia como texto.</p>';
+ if(MPS.cmp)h+='<div class="cd" style="margin:8px 0;padding:10px;text-align:center">'+(MPS.sel.length==0?'Elige la primera foto':'Elige la segunda foto')+'</div>';
+ if(!PHC.length)return h+'<p class="mu" style="margin:14px 2px;font-size:14px">Aún no hay fotos. Haz una cada pocas semanas con la misma luz, distancia y pose.</p>';
+ h+='<div class="f2gr">'+PHC.map((p,i)=>'<button class="f2th'+(MPS.sel.indexOf(p.id)>=0?' sl':'')+'" data-a="phv" data-i="'+i+'"><img src="'+p.t+'" alt="'+PHA[p.a]+' '+f2d(p.d)+'" loading="lazy"><span>'+f2d(p.d)+' · '+PHA[p.a]+'</span></button>').join('')+'</div>';
+ return h}
+function msUI(){MPS.view=0;
+ return '<div id="f2ms">'+pgHead('Medidas y fotos')+'<div class="seg" style="grid-template-columns:1fr 1fr"><button class="'+(MPS.tab==0?'on':'')+'" data-a="mstab" data-v="0">Medidas</button><button class="'+(MPS.tab==1?'on':'')+'" data-a="mstab" data-v="1">Fotos</button></div>'+(MPS.tab==0?msTab():phTab())+'<div style="height:30px"></div></div>'}
+A.f2ms=()=>{MPS.cmp=0;MPS.sel=[];fullPage(msUI());phLoad()};
+A.mstab=(i,b)=>{MPS.tab=+b.dataset.v;MPS.cmp=0;MPS.sel=[];sh(msUI())};
+A.msk=(i,b)=>{MPS.k=b.dataset.v;sh(msUI())};
+A.pha=(i,b)=>{MPS.ang=b.dataset.v;sh(msUI())};
+A.phcmp=()=>{MPS.cmp=MPS.cmp?0:1;MPS.sel=[];sh(msUI())};
+A.msb=()=>{sh(msUI())};
+A.msnew=()=>{const td=dk(new Date),last={};MSK.forEach(x=>{const t=msDelta(x[0]);if(t)last[x[0]]=t.v});
+ sh('<div id="f2ms">'+pgHead('Nueva medición','msb')+'<label>Fecha</label><input id="f2md" type="date" value="'+td+'" max="'+td+'"><p class="mu" style="font-size:13px;margin:10px 2px 0">Rellena solo lo que midas. Valores en centímetros.</p><div class="g2">'
+ +MSK.map(x=>'<div><label>'+x[1]+' (cm)</label><input id="f2m_'+x[0]+'" type="number" inputmode="decimal" step="0.1" min="10" max="300" placeholder="'+(last[x[0]]?R1(last[x[0]]):'')+'"></div>').join('')
+ +'</div><div style="height:90px"></div><div class="sb"><button class="pr" data-a="mssv" style="width:100%;padding:14px">Guardar medición</button></div></div>')};
+A.mssv=()=>{const g=id=>document.getElementById(id),d0=(g('f2md')||{}).value,d=/^\d{4}-\d{2}-\d{2}$/.test(d0||'')&&d0<=dk(new Date)?d0:dk(new Date),v={};
+ MSK.forEach(x=>{const e=g('f2m_'+x[0]),n=e?parseFloat(String(e.value).replace(',','.')):NaN;if(n>=10&&n<=300)v[x[0]]=Math.round(n*10)/10});
+ if(!Object.keys(v).length){zt('Indica al menos una medida');return}
+ const L=msList().filter(m=>m.d!=d),old=msList().find(m=>m.d==d);
+ S.ms=L.concat({d,v:Object.assign({},old?old.v:{},v)}).sort((a,b)=>a.d<b.d?-1:1);
+ sv();f2Ach();zt('Medición guardada');sh(msUI())};
+A.msdel=i=>{const m=msList()[i];if(!m)return;MPS.di=i;zcf('¿Borrar esta medición?',f2d(m.d,{day:'numeric',month:'long',year:'numeric'}),'msdl','Borrar')};
+A.msdl=()=>{const m=msList()[MPS.di];if(m){S.ms=msList().filter(x=>x!==m);sv()}MPS.di=-1;sh(msUI())};
+A.phv=async(i,b)=>{const p=PHC[i];if(!p)return;
+ if(MPS.cmp){const k=MPS.sel.indexOf(p.id);if(k>=0)MPS.sel.splice(k,1);else MPS.sel.push(p.id);
+  if(MPS.sel.length==2){phCompare();return}sh(msUI());return}
+ MPS.view=1;sh('<div id="f2ms">'+pgHead('Foto','msb')+'<div class="f2pv" id="f2pi"><div class="mu" style="padding:40px 0;text-align:center">Cargando…</div></div><div class="row" style="margin:10px 2px"><b>'+f2d(p.d,{day:'numeric',month:'long',year:'numeric'})+'</b><small>'+PHA[p.a]+'</small></div><div class="g2"><button data-a="phold" data-i="'+i+'">Comparar con la primera</button><button data-a="phdel" data-i="'+i+'" style="color:var(--c)">Borrar</button></div></div>');
+ try{const u=await phFull(p.id),e=document.getElementById('f2pi');if(e&&u)e.innerHTML='<img src="'+u+'" alt="'+PHA[p.a]+'">'}catch(x){}};
+A.phold=i=>{const p=PHC[i];if(!p)return;const same=PHC.filter(x=>x.a==p.a&&x.id!=p.id).sort((a,b)=>a.d<b.d?-1:1)[0];
+ if(!same){zt('No hay otra foto del mismo ángulo');return}MPS.sel=[same.id,p.id];phCompare()};
+A.phdel=i=>{const p=PHC[i];if(!p)return;MPS.pi=p.id;zcf('¿Borrar esta foto?',f2d(p.d,{day:'numeric',month:'long',year:'numeric'})+' · '+PHA[p.a],'phdl','Borrar')};
+A.phdl=async()=>{const id=MPS.pi;MPS.pi=null;if(!id)return;try{await phDo(['m','f'],'readwrite',tx=>{tx.objectStore('m').delete(id);tx.objectStore('f').delete(id)});await phLoad()}catch(e){zt('No se pudo borrar')}MPS.sel=[];MPS.cmp=0;sh(msUI())};
+async function phCompare(){const ps=MPS.sel.map(id=>PHC.find(p=>p.id==id)).filter(Boolean).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);if(ps.length<2){MPS.sel=[];sh(msUI());return}
+ MPS.view=1;const dd=Math.round((new Date(ps[1].d+'T12:00:00')-new Date(ps[0].d+'T12:00:00'))/864e5);
+ sh('<div id="f2ms">'+pgHead('Antes y después','msb')+'<div class="f2cm"><div><div class="f2pv" id="f2ca"><div class="mu" style="padding:30px 0;text-align:center">…</div></div><b>'+f2d(ps[0].d,{day:'numeric',month:'short',year:'numeric'})+'</b><small>'+PHA[ps[0].a]+'</small></div><div><div class="f2pv" id="f2cb"><div class="mu" style="padding:30px 0;text-align:center">…</div></div><b>'+f2d(ps[1].d,{day:'numeric',month:'short',year:'numeric'})+'</b><small>'+PHA[ps[1].a]+'</small></div></div><p class="mu" style="text-align:center;margin:12px 0">'+(dd==0?'Mismo día':dd+(dd==1?' día':' días')+' entre las dos fotos')+'</p></div>');
+ MPS.cmp=0;MPS.sel=[];
+ try{const[a,b]=await Promise.all([phFull(ps[0].id),phFull(ps[1].id)]);const ea=document.getElementById('f2ca'),eb=document.getElementById('f2cb');if(ea&&a)ea.innerHTML='<img src="'+a+'" alt="">';if(eb&&b)eb.innerHTML='<img src="'+b+'" alt="">'}catch(x){}}
+
+/* ---- alimentos: base ampliada, búsqueda sin tildes, Open Food Facts y escáner ---- */
+{const have=new Set(FD.map(f=>f.n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')));FD.push(..."Pechuga de pollo cruda,110,0,23,1.5,0,0.15;Muslo de pollo sin piel cocido,185,0,26,9,0,0.2;Jamón cocido,110,1,18,3.5,0,2;Chorizo,455,2,24,38,0,3.5;Salchicha de cerdo,270,3,12,24,0,2.2;Ternera picada 10% grasa cruda,176,0,20,10,0,0.15;Filete de ternera crudo,130,0,21,5,0,0.1;Lomo de cerdo crudo,143,0,21,6,0,0.1;Costillas de cerdo asadas,290,0,22,22,0,0.2;Pierna de cordero cocida,230,0,26,14,0,0.2;Conejo cocido,170,0,29,5.5,0,0.1;Hígado de ternera cocido,165,4,26,5,0,0.2;Beicon crudo,417,1,13,40,0,3.5;Hamburguesa de ternera cruda,240,0,17,19,0,0.2;Bacalao fresco crudo,82,0,18,0.7,0,0.2;Atún fresco crudo,144,0,23,5,0,0.1;Atún en aceite escurrido,198,0,29,8.5,0,0.9;Sardinas en aceite escurridas,208,0,25,11,0,1;Sardina fresca,135,0,19,6.5,0,0.2;Caballa cruda,205,0,19,14,0,0.2;Lubina cruda,97,0,18,2.5,0,0.2;Dorada cruda,100,0,20,2,0,0.2;Lenguado crudo,83,0,17,1.5,0,0.2;Trucha cruda,119,0,20,3.5,0,0.1;Salmón ahumado,160,0,22,8,0,3;Calamar crudo,92,3,16,1.4,0,0.5;Pulpo cocido,82,2,15,1,0,0.7;Mejillones cocidos,172,7,24,4.5,0,0.8;Surimi,95,10,8,0.5,0,1.8;Yema de huevo,322,3.6,16,27,0,0.1;Leche desnatada,35,5,3.4,0.1,0,0.1;Bebida de avena,45,6.5,0.5,1.5,0.8,0.1;Bebida de soja,38,2.5,3.3,1.8,0.5,0.1;Bebida de almendra,24,0.5,0.8,1.6,0.3,0.1;Yogur natural,61,4.7,3.5,3.3,0,0.1;Yogur desnatado,40,6,4,0.1,0,0.1;Skyr natural,63,4,11,0.2,0,0.1;Queso cottage,98,3.4,11,4.3,0,0.8;Queso manchego curado,411,0.5,26,34,0,1.8;Queso feta,264,4,14,21,0,2.5;Queso parmesano,431,4,38,29,0,3.5;Queso de untar light,115,5,9,6,0,1;Nata para cocinar,340,3,2.1,35,0,0.1;Mantequilla,717,0.1,0.9,81,0,0.1;Kéfir,56,4.5,3.3,2.3,0,0.1;Soja texturizada seca,330,30,50,1,17,1.5;Tempeh,193,9,19,11,5,0.1;Guisantes cocidos,84,15,5.4,0.2,5.5,0.1;Edamame,121,9,12,5,5,0.1;Arroz blanco crudo,360,79,7,0.6,1.3,0;Pasta cruda,359,72,12.5,1.5,3,0;Pan de molde integral,250,43,10,4,6,1.2;Tortita de arroz,387,82,8,2.8,3,0.3;Tortilla de trigo,310,50,9,8,3,1.5;Copos de maíz,375,84,7,1,3,1;Muesli,360,66,10,6,8,0.1;Galletas María,440,75,7,12,3,0.5;Harina de trigo,364,76,10,1,2.7,0;Maíz dulce en conserva,90,17,3,1.2,2.5,0.5;Palomitas sin aceite,387,78,13,4.5,15,0.1;Patata cruda,77,17,2,0.1,2.2,0;Patatas fritas de bolsa,536,53,6.5,34,4,1.3;Mandarina,53,13,0.8,0.3,1.8,0;Frambuesas,52,12,1.2,0.7,6.5,0;Melón,34,8,0.8,0.2,0.9,0.1;Piña,50,13,0.5,0.1,1.4,0;Mango,60,15,0.8,0.4,1.6,0;Melocotón,39,10,0.9,0.3,1.5,0;Cerezas,63,16,1,0.2,2.1,0;Ciruela,46,11,0.7,0.3,1.4,0;Higos,74,19,0.8,0.3,2.9,0;Granada,83,19,1.7,1.2,4,0;Limón,29,9,1.1,0.3,2.8,0;Pomelo,42,11,0.8,0.1,1.6,0;Dátiles,282,75,2.5,0.4,8,0;Pasas,299,79,3.1,0.5,3.7,0.1;Zumo de naranja,45,10,0.7,0.2,0.2,0;Ajo,149,33,6.4,0.5,2.1,0;Pimiento verde,20,4.6,0.9,0.2,1.7,0;Berenjena,25,6,1,0.2,3,0;Coliflor,25,5,1.9,0.3,2,0.1;Judías verdes,31,7,1.8,0.2,3.4,0;Espárragos,20,3.9,2.2,0.1,2.1,0;Calabaza,26,6.5,1,0.1,0.5,0;Remolacha cocida,44,10,1.7,0.2,2,0.2;Apio,16,3,0.7,0.2,1.6,0.2;Coles de Bruselas,43,9,3.4,0.3,3.8,0;Repollo,25,6,1.3,0.1,2.5,0;Rúcula,25,3.7,2.6,0.7,1.6,0;Puerro,61,14,1.5,0.3,1.8,0;Gazpacho,45,4,0.7,3,0.6,0.7;Cacahuetes,567,16,26,49,8.5,0;Anacardos,553,30,18,44,3.3,0;Pistachos,560,28,20,45,10,0;Avellanas,628,17,15,61,10,0;Semillas de chía,486,42,17,31,34,0;Semillas de lino,534,29,18,42,27,0.1;Semillas de calabaza,559,11,30,49,6,0;Semillas de girasol,584,20,21,51,8.6,0;Coco rallado,660,24,7,65,16,0;Aceite de girasol,884,0,0,100,0,0;Aceite de coco,862,0,0,100,0,0;Mayonesa,680,0.6,1.1,75,0,1.4;Ketchup,100,25,1.3,0.1,0.3,2.5;Tomate frito,80,9,1.5,4.5,1.5,0.8;Salsa de soja,60,5.6,8,0,0.8,14;Mostaza,66,6,4,4,3,2.5;Azúcar,400,100,0,0,0,0;Mermelada,250,62,0.4,0.1,1,0;Chocolate negro 70%,579,46,8,40,11,0;Chocolate con leche,535,59,7.7,30,3.4,0.2;Crema de cacao y avellanas,539,57.5,6.3,31,3.4,0.1;Cacao en polvo puro,228,58,19.6,13.7,33,0;Helado de nata,207,24,3.5,11,0.7,0.2;Croissant,406,46,8,21,2.4,1.1;Pizza margarita,250,31,11,9,2,1.5;Tortilla de patata,180,10,6,13,1,0.7;Cerveza,43,3.6,0.5,0,0,0;Vino tinto,85,2.6,0.1,0,0,0;Refresco de cola,42,10.6,0,0,0,0;Café solo,2,0.3,0.1,0,0,0;Bebida isotónica,26,6,0,0,0,0.1;Caseína en polvo,360,5,80,2,0,0.5;Barrita de proteínas,370,32,30,14,4,0.8;Proteína vegetal en polvo,380,6,75,6,3,1.5;Cerdo magro picado cocido,200,0,27,10,0,0.2;Pollo asado con piel,215,0,25,12,0,0.3;Pavo picado cocido,170,0,27,7,0,0.2;Atún claro en lata al natural,116,0,26,1,0,0.8;Lentejas crudas,352,60,25,1.1,31,0;Garbanzos secos,364,61,19,6,17,0;Judías blancas secas,333,60,23,0.8,15,0;Copos de avena integral,379,67,13,6.5,10,0;Pan de centeno,259,48,8.5,3.3,6,1.3;Barrita de cereales,400,70,5,11,5,0.5;Salmón fresco crudo,208,0,20,13,0,0.1;Ensalada de lechuga y tomate,18,3,1,0.2,1.4,0.1;Sopa de pollo con fideos,40,5,2.5,1,0.3,0.7;Arroz con leche,130,22,3,3,0.1,0.1;Natillas,115,17,3.5,3.8,0,0.2;Flan de huevo,125,20,3.5,3.5,0,0.2;Queso brie,334,0.5,21,28,0,1.6;Queso emmental,380,1,28,29,0,0.8;Queso crema,342,4,6,34,0,0.8;Tomates cherry,18,3.9,0.9,0.2,1.2,0;Salsa boloñesa,100,7,6,5,1,0.9;Salsa de tomate natural,38,7,1.6,0.4,1.5,0.5;Anchoas en aceite,210,0,29,10,0,6;Tallarines de arroz cocidos,109,24,0.9,0.2,1,0;Pan pita,275,55,9,1.2,2.2,1.2;Fajita de maíz,218,45,5.7,2.5,6,0.8".split(';').map(s=>{const a=s.split(',');return{n:a[0],b:a.slice(1).map(Number)}}).filter(f=>{const k=f.n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');if(have.has(k))return false;have.add(k);return true}))}
+const f2nm=s=>String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+fl=function(q){const e=$('#rs');if(!e)return;const k=f2nm(String(q||'').trim()),ws=k.split(/\s+/).filter(Boolean);
+ const L=FA().map((f,i)=>({f,i,n:f2nm(f.n)})).filter(o=>!ws.length||ws.every(w=>o.n.includes(w)));
+ L.sort((a,b)=>(ws.length&&b.n.startsWith(ws[0])?1:0)-(ws.length&&a.n.startsWith(ws[0])?1:0));
+ e.innerHTML=L.slice(0,ws.length?60:30).map(o=>'<div class="it" style="grid-template-columns:1fr auto" data-a="pk" data-i="'+o.i+'"><span>'+X(o.f.n)+'</span><small>'+o.f.b[0]+' kcal/100 g</small></div>').join('')+(ws.length&&!L.length?'<p class="mu" style="font-size:13px;margin:10px 2px">No está en tu lista. Prueba «Buscar en internet» o créalo en «Nuevo».</p>':'')};
+U.fs=q=>fl(q);
+var ff2Of=[];
+let f2ot=0;
+async function f2Fetch(url,ms){const ac=typeof AbortController!='undefined'?new AbortController():null,t=ac?setTimeout(()=>ac.abort(),ms||9000):0;
+ try{const r=await fetch(url,{signal:ac?ac.signal:undefined,headers:{Accept:'application/json'}});
+  if(r.status==429||r.status==503)throw 'busy';
+  if(r.status==404)return{_nf:1};
+  if(!r.ok)throw 'http';
+  return await r.json()}finally{if(t)clearTimeout(t)}}
+function f2Off(p){try{if(!p||typeof p!='object')return null;
+ const nm=String(p.product_name_es||p.product_name||'').trim();if(!nm)return null;const m=p.nutriments&&typeof p.nutriments=='object'?p.nutriments:{};
+ const num=k=>{const v=parseFloat(m[k]);return isFinite(v)?v:null};
+ let kc=num('energy-kcal_100g');if(kc==null){const kj=num('energy_100g');if(kj!=null)kc=kj/4.184}
+ if(kc==null)return null;
+ const c=num('carbohydrates_100g')||0,pr=num('proteins_100g')||0,f=num('fat_100g')||0,fi=num('fiber_100g')||0;let sa=num('salt_100g');if(sa==null){const so=num('sodium_100g');sa=so!=null?so*2.5:0}
+ if(kc<0||kc>950||c<0||pr<0||f<0||c>100||pr>100||f>100||c+pr+f>105)return null;
+ const brs=Array.isArray(p.brands)?p.brands[0]:String(p.brands||''),br=String(brs||'').split(',')[0].trim(),r1=v=>Math.round(v*10)/10;
+ return{n:nm.slice(0,60)+(br?' ('+br.slice(0,24)+')':''),b:[Math.round(kc),r1(c),r1(pr),r1(f),r1(Math.max(0,fi)),Math.round(Math.max(0,sa)*100)/100],ean:String(p.code||p._id||'').replace(/\D/g,'').slice(0,14)}
+}catch(e){return null}}
+async function f2Search(q){
+ const fl_='code,product_name,product_name_es,brands,nutriments';let j;
+ try{j=await f2Fetch('https://world.openfoodfacts.org/cgi/search.pl?search_terms='+encodeURIComponent(q)+'&search_simple=1&action=process&json=1&page_size=24&sort_by=unique_scans_n&fields='+fl_,10000)}
+ catch(e){if(e==='busy')throw e;j=await f2Fetch('https://search.openfoodfacts.org/search?q='+encodeURIComponent(q)+'&page_size=24&langs=es&fields='+fl_,10000)}
+ const arr=j&&Array.isArray(j.products)?j.products:j&&Array.isArray(j.hits)?j.hits:[];
+ const seen=new Set();return arr.map(f2Off).filter(x=>{if(!x||seen.has(x.n))return false;seen.add(x.n);return true})}
+A.f2os=async()=>{const inp=document.querySelector('input[data-u="fs"]'),q=((inp&&inp.value)||'').trim(),e=$('#rs');if(!e)return;
+ if(q.length<2){zt('Escribe al menos 2 letras');return}
+ if(Date.now()-f2ot<6000){zt('Espera unos segundos entre búsquedas');return}
+ f2ot=Date.now();e.innerHTML='<p class="mu" style="margin:10px 2px">Buscando en Open Food Facts…</p>';
+ try{const L=await f2Search(q);ff2Of=L;const e2=$('#rs');if(!e2)return;
+  e2.innerHTML=L.length?'<small class="mu" style="display:block;margin:6px 2px">Valores por 100 g · datos de Open Food Facts (ODbL)</small>'+L.map((f,i)=>'<div class="it" style="grid-template-columns:1fr auto" data-a="f2op" data-i="'+i+'"><span>'+X(f.n)+'</span><small>'+f.b[0]+' kcal</small></div>').join(''):'<p class="mu" style="margin:10px 2px">No hay resultados para «'+X(q)+'». Prueba con otra palabra o crea el alimento en «Nuevo».</p>'}
+ catch(x){const e2=$('#rs');if(e2)e2.innerHTML='<p class="mu" style="margin:10px 2px">'+(x==='busy'?'Open Food Facts está saturado. Prueba en un minuto.':'No se pudo consultar. Comprueba tu conexión e inténtalo de nuevo.')+'</p>'}};
+A.f2op=i=>{const f=ff2Of[i];if(!f)return;AD.pick={n:f.n,b:f.b.slice()};sh(addUI());U.gr(100)};
+/* escáner de códigos de barras */
+const EL=['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'],EG=['0100111','0110011','0011011','0100001','0011101','0111001','0000101','0010001','0001001','0010111'],ER=['1110010','1100110','1101100','1000010','1011100','1001110','1010000','1000100','1001000','1110100'],EP=['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+const ELM={},ERM={};EL.forEach((b,d)=>ELM[b]=['L',d]);EG.forEach((b,d)=>ELM[b]=['G',d]);ER.forEach((b,d)=>ERM[b]=d);
+function f2Mod(r,p,startBar){const t=r[p]+r[p+1]+r[p+2]+r[p+3],m=t/7;let s='',sum=0;const q=[];
+ for(let k=0;k<4;k++){const v=Math.round(r[p+k]/m);if(v<1||v>4)return null;q.push(v);sum+=v}
+ if(sum!=7)return null;
+ for(let k=0;k<4;k++){const bar=startBar?k%2==0:k%2==1;s+=(bar?'1':'0').repeat(q[k])}return s}
+function f2DecRuns(r,firstDark){const N=r.length;
+ for(let i=0;i+59<=N;i++){const dark=firstDark?i%2==0:i%2==1;if(!dark)continue;
+  const u=(r[i]+r[i+1]+r[i+2])/3;if(u<1.2)continue;
+  if(Math.abs(r[i]-u)>u*.6||Math.abs(r[i+1]-u)>u*.6||Math.abs(r[i+2]-u)>u*.6)continue;
+  let p=i+3,ok=1,par='',dg=[];
+  for(let d=0;d<6&&ok;d++){const b=f2Mod(r,p,false);if(!b){ok=0;break}const e=ELM[b];if(!e){ok=0;break}par+=e[0];dg.push(e[1]);p+=4}
+  if(!ok)continue;
+  let mg=0;for(let k=0;k<5;k++)mg+=r[p+k];if(Math.abs(mg-5*u)>u*2.2)continue;p+=5;
+  for(let d=0;d<6&&ok;d++){const b=f2Mod(r,p,true);if(!b){ok=0;break}const e=ERM[b];if(e==null){ok=0;break}dg.push(e);p+=4}
+  if(!ok)continue;
+  const first=EP.indexOf(par);if(first<0)continue;
+  const all=[first].concat(dg);let s=0;for(let k=0;k<12;k++)s+=all[k]*(k%2?3:1);
+  if((10-s%10)%10!=all[12])continue;
+  return all.join('')}
+ return null}
+function f2DecRow(a){const n=a.length;if(n<80)return null;
+ const s=new Float32Array(n);for(let i=0;i<n;i++){const x=a[i-1]!=null?a[i-1]:a[i],z=a[i+1]!=null?a[i+1]:a[i];s[i]=(x+a[i]*2+z)/4}
+ let mn=255,mx=0;for(let i=0;i<n;i++){if(s[i]<mn)mn=s[i];if(s[i]>mx)mx=s[i]}
+ if(mx-mn<35)return null;
+ const pre=new Float32Array(n+1);for(let i=0;i<n;i++)pre[i+1]=pre[i]+s[i];
+ const tryBin=(thr)=>{const bin=new Uint8Array(n);for(let i=0;i<n;i++)bin[i]=s[i]<thr(i)?1:0;
+  const runs=[];let c=bin[0],l=1;for(let i=1;i<n;i++){if(bin[i]==c)l++;else{runs.push(l);c=bin[i];l=1}}runs.push(l);
+  const fd=bin[0]==1;let r=f2DecRuns(runs,fd);if(r)return r;
+  const rr=runs.slice().reverse(),lastDark=(runs.length%2==1)?fd:!fd;return f2DecRuns(rr,lastDark)};
+ const mid=(mn+mx)/2;let r=tryBin(()=>mid);if(r)return r;
+ const w=Math.max(12,n>>4);
+ r=tryBin(i=>{const a0=Math.max(0,i-w),b0=Math.min(n,i+w+1);return(pre[b0]-pre[a0])/(b0-a0)});return r}
+function f2DecFrame(img){const W_=img.width,H_=img.height,d=img.data,gray=new Uint8Array(W_*H_);
+ for(let i=0,j=0;i<d.length;i+=4,j++)gray[j]=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;
+ const rows=[.5,.45,.55,.4,.6,.35,.65,.3,.7,.25,.75];
+ for(const f of rows){const y=Math.min(H_-1,Math.round(H_*f)),row=gray.subarray(y*W_,y*W_+W_);const r=f2DecRow(row);if(r)return r}
+ for(const f of rows){const x=Math.min(W_-1,Math.round(W_*f)),col=new Uint8Array(H_);for(let y=0;y<H_;y++)col[y]=gray[y*W_+x];const r=f2DecRow(col);if(r)return r}
+ return null}
+let SCN=null;
+const f2msg=t=>{const e=document.getElementById('f2sm');if(e)e.textContent=t};
+function f2ScanStop(){if(SCN){SCN.run=0;try{SCN.st.getTracks().forEach(t=>t.stop())}catch(e){}SCN=null}}
+const f2cl=A.cl;A.cl=()=>{f2ScanStop();f2cl()};
+A.f2sc=()=>{AD.pick=null;sh('<h3>Escanear código de barras</h3><div class="f2sv"><video id="f2v" playsinline muted autoplay></video><div class="f2gd"></div></div><p id="f2sm" class="mu" style="margin:8px 2px;font-size:13px">Abriendo la cámara…</p>'
+ +'<label>O escribe el código (8 a 14 cifras)</label><div class="g2" style="grid-template-columns:1fr auto"><input id="f2ean" inputmode="numeric" maxlength="14" placeholder="Por ejemplo 8410000000000"><button class="pr" data-a="f2ln">Buscar</button></div>'
+ +'<p class="mu" style="font-size:12px;margin:10px 2px">Solo se envía el número del código a Open Food Facts. La imagen de la cámara no sale del móvil.</p><button data-a="f2bk" style="width:100%">Volver</button>');
+ f2ScanStart()};
+A.f2bk=()=>{f2ScanStop();sh(addUI());fl('')};
+A.f2ln=()=>{const v=String((document.getElementById('f2ean')||{}).value||'').replace(/\D/g,'');if(v.length<8||v.length>14){f2msg('El código debe tener entre 8 y 14 cifras');return}f2ScanStop();f2Lookup(v)};
+async function f2ScanStart(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){f2msg('Este navegador no permite usar la cámara. Escribe el código.');return}
+ try{const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+  const v=document.getElementById('f2v');if(!v){st.getTracks().forEach(t=>t.stop());return}
+  v.srcObject=st;try{await v.play()}catch(e){}
+  let bd=null;try{if('BarcodeDetector' in window)bd=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']})}catch(e){bd=null}
+  SCN={st,v,run:1,last:'',n:0,bd};f2msg('Apunta al código de barras del envase.');f2ScanLoop()}
+ catch(e){f2msg(e&&e.name=='NotAllowedError'?'Permiso de cámara denegado. Puedes escribir el código.':'No se pudo abrir la cámara. Puedes escribir el código.')}}
+async function f2ScanLoop(){const me=SCN;if(!me)return;const cv=document.createElement('canvas'),g=cv.getContext('2d',{willReadFrequently:true});
+ while(SCN===me&&me.run){
+  if(!document.getElementById('f2v')){f2ScanStop();return}
+  const v=me.v;
+  if(document.visibilityState=='visible'&&v.readyState>=2&&v.videoWidth){
+   let code=null;
+   try{if(me.bd){const r=await me.bd.detect(v);if(r&&r.length)code=r[0].rawValue}}catch(e){me.bd=null}
+   if(!code){const w=Math.min(720,v.videoWidth),h=Math.round(v.videoHeight*w/v.videoWidth);cv.width=w;cv.height=h;g.drawImage(v,0,0,w,h);code=f2DecFrame(g.getImageData(0,0,w,h))}
+   if(code&&/^\d{8,14}$/.test(code)){if(code===me.last)me.n++;else{me.last=code;me.n=1}
+    if(me.n>=2||me.bd){f2ScanStop();f2Lookup(code);return}}
+  }
+  await new Promise(r=>setTimeout(r,170))}}
+async function f2Lookup(code){f2msg('Buscando '+code+'…');
+ try{const c=S.bc&&S.bc[code];let it=c&&Array.isArray(c.b)&&c.b.length==6?{n:String(c.n||'').slice(0,80),b:c.b.map(Number)}:null;
+  if(!it){const F_='code,product_name,product_name_es,brands,nutriments';let j=null;
+   try{j=await f2Fetch('https://world.openfoodfacts.org/api/v3/product/'+code+'.json?fields='+F_,9000)}catch(e){if(e==='busy')throw e;j=null}
+   if(!j||(!j.product&&!j._nf))j=await f2Fetch('https://world.openfoodfacts.org/api/v2/product/'+code+'.json?fields='+F_,9000);
+   const p=j&&j.product;it=p?f2Off(p):null;
+   if(!it){f2msg(p?'Este producto no tiene información nutricional completa. Créalo a mano en «Nuevo».':'Ese código no está en Open Food Facts. Créalo a mano en «Nuevo».');return}
+   S.bc=S.bc&&typeof S.bc=='object'?S.bc:{};S.bc[code]={n:it.n,b:it.b,t:Date.now()};
+   const ks=Object.keys(S.bc);if(ks.length>200){ks.sort((a,b)=>(S.bc[a].t||0)-(S.bc[b].t||0)).slice(0,ks.length-200).forEach(k=>delete S.bc[k])}
+   sv()}
+  AD.pick={n:it.n,b:it.b.slice()};sh(addUI());U.gr(100)}
+ catch(x){f2msg(x==='busy'?'Open Food Facts está saturado. Prueba en un minuto.':'No se pudo consultar. Comprueba tu conexión; los productos ya escaneados funcionan sin conexión.')}}
+const f2au=addUI;addUI=()=>{const h=f2au();try{if(AD&&!AD.pick&&AD.tab==0){const m='data-u="fs">';const k=h.indexOf(m);if(k>=0)return h.slice(0,k+m.length)+'<div class="g2" style="margin:8px 0 2px"><button data-a="f2os">'+ic('globe',16)+' Buscar online</button><button data-a="f2sc">'+ic('scan',16)+' Escanear código</button></div><small class="mu" style="display:block;margin:0 2px 6px;font-size:11px">Open Food Facts: solo se envía el texto o el código que buscas.</small>'+h.slice(k+m.length)}}catch(e){}return h};
+
+/* ---- logros ---- */
+function f2St(){const L=(S.logs||[]).filter(l=>l&&typeof l.d=='string'),cd=cdAll();let best=0;try{best=wkStats().best}catch(e){}
+ return{n:L.length,vol:L.reduce((s,l)=>s+(+l.v||0),0),st:best,pr:+S.pc||0,km:cd.reduce((s,l)=>s+(+l.c.km||0),0),cs:cd.length,wod:L.filter(l=>l.k=='w').length,
+  nd:Object.keys(S.meals||{}).filter(k=>{const m=S.meals[k];return m&&typeof m=='object'&&Object.values(m).some(a=>Array.isArray(a)&&a.length)}).length,
+  ms:msList().length,ph:PHN,wl:Array.isArray(S.wl)?S.wl.length:0,bk:S.bkd?1:0}}
+const ACH=[
+ ['e1','Primer paso','Registra tu primer entreno','n',1],['e2','Constancia','10 entrenos registrados','n',10],['e3','En forma','50 entrenos registrados','n',50],['e4','Centenario','100 entrenos registrados','n',100],['e5','Leyenda','250 entrenos registrados','n',250],
+ ['v1','Diez toneladas','Mueve 10 toneladas en total','vol',1e4],['v2','Cien toneladas','Mueve 100 toneladas en total','vol',1e5],['v3','Quinientas toneladas','Mueve 500 toneladas en total','vol',5e5],['v4','Mil toneladas','Mueve 1000 toneladas en total','vol',1e6],
+ ['s1','Racha de un mes','4 semanas seguidas cumpliendo tu objetivo','st',4],['s2','Racha de un trimestre','12 semanas seguidas','st',12],['s3','Medio año sin fallar','26 semanas seguidas','st',26],
+ ['p1','Primer récord','Supera tu mejor marca en un ejercicio','pr',1],['p2','Rompe marcas','10 récords personales','pr',10],['p3','Imparable','25 récords personales','pr',25],
+ ['c1','A moverse','Registra una sesión de cardio','cs',1],['c2','50 kilómetros','50 km de cardio en total','km',50],['c3','200 kilómetros','200 km de cardio en total','km',200],
+ ['w1','Primer WOD','Termina un WOD con el temporizador','wod',1],['w2','Veterano del WOD','10 WOD registrados','wod',10],
+ ['n1','Diario de comidas','Anota comidas durante 7 días','nd',7],['n2','Un mes de registro','Anota comidas durante 30 días','nd',30],
+ ['m1','Primera medición','Guarda tus medidas corporales','ms',1],['f1','Primera foto','Guarda una foto de progreso','ph',1],['f2','Antes y después','Ten al menos 2 fotos de progreso','ph',2],
+ ['b1','Peso al día','10 registros de peso corporal','wl',10],['k1','Datos a salvo','Guarda una copia de seguridad','bk',1]];
+function f2Ach(){try{const st=f2St(),first=!S.ach||typeof S.ach!='object'||Array.isArray(S.ach),a=first?{}:S.ach,nw=[];
+ ACH.forEach(x=>{if(a[x[0]])return;if(st[x[3]]>=x[4]){a[x[0]]=first?'-':dk(new Date);if(!first)nw.push(x)}});
+ if(first||nw.length){S.ach=a;sv()}
+ if(nw.length)setTimeout(()=>zt(nw.length==1?'Logro: '+nw[0][1]:'Logros: '+nw.slice(0,2).map(x=>x[1]).join(' y ')+(nw.length>2?' y '+(nw.length-2)+' más':'')),1900)
+}catch(e){}}
+function f2AchTx(x,st){const v=st[x[3]],t=x[4];return x[3]=='vol'?Z(v/1000)+' / '+Z(t/1000)+' t':x[3]=='km'?R1(v)+' / '+t+' km':Math.min(Z(v),t)+' / '+t}
+function achUI(){const st=f2St(),a=S.ach||{},dn=ACH.filter(x=>a[x[0]]),pd=ACH.filter(x=>!a[x[0]]);
+ const row=(x,on)=>'<div class="f2ac'+(on?' on':'')+'"><span class="f2ai">'+ic('trf',22)+'</span><span style="min-width:0"><b>'+x[1]+'</b><br><small>'+x[2]+'</small>'+(on?'':'<div class="bar"><i style="width:'+Math.min(100,Math.round(st[x[3]]/x[4]*100))+'%;background:var(--a2)"></i></div>')+'</span><small style="white-space:nowrap">'+(on?(a[x[0]]&&a[x[0]]!='-'?f2d(a[x[0]],{day:'numeric',month:'short',year:'2-digit'}):'Conseguido'):f2AchTx(x,st))+'</small></div>';
+ return pgHead('Logros')+'<div class="cd" style="text-align:center"><b style="font-size:32px">'+dn.length+' de '+ACH.length+'</b><br><small>logros conseguidos</small><div class="bar" style="margin-top:10px"><i style="width:'+Math.round(dn.length/ACH.length*100)+'%;background:var(--a2)"></i></div></div>'
+ +(pd.length?'<div class="ph">Por conseguir</div>'+pd.map(x=>row(x,0)).join(''):'')+(dn.length?'<div class="ph">Conseguidos</div>'+dn.map(x=>row(x,1)).join(''):'')+'<div style="height:30px"></div>'}
+A.f2lg=()=>{f2Ach();fullPage(achUI())};
+
+/* ---- exportar a CSV ---- */
+const csvE=v=>{if(v==null)return '';let s=typeof v=='number'?String(Math.round(v*100)/100).replace('.',','):String(v);if(typeof v!='number'&&/^[=+\-@\t\r]/.test(s))s="'"+s;return /[";\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+const csvB=rows=>'﻿'+rows.map(r=>r.map(csvE).join(';')).join('\r\n')+'\r\n';
+const f2Mn=i=>{const n=(S.nu&&S.nu.n)||3;return n<=5?MN[[0,1,2,3,4].filter(x=>n==3?[0,2,4].includes(x):n==4?[0,2,3,4].includes(x):n==2?[0,4].includes(x):1)[i]]||('Comida '+(i+1)):MN[i]||('Comida '+(i+1))};
+const CSV={
+ ent:{t:'Entrenos',s:'Fecha, tipo, series, volumen, minutos y esfuerzo',f:'entrenos',n:()=>(S.logs||[]).length,b:()=>[['Fecha','Tipo','Entreno','Series','Volumen (kg)','Minutos','RPE medio','Detalle']].concat((S.logs||[]).filter(l=>l&&typeof l.d=='string').slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0).map(l=>[l.d,l.k=='c'?'Cardio':l.k=='w'?'WOD':'Fuerza',l.n,+l.s||0,+l.v||0,+l.m||0,+l.q||'',(l.x||'')+(l.nt?' · '+l.nt:'')]))},
+ ser:{t:'Series por ejercicio',s:'Cada serie: repeticiones, peso y esfuerzo',f:'series',n:()=>Object.keys(S.hist||{}).length,b:()=>{const r=[['Fecha','Ejercicio','Serie','Repeticiones','Peso (kg)','RPE']];Object.keys(S.hist||{}).sort().forEach(n=>{(Array.isArray(S.hist[n])?S.hist[n]:[]).slice().reverse().forEach(x=>{(x&&Array.isArray(x.s)?x.s:[]).forEach((q,i)=>r.push([x.d,n,i+1,+q[0]||0,+q[1]||0,+q[2]||'']))})});return r}},
+ peso:{t:'Peso corporal',s:'Registro de peso con fecha',f:'peso-corporal',n:()=>(S.wl||[]).length,b:()=>[['Fecha','Peso (kg)']].concat((S.wl||[]).filter(p=>p&&p.d).slice().sort((a,b)=>a.d<b.d?-1:1).map(p=>[p.d,+p.w||0]))},
+ med:{t:'Medidas',s:'Cuello, hombros, pecho, brazo, cintura…',f:'medidas',n:()=>msList().length,b:()=>[['Fecha'].concat(MSK.map(x=>x[1]+' (cm)'))].concat(msList().map(m=>[m.d].concat(MSK.map(x=>+m.v[x[0]]>0?+m.v[x[0]]:''))))},
+ com:{t:'Comidas',s:'Alimentos, gramos y macros por día',f:'comidas',n:()=>Object.keys(S.meals||{}).length,b:()=>{const r=[['Fecha','Comida','Alimento','Gramos','Kcal','Hidratos (g)','Proteínas (g)','Grasas (g)','Fibra (g)','Sal (g)']];Object.keys(S.meals||{}).sort().forEach(d=>{const m=S.meals[d];if(!m||typeof m!='object')return;Object.keys(m).sort((a,b)=>a-b).forEach(i=>{(Array.isArray(m[i])?m[i]:[]).forEach(it=>{if(!it||!Array.isArray(it.b))return;const v=T(it);r.push([d,f2Mn(+i),it.n,+it.g||0,Math.round(v[0]),R1(v[1]),R1(v[2]),R1(v[3]),R1(v[4]||0),Math.round((v[5]||0)*100)/100])})})});return r}},
+ car:{t:'Cardio',s:'Sesiones con distancia, tiempo y ritmo',f:'cardio',n:()=>cdAll().length,b:()=>[['Fecha','Tipo','Distancia (km)','Tiempo (min)','Ritmo o velocidad']].concat(cdAll().map(l=>[l.d,cdLbl(l.c.t),+l.c.km||'',R1((+l.c.sec||0)/60),cdPace(l.c.t,+l.c.km,+l.c.sec)]))}};
+const f2Dl=async(name,data,mime)=>{let d=null;try{d=window.claude&&window.claude.use?await window.claude.use('downloads'):null}catch(e){d=null}
+ if(d){try{const r=await d.save({filename:name,data});return r&&r.status?r.status:'saved'}catch(e){return e&&e.code=='declined'?'declined':'fail'}}
+ if(ffSa()&&navigator.canShare&&typeof File!='undefined'){try{const f=new File([data],name,{type:mime});if(navigator.canShare({files:[f]})){await navigator.share({files:[f]});return 'saved'}}catch(e){if(e&&e.name=='AbortError')return 'declined'}}
+ try{const b=new Blob([data],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return 'saved'}catch(e){return 'fail'}};
+A.f2ex=()=>fullPage(pgHead('Exportar datos')+'<p class="mu" style="margin:-6px 2px 10px;font-size:14px">Archivos CSV para abrir en Excel, Numbers o Google Sheets. Los pesos van en kg. Separador «;» y decimales con coma, listos para Excel en español.</p>'
+ +Object.keys(CSV).map(k=>{const c=CSV[k],n=c.n();return '<div class="cd" style="display:flex;gap:12px;align-items:center;justify-content:space-between"><span style="min-width:0"><b>'+c.t+'</b><br><small>'+c.s+'</small></span><button data-a="f2exd" data-v="'+k+'" style="flex:none;white-space:nowrap'+(n?'':';opacity:.45')+'"'+(n?'':' disabled')+'>'+ic('dwn',16)+' '+(n?'CSV':'Vacío')+'</button></div>'}).join('')
+ +'<p class="mu" style="font-size:12px;margin:12px 2px">Para guardar todo y poder restaurarlo en StrataFit usa la copia de seguridad, no el CSV.</p><button data-a="zbk" style="width:100%">Copia de seguridad</button><div style="height:30px"></div>');
+A.f2exd=async(i,b)=>{const c=CSV[b.dataset.v];if(!c)return;let txt;try{txt=csvB(c.b())}catch(e){zt('No se pudo preparar el archivo');return}
+ const r=await f2Dl('stratafit-'+c.f+'-'+dk(new Date)+'.csv',txt,'text/csv;charset=utf-8');
+ zt(r=='saved'||r=='delivered'?'Archivo listo':r=='declined'?'No se guardó el archivo':'No se pudo guardar el archivo')};
+
+/* ---- copia de seguridad: lo nuevo ---- */
+function f2BxRows(s){const L=(Array.isArray(s.logs)?s.logs:[]).filter(l=>l&&typeof l=='object'),cd=L.filter(l=>l.k=='c').length,wd=L.filter(l=>l.k=='w').length,r=[];
+ if(cd||wd)r.push(bxP(cd,'sesión de cardio','sesiones de cardio')+' y '+bxP(wd,'WOD','WOD'));
+ const ms=Array.isArray(s.ms)?s.ms.length:0;if(ms)r.push(bxP(ms,'medición corporal','mediciones corporales'));
+ const na=s.ach&&typeof s.ach=='object'?Object.keys(s.ach).length:0;if(na)r.push(bxP(na,'logro conseguido','logros conseguidos'));
+ if(s===S&&PHN)r.push(bxP(PHN,'foto de progreso','fotos de progreso')+' (solo en la copia en archivo)');
+ if(s!==S&&f2PhR)r.push(bxP(f2PhR,'foto de progreso restaurada','fotos de progreso restauradas'));
+ return r}
+const f2Full=async()=>{let ph=[];try{ph=await phAllFull()}catch(e){ph=[]}const base=bxBuild();
+ return ph.length?base.replace('{"_sf":{',()=>'{"_sf":{"ph":'+JSON.stringify(ph)+','):base};
+let f2PhR=0;
+const f2bk=A.bkok;
+A.bkok=async()=>{const r=BKP;f2PhR=0;
+ try{if(r&&r.meta&&Array.isArray(r.meta.ph)&&r.meta.ph.length){const n=await phMerge(r.meta.ph);f2PhR=n;if(!n)zt('No se pudieron restaurar las fotos')}}catch(e){zt('No se pudieron restaurar las fotos')}
+ f2bk()};
+
+/* ---- accesos desde las pantallas ---- */
+function f2LgTx(l){return l.k=='c'&&l.x?' · '+X(l.x):l.k=='w'&&l.x?' · '+X(l.x)+(l.nt?' · '+X(l.nt):''):' · '+l.s+' series · '+l.m+' min'}
+function f2LgRt(l){return l.k=='c'?(l.c&&+l.c.km>0?R1(+l.c.km)+' km':l.m+' min'):l.k=='w'?'WOD':Z(ffDW(l.v))+' '+ffUL()}
+const f2wo=WO;WO=()=>{const h=f2wo();if(VW||W||zOV)return h;return h+f2row('timer','Temporizador WOD','AMRAP, EMOM, Tabata y For time','wod')+f2row('pulse','Registrar cardio','Carrera, bici, remo… con ritmo y resumen semanal','cardio')};
+const f2pf=PF;PF=()=>{const h=f2pf(),m='<details class="cd"><summary>Datos biométricos';if(h.indexOf(m)<0)return h;
+ const a=S.ach||{},nd=ACH.filter(x=>a[x[0]]).length;
+ return h.replace(m,()=>f2row('ruler','Medidas y fotos','Cintura, brazo, pecho… y antes y después','f2ms')+f2row('trf','Logros',nd+' de '+ACH.length+' conseguidos','f2lg')+f2row('dwn','Exportar datos (CSV)','Entrenos, series, peso, medidas, comidas y cardio','f2ex')+m)};
+/* limpieza de datos nuevos al arrancar */
+(function(){try{const A_=Array.isArray,O_=x=>x&&typeof x=='object'&&!A_(x);
+ if(S.ms!=null&&!A_(S.ms))S.ms=[];if(A_(S.ms))S.ms=S.ms.filter(m=>m&&typeof m.d=='string'&&O_(m.v));
+ ['ach','bc','wdc','stz'].forEach(k=>{if(S[k]!=null&&!O_(S[k]))delete S[k]});
+ if(S.pc!=null&&!(S.pc>=0))delete S.pc;
+ (S.logs||[]).forEach(l=>{if(l&&l.k&&l.k!='c'&&l.k!='w')delete l.k;if(l&&l.k=='c'&&!O_(l.c))delete l.k});
+}catch(e){}})();
+setTimeout(f2Ach,2500);
 
 $('nav').innerHTML=['workout','nutri','dash','user'].map((n,i)=>'<button data-a="tab" data-i="'+i+'"><span style="display:block;line-height:0;padding-bottom:4px">'+ic(n,28)+'</span>'+['Workout','Nutrición','Dashboard','Perfil'][i]+'</button>').join('');
 R();
