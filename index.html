@@ -827,7 +827,7 @@ const wo2=WO;WO=()=>{const h=wo2();if(VW)return h;const tr=S.plan.filter(d=>d.ex
 const prCard=()=>{const ks=new Set(Object.keys(S.pr||{}).concat(Object.keys(S.hist||{}))),l=[...ks].map(n=>[n,prOf(n)]).filter(x=>x[1]).sort((a,b)=>b[1].e-a[1].e).slice(0,6);return '<div class="cd"><b>Récords personales</b>'+(l.length?l.map(x=>'<div class="it" style="grid-template-columns:1fr auto"><span>'+X(x[0])+'<br><small>'+x[1].d+'</small></span><span style="text-align:right"><b>'+ffDW(x[1].w)+' '+ffUL()+' × '+x[1].r+'</b><br><small>1RM est. '+Z(ffDW(x[1].e))+' '+ffUL()+'</small></span></div>').join(''):'<p class="mu" style="margin:8px 0 0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>')+'</div>'};
 const db1=DB;DB=()=>db1()+prCard();
 /* ===== v1.8: filtro de grupo, programas propios, asistente, plegado, versión ===== */
-const APPV='1.15.2';
+const APPV='1.16.0';
 (function(){try{const n0=(S.cp||[]).length,okd=d=>d&&typeof d.n=='string'&&Array.isArray(d.ex)&&d.ex.every(e=>e&&typeof e.n=='string'&&+e.s>0);
 if(!Array.isArray(S.cp))S.cp=[];S.cp=S.cp.filter(p=>p&&typeof p.n=='string'&&Array.isArray(p.plan)&&p.plan.length&&p.plan.every(okd));
 if(S.cp.length!=n0||!(S.cpi>=0&&S.cpi<S.cp.length))S.cpi=-1;
@@ -1391,6 +1391,75 @@ A.upx=()=>{ffUp=0;const d=document.getElementById('upd');if(d)d.remove()};
 try{if(ffDeploy&&'serviceWorker' in navigator){navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.t==='upd'){ffUp=1;ffUpShow()}});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&navigator.serviceWorker.controller&&Date.now()-ffUpT>20*60*1e3){ffUpT=Date.now();fetch('./',{cache:'no-cache'}).catch(()=>{})}});ffUpT=Date.now()}}catch(e){}
 const rUp=R;R=()=>{rUp();if(!ffUp)return;if(W){const d=document.getElementById('upd');if(d)d.remove()}else ffUpShow()};
+
+/* ===== v1.16 · copia de seguridad completa (todo lo que importa para seguir por donde ibas) ===== */
+const BXV=2;
+const bxN=x=>Array.isArray(x)?x.length:(x&&typeof x=='object'?Object.keys(x).length:0);
+const bxP=(n,a,b)=>n+' '+(n==1?a:b);
+const bxWip=()=>{try{const z=JSON.parse(localStorage.getItem(ZK));if(z&&z.W&&z.d&&Array.isArray(z.W.x)&&z.d&&Array.isArray(z.d.ex))return z}catch(e){}return null};
+const bxRows=(s,wip)=>{
+ const it=Object.values(s.meals||{}).reduce((t,d)=>t+(d&&typeof d=='object'?Object.values(d).reduce((u,l)=>u+(Array.isArray(l)?l.length:0),0):0),0);
+ const dias=new Set((s.logs||[]).map(l=>l&&l.d)).size;
+ const r=[bxP(bxN(s.logs),'entreno registrado','entrenos registrados')+(dias?' ('+bxP(dias,'día','días')+')':''),
+  'Historial de pesos de '+bxP(bxN(s.hist),'ejercicio','ejercicios')+' y '+bxP(bxN(s.pr),'récord personal','récords personales'),
+  bxP(bxN(s.wl),'registro de peso corporal','registros de peso corporal'),
+  'Comidas de '+bxP(bxN(s.meals),'día','días')+' ('+bxP(it,'alimento anotado','alimentos anotados')+') y agua de '+bxP(bxN(s.wt),'día','días'),
+  bxP(bxN(s.cf),'alimento nuevo','alimentos nuevos')+', '+bxP(bxN(s.lib),'plato guardado','platos guardados')+' y '+bxP(Object.keys(s.tp||{}).length,'plantilla de día','plantillas de día'),
+  bxP(bxN(s.cr),'rutina personalizada','rutinas personalizadas')+', '+bxP(bxN(s.cp),'programa guardado','programas guardados')+' y '+bxP(bxN(s.cx),'ejercicio propio','ejercicios propios'),
+  'Notas de '+bxP(bxN(s.notes),'ejercicio','ejercicios'),
+  'Perfil, objetivos de nutrición, nivel y ajustes (tema, acento, estilo, unidades, avisos)'];
+ if(wip)r.push('Entreno en curso, para retomarlo');
+ return r};
+const bxLine=s=>[bxP(bxN(s.logs),'entreno','entrenos'),bxP(bxN(s.cr),'rutina','rutinas'),bxP(bxN(s.cf),'alimento nuevo','alimentos nuevos'),'comidas de '+bxP(bxN(s.meals),'día','días')].join(' · ');
+const bxBuild=()=>{const wip=bxWip();return JSON.stringify(Object.assign({_sf:{app:'StrataFit',fmt:BXV,ver:APPV,at:new Date().toISOString(),wip:wip||undefined,sum:bxRows(S,wip)}},S))};
+const BXE={vacio:'El archivo está vacío',prog:'Eso es un código de programa, no una copia: impórtalo en Programas',grande:'El archivo es demasiado grande para ser una copia de StrataFit',formato:'El archivo no es una copia válida de StrataFit',plan:'La copia está dañada: no tiene un programa de entrenamiento válido'};
+const bxParse=txt=>{txt=String(txt||'').trim();if(!txt)throw 'vacio';if(/^FFP1:/.test(txt))throw 'prog';if(txt.length>2e7)throw 'grande';
+ let o;try{o=JSON.parse(txt,(k,v)=>k=='__proto__'?undefined:v)}catch(e){throw 'formato'}
+ const A_=Array.isArray,O_=x=>x&&typeof x=='object'&&!A_(x);
+ if(!O_(o))throw 'formato';
+ const meta=O_(o._sf)?o._sf:null;delete o._sf;
+ if(!A_(o.plan)||!o.plan.length||!o.plan.every(d=>d&&typeof d.n=='string'&&A_(d.ex)&&d.ex.every(e=>e&&typeof e.n=='string'&&+e.s>0)))throw 'plan';
+ let fix=0;const L1=['logs','cr','cx','cf','lib','cp','wl'],O1=['done','last','meals','hist','pr','notes','bio','pf','nu','wt','tp','dt','fq','dl','dq'];
+ L1.forEach(k=>{if(o[k]!=null){if(!A_(o[k])){o[k]=[];fix++}else{const n=o[k].length;o[k]=o[k].filter(x=>x&&typeof x=='object');fix+=n-o[k].length}}});
+ O1.forEach(k=>{if(o[k]!=null&&!O_(o[k])){delete o[k];fix++}});
+ let wip=null;const w=meta&&meta.wip;if(O_(w)&&O_(w.W)&&A_(w.W.x)&&O_(w.d)&&A_(w.d.ex)&&w.W.x.length==w.d.ex.length)wip=w;
+ return{s:o,meta,wip,fix}};
+const bxDate=(t,l)=>{const d=new Date(t);return isNaN(d)?'':d.toLocaleDateString('es',l?{day:'numeric',month:'long',year:'numeric'}:{day:'numeric',month:'short'})};
+const bxAsk=txt=>{let r;try{r=bxParse(txt)}catch(x){zt(BXE[x]||BXE.formato);return}
+ BKP=r;const ds=r.meta&&r.meta.at?bxDate(r.meta.at,1):'';
+ zcf('¿Restaurar esta copia?','<b>Copia'+(ds?' del '+X(ds):'')+'</b><br>'+X(bxLine(r.s))+(r.wip?'<br>Incluye un entreno en curso.':'')+'<br><br><b>Ahora tienes</b><br>'+X(bxLine(S))+'<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.','bkok','Restaurar')};
+const bxPre=()=>{try{const p=JSON.parse(localStorage.getItem('ffpre'));if(p&&p.s&&Array.isArray(p.s.plan)&&Date.now()-p.t<30*864e5)return p}catch(e){}return null};
+A.bkok=()=>{const r=BKP;if(!r||!r.s)return;BKP=null;let pre;
+ try{pre=JSON.stringify({t:Date.now(),v:APPV,s:S,w:localStorage.getItem(ZK)});localStorage.setItem('ffpre',pre)}catch(e){zt('No hay espacio para guardar tus datos actuales: no se restauró nada');return}
+ try{const s=r.s;s.bkd=Date.now();localStorage.setItem('ff',JSON.stringify(s));
+  if(r.wip){r.wip.t=Date.now();localStorage.setItem(ZK,JSON.stringify(r.wip))}else localStorage.removeItem(ZK);
+  localStorage.setItem('ffrs',JSON.stringify({s:bxRows(s,r.wip),f:r.fix||0}))}
+ catch(e){try{const p=JSON.parse(pre);localStorage.setItem('ff',JSON.stringify(p.s));if(p.w)localStorage.setItem(ZK,p.w);else localStorage.removeItem(ZK)}catch(_){}zt('No se pudo restaurar; tus datos siguen como estaban');return}
+ location.reload()};
+A.bkun=()=>{const p=bxPre();if(!p)return;zcf('¿Deshacer la última restauración?','Volverás a los datos que tenías antes ('+X(bxLine(p.s))+'). Lo que tienes ahora se guardará por si cambias de idea.','bkun2','Deshacer')};
+A.bkun2=()=>{const p=bxPre();if(!p)return;
+ try{localStorage.setItem('ffpre',JSON.stringify({t:Date.now(),v:APPV,s:S,w:localStorage.getItem(ZK)}))}catch(e){zt('No hay espacio para deshacer');return}
+ try{localStorage.setItem('ff',JSON.stringify(p.s));if(p.w)localStorage.setItem(ZK,p.w);else localStorage.removeItem(ZK);
+  localStorage.setItem('ffrs',JSON.stringify({s:bxRows(p.s,null),f:0,u:1}))}
+ catch(e){try{localStorage.setItem('ff',JSON.stringify(S))}catch(_){}zt('No se pudo deshacer');return}
+ location.reload()};
+C.bkim=e=>{const f=e.files&&e.files[0];if(!f)return;if(f.size>2e7){zt(BXE.grande);e.value='';return}const r=new FileReader();r.onload=()=>bxAsk(String(r.result));r.onerror=()=>zt('No se pudo leer el archivo');r.readAsText(f);e.value=''};
+A.zbr=()=>{const e=$('#bk');bxAsk(e?e.value:'')};
+A.bkf=async()=>{const pv=S.bkd;S.bkd=Date.now();sv();const r=await ffDl('stratafit-copia-'+dk(new Date)+'.json',bxBuild());
+ if(r=='saved'||r=='delivered')zt('Copia guardada');else{S.bkd=pv;sv();zt(r=='declined'?'No se guardó la copia':'No se pudo guardar el archivo. Usa la opción de texto.')}};
+A.zbk=()=>{const p=bxPre();
+ sh('<h3>Copia de seguridad</h3><p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">'+bkAgo()+'</p>'
+ +'<div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div>'
+ +'<details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">'+bxRows(S,bxWip()).map(x=>'<div>· '+X(x)+'</div>').join('')+'</div></details>'
+ +'<details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto</summary><textarea id="bk" rows="5" style="margin-top:8px">'+X(bxBuild())+'</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details>'
+ +(p?'<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración ('+X(bxDate(p.t))+')</button>':''))};
+/* aviso tras restaurar: qué se ha recuperado */
+try{const q=localStorage.getItem('ffrs');if(q){localStorage.removeItem('ffrs');const o=JSON.parse(q);
+ setTimeout(()=>{try{dlg(o.u?'Datos recuperados':'Copia restaurada','<div style="display:grid;gap:6px;text-align:left">'+(o.s||[]).map(x=>'<div>· '+X(x)+'</div>').join('')+'</div>'+(o.f?'<div style="margin-top:10px">Se descartaron '+bxP(o.f,'elemento dañado','elementos dañados')+' de la copia.</div>':''),[['Entendido','zno','pr']])}catch(e){}},700)}}catch(e){}
+/* app recién instalada: ofrecer importar una copia */
+const bxNew=()=>!S.nbk&&!S.logs.length&&!S.bkd&&!(S.cp||[]).length&&!(S.cr||[]).length&&!bxN(S.meals)&&!(S.wl||[]).length;
+A.bknx=()=>{S.nbk=1;sv();R()};
+const bxWo=WO;WO=()=>(bxNew()&&!W?'<div class="cd" style="margin:0 0 12px"><b>¿Ya usabas StrataFit?</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="zbk">Importar copia</button><button data-a="bknx">Ahora no</button></div></div>':'')+bxWo();
 
 $('nav').innerHTML=['workout','nutri','dash','user'].map((n,i)=>'<button data-a="tab" data-i="'+i+'"><span style="display:block;line-height:0;padding-bottom:4px">'+ic(n,28)+'</span>'+['Workout','Nutrición','Dashboard','Perfil'][i]+'</button>').join('');
 R();
