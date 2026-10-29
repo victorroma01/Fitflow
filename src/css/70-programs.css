@@ -1,0 +1,9 @@
+/* ═══ css/70-programs ═══ Crear programa y gestor de programas */
+.cpo{width:100%;display:flex;align-items:center;gap:14px;text-align:left;padding:18px 16px;margin:0 0 12px;border-radius:20px;border:1px solid var(--ln);background:var(--cd)}.cpo>span:nth-child(2){flex:1;min-width:0}.cpo b{font-size:18px;display:block;margin-bottom:3px}.cpo small{color:var(--mu);font-size:13px;line-height:1.4;display:block}.cpi{width:48px;height:48px;border-radius:14px;display:grid!important;place-items:center;flex:none;background:color-mix(in srgb,var(--a2) 18%,transparent);color:var(--a1)}
+.cpw{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;margin:6px 0;border-radius:14px;text-align:left}.cpw i{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--mu);display:grid;place-items:center;flex:none;color:var(--ft);font-style:normal}.cpw.on{border-color:var(--a2)}.cpw.on i{background:var(--a2);border-color:var(--a2)}.cpw span{min-width:0}
+.cpr{margin:8px 0}.cpr.rs{opacity:.7}.cpm{display:flex;gap:6px}.cpm button{width:36px;height:36px;border-radius:10px;padding:0;display:grid;place-items:center}.cpm button:first-child svg{transform:rotate(180deg)}.cpm button:disabled{opacity:.3}.cpe{font-size:12px;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cps{display:flex;flex-wrap:wrap;gap:6px}.cps .chip{margin:0}
+.msb2{position:absolute;inset:0;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);-webkit-mask-image:linear-gradient(90deg,transparent 0%,transparent 32%,#000 100%);mask-image:linear-gradient(90deg,transparent 0%,transparent 32%,#000 100%)}
+.msd,.msd.out{animation:none}
+.msb,.msb2,.mci{animation:msi .45s cubic-bezier(.2,.9,.25,1) both}
+.msd.out .msb,.msd.out .msb2,.msd.out .mci{animation:mso .26s ease-in both}

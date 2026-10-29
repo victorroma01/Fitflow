@@ -1,0 +1,15 @@
+/* ═══ css/72-weekly-polish ═══ Ajustes tipográficos y tarjeta semanal */
+
+/* v19: halo bajo el botón fijo, mejores saltos de línea, tarjeta de semana */
+.sb{box-shadow:0 0 22px 16px var(--bg)}.sb.pr{box-shadow:0 6px 18px color-mix(in srgb,var(--a2) 35%,transparent),0 0 22px 16px var(--bg)}
+.mu,small,p,.cd small{text-wrap:pretty}h1,h2,h3{text-wrap:balance}
+.wkc .wkd{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:14px 0 4px}
+.wkc .wkd span{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;font-weight:650;color:var(--mu)}
+.wkc .wkd i{display:grid;place-items:center;width:100%;max-width:36px;aspect-ratio:1;border-radius:50%;border:1.5px solid var(--ln);box-sizing:border-box}
+.wkc .wkd .on i{border-color:transparent;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 4px 12px color-mix(in srgb,var(--a2) 40%,transparent)}
+.wkc .wkd .on i::after{content:"";width:34%;height:18%;border-left:2px solid var(--ft);border-bottom:2px solid var(--ft);transform:translateY(-12%) rotate(-45deg)}
+.wkc .wkd .td{color:var(--tx)}.wkc .wkd .td i{border-color:var(--a1)}.wkc .wkd .on.td i{border-color:transparent}
+.wkc .wkd .fu i{border-style:dashed;opacity:.55}
+.wkc .wks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--ln)}
+.wkc .wks b{display:block;font-size:26px;line-height:1.1}.wkc .wks small{color:var(--mu)}
+.wkc .wkn{display:block;margin-top:10px;font-size:12px}
