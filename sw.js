@@ -1,4 +1,4 @@
-/* FitFlow · uso sin conexión: primero red (siempre revalidada), y si falla, la última versión guardada */
+/* StrataFit · uso sin conexión: primero red (siempre revalidada), y si falla, la última versión guardada */
 const C='ff-app-1';
 self.addEventListener('install',()=>{self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==C)await caches.delete(k);await self.clients.claim()})())});
