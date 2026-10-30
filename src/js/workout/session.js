@@ -13,7 +13,7 @@ import { exBadge, exPhotoUrl } from '../library/photo.js';
 import { restorePlanBackup } from '../routines/builder.js';
 import { blockBadge, dayBlocks, exToolsHtml, inSuperset } from './day.js';
 import { restOf } from './rest.js';
-import { targetLine, targetText, unitHead, unitOf, usesWeight } from './targets.js';
+import { targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from './targets.js';
 import { lastTimeLine, prefillSets, setText } from './progression.js';
 import { usesBarbell } from './plates.js';
 import { isDeloadWeek } from './deload.js';
@@ -46,10 +46,10 @@ export function sessionView() {
     if (pv != null && pv !== cur[0] && W.x[pv] && W.x[pv].length && W.x[pv].every(s => s.ok))
       W.fd[pv] = 1;
   }
-  return html`<div class="wsk"><div class="hd"><b style="font-size:22px" id="tm">${raw(fmtDuration(t))}</b><span>Serie ${Math.min(o + 1, n)}/${n}</span><span class="mu" style="min-width:60px;text-align:right">${W.p ? 'En pausa' : restPill()}</span></div><div class="bar" style="height:5px;margin:10px 0"><i style="width:${o / n * 100}%;background:var(--a2)"></i></div>${raw(nextUpBar(d, cur))}</div>${d.ex.map((e, i) => html`<div class="xs${W.fd && W.fd[i] ? ' fd' : ''}${W.x[i].length && W.x[i].every(s => s.ok) ? ' dn' : ''}" id="ex${raw(i)}">${lt[i][1] ? blockHeader(L, lt[i][0], cur) : ''}${blockBadge(d.ex, i)}<div class="xh">${exThumb(e.n, i)}<div style="min-width:0"><b style="font-size:18px">${e.n}</b>${targetLine(e, i)}${lastTimeLine(e, i)}${e.o ? html`<div class="mu" style="font-size:12px">Cambiado desde: ${e.o} · <u data-a="zun" data-i="${raw(i)}" style="cursor:pointer">Deshacer</u></div>` : ''}</div>${foldButton(i)}</div>${foldSummary(e, i)}${exToolsHtml(e, i)}<div style="margin:-2px 0 6px"><button class="chip" data-a="zhi" data-i="${raw(i)}">Historial</button><button class="chip" data-a="zsw" data-i="${raw(i)}">${icon('swp', 15)} Swap</button>${usesBarbell(e.n) ? html`<button class="chip" data-a="zpl" data-i="${raw(i)}">Discos</button>` : ''}</div><div class="thd"><span>Set</span><span></span><span>${raw(unitHead(e))}</span><span>${usesWeight(e) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${W.x[i].map((s, j) => {
+  return html`<div class="wsk"><div class="hd"><b style="font-size:22px" id="tm">${raw(fmtDuration(t))}</b><span>Serie ${Math.min(o + 1, n)}/${n}</span><span class="mu" style="min-width:60px;text-align:right">${W.p ? 'En pausa' : restPill()}</span></div><div class="bar" style="height:5px;margin:10px 0"><i style="width:${o / n * 100}%;background:var(--a2)"></i></div>${raw(nextUpBar(d, cur))}</div>${d.ex.map((e, i) => html`<div class="xs${W.fd && W.fd[i] ? ' fd' : ''}${W.x[i].length && W.x[i].every(s => s.ok) ? ' dn' : ''}" id="ex${i}">${lt[i][1] ? blockHeader(L, lt[i][0], cur) : ''}${blockBadge(d.ex, i)}<div class="xh">${exThumb(e.n, i)}<div style="min-width:0"><b style="font-size:18px">${e.n}</b>${targetLine(e, i)}${lastTimeLine(e, i)}${e.o ? html`<div class="mu" style="font-size:12px">Cambiado desde: ${e.o} · <u data-a="zun" data-i="${i}" role="button" tabindex="0" style="cursor:pointer">Deshacer</u></div>` : ''}</div>${foldButton(i)}</div>${foldSummary(e, i)}${exToolsHtml(e, i)}<div style="margin:-2px 0 6px"><button class="chip" data-a="zhi" data-i="${i}">Historial</button><button class="chip" data-a="zsw" data-i="${i}">${icon('swp', 15)} Swap</button>${usesBarbell(e.n) ? html`<button class="chip" data-a="zpl" data-i="${i}">Discos</button>` : ''}</div><div class="thd"><span>Set</span><span></span><span>${raw(unitHead(e))}</span><span>${usesWeight(e) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${W.x[i].map((s, j) => {
     const c = cur && cur[0] == i && cur[1] == j;
-    return html`<div class="r2${c ? ' cur' : ''}"><span>${raw(s.t == 1 ? 'D' : j + 1)}</span><span class="wk2">WRK</span><input type="number" inputmode="decimal" data-c="sr" data-i="${raw(i)}" data-j="${raw(j)}" value="${raw(s.r)}">${raw(!usesWeight(e) ? '<span class="mu" style="text-align:center">–</span>' : html`<input type="number" inputmode="decimal" data-c="sw" data-i="${raw(i)}" data-j="${raw(j)}" value="${s.w ? toDisplayWeight(s.w) : ''}" placeholder="${weightUnit()}">`)}<span style="font-size:13px">${raw(fmtMinSec(inSuperset(i) ? 10 : restOf(e)))}</span><button class="ck ${s.ok ? 'on' : ''}" data-a="ck" data-i="${raw(i)}" data-j="${raw(j)}">✓</button></div>${W.re && W.ri && W.ri[0] == i && W.ri[1] == j ? html`<div class="rr"><button data-a="rt" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000))))}</b><br><small data-a="rt" data-i="0" style="cursor:pointer;text-decoration:underline">Saltar</small></span><button data-a="rt" data-i="15">+15s</button></div>` : ''}${rpeRow(i, j, s)}`;
-  })}<div class="g2" style="margin-top:8px"><button data-a="sl" data-i="${raw(i)}">− Serie</button><button data-a="sa" data-i="${raw(i)}">+ Serie</button></div></div>`)}<div class="g2" style="margin:16px 0 84px"><button data-a="zdis" style="background:#d4d4da;color:#111;border:0;padding:15px;border-radius:16px;font-size:15px">Salir y descartar</button><button data-a="end" style="background:#fff;color:#111;border:0;padding:15px;border-radius:16px;font-size:16px;font-weight:700">Log out</button></div><div class="pb"><button data-a="zpv">${icon('prv', 26)}</button><button data-a="zps">${icon(W.p ? 'ply' : 'pau', 30)}</button><button data-a="znx">${icon('nxt', 26)}</button></div>`;
+    return html`<div class="r2${c ? ' cur' : ''}"><span>${raw(s.t == 1 ? 'D' : j + 1)}</span><span class="wk2">WRK</span><input type="number" inputmode="decimal" data-c="sr" data-i="${i}" data-j="${j}" value="${s.r}" aria-label="${unitName(e) + ', ' + setName(j, s, e)}">${raw(!usesWeight(e) ? '<span class="mu" style="text-align:center">–</span>' : html`<input type="number" inputmode="decimal" data-c="sw" data-i="${i}" data-j="${j}" value="${s.w ? toDisplayWeight(s.w) : ''}" placeholder="${weightUnit()}" aria-label="${'Peso, ' + setName(j, s, e)}">`)}<span style="font-size:13px">${raw(fmtMinSec(inSuperset(i) ? 10 : restOf(e)))}</span><button class="ck ${s.ok ? 'on' : ''}" data-a="ck" data-i="${i}" data-j="${j}" aria-label="${'Hecha, ' + setName(j, s, e)}" aria-pressed="${s.ok ? 'true' : 'false'}">✓</button></div>${W.re && W.ri && W.ri[0] == i && W.ri[1] == j ? html`<div class="rr"><button data-a="rt" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000))))}</b><br><small data-a="rt" data-i="0" role="button" tabindex="0" style="cursor:pointer;text-decoration:underline">Saltar</small></span><button data-a="rt" data-i="15">+15s</button></div>` : ''}${rpeRow(i, j, s)}`;
+  })}<div class="g2" style="margin-top:8px"><button data-a="sl" data-i="${i}">− Serie</button><button data-a="sa" data-i="${i}">+ Serie</button></div></div>`)}<div class="g2" style="margin:16px 0 84px"><button data-a="zdis" style="background:#d4d4da;color:#111;border:0;padding:15px;border-radius:16px;font-size:15px">Salir y descartar</button><button data-a="end" style="background:#fff;color:#111;border:0;padding:15px;border-radius:16px;font-size:16px;font-weight:700">Log out</button></div><div class="pb"><button data-a="zpv" aria-label="Serie anterior">${icon('prv', 26)}</button><button data-a="zps" aria-label="${W.p ? 'Reanudar' : 'Pausar'}">${icon(W.p ? 'ply' : 'pau', 30)}</button><button data-a="znx" aria-label="Siguiente serie">${icon('nxt', 26)}</button></div>`;
 }
 A.zhi = i => {
   const E = S.plan[S.sel].ex[i];
@@ -152,11 +152,13 @@ const setToggle = (i, b) => {
   W.re = s.ok ? Date.now() + (a => a[i + 1] && a[i].b && a[i + 1].b == a[i].b ? 10 : restOf(a[i]))(S.plan[S.sel].ex) * 1000 : 0;
   R();
 };
-const foldButton = i => html`<button class="fdb" data-a="zfd" data-i="${raw(i)}" aria-label="Plegar o desplegar ejercicio">${icon('chev', 20)}</button>`;
+/** Cómo se llama una fila de series para los lectores de pantalla: «serie 2, Press banca» (o «drop set, …»). */
+const setName = (j, s, e) => (s.t == 1 ? 'drop set' : 'serie ' + (j + 1)) + ', ' + e.n;
+const foldButton = i => html`<button class="fdb" data-a="zfd" data-i="${i}" aria-label="Plegar o desplegar ejercicio">${icon('chev', 20)}</button>`;
 const foldSummary = (e, i) => {
   const a = W.x[i] || [];
   const ok = a.filter(s => s.ok).length;
-  return html`<div class="xsm" data-a="zfd" data-i="${raw(i)}"><span><b>${raw(ok)}/${a.length}</b> series</span><span>${raw(targetText(e))}</span></div>`;
+  return html`<div class="xsm" data-a="zfd" data-i="${i}" role="button" tabindex="0"><span><b>${raw(ok)}/${a.length}</b> series</span><span>${raw(targetText(e))}</span></div>`;
 };
 A.zfd = (i, b) => {
   const k = +b.dataset.i;
@@ -192,7 +194,7 @@ const anLiveOn = i => {
 const exThumb = (n, i) => {
   const on = anLiveOn(i);
   const s = exAnatomy(n, 64);
-  const at = exPhotoUrl(n) ? ' data-a="exv" data-n="' + X(n) + '" role="button" aria-label="Ver foto de ' + X(n) + '"' : '';
+  const at = exPhotoUrl(n) ? ' data-a="exv" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Ver foto de ' + X(n) + '"' : '';
   if (!on)
     return html`<div class="th"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
   const an = s.indexOf('stroke-width="\.7"') >= 0 || s.indexOf('stroke-width=".7"') >= 0;
@@ -249,7 +251,7 @@ const rpeRow = (i, j, s) => {
   const e = S.plan[S.sel].ex[i];
   if (!e || unitOf(e))
     return '';
-  return html`<div class="rpe"><span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<button class="chip${s.q == v ? ' on' : ''}" data-a="rpe" data-i="${raw(i)}" data-j="${raw(j)}" data-v="${v}">${v}</button>`)}${usesWeight(e) && (+s.w || 0) > 0 ? html`<button class="chip" data-a="drp" data-i="${raw(i)}" data-j="${raw(j)}">+ Drop set</button>` : ''}</div>`;
+  return html`<div class="rpe"><span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<button class="chip${s.q == v ? ' on' : ''}" data-a="rpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}${usesWeight(e) && (+s.w || 0) > 0 ? html`<button class="chip" data-a="drp" data-i="${i}" data-j="${j}">+ Drop set</button>` : ''}</div>`;
 };
 A.rpe = (i, b) => {
   const s = W.x[i] && W.x[i][+b.dataset.j];

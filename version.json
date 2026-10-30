@@ -1,17 +1,45 @@
 {
- "version": "1.22.0",
+ "version": "1.23.0",
  "date": "2026-10-30",
  "sections": [
   {
    "title": "Mejoras",
    "items": [
-    "Al tocar algo, la pantalla ya no se rehace entera: no pierdes la posición ni lo que estás escribiendo.",
-    "La app pesa un 30 % menos y lo poco usado (WOD, CSV, escáner) se descarga solo al abrirlo.",
-    "Más protección con los textos que vienen de fuera: copias, programas compartidos y Open Food Facts."
+    "Durante el entreno, cada botón responde al toque en al menos 44 × 44 px, aunque se vea igual.",
+    "Funciona mejor con VoiceOver: cada botón y cada campo dice qué es, por ejemplo «Peso, serie 2, Press banca».",
+    "En el navegador, la barra superior toma el color del tema que elijas, claro u oscuro.",
+    "Iconos un 37 % más ligeros, con la misma imagen."
+   ]
+  },
+  {
+   "title": "Correcciones",
+   "items": [
+    "Más protección al restaurar copias: una copia manipulada ya no puede colar código por la foto de perfil ni por los datos."
    ]
   }
  ],
  "history": [
+  {
+   "version": "1.23.0",
+   "date": "2026-10-30",
+   "sections": [
+    {
+     "title": "Mejoras",
+     "items": [
+      "Durante el entreno, cada botón responde al toque en al menos 44 × 44 px, aunque se vea igual.",
+      "Funciona mejor con VoiceOver: cada botón y cada campo dice qué es, por ejemplo «Peso, serie 2, Press banca».",
+      "En el navegador, la barra superior toma el color del tema que elijas, claro u oscuro.",
+      "Iconos un 37 % más ligeros, con la misma imagen."
+     ]
+    },
+    {
+     "title": "Correcciones",
+     "items": [
+      "Más protección al restaurar copias: una copia manipulada ya no puede colar código por la foto de perfil ni por los datos."
+     ]
+    }
+   ]
+  },
   {
    "version": "1.22.0",
    "date": "2026-10-30",

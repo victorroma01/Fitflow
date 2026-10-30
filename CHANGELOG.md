@@ -9,6 +9,32 @@ aviso de versión nueva (por eso se escriben para el usuario, en frases cortas);
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.23.0] — 2026-10-30
+
+### Mejoras
+- Durante el entreno, cada botón responde al toque en al menos 44 × 44 px, aunque se vea igual.
+- Funciona mejor con VoiceOver: cada botón y cada campo dice qué es, por ejemplo «Peso, serie 2, Press banca».
+- En el navegador, la barra superior toma el color del tema que elijas, claro u oscuro.
+- Iconos un 37 % más ligeros, con la misma imagen.
+
+### Correcciones
+- Más protección al restaurar copias: una copia manipulada ya no puede colar código por la foto de perfil ni por los datos.
+
+### Interno
+- Seguridad (auditoría S1): la foto de perfil solo se acepta como imagen incrustada JPEG, PNG o WebP (`safeImage`), al arrancar y al
+  restaurar (`cleanProfile`), y se escapa al pintarla. Además, los datos biométricos, de nutrición y de las series dejan de insertarse
+  sin escapar (`raw()`) en unos 30 módulos: una copia manipulada también podía inyectar HTML por ahí. `tests/security.py` lo cubre.
+- Accesibilidad (A1): `aria-label` en botones de icono y campos, `role="button"` y teclado (Intro, espacio) en lo que se toca sin ser
+  un botón, y zona táctil de 44 px en el entreno con `::after` invisibles (`css/97-touch-targets`). Prueba nueva `tests/a11y.py`
+  (33 pantallas; la zona táctil se mide tocando con `elementFromPoint`, a 390 y 320 px) y regla 10 de `tools/check.js`.
+- `theme-color` con `media` para tema claro y oscuro, y otra etiqueta delante si el tema se elige a mano (`applyTheme`).
+- Iconos PNG comprimidos sin pérdida: de 367 a 232 KB en total.
+- `tools/format.js` formatea también los módulos que se cargan al usarlos, encuentra los comentarios con el analizador (un `/*`
+  dentro de una plantilla se tomaba por comentario) y ya no mueve a la derecha, en cada pasada, los comentarios de varias líneas
+  dentro de una función.
+- GitHub Actions dice en cada solicitud de fusión desde dónde publica GitHub Pages y, en el modo «desde la rama», comprueba que la
+  copia de la raíz es exactamente la app compilada de ese código.
+
 ## [1.22.0] — 2026-10-30
 
 ### Mejoras

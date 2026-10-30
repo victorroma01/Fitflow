@@ -39,7 +39,7 @@ export function applyDiet() {
 export function dietCard() {
   const t = tdee();
   const i = S.nu.dt == null ? 3 : S.nu.dt;
-  return html`<details class="cd"><summary>Tipo de dieta: ${raw(DIET_TYPES[i][0])}</summary><label>Elige tu dieta</label><select data-c="dt">${DIET_TYPES.map((d, j) => html`<option value="${j}"${j == i ? ' selected' : ''}>${raw(d[0])}</option>`)}</select><p class="mu">${raw(DIET_TYPES[i][4])}. Proteína ${raw(DIET_TYPES[i][2])} g/kg, grasas ${raw(DIET_TYPES[i][3])} g/kg e hidratos el resto.</p>${raw(t ? html`<small>Metabolismo basal ${roundInt(t.bm)} kcal · gasto total ${roundInt(t.td)} kcal · objetivo ${roundInt(S.nu.k)} kcal</small>` : '<small style="color:var(--c)">Completa tus datos biométricos en Perfil para ajustar kcal y macros automáticamente.</small>')}</details>`;
+  return html`<details class="cd"><summary>Tipo de dieta: ${raw(DIET_TYPES[i][0])}</summary><label>Elige tu dieta</label><select data-c="dt" aria-label="Tipo de dieta">${DIET_TYPES.map((d, j) => html`<option value="${j}"${j == i ? ' selected' : ''}>${raw(d[0])}</option>`)}</select><p class="mu">${raw(DIET_TYPES[i][4])}. Proteína ${raw(DIET_TYPES[i][2])} g/kg, grasas ${raw(DIET_TYPES[i][3])} g/kg e hidratos el resto.</p>${raw(t ? html`<small>Metabolismo basal ${roundInt(t.bm)} kcal · gasto total ${roundInt(t.td)} kcal · objetivo ${roundInt(S.nu.k)} kcal</small>` : '<small style="color:var(--c)">Completa tus datos biométricos en Perfil para ajustar kcal y macros automáticamente.</small>')}</details>`;
 }
 /* — manejadores de esta función (registros A / C / U) — */
 C.dt = e => {

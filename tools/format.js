@@ -51,27 +51,38 @@ function format(src, name) {
   const printer = ts.createPrinter({ removeComments: false, newLine: ts.NewLineKind.LineFeed });
   let out = printer.printNode(ts.EmitHint.SourceFile, res.transformed[0], sf);
   res.dispose();
-  // sangría de 2 espacios (el impresor usa 4) fuera de las plantillas `…` y de los comentarios /* … */ de varias líneas
-  const tpl = templateLines(out);
-  commentLines(out).forEach(l => tpl.add(l));
-  out = out.split('\n').map((l, i) => tpl.has(i) ? l : l.replace(/^((?:    )+)/, m => '  '.repeat(m.length / 4))).join('\n');
+  // sangría de 2 espacios (el impresor usa 4) fuera de las plantillas `…` y de los comentarios /* … */ de varias líneas.
+  // Las líneas de un comentario se mueven lo mismo que su primera línea: el impresor las desplaza según la sangría que
+  // tenía el comentario, y si no se deshace, un comentario dentro de una función se movería a la derecha en cada pasada
+  const lines = out.split('\n'), keep = templateLines(out), shift = new Map();
+  const indent = l => /^ */.exec(l)[0].length;
+  const to2 = l => l.replace(/^((?:    )+)/, m => '  '.repeat(m.length / 4));
+  for (const [a, b] of commentBlocks(out)) {
+    const d = indent(lines[a]) - indent(to2(lines[a]));
+    for (let l = a + 1; l <= b; l++) {
+      keep.add(l);
+      shift.set(l, d);
+    }
+  }
+  out = lines.map((l, i) => shift.has(i) ? l.slice(Math.min(shift.get(i), indent(l))) : keep.has(i) ? l : to2(l)).join('\n');
   // plantillas etiquetadas sin espacio entre la etiqueta y la plantilla: html`…` (el impresor pone «html `…`»)
   out = out.replace(/\bhtml `/g, 'html`');
   return out.replace(/\s+$/, '') + '\n';
 }
-// líneas que empiezan dentro de un comentario /* … */ de varias líneas (no se tocan: su texto es libre)
-function commentLines(code) {
-  const sc = ts.createScanner(ts.ScriptTarget.ES2022, false, ts.LanguageVariant.Standard, code), set = new Set();
-  const lineOf = p => code.slice(0, p).split('\n').length - 1;
-  for (let k = sc.scan(); k !== ts.SyntaxKind.EndOfFileToken; k = sc.scan()) {
-    if (k === ts.SyntaxKind.MultiLineCommentTrivia) {
-      const a = lineOf(sc.getTokenPos()), b = lineOf(sc.getTextPos());
-      for (let l = a + 1; l <= b; l++) set.add(l);
-    }
-    // plantillas y expresiones regulares: el escáner necesita reescanear en contexto; basta con no confundir su contenido con comentarios
-    if (k === ts.SyntaxKind.TemplateHead || k === ts.SyntaxKind.NoSubstitutionTemplateLiteral) { /* el contenido ya es un token */ }
-  }
-  return set;
+// comentarios /* … */ de varias líneas: [primera línea, última línea] (el texto de las siguientes es libre). Se buscan con el
+// analizador, no con el escáner suelto: así un «/*» dentro de una plantilla (accept="image/*") no cuenta
+function commentBlocks(code) {
+  const sf = ts.createSourceFile('x.js', code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS), out = [], seen = new Set();
+  const lineOf = p => sf.getLineAndCharacterOfPosition(p).line;
+  const add = (pos, end, kind) => {
+    if (kind !== ts.SyntaxKind.MultiLineCommentTrivia || seen.has(pos)) return;
+    seen.add(pos);
+    if (lineOf(end) > lineOf(pos)) out.push([lineOf(pos), lineOf(end)]);
+  };
+  const visit = n => { ts.forEachLeadingCommentRange(code, n.pos, add); ts.forEachTrailingCommentRange(code, n.end, add); ts.forEachChild(n, visit); };
+  visit(sf);
+  ts.forEachLeadingCommentRange(code, sf.endOfFileToken.pos, add);
+  return out;
 }
 // líneas que empiezan dentro del contenido de una plantilla de varias líneas (no se tocan)
 function templateLines(code) {
@@ -91,7 +102,7 @@ module.exports = { format };
 if (require.main === module) {
   const args = process.argv.slice(2), check = args.includes('--check');
   let files = args.filter(a => !a.startsWith('--'));
-  if (!files.length) files = ['main.js'].concat(require('./modules').modules()).map(m => path.join(JS, m));
+  if (!files.length) files = ['main.js'].concat(require('./modules').allModules()).map(m => path.join(JS, m));
   let bad = 0;
   files.forEach(f => {
     const src = fs.readFileSync(f, 'utf8'), out = format(src, f);

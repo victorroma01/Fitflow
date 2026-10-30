@@ -132,6 +132,18 @@ def main(path):
         pg.clock.run_for(100)
         check('al comprobar responde con un aviso', ev("/se comprueban en la app instalada|No se ha podido comprobar|Tienes la última versión/.test(document.body.innerText)"))
 
+        # color de la barra del sistema (theme-color): sigue al tema elegido; en automático, al del móvil (etiquetas con media)
+        tc = "(()=>{const m=[...document.querySelectorAll('meta[name=theme-color]')].find(m=>!m.media||matchMedia(m.media).matches);return m?m.content:''})()"
+        ev("A.zth(0,{dataset:{v:'light'}})")
+        check('theme-color claro con el tema claro elegido', ev(tc) == '#f3f3f7', ev(tc))
+        ev("A.zth(0,{dataset:{v:'dark'}})")
+        check('theme-color oscuro con el tema oscuro elegido', ev(tc) == '#0b0b0d', ev(tc))
+        ev("A.zth(0,{dataset:{v:''}})")
+        auto = ev(tc)
+        check('en automático manda el tema del móvil', ev("!document.querySelector('meta[name=theme-color]:not([media])')") and auto in ('', '#0b0b0d'), auto)
+        if 'index.html' in path:
+            check('el paquete trae theme-color para tema claro y oscuro', ev("[...document.querySelectorAll('meta[name=theme-color][media]')].map(m=>m.content).sort().join()") == '#0b0b0d,#f3f3f7')
+
         # persistencia
         ev('saveState()')
         # entrenos guardados: dentro de 'ff' (1.20 y anteriores) o en su propia clave 'ff:logs' (guardado por partes, 1.21)

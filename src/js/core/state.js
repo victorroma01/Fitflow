@@ -36,6 +36,17 @@ export const setAddState = v => {
 };
 export const applyTheme = () => {
   S.theme ? document.documentElement.dataset.theme = S.theme : document.documentElement.removeAttribute('data-theme');
+  /* color de la barra del sistema (theme-color). Las dos etiquetas de la página siguen el tema del móvil; con un tema
+     elegido a mano va delante otra sin media (vale la primera que encaja) con el fondo de ese tema; en automático se quita */
+  const m = document.querySelector('meta[name="theme-color"]:not([media])');
+  if (!S.theme) {
+    m && m.remove();
+    return;
+  }
+  const t = m || document.createElement('meta');
+  t.name = 'theme-color';
+  t.content = S.theme == 'light' ? '#f3f3f7' : '#0b0b0d';
+  m || document.head.insertBefore(t, document.querySelector('meta[name="theme-color"]'));
 };
 export let overviewMode = 0;
 /** Cambia `overviewMode` desde otros módulos (un módulo no puede asignar una variable importada). */

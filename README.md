@@ -121,6 +121,8 @@ flowchart LR
   exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
 - **Persistencia solo a través de `Store`** (`core/store`). Ninguna otra parte toca `localStorage`: ahí se enchufaría un servidor
   ([`docs/BACKEND.md`](docs/BACKEND.md)).
+- **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
+  `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Diagnóstico; un `catch` vacío solo se permite con un
   comentario que explique por qué el fallo es esperable.
 - **Arranque explícito**: todo lo que se ejecuta al cargar (migraciones, reanudar un entreno, primer render) vive en `core/boot`, en orden.
@@ -158,7 +160,7 @@ flowchart LR
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
 │   └── img/                day/ (portadas, order.txt) y ex/ (fotos de ejercicio, map.txt)
 ├── static/                 sw.js (plantilla), manifiesto e iconos
-├── tools/                  check.js · format.js · format_css.js · same.js · rename.js
+├── tools/                  check.js · format.js · format_css.js · same.js · rename.js · pages.py
 ├── tests/                  pruebas (ver más abajo) y run.sh / compare.sh
 ├── docs/                   STATE.md · BACKEND.md · img/ (capturas)
 ├── .github/workflows/      pruebas automáticas
@@ -186,6 +188,7 @@ python -m playwright install chromium webkit
 | `bash tests/compare.sh vieja.html nueva.html` | Compara comportamiento e imagen de dos versiones. |
 | `node tools/rename.js mapa.txt` | Renombra globales (líneas «viejo nuevo») entendiendo ámbitos. |
 | `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. |
+| `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo mientras GitHub Pages publique desde la rama). |
 
 **Añadir una función**
 
@@ -208,10 +211,11 @@ en el archivo único van incrustadas.
 
 | Prueba | Qué comprueba |
 |---|---|
-| `tools/check.js` | Importaciones (lo usado de otro módulo, importado; nada sin usar), orden real de ejecución al cargar, identificadores sin declarar, nombres y manejadores duplicados, acciones sin manejador. |
+| `tools/check.js` | Importaciones (lo usado de otro módulo, importado; nada sin usar), orden real de ejecución al cargar, identificadores sin declarar, nombres y manejadores duplicados, acciones sin manejador y botones sin nombre accesible. |
 | `tests/smoke.py` | Arranque, pestañas, entreno completo, comidas, hojas, actualizaciones y persistencia, en las dos variantes. |
 | `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno. |
-| `tests/security.py` | Nombres con HTML malicioso en 33 pantallas: no debe ejecutarse nada. |
+| `tests/security.py` | Nombres, foto de perfil y datos con HTML malicioso en 33 pantallas, también desde una copia manipulada: no debe ejecutarse nada. |
+| `tests/a11y.py` | Accesibilidad en 33 pantallas: botones con nombre, campos con etiqueta, lo que se toca anunciado como botón y, en el entreno (a 390 y 320 px), zona táctil de 44 × 44 px medida tocando. |
 | `tests/safety.py` | Registro de errores, datos dañados, aviso al no poder guardar, copias automáticas y pantalla de error de arranque. |
 | `tests/storage.py` | Guardado por partes: formato, paso desde la 1.20, escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar. |
 | `tests/render.py` | Pintar con cambios mínimos: cada pantalla queda igual que pintada de cero y se conservan foco, texto escrito y desplazamiento. |
@@ -236,8 +240,8 @@ exige que no cambie nada.
    Chrome y Safari, crea la etiqueta `vX.Y.Z` con sus notas y publica la app; la app instalada enseña el aviso con las novedades.
 
 La publicación desde GitHub Actions requiere elegir **GitHub Actions** en *Settings → Pages → Source*. Mientras siga en
-*Deploy from a branch*, lo publicado es la copia de `dist/app/` en la raíz del repositorio, que hay que actualizar a mano en la misma
-solicitud de fusión.
+*Deploy from a branch*, lo publicado es la copia de `dist/app/` en la raíz del repositorio: se actualiza con
+`python3 tools/pages.py copiar` en la misma solicitud de fusión, y GitHub Actions comprueba que coincide con la app compilada.
 
 ## Siguientes pasos
 

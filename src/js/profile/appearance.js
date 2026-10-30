@@ -19,7 +19,7 @@ export function applyAccent() {
 }
 export const accentSwatches = () => html`<div class="swg">${ACCENTS.map((a, i) => {
   const on = (S.acc || 0) == i;
-  return html`<button class="swb${on ? ' on' : ''}" data-a="zac" data-i="${i}"><i style="background:linear-gradient(135deg,${raw(a[1])},${raw(a[2])});color:${raw(a[4])}">${on ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`;
+  return html`<button class="swb${on ? ' on' : ''}" data-a="zac" data-i="${i}"><i style="background:linear-gradient(135deg,${a[1]},${a[2]});color:${a[4]}">${on ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`;
 })}</div>`;
 A.zac = i => {
   S.acc = i;
@@ -27,7 +27,7 @@ A.zac = i => {
   saveState();
   R();
 };
-export const themeSegment = () => html`<div class="seg">${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`<button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="zth" data-v="${raw(x[0])}">${raw(x[1])}</button>`)}</div>`;
+export const themeSegment = () => html`<div class="seg">${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`<button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="zth" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
 A.zth = (i, b) => {
   S.theme = b.dataset.v;
   applyTheme();
@@ -43,7 +43,7 @@ const GLASS_INFO = { 3: 'Más transparencia, desenfoque y brillo. Es el más vis
 export const glassCard = () => {
   const m = glassMode();
   const g = m > 0;
-  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glk" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glk" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="gl" data-v="${raw(x[0])}">${raw(x[1])}</button>`)}</div><small class="mu" style="display:block;margin-top:4px">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu" style="display:block;margin-top:4px">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
+  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glk" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glk" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="gl" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><small class="mu" style="display:block;margin-top:4px">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu" style="display:block;margin-top:4px">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
 };
 A.glk = (i, b) => {
   const v = +b.dataset.v;

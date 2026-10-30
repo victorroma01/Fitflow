@@ -24,6 +24,7 @@ run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
 run python3 tests/photos.py dist/stratafit.html
 run python3 tests/security.py dist/stratafit.html
+run python3 tests/a11y.py dist/stratafit.html
 run python3 tests/safety.py dist/stratafit.html
 run python3 tests/storage.py dist/stratafit.html
 run python3 tests/render.py dist/stratafit.html

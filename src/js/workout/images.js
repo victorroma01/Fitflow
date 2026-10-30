@@ -8,7 +8,7 @@ import { S, saveState } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { groupOfName } from '../library/model.js';
 import { routineEditor, routineState } from '../routines/builder.js';
-import { html, raw } from '../core/html.js';
+import { html } from '../core/html.js';
 export const coverStyle = (n, d) => {
   const k = d && d.cu && DAY_PHOTOS[d.img] ? d.img : (DAY_PHOTO_RULES.find(r => r[0].test(n)) || [])[1];
   const u = DAY_PHOTOS[k];
@@ -29,7 +29,7 @@ export const routineImage = r => {
 const IMAGE_LABELS = { pecho: 'Pecho', espalda: 'Espalda', hombros: 'Hombros', brazos: 'Brazos', piernas: 'Piernas', legs: 'Prensa de piernas', torso: 'Torso', descanso: 'Descanso' };
 export const imagePicker = r => {
   const v = routineImage(r);
-  return html`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 4px">${Object.keys(DAY_PHOTOS).filter(k => k != 'descanso').map(k => html`<button data-a="crim" data-v="${raw(k)}" aria-label="${raw(IMAGE_LABELS[k])}" style="padding:0;height:78px;position:relative;overflow:hidden;border-radius:14px;border:2px solid ${v == k ? 'var(--a2)' : 'var(--ln)'}"><img src="${raw(DAY_PHOTOS[k])}" alt="" style="width:100%;height:100%;object-fit:cover;display:block${v == k ? '' : ';opacity:.55'}"></button>`)}</div>`;
+  return html`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 4px">${Object.keys(DAY_PHOTOS).filter(k => k != 'descanso').map(k => html`<button data-a="crim" data-v="${k}" aria-label="${IMAGE_LABELS[k]}" style="padding:0;height:78px;position:relative;overflow:hidden;border-radius:14px;border:2px solid ${v == k ? 'var(--a2)' : 'var(--ln)'}"><img src="${DAY_PHOTOS[k]}" alt="" style="width:100%;height:100%;object-fit:cover;display:block${v == k ? '' : ';opacity:.55'}"></button>`)}</div>`;
 };
 A.crim = (i, b) => {
   S.cr[routineState.i].img = b.dataset.v;

@@ -20,7 +20,7 @@ export function calendarPage() {
     c += '<i></i>';
   for (let i = 1; i <= n; i++)
     c += html`<i class="${ds.has(dayKey(new Date(d.getFullYear(), d.getMonth(), i))) ? 'on' : ''}">${i}</i>`;
-  return html`<div class="row"><button data-a="cm" data-i="-1">‹</button><b>${raw(d.toLocaleDateString('es', { month: 'long', year: 'numeric' }))}</b><button data-a="cm" data-i="1">›</button></div><div class="cal" style="margin-top:8px">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
+  return html`<div class="row"><button data-a="cm" data-i="-1" aria-label="Mes anterior">‹</button><b>${raw(d.toLocaleDateString('es', { month: 'long', year: 'numeric' }))}</b><button data-a="cm" data-i="1" aria-label="Mes siguiente">›</button></div><div class="cal" style="margin-top:8px">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
 const logsPage = () => {
   const L = S.logs.map((l, i) => ({ l, i })).reverse();
@@ -37,7 +37,7 @@ const logsPage = () => {
       last = m;
       h += html`<div class="ph">${m}</div>`;
     }
-    h += html`<div class="it exr" data-a="lgx" data-i="${raw(o.i)}" style="cursor:pointer"><span><b>${o.l.n}</b><br><small>${raw(d.toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' }))}${raw(logText(o.l))}</small></span><b>${raw(logRight(o.l))}</b></div>`;
+    h += html`<div class="it exr" data-a="lgx" data-i="${o.i}" role="button" tabindex="0" style="cursor:pointer"><span><b>${o.l.n}</b><br><small>${raw(d.toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' }))}${raw(logText(o.l))}</small></span><b>${raw(logRight(o.l))}</b></div>`;
   });
   return html`${raw(h)}<p class="mu" style="font-size:12px;margin-top:14px">Toca un registro para borrarlo.</p>`;
 };

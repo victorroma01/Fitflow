@@ -1,5 +1,5 @@
 /* ═══ core/events ═══
-   Delegación global de eventos click, change e input.
+   Delegación global de eventos click, change e input, y teclado para lo que hace de botón sin serlo.
 */
 import { A, C, U } from './registry.js';
 import { W } from './state.js';
@@ -20,4 +20,13 @@ document.addEventListener('change', e => {
 document.addEventListener('input', e => {
   const u = e.target.dataset.u;
   u && U[u](e.target.value);
+});
+/* Intro o espacio sobre algo con role="button" que no es un <button> (una fila de la lista, «Saltar»…) lo pulsa,
+   como haría un botón de verdad: así se puede usar con teclado o con un lector de pantalla */
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if ((e.key == 'Enter' || e.key == ' ') && t.getAttribute && t.getAttribute('role') == 'button' && t.tagName != 'BUTTON') {
+    e.preventDefault();
+    t.click();
+  }
 });

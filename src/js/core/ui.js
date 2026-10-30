@@ -37,7 +37,7 @@ export const sheet = h => {
 export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'zno', ''], [l, a, 'pr']]);
 document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt"></div>');
 export function dialog(t, p, b) {
-  $('#dg').innerHTML = html`<div class="dgb"><div class="dgc"><h3 style="margin:0 0 6px">${raw(t)}</h3><p class="mu" style="margin:0 0 16px;font-size:14px">${raw(p)}</p><div class="g2" style="grid-template-columns:repeat(${b.length},1fr)">${b.map(x => html`<button class="${raw(x[2])}" data-a="dga" data-v="${raw(x[1])}">${raw(x[0])}</button>`)}</div></div></div>`;
+  $('#dg').innerHTML = html`<div class="dgb"><div class="dgc"><h3 style="margin:0 0 6px">${raw(t)}</h3><p class="mu" style="margin:0 0 16px;font-size:14px">${raw(p)}</p><div class="g2" style="grid-template-columns:repeat(${b.length},1fr)">${b.map(x => html`<button class="${x[2]}" data-a="dga" data-v="${x[1]}">${raw(x[0])}</button>`)}</div></div></div>`;
 }
 A.dga = (i, b) => {
   $('#dg').innerHTML = '';
@@ -66,9 +66,9 @@ export const fullPage = h => {
   $('#sh').className = 'full';
   sheetToTop();
 };
-export const pgHead = (t, back) => html`<div class="row"><button data-a="${raw(back || 'cl')}" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 class="pgt">${raw(t)}</h1>`;
+export const pgHead = (t, back) => html`<div class="row"><button data-a="${back || 'cl'}" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 class="pgt">${raw(t)}</h1>`;
 A.menu = () => {
-  $('#mn').innerHTML = html`<div class="mbk" data-a="mnc"></div><div class="msd"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="mnc" aria-label="Cerrar">${icon('x', 22)}</button><div class="mti">Menú</div>${[['pg', 'prog', 'Programas'], ['cl2', 'cal', 'Calendario'], ['lg', 'log', 'Registros'], ['rw', 'reset', 'Reiniciar semana']].map((x, i) => html`<button class="mi" style="--d:${70 + i * 60}ms" data-a="mnx" data-v="${raw(x[0])}"><span>${raw(x[2])}</span>${icon(x[1], 22)}</button>`)}</div></div>`;
+  $('#mn').innerHTML = html`<div class="mbk" data-a="mnc"></div><div class="msd"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="mnc" aria-label="Cerrar">${icon('x', 22)}</button><div class="mti">Menú</div>${[['pg', 'prog', 'Programas'], ['cl2', 'cal', 'Calendario'], ['lg', 'log', 'Registros'], ['rw', 'reset', 'Reiniciar semana']].map((x, i) => html`<button class="mi" style="--d:${70 + i * 60}ms" data-a="mnx" data-v="${x[0]}"><span>${raw(x[2])}</span>${icon(x[1], 22)}</button>`)}</div></div>`;
 };
 A.mnc = () => {
   const s = $('.msd');
@@ -81,5 +81,5 @@ A.mnc = () => {
     $('#mn').innerHTML = '';
   }, 240);
 };
-export const segmented = (a, cur, list) => html`<div class="seg${list.length == 2 ? ' s2' : ''}">${list.map(x => html`<button class="${cur == x[0] ? 'on' : ''}" data-a="${raw(a)}" data-v="${raw(x[0])}">${raw(x[1])}</button>`)}</div>`;
-export const linkRow = (ico, t, s, a, i) => html`<button class="cd f2lk" data-a="${raw(a)}"${raw(i != null ? ' data-i="' + i + '"' : '')}>${icon(ico, 30)}<span><b>${raw(t)}</b><br><small>${raw(s)}</small></span></button>`;
+export const segmented = (a, cur, list) => html`<div class="seg${list.length == 2 ? ' s2' : ''}">${list.map(x => html`<button class="${cur == x[0] ? 'on' : ''}" data-a="${a}" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
+export const linkRow = (ico, t, s, a, i) => html`<button class="cd f2lk" data-a="${a}"${raw(i != null ? ' data-i="' + i + '"' : '')}>${icon(ico, 30)}<span><b>${raw(t)}</b><br><small>${raw(s)}</small></span></button>`;
