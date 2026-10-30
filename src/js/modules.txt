@@ -1,11 +1,12 @@
 # Orden de carga (el build concatena en este orden). Cada módulo es una lista de sentencias de ámbito global.
 core/util.js
 core/store.js
+core/errors.js
 core/registry.js
 data/library.js
 data/foods.js
+data/media.js
 data/photos.js
-data/exphotos.js
 data/anatomy.js
 data/templates.js
 data/levels.js
@@ -53,6 +54,8 @@ profile/units.js
 profile/feedback.js
 system/files.js
 system/backup.js
+system/snapshots.js
+system/diagnostics.js
 system/updates.js
 extras/anatomy.js
 extras/wod.js

@@ -7,7 +7,8 @@ d.innerHTML='<h2 style="margin:24px 0 8px;font-size:22px">StrataFit no ha podido
 document.body.appendChild(d);
 document.getElementById('ffe1').onclick=function(){location.reload()};
 document.getElementById('ffe2').onclick=function(){var t=document.getElementById('ffe4');try{t.value=localStorage.getItem('ff')||'(sin datos)'}catch(e){t.value='(no se puede leer el almacenamiento)'}t.style.display='block';t.focus();t.select()};
-document.getElementById('ffe3').onclick=function(){try{localStorage.removeItem('ff');localStorage.removeItem('ffw')}catch(e){}location.reload()}}
+document.getElementById('ffe3').onclick=function(){try{var r=localStorage.getItem('ff');if(r)localStorage.setItem('ffbad',JSON.stringify({t:Date.now(),raw:r}))}catch(e){}try{localStorage.removeItem('ff');localStorage.removeItem('ffw')}catch(e){}location.reload()};
+try{var l=JSON.parse(localStorage.getItem('fferr')||'[]');if(!Array.isArray(l))l=[];l.push({t:Date.now(),w:'arranque',m:String(m).slice(0,300),s:'',v:''});localStorage.setItem('fferr',JSON.stringify(l.slice(-30)))}catch(e){}}
 window.__ffe=fail;
 var last='';window.addEventListener('error',function(e){var m=(e.message||'Error')+(e.filename?'\n'+String(e.filename).split('/').pop()+':'+e.lineno+':'+e.colno:'');last=m;if(window.__ffok)return;if(window.__ffs||/SyntaxError|Unexpected|Invalid or unexpected/.test(m))fail(m)});
 

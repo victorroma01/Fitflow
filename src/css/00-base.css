@@ -1,9 +1,80 @@
 /* ═══ css/00-base ═══ Variables de tema, reinicio y tipografía base */
-:root{--bg:#0b0b0d;--cd:#17171b;--tx:#f4f4f6;--mu:#8b8b96;--ac:#9b5cf6;--ln:#2a2a31;--c:#e9567c;--p:#5b7bea;--g:#f0b244;--ib:#0b0b0d;box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);color-scheme:dark}
-@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3f3f7;--cd:#fff;--tx:#17171b;--mu:#6b6b76;--ln:#e0e0e6;--ib:#f3f3f7;color-scheme:light}}
-:root[data-theme="light"]{--bg:#f3f3f7;--cd:#fff;--tx:#17171b;--mu:#6b6b76;--ln:#e0e0e6;--ib:#f3f3f7;color-scheme:light}
-:root[data-theme="dark"]{--bg:#0b0b0d;--cd:#17171b;--tx:#f4f4f6;--mu:#8b8b96;--ln:#2a2a31;--ib:#0b0b0d;color-scheme:dark}
-*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:15px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif}
-#app{padding:14px 14px 96px;max-width:560px;margin:auto}
-button,input,select{font:inherit;color:inherit}button{background:var(--cd);border:1px solid var(--ln);border-radius:12px;padding:9px 12px;cursor:pointer}
-input,select,textarea{background:var(--ib);border:1px solid var(--ln);border-radius:10px;padding:8px;width:100%;min-width:0}
+:root {
+  --bg:#0b0b0d;
+  --cd:#17171b;
+  --tx:#f4f4f6;
+  --mu:#8b8b96;
+  --ac:#9b5cf6;
+  --ln:#2a2a31;
+  --c:#e9567c;
+  --p:#5b7bea;
+  --g:#f0b244;
+  --ib:#0b0b0d;
+  box-sizing:border-box;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+@media(prefers-color-scheme:light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#f3f3f7;
+    --cd:#fff;
+    --tx:#17171b;
+    --mu:#6b6b76;
+    --ln:#e0e0e6;
+    --ib:#f3f3f7;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"] {
+  --bg:#f3f3f7;
+  --cd:#fff;
+  --tx:#17171b;
+  --mu:#6b6b76;
+  --ln:#e0e0e6;
+  --ib:#f3f3f7;
+  color-scheme:light;
+}
+:root[data-theme="dark"] {
+  --bg:#0b0b0d;
+  --cd:#17171b;
+  --tx:#f4f4f6;
+  --mu:#8b8b96;
+  --ln:#2a2a31;
+  --ib:#0b0b0d;
+  color-scheme:dark;
+}
+* {
+  box-sizing:border-box;
+}
+html,body {
+  margin:0;
+}
+body {
+  background:var(--bg);
+  color:var(--tx);
+  font:15px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+#app {
+  padding:14px 14px 96px;
+  max-width:560px;
+  margin:auto;
+}
+button,input,select {
+  font:inherit;
+  color:inherit;
+}
+button {
+  background:var(--cd);
+  border:1px solid var(--ln);
+  border-radius:12px;
+  padding:9px 12px;
+  cursor:pointer;
+}
+input,select,textarea {
+  background:var(--ib);
+  border:1px solid var(--ln);
+  border-radius:10px;
+  padding:8px;
+  width:100%;
+  min-width:0;
+}

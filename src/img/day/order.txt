@@ -1,0 +1,14 @@
+# Fotos de portada de los días (src/img/day/<clave>.jpg), en el orden en que aparecen en el selector
+pecho
+espalda
+hombros
+piernas
+brazos
+torso
+legs
+descanso
+crossfit
+hyrox
+cardio
+core
+funcional

@@ -5,18 +5,38 @@
    Define: Store
 */
 /* Claves que usa la app (y, por tanto, lo único que habría que sincronizar con un servidor):
-     app  → estado completo S (perfil, programas, registros, comidas, medidas…)
-     wip  → entreno en curso (para reanudar si se cierra la app)
-     pre  → copia automática previa a restaurar una copia de seguridad (permite deshacer)
-     rs   → resumen pendiente de mostrar tras restaurar
-   Las fotos de progreso viven en IndexedDB (base "ffph"; ver extras/measures). */
-const Store={
- K:{app:'ff',wip:'ffw',pre:'ffpre',rs:'ffrs'},
- remote:null,
- /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…) */
- get(k){return localStorage.getItem(k)},
- set(k,v){localStorage.setItem(k,v);Store.note(k,v)},
- del(k){localStorage.removeItem(k);Store.note(k,null)},
- /* aviso a un adaptador remoto (si hay); un fallo del adaptador nunca debe impedir guardar en local */
- note(k,v){try{if(Store.remote&&Store.remote.changed)Store.remote.changed(k,v)}catch(e){}}
+   app  → estado completo S (perfil, programas, registros, comidas, medidas…)
+   wip  → entreno en curso (para reanudar si se cierra la app)
+   pre  → copia automática previa a restaurar una copia de seguridad (permite deshacer)
+   rs   → resumen pendiente de mostrar tras restaurar
+   err  → registro de errores del dispositivo (core/errors; no se sincroniza)
+   bad  → copia del estado que no se pudo leer, apartada antes de empezar de cero (no se sincroniza)
+   Las fotos de progreso viven en IndexedDB (base "ffph"; ver extras/measures) y las copias automáticas
+   también (base "ffsnap"; ver system/snapshots). */
+const Store = {
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad' },
+  remote: null,
+  /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…) */
+  get(k) {
+    return localStorage.getItem(k);
+  },
+  set(k, v) {
+    localStorage.setItem(k, v);
+    Store.note(k, v);
+  },
+  del(k) {
+    localStorage.removeItem(k);
+    Store.note(k, null);
+  },
+  /* aviso a un adaptador remoto (si hay); un fallo del adaptador nunca debe impedir guardar en local */
+  note(k, v) {
+    try {
+      if (Store.remote && Store.remote.changed)
+        Store.remote.changed(k, v);
+    }
+    catch (e) {
+      if (k != Store.K.err && typeof logError == 'function')
+        logError('Store.remote', e);
+    }
+  }
 };

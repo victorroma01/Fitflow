@@ -73,7 +73,7 @@ def main(path):
 
         # nutrición: añadir alimento
         ev('S.tab=1;R()')
-        k = ev("dk(new Date(Date.now()+ND*864e5))")
+        k = ev("dayKey(new Date(Date.now()+nutriDayOffset*864e5))")
         m0 = ev("((S.meals[%s]||{})[0]||[]).length" % json.dumps(k))
         ev('A.add(0)')
         pg.clock.run_for(300)
@@ -94,10 +94,10 @@ def main(path):
                 check('abre ' + name, n > 40, str(n))
             except Exception as e:
                 check('abre ' + name, False, str(e)[:120])
-            ev("A.cl&&A.cl();sh()")
+            ev("A.cl&&A.cl();sheet()")
 
         # persistencia
-        ev('sv()')
+        ev('saveState()')
         before = ev("JSON.parse(localStorage.getItem('ff')).logs.length")
         ev('location.reload()')
         pg.clock.run_for(800)

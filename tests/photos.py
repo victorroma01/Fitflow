@@ -42,14 +42,14 @@ def main(path, shots=None):
         check('arranca', ev('!!window.__ffok'))
 
         # datos: cada ejercicio enlazado existe y su foto está definida
-        miss = ev("Object.keys(EXPK).filter(n=>!exAll().some(e=>e.n==n))")
+        miss = ev("Object.keys(EX_PHOTO_KEY).filter(n=>!exAll().some(e=>e.n==n))")
         check('todos los ejercicios con foto existen en la biblioteca', not miss, str(miss))
-        miss = ev("Object.values(EXPK).filter(k=>!EXPH[k])")
+        miss = ev("Object.values(EX_PHOTO_KEY).filter(k=>!EX_PHOTOS[k])")
         check('cada enlace apunta a una foto', not miss, str(miss))
-        check('hay 28 fotos', ev('Object.keys(EXPH).length') == 28, str(ev('Object.keys(EXPH).length')))
-        bad = ev("""Promise.all(Object.keys(EXPH).map(k=>new Promise(r=>{const i=new Image();i.onload=()=>r(i.naturalWidth>100?null:k);i.onerror=()=>r(k);i.src='data:image/webp;base64,'+EXPH[k]}))).then(a=>a.filter(Boolean))""")
+        check('hay 28 fotos', ev('Object.keys(EX_PHOTOS).length') == 28, str(ev('Object.keys(EX_PHOTOS).length')))
+        bad = ev("""Promise.all(Object.keys(EX_PHOTOS).map(k=>new Promise(r=>{const i=new Image();i.onload=()=>r(i.naturalWidth>100?null:k);i.onerror=()=>r(k);i.src='data:image/webp;base64,'+EX_PHOTOS[k]}))).then(a=>a.filter(Boolean))""")
         check('todas las fotos se decodifican', not bad, str(bad))
-        check('Curl con mancuernas existe (nuevo)', ev("exAll().some(e=>e.n=='Curl con mancuernas'&&gk(e)=='Bíceps'&&e.q=='Mancuernas'&&e.p&&e.p[0]=='bi')"))
+        check('Curl con mancuernas existe (nuevo)', ev("exAll().some(e=>e.n=='Curl con mancuernas'&&groupOf(e)=='Bíceps'&&e.q=='Mancuernas'&&e.p&&e.p[0]=='bi')"))
         check('sin ejercicios repetidos', ev("(()=>{const n=exAll().map(e=>e.n);return n.length==new Set(n).size})()"))
 
         # búsqueda: nombres de las láminas y sin tildes
@@ -57,7 +57,7 @@ def main(path, shots=None):
                         ('copa de triceps', 'Extensión sobre la cabeza'), ('tras nuca', 'Extensión sobre la cabeza con cuerda'), ('encojimientos', 'Encogimientos con mancuernas'),
                         ('pullover en polea alta', 'Pullover en polea'), ('curl inclinado con mancuernas', 'Curl en banco inclinado'), ('remo con mancuerna', 'Remo mancuerna'),
                         ('press banca con mancuernas', 'Press banca mancuernas'), ('jalon', 'Jalón al pecho'), ('gemelo', 'Gemelo sentado')]:
-            ok = ev("(q=>exAll().some(e=>e.n==%s&&exHay(e).includes(q)))(%s)" % (repr(want).replace("'", '"'), repr(q).replace("'", '"')))
+            ok = ev("(q=>exAll().some(e=>e.n==%s&&exSearchText(e).includes(q)))(%s)" % (repr(want).replace("'", '"'), repr(q).replace("'", '"')))
             check('buscar «%s» encuentra «%s»' % (q, want), ok)
 
         # librería: insignia en la lista y foto en la ficha
@@ -83,7 +83,7 @@ def main(path, shots=None):
         ev("A.cl()")
 
         # entreno: miniatura tocable con insignia y ficha rápida
-        d = ev("S.plan.findIndex(d=>d.ex.some(e=>EXPK[e.n]))")
+        d = ev("S.plan.findIndex(d=>d.ex.some(e=>EX_PHOTO_KEY[e.n]))")
         check('el programa por defecto contiene ejercicios con foto', d >= 0, str(d))
         ev("S.tab=0;S.sel=%d;R()" % max(d, 0))
         ev("A.go()")
@@ -91,7 +91,7 @@ def main(path, shots=None):
         check('empieza el entreno', ev('!!W'))
         n = ev("document.querySelectorAll('.xs .th[data-a=exv]').length")
         check('hay miniaturas tocables en el entreno', n > 0, str(n))
-        check('las miniaturas sin foto no son tocables', ev("[...document.querySelectorAll('.xs')].every(x=>{const e=S.plan[S.sel].ex[+x.id.slice(2)];const t=x.querySelector('.th');return !t||(!!t.dataset.a)==!!EXPK[e.n]})"))
+        check('las miniaturas sin foto no son tocables', ev("[...document.querySelectorAll('.xs')].every(x=>{const e=S.plan[S.sel].ex[+x.id.slice(2)];const t=x.querySelector('.th');return !t||(!!t.dataset.a)==!!EX_PHOTO_KEY[e.n]})"))
         if shots:
             ev("document.querySelector('.xs .th[data-a=exv]').scrollIntoView({block:'center'})")
             pg.clock.run_for(300)

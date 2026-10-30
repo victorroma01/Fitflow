@@ -10,7 +10,7 @@ HERE=os.path.dirname(os.path.abspath(__file__))
 def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
     return chr(10).join(l for l in t.split(chr(10)) if not l.startswith('//'))
-SEED=_rd('seed.js');EXTRA=_rd('extra.js')
+COMPAT=_rd('compat.js');SEED=COMPAT+_rd('seed.js');EXTRA=COMPAT+_rd('extra.js')
 # pantallas: nombre -> js (se ejecuta tras cargar y sembrar). Solo se usan las que existen en la app (A.x)
 SCR={
  'workout':"S.tab=0;R()",
@@ -32,7 +32,7 @@ SCR={
  'cpm':"A.cpm()",
  'cal':"A.cl2()",
  'logs':"A.lg()",
- 'dlg':"zcf('Prueba','Texto de prueba para el diálogo.','zno','Aceptar')",
+ 'dlg':"confirmDialog('Prueba','Texto de prueba para el diálogo.','zno','Aceptar')",
  'go':"A.go()",
  'go_rest':"A.go();document.querySelector('.ck:not(.on)').click()",
  'go_open':"A.go();A.zov&&0;document.querySelectorAll('details').forEach(d=>d.open=true)",
@@ -45,7 +45,7 @@ SCR={
  'csv':"A.f2ex()",
  'scan':"S.tab=1;R();A.add(0);A.f2sc&&0",
  'bk':"A.zbk()",
- 'wdsum':"S.tab=0;R();window.FFS=null;f2Sum&&0",
+ 'wdsum':"S.tab=0;R();window.lastSummary=null;showSummary&&0",
 }
 CFG={ # nombre: (w,h,scheme,gm,gl)
  'a':(390,844,'dark',3,1),'b':(390,844,'light',3,1),'c':(390,844,'dark',0,0),'d':(390,844,'dark',1,1),'e':(320,568,'dark',3,1),'f':(430,932,'light',2,1),
@@ -66,7 +66,7 @@ def run(file,out,cfgs):
                 pg.evaluate(EXTRA);pg.evaluate("location.reload()");pg.wait_for_timeout(350)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
                 try:
-                    pg.evaluate(js);pg.wait_for_timeout(900 if k in('edit','overview','go_open') else 220)
+                    pg.evaluate(COMPAT+js);pg.wait_for_timeout(900 if k in('edit','overview','go_open') else 220)
                     pg.screenshot(path=f'{out}/{cn}_{k}.png',animations='disabled')
                     res[f'{cn}_{k}']=pg.evaluate("document.body.innerText.length")
                 except Exception as e:

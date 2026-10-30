@@ -1,5 +1,5 @@
 /* StrataFit · arranque instantáneo: abre al momento la última copia guardada y busca actualizaciones en segundo plano */
-const C='ff-app-2',PRE=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'];
+const C='ff-app-2',PRE=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'/*@@IMG@@*/];
 self.addEventListener('install',e=>{e.waitUntil((async()=>{
   const c=await caches.open(C);
   await Promise.all(PRE.map(async u=>{try{const r=await fetch(new Request(u,{cache:'reload'}));if(r.ok&&!r.redirected)await c.put(new URL(u,self.registration.scope).href,r)}catch(_){}}));

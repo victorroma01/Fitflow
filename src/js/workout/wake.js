@@ -1,7 +1,27 @@
 /* ═══ workout/wake ═══
    Mantener la pantalla activa durante el entreno.
-   Define: ffWL, ffWake
+   Define: wakeLockHandle, keepAwake
 */
-let ffWL=null;
-const ffWake=async()=>{try{const want=!!(((W&&!W.p&&S.awk!==0)||(WDS&&!WDS.pa&&!WDS.done))&&document.visibilityState=='visible');if(want&&!ffWL&&navigator.wakeLock){const l=await navigator.wakeLock.request('screen');ffWL=l;l.addEventListener('release',()=>{if(ffWL===l)ffWL=null})}else if(!want&&ffWL){const l=ffWL;ffWL=null;await l.release()}}catch(e){ffWL=null}};
-document.addEventListener('visibilitychange',ffWake);
+let wakeLockHandle = null;
+const keepAwake = async () => {
+  try {
+    const want = !!(((W && !W.p && S.awk !== 0) || (wodRun && !wodRun.pa && !wodRun.done)) && document.visibilityState == 'visible');
+    if (want && !wakeLockHandle && navigator.wakeLock) {
+      const l = await navigator.wakeLock.request('screen');
+      wakeLockHandle = l;
+      l.addEventListener('release', () => {
+        if (wakeLockHandle === l)
+          wakeLockHandle = null;
+      });
+    }
+    else if (!want && wakeLockHandle) {
+      const l = wakeLockHandle;
+      wakeLockHandle = null;
+      await l.release();
+    }
+  }
+  catch (e) {
+    wakeLockHandle = null;
+  }
+};
+document.addEventListener('visibilitychange', keepAwake);

@@ -1,26 +1,35 @@
 #!/usr/bin/env python3
 """StrataFit · build
 
-Compila src/ en un único index.html (sin dependencias, solo Python 3).
+Compila src/ en la app (sin dependencias, solo Python 3; node opcional para comprobar).
 
-  python3 build.py                 → dist/app/  (index.html + sw.js + manifiesto + iconos, listo para GitHub Pages)
-                                     dist/stratafit.html  (versión de un solo archivo, sin service worker)
-  python3 build.py --check         → además ejecuta comprobaciones estáticas (necesita node)
+  python3 build.py                 → dist/app/  (index.html + sw.js + manifiesto + iconos + img/, listo para GitHub Pages)
+                                     dist/stratafit.html  (archivo único con todo incrustado, sin service worker)
+  python3 build.py --check         → además ejecuta las comprobaciones estáticas (tools/check.js, necesita node + typescript)
   python3 build.py --only app      → solo el paquete de despliegue
   python3 build.py --only single   → solo el archivo único
 
-Estructura (todo el código vive en src/):
+Estructura (todo vive en src/):
   src/index.html          plantilla (@@CSS@@ y @@JS@@ se sustituyen al compilar)
-  src/css/NN-nombre.css   trozos de CSS contiguos; se concatenan por orden alfabético (el orden importa por la cascada)
+  src/css/NN-nombre.css   trozos de CSS; se concatenan por orden alfabético (el orden importa por la cascada)
   src/js/modules.txt      orden de carga de los módulos JS (el orden importa: ver README)
   src/js/<area>/<m>.js    módulos: listas de sentencias de ámbito global; el build las une en un solo <script>
-  static/                 sw.js, manifest.webmanifest e iconos
+  src/js/data/media.js    molde que el build sustituye por las fotos de src/img/ (rutas o base64 según la variante)
+  src/img/day/            portadas de los días (.jpg) y order.txt
+  src/img/ex/             fotos de ejercicio (.webp) y map.txt
+  static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
+
+Las dos variantes solo se diferencian en:
+  · FFDEP (core/util): 0 en el archivo único, 1 en el paquete (cabecera fija, aviso de versión nueva, sin recarga forzada);
+  · data/media: base64 en el archivo único, rutas img/… en el paquete.
 """
-import os, re, sys, json, shutil, subprocess, argparse
+import os, re, sys, json, base64, shutil, subprocess, argparse
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
 DIST = os.path.join(ROOT, 'dist')
+IMG = os.path.join(SRC, 'img')
+MEDIA_MODULE = 'data/media.js'
 
 
 def read(p):
@@ -66,12 +75,80 @@ def check_tree(mods):
         die('core/boot.js debe ser el último módulo (arranque)')
     if mods[0] != 'core/util.js':
         die('core/util.js debe ser el primero')
+    if MEDIA_MODULE not in seen:
+        die('falta ' + MEDIA_MODULE + ' en modules.txt')
 
 
-def compile_js(mods):
+# ── fotos ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+def list_lines(p):
+    return [l.split('#')[0].strip() for l in read(p).splitlines() if l.split('#')[0].strip()]
+
+
+def media():
+    """Lee src/img: portadas de día (order.txt) y fotos de ejercicio (map.txt). Devuelve la lista de fotos y los enlaces."""
+    files, day, ex, ex_for, ex_alias = [], [], [], {}, {}
+    for k in list_lines(os.path.join(IMG, 'day', 'order.txt')):
+        p = os.path.join(IMG, 'day', k + '.jpg')
+        if not os.path.isfile(p):
+            die('falta la portada ' + p)
+        day.append(k)
+        files.append(('img/day/' + k + '.jpg', p))
+    for n, l in enumerate(list_lines(os.path.join(IMG, 'ex', 'map.txt')), 1):
+        parts = [x.strip() for x in l.split('|')]
+        if len(parts) != 3 or not parts[0] or not parts[1]:
+            die('src/img/ex/map.txt: formato «clave | ejercicios | otros nombres» (línea %d de datos)' % n)
+        key, names, alts = parts[0], [x.strip() for x in parts[1].split(';') if x.strip()], [x.strip() for x in parts[2].split(';') if x.strip()]
+        p = os.path.join(IMG, 'ex', key + '.webp')
+        if not os.path.isfile(p):
+            die('falta la foto ' + p)
+        if key in ex:
+            die('clave repetida en map.txt: ' + key)
+        ex.append(key)
+        files.append(('img/ex/' + key + '.webp', p))
+        for nm in names:
+            if nm in ex_for:
+                die('el ejercicio «%s» tiene dos fotos en map.txt' % nm)
+            ex_for[nm] = key
+            if alts:
+                ex_alias[nm] = ' '.join(alts)
+    used = {os.path.basename(p) for _, p in files}
+    for sub, ext in (('day', '.jpg'), ('ex', '.webp')):
+        for f in sorted(os.listdir(os.path.join(IMG, sub))):
+            if f.endswith(ext) and f not in used:
+                print('  aviso: src/img/%s/%s no está en su lista y no se usa' % (sub, f))
+    return {'files': files, 'day': day, 'ex': ex, 'exFor': ex_for, 'exAlias': ex_alias}
+
+
+def media_js(m, inline):
+    def url(rel, p):
+        if not inline:
+            return rel
+        mime = 'image/jpeg' if p.endswith('.jpg') else 'image/webp'
+        with open(p, 'rb') as f:
+            return 'data:%s;base64,%s' % (mime, base64.b64encode(f.read()).decode('ascii'))
+    src = dict(m['files'])
+    obj = {
+        'day': {k: url('img/day/%s.jpg' % k, src['img/day/%s.jpg' % k]) for k in m['day']},
+        'ex': {k: url('img/ex/%s.webp' % k, src['img/ex/%s.webp' % k]) for k in m['ex']},
+        'exFor': m['exFor'],
+        'exAlias': m['exAlias'],
+    }
+    return 'const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
+
+
+# ── compilación ────────────────────────────────────────────────────────────────────────────────────────────────────
+
+def compile_js(mods, media_code):
     parts = []
     for m in mods:
         t = read(os.path.join(SRC, 'js', m))
+        if m == MEDIA_MODULE:
+            head = re.match(r'\s*/\*.*?\*/\s*', t, re.S)
+            n = len(re.findall(r'^const MEDIA\s*=', t, re.M))
+            if not head or n != 1:
+                die(MEDIA_MODULE + ' debe tener su cabecera y una sola línea «const MEDIA = …»')
+            t = head.group(0) + media_code + '\n'
         if '</script' in t.lower():
             die('"</script" dentro de ' + m + ' rompería el HTML')
         parts.append(t.rstrip('\n'))
@@ -88,7 +165,7 @@ def compile_css():
 
 
 def app_version(js):
-    m = re.search(r"const APPV='([^']+)'", js)
+    m = re.search(r"const APPV\s*=\s*'([^']+)'", js)
     return m.group(1) if m else '?'
 
 
@@ -102,35 +179,41 @@ HEAD_TAGS = '''<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0b0b0d">'''
 
 
+def page(tpl, css, js):
+    # replace con texto literal: el código puede contener barras invertidas
+    return tpl.replace('@@CSS@@', css).replace('@@JS@@', js)
+
+
 def deploy_variant(h):
-    """Paquete instalable: etiquetas fijas en la cabecera, aviso de versión nueva y arranque rápido."""
-    def rep(old, new, count=1, label=''):
-        nonlocal h
-        n = h.count(old)
-        if n != count:
-            die('variante app: "%s" aparece %d veces (esperadas %d)' % (label or old[:50], n, count))
-        h = h.replace(old, new)
-    rep("hd.appendChild(e);return e}", "return e}", 1, 'mk detached')
-    rep("<title>StrataFit</title>", "<title>StrataFit</title>\n" + HEAD_TAGS, 1, 'head')
-    rep("let ffDeploy=0,", "let ffDeploy=1,", 1, 'ffDeploy')
-    rep("FFSW=1;navigator.serviceWorker.ready.then(()=>{try{fetch(location.href,{cache:'reload'}).catch(()=>{})}catch(e){}}).catch(()=>{})", "FFSW=1", 1, 'sin recarga forzada')
-    rep(" im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ffIcoSvg);", "", 1, 'sin icono runtime')
-    return h
+    """Paquete instalable: FFDEP=1 (etiquetas fijas en la cabecera, aviso de versión nueva, sin recarga forzada)."""
+    h, n = re.subn(r'const FFDEP\s*=\s*0\s*;', 'const FFDEP = 1;', h)
+    if n != 1:
+        die('variante app: la constante FFDEP aparece %d veces (esperada 1, en core/util)' % n)
+    if h.count('<title>StrataFit</title>') != 1:
+        die('variante app: falta <title>StrataFit</title> en la plantilla')
+    return h.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + HEAD_TAGS)
 
 
-def static_manifest():
-    return {n: os.path.join(ROOT, 'static', n) for n in sorted(os.listdir(os.path.join(ROOT, 'static')))}
+def service_worker(files):
+    t = read(os.path.join(ROOT, 'static', 'sw.js'))
+    if t.count('/*@@IMG@@*/') != 1:
+        die('static/sw.js debe contener una vez el marcador /*@@IMG@@*/ dentro de la lista de precarga')
+    return t.replace('/*@@IMG@@*/', ''.join(",'%s'" % rel for rel, _ in files))
+
+
+def static_files():
+    return {n: os.path.join(ROOT, 'static', n) for n in sorted(os.listdir(os.path.join(ROOT, 'static'))) if n != 'sw.js'}
 
 
 def static_checks(js, html):
     """Comprobaciones baratas, sin dependencias externas."""
-    if js.count('window.__ffok=1;') != 1:
+    if len(re.findall(r'window\.__ffok\s*=\s*1\s*;', js)) != 1:
         die('no se encuentra la marca de arranque correcto (window.__ffok)')
     if not html.rstrip().endswith('</html>'):
         die('HTML incompleto')
 
 
-def node_check(js):
+def node_check(js, label):
     node = shutil.which('node')
     if not node:
         print('  (node no disponible: se omite la comprobación de sintaxis)')
@@ -140,8 +223,7 @@ def node_check(js):
     r = subprocess.run([node, '--check', tmp], capture_output=True, text=True)
     os.remove(tmp)
     if r.returncode:
-        die('error de sintaxis en el JS compilado:\n' + r.stderr)
-    print('  sintaxis JS correcta (node --check)')
+        die('error de sintaxis en el JS compilado (%s):\n%s' % (label, r.stderr))
 
 
 def main():
@@ -151,29 +233,43 @@ def main():
     a = ap.parse_args()
     mods = module_list()
     check_tree(mods)
-    js = compile_js(mods)
+    m = media()
     css = compile_css()
     tpl = read(os.path.join(SRC, 'index.html'))
     if tpl.count('@@CSS@@') != 1 or tpl.count('@@JS@@') != 1:
         die('la plantilla debe contener @@CSS@@ y @@JS@@ una vez cada uno')
-    # las funciones de sustitución evitan que re interprete barras invertidas del código
-    html = tpl.replace('@@CSS@@', css).replace('@@JS@@', js)
-    static_checks(js, html)
-    ver = app_version(js)
     os.makedirs(DIST, exist_ok=True)
-    node_check(js)
+    ver = '?'
     if a.only != 'app':
+        js = compile_js(mods, media_js(m, inline=True))
+        html = page(tpl, css, js)
+        static_checks(js, html)
+        node_check(js, 'archivo único')
+        ver = app_version(js)
         write(os.path.join(DIST, 'stratafit.html'), html)
-        print('  dist/stratafit.html  %d bytes' % len(html.encode('utf-8')))
+        print('  dist/stratafit.html  %d bytes (fotos incrustadas)' % len(html.encode('utf-8')))
     if a.only != 'single':
+        js = compile_js(mods, media_js(m, inline=False))
+        html = deploy_variant(page(tpl, css, js))
+        static_checks(js, html)
+        node_check(js, 'paquete')
+        ver = app_version(js)
         out = os.path.join(DIST, 'app')
         shutil.rmtree(out, ignore_errors=True)
         os.makedirs(out)
-        write(os.path.join(out, 'index.html'), deploy_variant(html))
-        for n, p in static_manifest().items():
+        write(os.path.join(out, 'index.html'), html)
+        write(os.path.join(out, 'sw.js'), service_worker(m['files']))
+        for n, p in static_files().items():
             shutil.copy(p, os.path.join(out, n))
-        print('  dist/app/            index.html %d bytes + %d archivos estáticos' % (os.path.getsize(os.path.join(out, 'index.html')), len(static_manifest())))
-    print('StrataFit %s · %d módulos JS · %d trozos CSS' % (ver, len(mods), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')])))
+        size = 0
+        for rel, p in m['files']:
+            os.makedirs(os.path.dirname(os.path.join(out, rel)), exist_ok=True)
+            shutil.copy(p, os.path.join(out, rel))
+            size += os.path.getsize(p)
+        print('  dist/app/            index.html %d bytes + sw.js, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
+            os.path.getsize(os.path.join(out, 'index.html')), len(m['files']), size // 1024))
+    print('StrataFit %s · %d módulos JS · %d trozos CSS · %d portadas y %d fotos de ejercicio' % (
+        ver, len(mods), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day']), len(m['ex'])))
     if a.check:
         tool = os.path.join(ROOT, 'tools', 'check.js')
         if not os.path.isfile(tool):
