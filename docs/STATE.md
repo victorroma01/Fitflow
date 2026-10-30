@@ -14,6 +14,8 @@ Las claves son cortas porque están en los datos de cada usuario y en sus copias
 | `ffrs` (`rs`) | Resumen pendiente de mostrar tras restaurar. |
 | `fferr` (`err`) | Últimos 30 errores registrados en este dispositivo (`core/errors`). No es un dato del usuario. |
 | `ffbad` (`bad`) | Copia de un estado que no se pudo leer al arrancar, apartada antes de empezar de cero. |
+| `ffver` (`ver`) | Última versión de la app abierta en este dispositivo (para enseñar las novedades tras actualizar). |
+| `ffseen` (`seen`) | Versión cuyas novedades ya se enseñaron, para no repetirlas. |
 
 En IndexedDB: `ffph` (fotos de progreso: miniaturas `m` y fotos completas `f`) y `ffsnap` (copias automáticas diarias, las 7 últimas).
 

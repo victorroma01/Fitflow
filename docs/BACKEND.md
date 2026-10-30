@@ -19,12 +19,14 @@ añade en un único sitio sin tocar las pantallas.
 | `app` | estado completo `S` (perfil, programas, registros, comidas, medidas…) | cientos de KB |
 | `wip` | entreno en curso | pocos KB |
 | `pre`, `rs` | auxiliares de restauración (no se sincronizan) | — |
+| `err`, `bad`, `ver`, `seen` | propios del dispositivo: errores, datos apartados, versión abierta y novedades vistas (no se sincronizan) | — |
 | IndexedDB `ffph` | fotos de progreso | MB (se subirían aparte, como archivos) |
+| IndexedDB `ffsnap` | copias automáticas del dispositivo (no se sincronizan: el servidor las haría innecesarias) | — |
 
 ## Gancho ya disponible
 
-`Store.set` / `Store.del` avisan a `Store.remote.changed(clave, valor)` si existe un adaptador (los fallos del adaptador se ignoran para
-no impedir nunca el guardado local). Un adaptador mínimo haría: cola de cambios en el dispositivo → `PUT` al servidor cuando hay red →
+`Store.set` / `Store.del` avisan a `Store.remote.changed(clave, valor)` si existe un adaptador (los fallos del adaptador se registran
+en Diagnóstico y nunca impiden el guardado local). Un adaptador mínimo haría: cola de cambios en el dispositivo → `PUT` al servidor cuando hay red →
 al abrir, `GET` del estado remoto y fusión.
 
 ## Esquema propuesto (cuando se decida)

@@ -1,6 +1,6 @@
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitFromName, unitOf, targetRange, UNIT_LABELS, UNIT_HEADS, targetText, unitHead, unitLabel, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+7)  · acciones/registros: 1
+   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+7)  · acciones/registros: 1
 */
 const repClass = n => /sentadilla|press banca|peso muerto|press militar|remo con barra|dominadas|fondos|hip thrust|prensa/i.test(n) ? 8 : /curl|extensi|elevaciones|aperturas|pájaros|gemelo|patada|abducci|face pull|crunch|encogimientos|muñeca/i.test(n) ? 12 : 10;
 const unitFromName = n => {
@@ -34,7 +34,6 @@ const targetRange = e => {
   const t = repClass(e.n);
   return t == 8 ? [6, 10] : t == 12 ? [10, 15] : [8, 12];
 };
-const UNIT_LABELS = { m: 'Metros', s: 'Segundos', min: 'Minutos', cal: 'Calorías', km: 'Km' };
 const UNIT_HEADS = { m: 'Dist.', s: 'Seg', min: 'Min', cal: 'Cal', km: 'Km' };
 const targetText = e => {
   const U = unitOf(e);
@@ -42,7 +41,6 @@ const targetText = e => {
   return (r[0] == r[1] ? r[0] : r[0] + '-' + r[1]) + (U ? ' ' + U : ' reps');
 };
 const unitHead = e => unitOf(e) ? UNIT_HEADS[unitOf(e)] || 'Reps' : 'Reps';
-const unitLabel = e => unitOf(e) ? UNIT_LABELS[unitOf(e)] || 'Reps' : 'Reps';
 const rirOf = e => COMPOUND_RE.test(e.n) ? '1-2' : /Elevaciones|Aperturas|Cruce|Pájaros|Face pull|Extensi|Curl|Patada|Gemelo|Encogim|Crunch/i.test(e.n) ? '0-1' : '1-2';
 const tempoOf = e => {
   if (e.t)

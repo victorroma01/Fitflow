@@ -1,12 +1,8 @@
 /* ═══ extras/anatomy ═══
    Mapa muscular dibujado en SVG.
-   Define: mk, MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exAnatomy, exAnatomyFull
+   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exAnatomy, exAnatomyFull
 */
 document.body.insertAdjacentHTML('afterbegin', '<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gB" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#a7adba"/><stop offset=".6" stop-color="#6b7080"/><stop offset="1" stop-color="#3b3f4b"/></linearGradient><linearGradient id="gR" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#d11f3a"/><stop offset="1" stop-color="#7d0d21"/></linearGradient><linearGradient id="gO" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ffb26b"/><stop offset="1" stop-color="#b8501a"/></linearGradient><pattern id="fb" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><rect width="1" height="2.2" fill="#000" opacity=".3"/></pattern><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>');
-const mk = (l, f, gl) => l ? l.split(',').map(h => [0, 1].map(k => {
-  const t = k ? ' transform="matrix(-1 0 0 1 100 0)"' : '';
-  return '<use href="#' + h + '" fill="url(#' + f + ')" stroke="#2a050c" stroke-width=".6"' + t + (gl ? ' filter="url(#gl)"' : '') + '/><use href="#' + h + '" fill="url(#fb)" stroke="none"' + t + '/>';
-}).join('')).join('') : '';
 (function () {
   const pat = (id, r) => '<pattern id="' + id + '" width="4" height="4" patternUnits="userSpaceOnUse"' + (r ? ' patternTransform="rotate(' + r + ')"' : '') + '><line x1="0" y1="0" x2="0" y2="4" stroke="#000" stroke-opacity=".26" stroke-width=".55"/></pattern>';
   const gr = (id, a, b, c) => '<radialGradient id="' + id + '" cx=".38" cy=".3" r=".9"><stop offset="0" stop-color="' + a + '"/><stop offset=".55" stop-color="' + b + '"/><stop offset="1" stop-color="' + c + '"/></radialGradient>';

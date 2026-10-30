@@ -1,6 +1,6 @@
 /* ═══ core/state ═══
    Estado global S (se guarda con saveState), sesión en curso W, tema y banderas de interfaz.
-   Define: stateRecovered, loadSavedState, S, W, nutriDayOffset, calMonthOffset, weekView, addState, resetArmed, saveState, applyTheme, overviewMode, weightView
+   Define: stateRecovered, loadSavedState, S, W, nutriDayOffset, calMonthOffset, weekView, addState, saveState, applyTheme, overviewMode, weightView
 */
 /** 1 si al arrancar había datos guardados que no se pudieron leer (se apartan en Store.K.bad; core/boot lo avisa). */
 let stateRecovered = 0;
@@ -42,7 +42,6 @@ let nutriDayOffset = 0;
 let calMonthOffset = 0;
 let weekView = 0;
 let addState = null;
-let resetArmed = 0;
 const saveState = () => storeJson(Store.K.app, S);
 const applyTheme = () => {
   S.theme ? document.documentElement.dataset.theme = S.theme : document.documentElement.removeAttribute('data-theme');
