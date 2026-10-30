@@ -4,7 +4,7 @@ guardados, partes dañadas o que faltan, falta de espacio, restaurar y deshacer,
   python3 tests/storage.py dist/stratafit.html
 Requiere:  pip install playwright  &&  playwright install chromium
 """
-import os, sys, json, datetime
+import os, sys, json, time, datetime
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts
 
@@ -61,11 +61,17 @@ def main(path):
         pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200]))
         pg.on('dialog', lambda d: d.accept())
         log = []
-        pg.on('framenavigated', lambda f: log.append('navega ' + f.url[-40:]) if f == pg.main_frame else None)
-        pg.on('console', lambda m: log.append('consola ' + m.type + ' ' + m.text[:150]) if m.type in ('error', 'warning') else None)
+        t0 = time.time()
+        stamp = lambda: '%.1fs ' % (time.time() - t0)
+        pg.on('framenavigated', lambda f: log.append(stamp() + 'navega ' + f.url[-40:]) if f == pg.main_frame else None)
+        pg.on('console', lambda m: log.append(stamp() + 'consola ' + m.type + ' ' + m.text[:150]) if m.type in ('error', 'warning') and 'Service Worker registration blocked' not in m.text else None)
+        pg.on('crash', lambda *_: log.append(stamp() + 'LA PÁGINA SE HA CERRADO (crash)'))
+        pg.on('dialog', lambda d: log.append(stamp() + 'diálogo ' + d.message[:80]))
         try:
             pg.clock.install(time=datetime.datetime(2026, 10, 29, 12, 0, 0))
-            ev = pg.evaluate
+            def ev(js, *a):
+                log.append(stamp() + 'evalúa ' + js[:70].replace('\n', ' '))
+                return pg.evaluate(js, *a)
 
             def reload(ms=1500):
                 pg.reload()
@@ -221,7 +227,7 @@ def main(path):
             check('«Borrar todo» borra el estado, sus partes y el entreno en curso', 'ffw' not in left and ev("__T.keys('ff:')") == ['ff:logs'] and ev('S.logs.length') == 0 and ev('Object.keys(S.meals).length') == 0 and not ev('S.hist'), str(left))
             check('sin errores de JS', not errs, '; '.join(errs[:3]))
         except Exception:
-            print('  FALLA excepción; últimos sucesos de la página:', ' | '.join(log[-12:]))
+            print('  FALLA excepción; últimos sucesos de la página:', ' | '.join(log[-14:]))
             raise
         b.close()
     print('\n%s' % ('TODO CORRECTO' if not fails else 'FALLAN: ' + ', '.join(fails)))

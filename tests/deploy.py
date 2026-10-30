@@ -27,6 +27,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+# El WebKit de Playwright no puede navegar a una página que controla su service worker («internal error»), así que en
+# WebKit el paquete se prueba sin service worker: todo menos la precarga, el uso sin conexión y el aviso que manda el
+# service worker (el aviso se prueba entonces con «Comprobar actualizaciones», que no depende de él).
+SW = ENGINE != 'webkit'
+CTX = {} if SW else {'service_workers': 'block'}
+
+
+def skipped(name):
+    print('  ——   ' + name + ' (sin service worker en este motor)')
+
+
 def reload(pg, notes):
     """Recarga la página. En WebKit, si la recarga falla con un error interno del motor (pasa con service worker en
     Playwright), se vuelve a abrir la misma dirección y se anota, para que la prueba siga y se vea el resto."""
@@ -69,12 +80,12 @@ def main(app):
     try:
         with sync_playwright() as p:
             b = launch(p)
-            c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark')
+            c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark', **CTX)
             pg = c.new_page()
             errs = []
             pg.on('framenavigated', lambda f: log.append('navega ' + f.url[-50:]) if f == pg.main_frame else None)
             pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200]))
-            pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' else None)
+            pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' and 'Service Worker' not in m.text else None)
             try:
                 pg.goto(url)
                 pg.wait_for_timeout(1500)
@@ -86,14 +97,17 @@ def main(app):
                 check('metas de app instalable sin duplicar', ev("document.querySelectorAll('meta[name=apple-mobile-web-app-capable]').length") == 1)
                 m = ev("fetch('manifest.webmanifest').then(r=>r.json()).then(j=>[j.start_url,j.display,j.icons.length])")
                 check('manifiesto válido', m == ['./', 'standalone', 3], str(m))
-                ev("navigator.serviceWorker.ready.then(()=>1)")
-                reload(pg, log)
-                pg.wait_for_timeout(1200)
-                check('service worker controla la página', ev('!!navigator.serviceWorker.controller'))
-                cached = ev("caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url.split('/fitflow/')[1]))))).then(a=>a.flat())")
                 code = ['js/' + f for f in os.listdir(os.path.join(orig, 'js'))]
-                need = ['index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', ''] + code
-                check('precarga completa (también el código js/)', all(n in cached for n in need), str([n for n in need if n not in cached]))
+                if SW:
+                    ev("navigator.serviceWorker.ready.then(()=>1)")
+                    reload(pg, log)
+                    pg.wait_for_timeout(1200)
+                    check('service worker controla la página', ev('!!navigator.serviceWorker.controller'))
+                    cached = ev("caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url.split('/fitflow/')[1]))))).then(a=>a.flat())")
+                    need = ['index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', ''] + code
+                    check('precarga completa (también el código js/)', all(n in cached for n in need), str([n for n in need if n not in cached]))
+                else:
+                    skipped('service worker y precarga')
                 check('el código va aparte y comprimido', bool(code) and ev("!!document.querySelector('script[type=module][src^=\"js/\"]')") and
                       all(len(s) < 2000 or len(s) / (s.count('\n') + 1) > 1000 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code)))
                 # lo poco usado (WOD, CSV, escáner) va en archivos aparte que no se descargan al arrancar
@@ -102,16 +116,22 @@ def main(app):
                 check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 3 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
                 assets = ev("[...new Set([...document.documentElement.outerHTML.matchAll(/(?:src=\"|url\\()((?:img)\\/[^\"')]+)/g)].map(m=>m[1]))]")
                 # sin conexión
-                c.set_offline(True)
-                reload(pg, log)
-                pg.wait_for_timeout(1200)
-                check('abre sin conexión', ev("document.querySelector('#app').innerText.length>50"))
-                pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
-                check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
-                ev('A.wod()')
-                pg.wait_for_timeout(300)
-                check('sin conexión también abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
-                c.set_offline(False)
+                if SW:
+                    c.set_offline(True)
+                    reload(pg, log)
+                    pg.wait_for_timeout(1200)
+                    check('abre sin conexión', ev("document.querySelector('#app').innerText.length>50"))
+                    pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
+                    check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
+                    ev('A.wod()')
+                    pg.wait_for_timeout(300)
+                    check('sin conexión también abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
+                    c.set_offline(False)
+                else:
+                    skipped('sin conexión')
+                    ev('A.wod()')
+                    pg.wait_for_timeout(300)
+                    check('abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
                 reload(pg, log)
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(800)
@@ -134,8 +154,11 @@ def main(app):
                 # versión nueva publicada: la app abre la copia guardada al momento y avisa con la tarjeta de novedades
                 v0 = ev('APPV')
                 publish('9.9.9', ['Prueba de novedades'])
-                reload(pg, log)
-                pg.wait_for_load_state('load')
+                if SW:
+                    reload(pg, log)
+                    pg.wait_for_load_state('load')
+                else:
+                    pg.click('[data-a=updChk]')  # sin service worker, el aviso llega desde «Comprobar actualizaciones»
                 try:
                     pg.wait_for_selector('#upd.update .updk', timeout=10000)
                 except Exception:
@@ -158,12 +181,13 @@ def main(app):
                 check('«Actualizar» carga la versión nueva', ev('APPV') == '9.9.9', ev('APPV'))
                 check('tras actualizar no repite las novedades ya vistas', ev("!document.getElementById('upd')"))
                 # la versión nueva, con su código de nombres nuevos, abre también sin conexión
-                c.set_offline(True)
-                reload(pg, log)
-                pg.wait_for_load_state('load')
-                pg.wait_for_timeout(1200)
-                check('la versión nueva abre sin conexión', ev('!!window.__ffok') and ev('APPV') == '9.9.9' and ev("!document.getElementById('ffe')"))
-                c.set_offline(False)
+                if SW:
+                    c.set_offline(True)
+                    reload(pg, log)
+                    pg.wait_for_load_state('load')
+                    pg.wait_for_timeout(1200)
+                    check('la versión nueva abre sin conexión', ev('!!window.__ffok') and ev('APPV') == '9.9.9' and ev("!document.getElementById('ffe')"))
+                    c.set_offline(False)
                 # Comprobar actualizaciones cuando hay una versión nueva en el servidor
                 publish('9.9.10', ['Otra mejora'], code=False)
                 ev("S.tab=3;R();document.querySelectorAll('details').forEach(d=>d.open=true)")
@@ -190,7 +214,7 @@ def main(app):
                 deploy(orig, os.path.join(site, 'fitflow'))
                 open(vj, 'w', encoding='utf-8').write(vj0)
                 # app instalada: compartir copia de seguridad
-                c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True)
+                c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
                 c2.add_init_script("Object.defineProperty(navigator,'standalone',{get:()=>true});window.__sh=null;navigator.canShare=()=>true;"
                                    "navigator.share=async d=>{if(window.__abort){const e=new Error('x');e.name='AbortError';throw e}window.__sh=[d.files[0].name,d.files[0].size>100,d.files[0].type]}")
                 p2 = c2.new_page()
