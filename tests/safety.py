@@ -19,6 +19,18 @@ SEED, EXTRA, INIT = rd('seed.js'), rd('extra.js'), rd('init.js')
 fails = []
 
 
+def booted(pg, limit=8000):
+    """Espera (en tiempo real) a que la app haya arrancado del todo tras una recarga: window.__ffok."""
+    for _ in range(limit // 50):
+        try:
+            if pg.evaluate('!!window.__ffok'):
+                return True
+        except Exception:
+            pass
+        pg.wait_for_timeout(50)
+    return False
+
+
 def check(name, cond, info=''):
     if not cond:
         fails.append(name)
@@ -46,6 +58,7 @@ def main(path):
             with pg.expect_navigation():
                 ev('location.reload()')
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(800)
             check('arranca con datos', ev('!!window.__ffok&&S.logs.length>10'))
 
@@ -112,6 +125,7 @@ def main(path):
             ev("Store.set(Store.K.app,'{esto no es json')")
             pg.reload()
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(1500)
             check('con datos dañados la app arranca igualmente', ev('!!window.__ffok'))
             check('y conserva los entrenos guardados aparte', ev('S.logs.length') == nlogs, '%s vs %s' % (ev('S.logs.length'), nlogs))
@@ -130,6 +144,7 @@ def main(path):
             with pg.expect_navigation():
                 pg.click('#ffe3')
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(800)
             bad = ev("JSON.parse(localStorage.getItem('ffbad')||'null')")
             check('«Restablecer» guarda una copia de los datos antes de borrarlos', bool(bad) and '2026-01-01' in bad['raw'], str(bad)[:200] + ' · claves: ' + str(ev("Object.keys(localStorage)")) + ' · ' + ' | '.join(log[-8:]))

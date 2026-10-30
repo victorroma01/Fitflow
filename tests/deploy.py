@@ -7,7 +7,7 @@ Requiere:  pip install playwright  &&  playwright install chromium
 """
 import os, sys, re, json, shutil, tempfile, threading, functools, http.server
 from playwright.sync_api import sync_playwright
-from browser import launch, app_url
+from browser import launch, app_url, ENGINE
 
 fails = []
 
@@ -25,6 +25,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def log_message(self, *a):
         pass
+
+
+def reload(pg, notes):
+    """Recarga la página. En WebKit, si la recarga falla con un error interno del motor (pasa con service worker en
+    Playwright), se vuelve a abrir la misma dirección y se anota, para que la prueba siga y se vea el resto."""
+    try:
+        pg.reload()
+    except Exception as e:
+        if ENGINE != 'webkit' or 'internal error' not in str(e):
+            raise
+        notes.append('recarga con error interno de WebKit en ' + pg.url[-30:])
+        pg.goto(pg.url)
 
 
 def deploy(orig, dest, ver=None, suffix=''):
@@ -46,6 +58,7 @@ def deploy(orig, dest, ver=None, suffix=''):
 
 
 def main(app):
+    log = []
     site = tempfile.mkdtemp(prefix='sf_site_')
     orig = os.path.join(site, 'orig')
     shutil.copytree(os.path.abspath(app), orig)
@@ -59,7 +72,6 @@ def main(app):
             c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark')
             pg = c.new_page()
             errs = []
-            log = []
             pg.on('framenavigated', lambda f: log.append('navega ' + f.url[-50:]) if f == pg.main_frame else None)
             pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200]))
             pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' else None)
@@ -75,7 +87,7 @@ def main(app):
                 m = ev("fetch('manifest.webmanifest').then(r=>r.json()).then(j=>[j.start_url,j.display,j.icons.length])")
                 check('manifiesto válido', m == ['./', 'standalone', 3], str(m))
                 ev("navigator.serviceWorker.ready.then(()=>1)")
-                pg.reload()
+                reload(pg, log)
                 pg.wait_for_timeout(1200)
                 check('service worker controla la página', ev('!!navigator.serviceWorker.controller'))
                 cached = ev("caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url.split('/fitflow/')[1]))))).then(a=>a.flat())")
@@ -91,7 +103,7 @@ def main(app):
                 assets = ev("[...new Set([...document.documentElement.outerHTML.matchAll(/(?:src=\"|url\\()((?:img)\\/[^\"')]+)/g)].map(m=>m[1]))]")
                 # sin conexión
                 c.set_offline(True)
-                pg.reload()
+                reload(pg, log)
                 pg.wait_for_timeout(1200)
                 check('abre sin conexión', ev("document.querySelector('#app').innerText.length>50"))
                 pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
@@ -100,7 +112,7 @@ def main(app):
                 pg.wait_for_timeout(300)
                 check('sin conexión también abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
                 c.set_offline(False)
-                pg.reload()
+                reload(pg, log)
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(800)
                 check('instalación nueva: no enseña novedades', ev("!document.getElementById('upd')"))
@@ -122,7 +134,7 @@ def main(app):
                 # versión nueva publicada: la app abre la copia guardada al momento y avisa con la tarjeta de novedades
                 v0 = ev('APPV')
                 publish('9.9.9', ['Prueba de novedades'])
-                pg.reload()
+                reload(pg, log)
                 pg.wait_for_load_state('load')
                 try:
                     pg.wait_for_selector('#upd.update .updk', timeout=10000)
@@ -147,7 +159,7 @@ def main(app):
                 check('tras actualizar no repite las novedades ya vistas', ev("!document.getElementById('upd')"))
                 # la versión nueva, con su código de nombres nuevos, abre también sin conexión
                 c.set_offline(True)
-                pg.reload()
+                reload(pg, log)
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(1200)
                 check('la versión nueva abre sin conexión', ev('!!window.__ffok') and ev('APPV') == '9.9.9' and ev("!document.getElementById('ffe')"))
@@ -163,7 +175,7 @@ def main(app):
                 check('el aviso se puede cerrar', ev("!document.getElementById('upd')"))
                 # tras actualizar desde una versión antigua (sin haber visto el aviso): novedades una sola vez
                 ev("localStorage.setItem('ffver','1.0.0');localStorage.removeItem('ffseen')")
-                pg.reload()
+                reload(pg, log)
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(1500)
                 news = ev("(()=>{const k=document.querySelector('#upd.news .updk');return k?{title:k.querySelector('h3').textContent,btn:k.querySelector('.upb').innerText}:null})()")
@@ -171,7 +183,7 @@ def main(app):
                 if news:
                     pg.click('#upd .upb')
                     pg.wait_for_timeout(200)
-                pg.reload()
+                reload(pg, log)
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(1500)
                 check('y solo una vez', ev("!document.getElementById('upd')"))
@@ -212,6 +224,8 @@ def main(app):
     finally:
         srv.shutdown()
         shutil.rmtree(site, ignore_errors=True)
+    for n in [x for x in log if x.startswith('recarga con error')]:
+        print('  AVISO', n)
     print('\n%s' % ('TODO CORRECTO' if not fails else 'FALLAN: ' + ', '.join(fails)))
     sys.exit(1 if fails else 0)
 

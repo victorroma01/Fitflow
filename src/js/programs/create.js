@@ -18,6 +18,7 @@ import { dropResume } from '../workout/resume.js';
 import { restOf } from '../workout/rest.js';
 import { targetRange, targetText, unitOf, weeklySetsCard } from '../workout/targets.js';
 import { isLevel, levelDot } from './levels.js';
+import { html, raw } from '../core/html.js';
 export let progDraft = { m: '', name: '', sel: [], plan: null, o: { lug: 'gym', mat: 'bw', est: 'clasico', obj: 'musculo', dias: 4, niv: 'int' }, vr: 0, k: -1, txt: '' };
 export const clone = x => JSON.parse(JSON.stringify(x));
 export const restDay = () => ({ n: 'Descanso', ex: [] });
@@ -91,33 +92,33 @@ const dayDuration = d => {
   });
   return Math.max(5, Math.round(t / 300) * 5);
 };
-const programDaysHtml = pl => weeklySetsCard(pl) + pl.map((d, j) => '<div class="cd" style="margin:8px 0"><div class="row"><b>Día ' + (j + 1) + ' · ' + X(d.n) + '</b>' + (d.ex.length ? '<small>' + d.ex.reduce((s, e) => s + e.s, 0) + ' series</small>' : '') + '</div>' + (d.ex.length ? d.ex.map(e => '<div class="mu" style="font-size:13px;margin-top:3px">' + (e.b ? '<b style="color:#f59e0b;font-size:11px">SS </b>' : '') + X(e.n) + ' · ' + e.s + ' × ' + targetText(e) + ' · ' + fmtMinSec(restOf(e)) + '</div>').join('') : '<div class="mu" style="font-size:13px;margin-top:3px">Descanso</div>') + '</div>').join('');
+const programDaysHtml = pl => weeklySetsCard(pl) + pl.map((d, j) => html`<div class="cd" style="margin:8px 0"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b>${d.ex.length ? html`<small>${raw(d.ex.reduce((s, e) => s + e.s, 0))} series</small>` : ''}</div>${raw(d.ex.length ? d.ex.map(e => html`<div class="mu" style="font-size:13px;margin-top:3px">${raw(e.b ? '<b style="color:#f59e0b;font-size:11px">SS </b>' : '')}${e.n} · ${raw(e.s)} × ${raw(targetText(e))} · ${raw(fmtMinSec(restOf(e)))}</div>`).join('') : '<div class="mu" style="font-size:13px;margin-top:3px">Descanso</div>')}</div>`).join('');
 const programRowsHtml = pl => pl.map((d, j) => {
   const r = !d.ex.length;
-  return '<div class="cd cpr' + (r ? ' rs' : '') + '"><div class="row"><b>Día ' + (j + 1) + ' · ' + X(d.n) + '</b><span class="cpm"><button data-a="cpu" data-i="' + j + '" aria-label="Subir"' + (j ? '' : ' disabled') + '>' + icon('chev', 18) + '</button><button data-a="cpd" data-i="' + j + '" aria-label="Bajar"' + (j < pl.length - 1 ? '' : ' disabled') + '>' + icon('chev', 18) + '</button></span></div>' + (r ? '<div class="mu" style="font-size:13px">Descanso</div>' : '<div class="mu" style="font-size:12px;margin-top:2px">' + d.ex.length + (d.ex.length == 1 ? ' ejercicio' : ' ejercicios') + ' · ' + d.ex.reduce((s, e) => s + e.s, 0) + ' series · ~' + dayDuration(d) + ' min</div><div class="mu cpe">' + d.ex.map(e => X(e.n)).join(' · ') + '</div>') + '</div>';
+  return html`<div class="cd cpr${r ? ' rs' : ''}"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b><span class="cpm"><button data-a="cpu" data-i="${raw(j)}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button><button data-a="cpd" data-i="${raw(j)}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>${icon('chev', 18)}</button></span></div>${raw(r ? '<div class="mu" style="font-size:13px">Descanso</div>' : html`<div class="mu" style="font-size:12px;margin-top:2px">${d.ex.length}${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayDuration(d)} min</div><div class="mu cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}</div>`;
 }).join('');
-const createHome = () => pgHead('Crear programa', 'pg') + '<p class="mu" style="margin:-6px 0 14px">Elige cómo quieres montarlo.</p><button class="cpo" data-a="cpm"><span class="cpi">' + icon('log', 26) + '</span><span><b>Con mis workouts</b><small>' + (S.cr.length ? S.cr.length + (S.cr.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.') + '</small></span>›</button><button class="cpo" data-a="cpg"><span class="cpi">' + icon('prog', 26) + '</span><span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›</button>';
-const programNameBox = () => '<div class="ph">Nombre del programa</div><input data-u="cpn" value="' + X(progDraft.name) + '" placeholder="Mi programa" maxlength="60">';
+const createHome = () => html`${pgHead('Crear programa', 'pg')}<p class="mu" style="margin:-6px 0 14px">Elige cómo quieres montarlo.</p><button class="cpo" data-a="cpm"><span class="cpi">${icon('log', 26)}</span><span><b>Con mis workouts</b><small>${raw(S.cr.length ? S.cr.length + (S.cr.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}</small></span>›</button><button class="cpo" data-a="cpg"><span class="cpi">${icon('prog', 26)}</span><span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›</button>`;
+const programNameBox = () => html`<div class="ph">Nombre del programa</div><input data-u="cpn" value="${progDraft.name}" placeholder="Mi programa" maxlength="60">`;
 const createFromMine = () => {
   const n = S.cr.length;
   let h = pgHead('Con mis workouts', 'cpn');
   if (!n)
-    return h + '<p class="mu">Aún no tienes workouts personalizados. Crea alguno y vuelve aquí para montar tu semana.</p><button class="pr" data-a="cr" style="width:100%;margin-top:10px;padding:15px;border-radius:16px">Ir a Workouts personalizados</button>';
-  h += '<p class="mu" style="margin:-6px 0 12px">Marca los que quieras (hasta 6). Te propongo el orden y dónde poner los días de descanso.</p><div class="ph">Tus workouts</div>' + S.cr.map((r, i) => {
+    return html`${raw(h)}<p class="mu">Aún no tienes workouts personalizados. Crea alguno y vuelve aquí para montar tu semana.</p><button class="pr" data-a="cr" style="width:100%;margin-top:10px;padding:15px;border-radius:16px">Ir a Workouts personalizados</button>`;
+  h += html`<p class="mu" style="margin:-6px 0 12px">Marca los que quieras (hasta 6). Te propongo el orden y dónde poner los días de descanso.</p><div class="ph">Tus workouts</div>${S.cr.map((r, i) => {
     const on = progDraft.sel.includes(i);
     const ex = [].concat(...r.bl.map(b => b.ex));
     const gs = [...new Set(ex.map(x => groupLabel(groupOfName(x))))];
-    return '<button class="cpw' + (on ? ' on' : '') + '" data-a="cpt" data-i="' + i + '"><i>' + (on ? icon('chk', 14) : '') + '</i><span><b>' + X(r.n) + '</b><br><small class="mu">' + (r.bl.length ? X(gs.slice(0, 3).join(' · ')) + ' · ' + ex.length + (ex.length == 1 ? ' ejercicio' : ' ejercicios') : 'Sin ejercicios') + '</small></span></button>';
-  }).join('');
+    return html`<button class="cpw${on ? ' on' : ''}" data-a="cpt" data-i="${raw(i)}"><i>${on ? icon('chk', 14) : ''}</i><span><b>${r.n}</b><br><small class="mu">${raw(r.bl.length ? X(gs.slice(0, 3).join(' · ')) + ' · ' + ex.length + (ex.length == 1 ? ' ejercicio' : ' ejercicios') : 'Sin ejercicios')}</small></span></button>`;
+  })}`;
   if (progDraft.plan) {
-    h += '<div class="row" style="margin-top:20px"><div class="ph" style="margin:0">Estructura sugerida</div><button class="chip" data-a="cpr" style="margin:0">Reordenar</button></div><p class="mu" style="font-size:12px;margin:4px 0 8px">Alterno grupos musculares para que descanses cada zona. Usa las flechas para cambiar el orden.</p>' + programRowsHtml(progDraft.plan) + programNameBox() + '<div style="height:96px"></div><button class="sb pr" data-a="cps" style="padding:16px;font-size:16px;border-radius:16px">Crear programa</button>';
+    h += html`<div class="row" style="margin-top:20px"><div class="ph" style="margin:0">Estructura sugerida</div><button class="chip" data-a="cpr" style="margin:0">Reordenar</button></div><p class="mu" style="font-size:12px;margin:4px 0 8px">Alterno grupos musculares para que descanses cada zona. Usa las flechas para cambiar el orden.</p>${raw(programRowsHtml(progDraft.plan))}${programNameBox()}<div style="height:96px"></div><button class="sb pr" data-a="cps" style="padding:16px;font-size:16px;border-radius:16px">Crear programa</button>`;
   }
-  return h + '<div style="height:30px"></div>';
+  return html`${raw(h)}<div style="height:30px"></div>`;
 };
-const optionChips = (k, t, sub) => '<div class="ph">' + t + '</div><div class="cps">' + GUIDE_OPTIONS[k].map(o => '<button class="chip' + (progDraft.o[k] == o[0] ? ' on' : '') + '" data-a="cpq" data-k="' + k + '" data-v="' + o[0] + '">' + (k == 'niv' ? levelDot(o[0]) : '') + o[1] + '</button>').join('') + '</div>' + (sub ? '<p class="mu" style="font-size:12px;margin:6px 2px 0">' + sub + '</p>' : '');
+const optionChips = (k, t, sub) => html`<div class="ph">${raw(t)}</div><div class="cps">${GUIDE_OPTIONS[k].map(o => html`<button class="chip${progDraft.o[k] == o[0] ? ' on' : ''}" data-a="cpq" data-k="${raw(k)}" data-v="${raw(o[0])}">${k == 'niv' ? levelDot(o[0]) : ''}${raw(o[1])}</button>`)}</div>${sub ? html`<p class="mu" style="font-size:12px;margin:6px 2px 0">${raw(sub)}</p>` : ''}`;
 const guidedForm = () => {
   const o = progDraft.o;
-  return pgHead('Programa guiado', 'cpn') + '<p class="mu" style="margin:-6px 0 4px">Responde cuatro cosas y te monto un programa a medida.</p>' + optionChips('lug', 'Dónde entrenas') + (o.lug == 'home' ? optionChips('mat', 'Material en casa') : '') + optionChips('est', 'Estilo de entrenamiento', STYLE_INFO[o.est]) + optionChips('obj', 'Objetivo', GOAL_INFO[o.obj]) + optionChips('dias', 'Días por semana') + optionChips('niv', 'Nivel', LEVEL_DETAILS[o.niv]) + '<div style="height:96px"></div><button class="sb pr" data-a="cpgen" style="padding:16px;font-size:16px;border-radius:16px">Ver propuesta</button>';
+  return html`${pgHead('Programa guiado', 'cpn')}<p class="mu" style="margin:-6px 0 4px">Responde cuatro cosas y te monto un programa a medida.</p>${optionChips('lug', 'Dónde entrenas')}${o.lug == 'home' ? optionChips('mat', 'Material en casa') : ''}${optionChips('est', 'Estilo de entrenamiento', STYLE_INFO[o.est])}${optionChips('obj', 'Objetivo', GOAL_INFO[o.obj])}${optionChips('dias', 'Días por semana')}${optionChips('niv', 'Nivel', LEVEL_DETAILS[o.niv])}<div style="height:96px"></div><button class="sb pr" data-a="cpgen" style="padding:16px;font-size:16px;border-radius:16px">Ver propuesta</button>`;
 };
 const makeEx = (tok, o) => {
   let sp = '';
@@ -237,9 +238,9 @@ const guidedProposal = () => {
   const o = progDraft.o;
   const pl = progDraft.plan;
   const lab = [o.lug == 'gym' ? 'Gimnasio' : 'Casa' + (o.mat == 'db' ? ' · mancuernas y bandas' : ' · peso corporal'), GUIDE_OPTIONS.est.find(x => x[0] == o.est)[1], GUIDE_OPTIONS.obj.find(x => x[0] == o.obj)[1], o.dias + ' días', GUIDE_OPTIONS.niv.find(x => x[0] == o.niv)[1]];
-  return pgHead('Tu propuesta', 'cpg') + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px">' + lab.map(x => '<span class="tg">' + X(x) + '</span>').join('') + '</div><div class="cd" style="margin:8px 0"><b>Cómo sacarle partido</b><p class="mu" style="margin:6px 0 0;font-size:13px;line-height:1.5">' + X(progDraft.txt) + '</p></div>' + weeklySetsCard(pl) + '<div class="row" style="margin-top:14px"><div class="ph" style="margin:0">Semana</div><button class="chip" data-a="cpvr" style="margin:0">Otra variante</button></div><p class="mu" style="font-size:12px;margin:4px 0 8px">Usa las flechas para mover días y descansos a tu gusto.</p>' + programRowsHtml(pl) + programNameBox() + '<div style="height:96px"></div><button class="sb pr" data-a="cps" style="padding:16px;font-size:16px;border-radius:16px">Crear programa</button>';
+  return html`${pgHead('Tu propuesta', 'cpg')}<div style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px">${lab.map(x => html`<span class="tg">${x}</span>`)}</div><div class="cd" style="margin:8px 0"><b>Cómo sacarle partido</b><p class="mu" style="margin:6px 0 0;font-size:13px;line-height:1.5">${progDraft.txt}</p></div>${weeklySetsCard(pl)}<div class="row" style="margin-top:14px"><div class="ph" style="margin:0">Semana</div><button class="chip" data-a="cpvr" style="margin:0">Otra variante</button></div><p class="mu" style="font-size:12px;margin:4px 0 8px">Usa las flechas para mover días y descansos a tu gusto.</p>${raw(programRowsHtml(pl))}${programNameBox()}<div style="height:96px"></div><button class="sb pr" data-a="cps" style="padding:16px;font-size:16px;border-radius:16px">Crear programa</button>`;
 };
-const orderWeekPage = () => pgHead('Ordenar semana', 'cpv0') + '<p class="mu" style="margin:-6px 0 8px">Mueve días y descansos con las flechas.</p>' + programRowsHtml(progDraft.plan) + '<div style="height:96px"></div><button class="sb pr" data-a="cpes" style="padding:16px;font-size:16px;border-radius:16px">Guardar orden</button>';
+const orderWeekPage = () => html`${pgHead('Ordenar semana', 'cpv0')}<p class="mu" style="margin:-6px 0 8px">Mueve días y descansos con las flechas.</p>${raw(programRowsHtml(progDraft.plan))}<div style="height:96px"></div><button class="sb pr" data-a="cpes" style="padding:16px;font-size:16px;border-radius:16px">Guardar orden</button>`;
 const refreshCreate = () => fullPage(progDraft.m == 'mine' ? createFromMine() : progDraft.m == 'guide' ? guidedProposal() : orderWeekPage());
 A.cpn = () => {
   progDraft = { m: '', name: '', sel: [], plan: null, o: progDraft.o, vr: 0, k: -1, txt: '' };
@@ -339,7 +340,7 @@ A.cpv0 = () => {
     return A.pg();
   const act = S.cpi == k;
   const pl = act ? S.plan : p.plan;
-  sheet(pgHead(X(p.n), 'pg') + '<p class="mu" style="margin:-6px 0 10px">' + X(p.d || '') + (act ? ' · <b style="color:var(--a1)">Plan actual</b>' : '') + '</p>' + programDaysHtml(pl) + '<div class="g2" style="margin-top:12px"><button data-a="cpe">Ordenar días</button><button data-a="cpdl" style="color:var(--c)">Borrar</button></div><button data-a="cpsh" style="width:100%;margin-top:8px">Compartir programa</button><div style="height:84px"></div>' + (act ? '' : '<button class="sb pr" data-a="cpac" style="padding:16px;font-size:16px;border-radius:16px">Usar este programa</button>'));
+  sheet(html`${pgHead(X(p.n), 'pg')}<p class="mu" style="margin:-6px 0 10px">${p.d || ''}${raw(act ? ' · <b style="color:var(--a1)">Plan actual</b>' : '')}</p>${raw(programDaysHtml(pl))}<div class="g2" style="margin-top:12px"><button data-a="cpe">Ordenar días</button><button data-a="cpdl" style="color:var(--c)">Borrar</button></div><button data-a="cpsh" style="width:100%;margin-top:8px">Compartir programa</button><div style="height:84px"></div>${raw(act ? '' : '<button class="sb pr" data-a="cpac" style="padding:16px;font-size:16px;border-radius:16px">Usar este programa</button>')}`);
   sheetToTop();
 };
 A.cpac = () => {

@@ -6,6 +6,7 @@ import { logError } from '../core/errors.js';
 import { A, C } from '../core/registry.js';
 import { applyTheme, S, saveState } from '../core/state.js';
 import { R } from '../core/render.js';
+import { html, raw } from '../core/html.js';
 const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#6e5300', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#e8590c', '#702a05', '#fff']];
 export function applyAccent() {
   const a = ACCENTS[S.acc || 0];
@@ -16,17 +17,17 @@ export function applyAccent() {
   r.setProperty('--ft', a[4]);
   r.setProperty('--ac', a[2]);
 }
-export const accentSwatches = () => '<div class="swg">' + ACCENTS.map((a, i) => {
+export const accentSwatches = () => html`<div class="swg">${ACCENTS.map((a, i) => {
   const on = (S.acc || 0) == i;
-  return '<button class="swb' + (on ? ' on' : '') + '" data-a="zac" data-i="' + i + '"><i style="background:linear-gradient(135deg,' + a[1] + ',' + a[2] + ');color:' + a[4] + '">' + (on ? '✓' : '') + '</i><small>' + a[0] + '</small></button>';
-}).join('') + '</div>';
+  return html`<button class="swb${on ? ' on' : ''}" data-a="zac" data-i="${i}"><i style="background:linear-gradient(135deg,${raw(a[1])},${raw(a[2])});color:${raw(a[4])}">${on ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`;
+})}</div>`;
 A.zac = i => {
   S.acc = i;
   applyAccent();
   saveState();
   R();
 };
-export const themeSegment = () => '<div class="seg">' + [['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => '<button class="' + ((S.theme || '') == x[0] ? 'on' : '') + '" data-a="zth" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>';
+export const themeSegment = () => html`<div class="seg">${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`<button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="zth" data-v="${raw(x[0])}">${raw(x[1])}</button>`)}</div>`;
 A.zth = (i, b) => {
   S.theme = b.dataset.v;
   applyTheme();
@@ -42,11 +43,7 @@ const GLASS_INFO = { 3: 'Más transparencia, desenfoque y brillo. Es el más vis
 export const glassCard = () => {
   const m = glassMode();
   const g = m > 0;
-  return '<label>Estilo</label><div class="gst">'
-    + '<button class="gso' + (g ? ' on' : '') + '" data-a="glk" data-v="1" aria-pressed="' + g + '"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button>'
-    + '<button class="gso' + (g ? '' : ' on') + '" data-a="glk" data-v="0" aria-pressed="' + !g + '"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>'
-    + (g ? '<label>Intensidad del Cristal</label><div class="seg">' + GLASS_LEVELS.map(x => '<button class="' + (m == x[0] ? 'on' : '') + '" data-a="gl" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div><small class="mu" style="display:block;margin-top:4px">' + GLASS_INFO[m] + (m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : '') + '</small>'
-      : '<small class="mu" style="display:block;margin-top:4px">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>');
+  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glk" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glk" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="gl" data-v="${raw(x[0])}">${raw(x[1])}</button>`)}</div><small class="mu" style="display:block;margin-top:4px">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu" style="display:block;margin-top:4px">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
 };
 A.glk = (i, b) => {
   const v = +b.dataset.v;

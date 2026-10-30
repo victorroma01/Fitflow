@@ -2,7 +2,7 @@
    Resumen del entreno e imagen para compartir.
    Define: pctChange, signed, summaryData, deltaChip, showSummary, summaryImage  · acciones/registros: 1
 */
-import { est1RM, fmtDateShort, X } from '../core/util.js';
+import { est1RM, fmtDateShort } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -13,6 +13,7 @@ import { lastSummary, newRecords, setLastSummary } from '../workout/finish.js';
 import { weekStats } from '../dashboard/home.js';
 import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
 import { checkAchievements } from './achievements.js';
+import { html, raw } from '../core/html.js';
 const pctChange = (a, b) => {
   if (!(b > 0))
     return null;
@@ -53,7 +54,7 @@ function summaryData() {
   }
   return o;
 }
-const deltaChip = (txt, cl) => '<span class="f2dc ' + (cl || '') + '">' + txt + '</span>';
+const deltaChip = (txt, cl) => html`<span class="f2dc ${raw(cl || '')}">${raw(txt)}</span>`;
 export function showSummary() {
   try {
     const o = summaryData();
@@ -62,8 +63,7 @@ export function showSummary() {
     setLastSummary(lastSummary || {});
     lastSummary.sm = o;
     const l = o.l;
-    let h = '<h3 style="margin:0">Entreno guardado</h3><small class="mu">' + X(l.n) + ' · ' + fmtDateShort(l.d, { weekday: 'long', day: 'numeric', month: 'long' }) + '</small>'
-      + '<div class="g2 f2tl"><div class="cd"><b>' + l.s + '</b><small>' + (l.s == 1 ? 'Serie' : 'Series') + '</small></div><div class="cd"><b>' + volumeText(l.v, 1) + '</b><small>Volumen</small></div><div class="cd"><b>' + l.m + ' min</b><small>Tiempo</small></div><div class="cd"><b>' + (l.q > 0 ? l.q : '—') + '</b><small>Esfuerzo (RPE)</small></div></div>';
+    let h = html`<h3 style="margin:0">Entreno guardado</h3><small class="mu">${l.n} · ${raw(fmtDateShort(l.d, { weekday: 'long', day: 'numeric', month: 'long' }))}</small><div class="g2 f2tl"><div class="cd"><b>${raw(l.s)}</b><small>${l.s == 1 ? 'Serie' : 'Series'}</small></div><div class="cd"><b>${raw(volumeText(l.v, 1))}</b><small>Volumen</small></div><div class="cd"><b>${raw(l.m)} min</b><small>Tiempo</small></div><div class="cd"><b>${raw(l.q > 0 ? l.q : '—')}</b><small>Esfuerzo (RPE)</small></div></div>`;
     const ch = [];
     if (o.dv != null)
       ch.push(deltaChip(signed(o.dv) + ' % volumen', o.dv > 0 ? 'up' : o.dv < 0 ? 'dn' : ''));
@@ -74,14 +74,14 @@ export function showSummary() {
     if (o.volRec)
       ch.push(deltaChip('Más volumen que nunca en este entreno', 'up'));
     if (ch.length)
-      h += '<div class="f2cmp"><small class="mu">Frente al entreno anterior</small><div>' + ch.join('') + '</div></div>';
+      h += html`<div class="f2cmp"><small class="mu">Frente al entreno anterior</small><div>${raw(ch.join(''))}</div></div>`;
     if (o.pr.length)
-      h += '<div class="cd f2prc"><b>' + (o.pr.length == 1 ? 'Récord personal' : o.pr.length + ' récords personales') + '</b>' + o.pr.map(p => '<div class="it" style="grid-template-columns:1fr auto"><span>' + X(p.n) + '</span><b>' + toDisplayWeight(p.w) + ' ' + weightUnit() + ' × ' + p.r + '</b></div>').join('') + '</div>';
+      h += html`<div class="cd f2prc"><b>${raw(o.pr.length == 1 ? 'Récord personal' : o.pr.length + ' récords personales')}</b>${o.pr.map(p => html`<div class="it" style="grid-template-columns:1fr auto"><span>${p.n}</span><b>${toDisplayWeight(p.w)} ${weightUnit()} × ${raw(p.r)}</b></div>`)}</div>`;
     if (o.ex.length)
-      h += '<details class="cd"' + (o.pr.length ? '' : ' open') + '><summary>Resumen por ejercicio</summary>' + o.ex.slice(0, 14).map(e => '<div class="it" style="grid-template-columns:1fr auto"><span>' + X(e.n) + '<br><small>' + e.k + (e.k == 1 ? ' serie' : ' series') + '</small></span><small>' + (e.b && !e.u ? toDisplayWeight(e.b[1]) + ' ' + weightUnit() + ' × ' + e.b[0] : '') + '</small></div>').join('') + '</details>';
+      h += html`<details class="cd"${o.pr.length ? '' : ' open'}><summary>Resumen por ejercicio</summary>${o.ex.slice(0, 14).map(e => html`<div class="it" style="grid-template-columns:1fr auto"><span>${e.n}<br><small>${raw(e.k)}${e.k == 1 ? ' serie' : ' series'}</small></span><small>${raw(e.b && !e.u ? toDisplayWeight(e.b[1]) + ' ' + weightUnit() + ' × ' + e.b[0] : '')}</small></div>`)}</details>`;
     if (o.st >= 2)
-      h += '<p class="mu" style="font-size:13px;margin:6px 2px">Llevas ' + o.st + ' semanas seguidas cumpliendo tu objetivo.</p>';
-    h += '<div class="g2" style="margin-top:12px"><button data-a="f2sh">' + icon('shr', 18) + ' Compartir</button><button class="pr" data-a="cl">Listo</button></div>';
+      h += html`<p class="mu" style="font-size:13px;margin:6px 2px">Llevas ${o.st} semanas seguidas cumpliendo tu objetivo.</p>`;
+    h += html`<div class="g2" style="margin-top:12px"><button data-a="f2sh">${icon('shr', 18)} Compartir</button><button class="pr" data-a="cl">Listo</button></div>`;
     sheet(h);
     summaryImage(o).then(b => {
       if (lastSummary)

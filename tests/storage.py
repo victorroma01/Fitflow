@@ -32,6 +32,18 @@ HELPERS = """window.__T={
 };0"""
 
 
+def booted(pg, limit=8000):
+    """Espera (en tiempo real) a que la app haya arrancado del todo tras una recarga: window.__ffok."""
+    for _ in range(limit // 50):
+        try:
+            if pg.evaluate('!!window.__ffok'):
+                return True
+        except Exception:
+            pass
+        pg.wait_for_timeout(50)
+    return False
+
+
 def check(name, cond, info=''):
     if not cond:
         fails.append(name)
@@ -59,6 +71,7 @@ def main(path):
                 with pg.expect_navigation():
                     ev('location.reload()')
                 pg.wait_for_load_state('load')
+                booted(pg)
                 pg.clock.run_for(ms)
                 ev(HELPERS)
 
@@ -104,6 +117,7 @@ def main(path):
             with pg.expect_navigation():
                 ev('location.reload()')
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(300)
             ev(HELPERS)
             check('lee los datos de la 1.20', ev('savedFormat') == 'whole' and ev('__T.can(S)') == ev('__T.can(%s)' % legacy))
@@ -118,6 +132,7 @@ def main(path):
             with pg.expect_navigation():
                 ev('location.reload()')
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(300)
             ev(HELPERS)
             ev("window.__set1=Store.set;Store.set=(k,v)=>{if(k.startsWith('ff:')&&k>'ff:l'){const e=new Error('lleno');e.name='QuotaExceededError';throw e}return __set1(k,v)};0")
@@ -157,6 +172,7 @@ def main(path):
             with pg.expect_navigation():
                 ev("S.rest=999;saveState();pendingRestore={s:__bk};restoreBackup()")
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(1500)
             ev(HELPERS)
             check('restaurar no lo pisa un guardado pendiente', ev('S.rest') == 31 and ev('S.logs.length') == 2, str((ev('S.rest'), ev('S.logs.length'))))
@@ -164,6 +180,7 @@ def main(path):
             with pg.expect_navigation():
                 ev('A.bkun2()')
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(1500)
             ev(HELPERS)
             check('deshacer la restauración devuelve los datos anteriores', ev('S.rest') == 999 and ev('(()=>{const s=JSON.parse(JSON.stringify(S));s.rest=%s;return __T.can(s)})()' % json.dumps(json.loads(before)['rest'])) == before)
@@ -188,6 +205,7 @@ def main(path):
             with pg.expect_navigation():
                 pg.click('#ffe3')
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(800)
             ev(HELPERS)
             bad = json.loads(ev("JSON.parse(localStorage.getItem('ffbad')).raw"))
@@ -199,6 +217,7 @@ def main(path):
             ev("localStorage.setItem('ffw',JSON.stringify({W:{x:[]},t:Date.now()}))")
             ev("A.zrs()")
             pg.wait_for_load_state('load')
+            booted(pg)
             pg.clock.run_for(800)
             ev(HELPERS)
             left = ev("__T.keys('ff')")

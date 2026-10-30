@@ -72,5 +72,8 @@ const morphChildren = (a, b) => {
 export const morph = (el, html) => {
   const t = document.createElement('template');
   t.innerHTML = html;
-  morphChildren(el, t.content);
+  if (el.firstChild)
+    morphChildren(el, t.content);
+  else
+    el.appendChild(t.content);
 };

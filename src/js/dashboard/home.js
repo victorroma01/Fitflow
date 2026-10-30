@@ -2,7 +2,7 @@
    Pestaña Dashboard: tarjetas de resumen.
    Define: dashboardBase, recordsCard, weekMonday, weekStats, weekCard, dashboardTab
 */
-import { dayKey, roundInt, X } from '../core/util.js';
+import { dayKey, roundInt } from '../core/util.js';
 import { S } from '../core/state.js';
 import { icon } from '../core/icons.js';
 import { bestOf } from '../workout/finish.js';
@@ -13,6 +13,7 @@ import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
 import { backupReminder } from '../system/backup.js';
 import { stagnationCard } from '../extras/stagnation.js';
 import { cardioCard } from '../extras/cardio.js';
+import { html, raw } from '../core/html.js';
 function dashboardBase() {
   const lg = S.logs;
   const now = new Date();
@@ -20,12 +21,12 @@ function dashboardBase() {
   const vol = lg.reduce((s, l) => s + l.v, 0);
   const last = lg.filter(l => !l.k).slice(-8);
   const mx = Math.max(1, ...last.map(l => l.v));
-  return '<div class="hd"><h1>Dashboard</h1><button data-a="zwv" style="padding:8px 12px">' + icon('dash', 24) + '</button></div><div class="g2" style="margin-top:12px"><div class="cd"><b style="font-size:26px">' + lg.length + '</b><br><small>Entrenos totales</small></div><div class="cd"><b style="font-size:26px">' + wkc + '</b><br><small>Últimos 7 días</small></div><div class="cd"><b style="font-size:26px">' + volumeText(vol) + '</b><br><small>Volumen total</small></div><div class="cd"><b style="font-size:26px">' + roundInt(sumMacros((S.meals[dayKey(now)] && Object.values(S.meals[dayKey(now)]).flat() || []).map(itemMacros))[0]) + '</b><br><small>kcal hoy</small></div></div><div class="cd"><b>Volumen por sesión</b><div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:8px">' + (last.length ? last.map(l => '<div style="flex:1;background:var(--ac);border-radius:4px;height:' + Math.max(6, l.v / mx * 100) + '%"></div>').join('') : '<small>Completa un entreno para ver tu progreso.</small>') + '</div></div><div class="cd">' + calendarPage() + '</div>';
+  return html`<div class="hd"><h1>Dashboard</h1><button data-a="zwv" style="padding:8px 12px">${icon('dash', 24)}</button></div><div class="g2" style="margin-top:12px"><div class="cd"><b style="font-size:26px">${lg.length}</b><br><small>Entrenos totales</small></div><div class="cd"><b style="font-size:26px">${raw(wkc)}</b><br><small>Últimos 7 días</small></div><div class="cd"><b style="font-size:26px">${raw(volumeText(vol))}</b><br><small>Volumen total</small></div><div class="cd"><b style="font-size:26px">${roundInt(sumMacros((S.meals[dayKey(now)] && Object.values(S.meals[dayKey(now)]).flat() || []).map(itemMacros))[0])}</b><br><small>kcal hoy</small></div></div><div class="cd"><b>Volumen por sesión</b><div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:8px">${raw(last.length ? last.map(l => html`<div style="flex:1;background:var(--ac);border-radius:4px;height:${Math.max(6, l.v / mx * 100)}%"></div>`).join('') : '<small>Completa un entreno para ver tu progreso.</small>')}</div></div><div class="cd">${calendarPage()}</div>`;
 }
 const recordsCard = () => {
   const ks = new Set(Object.keys(S.pr || {}).concat(Object.keys(S.hist || {})));
   const l = [...ks].map(n => [n, bestOf(n)]).filter(x => x[1]).sort((a, b) => b[1].e - a[1].e).slice(0, 6);
-  return '<div class="cd"><b>Récords personales</b>' + (l.length ? l.map(x => '<div class="it" style="grid-template-columns:1fr auto"><span>' + X(x[0]) + '<br><small>' + x[1].d + '</small></span><span style="text-align:right"><b>' + toDisplayWeight(x[1].w) + ' ' + weightUnit() + ' × ' + x[1].r + '</b><br><small>1RM est. ' + roundInt(toDisplayWeight(x[1].e)) + ' ' + weightUnit() + '</small></span></div>').join('') : '<p class="mu" style="margin:8px 0 0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>') + '</div>';
+  return html`<div class="cd"><b>Récords personales</b>${raw(l.length ? l.map(x => html`<div class="it" style="grid-template-columns:1fr auto"><span>${x[0]}<br><small>${raw(x[1].d)}</small></span><span style="text-align:right"><b>${toDisplayWeight(x[1].w)} ${weightUnit()} × ${raw(x[1].r)}</b><br><small>1RM est. ${roundInt(toDisplayWeight(x[1].e))} ${weightUnit()}</small></span></div>`).join('') : '<p class="mu" style="margin:8px 0 0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>')}</div>`;
 };
 export const weekMonday = d => {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -79,10 +80,7 @@ export const weekStats = () => {
 };
 const weekCard = () => {
   const s = weekStats();
-  return '<div class="cd wkc"><div class="row"><b>Esta semana</b><small>' + s.c + ' de ' + s.g + (s.g == 1 ? ' entreno' : ' entrenos') + '</small></div>' +
-    '<div class="wkd">' + s.dots.map(d => '<span class="' + (d.on ? 'on ' : '') + (d.td ? 'td ' : '') + (d.fu ? 'fu' : '') + '"><i></i>' + d.l + '</span>').join('') + '</div>' +
-    '<div class="wks"><div><b>' + s.st + '</b><small>' + (s.st == 1 ? 'semana de racha' : 'semanas de racha') + '</small></div><div><b>' + s.best + '</b><small>mejor racha</small></div></div>' +
-    '<small class="mu wkn">' + (s.any ? 'La semana cuenta con ' + s.t + ' o más entrenos.' : 'Completa tu primer entreno para empezar la racha.') + '</small></div>';
+  return html`<div class="cd wkc"><div class="row"><b>Esta semana</b><small>${raw(s.c)} de ${s.g}${s.g == 1 ? ' entreno' : ' entrenos'}</small></div><div class="wkd">${s.dots.map(d => html`<span class="${d.on ? 'on ' : ''}${d.td ? 'td ' : ''}${d.fu ? 'fu' : ''}"><i></i>${raw(d.l)}</span>`)}</div><div class="wks"><div><b>${s.st}</b><small>${s.st == 1 ? 'semana de racha' : 'semanas de racha'}</small></div><div><b>${s.best}</b><small>mejor racha</small></div></div><small class="mu wkn">${raw(s.any ? 'La semana cuenta con ' + s.t + ' o más entrenos.' : 'Completa tu primer entreno para empezar la racha.')}</small></div>`;
 };
 export function dashboardTab() {
   const h = dashboardBase() + recordsCard();

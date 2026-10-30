@@ -71,6 +71,7 @@ jobs:
           python-version: '3.12'
       - name: Dependencias
         run: |
+          npm install --no-audit --no-fund
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Compilar las dos versiones
@@ -78,7 +79,7 @@ jobs:
           python3 build.py --only single
           cp dist/stratafit.html /tmp/nueva.html
           git worktree add /tmp/base ${{ github.event.pull_request.base.sha }}
-          (cd /tmp/base && python3 build.py --only single)
+          (cd /tmp/base && npm install --no-audit --no-fund && python3 build.py --only single)
       - name: Paseo aleatorio y capturas
         id: comparar
         continue-on-error: true
@@ -106,11 +107,16 @@ jobs:
       pages: ${{ steps.pages.outputs.modo }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Compilar el paquete
-        run: python3 build.py --only app
+        run: |
+          npm install --no-audit --no-fund
+          python3 build.py --only app
       - name: Paquete para GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:

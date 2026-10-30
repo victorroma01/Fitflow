@@ -2,7 +2,6 @@
    Niveles de programa (aplicar, variantes, selector).
    Define: isLevel, round5, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelVars, levelMenuOpen, previewLevel, pendingLevel, levelPill, … (+4)  · acciones/registros: 5
 */
-import { X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { parseProgram } from '../data/library.js';
@@ -13,6 +12,7 @@ import { R } from '../core/render.js';
 import { dropResume, pendingResume } from '../workout/resume.js';
 import { clone, generateProgram, parseDays } from './create.js';
 import { previewProgram } from './manager.js';
+import { html, raw } from '../core/html.js';
 export const isLevel = v => LEVEL_KEYS.includes(v);
 const round5 = x => Math.max(5, Math.round(x / 5) * 5);
 const levelDay = (d, lv) => {
@@ -134,7 +134,7 @@ const planEdited = () => {
   }
 };
 const weekStarted = () => Object.keys(S.done || {}).some(k => k.indexOf(S.wk + '-') == 0 && S.done[k]);
-export const levelDot = v => '<i class="lvd" style="--lc:' + LEVEL_COLORS[v] + ';--ld:' + LEVEL_COLORS[v] + '38"></i>';
+export const levelDot = v => html`<i class="lvd" style="--lc:${raw(LEVEL_COLORS[v])};--ld:${raw(LEVEL_COLORS[v])}38"></i>`;
 const levelVars = v => '--lc:' + LEVEL_COLORS[v] + ';--lb:' + LEVEL_COLORS[v] + '24;--lr:' + LEVEL_COLORS[v] + '6b';
 export let levelMenuOpen = false;
 /** Cambia `levelMenuOpen` desde otros módulos (un módulo no puede asignar una variable importada). */
@@ -151,8 +151,7 @@ export const levelPill = () => {
   if (!levelsActive())
     return '';
   const v = isLevel(S.lv) ? S.lv : 'int';
-  return '<div class="lvw" style="' + levelVars(v) + '"><button class="lvp" data-a="lvo" aria-haspopup="menu" aria-expanded="' + (levelMenuOpen ? 'true' : 'false') + '" aria-label="Nivel del programa: ' + LEVEL_NAMES[v] + '">' + levelDot(v) + '<span>' + LEVEL_NAMES[v] + '</span><span class="lvc">▾</span></button>' +
-    (levelMenuOpen ? '<div class="lvb" data-a="lvx"></div><div class="lvm" role="menu">' + LEVEL_KEYS.map(k => '<button class="lvi' + (k == v ? ' on' : '') + '" data-a="lvs" data-v="' + k + '" role="menuitem" style="' + levelVars(k) + '">' + levelDot(k) + '<span><b>' + LEVEL_NAMES[k] + '</b><small class="mu">' + LEVEL_SUMMARY[k] + '</small></span>' + (k == v ? '<em>✓</em>' : '') + '</button>').join('') + '</div>' : '') + '</div>';
+  return html`<div class="lvw" style="${raw(levelVars(v))}"><button class="lvp" data-a="lvo" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${raw(LEVEL_NAMES[v])}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="lvx"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi${k == v ? ' on' : ''}" data-a="lvs" data-v="${raw(k)}" role="menuitem" style="${raw(levelVars(k))}">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
 };
 A.lvo = () => {
   levelMenuOpen = !levelMenuOpen;
@@ -223,12 +222,12 @@ A.lvc = () => {
   if (isLevel(pendingLevel))
     applyLevel(pendingLevel);
 };
-export const levelSegment = () => '<div class="lvs">' + LEVEL_KEYS.map(k => '<button class="' + (k == previewLevel ? 'on' : '') + '" data-a="pvl" data-v="' + k + '" style="' + levelVars(k) + '">' + levelDot(k) + '<span>' + LEVEL_NAMES[k] + '</span></button>').join('') + '</div><p class="mu lvn">' + LEVEL_DETAILS[previewLevel] + '</p>';
+export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${k == previewLevel ? 'on' : ''}" data-a="pvl" data-v="${raw(k)}" style="${raw(levelVars(k))}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
 A.pvl = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   if (isLevel(v))
     previewLevel = v;
   A.pv(previewProgram);
 };
-export const levelTag = v => '<span class="lvt">' + levelDot(v) + LEVEL_NAMES[v] + '</span>';
-export const programRow = (n, tag) => '<span class="pgr"><b style="font-size:17px">' + X(n) + '</b>' + tag + '</span>';
+export const levelTag = v => html`<span class="lvt">${levelDot(v)}${raw(LEVEL_NAMES[v])}</span>`;
+export const programRow = (n, tag) => html`<span class="pgr"><b style="font-size:17px">${n}</b>${raw(tag)}</span>`;

@@ -3,7 +3,7 @@
    últimos errores y, si los hubo, datos dañados que se apartaron al arrancar. Nada sale del móvil salvo que se copie.
    Define: storageUse, badData, diagnosticsText, diagnosticsPage  · acciones/registros: 4
 */
-import { $, APPV, dayKey, FFDEP, X } from '../core/util.js';
+import { $, APPV, dayKey, FFDEP } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
 import { clearErrorLog, errorLog, logError } from '../core/errors.js';
@@ -14,6 +14,7 @@ import { confirmDialog, fullPage, pgHead } from '../core/ui.js';
 import { copyText, downloadFile, isStandalone } from './files.js';
 import { backupDate } from './backup.js';
 import { offlineText } from './updates.js';
+import { html } from '../core/html.js';
 /** Tamaño aproximado (caracteres) de cada clave de Store y de cada parte del estado (las comidas, sumando los meses). */
 const storageUse = () => {
   const size = k => {
@@ -52,7 +53,7 @@ const diagnosticsText = () => {
 const diagnosticsPage = () => {
   const n = errorLog().length;
   const bad = badData();
-  return pgHead('Diagnóstico') + '<p class="mu" style="margin:-6px 0 12px">Si algo falla, copia este informe y envíalo. Solo contiene datos técnicos y los últimos errores; ningún dato tuyo sale del móvil si no lo copias tú.</p>' + '<textarea id="diagt" rows="12" readonly style="font:12px/1.4 ui-monospace,Menlo,monospace">' + X(diagnosticsText()) + '</textarea>' + '<div class="g2" style="margin-top:10px"><button class="pr" data-a="diagCopy">Copiar informe</button><button data-a="diagClear"' + (n ? '' : ' disabled') + '>Borrar errores</button></div>' + (bad ? '<div class="cd" style="margin-top:14px"><b>Datos que no se pudieron leer</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Al abrir la app el ' + X(backupDate(bad.t, 1)) + ' tus datos estaban dañados y se apartaron aquí para no perderlos. Descárgalos para intentar recuperarlos.</div><div class="g2"><button data-a="diagBad">Descargar</button><button data-a="diagBadDel">Eliminar</button></div></div>' : '') + '<div style="height:20px"></div>';
+  return html`${pgHead('Diagnóstico')}<p class="mu" style="margin:-6px 0 12px">Si algo falla, copia este informe y envíalo. Solo contiene datos técnicos y los últimos errores; ningún dato tuyo sale del móvil si no lo copias tú.</p><textarea id="diagt" rows="12" readonly style="font:12px/1.4 ui-monospace,Menlo,monospace">${diagnosticsText()}</textarea><div class="g2" style="margin-top:10px"><button class="pr" data-a="diagCopy">Copiar informe</button><button data-a="diagClear"${n ? '' : ' disabled'}>Borrar errores</button></div>${bad ? html`<div class="cd" style="margin-top:14px"><b>Datos que no se pudieron leer</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Al abrir la app el ${backupDate(bad.t, 1)} tus datos estaban dañados y se apartaron aquí para no perderlos. Descárgalos para intentar recuperarlos.</div><div class="g2"><button data-a="diagBad">Descargar</button><button data-a="diagBadDel">Eliminar</button></div></div>` : ''}<div style="height:20px"></div>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.diag = () => fullPage(diagnosticsPage());

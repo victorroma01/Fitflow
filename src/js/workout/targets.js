@@ -2,7 +2,7 @@
    Unidades, repeticiones objetivo, duración y volumen semanal.
    Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+7)  · acciones/registros: 1
 */
-import { fmtMinSec, X } from '../core/util.js';
+import { fmtMinSec } from '../core/util.js';
 import { C } from '../core/registry.js';
 import { groupOf } from '../data/library.js';
 import { S, saveState } from '../core/state.js';
@@ -11,6 +11,7 @@ import { exAll } from '../library/model.js';
 import { inSuperset } from './day.js';
 import { COMPOUND_RE, restOf } from './rest.js';
 import { warmupHtml } from './warmup.js';
+import { html, raw } from '../core/html.js';
 const repClass = n => /sentadilla|press banca|peso muerto|press militar|remo con barra|dominadas|fondos|hip thrust|prensa/i.test(n) ? 8 : /curl|extensi|elevaciones|aperturas|pájaros|gemelo|patada|abducci|face pull|crunch|encogimientos|muñeca/i.test(n) ? 12 : 10;
 export const unitFromName = n => {
   const m = String(n).match(/(\d+(?:[.,]\d+)?)\s*(km|m)\b/i);
@@ -123,7 +124,7 @@ const weeklySets = pl => {
   }));
   return Object.entries(o).sort((a, b) => b[1] - a[1]);
 };
-export const weeklySetsCard = pl => '<div class="cd" style="margin:8px 0"><b>Series directas por semana</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">' + weeklySets(pl).map(o => '<span style="padding:4px 10px;border-radius:12px;background:rgba(128,128,128,.18);font-size:12px">' + X(o[0]) + ' · ' + o[1] + '</span>').join('') + '</div></div>';
+export const weeklySetsCard = pl => html`<div class="cd" style="margin:8px 0"><b>Series directas por semana</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${weeklySets(pl).map(o => html`<span style="padding:4px 10px;border-radius:12px;background:rgba(128,128,128,.18);font-size:12px">${o[0]} · ${raw(o[1])}</span>`)}</div></div>`;
 export const usesWeight = e => !unitOf(e) || /Sled|Farmers|Sandbag|Carry|chaleco|con peso|con balón|arrastre|Lunges/i.test(e.n);
 export const targetLine = (e, i) => {
   const U = unitOf(e);
@@ -132,14 +133,14 @@ export const targetLine = (e, i) => {
     p.push('Descanso ' + fmtMinSec(inSuperset(i) ? 10 : restOf(e)));
   if (!U)
     p.push('Tempo ' + tempoOf(e));
-  return '<div class="mu">Objetivo: ' + e.s + ' × ' + targetText(e) + (U ? '' : ' · RIR ' + rirOf(e)) + '</div>' + (p.length ? '<div class="mu">' + p.join(' · ') + '</div>' : '') + warmupHtml(e, i);
+  return html`<div class="mu">Objetivo: ${raw(e.s)} × ${raw(targetText(e))}${raw(U ? '' : ' · RIR ' + rirOf(e))}</div>${p.length ? html`<div class="mu">${raw(p.join(' · '))}</div>` : ''}${raw(warmupHtml(e, i))}`;
 };
 const RANGE_OPTIONS = ['3-5', '5-8', '6-10', '8-10', '8-12', '10-12', '10-15', '12-15', '15-20'];
 export const rangeSelect = (e, i) => {
   if (unitOf(e))
     return '';
   const c = targetRange(e).join('-');
-  return '<select data-c="rg" data-i="' + i + '" style="width:auto;padding:5px 10px;font-size:13px">' + (RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => '<option value="' + v + '"' + (v == c ? ' selected' : '') + '>' + v + ' reps</option>').join('') + '</select>';
+  return html`<select data-c="rg" data-i="${raw(i)}" style="width:auto;padding:5px 10px;font-size:13px">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${raw(v)}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
 };
 C.rg = (e, i) => {
   const x = S.plan[S.sel].ex[i];

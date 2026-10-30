@@ -51,6 +51,8 @@ def main(path):
         pg.wait_for_load_state('load')
         pg.clock.run_for(800)
 
+        # reloj parado: el entreno en curso enseña el tiempo transcurrido y no debe cambiar entre una pintada y otra
+        pg.clock.pause_at(datetime.datetime(2026, 10, 29, 13, 0, 0))
         # cada pantalla, pintada encima de otra, queda igual que pintada de cero
         screens = [('Workout', 'weightView=0;S.tab=0'), ('Nutrición', 'weightView=0;S.tab=1'), ('Dashboard', 'weightView=0;S.tab=2'),
                    ('Perfil', 'weightView=0;S.tab=3'), ('peso corporal', 'S.tab=2;weightView=1')]

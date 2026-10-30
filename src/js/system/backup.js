@@ -15,6 +15,7 @@ import { WIP_KEY } from '../workout/resume.js';
 import { downloadFile } from './files.js';
 import { fillSnapshots } from './snapshots.js';
 import { allPhotosFull, mergePhotos, photoCount } from '../extras/measures.js';
+import { html, raw } from '../core/html.js';
 export let pendingRestore = null;
 /** Cambia `pendingRestore` desde otros módulos (pruebas: core/debug). */
 export const setPendingRestore = v => {
@@ -29,7 +30,7 @@ export const backupAge = () => {
 export const backupReminder = () => {
   if (S.logs.length < 3 || (S.bkd && Date.now() - S.bkd < 21 * 864e5))
     return '';
-  return '<div class="cd"><b>Haz una copia de seguridad</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Tus entrenos solo viven en este dispositivo. ' + (S.bkd ? backupAge() : 'Aún no has guardado ninguna copia.') + '</div><button data-a="zbk" style="width:100%">Copia de seguridad</button></div>';
+  return html`<div class="cd"><b>Haz una copia de seguridad</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Tus entrenos solo viven en este dispositivo. ${raw(S.bkd ? backupAge() : 'Aún no has guardado ninguna copia.')}</div><button data-a="zbk" style="width:100%">Copia de seguridad</button></div>`;
 };
 const BACKUP_FORMAT = 2;
 export const countOf = x => Array.isArray(x) ? x.length : (x && typeof x == 'object' ? Object.keys(x).length : 0);
@@ -48,13 +49,7 @@ const wipSession = () => {
 const backupRows = (s, wip) => {
   const it = Object.values(s.meals || {}).reduce((t, d) => t + (d && typeof d == 'object' ? Object.values(d).reduce((u, l) => u + (Array.isArray(l) ? l.length : 0), 0) : 0), 0);
   const dias = new Set((s.logs || []).map(l => l && l.d)).size;
-  const r = [plural(countOf(s.logs), 'entreno registrado', 'entrenos registrados') + (dias ? ' (' + plural(dias, 'día', 'días') + ')' : ''),
-    'Historial de pesos de ' + plural(countOf(s.hist), 'ejercicio', 'ejercicios') + ' y ' + plural(countOf(s.pr), 'récord personal', 'récords personales'),
-    plural(countOf(s.wl), 'registro de peso corporal', 'registros de peso corporal'),
-    'Comidas de ' + plural(countOf(s.meals), 'día', 'días') + ' (' + plural(it, 'alimento anotado', 'alimentos anotados') + ') y agua de ' + plural(countOf(s.wt), 'día', 'días'),
-    plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos') + ', ' + plural(countOf(s.lib), 'plato guardado', 'platos guardados') + ' y ' + plural(Object.keys(s.tp || {}).length, 'plantilla de día', 'plantillas de día'),
-    plural(countOf(s.cr), 'rutina personalizada', 'rutinas personalizadas') + ', ' + plural(countOf(s.cp), 'programa guardado', 'programas guardados') + ' y ' + plural(countOf(s.cx), 'ejercicio propio', 'ejercicios propios'),
-    'Notas de ' + plural(countOf(s.notes), 'ejercicio', 'ejercicios'), ...backupRowsFull(s),
+  const r = [plural(countOf(s.logs), 'entreno registrado', 'entrenos registrados') + (dias ? ' (' + plural(dias, 'día', 'días') + ')' : ''), 'Historial de pesos de ' + plural(countOf(s.hist), 'ejercicio', 'ejercicios') + ' y ' + plural(countOf(s.pr), 'récord personal', 'récords personales'), plural(countOf(s.wl), 'registro de peso corporal', 'registros de peso corporal'), 'Comidas de ' + plural(countOf(s.meals), 'día', 'días') + ' (' + plural(it, 'alimento anotado', 'alimentos anotados') + ') y agua de ' + plural(countOf(s.wt), 'día', 'días'), plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos') + ', ' + plural(countOf(s.lib), 'plato guardado', 'platos guardados') + ' y ' + plural(Object.keys(s.tp || {}).length, 'plantilla de día', 'plantillas de día'), plural(countOf(s.cr), 'rutina personalizada', 'rutinas personalizadas') + ', ' + plural(countOf(s.cp), 'programa guardado', 'programas guardados') + ' y ' + plural(countOf(s.cx), 'ejercicio propio', 'ejercicios propios'), 'Notas de ' + plural(countOf(s.notes), 'ejercicio', 'ejercicios'), ...backupRowsFull(s),
     'Perfil, objetivos de nutrición, nivel y ajustes (tema, acento, estilo, unidades, avisos)'];
   if (wip)
     r.push('Entreno en curso, para retomarlo');
@@ -132,7 +127,7 @@ export const askRestore = txt => {
   }
   pendingRestore = r;
   const ds = r.meta && r.meta.at ? backupDate(r.meta.at, 1) : '';
-  confirmDialog('¿Restaurar esta copia?', '<b>Copia' + (ds ? ' del ' + X(ds) : '') + '</b><br>' + X(backupSummary(r.s)) + (r.wip ? '<br>Incluye un entreno en curso.' : '') + (r.meta && Array.isArray(r.meta.ph) && r.meta.ph.length ? '<br>Incluye ' + r.meta.ph.length + ' fotos de progreso (se añaden a las que ya tienes).' : '') + '<br><br><b>Ahora tienes</b><br>' + X(backupSummary(S)) + '<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.', 'bkok', 'Restaurar');
+  confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}${r.meta && Array.isArray(r.meta.ph) && r.meta.ph.length ? html`<br>Incluye ${r.meta.ph.length} fotos de progreso (se añaden a las que ya tienes).` : ''}<br><br><b>Ahora tienes</b><br>${backupSummary(S)}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'bkok', 'Restaurar');
 };
 const preRestore = () => {
   try {
@@ -260,12 +255,7 @@ A.bkf = async () => {
 };
 A.zbk = () => {
   const p = preRestore();
-  sheet('<h3>Copia de seguridad</h3><p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">' + backupAge() + '</p>'
-    + '<div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div>'
-    + '<details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">' + backupRows(S, wipSession()).map(x => '<div>· ' + X(x) + '</div>').join('') + '</div></details>'
-    + '<details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto (sin fotos)</summary><textarea id="bk" rows="5" style="margin-top:8px">' + X(buildBackup()) + '</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details>'
-    + '<details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>'
-    + (p ? '<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (' + X(backupDate(p.t)) + ')</button>' : ''));
+  sheet(html`<h3>Copia de seguridad</h3><p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto (sin fotos)</summary><textarea id="bk" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
   fillSnapshots();
 };
 export const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;

@@ -12,6 +12,7 @@ import { fullPage, pgHead } from '../core/ui.js';
 import { weekStats } from '../dashboard/home.js';
 import { cardioLogs } from './cardio.js';
 import { measureList, photoCount } from './measures.js';
+import { html, raw } from '../core/html.js';
 function achStats() {
   const L = (S.logs || []).filter(l => l && typeof l.d == 'string');
   const cd = cardioLogs();
@@ -76,9 +77,8 @@ function achievementsPage() {
   const a = S.ach || {};
   const dn = ACHIEVEMENTS.filter(x => a[x[0]]);
   const pd = ACHIEVEMENTS.filter(x => !a[x[0]]);
-  const row = (x, on) => '<div class="f2ac' + (on ? ' on' : '') + '"><span class="f2ai">' + icon('trf', 22) + '</span><span style="min-width:0"><b>' + x[1] + '</b><br><small>' + x[2] + '</small>' + (on ? '' : '<div class="bar"><i style="width:' + Math.min(100, Math.round(st[x[3]] / x[4] * 100)) + '%;background:var(--a2)"></i></div>') + '</span><small style="white-space:nowrap">' + (on ? (a[x[0]] && a[x[0]] != '-' ? fmtDateShort(a[x[0]], { day: 'numeric', month: 'short', year: '2-digit' }) : 'Conseguido') : achProgress(x, st)) + '</small></div>';
-  return pgHead('Logros') + '<div class="cd" style="text-align:center"><b style="font-size:32px">' + dn.length + ' de ' + ACHIEVEMENTS.length + '</b><br><small>logros conseguidos</small><div class="bar" style="margin-top:10px"><i style="width:' + Math.round(dn.length / ACHIEVEMENTS.length * 100) + '%;background:var(--a2)"></i></div></div>'
-    + (pd.length ? '<div class="ph">Por conseguir</div>' + pd.map(x => row(x, 0)).join('') : '') + (dn.length ? '<div class="ph">Conseguidos</div>' + dn.map(x => row(x, 1)).join('') : '') + '<div style="height:30px"></div>';
+  const row = (x, on) => html`<div class="f2ac${on ? ' on' : ''}"><span class="f2ai">${icon('trf', 22)}</span><span style="min-width:0"><b>${raw(x[1])}</b><br><small>${raw(x[2])}</small>${on ? '' : html`<div class="bar"><i style="width:${Math.min(100, Math.round(st[x[3]] / x[4] * 100))}%;background:var(--a2)"></i></div>`}</span><small style="white-space:nowrap">${raw(on ? (a[x[0]] && a[x[0]] != '-' ? fmtDateShort(a[x[0]], { day: 'numeric', month: 'short', year: '2-digit' }) : 'Conseguido') : achProgress(x, st))}</small></div>`;
+  return html`${pgHead('Logros')}<div class="cd" style="text-align:center"><b style="font-size:32px">${dn.length} de ${ACHIEVEMENTS.length}</b><br><small>logros conseguidos</small><div class="bar" style="margin-top:10px"><i style="width:${Math.round(dn.length / ACHIEVEMENTS.length * 100)}%;background:var(--a2)"></i></div></div>${pd.length ? html`<div class="ph">Por conseguir</div>${raw(pd.map(x => row(x, 0)).join(''))}` : ''}${dn.length ? html`<div class="ph">Conseguidos</div>${raw(dn.map(x => row(x, 1)).join(''))}` : ''}<div style="height:30px"></div>`;
 }
 A.f2lg = () => {
   checkAchievements();

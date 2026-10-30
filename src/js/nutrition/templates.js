@@ -2,7 +2,7 @@
    Plantillas de comidas y hábitos.
    Define: nutriDayKey, dayType, templateCard, habitsCard  · acciones/registros: 5
 */
-import { $, dayKey, roundInt, X } from '../core/util.js';
+import { $, dayKey, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
@@ -10,6 +10,7 @@ import { segmented, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { itemMacros, sumMacros } from './home.js';
 import { addSheet } from './add.js';
+import { html, raw } from '../core/html.js';
 const nutriDayKey = () => dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
 const dayType = k => {
   if (S.dt && (S.dt[k] == 't' || S.dt[k] == 'r'))
@@ -36,9 +37,7 @@ export const templateCard = k => {
   let kc = '';
   if (has)
     kc = roundInt(sumMacros(Object.keys(tp).flatMap(i => Array.isArray(tp[i]) ? tp[i] : []).map(itemMacros))[0]);
-  return '<details class="cd"><summary>Plantillas · día de ' + nm + '</summary><label>Tipo de este día</label>' + segmented('dty', t, [['t', 'Entreno'], ['r', 'Descanso']])
-    + '<div class="g2" style="margin-top:10px"><button data-a="tpa">Aplicar plantilla</button><button data-a="tps">Guardar día como plantilla</button></div>'
-    + '<small class="mu" style="display:block;margin-top:8px">' + (has ? 'Plantilla de ' + nm + ' guardada · ' + kc + ' kcal. Solo se rellenan las comidas vacías.' : 'Todavía no tienes plantilla de día de ' + nm + '. Rellena el día y pulsa Guardar.') + '</small></details>';
+  return html`<details class="cd"><summary>Plantillas · día de ${raw(nm)}</summary><label>Tipo de este día</label>${segmented('dty', t, [['t', 'Entreno'], ['r', 'Descanso']])}<div class="g2" style="margin-top:10px"><button data-a="tpa">Aplicar plantilla</button><button data-a="tps">Guardar día como plantilla</button></div><small class="mu" style="display:block;margin-top:8px">${raw(has ? 'Plantilla de ' + nm + ' guardada · ' + kc + ' kcal. Solo se rellenan las comidas vacías.' : 'Todavía no tienes plantilla de día de ' + nm + '. Rellena el día y pulsa Guardar.')}</small></details>`;
 };
 A.dty = (i, b) => {
   const k = nutriDayKey();
@@ -100,7 +99,7 @@ export const habitsCard = m => {
   const ys = (S.meals[yk] || {})[m] || [];
   if (!l.length && !ys.length)
     return '';
-  return '<div class="mu" style="font-size:12px;margin:2px 0 6px">Habituales · un toque los añade</div><div class="hab">' + (ys.length ? '<button class="chip" data-a="hay">Repetir comida de ayer</button>' : '') + l.map(x => '<button class="chip" data-a="hab" data-n="' + X(x[0]) + '">' + X(x[0]) + ' · ' + x[1].g + ' g</button>').join('') + '</div>';
+  return html`<div class="mu" style="font-size:12px;margin:2px 0 6px">Habituales · un toque los añade</div><div class="hab">${raw(ys.length ? '<button class="chip" data-a="hay">Repetir comida de ayer</button>' : '')}${l.map(x => html`<button class="chip" data-a="hab" data-n="${x[0]}">${x[0]} · ${raw(x[1].g)} g</button>`)}</div>`;
 };
 A.hab = (i, b) => {
   const n = b.dataset.n;
@@ -135,7 +134,7 @@ A.hay = () => {
 /* — manejadores de esta función (registros A / C / U) — */
 A.sd = (i, b) => {
   setAddState({ m: i });
-  sheet('<h3>Guardar plato en la librería</h3><input id="pn" value="' + X(b.dataset.n) + '"><button class="pr" data-a="sdo" style="width:100%;margin-top:10px">Guardar</button>');
+  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" value="${b.dataset.n}"><button class="pr" data-a="sdo" style="width:100%;margin-top:10px">Guardar</button>`);
 };
 A.sdo = () => {
   const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));

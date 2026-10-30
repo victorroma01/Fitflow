@@ -10,6 +10,7 @@ import { sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { weekMonday } from '../dashboard/home.js';
 import { checkAchievements } from './achievements.js';
+import { html, raw } from '../core/html.js';
 const CARDIO_TYPES = [['run', 'Carrera'], ['walk', 'Caminata'], ['bike', 'Bici'], ['row', 'Remo'], ['swim', 'Natación'], ['ell', 'Elíptica'], ['oth', 'Otro']];
 let cardioState = { t: 'run' };
 export const cardioLabel = t => (CARDIO_TYPES.find(x => x[0] == t) || CARDIO_TYPES[6])[1];
@@ -28,11 +29,7 @@ const paceLabel = t => t == 'bike' || t == 'ell' || t == 'oth' ? 'Velocidad medi
 function cardioSheet() {
   const t = cardioState.t;
   const td = dayKey(new Date);
-  return '<h3>Registrar cardio</h3><div>' + CARDIO_TYPES.map(x => '<button class="chip ' + (t == x[0] ? 'on' : '') + '" data-a="cdt" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>'
-    + '<label>Fecha</label><input id="f2cdd" type="date" value="' + td + '" max="' + td + '">'
-    + '<div class="g2"><div><label>Distancia (km, opcional)</label><input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cdp"></div><div><label>Tiempo (min y s)</label><div class="g2" style="gap:6px"><input id="f2cdm" type="number" inputmode="numeric" min="0" max="999" placeholder="min" data-u="cdp"><input id="f2cds" type="number" inputmode="numeric" min="0" max="59" placeholder="s" data-u="cdp"></div></div></div>'
-    + '<div class="cd" style="margin:12px 0 0;text-align:center"><small id="f2cdl" class="mu">' + paceLabel(t) + '</small><br><b id="f2cdr" style="font-size:22px">—</b></div>'
-    + '<button class="pr" data-a="cdsv" style="width:100%;margin-top:12px">Guardar</button>';
+  return html`<h3>Registrar cardio</h3><div>${CARDIO_TYPES.map(x => html`<button class="chip ${t == x[0] ? 'on' : ''}" data-a="cdt" data-v="${raw(x[0])}">${raw(x[1])}</button>`)}</div><label>Fecha</label><input id="f2cdd" type="date" value="${raw(td)}" max="${raw(td)}"><div class="g2"><div><label>Distancia (km, opcional)</label><input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cdp"></div><div><label>Tiempo (min y s)</label><div class="g2" style="gap:6px"><input id="f2cdm" type="number" inputmode="numeric" min="0" max="999" placeholder="min" data-u="cdp"><input id="f2cds" type="number" inputmode="numeric" min="0" max="59" placeholder="s" data-u="cdp"></div></div></div><div class="cd" style="margin:12px 0 0;text-align:center"><small id="f2cdl" class="mu">${paceLabel(t)}</small><br><b id="f2cdr" style="font-size:22px">—</b></div><button class="pr" data-a="cdsv" style="width:100%;margin-top:12px">Guardar</button>`;
 }
 function readCardio() {
   const g = id => document.getElementById(id);
@@ -101,8 +98,7 @@ export function cardioCard() {
     const cur = W4[3];
     const mx = Math.max(1, ...W4.map(w => w.km || w.sec / 600));
     const tot = L.reduce((s, l) => s + (+l.c.km || 0), 0);
-    return '<div class="cd"><div class="row"><b>Cardio</b><small>' + round1(tot) + ' km en total</small></div><div class="f2cs"><div><b>' + round1(cur.km) + '</b><small>km esta semana</small></div><div><b>' + fmtClock(cur.sec) + '</b><small>tiempo</small></div><div><b>' + cur.n + '</b><small>' + (cur.n == 1 ? 'sesión' : 'sesiones') + '</small></div></div>'
-      + '<div class="f2bars">' + W4.map(w => '<div><i style="height:' + Math.max(4, Math.round((w.km || w.sec / 600) / mx * 56)) + 'px"></i><small>' + (w.k ? '−' + w.k + ' sem' : 'Ahora') + '</small></div>').join('') + '</div></div>';
+    return html`<div class="cd"><div class="row"><b>Cardio</b><small>${round1(tot)} km en total</small></div><div class="f2cs"><div><b>${round1(cur.km)}</b><small>km esta semana</small></div><div><b>${raw(fmtClock(cur.sec))}</b><small>tiempo</small></div><div><b>${raw(cur.n)}</b><small>${cur.n == 1 ? 'sesión' : 'sesiones'}</small></div></div><div class="f2bars">${W4.map(w => html`<div><i style="height:${Math.max(4, Math.round((w.km || w.sec / 600) / mx * 56))}px"></i><small>${raw(w.k ? '−' + w.k + ' sem' : 'Ahora')}</small></div>`)}</div></div>`;
   }
   catch (e) {
     return '';

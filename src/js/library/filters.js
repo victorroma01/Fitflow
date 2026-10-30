@@ -11,6 +11,7 @@ import { libBody, libState } from './browse.js';
 import { swapBody, swapState } from './swap.js';
 import { pickBody, pickState } from './picker.js';
 import { routineExRows, routineState } from '../routines/builder.js';
+import { html, raw } from '../core/html.js';
 export const equipIn = l => EQUIP_ORDER.filter(q => l.some(e => e.q == q));
 export const filterOpen = {};
 export const equipMatch = (c, e) => !c || !c.length || c.includes(e.q);
@@ -20,7 +21,7 @@ export const equipDropdown = (k, cur, items, base, sh) => {
     return '';
   const open = !!filterOpen[k];
   const cnt = n => base.filter(e => e.q == n).length;
-  return '<div class="eqd"><button class="eqb' + (cur.length ? ' on' : '') + '" data-a="eqo" data-k="' + k + '" aria-haspopup="true" aria-expanded="' + open + '"><span>Equipo</span><b>' + (cur.length ? X(sh && cur.length > 1 ? cur[0] + ' +' + (cur.length - 1) : cur.join(', ')) : 'Todos') + '</b>' + icon('chev', 16) + '</button><div class="eqp"' + (open ? '' : ' hidden') + '><div class="eqg">' + items.map(x => '<button class="eqi' + (cur.includes(x) ? ' on' : '') + '" data-a="eqt" data-k="' + k + '" data-v="' + X(x) + '"><i>' + (cur.includes(x) ? icon('chk', 14) : '') + '</i><span>' + X(x) + '</span><small>' + cnt(x) + '</small></button>').join('') + '</div><div class="eqf"><button data-a="eqc" data-k="' + k + '"' + (cur.length ? '' : ' disabled') + '>Limpiar</button><button class="pr" data-a="eqo" data-k="' + k + '">Listo</button></div></div></div>';
+  return html`<div class="eqd"><button class="eqb${cur.length ? ' on' : ''}" data-a="eqo" data-k="${raw(k)}" aria-haspopup="true" aria-expanded="${open}"><span>Equipo</span><b>${raw(cur.length ? X(sh && cur.length > 1 ? cur[0] + ' +' + (cur.length - 1) : cur.join(', ')) : 'Todos')}</b>${icon('chev', 16)}</button><div class="eqp"${open ? '' : ' hidden'}><div class="eqg">${items.map(x => html`<button class="eqi${cur.includes(x) ? ' on' : ''}" data-a="eqt" data-k="${raw(k)}" data-v="${x}"><i>${cur.includes(x) ? icon('chk', 14) : ''}</i><span>${x}</span><small>${raw(cnt(x))}</small></button>`)}</div><div class="eqf"><button data-a="eqc" data-k="${raw(k)}"${cur.length ? '' : ' disabled'}>Limpiar</button><button class="pr" data-a="eqo" data-k="${raw(k)}">Listo</button></div></div></div>`;
 };
 const filterRefresh = { lb: () => {
     const e = $('#lr');
@@ -84,7 +85,7 @@ document.addEventListener('click', e => {
   document.querySelectorAll('.eqp').forEach(p => p.hidden = true);
   document.querySelectorAll('.eqb').forEach(t => t.setAttribute('aria-expanded', 'false'));
 }, true);
-export const groupChips = (cur, act) => '<div class="chs">' + ['Todos'].concat(GROUPS.filter(x => exAll().some(e => groupOf(e) == x))).map(x => '<button class="chip' + ((x == 'Todos' ? '' : x) == cur ? ' on' : '') + '" data-a="' + act + '" data-v="' + (x == 'Todos' ? '' : X(x)) + '">' + (x == 'Propio' ? 'Mis ejercicios' : x) + '</button>').join('') + '</div>';
+export const groupChips = (cur, act) => html`<div class="chs">${['Todos'].concat(GROUPS.filter(x => exAll().some(e => groupOf(e) == x))).map(x => html`<button class="chip${(x == 'Todos' ? '' : x) == cur ? ' on' : ''}" data-a="${raw(act)}" data-v="${raw(x == 'Todos' ? '' : X(x))}">${raw(x == 'Propio' ? 'Mis ejercicios' : x)}</button>`)}</div>`;
 export const groupMatch = (c, e) => !c || !c.length || c.includes(groupOf(e));
 export const groupDropdown = (k, cur, list) => {
   cur = cur || [];
@@ -93,11 +94,11 @@ export const groupDropdown = (k, cur, list) => {
     return '';
   const open = !!filterOpen[k];
   const cnt = n => list.filter(e => groupOf(e) == n).length;
-  return '<div class="eqd"><button class="eqb' + (cur.length ? ' on' : '') + '" data-a="eqo" data-k="' + k + '" aria-haspopup="true" aria-expanded="' + open + '"><span>Músculo</span><b>' + (cur.length ? X(cur.length > 1 ? groupLabel(cur[0]) + ' +' + (cur.length - 1) : groupLabel(cur[0])) : 'Todos') + '</b>' + icon('chev', 16) + '</button><div class="eqp"' + (open ? '' : ' hidden') + '><div class="eqg gr">' + gs.map(x => '<button class="eqi' + (cur.includes(x) ? ' on' : '') + '" data-a="grt" data-k="' + k + '" data-v="' + X(x) + '"><i>' + (cur.includes(x) ? icon('chk', 14) : '') + '</i><span>' + X(groupLabel(x)) + '</span><small>' + cnt(x) + '</small></button>').join('') + '</div><div class="eqf"><button data-a="grc" data-k="' + k + '"' + (cur.length ? '' : ' disabled') + '>Limpiar</button><button class="pr" data-a="eqo" data-k="' + k + '">Listo</button></div></div></div>';
+  return html`<div class="eqd"><button class="eqb${cur.length ? ' on' : ''}" data-a="eqo" data-k="${raw(k)}" aria-haspopup="true" aria-expanded="${open}"><span>Músculo</span><b>${raw(cur.length ? X(cur.length > 1 ? groupLabel(cur[0]) + ' +' + (cur.length - 1) : groupLabel(cur[0])) : 'Todos')}</b>${icon('chev', 16)}</button><div class="eqp"${open ? '' : ' hidden'}><div class="eqg gr">${gs.map(x => html`<button class="eqi${cur.includes(x) ? ' on' : ''}" data-a="grt" data-k="${raw(k)}" data-v="${x}"><i>${cur.includes(x) ? icon('chk', 14) : ''}</i><span>${groupLabel(x)}</span><small>${raw(cnt(x))}</small></button>`)}</div><div class="eqf"><button data-a="grc" data-k="${raw(k)}"${cur.length ? '' : ' disabled'}>Limpiar</button><button class="pr" data-a="eqo" data-k="${raw(k)}">Listo</button></div></div></div>`;
 };
 export const filterRow = (...l) => {
   l = l.filter(Boolean);
-  return l.length ? '<div class="eqrow">' + l.join('') + '</div>' : '';
+  return l.length ? html`<div class="eqrow">${raw(l.join(''))}</div>` : '';
 };
 A.grt = (i, b) => {
   const k = b.dataset.k.slice(0, -1);

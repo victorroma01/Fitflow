@@ -8,6 +8,7 @@ import { S, saveState } from '../core/state.js';
 import { segmented } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { setPlateBar, setPlateTotal } from '../workout/plates.js';
+import { html } from '../core/html.js';
 export const weightUnit = () => S.un == 'lb' ? 'lb' : 'kg';
 export const toDisplayWeight = v => {
   v = +v || 0;
@@ -22,7 +23,7 @@ export const volumeText = (v, d) => {
   return (d ? round1(x) : roundInt(x)) + (S.un == 'lb' ? ' k lb' : ' t');
 };
 export const usesLb = () => S.un == 'lb';
-export const unitsCard = () => '<label>Unidades de carga</label>' + segmented('un', usesLb() ? 'lb' : 'kg', [['kg', 'Kilos (kg)'], ['lb', 'Libras (lb)']]) + '<small class="mu" style="display:block;margin-top:4px">Cambia pesos, discos, volumen y récords. El peso corporal sigue en kg.</small>';
+export const unitsCard = () => html`<label>Unidades de carga</label>${segmented('un', usesLb() ? 'lb' : 'kg', [['kg', 'Kilos (kg)'], ['lb', 'Libras (lb)']])}<small class="mu" style="display:block;margin-top:4px">Cambia pesos, discos, volumen y récords. El peso corporal sigue en kg.</small>`;
 A.un = (i, b) => {
   S.un = b.dataset.v == 'lb' ? 'lb' : 'kg';
   setPlateTotal(usesLb() ? 135 : 60);

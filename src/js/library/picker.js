@@ -2,7 +2,7 @@
    Selector para añadir ejercicios al día.
    Define: addToDay, pickState, pickBody, pickSheet  · acciones/registros: 5
 */
-import { $, X } from '../core/util.js';
+import { $ } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { EXERCISES } from '../data/library.js';
 import { addState, S, saveState, setAddState, W } from '../core/state.js';
@@ -13,6 +13,7 @@ import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, 
 import { saveSession } from '../workout/resume.js';
 import { newPlanEx } from '../workout/targets.js';
 import { prefillSets } from '../workout/progression.js';
+import { html, raw } from '../core/html.js';
 /** Añade un ejercicio al día seleccionado. Si hay un entreno en curso, añade también sus series (si no, la sesión no podría pintarlo). */
 const addToDay = n => {
   const d = S.plan[S.sel];
@@ -41,10 +42,10 @@ export const pickBody = () => {
   const base = bq.filter(o => groupMatch(pickState.gs, o.e));
   const l = base.filter(o => equipMatch(pickState.eq, o.e)).sort((a, b) => exCompare(a.e, b.e));
   const lim = 120;
-  return filterRow(groupDropdown('pkg', pickState.gs, bq.map(o => o.e)), equipDropdown('pk', pickState.eq, equipIn(base.map(o => o.e)), base.map(o => o.e), 1)) + l.slice(0, lim).map(o => '<div class="it exr" data-a="px" data-i="' + o.i + '" style="cursor:pointer"><span class="exc">' + exCellHtml(o.e) + '</span><small class="mu">Añadir +</small></div>').join('') + (l.length > lim ? '<p class="mu" style="text-align:center">Mostrando ' + lim + ' de ' + l.length + '. Usa la búsqueda o un grupo.</p>' : '') || '<p class="mu">Sin resultados.</p>';
+  return filterRow(groupDropdown('pkg', pickState.gs, bq.map(o => o.e)), equipDropdown('pk', pickState.eq, equipIn(base.map(o => o.e)), base.map(o => o.e), 1)) + l.slice(0, lim).map(o => html`<div class="it exr" data-a="px" data-i="${o.i}" style="cursor:pointer"><span class="exc">${exCellHtml(o.e)}</span><small class="mu">Añadir +</small></div>`).join('') + (l.length > lim ? html`<p class="mu" style="text-align:center">Mostrando ${lim} de ${l.length}. Usa la búsqueda o un grupo.</p>` : '') || '<p class="mu">Sin resultados.</p>';
 };
 function pickSheet() {
-  return '<h3>Añadir ejercicio</h3><input placeholder="Buscar por nombre, músculo o equipo" data-u="pks" value="' + X(pickState.q) + '"><div id="pkr">' + pickBody() + '</div><label>Crear ejercicio nuevo</label><div class="g2" style="grid-template-columns:1fr auto"><input id="xn" placeholder="Nombre"><button class="pr" data-a="nx">Crear</button></div>';
+  return html`<h3>Añadir ejercicio</h3><input placeholder="Buscar por nombre, músculo o equipo" data-u="pks" value="${pickState.q}"><div id="pkr">${raw(pickBody())}</div><label>Crear ejercicio nuevo</label><div class="g2" style="grid-template-columns:1fr auto"><input id="xn" placeholder="Nombre"><button class="pr" data-a="nx">Crear</button></div>`;
 }
 A.pick = () => {
   pickState = { g: '', gs: [], q: '', eq: [] };

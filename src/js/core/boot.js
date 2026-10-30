@@ -1,7 +1,7 @@
 /* ═══ core/boot ═══
    Arranque: migraciones, restauración de estado y primer render.
 */
-import { $, fmtDuration, fmtMinSec, roundInt, X } from './util.js';
+import { $, fmtDuration, fmtMinSec, roundInt } from './util.js';
 import { Store } from './store.js';
 import { logError } from './errors.js';
 import { savedFormat, stateRecovered } from './persist.js';
@@ -23,6 +23,7 @@ import { takeSnapshot } from '../system/snapshots.js';
 import { showWhatsNew, whatsNewDue } from '../system/updates.js';
 import { loadPhotos } from '../extras/measures.js';
 import { checkAchievements } from '../extras/achievements.js';
+import { html, raw } from './html.js';
 (function () {
   try {
     const A_ = Array.isArray;
@@ -266,7 +267,7 @@ try {
     const o = JSON.parse(q);
     setTimeout(() => {
       try {
-        dialog(o.u ? 'Datos recuperados' : 'Copia restaurada', '<div style="display:grid;gap:6px;text-align:left">' + (o.s || []).map(x => '<div>· ' + X(x) + '</div>').join('') + '</div>' + (o.f ? '<div style="margin-top:10px">Se descartaron ' + plural(o.f, 'elemento dañado', 'elementos dañados') + ' de la copia.</div>' : ''), [['Entendido', 'zno', 'pr']]);
+        dialog(o.u ? 'Datos recuperados' : 'Copia restaurada', html`<div style="display:grid;gap:6px;text-align:left">${(o.s || []).map(x => html`<div>· ${x}</div>`)}</div>${o.f ? html`<div style="margin-top:10px">Se descartaron ${raw(plural(o.f, 'elemento dañado', 'elementos dañados'))} de la copia.</div>` : ''}`, [['Entendido', 'zno', 'pr']]);
       }
       catch (e) {
         logError('arranque: aviso de restauración', e);
@@ -304,7 +305,7 @@ loadPhotos();
   }
 })();
 setTimeout(checkAchievements, 2500);
-$('nav').innerHTML = ['workout', 'nutri', 'dash', 'user'].map((n, i) => '<button data-a="tab" data-i="' + i + '"><span style="display:block;line-height:0;padding-bottom:4px">' + icon(n, 28) + '</span>' + ['Workout', 'Nutrición', 'Dashboard', 'Perfil'][i] + '</button>').join('');
+$('nav').innerHTML = ['workout', 'nutri', 'dash', 'user'].map((n, i) => html`<button data-a="tab" data-i="${i}"><span style="display:block;line-height:0;padding-bottom:4px">${icon(n, 28)}</span>${raw(['Workout', 'Nutrición', 'Dashboard', 'Perfil'][i])}</button>`).join('');
 R();
 window.__ffok = 1;
 /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */

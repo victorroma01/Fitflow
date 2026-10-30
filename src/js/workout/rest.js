@@ -9,6 +9,7 @@ import { S, saveState, W } from '../core/state.js';
 import { R } from '../core/render.js';
 import { exAll } from '../library/model.js';
 import { unitFromName } from './targets.js';
+import { html, raw } from '../core/html.js';
 export const COMPOUND_RE = /^(Press banca|Press militar|Sentadilla|Peso muerto|Dominadas|Remo con barra|Remo T|Remo Pendlay|Prensa|Hack|Hip thrust|Clean|Snatch|Thruster|Power|Overhead|Push press|Buenos)/;
 export const REST_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180, 210, 240, 300];
 function restByName(n) {
@@ -29,7 +30,7 @@ function restByName(n) {
 export const restOf = e => e.r || restDefault(e.n);
 export const restSelect = e => {
   const r = restOf(e);
-  return '<select data-c="rx" data-i="' + S.plan[S.sel].ex.indexOf(e) + '" style="width:auto;padding:5px 10px;font-size:13px">' + REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => '<option value="' + v + '"' + (v == r ? ' selected' : '') + '>Descanso ' + fmtMinSec(v) + ' por serie</option>').join('') + '</select>';
+  return html`<select data-c="rx" data-i="${raw(S.plan[S.sel].ex.indexOf(e))}" style="width:auto;padding:5px 10px;font-size:13px">${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))} por serie</option>`)}</select>`;
 };
 const HEAVY_TYPES = new Set(['Press plano', 'Press inclinado', 'Press declinado', 'Press vertical', 'Dominadas', 'Remo horizontal', 'Cadena posterior', 'Sentadilla', 'Prensa y hack', 'Bisagra de cadera', 'Empuje de cadera', 'Halterofilia']);
 export function restDefault(n) {

@@ -8,6 +8,7 @@ import { EX_ALIASES } from '../data/photos.js';
 import { S } from '../core/state.js';
 import { exBadge } from './photo.js';
 import { exAnatomy } from '../extras/anatomy.js';
+import { html, raw } from '../core/html.js';
 export const groupOfName = n => {
   const e = EXERCISES.concat(S.cx).find(x => x.n == n);
   return e ? groupOf(e) : 'Propio';
@@ -21,8 +22,8 @@ export const exSearchText = e => {
   return s + ' ' + s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 const exSubtitle = e => X((e.q || 'Personalizado') + (e.t && e.t != 'Otros' ? ' · ' + e.t : ''));
-const exMusclesHtml = e => (exMuscles(e, 'p').length ? '<small style="color:var(--a1)">Principal: ' + X(exMuscles(e, 'p').join(', ')) + '</small>' : '') + (exMuscles(e, 's').length ? '<br><small class="mu">Secundarios: ' + X(exMuscles(e, 's').join(', ')) + '</small>' : '');
-export const exCellHtml = e => '<i class="exth">' + exAnatomy(e.n, 48) + exBadge(e.n) + '</i><span class="ext"><b>' + X(e.n) + '</b><br><small>' + exSubtitle(e) + '</small><br>' + exMusclesHtml(e) + '</span>';
-export const exRowHtml = (o, btn, act) => '<div class="it exr"><span class="exc" data-a="' + (act || 'exd') + '" data-i="' + o.i + '">' + exCellHtml(o.e) + '</span>' + btn + '</div>';
+const exMusclesHtml = e => (exMuscles(e, 'p').length ? html`<small style="color:var(--a1)">Principal: ${exMuscles(e, 'p').join(', ')}</small>` : '') + (exMuscles(e, 's').length ? html`<br><small class="mu">Secundarios: ${exMuscles(e, 's').join(', ')}</small>` : '');
+export const exCellHtml = e => html`<i class="exth">${exAnatomy(e.n, 48)}${raw(exBadge(e.n))}</i><span class="ext"><b>${e.n}</b><br><small>${raw(exSubtitle(e))}</small><br>${raw(exMusclesHtml(e))}</span>`;
+export const exRowHtml = (o, btn, act) => html`<div class="it exr"><span class="exc" data-a="${raw(act || 'exd')}" data-i="${raw(o.i)}">${exCellHtml(o.e)}</span>${raw(btn)}</div>`;
 export const exCompare = (a, b) => GROUPS.indexOf(groupOf(a)) - GROUPS.indexOf(groupOf(b)) || exOrder(a) - exOrder(b);
 export const categoryOf = g => ['CrossFit', 'Hyrox', 'Funcional', 'Cardio'].includes(g) ? g : 'Culturismo';

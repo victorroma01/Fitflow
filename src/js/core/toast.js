@@ -3,10 +3,11 @@
    avisar sin depender de la interfaz.
    Define: toast
 */
-import { $, X } from './util.js';
+import { $ } from './util.js';
+import { html } from './html.js';
 export const toast = m => {
   const e = $('#tt');
-  e.innerHTML = '<div class="tst">' + X(m) + '</div>';
+  e.innerHTML = html`<div class="tst">${m}</div>`;
   clearTimeout(toast.h);
   toast.h = setTimeout(() => {
     e.innerHTML = '';

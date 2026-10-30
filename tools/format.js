@@ -55,6 +55,8 @@ function format(src, name) {
   const tpl = templateLines(out);
   commentLines(out).forEach(l => tpl.add(l));
   out = out.split('\n').map((l, i) => tpl.has(i) ? l : l.replace(/^((?:    )+)/, m => '  '.repeat(m.length / 4))).join('\n');
+  // plantillas etiquetadas sin espacio entre la etiqueta y la plantilla: html`…` (el impresor pone «html `…`»)
+  out = out.replace(/\bhtml `/g, 'html`');
   return out.replace(/\s+$/, '') + '\n';
 }
 // líneas que empiezan dentro de un comentario /* … */ de varias líneas (no se tocan: su texto es libre)
