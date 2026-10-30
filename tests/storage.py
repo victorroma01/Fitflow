@@ -68,8 +68,7 @@ def main(path):
             ev = pg.evaluate
 
             def reload(ms=1500):
-                with pg.expect_navigation():
-                    ev('location.reload()')
+                pg.reload()
                 pg.wait_for_load_state('load')
                 booted(pg)
                 pg.clock.run_for(ms)
@@ -114,8 +113,7 @@ def main(path):
             # ── datos de la 1.20: todo el estado en 'ff' ──
             legacy = ev("(()=>{const s=JSON.parse(JSON.stringify(S));s.meals['2024-02-29']={0:[{n:'Antiguo',g:50,b:[100,10,10,1,0,0]}]};return JSON.stringify(s)})()")
             ev("(s=>{localStorage.clear();localStorage.setItem('ff',s)})(%s)" % json.dumps(legacy))
-            with pg.expect_navigation():
-                ev('location.reload()')
+            pg.reload()
             pg.wait_for_load_state('load')
             booted(pg)
             pg.clock.run_for(300)
@@ -129,8 +127,7 @@ def main(path):
 
             # ── sin espacio para pasar a partes: sigue guardando entero, como la 1.20 ──
             ev("(s=>{localStorage.clear();localStorage.setItem('ff',s)})(%s)" % json.dumps(legacy))
-            with pg.expect_navigation():
-                ev('location.reload()')
+            pg.reload()
             pg.wait_for_load_state('load')
             booted(pg)
             pg.clock.run_for(300)

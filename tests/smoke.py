@@ -25,8 +25,7 @@ def check(name, cond, info=''):
 
 
 def reload(pg):
-    with pg.expect_navigation():
-        pg.evaluate('location.reload()')
+    pg.reload()
     pg.wait_for_load_state('load')
     pg.clock.run_for(800)
 

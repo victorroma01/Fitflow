@@ -50,7 +50,9 @@ self.addEventListener('fetch',e=>{
     })());
     return;
   }
-  e.respondWith((async()=>{
+  /* la copia guardada al momento (si la hay) y, mientras, la de la red, que actualiza la caché y avisa si el documento cambió.
+     respondWith y waitUntil se llaman ya, durante el evento (WebKit no admite waitUntil más tarde) */
+  const work=(async()=>{
     const c=await caches.open(C);
     const hit=await c.match(r,{ignoreSearch:true,ignoreVary:true});
     const old=hit?hit.clone():null;
@@ -65,7 +67,8 @@ self.addEventListener('fetch',e=>{
       if(changed){changedAt=Date.now();await tell();}
       return n;
     });
-    if(hit){e.waitUntil(net.catch(()=>{}));return hit}
-    return net;
-  })());
+    return{hit,net};
+  })();
+  e.respondWith(work.then(w=>w.hit||w.net));
+  e.waitUntil(work.then(w=>w.net).catch(()=>{}));
 });

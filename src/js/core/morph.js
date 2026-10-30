@@ -17,13 +17,21 @@ const sameNode = (a, b) => {
 };
 /** Atributos de `a` iguales a los de `b`, en el mismo orden (así el HTML resultante es idéntico al de pintar de cero). */
 const syncAttrs = (a, b) => {
-  const names = e => Array.from(e.attributes, x => x.name).join(' ');
-  if (names(a) !== names(b))
-    for (const x of [...a.attributes])
-      a.removeAttributeNS(x.namespaceURI, x.localName);
-  for (const x of b.attributes)
-    if (a.getAttributeNS(x.namespaceURI, x.localName) !== x.value)
-      a.setAttributeNS(x.namespaceURI, x.name, x.value);
+  const x = a.attributes;
+  const y = b.attributes;
+  let same = x.length === y.length;
+  for (let i = 0; same && i < y.length; i++)
+    same = x[i].name === y[i].name;
+  if (same) {
+    for (let i = 0; i < y.length; i++)
+      if (x[i].value !== y[i].value)
+        x[i].value = y[i].value;
+    return;
+  }
+  while (x.length)
+    a.removeAttributeNode(x[0]);
+  for (let i = 0; i < y.length; i++)
+    a.setAttributeNS(y[i].namespaceURI, y[i].name, y[i].value);
 };
 /** Estado de los campos de formulario, que no está en los atributos: el valor escrito, la casilla marcada, la opción elegida. */
 const syncFields = (a, b) => {

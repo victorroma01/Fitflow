@@ -55,8 +55,7 @@ def main(path):
             ev = pg.evaluate
             ev(SEED)
             ev(EXTRA)
-            with pg.expect_navigation():
-                ev('location.reload()')
+            pg.reload()
             pg.wait_for_load_state('load')
             booted(pg)
             pg.clock.run_for(800)

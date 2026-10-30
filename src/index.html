@@ -18,7 +18,10 @@ try{var l=JSON.parse(localStorage.getItem('fferr')||'[]');if(!Array.isArray(l))l
 window.__ffe=fail;
 var last='';window.addEventListener('error',function(e){var m=(e.message||'Error')+(e.filename?'\n'+String(e.filename).split('/').pop()+':'+e.lineno+':'+e.colno:'');last=m;if(window.__ffok)return;if(window.__ffs||/SyntaxError|Unexpected|Invalid or unexpected/.test(m))fail(m)});
 
-setTimeout(function(){if(!window.__ffok)fail((last?last+'\n\n':'')+'La aplicación no terminó de arrancar (tiempo agotado).')},7000)})();
+/* si no termina de arrancar: 7 s después de cargar el documento y su código (DOMContentLoaded espera al módulo) o, si el
+   código no llega nunca, a los 30 s */
+var late=function(){if(!window.__ffok)fail((last?last+'\n\n':'')+'La aplicación no terminó de arrancar (tiempo agotado).')};
+document.addEventListener('DOMContentLoaded',function(){setTimeout(late,7000)});setTimeout(late,30000)})();
 </script>
 <nav><button data-a="tab" data-i="0"><span></span>Workout</button><button data-a="tab" data-i="1"><span></span>Nutrición</button><button data-a="tab" data-i="2"><span></span>Dashboard</button><button data-a="tab" data-i="3"><span></span>Perfil</button></nav>
 <script>

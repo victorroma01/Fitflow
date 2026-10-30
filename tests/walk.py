@@ -79,6 +79,9 @@ def trace(file,seed,steps):
             try:pg.clock.run_for(adv)
             except Exception as e:res['errs'].append('CLOCK '+str(e)[:100])
             pg.wait_for_timeout(25)  # tiempo real para lo asíncrono que no depende del reloj (IndexedDB: copias, fotos)
+            for _ in range(20):  # la lista de copias automáticas se rellena desde IndexedDB: esperar a que deje de decir «Cargando…»
+                if not pg.evaluate("(()=>{const e=document.querySelector('#snapl');return !!e&&/Cargando/.test(e.textContent)})()"):break
+                pg.wait_for_timeout(25)
             try:
                 sg=pg.evaluate(SIG)
             except Exception as e:
