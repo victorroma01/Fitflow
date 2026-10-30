@@ -2585,48 +2585,130 @@ html.gl .mc:not(.on) {
   border:1px solid rgba(255,255,255,.45);
   box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),0 6px 14px rgba(0,0,0,.22);
 }
-/* ═══ css/92-update-banner ═══ Aviso de nueva versión */
-/* aviso de nueva versión */
+/* ═══ css/92-update-popup ═══ Aviso de versión nueva y novedades: tarjeta negra con letra blanca y botón del color del tema */
 #upd {
   position:fixed;
-  left:12px;
-  right:12px;
-  bottom:calc(92px + env(safe-area-inset-bottom,0px));
-  z-index:8;
+  inset:0;
+  z-index:40;
+  display:grid;
+  place-items:center;
+  padding:max(20px,env(safe-area-inset-top,0px)) 20px max(20px,env(safe-area-inset-bottom,0px));
+}
+#upd .updb {
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  animation:upf .25s ease;
+}
+#upd .updk {
+  position:relative;
+  width:100%;
+  max-width:340px;
+  max-height:calc(100vh - 80px);
   display:flex;
-  align-items:center;
-  gap:6px;
-  padding:10px 10px 10px 16px;
-  border-radius:22px;
-  background:var(--cd);
-  border:1px solid var(--ln);
-  box-shadow:0 12px 34px rgba(0,0,0,.35);
-  animation:upi .32s cubic-bezier(.2,.8,.2,1);
+  flex-direction:column;
+  padding:22px 20px 18px;
+  border-radius:26px;
+  background:#000;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 24px 60px rgba(0,0,0,.6);
+  animation:upk .34s cubic-bezier(.2,.8,.2,1);
 }
-#upd span {
-  flex:1;
-  font-size:14px;
-  font-weight:600;
-}
-#upd button {
-  border:0;
-  border-radius:15px;
-  padding:9px 14px;
+#upd .upe {
+  display:block;
+  font-size:12px;
   font-weight:700;
-  font-size:14px;
-  background:none;
-  color:var(--mu);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.62);
 }
-#upd button[data-a=upr] {
-  background:var(--ac);
+#upd h3 {
+  margin:6px 40px 10px 0;
+  font-size:26px;
+  line-height:1.1;
+  letter-spacing:-.02em;
   color:#fff;
 }
-html.gl #upd {
-  background:color-mix(in srgb,var(--cd) var(--pp),transparent);
-  -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
-  backdrop-filter:blur(var(--bn)) saturate(var(--sa));
-  border-color:var(--gb);
-  box-shadow:var(--gs),var(--grim);
+#upd .upn {
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  margin:0 0 18px;
+}
+#upd .upv {
+  margin:14px 0 0;
+  font-weight:700;
+  color:#fff;
+}
+#upd .ups {
+  margin:12px 0 4px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.55);
+}
+#upd ul {
+  margin:0;
+  padding:0 0 0 18px;
+}
+#upd li {
+  margin:6px 0;
+  font-size:14px;
+  line-height:1.4;
+  color:#fff;
+}
+#upd .upb {
+  width:100%;
+  flex:none;
+  border:0;
+  border-radius:16px;
+  padding:15px;
+  background:var(--a1);
+  color:#000;
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  box-shadow:none;
+}
+#upd .upb:disabled {
+  opacity:.75;
+}
+#upd .updx {
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:34px;
+  height:34px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  font-size:22px;
+  line-height:1;
+  box-shadow:none;
+}
+@keyframes upf {
+  from {
+    opacity:0;
+  }
+}
+@keyframes upk {
+  from {
+    opacity:0;
+    transform:translateY(16px) scale(.97);
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  #upd .updb,#upd .updk {
+    animation:none;
+  }
 }
 /* ═══ css/93-glass-shapes ═══ Esquinas redondeadas y ajustes de forma bajo Cristal */
 /* toque más rápido: sin esperas ni zoom por doble toque */
@@ -2804,12 +2886,6 @@ html.gl .gpv {
 }
 html.gl .gpv.fl::after {
   border-radius:11px;
-}
-html.gl #upd {
-  border-radius:26px;
-}
-html.gl #upd button {
-  border-radius:19px;
 }
 #sh>.sb {
   z-index:10;
@@ -3396,10 +3472,12 @@ const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
    rs   → resumen pendiente de mostrar tras restaurar
    err  → registro de errores del dispositivo (core/errors; no se sincroniza)
    bad  → copia del estado que no se pudo leer, apartada antes de empezar de cero (no se sincroniza)
+   ver  → última versión de la app abierta en este dispositivo (para enseñar las novedades tras actualizar)
+   seen → versión cuyas novedades ya se enseñaron (para no repetirlas)
    Las fotos de progreso viven en IndexedDB (base "ffph"; ver extras/measures) y las copias automáticas
    también (base "ffsnap"; ver system/snapshots). */
 const Store = {
-  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad' },
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen' },
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…) */
   get(k) {
@@ -3475,7 +3553,7 @@ const C = {};
 const U = {};
 /* ═══ data/library ═══
    Biblioteca base: ejercicios (LIB_MAIN, LIB_EXTRA, EX_DETAILS), programas predefinidos (PROGRAMS), analizador y lista EXERCISES.
-   Define: LIB_MAIN, PROGRAMS, PROGRAM_NAMES, LIB_EXTRA, GROUPS, EM, groupOf, groupLabel, parseExToken, parseProgram, EXERCISES, PROGRAM_NOTES, MUSCLES, EQUIP, EQUIP_ORDER, EX_DETAILS
+   Define: LIB_MAIN, PROGRAMS, PROGRAM_NAMES, LIB_EXTRA, GROUPS, groupOf, groupLabel, parseExToken, parseProgram, EXERCISES, PROGRAM_NOTES, MUSCLES, EQUIP, EQUIP_ORDER, EX_DETAILS
 */
 const LIB_MAIN = "Culturismo|Hombros|Press hombro mancuernas,Elevaciones laterales,Pájaros mancuernas,Press militar barra,Face pull;Culturismo|Pecho|Press banca,Press inclinado mancuernas,Aperturas en polea,Fondos,Press pecho máquina;Culturismo|Espalda|Dominadas,Remo con barra,Jalón al pecho,Remo mancuerna,Peso muerto;Culturismo|Cuádriceps|Sentadilla,Prensa,Zancadas,Extensión cuádriceps;Culturismo|Isquios y glúteos|Peso muerto rumano,Curl femoral,Hip thrust;Culturismo|Gemelos|Gemelo de pie,Gemelo sentado;Culturismo|Bíceps|Curl bíceps barra,Curl martillo,Curl predicador;Culturismo|Tríceps|Press francés,Extensión tríceps polea;Culturismo|Abdomen|Crunch en polea,Elevación de piernas,Plancha,Rueda abdominal;CrossFit|Full|Clean & jerk,Snatch,Thruster,Burpees,Wall balls,Kettlebell swing,Box jump,Toes to bar,Muscle-up,Rope climb,Double unders;Hyrox|Estación|SkiErg 1000 m,Sled push,Sled pull,Burpee broad jump,Remo 1000 m,Farmers carry,Sandbag lunges;Funcional|Full|Turkish get-up,Bear crawl,Goblet squat,Battle ropes,Medicine ball slam,TRX remo,Dead bug;Cardio|Cardio|Carrera continua,Intervalos 400 m,Cinta inclinada,Remo ergómetro,Bicicleta,Series 1 km,Tempo run";
 const PROGRAMS = ["Bro Split#Pecho:Press banca*4/5-8@180,Press inclinado mancuernas*3/8-10@120,Press pecho máquina convergente*3/10-12@90,Cruce de poleas*3/12-15@75,Fondos*3/8-12@90|Espalda:Dominadas*4/6-10@150,Remo con barra*4/6-8@150,Jalón agarre neutro*3/8-12@120,Remo mancuerna*3/10-12@90,Pullover en polea*3/12-15@75|Descanso|Hombros:Press militar barra*4/6-8@150,Press hombro mancuernas*3/8-10@120,Elevaciones laterales*4/12-15@60,Pájaros mancuernas*3/12-15@60,Face pull*3/15-20@60,Encogimientos*3/8-12@90|Piernas:Sentadilla*4/5-8@180,Prensa*3/10-12@120,Peso muerto rumano*3/6-10@150,Curl femoral tumbado*4/10-12@90,Extensión cuádriceps*3/12-15@75,Gemelo de pie*4/8-12@60|Brazos (bíceps y tríceps):Curl con barra Z*3/8-10@90,+Press francés*3/8-10@90,Curl martillo*3/10-12@75,+Extensión tríceps polea*3/10-12@75,Curl predicador*3/10-12@75,+Extensión sobre la cabeza*3/10-12@75,Crunch en polea*3/12-15@60|Descanso",
@@ -3485,7 +3563,6 @@ const PROGRAMS = ["Bro Split#Pecho:Press banca*4/5-8@180,Press inclinado mancuer
 const PROGRAM_NAMES = PROGRAMS.map(s => s.split('#')[0]);
 const LIB_EXTRA = "Culturismo|Pecho|Press banca declinado,Press banca mancuernas,Aperturas mancuernas,Cruce de poleas,Pec deck,Flexiones,Press inclinado barra,Pullover mancuerna;Culturismo|Espalda|Jalón agarre estrecho,Remo en polea baja,Remo en máquina,Remo T,Dominadas supinas,Pullover en polea,Hiperextensiones,Remo Pendlay,Encogimientos;Culturismo|Hombros|Press Arnold,Elevaciones frontales,Elevaciones laterales en polea,Pájaros en máquina,Press hombro máquina,Remo al mentón;Culturismo|Bíceps|Curl alterno mancuernas,Curl en banco inclinado,Curl en polea,Curl concentrado,Curl Zottman;Culturismo|Tríceps|Press cerrado,Fondos en banco,Patada de tríceps,Extensión sobre la cabeza,Extensión con cuerda;Culturismo|Antebrazos|Curl de muñeca,Curl inverso,Colgado de barra,Rodillo de muñeca;Culturismo|Abdomen|Crunch,Crunch inverso,Elevación de rodillas colgado,Russian twist,Plancha lateral,Leñador en polea,Hollow hold;Culturismo|Cuádriceps|Sentadilla frontal,Sentadilla búlgara,Hack squat,Prensa 45°,Sissy squat,Step up;Culturismo|Isquios y glúteos|Buenos días,Curl femoral tumbado,Curl femoral sentado,Patada de glúteo en polea,Abducción en máquina,Puente de glúteo,Peso muerto sumo,Zancada atrás;Culturismo|Gemelos|Gemelo en prensa,Gemelo a una pierna,Gemelo burro;CrossFit|Full|Overhead squat,Power clean,Push press,Handstand push-up,Pull-ups kipping,Ring dips,Sit-ups,Devil press;Hyrox|Estación|SkiErg 500 m,Carrera 1 km,Wall balls 100,Sandbag clean;Funcional|Full|Kettlebell snatch,Sentadilla con salto,Mountain climbers,Landmine press,Pallof press,Salto lateral;Cardio|Cardio|Elíptica,Comba,Natación,Cuestas,Fartlek,Caminata inclinada";
 const GROUPS = ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Antebrazos', 'Abdomen', 'Cuádriceps', 'Isquios y glúteos', 'Gemelos', 'CrossFit', 'Hyrox', 'Funcional', 'Cardio', 'Propio'];
-const EM = { CrossFit: 'CF', Hyrox: 'HX', Funcional: 'FN', Cardio: 'CD', Propio: '+' };
 const groupOf = e => e.g == 'Propio' ? 'Propio' : e.c == 'Culturismo' ? e.g : e.c;
 const groupLabel = g => g == 'Propio' ? 'Mis ejercicios' : g;
 const parseExToken = t => {
@@ -3673,6 +3750,12 @@ const MEAL_NAMES = ['Desayuno', 'Almuerzo', 'Comida', 'Merienda', 'Cena', 'Snack
    Define: MEDIA
 */
 const MEDIA = {"day":{"pecho":"img/day/pecho.jpg","espalda":"img/day/espalda.jpg","hombros":"img/day/hombros.jpg","piernas":"img/day/piernas.jpg","brazos":"img/day/brazos.jpg","torso":"img/day/torso.jpg","legs":"img/day/legs.jpg","descanso":"img/day/descanso.jpg","crossfit":"img/day/crossfit.jpg","hyrox":"img/day/hyrox.jpg","cardio":"img/day/cardio.jpg","core":"img/day/core.jpg","funcional":"img/day/funcional.jpg"},"ex":{"remo-mancuerna":"img/ex/remo-mancuerna.webp","curl-predicador":"img/ex/curl-predicador.webp","extension-triceps-polea":"img/ex/extension-triceps-polea.webp","remo-polea-baja":"img/ex/remo-polea-baja.webp","extension-cuadriceps":"img/ex/extension-cuadriceps.webp","curl-femoral-tumbado":"img/ex/curl-femoral-tumbado.webp","gemelo-de-pie":"img/ex/gemelo-de-pie.webp","face-pull":"img/ex/face-pull.webp","pajaros-mancuernas":"img/ex/pajaros-mancuernas.webp","hip-thrust":"img/ex/hip-thrust.webp","aperturas-polea":"img/ex/aperturas-polea.webp","elevaciones-laterales":"img/ex/elevaciones-laterales.webp","jalon-al-pecho":"img/ex/jalon-al-pecho.webp","peso-muerto-rumano":"img/ex/peso-muerto-rumano.webp","fondos":"img/ex/fondos.webp","curl-martillo":"img/ex/curl-martillo.webp","zancadas":"img/ex/zancadas.webp","press-banca-mancuernas":"img/ex/press-banca-mancuernas.webp","peso-muerto-sumo":"img/ex/peso-muerto-sumo.webp","sentadilla-bulgara":"img/ex/sentadilla-bulgara.webp","pullover-polea":"img/ex/pullover-polea.webp","curl-mancuernas":"img/ex/curl-mancuernas.webp","copa-triceps":"img/ex/copa-triceps.webp","pullover-mancuerna":"img/ex/pullover-mancuerna.webp","encogimientos":"img/ex/encogimientos.webp","curl-inclinado":"img/ex/curl-inclinado.webp","extension-tras-nuca":"img/ex/extension-tras-nuca.webp","gemelo-sentado":"img/ex/gemelo-sentado.webp"},"exFor":{"Remo mancuerna":"remo-mancuerna","Curl predicador":"curl-predicador","Extensión tríceps polea":"extension-triceps-polea","Remo en polea baja":"remo-polea-baja","Extensión cuádriceps":"extension-cuadriceps","Curl femoral tumbado":"curl-femoral-tumbado","Curl femoral":"curl-femoral-tumbado","Gemelo de pie":"gemelo-de-pie","Face pull":"face-pull","Pájaros mancuernas":"pajaros-mancuernas","Hip thrust":"hip-thrust","Aperturas en polea":"aperturas-polea","Elevaciones laterales":"elevaciones-laterales","Jalón al pecho":"jalon-al-pecho","Peso muerto rumano":"peso-muerto-rumano","Fondos":"fondos","Fondos en paralelas":"fondos","Curl martillo":"curl-martillo","Zancadas":"zancadas","Press banca mancuernas":"press-banca-mancuernas","Peso muerto sumo":"peso-muerto-sumo","Sentadilla búlgara":"sentadilla-bulgara","Pullover en polea":"pullover-polea","Jalón con brazos rectos":"pullover-polea","Curl con mancuernas":"curl-mancuernas","Curl alterno mancuernas":"curl-mancuernas","Extensión sobre la cabeza":"copa-triceps","Pullover mancuerna":"pullover-mancuerna","Encogimientos con mancuernas":"encogimientos","Curl en banco inclinado":"curl-inclinado","Curl con mancuernas a 45°":"curl-inclinado","Extensión sobre la cabeza con cuerda":"extension-tras-nuca","Gemelo sentado":"gemelo-sentado"},"exAlias":{"Remo mancuerna":"Remo con mancuerna","Press banca mancuernas":"Press banca con mancuernas","Sentadilla búlgara":"Zancada búlgara","Pullover en polea":"Pullover en polea alta","Jalón con brazos rectos":"Pullover en polea alta","Curl con mancuernas":"Curl con mancuerna","Curl alterno mancuernas":"Curl con mancuerna","Extensión sobre la cabeza":"Copa de tríceps","Pullover mancuerna":"Pullover con mancuerna","Encogimientos con mancuernas":"Encojimientos","Curl en banco inclinado":"Curl inclinado con mancuernas","Curl con mancuernas a 45°":"Curl inclinado con mancuernas","Extensión sobre la cabeza con cuerda":"Extensión tras nuca Tras nuca"}};
+/* ═══ data/release ═══
+   Novedades de esta versión. Este archivo es solo el molde: build.py lo sustituye por la entrada de la versión actual
+   de CHANGELOG.md (apartados Novedades, Mejoras y Correcciones). Se enseñan una vez tras actualizar (system/updates).
+   Define: RELEASE
+*/
+const RELEASE = {"version":"1.20.0","date":"2026-10-30","sections":[{"title":"Novedades","items":["Comprobar actualizaciones en Ajustes, con las novedades de cada versión.","Copias automáticas diarias en el móvil (las 7 últimas).","Diagnóstico en Ajustes para enviar un informe si algo falla."]},{"title":"Mejoras","items":["La app instalada pesa la mitad y arranca más rápido.","Aviso si el móvil no tiene espacio para guardar.","Si tus datos se dañan, se guardan aparte para recuperarlos."]},{"title":"Correcciones","items":["Flechas de mes del calendario del Dashboard.","Añadir un ejercicio con un entreno en marcha."]}]};
 /* ═══ data/photos ═══
    Fotos: portadas de los días (DAY_PHOTOS) con sus reglas de asignación por nombre del día (DAY_PHOTO_RULES)
    y fotos de ejercicio (EX_PHOTOS, EX_PHOTO_KEY) con nombres alternativos de búsqueda (EX_ALIASES). Vienen de data/media.
@@ -3790,7 +3873,7 @@ const LEVEL_EXTRA_DAYS = { hb: 'Hombros y brazos:Press hombro mancuernas*3/8-10@
 const LEVEL_LAYOUTS = [{ ini: [0, 1, -1, 4, 'hb', -1, -1], ava: null }, { ini: [0, 1, -1, 3, 4, -1, -1], ava: [0, 1, 'z2', 3, 4, 5, -1] }, { ini: null, ava: [0, 1, -1, 3, 4, 'bh', -1] }, { ini: [0, -1, 1, -1, 2, -1, -1], ava: null }, { ini: [0, -1, 2, -1, 4, 5, -1], ava: [0, 1, 2, 'cx', 4, 5, -1] }];
 /* ═══ core/state ═══
    Estado global S (se guarda con saveState), sesión en curso W, tema y banderas de interfaz.
-   Define: stateRecovered, loadSavedState, S, W, nutriDayOffset, calMonthOffset, weekView, addState, resetArmed, saveState, applyTheme, overviewMode, weightView
+   Define: stateRecovered, loadSavedState, S, W, nutriDayOffset, calMonthOffset, weekView, addState, saveState, applyTheme, overviewMode, weightView
 */
 /** 1 si al arrancar había datos guardados que no se pudieron leer (se apartan en Store.K.bad; core/boot lo avisa). */
 let stateRecovered = 0;
@@ -3832,7 +3915,6 @@ let nutriDayOffset = 0;
 let calMonthOffset = 0;
 let weekView = 0;
 let addState = null;
-let resetArmed = 0;
 const saveState = () => storeJson(Store.K.app, S);
 const applyTheme = () => {
   S.theme ? document.documentElement.dataset.theme = S.theme : document.documentElement.removeAttribute('data-theme');
@@ -3982,7 +4064,7 @@ function R() {
   document.querySelectorAll('nav button').forEach((b, i) => b.classList.toggle('on', i == S.tab));
   $('nav').style.display = W || overviewMode ? 'none' : 'flex';
   saveSession();
-  updateBannerSync();
+  updatePopupSync();
 }
 A.tab = (i, b) => {
   levelMenuOpen = false;
@@ -5396,7 +5478,7 @@ C.rs = e => {
 };
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitFromName, unitOf, targetRange, UNIT_LABELS, UNIT_HEADS, targetText, unitHead, unitLabel, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+7)  · acciones/registros: 1
+   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+7)  · acciones/registros: 1
 */
 const repClass = n => /sentadilla|press banca|peso muerto|press militar|remo con barra|dominadas|fondos|hip thrust|prensa/i.test(n) ? 8 : /curl|extensi|elevaciones|aperturas|pájaros|gemelo|patada|abducci|face pull|crunch|encogimientos|muñeca/i.test(n) ? 12 : 10;
 const unitFromName = n => {
@@ -5430,7 +5512,6 @@ const targetRange = e => {
   const t = repClass(e.n);
   return t == 8 ? [6, 10] : t == 12 ? [10, 15] : [8, 12];
 };
-const UNIT_LABELS = { m: 'Metros', s: 'Segundos', min: 'Minutos', cal: 'Calorías', km: 'Km' };
 const UNIT_HEADS = { m: 'Dist.', s: 'Seg', min: 'Min', cal: 'Cal', km: 'Km' };
 const targetText = e => {
   const U = unitOf(e);
@@ -5438,7 +5519,6 @@ const targetText = e => {
   return (r[0] == r[1] ? r[0] : r[0] + '-' + r[1]) + (U ? ' ' + U : ' reps');
 };
 const unitHead = e => unitOf(e) ? UNIT_HEADS[unitOf(e)] || 'Reps' : 'Reps';
-const unitLabel = e => unitOf(e) ? UNIT_LABELS[unitOf(e)] || 'Reps' : 'Reps';
 const rirOf = e => COMPOUND_RE.test(e.n) ? '1-2' : /Elevaciones|Aperturas|Cruce|Pájaros|Face pull|Extensi|Curl|Patada|Gemelo|Encogim|Crunch/i.test(e.n) ? '0-1' : '1-2';
 const tempoOf = e => {
   if (e.t)
@@ -7463,7 +7543,7 @@ A.zwva = () => {
 */
 function profileBase() {
   const p = S.pf;
-  return '<div class="hd"><h1>Perfil</h1></div><div class="cd"><label class="av" style="cursor:pointer;font-size:0">' + (p.img ? '<img src="' + p.img + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block">' : '') + (p.img ? '' : icon('camera', 36)) + '<input type="file" accept="image/*" data-c="ph" hidden></label>' + [['Nombre', 'name'], ['Email', 'email'], ['Teléfono', 'tel']].map(x => '<label>' + x[0] + '</label><input data-c="pf" data-i="' + x[1] + '" value="' + X(p[x[1]] || '') + '">').join('') + '</div>' + bioCard() + '<details class="cd"><summary>Ajustes</summary><label>Apariencia</label>' + themeSegment() + glassCard() + '<label>Color de acento</label>' + accentSwatches() + unitsCard() + '<label><input type="checkbox" style="width:auto" ' + (S.notif ? 'checked' : '') + ' data-c="nt"> Notificaciones activadas</label><label><input type="checkbox" style="width:auto" ' + (S.snd === 0 ? '' : 'checked') + ' data-c="snd"> Sonidos del descanso</label><button data-a="zsnd" style="width:100%;margin-top:8px">Probar sonido</button>' + alertSettings() + '<button data-a="zbk" style="width:100%;margin-top:12px">Copia de seguridad</button><small class="mu" style="display:block;margin-top:6px">' + backupAge() + '</small>' + offlineNote() + '<button data-a="diag" style="width:100%;margin-top:12px">Diagnóstico' + (errorLog().length ? ' · ' + plural(errorLog().length, 'error registrado', 'errores registrados') : '') + '</button><button data-a="rst" style="width:100%;margin-top:14px;color:var(--c)">' + (resetArmed ? '¿Seguro? Pulsa otra vez para borrar todo' : 'Borrar todos los datos') + '</button></details><p class="ver v1">StrataFit · versión ' + APPV + '</p><p class="ver v2">© 2026 V. M. Rodriguez Mazuelas. Todos los derechos reservados.</p><p class="ver v3">Los consejos de entrenamiento y nutrición son orientativos y no sustituyen el consejo de un profesional sanitario.</p>';
+  return '<div class="hd"><h1>Perfil</h1></div><div class="cd"><label class="av" style="cursor:pointer;font-size:0">' + (p.img ? '<img src="' + p.img + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block">' : '') + (p.img ? '' : icon('camera', 36)) + '<input type="file" accept="image/*" data-c="ph" hidden></label>' + [['Nombre', 'name'], ['Email', 'email'], ['Teléfono', 'tel']].map(x => '<label>' + x[0] + '</label><input data-c="pf" data-i="' + x[1] + '" value="' + X(p[x[1]] || '') + '">').join('') + '</div>' + bioCard() + '<details class="cd"><summary>Ajustes</summary><label>Apariencia</label>' + themeSegment() + glassCard() + '<label>Color de acento</label>' + accentSwatches() + unitsCard() + '<label><input type="checkbox" style="width:auto" ' + (S.notif ? 'checked' : '') + ' data-c="nt"> Notificaciones activadas</label><label><input type="checkbox" style="width:auto" ' + (S.snd === 0 ? '' : 'checked') + ' data-c="snd"> Sonidos del descanso</label><button data-a="zsnd" style="width:100%;margin-top:8px">Probar sonido</button>' + alertSettings() + '<button data-a="zbk" style="width:100%;margin-top:12px">Copia de seguridad</button><small class="mu" style="display:block;margin-top:6px">' + backupAge() + '</small>' + offlineNote() + '<button data-a="updChk" style="width:100%;margin-top:12px">Comprobar actualizaciones</button><button data-a="diag" style="width:100%;margin-top:12px">Diagnóstico' + (errorLog().length ? ' · ' + plural(errorLog().length, 'error registrado', 'errores registrados') : '') + '</button><button data-a="rst" style="width:100%;margin-top:14px;color:var(--c)">' + 'Borrar todos los datos' + '</button></details><p class="ver v1">StrataFit · versión ' + APPV + '</p><p class="ver v2">© 2026 V. M. Rodriguez Mazuelas. Todos los derechos reservados.</p><p class="ver v3">Los consejos de entrenamiento y nutrición son orientativos y no sustituyen el consejo de un profesional sanitario.</p>';
 }
 A.zrs = () => {
   Store.del(Store.K.app);
@@ -8314,8 +8394,8 @@ A.diagBadDel2 = () => {
   fullPage(diagnosticsPage());
 };
 /* ═══ system/updates ═══
-   Actualización de la app, modo sin conexión y service worker.
-   Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, showUpdateBanner, updateBannerSync  · acciones/registros: 2
+   Actualización de la app: service worker, uso sin conexión, Comprobar actualizaciones y aviso de versión nueva con sus novedades.
+   Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, updateFound, releaseNotesHtml, updatePopupHtml, showPopup, showUpdatePopup, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
 const ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1024 1024\"><defs> <radialGradient id=\"b1\" cx=\"22%\" cy=\"18%\" r=\"62%\"><stop offset=\"0\" stop-color=\"#8b55ff\"/><stop offset=\"1\" stop-color=\"#8b55ff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b2\" cx=\"88%\" cy=\"28%\" r=\"60%\"><stop offset=\"0\" stop-color=\"#3f7bff\"/><stop offset=\"1\" stop-color=\"#3f7bff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b3\" cx=\"62%\" cy=\"98%\" r=\"68%\"><stop offset=\"0\" stop-color=\"#f0507f\"/><stop offset=\"1\" stop-color=\"#f0507f\" stop-opacity=\"0\"/></radialGradient> <linearGradient id=\"gs\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".30\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".06\"/></linearGradient> <linearGradient id=\"ge\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".85\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".35\"/></linearGradient> <linearGradient id=\"wh\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#ffffff\"/><stop offset=\"1\" stop-color=\"#ddd0ff\"/></linearGradient><filter id=\"sh\" x=\"-30%\" y=\"-30%\" width=\"160%\" height=\"170%\"><feDropShadow dx=\"0\" dy=\"22\" stdDeviation=\"26\" flood-color=\"#1a0a55\" flood-opacity=\".45\"/></filter> <filter id=\"sh2\" x=\"-20%\" y=\"-30%\" width=\"140%\" height=\"180%\"><feDropShadow dx=\"0\" dy=\"12\" stdDeviation=\"12\" flood-color=\"#2a1180\" flood-opacity=\".55\"/></filter></defs> <rect width=\"1024\" height=\"1024\" fill=\"#140f3a\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b1)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b2)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b3)\" opacity=\".9\"/> <g filter=\"url(#sh)\"><circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"url(#gs)\"/></g> <circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"none\" stroke=\"url(#ge)\" stroke-width=\"5\"/> <g filter=\"url(#sh2)\"><rect x=\"362.0\" y=\"498.0\" width=\"300.0\" height=\"28.0\" rx=\"14.0\" fill=\"url(#wh)\"/><rect x=\"343.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"643.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"295.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/><rect x=\"695.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/></g></svg>";
 let swState = 0;
@@ -8383,16 +8463,140 @@ const offlineNote = () => '<small class="mu" style="display:block;margin-top:10p
 let updatesOn = FFDEP;
 let updateReady = 0;
 let updateCheckedAt = 0;
-const showUpdateBanner = () => {
-  if (!updateReady || W || document.getElementById('upd'))
-    return;
+/** Versión publicada que se está anunciando (contenido de version.json) o null si no se pudo leer. */
+let updateInfo = null;
+/** ¿La versión a es posterior a b? Compara número a número: 1.10.0 es posterior a 1.9.3. */
+const isNewerVersion = (a, b) => {
+  const x = String(a || '').split('.').map(Number);
+  const y = String(b || '').split('.').map(Number);
+  for (let i = 0; i < 3; i++)
+    if ((x[i] || 0) != (y[i] || 0))
+      return (x[i] || 0) > (y[i] || 0);
+  return false;
+};
+/** Lee version.json del servidor sin pasar por ninguna caché. Devuelve null si no hay conexión o no es válido. */
+const fetchVersionInfo = async () => {
+  if (location.protocol == 'file:')
+    return null;
+  try {
+    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok)
+      return null;
+    const j = await r.json();
+    return j && typeof j.version == 'string' ? j : null;
+  }
+  catch (e) {
+    logError('comprobar versión', e);
+    return null;
+  }
+};
+/** Lista de cambios de una o varias versiones (si se saltaron versiones, se enseñan todas las posteriores a la instalada). */
+const releaseNotesHtml = (info, current) => {
+  const all = info && Array.isArray(info.history) && info.history.length ? info.history : (info ? [info] : []);
+  const list = current ? all : all.filter(v => isNewerVersion(v.version, APPV));
+  const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
+  const html = shown.map(v => (shown.length > 1 ? '<p class="upv">Versión ' + X(v.version) + '</p>' : '') + (v.sections || []).map(s => '<p class="ups">' + X(s.title) + '</p><ul>' + (s.items || []).slice(0, 8).map(i => '<li>' + X(i) + '</li>').join('') + '</ul>').join('')).join('');
+  return html || '<ul><li>Mejoras y correcciones.</li></ul>';
+};
+/** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
+const updatePopupHtml = (info, mode) => {
+  const v = info && info.version ? info.version : '';
+  return '<div class="updb" data-a="updLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt">'
+    + '<button class="updx" data-a="updLater" aria-label="Cerrar">×</button>'
+    + '<small class="upe">' + (mode == 'news' ? 'Novedades' : 'Nueva versión disponible') + '</small>'
+    + '<h3 id="updt">' + (v ? 'Versión ' + X(v) : 'Versión nueva') + '</h3>'
+    + '<div class="upn">' + releaseNotesHtml(info, mode == 'news') + '</div>'
+    + '<button class="upb" data-a="' + (mode == 'news' ? 'updLater' : 'updApply') + '">' + (mode == 'news' ? 'Entendido' : 'Actualizar') + '</button></div>';
+};
+const showPopup = (info, mode) => {
+  const old = document.getElementById('upd');
+  if (old)
+    old.remove();
   const d = document.createElement('div');
   d.id = 'upd';
-  d.setAttribute('role', 'status');
-  d.innerHTML = '<span>Nueva versión disponible</span><button data-a="upx">Luego</button><button data-a="upr">Actualizar</button>';
+  d.className = mode;
+  d.innerHTML = updatePopupHtml(info, mode);
   document.body.appendChild(d);
 };
-A.upr = () => {
+/** Enseña el aviso de versión nueva (nunca en mitad de un entreno: se espera a que termine). */
+const showUpdatePopup = () => {
+  if (!updateReady || W || document.getElementById('upd'))
+    return;
+  showPopup(updateInfo, 'update');
+  if (updateInfo && updateInfo.version)
+    try {
+      Store.set(Store.K.seen, updateInfo.version);
+    }
+    catch (e) {
+      logError('anotar novedades vistas', e);
+    }
+};
+/** El service worker ha descargado otra versión: se averigua cuál es y qué cambia, y se avisa si es posterior a esta.
+   Si no se puede saber (sin conexión), no se avisa: la versión nueva se abrirá sola la próxima vez. */
+let updateFound = 0;
+const onUpdateFound = async () => {
+  if (updateFound)
+    return;
+  updateFound = 1;
+  const info = await fetchVersionInfo();
+  if (!info || !isNewerVersion(info.version, APPV))
+    return;
+  updateInfo = info;
+  updateReady = 1;
+  showUpdatePopup();
+};
+/** ¿Hay que enseñar las novedades de esta versión? Anota la versión abierta; se llama una vez al arrancar (core/boot).
+   Solo en la app instalada y solo si se viene de otra versión cuyas novedades no se vieron ya en el aviso previo. */
+const whatsNewDue = () => {
+  if (!FFDEP)
+    return false;
+  let prev = null;
+  let seen = null;
+  try {
+    prev = Store.get(Store.K.ver);
+    seen = Store.get(Store.K.seen);
+    Store.set(Store.K.ver, APPV);
+  }
+  catch (e) {
+    logError('versión anterior', e);
+    return false;
+  }
+  /* hasta la 1.19.0 no se guardaba la versión: si ya había datos, es una actualización */
+  const updated = prev ? prev != APPV : (S.logs.length > 0 || (S.cp || []).length > 0 || (S.cr || []).length > 0);
+  return updated && seen != APPV && RELEASE.sections.length > 0;
+};
+/** 1 si las novedades esperan a que termine el entreno en curso. */
+let whatsNewPending = 0;
+/** Enseña una vez las novedades de esta versión (botón Entendido). */
+const showWhatsNew = () => {
+  if (W) {
+    whatsNewPending = 1;
+    return;
+  }
+  whatsNewPending = 0;
+  if (document.getElementById('upd'))
+    return;
+  showPopup(RELEASE, 'news');
+  try {
+    Store.set(Store.K.seen, APPV);
+  }
+  catch (e) {
+    logError('anotar novedades vistas', e);
+  }
+};
+/* — manejadores de esta función (registros A / C / U) — */
+/** Actualizar: descarga ya la versión nueva (el service worker la guarda) y vuelve a abrir la app con ella. */
+A.updApply = async (i, b) => {
+  if (b) {
+    b.disabled = true;
+    b.textContent = 'Actualizando…';
+  }
+  try {
+    await Promise.all(['./', 'index.html'].map(u => fetch(u + '?fresh=' + Date.now(), { cache: 'reload' })));
+  }
+  catch (e) {
+    logError('descargar actualización', e);
+  }
   try {
     location.reload();
   }
@@ -8400,20 +8604,51 @@ A.upr = () => {
     /* recargar puede no estar permitido en algunas vistas */
   }
 };
-A.upx = () => {
+A.updLater = () => {
   updateReady = 0;
   const d = document.getElementById('upd');
   if (d)
     d.remove();
 };
+/** Ajustes → Comprobar actualizaciones. */
+A.updChk = async (i, b) => {
+  if (!updatesOn) {
+    toast('Las actualizaciones se comprueban en la app instalada');
+    return;
+  }
+  const label = b ? b.textContent : '';
+  if (b) {
+    b.disabled = true;
+    b.textContent = 'Comprobando…';
+  }
+  const info = await fetchVersionInfo();
+  if (b) {
+    b.disabled = false;
+    b.textContent = label;
+  }
+  if (!info) {
+    toast('No se ha podido comprobar. Revisa la conexión.');
+    return;
+  }
+  if (!isNewerVersion(info.version, APPV)) {
+    toast('Tienes la última versión (' + APPV + ')');
+    return;
+  }
+  updateInfo = info;
+  updateReady = 1;
+  showUpdatePopup();
+};
 try {
   if (updatesOn && 'serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', e => {
-      if (e.data && e.data.t === 'upd') {
-        updateReady = 1;
-        showUpdateBanner();
-      }
+      if (e.data && e.data.t === 'upd')
+        onUpdateFound();
     });
+    /* por si el service worker detectó la versión nueva antes de que esta página escuchara */
+    navigator.serviceWorker.ready.then(() => {
+      if (navigator.serviceWorker.controller)
+        navigator.serviceWorker.controller.postMessage({ t: 'ask' });
+    }).catch(e => logError('preguntar por versión nueva', e));
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && navigator.serviceWorker.controller && Date.now() - updateCheckedAt > 20 * 60 * 1e3) {
         updateCheckedAt = Date.now();
@@ -8427,26 +8662,25 @@ try {
 catch (e) {
   logError('aviso de versión nueva', e);
 }
-const updateBannerSync = () => {
+/** Lo llama R(): durante un entreno se oculta el aviso; al terminar, vuelve. */
+const updatePopupSync = () => {
+  if (whatsNewPending && !W)
+    showWhatsNew();
   if (!updateReady)
     return;
   if (W) {
     const d = document.getElementById('upd');
-    if (d)
+    if (d && d.className == 'update')
       d.remove();
   }
   else
-    showUpdateBanner();
+    showUpdatePopup();
 };
 /* ═══ extras/anatomy ═══
    Mapa muscular dibujado en SVG.
-   Define: mk, MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exAnatomy, exAnatomyFull
+   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exAnatomy, exAnatomyFull
 */
 document.body.insertAdjacentHTML('afterbegin', '<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gB" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#a7adba"/><stop offset=".6" stop-color="#6b7080"/><stop offset="1" stop-color="#3b3f4b"/></linearGradient><linearGradient id="gR" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#d11f3a"/><stop offset="1" stop-color="#7d0d21"/></linearGradient><linearGradient id="gO" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ffb26b"/><stop offset="1" stop-color="#b8501a"/></linearGradient><pattern id="fb" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><rect width="1" height="2.2" fill="#000" opacity=".3"/></pattern><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>');
-const mk = (l, f, gl) => l ? l.split(',').map(h => [0, 1].map(k => {
-  const t = k ? ' transform="matrix(-1 0 0 1 100 0)"' : '';
-  return '<use href="#' + h + '" fill="url(#' + f + ')" stroke="#2a050c" stroke-width=".6"' + t + (gl ? ' filter="url(#gl)"' : '') + '/><use href="#' + h + '" fill="url(#fb)" stroke="none"' + t + '/>';
-}).join('')).join('') : '';
 (function () {
   const pat = (id, r) => '<pattern id="' + id + '" width="4" height="4" patternUnits="userSpaceOnUse"' + (r ? ' patternTransform="rotate(' + r + ')"' : '') + '><line x1="0" y1="0" x2="0" y2="4" stroke="#000" stroke-opacity=".26" stroke-width=".55"/></pattern>';
   const gr = (id, a, b, c) => '<radialGradient id="' + id + '" cx=".38" cy=".3" r=".9"><stop offset="0" stop-color="' + a + '"/><stop offset=".55" stop-color="' + b + '"/><stop offset="1" stop-color="' + c + '"/></radialGradient>';
@@ -10684,6 +10918,8 @@ window.__ffok = 1;
 if (stateRecovered)
   setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
 setTimeout(() => takeSnapshot().catch(e => logError('copia automática', e)), 4000);
+if (whatsNewDue())
+  setTimeout(showWhatsNew, 900);
 /* pide al navegador que no borre los datos de la app instalada cuando falte espacio (sin efecto si no lo admite) */
 if (isStandalone() && navigator.storage && navigator.storage.persist)
   navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(e => logError('almacenamiento persistente', e));
