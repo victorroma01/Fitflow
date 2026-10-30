@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icon-192.png" width="96" height="96" alt="Icono de StrataFit">
+<img src="static/icon-192.png" width="96" height="96" alt="Icono de StrataFit">
 
 # StrataFit
 
@@ -140,7 +140,6 @@ flowchart LR
 ## Estructura del repositorio
 
 ```
-├── index.html, sw.js, version.json, img/   app publicada (copia de dist/app; la sirve GitHub Pages)
 ├── src/
 │   ├── index.html          plantilla: cabecera, pantalla de error de arranque y marcadores @@CSS@@ / @@JS@@
 │   ├── js/
@@ -188,7 +187,7 @@ python -m playwright install chromium webkit
 | `bash tests/compare.sh vieja.html nueva.html` | Compara comportamiento e imagen de dos versiones. |
 | `node tools/rename.js mapa.txt` | Renombra globales (líneas «viejo nuevo») entendiendo ámbitos. |
 | `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. |
-| `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo mientras GitHub Pages publique desde la rama). |
+| `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo si GitHub Pages volviera a publicar desde la rama). |
 
 **Añadir una función**
 
@@ -239,9 +238,10 @@ exige que no cambie nada.
 4. Abre una solicitud de fusión y, cuando las pruebas estén en verde, fusiónala. Al llegar a `main`, GitHub Actions vuelve a probar en
    Chrome y Safari, crea la etiqueta `vX.Y.Z` con sus notas y publica la app; la app instalada enseña el aviso con las novedades.
 
-La publicación desde GitHub Actions requiere elegir **GitHub Actions** en *Settings → Pages → Source*. Mientras siga en
-*Deploy from a branch*, lo publicado es la copia de `dist/app/` en la raíz del repositorio: se actualiza con
-`python3 tools/pages.py copiar` en la misma solicitud de fusión, y GitHub Actions comprueba que coincide con la app compilada.
+GitHub Pages publica desde GitHub Actions (*Settings → Pages → Source*: **GitHub Actions**), así que el repositorio no guarda
+ninguna copia compilada: lo publicado siempre sale del código de `main`. Si algún día se vuelve a *Deploy from a branch*, lo publicado
+sería la raíz del repositorio: `python3 tools/pages.py copiar` pone ahí `dist/app/`, y GitHub Actions falla si falta o no coincide
+con la app compilada.
 
 ## Siguientes pasos
 

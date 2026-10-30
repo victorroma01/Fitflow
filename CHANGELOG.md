@@ -32,8 +32,10 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - `tools/format.js` formatea también los módulos que se cargan al usarlos, encuentra los comentarios con el analizador (un `/*`
   dentro de una plantilla se tomaba por comentario) y ya no mueve a la derecha, en cada pasada, los comentarios de varias líneas
   dentro de una función.
-- GitHub Actions dice en cada solicitud de fusión desde dónde publica GitHub Pages y, en el modo «desde la rama», comprueba que la
-  copia de la raíz es exactamente la app compilada de ese código.
+- GitHub Pages ya publica desde GitHub Actions: se quita del repositorio la copia compilada de la raíz (`index.html`, `sw.js`,
+  `version.json`, manifiesto, iconos, `js/` y las 41 fotos de `img/`, duplicadas de `src/img`). La CI dice en cada solicitud de
+  fusión desde dónde publica y, si se volviera al modo «desde la rama», falla si la raíz no lleva la app compilada de ese código
+  (`tools/pages.py`).
 
 ## [1.22.0] — 2026-10-30
 
