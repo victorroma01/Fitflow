@@ -218,7 +218,8 @@ def main(path):
             # ── borrar todos los datos ──
             ev(SEED)
             ev("localStorage.setItem('ffw',JSON.stringify({W:{x:[]},t:Date.now()}))")
-            ev("A.zrs()")
+            with pg.expect_navigation():
+                ev("A.zrs()")
             pg.wait_for_load_state('load')
             booted(pg)
             pg.clock.run_for(800)
