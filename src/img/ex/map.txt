@@ -1,0 +1,30 @@
+# Fotos de ejercicio. Una línea por foto:  clave | ejercicios de la biblioteca que la usan (separados por ;) | otros nombres para buscarlo (separados por ;)
+# El archivo es src/img/ex/<clave>.webp. Tras cambiar algo aquí ejecuta:  python3 tools/exphotos.py
+remo-mancuerna|Remo mancuerna|Remo con mancuerna
+curl-predicador|Curl predicador|
+extension-triceps-polea|Extensión tríceps polea|
+remo-polea-baja|Remo en polea baja|
+extension-cuadriceps|Extensión cuádriceps|
+curl-femoral-tumbado|Curl femoral tumbado;Curl femoral|
+gemelo-de-pie|Gemelo de pie|
+face-pull|Face pull|
+pajaros-mancuernas|Pájaros mancuernas|
+hip-thrust|Hip thrust|
+aperturas-polea|Aperturas en polea|
+elevaciones-laterales|Elevaciones laterales|
+jalon-al-pecho|Jalón al pecho|
+peso-muerto-rumano|Peso muerto rumano|
+fondos|Fondos;Fondos en paralelas|
+curl-martillo|Curl martillo|
+zancadas|Zancadas|
+press-banca-mancuernas|Press banca mancuernas|Press banca con mancuernas
+peso-muerto-sumo|Peso muerto sumo|
+sentadilla-bulgara|Sentadilla búlgara|Zancada búlgara
+pullover-polea|Pullover en polea;Jalón con brazos rectos|Pullover en polea alta
+curl-mancuernas|Curl con mancuernas;Curl alterno mancuernas|Curl con mancuerna
+copa-triceps|Extensión sobre la cabeza|Copa de tríceps
+pullover-mancuerna|Pullover mancuerna|Pullover con mancuerna
+encogimientos|Encogimientos con mancuernas|Encojimientos
+curl-inclinado|Curl en banco inclinado;Curl con mancuernas a 45°|Curl inclinado con mancuernas
+extension-tras-nuca|Extensión sobre la cabeza con cuerda|Extensión tras nuca;Tras nuca
+gemelo-sentado|Gemelo sentado|
