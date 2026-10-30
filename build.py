@@ -29,7 +29,7 @@ Las dos variantes solo se diferencian en:
   · data/media: base64 en el archivo único, rutas img/… en el paquete.
 El paquete lleva además version.json (versión publicada y sus novedades), que la app consulta para avisar de actualizaciones.
 """
-import os, re, sys, json, base64, shutil, tempfile, subprocess, argparse
+import os, re, sys, json, base64, shutil, subprocess, argparse
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
@@ -242,8 +242,10 @@ def run_esbuild(args, stdin=None):
 
 def stage(generated, deploy):
     """Copia src/js a una carpeta temporal con los moldes generados (data/media, data/release) y, en el paquete, FFDEP = 1."""
-    st = tempfile.mkdtemp(prefix='sf_js_')
-    shutil.copytree(os.path.join(SRC, 'js'), st, dirs_exist_ok=True)
+    # siempre la misma carpeta: esbuild tiene en cuenta las rutas al calcular los nombres de los archivos, y así salen iguales
+    st = os.path.join(DIST, '.stage')
+    shutil.rmtree(st, ignore_errors=True)
+    shutil.copytree(os.path.join(SRC, 'js'), st)
     for m, code in generated.items():
         p = os.path.join(st, m)
         t = read(p)
@@ -275,7 +277,9 @@ def bundle_app(st, outdir):
     """Paquete: módulos ES en js/ con nombres que cambian con el contenido. Los import() dinámicos (lo poco usado) quedan
     en archivos aparte. Devuelve el archivo de entrada, los que importa al arrancar y todos los generados."""
     meta = os.path.join(st, '_meta.json')
-    run_esbuild([os.path.join(st, ENTRY), '--format=esm', '--splitting', '--outdir=' + outdir, '--entry-names=[name]-[hash]',
+    # rutas relativas a la raíz del repositorio: los nombres por contenido salen iguales en cualquier ordenador
+    rel_root = lambda p: os.path.relpath(p, ROOT)
+    run_esbuild([rel_root(os.path.join(st, ENTRY)), '--format=esm', '--splitting', '--outdir=' + rel_root(outdir), '--entry-names=[name]-[hash]',
                  '--chunk-names=[name]-[hash]', '--metafile=' + meta] + ESBUILD_COMMON)
     outs = json.loads(read(meta))['outputs']
     rel = lambda p: 'js/' + os.path.basename(p)
