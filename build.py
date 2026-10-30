@@ -3,7 +3,7 @@
 
 Compila src/ en la app (sin dependencias, solo Python 3; node opcional para comprobar).
 
-  python3 build.py                 → dist/app/  (index.html + sw.js + manifiesto + iconos + img/, listo para GitHub Pages)
+  python3 build.py                 → dist/app/  (index.html + sw.js + version.json + manifiesto + iconos + img/, listo para GitHub Pages)
                                      dist/stratafit.html  (archivo único con todo incrustado, sin service worker)
   python3 build.py --check         → además ejecuta las comprobaciones estáticas (tools/check.js, necesita node + typescript)
   python3 build.py --only app      → solo el paquete de despliegue
@@ -15,6 +15,8 @@ Estructura (todo vive en src/):
   src/js/modules.txt      orden de carga de los módulos JS (el orden importa: ver README)
   src/js/<area>/<m>.js    módulos: listas de sentencias de ámbito global; el build las une en un solo <script>
   src/js/data/media.js    molde que el build sustituye por las fotos de src/img/ (rutas o base64 según la variante)
+  src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
+  CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
   src/img/day/            portadas de los días (.jpg) y order.txt
   src/img/ex/             fotos de ejercicio (.webp) y map.txt
   static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
@@ -22,6 +24,7 @@ Estructura (todo vive en src/):
 Las dos variantes solo se diferencian en:
   · FFDEP (core/util): 0 en el archivo único, 1 en el paquete (cabecera fija, aviso de versión nueva, sin recarga forzada);
   · data/media: base64 en el archivo único, rutas img/… en el paquete.
+El paquete lleva además version.json (versión publicada y sus novedades), que la app consulta para avisar de actualizaciones.
 """
 import os, re, sys, json, base64, shutil, subprocess, argparse
 
@@ -30,6 +33,9 @@ SRC = os.path.join(ROOT, 'src')
 DIST = os.path.join(ROOT, 'dist')
 IMG = os.path.join(SRC, 'img')
 MEDIA_MODULE = 'data/media.js'
+RELEASE_MODULE = 'data/release.js'
+CHANGELOG = os.path.join(ROOT, 'CHANGELOG.md')
+USER_SECTIONS = ('Novedades', 'Mejoras', 'Correcciones')  # apartados que la app enseña al usuario
 
 
 def read(p):
@@ -75,8 +81,9 @@ def check_tree(mods):
         die('core/boot.js debe ser el último módulo (arranque)')
     if mods[0] != 'core/util.js':
         die('core/util.js debe ser el primero')
-    if MEDIA_MODULE not in seen:
-        die('falta ' + MEDIA_MODULE + ' en modules.txt')
+    for gm in (MEDIA_MODULE, RELEASE_MODULE):
+        if gm not in seen:
+            die('falta ' + gm + ' en modules.txt')
 
 
 # ── fotos ──────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -137,18 +144,75 @@ def media_js(m, inline):
     return 'const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 
 
+# ── novedades (CHANGELOG.md) ────────────────────────────────────────────────────────────────────────────────────────
+
+def plain(s):
+    """Texto sin marcas de Markdown (**negrita**, `código`, [enlace](url))."""
+    s = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', s)
+    return re.sub(r'\*\*|__|`', '', s).strip()
+
+
+def changelog():
+    """Versiones de CHANGELOG.md, de la más nueva a la más antigua: [{version, date, sections: [{title, items}]}].
+    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran."""
+    out, cur, sec = [], None, None
+    for raw in read(CHANGELOG).splitlines():
+        l = raw.rstrip()
+        if l.startswith('## '):
+            m = re.match(r'^## \[(\d+\.\d+\.\d+)\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})$', l)
+            cur = {'version': m.group(1), 'date': m.group(2), 'sections': []} if m else None
+            if cur:
+                out.append(cur)
+            sec = None
+        elif cur is None:
+            continue
+        elif l.startswith('### '):
+            title = l[4:].strip()
+            sec = {'title': title, 'items': []} if title in USER_SECTIONS else None
+            if sec:
+                cur['sections'].append(sec)
+        elif sec is not None and re.match(r'^[-*] ', l):
+            sec['items'].append(plain(l[2:]))
+        elif sec is not None and l.strip() and sec['items'] and raw.startswith('  '):
+            sec['items'][-1] += ' ' + plain(l)
+    for e in out:
+        e['sections'] = [s for s in e['sections'] if s['items']]
+    return out
+
+
+def release_for(entries, ver):
+    if not entries or entries[0]['version'] != ver:
+        die('CHANGELOG.md debe empezar por la entrada de la versión %s («## [%s] — AAAA-MM-DD»)' % (ver, ver))
+    if not entries[0]['sections']:
+        die('la entrada %s de CHANGELOG.md no tiene Novedades, Mejoras ni Correcciones que enseñar' % ver)
+    return entries[0]
+
+
+def release_js(rel):
+    return 'const RELEASE = ' + json.dumps(rel, ensure_ascii=False, separators=(',', ':')) + ';'
+
+
+def version_json(entries):
+    """version.json del paquete: la versión publicada con sus novedades y las de las anteriores (por si alguien salta varias)."""
+    top = entries[0]
+    return json.dumps({'version': top['version'], 'date': top['date'], 'sections': top['sections'], 'history': entries[:6]},
+                      ensure_ascii=False, indent=1) + '\n'
+
+
 # ── compilación ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-def compile_js(mods, media_code):
+def compile_js(mods, generated):
+    """Une los módulos. generated = {módulo molde: código que lo sustituye} (data/media, data/release)."""
     parts = []
     for m in mods:
         t = read(os.path.join(SRC, 'js', m))
-        if m == MEDIA_MODULE:
+        if m in generated:
+            name = re.match(r'const (\w+)', generated[m]).group(1)
             head = re.match(r'\s*/\*.*?\*/\s*', t, re.S)
-            n = len(re.findall(r'^const MEDIA\s*=', t, re.M))
+            n = len(re.findall(r'^const ' + name + r'\s*=', t, re.M))
             if not head or n != 1:
-                die(MEDIA_MODULE + ' debe tener su cabecera y una sola línea «const MEDIA = …»')
-            t = head.group(0) + media_code + '\n'
+                die('%s debe tener su cabecera y una sola línea «const %s = …»' % (m, name))
+            t = head.group(0) + generated[m] + '\n'
         if '</script' in t.lower():
             die('"</script" dentro de ' + m + ' rompería el HTML')
         parts.append(t.rstrip('\n'))
@@ -234,6 +298,7 @@ def main():
     mods = module_list()
     check_tree(mods)
     m = media()
+    entries = changelog()
     css = compile_css()
     tpl = read(os.path.join(SRC, 'index.html'))
     if tpl.count('@@CSS@@') != 1 or tpl.count('@@JS@@') != 1:
@@ -241,24 +306,25 @@ def main():
     os.makedirs(DIST, exist_ok=True)
     ver = '?'
     if a.only != 'app':
-        js = compile_js(mods, media_js(m, inline=True))
+        ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
+        js = compile_js(mods, {MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: release_js(release_for(entries, ver))})
         html = page(tpl, css, js)
         static_checks(js, html)
         node_check(js, 'archivo único')
-        ver = app_version(js)
         write(os.path.join(DIST, 'stratafit.html'), html)
         print('  dist/stratafit.html  %d bytes (fotos incrustadas)' % len(html.encode('utf-8')))
     if a.only != 'single':
-        js = compile_js(mods, media_js(m, inline=False))
+        ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
+        js = compile_js(mods, {MEDIA_MODULE: media_js(m, inline=False), RELEASE_MODULE: release_js(release_for(entries, ver))})
         html = deploy_variant(page(tpl, css, js))
         static_checks(js, html)
         node_check(js, 'paquete')
-        ver = app_version(js)
         out = os.path.join(DIST, 'app')
         shutil.rmtree(out, ignore_errors=True)
         os.makedirs(out)
         write(os.path.join(out, 'index.html'), html)
         write(os.path.join(out, 'sw.js'), service_worker(m['files']))
+        write(os.path.join(out, 'version.json'), version_json(entries))
         for n, p in static_files().items():
             shutil.copy(p, os.path.join(out, n))
         size = 0
@@ -266,7 +332,7 @@ def main():
             os.makedirs(os.path.dirname(os.path.join(out, rel)), exist_ok=True)
             shutil.copy(p, os.path.join(out, rel))
             size += os.path.getsize(p)
-        print('  dist/app/            index.html %d bytes + sw.js, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
+        print('  dist/app/            index.html %d bytes + sw.js, version.json, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
             os.path.getsize(os.path.join(out, 'index.html')), len(m['files']), size // 1024))
     print('StrataFit %s · %d módulos JS · %d trozos CSS · %d portadas y %d fotos de ejercicio' % (
         ver, len(mods), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day']), len(m['ex'])))

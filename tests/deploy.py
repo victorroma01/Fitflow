@@ -4,7 +4,7 @@ arranque sin conexión, aviso de versión nueva, copia de seguridad desde la app
   python3 tests/deploy.py dist/app
 Requiere:  pip install playwright  &&  playwright install chromium
 """
-import os, sys, re, shutil, tempfile, threading, functools, http.server
+import os, sys, re, json, shutil, tempfile, threading, functools, http.server
 from playwright.sync_api import sync_playwright
 
 fails = []
@@ -66,18 +66,74 @@ def main(app):
             pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
             check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
             c.set_offline(False)
-            # versión nueva publicada: la app abre la copia guardada al momento y avisa
+            check('instalación nueva: no enseña novedades', ev("!document.getElementById('upd')"))
+            vj = os.path.join(site, 'fitflow', 'version.json')
+            vj0 = open(vj, encoding='utf-8').read()
+            check('version.json publicado con la versión de la app', json.loads(vj0)['version'] == ev('APPV'))
+            # Ajustes → Comprobar actualizaciones, sin versión nueva
+            ev("S.tab=3;R();document.querySelectorAll('details').forEach(d=>d.open=true)")
+            pg.click('[data-a=updChk]')
+            pg.wait_for_timeout(800)
+            check('Comprobar actualizaciones: «Tienes la última versión»', ev("/Tienes la última versión/.test(document.body.innerText)"))
+
+            def publish(ver, items, index=True):
+                if index:
+                    open(idx, 'w', encoding='utf-8').write(re.sub(r"(const APPV\s*=\s*')[^']+'", "\\g<1>" + ver + "'", t, count=1))
+                e = {'version': ver, 'date': '2026-12-01', 'sections': [{'title': 'Novedades', 'items': items}]}
+                open(vj, 'w', encoding='utf-8').write(json.dumps(dict(e, history=[e, json.loads(vj0)])))
+
+            # versión nueva publicada: la app abre la copia guardada al momento y avisa con la tarjeta de novedades
             t = open(idx, encoding='utf-8').read()
             v0 = re.search(r"const APPV\s*=\s*'([^']+)'", t).group(1)
-            open(idx, 'w', encoding='utf-8').write(re.sub(r"(const APPV\s*=\s*')[^']+'", r"\g<1>9.9.9'", t, count=1))
+            publish('9.9.9', ['Prueba de novedades'])
             pg.reload()
-            pg.wait_for_timeout(2500)
+            pg.wait_for_load_state('load')
+            try:
+                pg.wait_for_selector('#upd.update .updk', timeout=10000)
+            except Exception:
+                pass
+            print('   (aviso tras %s ms)' % ev("Math.round(performance.now())"))
             check('abre al instante con la versión guardada', ev('APPV') == v0, ev('APPV'))
-            check('muestra «Nueva versión disponible»', ev("!!document.getElementById('upd')"))
-            pg.reload()
+            check('aparece el aviso de versión nueva', ev("!!document.querySelector('#upd.update .updk')"))
+            card = ev("""(()=>{const k=document.querySelector('#upd .updk'),b=k&&k.querySelector('.upb'),cs=x=>getComputedStyle(x);if(!k)return null;
+              return {title:k.querySelector('h3').textContent,text:k.innerText,bg:cs(k).backgroundColor,fg:cs(k).color,
+                      bbg:cs(b).backgroundColor,a1:getComputedStyle(document.documentElement).getPropertyValue('--a1').trim(),bfg:cs(b).color,up:cs(b).textTransform,label:b.innerText}})()""")
+            check('titulado con la versión nueva', bool(card) and card['title'] == 'Versión 9.9.9', str(card and card['title']))
+            check('enseña las novedades', bool(card) and 'Prueba de novedades' in card['text'])
+            check('tarjeta negra con letra blanca', bool(card) and card['bg'] == 'rgb(0, 0, 0)' and card['fg'] == 'rgb(255, 255, 255)', str(card and (card['bg'], card['fg'])))
+            a1 = ev("(()=>{const d=document.createElement('i');d.style.color=getComputedStyle(document.documentElement).getPropertyValue('--a1');document.body.appendChild(d);const c=getComputedStyle(d).color;d.remove();return c})()")
+            check('botón Actualizar del color del tema, letra negra y mayúsculas', bool(card) and card['bbg'] == a1 and card['bfg'] == 'rgb(0, 0, 0)' and card['label'] == 'ACTUALIZAR', str(card and (card['bbg'], a1, card['bfg'], card['label'])))
+            with pg.expect_navigation():
+                pg.click('#upd .upb')
+            pg.wait_for_load_state('load')
             pg.wait_for_timeout(1200)
-            check('tras actualizar carga la nueva', ev('APPV') == '9.9.9', ev('APPV'))
+            check('«Actualizar» carga la versión nueva', ev('APPV') == '9.9.9', ev('APPV'))
+            check('tras actualizar no repite las novedades ya vistas', ev("!document.getElementById('upd')"))
+            # Comprobar actualizaciones cuando hay una versión nueva en el servidor
+            publish('9.9.10', ['Otra mejora'], index=False)
+            ev("S.tab=3;R();document.querySelectorAll('details').forEach(d=>d.open=true)")
+            pg.click('[data-a=updChk]')
+            pg.wait_for_timeout(800)
+            check('Comprobar actualizaciones encuentra la versión nueva', ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión 9.9.10')
+            pg.click('#upd .updx')
+            pg.wait_for_timeout(200)
+            check('el aviso se puede cerrar', ev("!document.getElementById('upd')"))
+            # tras actualizar desde una versión antigua (sin haber visto el aviso): novedades una sola vez
+            ev("localStorage.setItem('ffver','1.0.0');localStorage.removeItem('ffseen')")
+            pg.reload()
+            pg.wait_for_load_state('load')
+            pg.wait_for_timeout(1500)
+            news = ev("(()=>{const k=document.querySelector('#upd.news .updk');return k?{title:k.querySelector('h3').textContent,btn:k.querySelector('.upb').innerText}:null})()")
+            check('tras actualizar enseña las novedades de la versión', bool(news) and news['title'].startswith('Versión ') and news['btn'] == 'ENTENDIDO', str(news))
+            if news:
+                pg.click('#upd .upb')
+                pg.wait_for_timeout(200)
+            pg.reload()
+            pg.wait_for_load_state('load')
+            pg.wait_for_timeout(1500)
+            check('y solo una vez', ev("!document.getElementById('upd')"))
             open(idx, 'w', encoding='utf-8').write(t)
+            open(vj, 'w', encoding='utf-8').write(vj0)
             # app instalada: compartir copia de seguridad
             c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True)
             c2.add_init_script("Object.defineProperty(navigator,'standalone',{get:()=>true});window.__sh=null;navigator.canShare=()=>true;"

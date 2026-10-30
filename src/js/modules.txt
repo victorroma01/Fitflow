@@ -6,6 +6,7 @@ core/registry.js
 data/library.js
 data/foods.js
 data/media.js
+data/release.js
 data/photos.js
 data/anatomy.js
 data/templates.js

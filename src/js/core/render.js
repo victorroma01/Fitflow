@@ -15,7 +15,7 @@ function R() {
   document.querySelectorAll('nav button').forEach((b, i) => b.classList.toggle('on', i == S.tab));
   $('nav').style.display = W || overviewMode ? 'none' : 'flex';
   saveSession();
-  updateBannerSync();
+  updatePopupSync();
 }
 A.tab = (i, b) => {
   levelMenuOpen = false;

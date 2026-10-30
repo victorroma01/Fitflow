@@ -175,12 +175,6 @@ html.gl .gpv {
 html.gl .gpv.fl::after {
   border-radius:11px;
 }
-html.gl #upd {
-  border-radius:26px;
-}
-html.gl #upd button {
-  border-radius:19px;
-}
 #sh>.sb {
   z-index:10;
   animation:fdi .3s ease;

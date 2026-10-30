@@ -116,6 +116,16 @@ def main(path):
         ev("document.querySelector('[data-a=cm][data-i=\"-1\"]').click()")
         pg.clock.run_for(200)
 
+        # Ajustes → Comprobar actualizaciones (en el archivo único no hay servidor: avisa; en el paquete por file:// no puede leer version.json)
+        ev("S.tab=3;R();document.querySelectorAll('details').forEach(d=>d.open=true)")
+        pg.clock.run_for(200)
+        check('Ajustes tiene «Comprobar actualizaciones»', ev("!!document.querySelector('[data-a=updChk]')"))
+        ev("document.querySelector('[data-a=updChk]').click()")
+        pg.clock.run_for(300)
+        pg.wait_for_timeout(300)
+        pg.clock.run_for(100)
+        check('al comprobar responde con un aviso', ev("/se comprueban en la app instalada|No se ha podido comprobar|Tienes la última versión/.test(document.body.innerText)"))
+
         # persistencia
         ev('saveState()')
         before = ev("JSON.parse(localStorage.getItem('ff')).logs.length")

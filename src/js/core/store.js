@@ -11,10 +11,12 @@
    rs   → resumen pendiente de mostrar tras restaurar
    err  → registro de errores del dispositivo (core/errors; no se sincroniza)
    bad  → copia del estado que no se pudo leer, apartada antes de empezar de cero (no se sincroniza)
+   ver  → última versión de la app abierta en este dispositivo (para enseñar las novedades tras actualizar)
+   seen → versión cuyas novedades ya se enseñaron (para no repetirlas)
    Las fotos de progreso viven en IndexedDB (base "ffph"; ver extras/measures) y las copias automáticas
    también (base "ffsnap"; ver system/snapshots). */
 const Store = {
-  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad' },
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen' },
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…) */
   get(k) {
