@@ -1,6 +1,6 @@
 /* ═══ system/updates ═══
    Actualización de la app: service worker, uso sin conexión, Comprobar actualizaciones y aviso de versión nueva con sus novedades.
-   Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, updateFound, releaseNotesHtml, updatePopupHtml, showPopup, showUpdatePopup, onUpdateFound, showWhatsNew, updatePopupSync  · acciones/registros: 3
+   Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, updateFound, releaseNotesHtml, updatePopupHtml, showPopup, showUpdatePopup, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
 const ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1024 1024\"><defs> <radialGradient id=\"b1\" cx=\"22%\" cy=\"18%\" r=\"62%\"><stop offset=\"0\" stop-color=\"#8b55ff\"/><stop offset=\"1\" stop-color=\"#8b55ff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b2\" cx=\"88%\" cy=\"28%\" r=\"60%\"><stop offset=\"0\" stop-color=\"#3f7bff\"/><stop offset=\"1\" stop-color=\"#3f7bff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b3\" cx=\"62%\" cy=\"98%\" r=\"68%\"><stop offset=\"0\" stop-color=\"#f0507f\"/><stop offset=\"1\" stop-color=\"#f0507f\" stop-opacity=\"0\"/></radialGradient> <linearGradient id=\"gs\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".30\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".06\"/></linearGradient> <linearGradient id=\"ge\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".85\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".35\"/></linearGradient> <linearGradient id=\"wh\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#ffffff\"/><stop offset=\"1\" stop-color=\"#ddd0ff\"/></linearGradient><filter id=\"sh\" x=\"-30%\" y=\"-30%\" width=\"160%\" height=\"170%\"><feDropShadow dx=\"0\" dy=\"22\" stdDeviation=\"26\" flood-color=\"#1a0a55\" flood-opacity=\".45\"/></filter> <filter id=\"sh2\" x=\"-20%\" y=\"-30%\" width=\"140%\" height=\"180%\"><feDropShadow dx=\"0\" dy=\"12\" stdDeviation=\"12\" flood-color=\"#2a1180\" flood-opacity=\".55\"/></filter></defs> <rect width=\"1024\" height=\"1024\" fill=\"#140f3a\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b1)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b2)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b3)\" opacity=\".9\"/> <g filter=\"url(#sh)\"><circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"url(#gs)\"/></g> <circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"none\" stroke=\"url(#ge)\" stroke-width=\"5\"/> <g filter=\"url(#sh2)\"><rect x=\"362.0\" y=\"498.0\" width=\"300.0\" height=\"28.0\" rx=\"14.0\" fill=\"url(#wh)\"/><rect x=\"343.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"643.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"295.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/><rect x=\"695.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/></g></svg>";
 let swState = 0;
@@ -150,10 +150,11 @@ const onUpdateFound = async () => {
   updateReady = 1;
   showUpdatePopup();
 };
-/** Tras actualizar, enseña una vez las novedades de la versión (salvo que ya se vieran en el aviso). Solo en la app instalada. */
-const showWhatsNew = () => {
-  if (!FFDEP || W)
-    return;
+/** ¿Hay que enseñar las novedades de esta versión? Anota la versión abierta; se llama una vez al arrancar (core/boot).
+   Solo en la app instalada y solo si se viene de otra versión cuyas novedades no se vieron ya en el aviso previo. */
+const whatsNewDue = () => {
+  if (!FFDEP)
+    return false;
   let prev = null;
   let seen = null;
   try {
@@ -163,11 +164,22 @@ const showWhatsNew = () => {
   }
   catch (e) {
     logError('versión anterior', e);
-    return;
+    return false;
   }
   /* hasta la 1.19.0 no se guardaba la versión: si ya había datos, es una actualización */
   const updated = prev ? prev != APPV : (S.logs.length > 0 || (S.cp || []).length > 0 || (S.cr || []).length > 0);
-  if (!updated || seen == APPV || !RELEASE.sections.length || document.getElementById('upd'))
+  return updated && seen != APPV && RELEASE.sections.length > 0;
+};
+/** 1 si las novedades esperan a que termine el entreno en curso. */
+let whatsNewPending = 0;
+/** Enseña una vez las novedades de esta versión (botón Entendido). */
+const showWhatsNew = () => {
+  if (W) {
+    whatsNewPending = 1;
+    return;
+  }
+  whatsNewPending = 0;
+  if (document.getElementById('upd'))
     return;
   showPopup(RELEASE, 'news');
   try {
@@ -257,6 +269,8 @@ catch (e) {
 }
 /** Lo llama R(): durante un entreno se oculta el aviso; al terminar, vuelve. */
 const updatePopupSync = () => {
+  if (whatsNewPending && !W)
+    showWhatsNew();
   if (!updateReady)
     return;
   if (W) {

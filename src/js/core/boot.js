@@ -291,7 +291,8 @@ window.__ffok = 1;
 if (stateRecovered)
   setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
 setTimeout(() => takeSnapshot().catch(e => logError('copia automática', e)), 4000);
-setTimeout(showWhatsNew, 900);
+if (whatsNewDue())
+  setTimeout(showWhatsNew, 900);
 /* pide al navegador que no borre los datos de la app instalada cuando falte espacio (sin efecto si no lo admite) */
 if (isStandalone() && navigator.storage && navigator.storage.persist)
   navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(e => logError('almacenamiento persistente', e));
