@@ -25,20 +25,20 @@ export function foodList(q) {
   const ws = k.split(/\s+/).filter(Boolean);
   const L = allFoods().map((f, i) => ({ f, i, n: foldText(f.n) })).filter(o => !ws.length || ws.every(w => o.n.includes(w)));
   L.sort((a, b) => (ws.length && b.n.startsWith(ws[0]) ? 1 : 0) - (ws.length && a.n.startsWith(ws[0]) ? 1 : 0));
-  e.innerHTML = L.slice(0, ws.length ? 60 : 30).map(o => html`<div class="it" style="grid-template-columns:1fr auto" data-a="pk" data-i="${o.i}"><span>${o.f.n}</span><small>${o.f.b[0]} kcal/100 g</small></div>`).join('') + (ws.length && !L.length ? '<p class="mu" style="font-size:13px;margin:10px 2px">No está en tu lista. Prueba «Buscar en internet» o créalo en «Nuevo».</p>' : '');
+  e.innerHTML = L.slice(0, ws.length ? 60 : 30).map(o => html`<div class="it" style="grid-template-columns:1fr auto" data-a="pk" data-i="${o.i}" role="button" tabindex="0"><span>${o.f.n}</span><small>${o.f.b[0]} kcal/100 g</small></div>`).join('') + (ws.length && !L.length ? '<p class="mu" style="font-size:13px;margin:10px 2px">No está en tu lista. Prueba «Buscar en internet» o créalo en «Nuevo».</p>' : '');
 }
 function addSheetBase() {
   const a = addState;
   let h = html`<div style="margin-bottom:8px">${['Alimentos', 'Librería', 'Nuevo'].map((x, i) => html`<button class="chip ${a.tab == i ? 'on' : ''}" data-a="at" data-i="${i}">${raw(x)}</button>`)}</div>`;
   if (a.pick) {
     const f = a.pick;
-    return html`${raw(h)}<h3>${f.n}</h3><label>Gramos</label><input id="gr" type="number" value="100" data-u="gr"><p id="pv" class="mu"></p><button class="pr" data-a="fa" style="width:100%">Añadir</button>`;
+    return html`${raw(h)}<h3>${f.n}</h3><label for="gr">Gramos</label><input id="gr" type="number" value="100" data-u="gr"><p id="pv" class="mu"></p><button class="pr" data-a="fa" style="width:100%">Añadir</button>`;
   }
   if (a.tab == 0)
-    return h + habitsCard(a.m) + '<input placeholder="Buscar alimento" data-u="fs"><div id="rs"></div>';
+    return h + habitsCard(a.m) + '<input placeholder="Buscar alimento" aria-label="Buscar alimento" data-u="fs"><div id="rs"></div>';
   if (a.tab == 1)
-    return h + (S.lib.length ? S.lib.map((p, i) => html`<div class="it" style="grid-template-columns:1fr auto auto"><span>${p.n}<br><small>${roundInt(sumMacros(p.it.map(itemMacros))[0])} kcal</small></span><button data-a="la" data-i="${raw(i)}">Añadir</button><button data-a="lx" data-i="${raw(i)}" style="padding:6px">✕</button></div>`).join('') : '<p class="mu">Aún no hay platos. Pulsa ★ Guardar plato en una comida.</p>');
-  return html`${raw(h)}<label>Nombre</label><input id="n0">${[['Kcal', 'k'], ['Hidratos g', 'c'], ['Proteínas g', 'p'], ['Grasas g', 'f'], ['Fibra g', 'fi'], ['Sal g', 's']].map(x => html`<label>${raw(x[0])} (por 100 g)</label><input type="number" id="n_${raw(x[1])}">`)}<button class="pr" data-a="nf" style="width:100%;margin-top:10px">Guardar alimento</button>`;
+    return h + (S.lib.length ? S.lib.map((p, i) => html`<div class="it" style="grid-template-columns:1fr auto auto"><span>${p.n}<br><small>${roundInt(sumMacros(p.it.map(itemMacros))[0])} kcal</small></span><button data-a="la" data-i="${i}">Añadir</button><button data-a="lx" data-i="${i}" aria-label="${'Borrar ' + p.n}" style="padding:6px">✕</button></div>`).join('') : '<p class="mu">Aún no hay platos. Pulsa ★ Guardar plato en una comida.</p>');
+  return html`${raw(h)}<label for="n0">Nombre</label><input id="n0">${[['Kcal', 'k'], ['Hidratos g', 'c'], ['Proteínas g', 'p'], ['Grasas g', 'f'], ['Fibra g', 'fi'], ['Sal g', 's']].map(x => html`<label for="n_${x[1]}">${raw(x[0])} (por 100 g)</label><input type="number" id="n_${x[1]}">`)}<button class="pr" data-a="nf" style="width:100%;margin-top:10px">Guardar alimento</button>`;
 }
 A.la = i => {
   const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));

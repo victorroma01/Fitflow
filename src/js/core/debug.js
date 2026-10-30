@@ -19,7 +19,7 @@ import { R } from './render.js';
 import { exAll, exSearchText } from '../library/model.js';
 import { libBody, libState } from '../library/browse.js';
 import { clone } from '../programs/create.js';
-import { buildBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
+import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { updatesOn } from '../system/updates.js';
 import { showSummary } from '../extras/summary.js';
@@ -48,6 +48,7 @@ const DEBUG_NAMES = {
   logError: [() => logError],
   nutriDayOffset: [() => nutriDayOffset],
   partsFailed: [() => partsFailed],
+  parseBackup: [() => parseBackup],
   pendingRestore: [() => pendingRestore, setPendingRestore],
   R: [() => R],
   restoreBackup: [() => restoreBackup],

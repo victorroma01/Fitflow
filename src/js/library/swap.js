@@ -115,7 +115,7 @@ A.zsw = i => {
   swapState = { i, q: '', eq: [], all: 0 };
   filterOpen.sw = 0;
   const e = S.plan[S.sel].ex[i];
-  sheet(html`<h3>Swap</h3><p class="mu" style="margin:-4px 0 8px">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p><div id="swh">${raw(swapScope())}</div><input placeholder="Buscar alternativa" data-u="sws" style="margin-top:8px"><div id="swb">${raw(swapBody())}</div>`);
+  sheet(html`<h3>Swap</h3><p class="mu" style="margin:-4px 0 8px">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p><div id="swh">${raw(swapScope())}</div><input placeholder="Buscar alternativa" aria-label="Buscar alternativa" data-u="sws" style="margin-top:8px"><div id="swb">${raw(swapBody())}</div>`);
 };
 A.swsc = i => {
   swapState.all = i;

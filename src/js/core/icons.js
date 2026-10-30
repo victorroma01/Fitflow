@@ -5,8 +5,8 @@
 import { groupAnatomy } from '../extras/anatomy.js';
 import { html, raw } from './html.js';
 const IC = { workout: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>', nutri: '<path d="M7 3v8M5 3v5a2 2 0 004 0V3M7 11v10M17 3c-2 2-3 5-3 8h3v10"/>', dash: '<path d="M5 20V10M12 20V4M19 20v-7"/>', user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>', lib: '<path d="M4 5h16v4H4zM4 11h16v4H4zM4 17h16v3H4z"/>', prog: '<path d="M8 6h12M8 12h12M8 18h12M4 6h1M4 12h1M4 18h1"/>', cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>', log: '<path d="M6 3h12v18H6zM9 8h6M9 12h6M9 16h4"/>', reset: '<path d="M4 12a8 8 0 108-8M4 4v5h5"/>', camera: '<path d="M4 8h4l2-3h4l2 3h4v11H4z"/><circle cx="12" cy="13" r="3.5"/>', CrossFit: '<circle cx="12" cy="14" r="6"/><path d="M8 9a4 4 0 018 0"/>', Hyrox: '<path d="M3 17h18M6 17V9h8v8M14 12h5"/>', Funcional: '<path d="M12 3v18M3 12h18M7 7l10 10M17 7L7 17"/>', Cardio: '<path d="M3 12h4l2-5 4 10 2-5h6"/>', Propio: '<path d="M12 5v14M5 12h14"/>' };
-export const icon = (n, s) => html`<svg viewBox="0 0 24 24" width="${raw(s)}" height="${raw(s)}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${raw(IC[n])}</svg>`;
-export const groupIcon = (g, s) => IC[g] ? html`<span style="display:grid;place-items:center;height:${raw(s)}px">${icon(g, s * .6)}</span>` : groupAnatomy(g, s);
+export const icon = (n, s) => html`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${raw(IC[n])}</svg>`;
+export const groupIcon = (g, s) => IC[g] ? html`<span style="display:grid;place-items:center;height:${s}px">${icon(g, s * .6)}</span>` : groupAnatomy(g, s);
 IC.prv = '<path d="M6 5v14M19 5L9 12l10 7z"/>';
 IC.nxt = '<path d="M18 5v14M5 5l10 7-10 7z"/>';
 IC.pau = '<path d="M8 5v14M16 5v14" stroke-width="3"/>';

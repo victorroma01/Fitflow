@@ -1,6 +1,8 @@
 # Pruebas y publicación de StrataFit.
 #  · En cada solicitud de fusión y en cada cambio en main: compilar y probar en Chrome (Chromium) y en Safari (WebKit).
 #  · En las solicitudes de fusión, además: comparar con la versión anterior (informativo, salvo con la etiqueta «refactor»).
+#  · Siempre: decir desde dónde publica GitHub Pages y, si publica desde la rama, comprobar que la copia de la raíz es la app
+#    compilada de este código (tools/pages.py).
 #  · En main, si todo pasa: etiqueta vX.Y.Z con sus notas (de CHANGELOG.md) la primera vez que aparece una versión y,
 #    si GitHub Pages publica desde GitHub Actions (Settings → Pages → Source), publica la app.
 name: Pruebas
@@ -15,6 +17,9 @@ jobs:
     name: Compilar y probar (Chrome)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      pages: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,6 +35,13 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Formato, compilación, reglas y pruebas
         run: bash tests/run.sh
+      # con «Deploy from a branch» lo publicado es la copia de la raíz: tiene que ser la app que sale de este código
+      - name: Copia publicada (GitHub Pages)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          modo=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type 2>/dev/null || echo desconocido)
+          python3 tools/pages.py comprobar "$modo"
 
   safari:
     name: Probar en Safari (WebKit)

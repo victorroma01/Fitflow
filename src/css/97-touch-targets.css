@@ -1,0 +1,32 @@
+/* ═══ css/97-touch-targets ═══ Zona táctil de al menos 44 × 44 px en el entreno en curso (el mínimo que recomienda Apple)
+   Lo que se ve pequeño conserva su aspecto: un ::after invisible amplía la zona que responde al dedo hasta 44 px, centrada
+   (inset negativo solo si el control mide menos). tests/a11y.py comprueba que ningún vecino se la quite. */
+.xs .chip,.xs .g2 button,.xs .fdb,.rr button,.rr small[data-a],.wsn,.wsr {
+  position:relative;
+}
+.xs .chip::after,.xs .g2 button::after,.xs .fdb::after,.rr button::after,.rr small[data-a]::after,.wsr::after {
+  content:"";
+  position:absolute;
+  inset:min(0px,calc(50% - 22px));
+}
+/* la barra del ejercicio actual va pegada al final de la cabecera fija: crece hacia arriba, para no tapar lo de debajo */
+.wsn::after {
+  content:"";
+  position:absolute;
+  inset:-9px 0 -6px;
+}
+/* «Saltar» el descanso: hacia arriba (sobre el contador) más que hacia abajo, donde empiezan los botones de RPE */
+.rr small[data-a]::after {
+  inset:-20px -6px -9px;
+}
+/* los números de RPE, un poco más anchos para que sus zonas de 44 px no se pisen; y más aire entre filas de chips */
+.rpe .chip {
+  min-width:38px;
+}
+.rpe,.wup {
+  row-gap:14px;
+}
+/* un select no admite ::after: el de descanso crece de verdad, igual de alto que el de tempo */
+.xs select {
+  min-height:44px;
+}

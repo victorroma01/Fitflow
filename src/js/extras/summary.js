@@ -54,7 +54,7 @@ function summaryData() {
   }
   return o;
 }
-const deltaChip = (txt, cl) => html`<span class="f2dc ${raw(cl || '')}">${raw(txt)}</span>`;
+const deltaChip = (txt, cl) => html`<span class="f2dc ${cl || ''}">${raw(txt)}</span>`;
 export function showSummary() {
   try {
     const o = summaryData();

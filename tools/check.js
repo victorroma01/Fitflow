@@ -279,6 +279,29 @@ const usedFrom = Object.fromEntries(mods.map(m => [m, new Set()]));
 })(sf);
 for (const m of mods) for (const [n, from] of imported[m]) if (!usedFrom[m].has(n)) err(m + ': importa «' + n + '» de ' + from + ' y no lo usa');
 
+// 10. botones sin nombre: un <button> cuyo contenido no tiene ni una letra ni un número (☰, ‹, ✕, solo un icono…) necesita
+//     aria-label (o title): si no, VoiceOver lo anuncia como «botón» sin decir para qué sirve. Se mira el HTML de cada
+//     plantilla y de cada texto; lo interpolado cuenta como texto (puede serlo), salvo icon(…), que pinta un SVG sin nombre.
+const flatHtml = n => {
+  if (ts.isNoSubstitutionTemplateLiteral(n) || ts.isStringLiteral(n)) return n.text;
+  let t = n.head.text;
+  for (const s of n.templateSpans) {
+    const e = s.expression;
+    t += (ts.isCallExpression(e) && ts.isIdentifier(e.expression) && e.expression.text === 'icon' ? '' : 'X') + s.literal.text;
+  }
+  return t;
+};
+(function w(n) {
+  const tagged = ts.isTaggedTemplateExpression(n) && ts.isIdentifier(n.tag) && n.tag.text === 'html';
+  const lit = (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n) || ts.isTemplateExpression(n)) && !ts.isTaggedTemplateExpression(n.parent);
+  const t = tagged ? flatHtml(n.template) : lit ? flatHtml(n) : '';
+  const re = /<button\b([^>]*)>([\s\S]*?)<\/button>/g; let m;
+  while (t.includes('<button') && (m = re.exec(t)))
+    if (!/\b(aria-label|aria-labelledby|title)=/.test(m[1]) && !/[\p{L}\p{N}]/u.test(m[2].replace(/<[^>]*>/g, '')))
+      err('botón sin nombre (añade aria-label): ' + m[0].replace(/\s+/g, ' ').slice(0, 90) + ' @ ' + where(n.getStart(sf)));
+  ts.forEachChild(n, w);
+})(sf);
+
 // ---- resultado
 warns.forEach(w => console.log('aviso:', w));
 errors.forEach(e => console.log('ERROR:', e));

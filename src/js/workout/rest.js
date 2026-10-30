@@ -30,7 +30,7 @@ function restByName(n) {
 export const restOf = e => e.r || restDefault(e.n);
 export const restSelect = e => {
   const r = restOf(e);
-  return html`<select data-c="rx" data-i="${raw(S.plan[S.sel].ex.indexOf(e))}" style="width:auto;padding:5px 10px;font-size:13px">${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))} por serie</option>`)}</select>`;
+  return html`<select data-c="rx" data-i="${S.plan[S.sel].ex.indexOf(e)}" aria-label="${'Descanso, ' + e.n}" style="width:auto;padding:5px 10px;font-size:13px">${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))} por serie</option>`)}</select>`;
 };
 const HEAVY_TYPES = new Set(['Press plano', 'Press inclinado', 'Press declinado', 'Press vertical', 'Dominadas', 'Remo horizontal', 'Cadena posterior', 'Sentadilla', 'Prensa y hack', 'Bisagra de cadera', 'Empuje de cadera', 'Halterofilia']);
 export function restDefault(n) {

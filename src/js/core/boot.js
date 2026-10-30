@@ -18,7 +18,7 @@ import { isLevel } from '../programs/levels.js';
 import { applyAccent } from '../profile/appearance.js';
 import { beep, buzz } from '../profile/feedback.js';
 import { isStandalone } from '../system/files.js';
-import { plural } from '../system/backup.js';
+import { cleanProfile, plural } from '../system/backup.js';
 import { takeSnapshot } from '../system/snapshots.js';
 import { showWhatsNew, whatsNewDue } from '../system/updates.js';
 import { loadPhotos } from '../extras/measures.js';
@@ -56,6 +56,8 @@ import { html, raw } from './html.js';
       S.meals = {};
     if (!S.pf)
       S.pf = {};
+    /* foto de perfil solo si es una imagen válida: unos datos manipulados no pueden meter código en Perfil */
+    cleanProfile(S.pf);
   }
   catch (e) {
     S.plan = parseProgram(0);

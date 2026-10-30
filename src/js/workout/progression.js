@@ -100,7 +100,7 @@ const suggestionBox = (e, i, P) => {
   else
     t = 'mantén ' + wv + ' ' + u + ' y busca 1 rep más hasta ' + P.hi;
   const dif = W.x[i].some(s => !s.ok && s.t != 1 && Math.abs((+s.w || 0) - P.nw) > 1e-6);
-  return html`<div class="sgb"><span><b>Sugerido</b> · ${raw(t)}</span>${dif ? html`<button class="chip" data-a="sgap" data-i="${raw(i)}">Aplicar</button>` : ''}</div>`;
+  return html`<div class="sgb"><span><b>Sugerido</b> · ${raw(t)}</span>${dif ? html`<button class="chip" data-a="sgap" data-i="${i}">Aplicar</button>` : ''}</div>`;
 };
 A.sgap = i => {
   const e = S.plan[S.sel].ex[i];

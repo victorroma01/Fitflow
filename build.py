@@ -315,7 +315,10 @@ HEAD_TAGS = '''<link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="StrataFit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="theme-color" content="#0b0b0d">'''
+<meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f3f3f7" media="(prefers-color-scheme: light)">'''
+# theme-color: el color de la barra del sistema sigue al tema del móvil (el primero cuyo media encaja); si el tema se elige
+# a mano en Ajustes, core/state applyTheme() pone delante otra etiqueta sin media con el color de ese tema
 
 
 def page(tpl, css, js):

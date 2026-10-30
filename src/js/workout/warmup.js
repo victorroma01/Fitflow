@@ -8,7 +8,7 @@ import { R } from '../core/render.js';
 import { exAll } from '../library/model.js';
 import { COMPOUND_RE } from './rest.js';
 import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
-import { html, raw } from '../core/html.js';
+import { html } from '../core/html.js';
 const isWarmupLift = e => {
   const x = exAll().find(y => y.n == e.n);
   return x && ['Barra', 'Smith'].includes(x.q) && COMPOUND_RE.test(e.n) && !/Hip thrust/i.test(e.n);
@@ -30,7 +30,7 @@ export const warmupHtml = (e, i) => {
   st.push([rd(wl * .5), 8], [rd(wl * .7), 5], [rd(wl * .85), 2]);
   st = st.filter((x, k) => !k || x[0] != st[k - 1][0]);
   W.wu = W.wu || {};
-  return html`<div class="wup"><span>Calentamiento</span>${st.map((x, k) => html`<button class="chip${W.wu[i + '_' + k] ? ' on' : ''}" data-a="wuk" data-i="${raw(i)}" data-k="${k}">${x[1]} × ${x[0]} ${weightUnit()}</button>`)}</div>`;
+  return html`<div class="wup"><span>Calentamiento</span>${st.map((x, k) => html`<button class="chip${W.wu[i + '_' + k] ? ' on' : ''}" data-a="wuk" data-i="${i}" data-k="${k}">${x[1]} × ${x[0]} ${weightUnit()}</button>`)}</div>`;
 };
 A.wuk = (i, b) => {
   W.wu = W.wu || {};

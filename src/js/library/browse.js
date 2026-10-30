@@ -22,7 +22,7 @@ export function libBody() {
   const g = libState.g;
   const eq = libState.eq || [];
   if (!q && !g)
-    return html`<p class="mu" style="margin:10px 0 4px">${al.length} ejercicios · toca un grupo muscular</p><div class="gg">${GROUPS.map(x => [x, al.filter(o => groupOf(o.e) == x).length]).filter(a => a[1]).map(a => html`<button data-a="lb" data-v="${raw(a[0])}">${groupIcon(a[0], 88)}<b>${raw(groupLabel(a[0]))}</b><small>${raw(a[1])} ejercicios</small></button>`)}</div>`;
+    return html`<p class="mu" style="margin:10px 0 4px">${al.length} ejercicios · toca un grupo muscular</p><div class="gg">${GROUPS.map(x => [x, al.filter(o => groupOf(o.e) == x).length]).filter(a => a[1]).map(a => html`<button data-a="lb" data-v="${a[0]}">${groupIcon(a[0], 88)}<b>${raw(groupLabel(a[0]))}</b><small>${raw(a[1])} ejercicios</small></button>`)}</div>`;
   const base = al.filter(o => q ? exSearchText(o.e).includes(q) : groupOf(o.e) == g);
   const l = base.filter(o => equipMatch(eq, o.e)).sort((a, b) => q ? exCompare(a.e, b.e) : exOrder(a.e) - exOrder(b.e)).slice(0, q ? 80 : 500);
   let h = '';
@@ -37,7 +37,7 @@ export function libBody() {
   });
   return (g && !q ? html`<div class="row" style="margin:8px 0 0"><button data-a="lb" data-v="">‹ Grupos</button><b>${groupLabel(g)} <span class="mu" style="font-weight:400">· ${base.length}</span></b>${groupIcon(g, 60)}</div>` : '') + equipDropdown('lb', eq, equipIn(base.map(o => o.e)), base.map(o => o.e)) + (h || '<p class="mu">Sin resultados.</p>');
 }
-const libPage = () => html`${pgHead('Librería de ejercicios')}<input placeholder="Buscar por nombre, músculo o equipo" data-u="ls" value="${libState.q || ''}"><div id="lr">${raw(libBody())}</div>`;
+const libPage = () => html`${pgHead('Librería de ejercicios')}<input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="ls" value="${libState.q || ''}"><div id="lr">${raw(libBody())}</div>`;
 A.lib = () => {
   libState = { g: '', q: '', eq: [] };
   fullPage(libPage());
@@ -69,7 +69,7 @@ const exDetailHtml = (i, nav, w) => {
 A.exd = i => {
   if (!exAll()[i])
     return;
-  sheet(exDetailHtml(i, html`<div class="row"><button data-a="lib2" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button><button class="pr" data-a="lad" data-i="${raw(i)}" style="padding:9px 14px">+ Al día</button></div>`));
+  sheet(exDetailHtml(i, html`<div class="row"><button data-a="lib2" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button><button class="pr" data-a="lad" data-i="${i}" style="padding:9px 14px">+ Al día</button></div>`));
   sheetToTop();
 };
 A.exv = (i, b) => {

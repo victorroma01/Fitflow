@@ -74,15 +74,15 @@ const progressChart = (pts, m, sel, inter) => {
   if (pts.length > 1)
     s += html`<text x="${W0 - pr}" y="${H0 - 6}" text-anchor="end" class="pga">${raw(dateShort(pts[pts.length - 1].d))}</text>`;
   if (pts.length > 1)
-    s += html`<path d="${raw(pts.map((p, i) => (i ? 'L' : 'M') + xx(i).toFixed(1) + ' ' + yy(toDisplayWeight(p.v)).toFixed(1)).join(' '))}" fill="none" stroke="var(--a2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    s += html`<path d="${pts.map((p, i) => (i ? 'L' : 'M') + xx(i).toFixed(1) + ' ' + yy(toDisplayWeight(p.v)).toFixed(1)).join(' ')}" fill="none" stroke="var(--a2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   pts.forEach((p, i) => {
     const cx = xx(i).toFixed(1);
     const cy = yy(toDisplayWeight(p.v)).toFixed(1);
     if (i == sel)
-      s += html`<circle cx="${raw(cx)}" cy="${raw(cy)}" r="9" fill="var(--a2)" opacity=".18"/>`;
-    s += html`<circle cx="${raw(cx)}" cy="${raw(cy)}" r="${i == sel ? 5 : 3.6}" fill="${p.pr ? 'var(--a2)' : 'var(--cd)'}" stroke="${p.pr ? 'var(--cd)' : 'var(--a2)'}" stroke-width="2"/>`;
+      s += html`<circle cx="${cx}" cy="${cy}" r="9" fill="var(--a2)" opacity=".18"/>`;
+    s += html`<circle cx="${cx}" cy="${cy}" r="${i == sel ? 5 : 3.6}" fill="${p.pr ? 'var(--a2)' : 'var(--cd)'}" stroke="${p.pr ? 'var(--cd)' : 'var(--a2)'}" stroke-width="2"/>`;
     if (inter)
-      s += html`<circle cx="${raw(cx)}" cy="${raw(cy)}" r="15" fill="transparent" data-a="pgp" data-i="${raw(i)}" style="cursor:pointer"/>`;
+      s += html`<circle cx="${cx}" cy="${cy}" r="15" fill="transparent" data-a="pgp" data-i="${i}" style="cursor:pointer"/>`;
   });
   return html`${raw(s)}</svg>`;
 };

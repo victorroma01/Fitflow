@@ -134,7 +134,7 @@ A.hay = () => {
 /* — manejadores de esta función (registros A / C / U) — */
 A.sd = (i, b) => {
   setAddState({ m: i });
-  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" value="${b.dataset.n}"><button class="pr" data-a="sdo" style="width:100%;margin-top:10px">Guardar</button>`);
+  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" aria-label="Nombre del plato" value="${b.dataset.n}"><button class="pr" data-a="sdo" style="width:100%;margin-top:10px">Guardar</button>`);
 };
 A.sdo = () => {
   const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));

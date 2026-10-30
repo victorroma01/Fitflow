@@ -24,6 +24,6 @@ export const exSearchText = e => {
 const exSubtitle = e => X((e.q || 'Personalizado') + (e.t && e.t != 'Otros' ? ' · ' + e.t : ''));
 const exMusclesHtml = e => (exMuscles(e, 'p').length ? html`<small style="color:var(--a1)">Principal: ${exMuscles(e, 'p').join(', ')}</small>` : '') + (exMuscles(e, 's').length ? html`<br><small class="mu">Secundarios: ${exMuscles(e, 's').join(', ')}</small>` : '');
 export const exCellHtml = e => html`<i class="exth">${exAnatomy(e.n, 48)}${raw(exBadge(e.n))}</i><span class="ext"><b>${e.n}</b><br><small>${raw(exSubtitle(e))}</small><br>${raw(exMusclesHtml(e))}</span>`;
-export const exRowHtml = (o, btn, act) => html`<div class="it exr"><span class="exc" data-a="${raw(act || 'exd')}" data-i="${raw(o.i)}">${exCellHtml(o.e)}</span>${raw(btn)}</div>`;
+export const exRowHtml = (o, btn, act) => html`<div class="it exr"><span class="exc" data-a="${act || 'exd'}" data-i="${o.i}">${exCellHtml(o.e)}</span>${raw(btn)}</div>`;
 export const exCompare = (a, b) => GROUPS.indexOf(groupOf(a)) - GROUPS.indexOf(groupOf(b)) || exOrder(a) - exOrder(b);
 export const categoryOf = g => ['CrossFit', 'Hyrox', 'Funcional', 'Cardio'].includes(g) ? g : 'Culturismo';

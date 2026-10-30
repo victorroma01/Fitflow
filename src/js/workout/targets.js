@@ -1,6 +1,6 @@
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+7)  · acciones/registros: 1
+   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, unitName, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+8)  · acciones/registros: 1
 */
 import { fmtMinSec } from '../core/util.js';
 import { C } from '../core/registry.js';
@@ -51,6 +51,9 @@ export const targetText = e => {
   return (r[0] == r[1] ? r[0] : r[0] + '-' + r[1]) + (U ? ' ' + U : ' reps');
 };
 export const unitHead = e => unitOf(e) ? UNIT_HEADS[unitOf(e)] || 'Reps' : 'Reps';
+/* nombre completo de lo que se anota en cada serie, para los lectores de pantalla (la cabecera de la tabla va abreviada) */
+const UNIT_NAMES = { m: 'Metros', s: 'Segundos', min: 'Minutos', cal: 'Calorías', km: 'Kilómetros' };
+export const unitName = e => UNIT_NAMES[unitOf(e)] || 'Repeticiones';
 export const rirOf = e => COMPOUND_RE.test(e.n) ? '1-2' : /Elevaciones|Aperturas|Cruce|Pájaros|Face pull|Extensi|Curl|Patada|Gemelo|Encogim|Crunch/i.test(e.n) ? '0-1' : '1-2';
 export const tempoOf = e => {
   if (e.t)
@@ -140,7 +143,7 @@ export const rangeSelect = (e, i) => {
   if (unitOf(e))
     return '';
   const c = targetRange(e).join('-');
-  return html`<select data-c="rg" data-i="${raw(i)}" style="width:auto;padding:5px 10px;font-size:13px">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${raw(v)}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
+  return html`<select data-c="rg" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" style="width:auto;padding:5px 10px;font-size:13px">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
 };
 C.rg = (e, i) => {
   const x = S.plan[S.sel].ex[i];
