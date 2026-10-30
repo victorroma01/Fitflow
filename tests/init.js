@@ -3,3 +3,5 @@
  window.__beeps=0;if(window.OscillatorNode){const o=OscillatorNode.prototype.start;OscillatorNode.prototype.start=function(){window.__beeps++;try{return o.apply(this,arguments)}catch(e){}}}
  try{navigator.vibrate=function(){return true}}catch(e){}
 })();
+// y cada bloqueo de la CSP (build.py) queda en window.__csp: las pruebas comprueban que la app no choca con ella
+document.addEventListener('securitypolicyviolation',function(e){(window.__csp=window.__csp||[]).push(e.violatedDirective+' '+String(e.blockedURI).slice(0,80))});

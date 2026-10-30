@@ -9,7 +9,7 @@ import { logError } from '../core/errors.js';
 import { lockSaves, replaceSavedState } from '../core/persist.js';
 import { A, C } from '../core/registry.js';
 import { flushState, S, saveState } from '../core/state.js';
-import { confirmDialog, sheet } from '../core/ui.js';
+import { confirmDialog, pgHead, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
 import { downloadFile } from './files.js';
@@ -271,7 +271,9 @@ A.bkf = async () => {
 };
 A.zbk = () => {
   const p = preRestore();
-  sheet(html`<h3>Copia de seguridad</h3><p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto (sin fotos)</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
+  /* desde Ajustes es una página más, con «←» de vuelta; desde Perfil o un aviso, una hoja */
+  const fromSettings = !!$('#ajs');
+  sheet(html`${fromSettings ? pgHead('Copia de seguridad', 'zaj') : html`<h3>Copia de seguridad</h3>`}<p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto (sin fotos)</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
   fillSnapshots();
 };
 export const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;

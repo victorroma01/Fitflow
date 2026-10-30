@@ -1,4 +1,4 @@
-"""Prueba de accesibilidad: abre las 33 pantallas de tests/shots.py y comprueba que
+"""Prueba de accesibilidad: abre las 39 pantallas de tests/shots.py y comprueba que
   · cada botón tiene un nombre que se pueda leer (texto, aria-label o title; un símbolo suelto como ☰, ‹ o ✕ no vale),
   · cada campo (input, select, textarea) tiene una etiqueta asociada (aria-label, title, aria-labelledby o <label>),
   · lo que se toca sin ser un botón (un div con data-a) se anuncia como botón (role="button") y se puede enfocar,
@@ -97,6 +97,7 @@ def main(path, show):
                     pg.evaluate(SCR[k])
                     pg.clock.run_for(400)
                     r = pg.evaluate(SCAN + '(%d)' % (MIN if k in WORKOUT else 0))
+                    r['bloqueos de la CSP'] = pg.evaluate('window.__csp||[]')
                 except Exception as e:
                     print('  FALLA', k, 'no se pudo abrir:', str(e)[:100])
                     fails += 1

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Compara el comportamiento y la imagen de dos compilaciones de archivo único (para refactors: no debe cambiar nada).
 #   bash tests/compare.sh referencia.html nueva.html [semillas] [pasos]
-# Paseo aleatorio diferencial (DOM, datos guardados y sonidos paso a paso) y 33 pantallas × 6 configuraciones píxel a píxel.
+# Paseo aleatorio diferencial (DOM, datos guardados y sonidos paso a paso) y 39 pantallas × 6 configuraciones píxel a píxel.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 REF=$(realpath "$1"); NEW=$(realpath "$2"); SEEDS=${3:-0,1,2,3}; STEPS=${4:-150}

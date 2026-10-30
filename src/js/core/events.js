@@ -29,4 +29,9 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     t.click();
   }
+  /* Intro en un campo con data-enter (p. ej. el buscador de alimentos en internet) lanza esa acción, como su botón */
+  else if (e.key == 'Enter' && t.dataset && t.dataset.enter && A[t.dataset.enter]) {
+    e.preventDefault();
+    A[t.dataset.enter](0, t);
+  }
 });

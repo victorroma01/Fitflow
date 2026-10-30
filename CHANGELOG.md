@@ -9,6 +9,53 @@ aviso de versión nueva (por eso se escriben para el usuario, en frases cortas);
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.24.0] — 2026-10-30
+
+### Novedades
+- «Mi nutrición»: toca el icono de cuchillo y tenedor y verás tus kcal en un anillo con el reparto de macros, tu peso, tu objetivo, tu actividad y las comidas al día. Puedes ajustarlo a mano o recalcularlo con tus datos.
+- Medallas en Logros: cada logro tiene la suya, en bronce, plata, oro o platino.
+- Informar de un fallo, en Ajustes: eliges el tipo de fallo, lo explicas y lo envías.
+- 280 alimentos nuevos, 495 en total, ordenados por grupos.
+
+### Mejoras
+- Nutrición sabe sola si hoy es día de entreno o de descanso, según tu rutina.
+- Cada comida tiene botones más pequeños: «+», guardar plato, Buscar y Scan.
+- Un «?» junto a las plantillas explica para qué sirven.
+- Ajustes tiene su propia página, ordenada por secciones; en Perfil, tus datos van en «Datos» y cada apartado tiene su icono.
+- Más protección: la app solo ejecuta su propio código y solo se conecta a sí misma y a Open Food Facts.
+
+### Correcciones
+- Las kcal y los macros puestos a mano ya no se pierden al cambiar tu peso o tu actividad.
+- Un alimento o una comida con datos dañados ya no impide abrir Nutrición.
+- Un alimento habitual guardado con datos dañados ya no puede colar texto sin filtrar en la hoja «Añadir».
+- Corregidos los valores de las lentejas crudas y del surimi.
+
+### Interno
+- Tipo de día sin elegirlo a mano (`nutrition/templates`, `dayInfo`): el Día 1 de la rutina es el lunes; un día con entreno
+  registrado es de entreno, uno ya pasado sin entreno, de descanso, y hoy y los siguientes, lo que diga la rutina. Fuera `S.dt` y el
+  selector.
+- `nutrition/goals` («Mi nutrición» y «Ajustar a mano»). Los objetivos puestos a mano se marcan con `S.nu.man`: `applyDiet()` no los
+  pisa salvo que se le pida (`force`: «Recalcular con mis datos», cambiar el objetivo o el objetivo físico). `cleanGoals` deja `S.nu`
+  válido al arrancar.
+- Ayudas «?» genéricas (`core/ui`: `HELP`, `helpDot`, burbuja que se cierra con otro toque o al desplazar). `data-enter` lanza una
+  acción con Intro desde un campo.
+- `data/foods`: 13 grupos (`FOOD_GROUPS`) y 495 alimentos; la hoja «Añadir» los muestra todos por grupos y, sin resultados, ofrece
+  buscar en internet. «Buscar» y «Scan» abren desde cada comida la búsqueda en Open Food Facts y el escáner.
+- `profile/settings`: Ajustes como página con secciones y una página por fila; mientras está abierta, cada `R()` la repinta con
+  `core/morph`. Copia de seguridad y Diagnóstico vuelven a Ajustes con «←». Pie de Perfil con nombre y versión.
+- `system/report`: informe de fallo con tipo y texto, abierto como incidencia nueva en GitHub (sin publicar ningún correo) o
+  compartido; los datos técnicos, opcionales y visibles antes de enviar.
+- `extras/medals`: 27 medallas SVG (forma y color por familia, metal por nivel, dibujo y cifra por logro).
+- Más robustez con datos dañados o manipulados: comidas y alimentos propios mal formados se ignoran al pintar (`itemMacros`,
+  `mealItems`, `allFoods`), los datos de perfil solo admiten nombre, email y teléfono con un largo máximo, la foto de perfil
+  comprueba tipo y tamaño, y los gramos van de 0 a 5000.
+- CSP en una etiqueta `<meta>` (`build.py`, `csp_meta`): `script-src` con la huella sha256 de cada `<script>` en línea (y `'self'`
+  en el paquete), sin `'unsafe-inline'` ni `eval`; `connect-src` solo la propia web y Open Food Facts; imágenes propias, `data:` y
+  `blob:`. El `onerror="…"` del módulo de entrada pasa a un escuchador de `error` en fase de captura en `src/index.html`.
+- Pruebas: `tests/features.py` (nueva) y 6 pantallas más en `tests/shots.py` (39), que recorren también seguridad y accesibilidad.
+  `tests/init.js` apunta cada bloqueo de la CSP (`window.__csp`) y a11y, features y smoke lo comprueban; `tests/security.py`
+  prueba el escapado sin la CSP (`bypass_csp`, con un control de que lo detectaría) y después la CSP sola.
+
 ## [1.23.0] — 2026-10-30
 
 ### Mejoras

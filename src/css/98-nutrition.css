@@ -1,0 +1,328 @@
+/* ═══ css/98-nutrition ═══ Nutrición 1.24: tipo de día, icono de «Mi nutrición», botones de cada comida, ayudas «?», grupos de alimentos y página «Mi nutrición» */
+/* fila bajo la fecha: tipo de día (automático) e icono de cuchillo y tenedor */
+.ndy {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:10px 2px 0;
+}
+.ndt {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 11px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:650;
+  color:var(--tx);
+  background:color-mix(in srgb,var(--a2) 16%,transparent);
+}
+.ndt svg {
+  color:var(--a1);
+}
+.nmb {
+  position:relative;
+  width:42px;
+  height:42px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  flex:none;
+}
+html.gl .nmb,.nmb {
+  border-radius:50%;
+}
+.nmb::after {
+  content:"";
+  position:absolute;
+  inset:-2px;
+}
+/* botones de cada comida: «+», guardar plato, Buscar y Scan, en píldoras pequeñas */
+.mlb {
+  display:flex;
+  gap:8px;
+  margin-top:4px;
+}
+.mlp {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  height:40px;
+  padding:0 14px;
+  font-size:15px;
+  flex:1 1 auto;
+  min-width:0;
+  white-space:nowrap;
+}
+html.gl .mlp,.mlp {
+  border-radius:999px;
+}
+.mlp.mli {
+  flex:none;
+  width:44px;
+  padding:0;
+}
+@media (max-width:350px) {
+  .mlb {
+    gap:6px;
+  }
+  .mlp {
+    padding:0 9px;
+    gap:5px;
+    font-size:13.5px;
+  }
+  .mlp.mli {
+    width:38px;
+  }
+}
+/* «?» de ayuda: un círculo pequeño en la esquina del botón; la burbuja con la explicación */
+.hqw {
+  position:relative;
+  display:grid;
+}
+.hqw .hq {
+  position:absolute;
+  top:-7px;
+  right:-7px;
+  z-index:1;
+  width:19px;
+  height:19px;
+  padding:0;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:11.5px;
+  font-weight:800;
+  line-height:1;
+  color:var(--mu);
+  background:var(--cd);
+  border:1px solid var(--ln);
+  box-shadow:0 2px 6px #0004;
+}
+.hqw .hq::after {
+  content:"";
+  position:absolute;
+  inset:-6px;
+}
+#tip {
+  position:fixed;
+  z-index:60;
+  padding:10px 13px;
+  border-radius:13px;
+  font-size:13.5px;
+  line-height:1.4;
+  color:var(--bg);
+  background:var(--tx);
+  box-shadow:0 10px 30px #0006;
+  animation:fdi .15s ease;
+}
+#tip::before {
+  content:"";
+  position:absolute;
+  left:calc(var(--ax,50%) - 6px);
+  width:12px;
+  height:12px;
+  background:inherit;
+  transform:rotate(45deg);
+}
+#tip.dn::before {
+  top:-5px;
+}
+#tip.up::before {
+  bottom:-5px;
+}
+.tpw {
+  font-size:13px;
+  margin:10px 0 0;
+}
+/* grupos de alimentos en «Añadir» */
+.fgc {
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  margin:8px -2px 2px;
+  padding:2px 2px 6px;
+  scrollbar-width:none;
+}
+.fgc::-webkit-scrollbar {
+  display:none;
+}
+.fgc .chip {
+  flex:none;
+  margin:0;
+  white-space:nowrap;
+}
+.fgc .chip:disabled {
+  opacity:.4;
+}
+/* «Mi nutrición» */
+.mnh {
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+}
+.mnm {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:14px;
+  color:var(--mu);
+  white-space:nowrap;
+}
+.mnr {
+  display:grid;
+  grid-template-columns:150px 1fr;
+  gap:12px;
+  align-items:center;
+  margin:4px 0 20px;
+}
+.mnk {
+  position:relative;
+  width:150px;
+  height:150px;
+}
+.mnk svg {
+  display:block;
+}
+.mnc {
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-content:center;
+  text-align:center;
+}
+.mnc b {
+  font-size:30px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  line-height:1.1;
+}
+.mnc small {
+  color:var(--mu);
+  font-size:13px;
+}
+.mnx {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+}
+.mnq {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  padding:4px 2px;
+  min-width:0;
+}
+.mnq+.mnq {
+  border-left:1px solid var(--ln);
+}
+.mnq small:first-child {
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  font-size:12.5px;
+  font-weight:700;
+}
+.mnq b {
+  font-size:26px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  line-height:1.1;
+}
+.mnq small:last-child {
+  font-size:12px;
+  color:var(--mu);
+}
+@media (max-width:360px) {
+  .mnr {
+    grid-template-columns:1fr;
+    justify-items:center;
+  }
+  .mnx {
+    width:100%;
+  }
+}
+.mnl {
+  border-top:1px solid var(--ln);
+}
+.mnw {
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:58px;
+  margin:0;
+  border-bottom:1px solid var(--ln);
+  font-size:16px;
+  color:var(--mu);
+}
+.mnv {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--tx);
+  min-width:0;
+}
+.mnv b {
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.mnv svg {
+  color:var(--mu);
+  flex:none;
+}
+.mnv input {
+  width:78px;
+  padding:6px 2px;
+  border:0;
+  border-bottom:1px solid var(--ln);
+  border-radius:0;
+  background:transparent;
+  color:var(--tx);
+  font-size:16px;
+  font-weight:700;
+  text-align:right;
+}
+html.gl .mnv input {
+  border-radius:0;
+  background:transparent;
+  border-color:transparent transparent var(--ln);
+}
+.mnw select {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:0;
+  cursor:pointer;
+  font-size:16px;
+}
+.mnd {
+  font-style:normal;
+  font-size:13px;
+  font-weight:650;
+  padding:4px 8px;
+  border-radius:8px;
+  background:color-mix(in srgb,var(--tx) 9%,transparent);
+  white-space:nowrap;
+}
+.mnp {
+  font-size:13px;
+  margin:12px 2px 0;
+}
+.mnb {
+  display:grid;
+  gap:10px;
+}
+.mnb button {
+  width:100%;
+  padding:15px;
+  border-radius:16px;
+  font-size:16px;
+}

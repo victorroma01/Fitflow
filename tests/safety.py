@@ -65,7 +65,9 @@ def main(path):
             ev("clearErrorLog();logError('prueba',new Error('fallo de prueba'))")
             e = ev('errorLog()')
             check('logError guarda lugar, mensaje y versión', len(e) == 1 and e[0]['w'] == 'prueba' and 'fallo de prueba' in e[0]['m'] and e[0]['v'] == ev('APPV'), str(e))
-            ev("const s=document.createElement('script');s.textContent=\"throw new Error('boom global')\";document.body.appendChild(s);s.remove()")
+            # un error que nadie captura (sin <script> añadido: la CSP no lo dejaría ejecutar)
+            ev("queueMicrotask(()=>{throw new Error('boom global')})")
+            pg.wait_for_timeout(50)
             check('captura errores no controlados', any('boom global' in x['m'] for x in ev('errorLog()')))
             ev("(()=>{Promise.reject(new Error('promesa rota'));return 1})()")
             pg.clock.run_for(50)
@@ -74,10 +76,11 @@ def main(path):
             ev("for(let i=0;i<40;i++)logError('lote',new Error('e'+i))")
             check('guarda como mucho 30 errores', len(ev('errorLog()')) == 30)
 
-            # Perfil → Diagnóstico
-            ev('S.tab=3;R();document.querySelectorAll("details").forEach(d=>d.open=true)')
-            check('Perfil muestra el botón de diagnóstico con el número de errores', ev("/Diagnóstico · 30 errores registrados/.test(document.body.innerText)"))
-            ev('A.diag()')
+            # Perfil → Ajustes → Diagnóstico
+            ev('S.tab=3;R();A.zaj()')
+            pg.clock.run_for(200)
+            check('Ajustes muestra el diagnóstico con el número de errores', ev("/Diagnóstico\\s*30 errores/.test(document.querySelector('#sh [data-a=diag]').innerText)"))
+            ev("document.querySelector('#sh [data-a=diag]').click()")
             pg.clock.run_for(200)
             t = ev("document.querySelector('#diagt').value")
             check('el informe incluye versión, navegador y errores', ('StrataFit ' + ev('APPV')) in t and 'Navegador:' in t and 'e39' in t, t[:200])

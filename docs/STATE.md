@@ -70,13 +70,12 @@ t?: tempo, b?: bloque (superseries), o?: nombre original si se cambió (swap), i
 
 | Clave | Tipo | Qué es |
 |---|---|---|
-| `nu` | `{ k, c, p, f, n, dt? }` | Objetivo: kcal, % hidratos/proteína/grasa, número de comidas, tipo de dieta. |
+| `nu` | `{ k, c, p, f, n, dt?, man? }` | Objetivo: kcal (800–8000), % hidratos/proteína/grasa, número de comidas (2–8), tipo de dieta; `man: 1` si las kcal y los macros están puestos a mano (no se recalculan solos). `core/boot` los deja válidos (`cleanGoals`). |
 | `bio` | `{ age, h, w, sex, act, goal }` | Datos biométricos (edad, altura cm, peso kg, sexo, actividad, objetivo) para el gasto energético. |
 | `meals` | `{ 'AAAA-MM-DD': { comida: [{ n, g, b: [kcal, hc, prot, grasa, fibra, sal por 100 g] }] } }` | Comidas del día. |
 | `cf` | `[{ n, b }]` | Alimentos creados por el usuario. |
 | `lib` | `[{ n, it }]` | Platos guardados (librería de comidas). |
-| `tp` | `{ 't' \| 'r': { comida: [...] } }` | Plantillas de día de entreno / descanso. |
-| `dt` | `{ fecha: 't' \| 'r' }` | Tipo de día elegido a mano. |
+| `tp` | `{ 't' \| 'r': { comida: [...] } }` | Plantillas de día de entreno / descanso. El tipo de cada día ya no se guarda: sale de la rutina (el Día 1 es el lunes) y de los entrenos registrados (`nutrition/templates`, `dayInfo`); hasta la 1.23 se elegía a mano en `dt`, que se borra al arrancar. |
 | `fq` | `{ alimento: { c, t, b } }` | Alimentos frecuentes (hábitos). |
 | `wt` | `{ fecha: ml }` | Agua. |
 | `bc` | `{ código: { n, b, t } }` | Caché de códigos de barras consultados. |
@@ -94,7 +93,7 @@ t?: tempo, b?: bloque (superseries), o?: nombre original si se cambió (swap), i
 | `snd` / `snt` / `vol` / `vib` | Sonido activado, tipo de pitido, volumen y vibración. |
 | `awk` | 0 para no mantener la pantalla encendida durante el entreno. |
 | `notif` | Notificaciones activadas. |
-| `pf` | Perfil: nombre, contacto y foto (`img`, en base64). |
+| `pf` | Perfil: `name`, `email` y `tel` (hasta 120 caracteres) y foto (`img`, JPEG, PNG o WebP en base64). |
 | `wdc` | Última configuración del temporizador WOD. |
 | `rg` | Rango de la gráfica de peso: 0 semanas, 1 meses, 2 años. |
 

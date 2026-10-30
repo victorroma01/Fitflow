@@ -45,18 +45,23 @@ const badData = () => {
     return null;
   }
 };
-const diagnosticsText = () => {
+export const diagnosticsText = () => {
   const errs = errorLog().slice().reverse();
   const bad = badData();
   return ['StrataFit ' + APPV + (FFDEP ? ' · app instalable' : ' · archivo único'), 'Fecha: ' + new Date().toISOString(), 'Navegador: ' + navigator.userAgent, 'Abierta como app: ' + (isStandalone() ? 'sí' : 'no'), offlineText(), 'Almacenamiento: ' + storageUse().filter(x => x[1]).map(x => x[0] + ' ' + Math.ceil(x[1] / 1024) + ' KB').join(', '), 'Guardado: ' + ({ parts: 'por partes', whole: 'entero' + (partsFailed ? ' (sin espacio para dividirlo)' : '') }[savedFormat] || 'sin datos'), 'Entrenos registrados: ' + S.logs.length, bad ? 'Datos dañados apartados el ' + new Date(bad.t).toISOString().slice(0, 10) + ' (' + Math.ceil(bad.raw.length / 1024) + ' KB)' : 'Sin datos dañados', 'Errores registrados: ' + errs.length].concat(errs.map(e => '· ' + new Date(e.t).toISOString().slice(0, 16).replace('T', ' ') + ' · ' + e.w + ' · ' + e.m + (e.v ? ' · v' + e.v : ''))).join('\n');
 };
+/* «←» de Diagnóstico: a Ajustes si se abrió desde allí */
+let diagBack = 'cl';
 const diagnosticsPage = () => {
   const n = errorLog().length;
   const bad = badData();
-  return html`${pgHead('Diagnóstico')}<p class="mu" style="margin:-6px 0 12px">Si algo falla, copia este informe y envíalo. Solo contiene datos técnicos y los últimos errores; ningún dato tuyo sale del móvil si no lo copias tú.</p><textarea id="diagt" aria-label="Informe de diagnóstico" rows="12" readonly style="font:12px/1.4 ui-monospace,Menlo,monospace">${diagnosticsText()}</textarea><div class="g2" style="margin-top:10px"><button class="pr" data-a="diagCopy">Copiar informe</button><button data-a="diagClear"${n ? '' : ' disabled'}>Borrar errores</button></div>${bad ? html`<div class="cd" style="margin-top:14px"><b>Datos que no se pudieron leer</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Al abrir la app el ${backupDate(bad.t, 1)} tus datos estaban dañados y se apartaron aquí para no perderlos. Descárgalos para intentar recuperarlos.</div><div class="g2"><button data-a="diagBad">Descargar</button><button data-a="diagBadDel">Eliminar</button></div></div>` : ''}<div style="height:20px"></div>`;
+  return html`${pgHead('Diagnóstico', diagBack)}<p class="mu" style="margin:-6px 0 12px">Si algo falla, copia este informe y envíalo. Solo contiene datos técnicos y los últimos errores; ningún dato tuyo sale del móvil si no lo copias tú.</p><textarea id="diagt" aria-label="Informe de diagnóstico" rows="12" readonly style="font:12px/1.4 ui-monospace,Menlo,monospace">${diagnosticsText()}</textarea><div class="g2" style="margin-top:10px"><button class="pr" data-a="diagCopy">Copiar informe</button><button data-a="diagClear"${n ? '' : ' disabled'}>Borrar errores</button></div>${bad ? html`<div class="cd" style="margin-top:14px"><b>Datos que no se pudieron leer</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Al abrir la app el ${backupDate(bad.t, 1)} tus datos estaban dañados y se apartaron aquí para no perderlos. Descárgalos para intentar recuperarlos.</div><div class="g2"><button data-a="diagBad">Descargar</button><button data-a="diagBadDel">Eliminar</button></div></div>` : ''}<div style="height:20px"></div>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.diag = () => fullPage(diagnosticsPage());
+A.diag = () => {
+  diagBack = $('#ajs') ? 'zaj' : 'cl';
+  fullPage(diagnosticsPage());
+};
 A.diagCopy = async () => {
   const ok = await copyText(diagnosticsText(), $('#diagt'));
   toast(ok ? 'Informe copiado' : 'Selecciona el texto y cópialo');

@@ -7,7 +7,7 @@ import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
 import { addState, S, saveState } from '../core/state.js';
 import { onSheetClose, sheet } from '../core/ui.js';
-import { addSheet, foodList } from '../nutrition/add.js';
+import { addSheet } from '../nutrition/add.js';
 import { html, raw } from '../core/html.js';
 var onlineFoods = [];
 let onlineTimer = 0;
@@ -90,7 +90,7 @@ async function searchOnline(q) {
   });
 }
 A.f2os = async () => {
-  const inp = document.querySelector('input[data-u="fs"]');
+  const inp = $('#f2q') || document.querySelector('input[data-u="fs"]');
   const q = ((inp && inp.value) || '').trim();
   const e = $('#rs');
   if (!e)
@@ -332,13 +332,13 @@ function stopScan() {
 onSheetClose.push(stopScan);
 A.f2sc = () => {
   addState.pick = null;
-  sheet(html`<h3>Escanear código de barras</h3><div class="f2sv"><video id="f2v" playsinline muted autoplay></video><div class="f2gd"></div></div><p id="f2sm" class="mu" style="margin:8px 2px;font-size:13px">Abriendo la cámara…</p><label>O escribe el código (8 a 14 cifras)</label><div class="g2" style="grid-template-columns:1fr auto"><input id="f2ean" aria-label="Código de barras" inputmode="numeric" maxlength="14" placeholder="Por ejemplo 8410000000000"><button class="pr" data-a="f2ln">Buscar</button></div><p class="mu" style="font-size:12px;margin:10px 2px">Solo se envía el número del código a Open Food Facts. La imagen de la cámara no sale del móvil.</p><button data-a="f2bk" style="width:100%">Volver</button>`);
+  sheet(html`<h3>Escanear código de barras</h3><div class="f2sv"><video id="f2v" playsinline muted autoplay></video><div class="f2gd"></div></div><p id="f2sm" class="mu" style="margin:8px 2px;font-size:13px">Abriendo la cámara…</p><label>O escribe el código (8 a 14 cifras)</label><div class="g2" style="grid-template-columns:1fr auto"><input id="f2ean" aria-label="Código de barras" data-enter="f2ln" inputmode="numeric" maxlength="14" placeholder="Por ejemplo 8410000000000"><button class="pr" data-a="f2ln">Buscar</button></div><p class="mu" style="font-size:12px;margin:10px 2px">Solo se envía el número del código a Open Food Facts. La imagen de la cámara no sale del móvil.</p><button data-a="f2bk" style="width:100%">Cerrar</button>`);
   startScan();
 };
+/* el escáner se abre desde el botón «Scan» de una comida: cerrarlo vuelve a Nutrición */
 A.f2bk = () => {
   stopScan();
-  sheet(addSheet());
-  foodList('');
+  sheet();
 };
 A.f2ln = () => {
   const v = String((document.getElementById('f2ean') || {}).value || '').replace(/\D/g, '');
@@ -454,7 +454,7 @@ async function lookupBarcode(code) {
       const p = j && j.product;
       it = p ? offProduct(p) : null;
       if (!it) {
-        scanMsg(p ? 'Este producto no tiene información nutricional completa. Créalo a mano en «Nuevo».' : 'Ese código no está en Open Food Facts. Créalo a mano en «Nuevo».');
+        scanMsg(p ? 'Este producto no tiene información nutricional completa. Créalo a mano con «+», en «Nuevo».' : 'Ese código no está en Open Food Facts. Créalo a mano con «+», en «Nuevo».');
         return;
       }
       S.bc = S.bc && typeof S.bc == 'object' ? S.bc : {};

@@ -26,10 +26,11 @@ Estructura (todo vive en src/):
 
 Las dos variantes solo se diferencian en:
   · FFDEP (core/util): 0 en el archivo único, 1 en el paquete (cabecera fija, aviso de versión nueva, sin recarga forzada);
-  · data/media: base64 en el archivo único, rutas img/… en el paquete.
+  · data/media: base64 en el archivo único, rutas img/… en el paquete;
+  · la CSP (csp_meta): las dos admiten la huella de sus <script> en línea, y el paquete además sus archivos js/ ('self').
 El paquete lleva además version.json (versión publicada y sus novedades), que la app consulta para avisar de actualizaciones.
 """
-import os, re, sys, json, base64, shutil, subprocess, argparse
+import os, re, sys, json, base64, hashlib, shutil, subprocess, argparse
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
@@ -321,22 +322,52 @@ HEAD_TAGS = '''<link rel="manifest" href="manifest.webmanifest">
 # a mano en Ajustes, core/state applyTheme() pone delante otra etiqueta sin media con el color de ese tema
 
 
+# Política de seguridad del contenido (CSP), en una etiqueta <meta> (GitHub Pages no deja poner cabeceras): solo se ejecuta
+# el código de la app (sus archivos de la propia web y los <script> de la plantilla, reconocidos por su huella sha256); nada
+# de atributos on…=, eval ni código de otros sitios. Las conexiones van solo a la propia web y a Open Food Facts, y las
+# imágenes solo pueden ser propias, data: o blob: (así un dato inyectado tampoco puede sacar información con una imagen
+# de otro sitio). frame-ancestors, sandbox y report-uri no valen en <meta>: no se ponen.
+CSP_CONNECT = 'https://world.openfoodfacts.org https://search.openfoodfacts.org'
+
+
+def template_scripts(tpl):
+    """Texto de los <script> de la plantilla (todos sin atributos), con el del código (@@JS@@) incluido."""
+    s = re.findall(r'<script>(.*?)</script>', tpl, re.S)
+    if len(s) != tpl.count('<script') or s.count('\n@@JS@@') != 1:
+        die('la plantilla solo puede tener <script> sin atributos, y uno de ellos con salto + @@JS@@ dentro')
+    return s
+
+
+def csp_meta(scripts, files):
+    """<meta> con la CSP: la huella de cada <script> en línea (`scripts`, su texto exacto) y, con `files`, el código de la web."""
+    if any('\r' in s or '\0' in s for s in scripts):
+        # el navegador los cambia al leer la página (\r\n → \n): la huella ya no coincidiría y el <script> no se ejecutaría
+        die('\\r o \\0 dentro de un <script>')
+    sha = ["'sha256-%s'" % base64.b64encode(hashlib.sha256(s.encode('utf-8')).digest()).decode() for s in scripts]
+    pol = ["default-src 'self'", ' '.join(['script-src'] + (["'self'"] if files else []) + sha), "style-src 'self' 'unsafe-inline'",
+           "img-src 'self' data: blob:", "media-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self' " + CSP_CONNECT,
+           "worker-src 'self'", "manifest-src 'self'", "object-src 'none'", "base-uri 'none'", "form-action 'none'"]
+    return '<meta http-equiv="Content-Security-Policy" content="%s">' % '; '.join(pol)
+
+
 def page(tpl, css, js):
+    """Archivo único: todo en línea, con la CSP que admite justo sus dos <script> (el de arranque y el código)."""
+    sc = ['\n' + js if s == '\n@@JS@@' else s for s in template_scripts(tpl)]
+    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, False), 1)
     # replace con texto literal: el código puede contener barras invertidas
-    return tpl.replace('@@CSS@@', css).replace('@@JS@@', js)
-
-
-LOAD_FAIL = "window.__ffe&&__ffe('No se ha podido cargar la app. Comprueba la conexión y pulsa Reintentar.')"
+    return h.replace('@@CSS@@', css).replace('@@JS@@', js)
 
 
 def deploy_page(tpl, css, entry, eager):
-    """index.html del paquete: etiquetas fijas en la cabecera (manifiesto, icono…), precarga de los módulos del arranque y el
-    módulo de entrada (si no carga, la pantalla de error lo dice al momento)."""
+    """index.html del paquete: CSP y etiquetas fijas en la cabecera (manifiesto, icono…), precarga de los módulos del arranque y
+    el módulo de entrada (si no carga, la pantalla de error lo dice al momento)."""
     if tpl.count('<title>StrataFit</title>') != 1 or tpl.count('<script>\n@@JS@@</script>') != 1:
         die('la plantilla debe tener <title>StrataFit</title> y «<script>» + salto + @@JS@@ + «</script>»')
     pre = ''.join('\n<link rel="modulepreload" href="%s">' % f for f in [entry] + eager)
-    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + HEAD_TAGS + pre)
-    h = h.replace('<script>\n@@JS@@</script>', '<script type="module" src="%s" onerror="%s"></script>' % (entry, LOAD_FAIL))
+    sc = [s for s in template_scripts(tpl) if s != '\n@@JS@@']
+    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, True) + '\n' + HEAD_TAGS + pre)
+    # sin onerror="…" (la CSP no deja atributos on…): si el módulo no carga, lo ve el arranque de la plantilla (src/index.html)
+    h = h.replace('<script>\n@@JS@@</script>', '<script type="module" src="%s"></script>' % entry)
     return h.replace('@@CSS@@', css)
 
 
