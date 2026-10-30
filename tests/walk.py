@@ -30,7 +30,11 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
  else e.value=txt;
  e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}"""
 SIG="""()=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
- const h=b.innerHTML;let ls='';try{ls=(localStorage.getItem('ff')||'')+'|'+(localStorage.getItem('ffw')||'')}catch(e){}
+ const h=b.innerHTML;let ls='';try{const g=k=>localStorage.getItem(k);let c=JSON.parse(g('ff')||'null');
+  if(c&&c._parts){delete c._parts;const ks=[],m={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('ff:'))ks.push(k)}
+   ks.sort().forEach(k=>{const v=JSON.parse(g(k));if(k.startsWith('ff:meals:'))Object.assign(m,v);else if(c[k.slice(3)]===k)c[k.slice(3)]=v});if(c.meals==='ff:meals')c.meals=m}
+  const can=v=>Array.isArray(v)?'['+v.map(can).join(',')+']':v&&typeof v=='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+can(v[k])).join(',')+'}':JSON.stringify(v);
+  ls=(c?can(c):'')+'|'+(g('ffw')||'')}catch(e){ls='ERR '+e}
  const f=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x>>>0};
  return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps}}"""
 WORDS=['a','Prueba','12','Pollo','Press','x y','0','99','Arroz','Mi plan']

@@ -1,4 +1,8 @@
-# Pruebas automáticas de StrataFit: se ejecutan en cada cambio en main y en cada solicitud de fusión.
+# Pruebas y publicación de StrataFit.
+#  · En cada solicitud de fusión y en cada cambio en main: compilar y probar en Chrome (Chromium) y en Safari (WebKit).
+#  · En las solicitudes de fusión, además: comparar con la versión anterior (informativo, salvo con la etiqueta «refactor»).
+#  · En main, si todo pasa: etiqueta vX.Y.Z con sus notas (de CHANGELOG.md) la primera vez que aparece una versión y,
+#    si GitHub Pages publica desde GitHub Actions (Settings → Pages → Source), publica la app.
 name: Pruebas
 
 on:
@@ -8,7 +12,7 @@ on:
 
 jobs:
   pruebas:
-    name: Compilar y probar
+    name: Compilar y probar (Chrome)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -22,9 +26,32 @@ jobs:
       - name: Dependencias
         run: |
           npm install --no-audit --no-fund
-          pip install playwright pillow numpy
+          pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Formato, compilación, reglas y pruebas
+        run: bash tests/run.sh
+
+  safari:
+    name: Probar en Safari (WebKit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencias
+        run: |
+          npm install --no-audit --no-fund
+          pip install -r tests/requirements.txt
+          python -m playwright install --with-deps webkit
+      # mismas pruebas con el motor de Safari; la app se sirve por HTTP, como en GitHub Pages (tests/browser.py)
+      - name: Pruebas en WebKit
+        env:
+          SF_BROWSER: webkit
         run: bash tests/run.sh
 
   equivalencia:
@@ -44,7 +71,7 @@ jobs:
           python-version: '3.12'
       - name: Dependencias
         run: |
-          pip install playwright pillow numpy
+          pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
       - name: Compilar las dos versiones
         run: |
@@ -65,3 +92,64 @@ jobs:
           if [ "$RESULTADO" = "success" ]; then echo "Sin diferencias con la versión anterior"; exit 0; fi
           echo "::notice::Hay diferencias de comportamiento o de imagen con la versión anterior (ver el paso anterior)"
           if [ "$REFACTOR" = "true" ]; then echo "La etiqueta refactor exige que no haya diferencias"; exit 1; fi
+
+  version:
+    name: Etiquetar la versión
+    needs: [pruebas, safari]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pages: read
+    outputs:
+      pages: ${{ steps.pages.outputs.modo }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compilar el paquete
+        run: python3 build.py --only app
+      - name: Paquete para GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/app
+      - name: ¿GitHub Pages publica desde aquí?
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          modo=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type 2>/dev/null || echo ninguno)
+          echo "modo=$modo" >> "$GITHUB_OUTPUT"
+          if [ "$modo" != workflow ]; then
+            echo "::notice::GitHub Pages publica desde la rama (modo: $modo): la app publicada son los archivos de la raíz. Para publicar desde aquí, en Settings → Pages → Source elige «GitHub Actions»."
+          fi
+      - name: Etiqueta y notas de la versión
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(python3 build.py --version)
+          if git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null; then echo "La versión v$v ya está etiquetada"; exit 0; fi
+          python3 build.py --notes > notas.md
+          gh release create "v$v" --target "$GITHUB_SHA" --title "StrataFit $v" --notes-file notas.md
+          echo "::notice::Publicada la versión v$v"
+
+  pages:
+    name: Publicar en GitHub Pages
+    needs: version
+    if: needs.version.outputs.pages == 'workflow'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -145,7 +145,7 @@ const restoreBackup = () => {
   try {
     const s = r.s;
     s.bkd = Date.now();
-    Store.set(Store.K.app, JSON.stringify(s));
+    replaceSavedState(s);
     if (r.wip) {
       r.wip.t = Date.now();
       Store.set(WIP_KEY, JSON.stringify(r.wip));
@@ -155,9 +155,11 @@ const restoreBackup = () => {
     Store.set(Store.K.rs, JSON.stringify({ s: backupRows(s, r.wip), f: r.fix || 0 }));
   }
   catch (e) {
+    logError('restaurar copia', e);
     try {
       const p = JSON.parse(pre);
-      Store.set(Store.K.app, JSON.stringify(p.s));
+      if (!flushState())
+        throw new Error('no se pudo volver a guardar el estado anterior');
       if (p.w)
         Store.set(WIP_KEY, p.w);
       else
@@ -169,6 +171,7 @@ const restoreBackup = () => {
     toast('No se pudo restaurar; tus datos siguen como estaban');
     return;
   }
+  lockSaves();
   location.reload();
 };
 A.bkun = () => {
@@ -189,7 +192,7 @@ A.bkun2 = () => {
     return;
   }
   try {
-    Store.set(Store.K.app, JSON.stringify(p.s));
+    replaceSavedState(p.s);
     if (p.w)
       Store.set(WIP_KEY, p.w);
     else
@@ -197,15 +200,13 @@ A.bkun2 = () => {
     Store.set(Store.K.rs, JSON.stringify({ s: backupRows(p.s, null), f: 0, u: 1 }));
   }
   catch (e) {
-    try {
-      Store.set(Store.K.app, JSON.stringify(S));
-    }
-    catch (_) {
-      logError('guardar al deshacer restauración', _);
-    }
+    logError('deshacer restauración', e);
+    if (!flushState())
+      logError('guardar al deshacer restauración', new Error('no se pudo volver a guardar el estado actual'));
     toast('No se pudo deshacer');
     return;
   }
+  lockSaves();
   location.reload();
 };
 C.bkim = e => {

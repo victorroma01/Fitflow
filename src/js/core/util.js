@@ -4,7 +4,7 @@
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
-const APPV = '1.20.0';
+const APPV = '1.21.0';
 const FFDEP = 0; /* 1 en el paquete instalable (dist/app): lo fija build.py; 0 en el archivo único */
 const $ = q => document.querySelector(q);
 /** Lee (sin v) o guarda (con v) un valor como JSON. Si falla lo registra; si falla al guardar, además avisa (como mucho una vez por minuto). */

@@ -5,6 +5,7 @@ aviso cuando no se puede guardar, copias automáticas diarias y la pantalla de e
 """
 import os, sys, datetime
 from playwright.sync_api import sync_playwright
+from browser import launch, app_url, context_opts
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,10 +26,10 @@ def check(name, cond, info=''):
 
 
 def main(path):
-    url = 'file://' + os.path.abspath(path)
+    url = app_url(path)
     with sync_playwright() as p:
-        b = p.chromium.launch()
-        c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark')
+        b = launch(p)
+        c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark', **context_opts(path))
         c.add_init_script(INIT)
         pg = c.new_page()
         pg.on('dialog', lambda d: d.accept())
@@ -70,8 +71,8 @@ def main(path):
         ev('sheet()')
 
         # no se puede guardar (almacenamiento lleno)
-        ev("window.__set=Store.set;Store.set=(k,v)=>{if(k==Store.K.app){const e=new Error('lleno');e.name='QuotaExceededError';throw e}return window.__set(k,v)}")
-        ev('saveState()')
+        ev("window.__set=Store.set;Store.set=(k,v)=>{if(k==Store.K.app||k.startsWith(Store.K.app+':')){const e=new Error('lleno');e.name='QuotaExceededError';throw e}return window.__set(k,v)};0")
+        ev('S.rest+=5;saveState()')
         pg.clock.run_for(100)
         check('si no puede guardar, avisa', ev("/No se ha podido guardar/.test(document.body.innerText)"))
         check('y lo registra', any(x['w'] == 'guardar ff' and 'QuotaExceededError' in x['m'] for x in ev('errorLog()')))
@@ -102,12 +103,14 @@ def main(path):
         check('«Restaurar» pide confirmación con el resumen de la copia', ev("!!document.querySelector('#dg .dgc')&&/Restaurar/.test(document.querySelector('#dg').innerText)"))
         ev("document.querySelector('#dg').innerHTML='';sheet()")
 
-        # datos dañados al arrancar
+        # datos dañados al arrancar (el núcleo 'ff'; los entrenos y comidas, guardados aparte, se conservan)
+        nlogs = ev('S.logs.length')
         ev("Store.set(Store.K.app,'{esto no es json')")
         pg.reload()
         pg.wait_for_load_state('load')
         pg.clock.run_for(1500)
-        check('con datos dañados la app arranca igualmente', ev('!!window.__ffok&&S.logs.length==0'))
+        check('con datos dañados la app arranca igualmente', ev('!!window.__ffok'))
+        check('y conserva los entrenos guardados aparte', ev('S.logs.length') == nlogs, '%s vs %s' % (ev('S.logs.length'), nlogs))
         bad = ev("JSON.parse(localStorage.getItem('ffbad')||'null')")
         check('aparta los datos dañados antes de empezar de cero', bool(bad) and bad['raw'] == '{esto no es json', str(bad)[:80])
         check('avisa al usuario', ev("/No se pudieron leer tus datos/.test(document.body.innerText)"))

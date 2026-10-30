@@ -6,6 +6,7 @@ Requiere:  pip install playwright  &&  playwright install chromium
 """
 import os, sys, re, json, shutil, tempfile, threading, functools, http.server
 from playwright.sync_api import sync_playwright
+from browser import launch, app_url
 
 fails = []
 
@@ -34,7 +35,7 @@ def main(app):
     idx = os.path.join(site, 'fitflow', 'index.html')
     try:
         with sync_playwright() as p:
-            b = p.chromium.launch()
+            b = launch(p)
             c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark')
             pg = c.new_page()
             errs = []

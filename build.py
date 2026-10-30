@@ -8,6 +8,8 @@ Compila src/ en la app (sin dependencias, solo Python 3; node opcional para comp
   python3 build.py --check         → además ejecuta las comprobaciones estáticas (tools/check.js, necesita node + typescript)
   python3 build.py --only app      → solo el paquete de despliegue
   python3 build.py --only single   → solo el archivo único
+  python3 build.py --version       → escribe la versión (APPV) y termina
+  python3 build.py --notes         → escribe la entrada de CHANGELOG.md de esa versión (notas de la publicación en GitHub)
 
 Estructura (todo vive en src/):
   src/index.html          plantilla (@@CSS@@ y @@JS@@ se sustituyen al compilar)
@@ -188,6 +190,14 @@ def release_for(entries, ver):
     return entries[0]
 
 
+def release_notes(ver):
+    """Texto Markdown de la entrada de `ver` en CHANGELOG.md (todos sus apartados), para la publicación en GitHub."""
+    m = re.search(r'^## \[' + re.escape(ver) + r'\][^\n]*\n(.*?)(?=^## |\Z)', read(CHANGELOG), re.S | re.M)
+    if not m:
+        die('CHANGELOG.md no tiene la entrada %s' % ver)
+    return m.group(1).strip() + '\n'
+
+
 def release_js(rel):
     return 'const RELEASE = ' + json.dumps(rel, ensure_ascii=False, separators=(',', ':')) + ';'
 
@@ -294,7 +304,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--check', action='store_true', help='comprobaciones estáticas adicionales (tools/check.js, necesita node + typescript)')
     ap.add_argument('--only', choices=['app', 'single'])
+    ap.add_argument('--version', action='store_true', help='escribe la versión de la app y termina')
+    ap.add_argument('--notes', action='store_true', help='escribe las notas de la versión (CHANGELOG.md) y termina')
     a = ap.parse_args()
+    if a.version or a.notes:
+        ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
+        sys.stdout.write(release_notes(ver) if a.notes else ver + '\n')
+        return
     mods = module_list()
     check_tree(mods)
     m = media()

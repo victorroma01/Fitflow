@@ -288,8 +288,13 @@ $('nav').innerHTML = ['workout', 'nutri', 'dash', 'user'].map((n, i) => '<button
 R();
 window.__ffok = 1;
 /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
-if (stateRecovered)
-  setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
+if (stateRecovered == 1)
+  setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
+else if (stateRecovered == 2)
+  setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
+/* datos de la 1.20 o anteriores: se pasan a partes nada más arrancar (core/persist) */
+if (savedFormat == 'whole')
+  setTimeout(saveState, 1000);
 setTimeout(() => takeSnapshot().catch(e => logError('copia automática', e)), 4000);
 if (whatsNewDue())
   setTimeout(showWhatsNew, 900);

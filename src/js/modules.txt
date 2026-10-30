@@ -2,6 +2,7 @@
 core/util.js
 core/store.js
 core/errors.js
+core/persist.js
 core/registry.js
 data/library.js
 data/foods.js

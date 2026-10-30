@@ -106,7 +106,8 @@ flowchart LR
 
 **Principios del código**
 
-- **Estado único `S`**, guardado con `saveState()`; el entreno en curso es `W` y `R()` pinta la pantalla.
+- **Estado único `S`**, guardado con `saveState()`; el entreno en curso es `W` y `R()` pinta la pantalla. Se guarda por partes
+  (`core/persist`): solo se escribe lo que cambia y todos los guardados de una acción se agrupan en uno.
 - **Eventos delegados**: el HTML lleva `data-a`, `data-c` o `data-u` y un único listener llama al manejador `A.nombre`, `C.nombre` o `U.nombre`,
   escrito junto a la función que lo usa.
 - **Persistencia solo a través de `Store`** (`core/store`). Ninguna otra parte toca `localStorage`: ahí se enchufaría un servidor
@@ -201,12 +202,17 @@ python -m playwright install chromium
 | `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno. |
 | `tests/security.py` | Nombres con HTML malicioso en 33 pantallas: no debe ejecutarse nada. |
 | `tests/safety.py` | Registro de errores, datos dañados, aviso al no poder guardar, copias automáticas y pantalla de error de arranque. |
+| `tests/storage.py` | Guardado por partes: formato, paso desde la 1.20, escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar. |
 | `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, fotos en caché, aviso de versión nueva y novedades. |
 | `tests/walk.py` | Paseo aleatorio diferencial: la misma secuencia de toques en dos versiones; compara pantalla, datos y sonidos paso a paso. |
 | `tests/shots.py` | 33 pantallas × 6 configuraciones (temas, cristal, tamaños de iPhone), comparadas píxel a píxel. |
 
-GitHub Actions ejecuta `tests/run.sh` en cada cambio de `main` y en cada solicitud de fusión, y además compara la solicitud con la versión
-anterior (paseo aleatorio y capturas). La comparación es informativa salvo con la etiqueta **`refactor`**, que exige que no cambie nada.
+Las pruebas usan Chrome (Chromium) por defecto; con `SF_BROWSER=webkit` se pasan en el motor de Safari, sirviendo la app por HTTP como
+GitHub Pages (`tests/browser.py`).
+
+GitHub Actions ejecuta `tests/run.sh` en Chrome y en Safari en cada cambio de `main` y en cada solicitud de fusión, y además compara la
+solicitud con la versión anterior (paseo aleatorio y capturas). La comparación es informativa salvo con la etiqueta **`refactor`**, que
+exige que no cambie nada.
 
 ## Publicar una versión
 
@@ -214,8 +220,12 @@ anterior (paseo aleatorio y capturas). La comparación es informativa salvo con 
 2. Escribe su entrada en `CHANGELOG.md` (Novedades, Mejoras, Correcciones en frases cortas para el usuario; Interno para desarrollo).
    La compilación se detiene si falta.
 3. `npm run format` y `bash tests/run.sh`.
-4. Copia `dist/app/` a la raíz del repositorio en una rama y abre una solicitud de fusión. Cuando las pruebas estén en verde, fusiónala:
-   GitHub Pages publica en un minuto y la app instalada enseña el aviso con las novedades.
+4. Abre una solicitud de fusión y, cuando las pruebas estén en verde, fusiónala. Al llegar a `main`, GitHub Actions vuelve a probar en
+   Chrome y Safari, crea la etiqueta `vX.Y.Z` con sus notas y publica la app; la app instalada enseña el aviso con las novedades.
+
+La publicación desde GitHub Actions requiere elegir **GitHub Actions** en *Settings → Pages → Source*. Mientras siga en
+*Deploy from a branch*, lo publicado es la copia de `dist/app/` en la raíz del repositorio, que hay que actualizar a mano en la misma
+solicitud de fusión.
 
 ## Siguientes pasos
 

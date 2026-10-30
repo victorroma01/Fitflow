@@ -5,7 +5,8 @@
    Define: Store
 */
 /* Claves que usa la app (y, por tanto, lo único que habría que sincronizar con un servidor):
-   app  → estado completo S (perfil, programas, registros, comidas, medidas…)
+   app  → estado S: el núcleo (perfil, plan, programas, ajustes, peso…); los entrenos, el historial y las comidas
+      van aparte en claves que empiezan por «ff:» (ff:logs, ff:hist, ff:meals:2026-10…; ver core/persist)
    wip  → entreno en curso (para reanudar si se cierra la app)
    pre  → copia automática previa a restaurar una copia de seguridad (permite deshacer)
    rs   → resumen pendiente de mostrar tras restaurar
@@ -29,6 +30,16 @@ const Store = {
   del(k) {
     localStorage.removeItem(k);
     Store.note(k, null);
+  },
+  /** Claves guardadas que empiezan por `prefix` (las partes del estado: core/persist). */
+  keys(prefix) {
+    const out = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k != null && k.startsWith(prefix))
+        out.push(k);
+    }
+    return out;
   },
   /* aviso a un adaptador remoto (si hay); un fallo del adaptador nunca debe impedir guardar en local */
   note(k, v) {

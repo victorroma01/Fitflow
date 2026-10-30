@@ -26,6 +26,7 @@ run python3 tests/smoke.py dist/app/index.html
 run python3 tests/photos.py dist/stratafit.html
 run python3 tests/security.py dist/stratafit.html
 run python3 tests/safety.py dist/stratafit.html
+run python3 tests/storage.py dist/stratafit.html
 run python3 tests/deploy.py dist/app
 echo
 if [ $fallos -eq 0 ]; then echo "Todas las pruebas correctas"; else echo "$fallos pruebas fallan"; exit 1; fi

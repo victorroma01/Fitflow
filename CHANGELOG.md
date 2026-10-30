@@ -9,6 +9,23 @@ aviso de versión nueva (por eso se escriben para el usuario, en frases cortas);
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.21.0] — 2026-10-30
+
+### Mejoras
+- Guardar es unas 3 veces más rápido: solo se escribe lo que cambia.
+- Si una parte de tus datos se daña, el resto se conserva.
+
+### Correcciones
+- «Borrar todos los datos» también descarta el entreno en curso.
+
+### Interno
+- Guardado por partes (`core/persist`): núcleo en `ff` y `ff:logs`, `ff:hist` y `ff:meals:AAAA-MM` aparte; solo se escriben las claves
+  que cambian y los `saveState()` de una acción se agrupan en uno. Los datos de la 1.20 pasan solos a partes (si no caben, se sigue
+  guardando entero). Con 3 años de datos, un cambio escribe 7–50 KB en lugar de 645 KB.
+- Pruebas también en Safari (WebKit) en GitHub Actions, con la app servida por HTTP (`tests/browser.py`); prueba nueva del guardado
+  (`tests/storage.py`).
+- Publicación automática desde GitHub Actions: etiqueta `vX.Y.Z` con sus notas y, si Pages publica desde Actions, despliegue.
+
 ## [1.20.0] — 2026-10-30
 
 ### Novedades

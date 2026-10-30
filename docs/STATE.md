@@ -1,6 +1,7 @@
 # Qué guarda StrataFit
 
-Todo lo que la app recuerda está en el objeto `S` (`core/state`), que se guarda entero como JSON en la clave `ff` mediante `saveState()`.
+Todo lo que la app recuerda está en el objeto `S` (`core/state`), que se guarda con `saveState()` (`core/persist`): el núcleo en la clave
+`ff` y las colecciones que más crecen (entrenos, historial y comidas) en claves propias, para escribir solo lo que cambia.
 Las claves son cortas porque están en los datos de cada usuario y en sus copias de seguridad: **no se renombran sin una migración** en
 `core/boot` (versión de esquema en `S.v`). Este documento es el diccionario de datos; si añades una clave, añádela aquí.
 
@@ -8,7 +9,10 @@ Las claves son cortas porque están en los datos de cada usuario y en sus copias
 
 | Clave | Contenido |
 |---|---|
-| `ff` (`app`) | El estado `S` completo. |
+| `ff` (`app`) | Núcleo del estado `S`: todo menos `logs`, `hist` y `meals`, que quedan como el nombre de su clave (`"logs": "ff:logs"`), más la marca `_parts: 1`. Hasta la 1.20 era el estado completo; esos datos se leen igual y pasan a partes en el primer guardado. |
+| `ff:logs` | `S.logs`. |
+| `ff:hist` | `S.hist`. |
+| `ff:meals:AAAA-MM` | Los días de `S.meals` de ese mes (`ff:meals:otros` para claves que no son fechas). Un mes sin comidas no tiene clave. |
 | `ffw` (`wip`) | Entreno en curso (`W` y el día), para reanudarlo si se cierra la app. |
 | `ffpre` (`pre`) | Estado anterior a la última restauración de una copia (permite deshacerla durante 30 días). |
 | `ffrs` (`rs`) | Resumen pendiente de mostrar tras restaurar. |
