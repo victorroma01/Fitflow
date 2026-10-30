@@ -2,7 +2,7 @@
 /* StrataFit · formateador de módulos (sin dependencias externas salvo typescript)
    Reimprime cada módulo de src/js con una instrucción por línea y bloques sangrados, conservando comentarios,
    comillas y literales. Divide «const a=…,b=…;» en una declaración por línea.
-   Uso:  node tools/format.js            (formatea todos los módulos de modules.txt)
+   Uso:  node tools/format.js            (formatea main.js y todos los módulos que importa)
          node tools/format.js --check    (falla si alguno no está formateado)
          node tools/format.js archivo.js (solo ese)
    Después de formatear, tools/same.js comprueba que el código es equivalente al anterior. */
@@ -51,10 +51,25 @@ function format(src, name) {
   const printer = ts.createPrinter({ removeComments: false, newLine: ts.NewLineKind.LineFeed });
   let out = printer.printNode(ts.EmitHint.SourceFile, res.transformed[0], sf);
   res.dispose();
-  // sangría de 2 espacios (el impresor usa 4) fuera de las plantillas `…` de varias líneas
+  // sangría de 2 espacios (el impresor usa 4) fuera de las plantillas `…` y de los comentarios /* … */ de varias líneas
   const tpl = templateLines(out);
+  commentLines(out).forEach(l => tpl.add(l));
   out = out.split('\n').map((l, i) => tpl.has(i) ? l : l.replace(/^((?:    )+)/, m => '  '.repeat(m.length / 4))).join('\n');
   return out.replace(/\s+$/, '') + '\n';
+}
+// líneas que empiezan dentro de un comentario /* … */ de varias líneas (no se tocan: su texto es libre)
+function commentLines(code) {
+  const sc = ts.createScanner(ts.ScriptTarget.ES2022, false, ts.LanguageVariant.Standard, code), set = new Set();
+  const lineOf = p => code.slice(0, p).split('\n').length - 1;
+  for (let k = sc.scan(); k !== ts.SyntaxKind.EndOfFileToken; k = sc.scan()) {
+    if (k === ts.SyntaxKind.MultiLineCommentTrivia) {
+      const a = lineOf(sc.getTokenPos()), b = lineOf(sc.getTextPos());
+      for (let l = a + 1; l <= b; l++) set.add(l);
+    }
+    // plantillas y expresiones regulares: el escáner necesita reescanear en contexto; basta con no confundir su contenido con comentarios
+    if (k === ts.SyntaxKind.TemplateHead || k === ts.SyntaxKind.NoSubstitutionTemplateLiteral) { /* el contenido ya es un token */ }
+  }
+  return set;
 }
 // líneas que empiezan dentro del contenido de una plantilla de varias líneas (no se tocan)
 function templateLines(code) {
@@ -74,7 +89,7 @@ module.exports = { format };
 if (require.main === module) {
   const args = process.argv.slice(2), check = args.includes('--check');
   let files = args.filter(a => !a.startsWith('--'));
-  if (!files.length) files = fs.readFileSync(path.join(JS, 'modules.txt'), 'utf8').split('\n').map(s => s.trim()).filter(s => s && s[0] !== '#').map(m => path.join(JS, m));
+  if (!files.length) files = ['main.js'].concat(require('./modules').modules()).map(m => path.join(JS, m));
   let bad = 0;
   files.forEach(f => {
     const src = fs.readFileSync(f, 'utf8'), out = format(src, f);

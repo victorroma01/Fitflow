@@ -2,7 +2,11 @@
    Descarga, copia y codificación de archivos.
    Define: isStandalone, downloadFile, copyText, toBase64, fromBase64, cleanText  · acciones/registros: 1
 */
-const isStandalone = () => {
+import { $ } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A } from '../core/registry.js';
+import { S, saveState } from '../core/state.js';
+export const isStandalone = () => {
   try {
     return navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
   }
@@ -10,7 +14,7 @@ const isStandalone = () => {
     return false;
   }
 };
-const downloadFile = async (name, data) => {
+export const downloadFile = async (name, data) => {
   let d = null;
   try {
     d = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
@@ -56,7 +60,7 @@ const downloadFile = async (name, data) => {
     return 'fail';
   }
 };
-const copyText = async (t, el) => {
+export const copyText = async (t, el) => {
   try {
     await navigator.clipboard.writeText(t);
     return true;
@@ -88,17 +92,17 @@ A.zbc = () => {
   saveState();
   toast('Texto copiado');
 };
-const toBase64 = s => {
+export const toBase64 = s => {
   const b = new TextEncoder().encode(s);
   let t = '';
   b.forEach(c => t += String.fromCharCode(c));
   return btoa(t);
 };
-const fromBase64 = s => {
+export const fromBase64 = s => {
   const t = atob(s);
   const b = new Uint8Array(t.length);
   for (let i = 0; i < t.length; i++)
     b[i] = t.charCodeAt(i);
   return new TextDecoder().decode(b);
 };
-const cleanText = (v, n) => String(v).replace(/[<>&"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+export const cleanText = (v, n) => String(v).replace(/[<>&"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);

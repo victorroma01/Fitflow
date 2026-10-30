@@ -2,8 +2,12 @@
    Tema, color de acento y estilo Cristal.
    Define: ACCENTS, applyAccent, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, glSync  · acciones/registros: 4
 */
+import { logError } from '../core/errors.js';
+import { A, C } from '../core/registry.js';
+import { applyTheme, S, saveState } from '../core/state.js';
+import { R } from '../core/render.js';
 const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#6e5300', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#e8590c', '#702a05', '#fff']];
-function applyAccent() {
+export function applyAccent() {
   const a = ACCENTS[S.acc || 0];
   const r = document.documentElement.style;
   r.setProperty('--a1', a[1]);
@@ -12,7 +16,7 @@ function applyAccent() {
   r.setProperty('--ft', a[4]);
   r.setProperty('--ac', a[2]);
 }
-const accentSwatches = () => '<div class="swg">' + ACCENTS.map((a, i) => {
+export const accentSwatches = () => '<div class="swg">' + ACCENTS.map((a, i) => {
   const on = (S.acc || 0) == i;
   return '<button class="swb' + (on ? ' on' : '') + '" data-a="zac" data-i="' + i + '"><i style="background:linear-gradient(135deg,' + a[1] + ',' + a[2] + ');color:' + a[4] + '">' + (on ? '✓' : '') + '</i><small>' + a[0] + '</small></button>';
 }).join('') + '</div>';
@@ -22,7 +26,7 @@ A.zac = i => {
   saveState();
   R();
 };
-const themeSegment = () => '<div class="seg">' + [['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => '<button class="' + ((S.theme || '') == x[0] ? 'on' : '') + '" data-a="zth" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>';
+export const themeSegment = () => '<div class="seg">' + [['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => '<button class="' + ((S.theme || '') == x[0] ? 'on' : '') + '" data-a="zth" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>';
 A.zth = (i, b) => {
   S.theme = b.dataset.v;
   applyTheme();
@@ -35,7 +39,7 @@ const glassMode = () => {
 };
 const GLASS_LEVELS = [['3', 'Máximo'], ['2', 'Medio'], ['1', 'Mínimo']];
 const GLASS_INFO = { 3: 'Más transparencia, desenfoque y brillo. Es el más vistoso y el que más batería usa.', 2: 'Equilibrado: se nota el cristal sin perder legibilidad.', 1: 'Cristal discreto: casi opaco, con brillos suaves. Muy ligero.' };
-const glassCard = () => {
+export const glassCard = () => {
   const m = glassMode();
   const g = m > 0;
   return '<label>Estilo</label><div class="gst">'
@@ -67,7 +71,7 @@ A.gl = (i, b) => {
   saveState();
   R();
 };
-const glSync = () => {
+export const glSync = () => {
   try {
     const m = glassMode();
     const d = document.documentElement;

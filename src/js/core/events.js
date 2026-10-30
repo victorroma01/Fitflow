@@ -1,6 +1,9 @@
 /* ═══ core/events ═══
    Delegación global de eventos click, change e input.
 */
+import { A, C, U } from './registry.js';
+import { W } from './state.js';
+import { saveSession } from '../workout/resume.js';
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-a]');
   if (b && A[b.dataset.a])

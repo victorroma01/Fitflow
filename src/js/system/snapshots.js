@@ -4,6 +4,12 @@
    archivo: si el navegador borra los datos de la app, también se borran estas.
    Define: SNAP_KEEP, snapDbPromise, snapDb, snapTx, snapList, takeSnapshot, snapshotRows, fillSnapshots  · acciones/registros: 1
 */
+import { $, APPV, dayKey, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { logError } from '../core/errors.js';
+import { A } from '../core/registry.js';
+import { S } from '../core/state.js';
+import { askRestore, backupDate, buildBackup, countOf, plural } from './backup.js';
 const SNAP_KEEP = 7;
 let snapDbPromise = null;
 const snapDb = () => snapDbPromise || (snapDbPromise = new Promise((res, rej) => {
@@ -22,7 +28,7 @@ const snapDb = () => snapDbPromise || (snapDbPromise = new Promise((res, rej) =>
   throw e;
 }));
 /** Ejecuta fn(almacén) en una transacción; devuelve el resultado de la petición que fn devuelva. */
-const snapTx = (mode, fn) => snapDb().then(db => new Promise((res, rej) => {
+export const snapTx = (mode, fn) => snapDb().then(db => new Promise((res, rej) => {
   const tx = db.transaction('s', mode);
   let rq;
   tx.oncomplete = () => res(rq ? rq.result : undefined);
@@ -31,9 +37,9 @@ const snapTx = (mode, fn) => snapDb().then(db => new Promise((res, rej) => {
   rq = fn(tx.objectStore('s'));
 }));
 /** Copias guardadas, de la más reciente a la más antigua. */
-const snapList = () => snapTx('readonly', st => st.getAll()).then(a => (a || []).sort((x, y) => x.d < y.d ? 1 : -1));
+export const snapList = () => snapTx('readonly', st => st.getAll()).then(a => (a || []).sort((x, y) => x.d < y.d ? 1 : -1));
 /** Guarda la copia de hoy si aún no existe (y si hay algo que guardar) y borra las que sobran. Devuelve 1 si guardó. */
-const takeSnapshot = async () => {
+export const takeSnapshot = async () => {
   if (!S.logs.length && !(S.cr || []).length && !(S.cp || []).length && !countOf(S.meals) && !(S.wl || []).length)
     return 0;
   const d = dayKey(new Date());
@@ -55,7 +61,7 @@ const takeSnapshot = async () => {
 };
 const snapshotRows = l => l.length ? l.map(x => '<div class="row" style="padding:8px 0;border-top:1px solid var(--ln)"><span><b>' + X(backupDate(x.t, 1)) + '</b><br><small class="mu">' + plural(x.n || 0, 'entreno', 'entrenos') + ' · versión ' + X(x.v || '') + '</small></span><button data-a="snapr" data-v="' + X(x.d) + '">Restaurar</button></div>').join('') : '<p class="mu" style="font-size:13px;margin:8px 0 0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>';
 /** Rellena la lista de copias automáticas de la hoja de copia de seguridad (se carga aparte porque IndexedDB es asíncrono). */
-const fillSnapshots = () => snapList().then(l => {
+export const fillSnapshots = () => snapList().then(l => {
   const e = $('#snapl');
   if (e)
     e.innerHTML = snapshotRows(l);

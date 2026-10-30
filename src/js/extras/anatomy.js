@@ -2,6 +2,10 @@
    Mapa muscular dibujado en SVG.
    Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exAnatomy, exAnatomyFull
 */
+import { groupOf } from '../data/library.js';
+import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
+import { groupIcon } from '../core/icons.js';
+import { exAll } from '../library/model.js';
 document.body.insertAdjacentHTML('afterbegin', '<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gB" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#a7adba"/><stop offset=".6" stop-color="#6b7080"/><stop offset="1" stop-color="#3b3f4b"/></linearGradient><linearGradient id="gR" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#d11f3a"/><stop offset="1" stop-color="#7d0d21"/></linearGradient><linearGradient id="gO" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ffb26b"/><stop offset="1" stop-color="#b8501a"/></linearGradient><pattern id="fb" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><rect width="1" height="2.2" fill="#000" opacity=".3"/></pattern><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>');
 (function () {
   const pat = (id, r) => '<pattern id="' + id + '" width="4" height="4" patternUnits="userSpaceOnUse"' + (r ? ' patternTransform="rotate(' + r + ')"' : '') + '><line x1="0" y1="0" x2="0" y2="4" stroke="#000" stroke-opacity=".26" stroke-width=".55"/></pattern>';
@@ -37,7 +41,7 @@ const anatomySvg = (v, P, S, box, w, h) => {
   return '<svg viewBox="' + box + '" width="' + w + '" height="' + (h || w) + '" aria-hidden="true" focusable="false"><use href="#' + (sm ? 's' : 'b') + v + '"/>' + Object.keys(AN_R[v]).map(k => p.includes(k) ? u(k, 'gRd', '#2a0409') : s.includes(k) ? u(k, 'gOr', '#3a1a04') : '').join('') + '</svg>';
 };
 const GROUP_ANATOMY = { Pecho: ['F', ['pe'], ['dA', 'tr', 'sa'], '24 42 152 152'], Espalda: ['B', ['da', 'tm', 'ro'], ['dP', 'tr', 'er', 'rm'], '24 38 152 152'], Hombros: ['F', ['dA', 'dL'], ['ts', 'tr'], '30 40 140 140'], 'Bíceps': ['F', ['bi'], ['br', 'bq', 'an', 'dA'], '14 70 172 172'], 'Tríceps': ['B', ['tr'], ['dP', 'an', 'bq'], '14 70 172 172'], Antebrazos: ['F', ['an', 'bq'], ['bi', 'br'], '14 110 172 172'], Abdomen: ['F', ['ab'], ['ob', 'tv', 'fc', 'sa'], '36 98 128 128'], 'Cuádriceps': ['F', ['cu'], ['fc', 'ad', 'ta'], '36 196 128 128'], 'Isquios y glúteos': ['B', ['is', 'gl'], ['gm', 'ad', 'ge', 'er'], '36 160 128 128'], Gemelos: ['B', ['ge', 'so'], ['is', 'ta'], '36 270 128 128'] };
-function groupAnatomy(g, s) {
+export function groupAnatomy(g, s) {
   const a = GROUP_ANATOMY[g];
   return a ? '<span class="anb" style="width:' + s + 'px;height:' + s + 'px">' + anatomySvg(a[0], a[1], a[2], a[3], s) + '</span>' : '';
 }
@@ -68,7 +72,7 @@ const regionsBox = (v, regs) => {
   }
   return bx.toFixed(0) + ' ' + by.toFixed(0) + ' ' + z.toFixed(0) + ' ' + z.toFixed(0);
 };
-const exAnatomy = (n, s) => {
+export const exAnatomy = (n, s) => {
   const e = exAll().find(x => x.n == n);
   const g = e ? groupOf(e) : '';
   const a = GROUP_ANATOMY[g];
@@ -87,7 +91,7 @@ const exAnatomy = (n, s) => {
     return anatomySvg(v, P, S, box, Math.round(s * 200 / 410), s);
   return anatomySvg(v, P, S, box, s);
 };
-const exAnatomyFull = e => {
+export const exAnatomyFull = e => {
   const has = e && e.p && e.p.length;
   const g = e ? groupOf(e) : '';
   const a = GROUP_ANATOMY[g];

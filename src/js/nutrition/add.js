@@ -1,8 +1,31 @@
 /* ═══ nutrition/add ═══
    Añadir alimentos y comidas al día.
-   Define: allFoods, addSheetBase, addMealItem, addSheet  · acciones/registros: 2
+   Define: allFoods, foldText, foodList, addSheetBase, addMealItem, addSheet  · acciones/registros: 2
 */
-const allFoods = () => FOODS_SRC.concat(S.cf);
+import { $, dayKey, round1, roundInt, X } from '../core/util.js';
+import { logError } from '../core/errors.js';
+import { A, U } from '../core/registry.js';
+import { FOODS_SRC } from '../data/foods.js';
+import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { itemMacros, sumMacros } from './home.js';
+import { habitsCard } from './templates.js';
+export const allFoods = () => FOODS_SRC.concat(S.cf);
+/** Texto en minúsculas y sin tildes, para buscar. */
+export const foldText = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+/** Lista de alimentos de la hoja «Añadir» que coinciden con la búsqueda `q` (todas las palabras, sin tildes). */
+export function foodList(q) {
+  const e = $('#rs');
+  if (!e)
+    return;
+  const k = foldText(String(q || '').trim());
+  const ws = k.split(/\s+/).filter(Boolean);
+  const L = allFoods().map((f, i) => ({ f, i, n: foldText(f.n) })).filter(o => !ws.length || ws.every(w => o.n.includes(w)));
+  L.sort((a, b) => (ws.length && b.n.startsWith(ws[0]) ? 1 : 0) - (ws.length && a.n.startsWith(ws[0]) ? 1 : 0));
+  e.innerHTML = L.slice(0, ws.length ? 60 : 30).map(o => '<div class="it" style="grid-template-columns:1fr auto" data-a="pk" data-i="' + o.i + '"><span>' + X(o.f.n) + '</span><small>' + o.f.b[0] + ' kcal/100 g</small></div>').join('') + (ws.length && !L.length ? '<p class="mu" style="font-size:13px;margin:10px 2px">No está en tu lista. Prueba «Buscar en internet» o créalo en «Nuevo».</p>' : '');
+}
 function addSheetBase() {
   const a = addState;
   let h = '<div style="margin-bottom:8px">' + ['Alimentos', 'Librería', 'Nuevo'].map((x, i) => '<button class="chip ' + (a.tab == i ? 'on' : '') + '" data-a="at" data-i="' + i + '">' + x + '</button>').join('') + '</div>';
@@ -45,7 +68,7 @@ A.fa = () => {
     saveState();
   }
 };
-function addSheet() {
+export function addSheet() {
   const h = addSheetBase();
   try {
     if (addState && !addState.pick && addState.tab == 0) {
@@ -62,7 +85,7 @@ function addSheet() {
 }
 /* — manejadores de esta función (registros A / C / U) — */
 A.add = i => {
-  addState = { m: i, tab: 0 };
+  setAddState({ m: i, tab: 0 });
   sheet(addSheet());
   foodList('');
 };
@@ -100,3 +123,4 @@ U.gr = v => {
     e.textContent = roundInt(t[0]) + ' kcal · C ' + round1(t[1]) + ' · P ' + round1(t[2]) + ' · G ' + round1(t[3]) + ' · Fibra ' + round1(t[4]) + ' · Sal ' + round1(t[5]);
   }
 };
+U.fs = foodList;

@@ -2,10 +2,18 @@
    Registro de cardio.
    Define: CARDIO_TYPES, cardioState, cardioLabel, cardioPace, paceLabel, cardioSheet, readCardio, cardioLogs, cardioCard  · acciones/registros: 4
 */
+import { clampInt, clampNum, dayKey, fmtClock, round1 } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A, U } from '../core/registry.js';
+import { S, saveState } from '../core/state.js';
+import { sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { weekMonday } from '../dashboard/home.js';
+import { checkAchievements } from './achievements.js';
 const CARDIO_TYPES = [['run', 'Carrera'], ['walk', 'Caminata'], ['bike', 'Bici'], ['row', 'Remo'], ['swim', 'Natación'], ['ell', 'Elíptica'], ['oth', 'Otro']];
 let cardioState = { t: 'run' };
-const cardioLabel = t => (CARDIO_TYPES.find(x => x[0] == t) || CARDIO_TYPES[6])[1];
-function cardioPace(t, km, sec) {
+export const cardioLabel = t => (CARDIO_TYPES.find(x => x[0] == t) || CARDIO_TYPES[6])[1];
+export function cardioPace(t, km, sec) {
   if (!(km > 0 && sec > 0))
     return '';
   if (t == 'bike' || t == 'ell' || t == 'oth')
@@ -75,10 +83,10 @@ A.cdsv = () => {
   checkAchievements();
   R();
 };
-function cardioLogs() {
+export function cardioLogs() {
   return (S.logs || []).filter(l => l && l.k == 'c' && l.c && typeof l.c == 'object' && typeof l.d == 'string');
 }
-function cardioCard() {
+export function cardioCard() {
   try {
     const L = cardioLogs();
     if (!L.length)

@@ -2,10 +2,26 @@
    Crear programa: guiado y a partir de mis workouts.
    Define: progDraft, clone, restDay, syncCustomProgram, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, dayDuration, programDaysHtml, programRowsHtml, createHome, programNameBox, … (+11)  · acciones/registros: 20
 */
-let progDraft = { m: '', name: '', sel: [], plan: null, o: { lug: 'gym', mat: 'bw', est: 'clasico', obj: 'musculo', dias: 4, niv: 'int' }, vr: 0, k: -1, txt: '' };
-const clone = x => JSON.parse(JSON.stringify(x));
-const restDay = () => ({ n: 'Descanso', ex: [] });
-const syncCustomProgram = () => {
+import { fmtMinSec, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A, U } from '../core/registry.js';
+import { groupLabel, parseExToken } from '../data/library.js';
+import { GOAL_INFO, GUIDE_DAY_IMAGES, GUIDE_DAY_NAMES, GUIDE_LEVEL_VARIANTS, GUIDE_OPTIONS, GUIDE_SEQUENCES, GUIDE_TEMPLATES, SET_SCHEMES, STYLE_INFO } from '../data/templates.js';
+import { LEVEL_DETAILS } from '../data/levels.js';
+import { S, saveState, W } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { confirmDialog, dialog, fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { groupOfName } from '../library/model.js';
+import { routineToDay } from '../routines/builder.js';
+import { dropResume } from '../workout/resume.js';
+import { restOf } from '../workout/rest.js';
+import { targetRange, targetText, unitOf, weeklySetsCard } from '../workout/targets.js';
+import { isLevel, levelDot } from './levels.js';
+export let progDraft = { m: '', name: '', sel: [], plan: null, o: { lug: 'gym', mat: 'bw', est: 'clasico', obj: 'musculo', dias: 4, niv: 'int' }, vr: 0, k: -1, txt: '' };
+export const clone = x => JSON.parse(JSON.stringify(x));
+export const restDay = () => ({ n: 'Descanso', ex: [] });
+export const syncCustomProgram = () => {
   if (S.cpi >= 0 && S.cp[S.cpi])
     S.cp[S.cpi].plan = clone(S.plan);
 };
@@ -136,7 +152,7 @@ const makeEx = (tok, o) => {
     s = Math.min(5, s + 1);
   return sp + n + '*' + s + '/' + g + '@' + rs;
 };
-const generateProgram = o => {
+export const generateProgram = o => {
   const pl = o.lug == 'gym' ? 'gym' : o.mat;
   const E = o.est;
   const P = Object.assign({ low: GUIDE_TEMPLATES[E][pl].leg }, GUIDE_TEMPLATES[E][pl]);
@@ -188,7 +204,7 @@ const generateProgram = o => {
   }
   return layoutWeek(pl2, o.dias);
 };
-const parseDays = b => b.split('|').map(x => {
+export const parseDays = b => b.split('|').map(x => {
   const [a, r] = x.split(':');
   const ex = [];
   let k = 0;

@@ -4,9 +4,10 @@
    registrar un adaptador en Store.remote (ver docs/BACKEND.md) y Store avisará de cada cambio.
    Define: Store
 */
+import { logError } from './errors.js';
 /* Claves que usa la app (y, por tanto, lo único que habría que sincronizar con un servidor):
    app  → estado S: el núcleo (perfil, plan, programas, ajustes, peso…); los entrenos, el historial y las comidas
-      van aparte en claves que empiezan por «ff:» (ff:logs, ff:hist, ff:meals:2026-10…; ver core/persist)
+          van aparte en claves que empiezan por «ff:» (ff:logs, ff:hist, ff:meals:2026-10…; ver core/persist)
    wip  → entreno en curso (para reanudar si se cierra la app)
    pre  → copia automática previa a restaurar una copia de seguridad (permite deshacer)
    rs   → resumen pendiente de mostrar tras restaurar
@@ -16,7 +17,7 @@
    seen → versión cuyas novedades ya se enseñaron (para no repetirlas)
    Las fotos de progreso viven en IndexedDB (base "ffph"; ver extras/measures) y las copias automáticas
    también (base "ffsnap"; ver system/snapshots). */
-const Store = {
+export const Store = {
   K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen' },
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…) */

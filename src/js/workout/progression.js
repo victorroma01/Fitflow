@@ -2,13 +2,19 @@
    Sugerencias de progresión y autorrelleno de series.
    Define: setText, prefillSets, progressionOf, suggestionBox, lastTimeLine  · acciones/registros: 1
 */
-const setText = (e, s) => {
+import { A } from '../core/registry.js';
+import { S, W } from '../core/state.js';
+import { R } from '../core/render.js';
+import { lastHistory, roundHalf, targetRange, unitOf, weightStep } from './targets.js';
+import { isDeloadWeek } from './deload.js';
+import { fromDisplayWeight, toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
+export const setText = (e, s) => {
   const U = unitOf(e);
   const w = toDisplayWeight(s[1]);
   const x = (s[3] == 1 ? ' (drop)' : '') + (+s[2] > 0 ? ' @' + s[2] : '');
   return U ? s[0] + ' ' + U + (s[1] > 0 ? ' · ' + w + ' ' + weightUnit() : '') + x : s[0] + ' × ' + w + ' ' + weightUnit() + x;
 };
-function prefillSets(e, a) {
+export function prefillSets(e, a) {
   const h = lastHistory(e);
   const U = unitOf(e);
   const r = targetRange(e);
@@ -102,7 +108,7 @@ A.sgap = i => {
   prefillSets(e, W.x[i].filter(s => s.t != 1));
   R();
 };
-const lastTimeLine = (e, i) => {
+export const lastTimeLine = (e, i) => {
   const h = lastHistory(e);
   if (!h || !h.s.length)
     return '';

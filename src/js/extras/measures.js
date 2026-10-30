@@ -2,11 +2,19 @@
    Medidas corporales y fotos de progreso.
    Define: MEASURES, PHOTO_ANGLES, measureState, photoCache, photoCount, photoDbPromise, openPhotoDb, photoDb, photoTx, measuresShown, loadPhotos, preparePhoto, photoFull, allPhotosFull, validPhoto, mergePhotos, … (+7)  · acciones/registros: 15
 */
-const MEASURES = [['cu', 'Cuello'], ['ho', 'Hombros'], ['pe', 'Pecho'], ['br', 'Brazo'], ['ci', 'Cintura'], ['ca', 'Cadera'], ['mu', 'Muslo'], ['ge', 'Gemelo']];
+import { dayKey, fmtDateShort, newId, round1 } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { logError } from '../core/errors.js';
+import { A, C } from '../core/registry.js';
+import { S, saveState } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { confirmDialog, fullPage, pgHead, sheet } from '../core/ui.js';
+import { checkAchievements } from './achievements.js';
+export const MEASURES = [['cu', 'Cuello'], ['ho', 'Hombros'], ['pe', 'Pecho'], ['br', 'Brazo'], ['ci', 'Cintura'], ['ca', 'Cadera'], ['mu', 'Muslo'], ['ge', 'Gemelo']];
 const PHOTO_ANGLES = { f: 'Frente', s: 'Lado', b: 'Espalda' };
 let measureState = { tab: 0, ang: 'f', k: 'ci', cmp: 0, sel: [] };
 let photoCache = [];
-let photoCount = 0;
+export let photoCount = 0;
 let photoDbPromise = null;
 const openPhotoDb = () => new Promise((res, rej) => {
   try {
@@ -59,7 +67,7 @@ const photoTx = (st, mode, fn) => photoDb().then(db => new Promise((res, rej) =>
   }
 }));
 const measuresShown = () => !!document.querySelector('#sh.full #f2ms');
-const loadPhotos = () => photoTx('m', 'readonly', tx => tx.objectStore('m').getAll()).then(a => {
+export const loadPhotos = () => photoTx('m', 'readonly', tx => tx.objectStore('m').getAll()).then(a => {
   photoCache = (a || []).filter(x => x && x.id && typeof x.t == 'string').sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : (a.id < b.id ? 1 : -1));
   photoCount = photoCache.length;
   if (measuresShown() && measureState.tab == 1 && !measureState.view)
@@ -144,7 +152,7 @@ C.f2ph = async (e) => {
   }
 };
 const photoFull = id => photoTx('f', 'readonly', tx => tx.objectStore('f').get(id)).then(r => r && r.u);
-const allPhotosFull = async () => {
+export const allPhotosFull = async () => {
   const [m, f] = await Promise.all([photoTx('m', 'readonly', tx => tx.objectStore('m').getAll()), photoTx('f', 'readonly', tx => tx.objectStore('f').getAll())]);
   const fm = {};
   (f || []).forEach(x => {
@@ -154,7 +162,7 @@ const allPhotosFull = async () => {
   return (m || []).filter(x => x && x.id && fm[x.id]).map(x => ({ id: x.id, d: x.d, a: x.a, t: x.t, u: fm[x.id] }));
 };
 const validPhoto = p => p && typeof p.id == 'string' && p.id.length <= 40 && /^[\w-]+$/.test(p.id) && /^\d{4}-\d{2}-\d{2}$/.test(p.d || '') && PHOTO_ANGLES[p.a] && typeof p.t == 'string' && typeof p.u == 'string' && p.t.length < 4e5 && p.u.length < 2.5e6 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p.t) && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p.u);
-const mergePhotos = async (arr) => {
+export const mergePhotos = async (arr) => {
   const L = (Array.isArray(arr) ? arr : []).filter(validPhoto).slice(0, 80);
   if (!L.length)
     return 0;
@@ -167,7 +175,7 @@ const mergePhotos = async (arr) => {
   await loadPhotos();
   return L.length;
 };
-function measureList() {
+export function measureList() {
   return (Array.isArray(S.ms) ? S.ms : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object');
 }
 function measureDelta(k) {

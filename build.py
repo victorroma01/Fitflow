@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """StrataFit · build
 
-Compila src/ en la app (sin dependencias, solo Python 3; node opcional para comprobar).
+Compila src/ en la app. Necesita Python 3 y esbuild («npm install»), que une los módulos ES y comprime el código.
 
-  python3 build.py                 → dist/app/  (index.html + sw.js + version.json + manifiesto + iconos + img/, listo para GitHub Pages)
+  python3 build.py                 → dist/app/  (index.html + js/ + sw.js + version.json + manifiesto + iconos + img/, para GitHub Pages)
                                      dist/stratafit.html  (archivo único con todo incrustado, sin service worker)
   python3 build.py --check         → además ejecuta las comprobaciones estáticas (tools/check.js, necesita node + typescript)
   python3 build.py --only app      → solo el paquete de despliegue
@@ -14,8 +14,9 @@ Compila src/ en la app (sin dependencias, solo Python 3; node opcional para comp
 Estructura (todo vive en src/):
   src/index.html          plantilla (@@CSS@@ y @@JS@@ se sustituyen al compilar)
   src/css/NN-nombre.css   trozos de CSS; se concatenan por orden alfabético (el orden importa por la cascada)
-  src/js/modules.txt      orden de carga de los módulos JS (el orden importa: ver README)
-  src/js/<area>/<m>.js    módulos: listas de sentencias de ámbito global; el build las une en un solo <script>
+  src/js/main.js          punto de entrada: importa los módulos en orden de carga (cada uno registra sus manejadores)
+  src/js/<area>/<m>.js    módulos ES (import/export); esbuild los une: en un solo <script> (archivo único) o en js/
+                          con lo poco usado en archivos aparte que se cargan al usarlo (paquete)
   src/js/data/media.js    molde que el build sustituye por las fotos de src/img/ (rutas o base64 según la variante)
   src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
@@ -28,12 +29,13 @@ Las dos variantes solo se diferencian en:
   · data/media: base64 en el archivo único, rutas img/… en el paquete.
 El paquete lleva además version.json (versión publicada y sus novedades), que la app consulta para avisar de actualizaciones.
 """
-import os, re, sys, json, base64, shutil, subprocess, argparse
+import os, re, sys, json, base64, shutil, tempfile, subprocess, argparse
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
 DIST = os.path.join(ROOT, 'dist')
 IMG = os.path.join(SRC, 'img')
+ENTRY = 'main.js'
 MEDIA_MODULE = 'data/media.js'
 RELEASE_MODULE = 'data/release.js'
 CHANGELOG = os.path.join(ROOT, 'CHANGELOG.md')
@@ -57,35 +59,41 @@ def die(msg):
 
 
 def module_list():
+    """Módulos en orden de carga: los «import './…';» de src/js/main.js."""
     out = []
-    for l in read(os.path.join(SRC, 'js', 'modules.txt')).splitlines():
-        l = l.strip()
-        if l and not l.startswith('#'):
-            out.append(l)
+    for l in read(os.path.join(SRC, 'js', ENTRY)).splitlines():
+        m = re.match(r"^import '\./([^']+)';$", l.strip())
+        if m:
+            out.append(m.group(1))
     return out
+
+
+def lazy_modules():
+    """Módulos que se cargan al usarlos: los import('…') de src/js/core/lazy.js."""
+    return [os.path.normpath(os.path.join('core', m)).replace(os.sep, '/') for m in re.findall(r"import\('([^']+)'\)", read(os.path.join(SRC, 'js', 'core', 'lazy.js')))]
 
 
 def check_tree(mods):
     seen = set()
     for m in mods:
         if m in seen:
-            die('módulo repetido en modules.txt: ' + m)
+            die('módulo importado dos veces en main.js: ' + m)
         seen.add(m)
         if not os.path.isfile(os.path.join(SRC, 'js', m)):
-            die('falta el módulo listado: ' + m)
+            die('main.js importa un módulo que no existe: ' + m)
     for dp, _, fs in os.walk(os.path.join(SRC, 'js')):
         for f in fs:
             if f.endswith('.js'):
                 rel = os.path.relpath(os.path.join(dp, f), os.path.join(SRC, 'js')).replace(os.sep, '/')
-                if rel not in seen:
-                    die('módulo sin listar en modules.txt: ' + rel)
+                if rel not in seen and rel != ENTRY and rel not in lazy_modules():
+                    die('módulo que ni main.js importa ni core/lazy.js carga: ' + rel)
     if mods[-1] != 'core/boot.js':
         die('core/boot.js debe ser el último módulo (arranque)')
     if mods[0] != 'core/util.js':
         die('core/util.js debe ser el primero')
     for gm in (MEDIA_MODULE, RELEASE_MODULE):
         if gm not in seen:
-            die('falta ' + gm + ' en modules.txt')
+            die('main.js debe importar ' + gm)
 
 
 # ── fotos ──────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -143,7 +151,7 @@ def media_js(m, inline):
         'exFor': m['exFor'],
         'exAlias': m['exAlias'],
     }
-    return 'const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
+    return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 
 
 # ── novedades (CHANGELOG.md) ────────────────────────────────────────────────────────────────────────────────────────
@@ -199,7 +207,7 @@ def release_notes(ver):
 
 
 def release_js(rel):
-    return 'const RELEASE = ' + json.dumps(rel, ensure_ascii=False, separators=(',', ':')) + ';'
+    return 'export const RELEASE = ' + json.dumps(rel, ensure_ascii=False, separators=(',', ':')) + ';'
 
 
 def version_json(entries):
@@ -211,35 +219,88 @@ def version_json(entries):
 
 # ── compilación ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-def compile_js(mods, generated):
-    """Une los módulos. generated = {módulo molde: código que lo sustituye} (data/media, data/release)."""
-    parts = []
-    for m in mods:
-        t = read(os.path.join(SRC, 'js', m))
-        if m in generated:
-            name = re.match(r'const (\w+)', generated[m]).group(1)
-            head = re.match(r'\s*/\*.*?\*/\s*', t, re.S)
-            n = len(re.findall(r'^const ' + name + r'\s*=', t, re.M))
-            if not head or n != 1:
-                die('%s debe tener su cabecera y una sola línea «const %s = …»' % (m, name))
-            t = head.group(0) + generated[m] + '\n'
-        if '</script' in t.lower():
-            die('"</script" dentro de ' + m + ' rompería el HTML')
-        parts.append(t.rstrip('\n'))
-    return '\n'.join(parts) + '\n'
+def esbuild_bin():
+    """esbuild de node_modules (npm install) o el indicado en la variable ESBUILD."""
+    for c in (os.environ.get('ESBUILD'), os.path.join(ROOT, 'node_modules', '.bin', 'esbuild'), shutil.which('esbuild')):
+        if c and os.path.isfile(c):
+            return c
+    die('falta esbuild: ejecuta «npm install» (o indica su ruta en la variable ESBUILD)')
+
+
+# código para navegadores de 2020 en adelante (iOS 14+); comprimido, con los textos en UTF-8 tal cual
+ESBUILD_COMMON = ['--bundle', '--minify', '--target=es2020', '--charset=utf8', '--legal-comments=none', '--log-level=warning']
+
+
+def run_esbuild(args, stdin=None):
+    r = subprocess.run([esbuild_bin()] + args, input=stdin, capture_output=True, text=True, cwd=ROOT)
+    if r.returncode:
+        die('esbuild:\n' + (r.stderr or r.stdout))
+    if r.stderr.strip():
+        print(r.stderr.rstrip())
+    return r.stdout
+
+
+def stage(generated, deploy):
+    """Copia src/js a una carpeta temporal con los moldes generados (data/media, data/release) y, en el paquete, FFDEP = 1."""
+    st = tempfile.mkdtemp(prefix='sf_js_')
+    shutil.copytree(os.path.join(SRC, 'js'), st, dirs_exist_ok=True)
+    for m, code in generated.items():
+        p = os.path.join(st, m)
+        t = read(p)
+        name = re.match(r'export const (\w+)', code).group(1)
+        head = re.match(r'\s*/\*.*?\*/\s*', t, re.S)
+        if not head or len(re.findall(r'^export const ' + name + r'\s*=', t, re.M)) != 1:
+            die('%s debe tener su cabecera y una sola línea «export const %s = …»' % (m, name))
+        write(p, head.group(0) + code + '\n')
+    if deploy:
+        p = os.path.join(st, 'core', 'util.js')
+        t, n = re.subn(r'^export const FFDEP = 0;', 'export const FFDEP = 1;', read(p), flags=re.M)
+        if n != 1:
+            die('core/util.js debe declarar una vez «export const FFDEP = 0;»')
+        write(p, t)
+    return st
+
+
+def bundle_single(st):
+    """Archivo único: todo en un script clásico (IIFE), también lo que en el paquete se carga al usarlo."""
+    out = os.path.join(st, '_out.js')
+    run_esbuild([os.path.join(st, ENTRY), '--format=iife', '--outfile=' + out] + ESBUILD_COMMON)
+    js = read(out)
+    if '</script' in js.lower():
+        die('"</script" dentro del JS compilado rompería el HTML')
+    return js
+
+
+def bundle_app(st, outdir):
+    """Paquete: módulos ES en js/ con nombres que cambian con el contenido. Los import() dinámicos (lo poco usado) quedan
+    en archivos aparte. Devuelve el archivo de entrada, los que importa al arrancar y todos los generados."""
+    meta = os.path.join(st, '_meta.json')
+    run_esbuild([os.path.join(st, ENTRY), '--format=esm', '--splitting', '--outdir=' + outdir, '--entry-names=[name]-[hash]',
+                 '--chunk-names=[name]-[hash]', '--metafile=' + meta] + ESBUILD_COMMON)
+    outs = json.loads(read(meta))['outputs']
+    rel = lambda p: 'js/' + os.path.basename(p)
+    entry = next(p for p, o in outs.items() if o.get('entryPoint'))
+    eager, todo = [], [entry]
+    while todo:
+        for i in outs[todo.pop()].get('imports', []):
+            if i['kind'] == 'import-statement' and rel(i['path']) not in eager:
+                eager.append(rel(i['path']))
+                todo.append(next(p for p in outs if rel(p) == rel(i['path'])))
+    return rel(entry), eager, sorted(rel(p) for p in outs)
 
 
 def compile_css():
+    """Une los trozos de CSS por orden alfabético y los comprime con esbuild."""
     d = os.path.join(SRC, 'css')
     names = sorted(f for f in os.listdir(d) if f.endswith('.css'))
-    css = ''.join(read(os.path.join(d, f)) for f in names)
+    css = run_esbuild(['--loader=css', '--minify', '--log-level=warning'], ''.join(read(os.path.join(d, f)) for f in names)).strip()
     if '</style' in css.lower():
         die('"</style" dentro del CSS')
     return css
 
 
 def app_version(js):
-    m = re.search(r"const APPV\s*=\s*'([^']+)'", js)
+    m = re.search(r"export const APPV\s*=\s*'([^']+)'", js)
     return m.group(1) if m else '?'
 
 
@@ -258,21 +319,26 @@ def page(tpl, css, js):
     return tpl.replace('@@CSS@@', css).replace('@@JS@@', js)
 
 
-def deploy_variant(h):
-    """Paquete instalable: FFDEP=1 (etiquetas fijas en la cabecera, aviso de versión nueva, sin recarga forzada)."""
-    h, n = re.subn(r'const FFDEP\s*=\s*0\s*;', 'const FFDEP = 1;', h)
-    if n != 1:
-        die('variante app: la constante FFDEP aparece %d veces (esperada 1, en core/util)' % n)
-    if h.count('<title>StrataFit</title>') != 1:
-        die('variante app: falta <title>StrataFit</title> en la plantilla')
-    return h.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + HEAD_TAGS)
+LOAD_FAIL = "window.__ffe&&__ffe('No se ha podido cargar la app. Comprueba la conexión y pulsa Reintentar.')"
+
+
+def deploy_page(tpl, css, entry, eager):
+    """index.html del paquete: etiquetas fijas en la cabecera (manifiesto, icono…), precarga de los módulos del arranque y el
+    módulo de entrada (si no carga, la pantalla de error lo dice al momento)."""
+    if tpl.count('<title>StrataFit</title>') != 1 or tpl.count('<script>\n@@JS@@</script>') != 1:
+        die('la plantilla debe tener <title>StrataFit</title> y «<script>» + salto + @@JS@@ + «</script>»')
+    pre = ''.join('\n<link rel="modulepreload" href="%s">' % f for f in [entry] + eager)
+    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + HEAD_TAGS + pre)
+    h = h.replace('<script>\n@@JS@@</script>', '<script type="module" src="%s" onerror="%s"></script>' % (entry, LOAD_FAIL))
+    return h.replace('@@CSS@@', css)
 
 
 def service_worker(files):
+    """sw.js con la lista de precarga completa: el código (js/…) y las fotos (img/…)."""
     t = read(os.path.join(ROOT, 'static', 'sw.js'))
-    if t.count('/*@@IMG@@*/') != 1:
-        die('static/sw.js debe contener una vez el marcador /*@@IMG@@*/ dentro de la lista de precarga')
-    return t.replace('/*@@IMG@@*/', ''.join(",'%s'" % rel for rel, _ in files))
+    if t.count('/*@@FILES@@*/') != 1:
+        die('static/sw.js debe contener una vez el marcador /*@@FILES@@*/ dentro de la lista de precarga')
+    return t.replace('/*@@FILES@@*/', ''.join(",'%s'" % rel for rel in files))
 
 
 def static_files():
@@ -281,7 +347,7 @@ def static_files():
 
 def static_checks(js, html):
     """Comprobaciones baratas, sin dependencias externas."""
-    if len(re.findall(r'window\.__ffok\s*=\s*1\s*;', js)) != 1:
+    if len(re.findall(r'window\.__ffok\s*=\s*1\b', js)) != 1:
         die('no se encuentra la marca de arranque correcto (window.__ffok)')
     if not html.rstrip().endswith('</html>'):
         die('HTML incompleto')
@@ -320,26 +386,32 @@ def main():
     if tpl.count('@@CSS@@') != 1 or tpl.count('@@JS@@') != 1:
         die('la plantilla debe contener @@CSS@@ y @@JS@@ una vez cada uno')
     os.makedirs(DIST, exist_ok=True)
-    ver = '?'
+    ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
+    rel_js = release_js(release_for(entries, ver))
     if a.only != 'app':
-        ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
-        js = compile_js(mods, {MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: release_js(release_for(entries, ver))})
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False)
+        try:
+            js = bundle_single(st)
+        finally:
+            shutil.rmtree(st, ignore_errors=True)
         html = page(tpl, css, js)
         static_checks(js, html)
         node_check(js, 'archivo único')
         write(os.path.join(DIST, 'stratafit.html'), html)
-        print('  dist/stratafit.html  %d bytes (fotos incrustadas)' % len(html.encode('utf-8')))
+        print('  dist/stratafit.html  %d bytes (código %d KB comprimido, fotos incrustadas)' % (len(html.encode('utf-8')), len(js.encode('utf-8')) // 1024))
     if a.only != 'single':
-        ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
-        js = compile_js(mods, {MEDIA_MODULE: media_js(m, inline=False), RELEASE_MODULE: release_js(release_for(entries, ver))})
-        html = deploy_variant(page(tpl, css, js))
-        static_checks(js, html)
-        node_check(js, 'paquete')
         out = os.path.join(DIST, 'app')
         shutil.rmtree(out, ignore_errors=True)
         os.makedirs(out)
+        st = stage({MEDIA_MODULE: media_js(m, inline=False), RELEASE_MODULE: rel_js}, deploy=True)
+        try:
+            entry, eager, js_files = bundle_app(st, os.path.join(out, 'js'))
+        finally:
+            shutil.rmtree(st, ignore_errors=True)
+        html = deploy_page(tpl, css, entry, eager)
+        static_checks(''.join(read(os.path.join(out, f)) for f in js_files), html)
         write(os.path.join(out, 'index.html'), html)
-        write(os.path.join(out, 'sw.js'), service_worker(m['files']))
+        write(os.path.join(out, 'sw.js'), service_worker(js_files + [rel for rel, _ in m['files']]))
         write(os.path.join(out, 'version.json'), version_json(entries))
         for n, p in static_files().items():
             shutil.copy(p, os.path.join(out, n))
@@ -348,10 +420,12 @@ def main():
             os.makedirs(os.path.dirname(os.path.join(out, rel)), exist_ok=True)
             shutil.copy(p, os.path.join(out, rel))
             size += os.path.getsize(p)
-        print('  dist/app/            index.html %d bytes + sw.js, version.json, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
-            os.path.getsize(os.path.join(out, 'index.html')), len(m['files']), size // 1024))
-    print('StrataFit %s · %d módulos JS · %d trozos CSS · %d portadas y %d fotos de ejercicio' % (
-        ver, len(mods), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day']), len(m['ex'])))
+        start = sum(os.path.getsize(os.path.join(out, f)) for f in [entry] + eager)
+        later = sum(os.path.getsize(os.path.join(out, f)) for f in js_files) - start
+        print('  dist/app/            index.html %d bytes + js/ (%d KB al arrancar, %d KB al usarlo, %d archivos) + sw.js, version.json, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
+            os.path.getsize(os.path.join(out, 'index.html')), start // 1024, later // 1024, len(js_files), len(m['files']), size // 1024))
+    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas y %d fotos de ejercicio' % (
+        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day']), len(m['ex'])))
     if a.check:
         tool = os.path.join(ROOT, 'tools', 'check.js')
         if not os.path.isfile(tool):

@@ -78,6 +78,7 @@ def trace(file,seed,steps):
             adv=rng.choice([0,50,400,1500,6000,31000]);
             try:pg.clock.run_for(adv)
             except Exception as e:res['errs'].append('CLOCK '+str(e)[:100])
+            pg.wait_for_timeout(25)  # tiempo real para lo asíncrono que no depende del reloj (IndexedDB: copias, fotos)
             try:
                 sg=pg.evaluate(SIG)
             except Exception as e:

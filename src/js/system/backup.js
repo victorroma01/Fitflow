@@ -2,21 +2,38 @@
    Copias de seguridad, restauración y avisos.
    Define: pendingRestore, backupAge, backupReminder, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, parseBackup, backupDate, askRestore, preRestore, restoreBackup, … (+5)  · acciones/registros: 8
 */
-let pendingRestore = null;
-const backupAge = () => {
+import { $, APPV, dayKey, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { Store } from '../core/store.js';
+import { logError } from '../core/errors.js';
+import { lockSaves, replaceSavedState } from '../core/persist.js';
+import { A, C } from '../core/registry.js';
+import { flushState, S, saveState } from '../core/state.js';
+import { confirmDialog, sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { WIP_KEY } from '../workout/resume.js';
+import { downloadFile } from './files.js';
+import { fillSnapshots } from './snapshots.js';
+import { allPhotosFull, mergePhotos, photoCount } from '../extras/measures.js';
+export let pendingRestore = null;
+/** Cambia `pendingRestore` desde otros módulos (pruebas: core/debug). */
+export const setPendingRestore = v => {
+  pendingRestore = v;
+};
+export const backupAge = () => {
   if (!S.bkd)
     return 'Aún no has guardado ninguna copia.';
   const d = Math.floor((Date.now() - S.bkd) / 864e5);
   return 'Última copia: ' + (d <= 0 ? 'hoy' : d == 1 ? 'ayer' : 'hace ' + d + ' días') + '.';
 };
-const backupReminder = () => {
+export const backupReminder = () => {
   if (S.logs.length < 3 || (S.bkd && Date.now() - S.bkd < 21 * 864e5))
     return '';
   return '<div class="cd"><b>Haz una copia de seguridad</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Tus entrenos solo viven en este dispositivo. ' + (S.bkd ? backupAge() : 'Aún no has guardado ninguna copia.') + '</div><button data-a="zbk" style="width:100%">Copia de seguridad</button></div>';
 };
 const BACKUP_FORMAT = 2;
-const countOf = x => Array.isArray(x) ? x.length : (x && typeof x == 'object' ? Object.keys(x).length : 0);
-const plural = (n, a, b) => n + ' ' + (n == 1 ? a : b);
+export const countOf = x => Array.isArray(x) ? x.length : (x && typeof x == 'object' ? Object.keys(x).length : 0);
+export const plural = (n, a, b) => n + ' ' + (n == 1 ? a : b);
 const wipSession = () => {
   try {
     const z = JSON.parse(Store.get(WIP_KEY));
@@ -44,7 +61,7 @@ const backupRows = (s, wip) => {
   return r;
 };
 const backupSummary = s => [plural(countOf(s.logs), 'entreno', 'entrenos'), plural(countOf(s.cr), 'rutina', 'rutinas'), plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos'), 'comidas de ' + plural(countOf(s.meals), 'día', 'días')].join(' · ');
-const buildBackup = () => {
+export const buildBackup = () => {
   const wip = wipSession();
   return JSON.stringify(Object.assign({ _sf: { app: 'StrataFit', fmt: BACKUP_FORMAT, ver: APPV, at: new Date().toISOString(), wip: wip || undefined, sum: backupRows(S, wip) } }, S));
 };
@@ -100,11 +117,11 @@ const parseBackup = txt => {
     wip = w;
   return { s: o, meta, wip, fix };
 };
-const backupDate = (t, l) => {
+export const backupDate = (t, l) => {
   const d = new Date(t);
   return isNaN(d) ? '' : d.toLocaleDateString('es', l ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' });
 };
-const askRestore = txt => {
+export const askRestore = txt => {
   let r;
   try {
     r = parseBackup(txt);
@@ -128,7 +145,7 @@ const preRestore = () => {
   }
   return null;
 };
-const restoreBackup = () => {
+export const restoreBackup = () => {
   const r = pendingRestore;
   if (!r || !r.s)
     return;
@@ -251,13 +268,13 @@ A.zbk = () => {
     + (p ? '<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (' + X(backupDate(p.t)) + ')</button>' : ''));
   fillSnapshots();
 };
-const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;
+export const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;
 A.bknx = () => {
   S.nbk = 1;
   saveState();
   R();
 };
-const restoreBanner = () => '<div class="cd" style="margin:0 0 12px"><b>¿Ya usabas StrataFit?</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="zbk">Importar copia</button><button data-a="bknx">Ahora no</button></div></div>';
+export const restoreBanner = () => '<div class="cd" style="margin:0 0 12px"><b>¿Ya usabas StrataFit?</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="zbk">Importar copia</button><button data-a="bknx">Ahora no</button></div></div>';
 function backupRowsFull(s) {
   const L = (Array.isArray(s.logs) ? s.logs : []).filter(l => l && typeof l == 'object');
   const cd = L.filter(l => l.k == 'c').length;

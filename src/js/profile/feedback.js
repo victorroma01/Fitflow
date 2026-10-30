@@ -2,6 +2,10 @@
    Sonido, vibración y avisos de descanso.
    Define: audioCtx, audioContext, beep, canVibrate, buzz, soundVolume, soundSequence, alertSettings  · acciones/registros: 8
 */
+import { A, C } from '../core/registry.js';
+import { S, saveState } from '../core/state.js';
+import { segmented } from '../core/ui.js';
+import { R } from '../core/render.js';
 let audioCtx = null;
 const audioContext = () => {
   const C = window.AudioContext || window.webkitAudioContext;
@@ -20,7 +24,7 @@ document.addEventListener('pointerdown', () => {
     /* audio opcional: se activa con el primer toque */
   }
 }, { once: true });
-const beep = f => {
+export const beep = f => {
   if (S.snd === 0)
     return;
   try {
@@ -53,7 +57,7 @@ A.zsnd = () => {
   setTimeout(() => beep(1), 2100);
 };
 const canVibrate = () => typeof navigator != 'undefined' && typeof navigator.vibrate == 'function';
-const buzz = p => {
+export const buzz = p => {
   if (S.vib === 0)
     return;
   try {
@@ -98,7 +102,7 @@ A.zsnd1 = () => {
   beep(0);
   setTimeout(() => beep(1), 420);
 };
-const alertSettings = () => '<label>Avisos de descanso</label>'
+export const alertSettings = () => '<label>Avisos de descanso</label>'
   + '<label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" style="width:auto" ' + (S.vib === 0 ? '' : 'checked') + ' data-c="vib"> Vibración al terminar el descanso</label>'
   + (canVibrate() ? '' : '<small class="mu" style="display:block;margin:-2px 0 6px">Este dispositivo no permite vibrar desde la web (iPhone). El aviso será por sonido.</small>')
   + '<small class="mu" style="display:block">Volumen del aviso</small>' + segmented('vol', S.vol == null ? 1 : S.vol, [[0, 'Bajo'], [1, 'Medio'], [2, 'Alto']])

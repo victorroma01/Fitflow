@@ -2,6 +2,16 @@
    Cambiar un ejercicio por otro (swap) y deshacer.
    Define: swapExercise, swapState, swapCandidates, swapTiers, swapBody, swapScope  · acciones/registros: 6
 */
+import { $, X } from '../core/util.js';
+import { A, U } from '../core/registry.js';
+import { groupOf } from '../data/library.js';
+import { S, saveState, W } from '../core/state.js';
+import { sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { exAll, exCellHtml, exOrder, exSearchText, overlapCount } from './model.js';
+import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
+import { fixUnits } from '../workout/targets.js';
+import { prefillSets } from '../workout/progression.js';
 const swapExercise = (i, b) => {
   const nn = b.dataset.n;
   const d = S.plan[S.sel].ex;
@@ -57,7 +67,7 @@ A.zun = i => {
   saveState();
   R();
 };
-let swapState = { i: 0, q: '', eq: [], all: 0 };
+export let swapState = { i: 0, q: '', eq: [], all: 0 };
 const swapCandidates = c => {
   const inDay = new Set(S.plan[S.sel].ex.map(x => x.n));
   const q = swapState.q.trim();
@@ -84,7 +94,7 @@ const swapTiers = (c, l) => {
   const so = a => a.sort((x, y) => y[0] - x[0] || exOrder(x[1]) - exOrder(y[1])).map(x => x[1]);
   return [['Mismo enfoque', so(t0)], ['Mismo grupo muscular', so(t1).concat(so(t2))], ['Músculos relacionados', so(t3).slice(0, swapState.q ? 40 : 10)]];
 };
-const swapBody = () => {
+export const swapBody = () => {
   const cur = S.plan[S.sel].ex[swapState.i];
   const c = exAll().find(x => x.n == cur.n) || { n: cur.n, p: [], s: [] };
   const cand = swapCandidates(c);

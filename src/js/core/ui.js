@@ -1,7 +1,11 @@
 /* ═══ core/ui ═══
    Hojas inferiores (sheet, fullPage), diálogos (dialog, confirmDialog), avisos (toast), menú lateral y componentes base.
-   Define: sheetBarFix, sheet, confirmDialog, dialog, toast, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 5
+   Define: sheetBarFix, sheet, confirmDialog, dialog, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 5
 */
+import { $ } from './util.js';
+import { logError } from './errors.js';
+import { A } from './registry.js';
+import { icon } from './icons.js';
 function sheetBarFix() {
   try {
     const s = $('#sh');
@@ -17,7 +21,7 @@ function sheetBarFix() {
     logError('barra de la hoja', e);
   }
 }
-const sheet = h => {
+export const sheet = h => {
   const s = $('#sh');
   const p = s.querySelector('.sp');
   if (h && p && s.className == 'full') {
@@ -29,9 +33,9 @@ const sheet = h => {
   s.innerHTML = h ? '<div class="bk" data-a="cl"></div><div class="sp">' + h + '</div>' : '';
   sheetBarFix();
 };
-const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'zno', ''], [l, a, 'pr']]);
+export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'zno', ''], [l, a, 'pr']]);
 document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt"></div>');
-function dialog(t, p, b) {
+export function dialog(t, p, b) {
   $('#dg').innerHTML = '<div class="dgb"><div class="dgc"><h3 style="margin:0 0 6px">' + t + '</h3><p class="mu" style="margin:0 0 16px;font-size:14px">' + p + '</p><div class="g2" style="grid-template-columns:repeat(' + b.length + ',1fr)">' + b.map(x => '<button class="' + x[2] + '" data-a="dga" data-v="' + x[1] + '">' + x[0] + '</button>').join('') + '</div></div></div>';
 }
 A.dga = (i, b) => {
@@ -41,29 +45,27 @@ A.dga = (i, b) => {
 };
 A.zno = () => {
 };
-const toast = m => {
-  const e = $('#tt');
-  e.innerHTML = '<div class="tst">' + X(m) + '</div>';
-  clearTimeout(toast.h);
-  toast.h = setTimeout(() => {
-    e.innerHTML = '';
-  }, 2600);
-};
 A.mnx = (i, b) => {
   $('#mn').innerHTML = '';
   A[b.dataset.v]();
 };
-const sheetToTop = () => {
+/** Tareas al cerrar la hoja con «Cerrar» (p. ej. apagar la cámara del escáner): los módulos que lo necesitan se apuntan aquí. */
+export const onSheetClose = [];
+A.cl = () => {
+  onSheetClose.forEach(f => f());
+  sheet();
+};
+export const sheetToTop = () => {
   const p = $('#sh .sp');
   if (p)
     p.scrollTop = 0;
 };
-const fullPage = h => {
+export const fullPage = h => {
   sheet(h);
   $('#sh').className = 'full';
   sheetToTop();
 };
-const pgHead = (t, back) => '<div class="row"><button data-a="' + (back || 'cl') + '" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 class="pgt">' + t + '</h1>';
+export const pgHead = (t, back) => '<div class="row"><button data-a="' + (back || 'cl') + '" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 class="pgt">' + t + '</h1>';
 A.menu = () => {
   $('#mn').innerHTML = '<div class="mbk" data-a="mnc"></div><div class="msd"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="mnc" aria-label="Cerrar">' + icon('x', 22) + '</button><div class="mti">Menú</div>' + [['pg', 'prog', 'Programas'], ['cl2', 'cal', 'Calendario'], ['lg', 'log', 'Registros'], ['rw', 'reset', 'Reiniciar semana']].map((x, i) => '<button class="mi" style="--d:' + (70 + i * 60) + 'ms" data-a="mnx" data-v="' + x[0] + '"><span>' + x[2] + '</span>' + icon(x[1], 22) + '</button>').join('') + '</div></div>';
 };
@@ -78,5 +80,5 @@ A.mnc = () => {
     $('#mn').innerHTML = '';
   }, 240);
 };
-const segmented = (a, cur, list) => '<div class="seg' + (list.length == 2 ? ' s2' : '') + '">' + list.map(x => '<button class="' + (cur == x[0] ? 'on' : '') + '" data-a="' + a + '" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>';
-const linkRow = (ico, t, s, a, i) => '<button class="cd f2lk" data-a="' + a + '"' + (i != null ? ' data-i="' + i + '"' : '') + '>' + icon(ico, 30) + '<span><b>' + t + '</b><br><small>' + s + '</small></span></button>';
+export const segmented = (a, cur, list) => '<div class="seg' + (list.length == 2 ? ' s2' : '') + '">' + list.map(x => '<button class="' + (cur == x[0] ? 'on' : '') + '" data-a="' + a + '" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>';
+export const linkRow = (ico, t, s, a, i) => '<button class="cd f2lk" data-a="' + a + '"' + (i != null ? ' data-i="' + i + '"' : '') + '>' + icon(ico, 30) + '<span><b>' + t + '</b><br><small>' + s + '</small></span></button>';

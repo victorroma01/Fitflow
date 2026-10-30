@@ -1,18 +1,13 @@
 /* ═══ extras/foods-online ═══
    Alimentos en línea (Open Food Facts) y escáner de códigos.
-   Define: foldText, foodList, onlineFoods, onlineTimer, fetchTimeout, offProduct, searchOnline, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, … (+7)  · acciones/registros: 6
+   Define: onlineFoods, onlineTimer, fetchTimeout, offProduct, searchOnline, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, … (+7)  · acciones/registros: 6
 */
-const foldText = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-function foodList(q) {
-  const e = $('#rs');
-  if (!e)
-    return;
-  const k = foldText(String(q || '').trim());
-  const ws = k.split(/\s+/).filter(Boolean);
-  const L = allFoods().map((f, i) => ({ f, i, n: foldText(f.n) })).filter(o => !ws.length || ws.every(w => o.n.includes(w)));
-  L.sort((a, b) => (ws.length && b.n.startsWith(ws[0]) ? 1 : 0) - (ws.length && a.n.startsWith(ws[0]) ? 1 : 0));
-  e.innerHTML = L.slice(0, ws.length ? 60 : 30).map(o => '<div class="it" style="grid-template-columns:1fr auto" data-a="pk" data-i="' + o.i + '"><span>' + X(o.f.n) + '</span><small>' + o.f.b[0] + ' kcal/100 g</small></div>').join('') + (ws.length && !L.length ? '<p class="mu" style="font-size:13px;margin:10px 2px">No está en tu lista. Prueba «Buscar en internet» o créalo en «Nuevo».</p>' : '');
-}
+import { $, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A, U } from '../core/registry.js';
+import { addState, S, saveState } from '../core/state.js';
+import { onSheetClose, sheet } from '../core/ui.js';
+import { addSheet, foodList } from '../nutrition/add.js';
 var onlineFoods = [];
 let onlineTimer = 0;
 async function fetchTimeout(url, ms) {
@@ -332,10 +327,8 @@ function stopScan() {
     scanState = null;
   }
 }
-A.cl = () => {
-  stopScan();
-  sheet();
-};
+/* al cerrar la hoja (A.cl, core/ui) se apaga la cámara si estaba encendida */
+onSheetClose.push(stopScan);
 A.f2sc = () => {
   addState.pick = null;
   sheet('<h3>Escanear código de barras</h3><div class="f2sv"><video id="f2v" playsinline muted autoplay></video><div class="f2gd"></div></div><p id="f2sm" class="mu" style="margin:8px 2px;font-size:13px">Abriendo la cámara…</p>'
@@ -482,4 +475,3 @@ async function lookupBarcode(code) {
   }
 }
 /* — manejadores de esta función (registros A / C / U) — */
-U.fs = foodList;

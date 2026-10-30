@@ -3,6 +3,17 @@
    últimos errores y, si los hubo, datos dañados que se apartaron al arrancar. Nada sale del móvil salvo que se copie.
    Define: storageUse, badData, diagnosticsText, diagnosticsPage  · acciones/registros: 4
 */
+import { $, APPV, dayKey, FFDEP, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { Store } from '../core/store.js';
+import { clearErrorLog, errorLog, logError } from '../core/errors.js';
+import { partKey, partsFailed, savedFormat } from '../core/persist.js';
+import { A } from '../core/registry.js';
+import { S } from '../core/state.js';
+import { confirmDialog, fullPage, pgHead } from '../core/ui.js';
+import { copyText, downloadFile, isStandalone } from './files.js';
+import { backupDate } from './backup.js';
+import { offlineText } from './updates.js';
 /** Tamaño aproximado (caracteres) de cada clave de Store y de cada parte del estado (las comidas, sumando los meses). */
 const storageUse = () => {
   const size = k => {

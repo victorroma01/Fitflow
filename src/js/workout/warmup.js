@@ -2,11 +2,17 @@
    Series de calentamiento.
    Define: isWarmupLift, warmupHtml  · acciones/registros: 1
 */
+import { A } from '../core/registry.js';
+import { S, W } from '../core/state.js';
+import { R } from '../core/render.js';
+import { exAll } from '../library/model.js';
+import { COMPOUND_RE } from './rest.js';
+import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
 const isWarmupLift = e => {
   const x = exAll().find(y => y.n == e.n);
   return x && ['Barra', 'Smith'].includes(x.q) && COMPOUND_RE.test(e.n) && !/Hip thrust/i.test(e.n);
 };
-const warmupHtml = (e, i) => {
+export const warmupHtml = (e, i) => {
   const d = S.plan[S.sel];
   if (!W || !isWarmupLift(e) || d.ex.findIndex(isWarmupLift) != i || W.x[i].some(s => s.ok))
     return '';

@@ -3,9 +3,11 @@
    de diagnóstico de Perfil. Nada sale del móvil salvo que el usuario copie el informe.
    Define: ERROR_LIMIT, logError, errorLog, clearErrorLog
 */
+import { APPV } from './util.js';
+import { Store } from './store.js';
 const ERROR_LIMIT = 30;
 /** Anota un error. Nunca lanza: registrar no debe romper nada. */
-const logError = (where, e) => {
+export const logError = (where, e) => {
   try {
     const l = errorLog();
     const msg = e && (e.message || e.name) ? (e.name && e.name != 'Error' ? e.name + ': ' : '') + (e.message || '') : String(e);
@@ -17,7 +19,7 @@ const logError = (where, e) => {
   }
 };
 /** Errores guardados, del más antiguo al más reciente. */
-const errorLog = () => {
+export const errorLog = () => {
   try {
     const l = JSON.parse(Store.get(Store.K.err) || '[]');
     return Array.isArray(l) ? l : [];
@@ -26,7 +28,7 @@ const errorLog = () => {
     return [];
   }
 };
-const clearErrorLog = () => {
+export const clearErrorLog = () => {
   try {
     Store.del(Store.K.err);
   }

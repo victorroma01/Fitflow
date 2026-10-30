@@ -2,6 +2,17 @@
    Selector para añadir ejercicios al día.
    Define: addToDay, pickState, pickBody, pickSheet  · acciones/registros: 5
 */
+import { $, X } from '../core/util.js';
+import { A, U } from '../core/registry.js';
+import { EXERCISES } from '../data/library.js';
+import { addState, S, saveState, setAddState, W } from '../core/state.js';
+import { sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { categoryOf, exAll, exCellHtml, exCompare, exSearchText } from './model.js';
+import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, groupDropdown, groupMatch } from './filters.js';
+import { saveSession } from '../workout/resume.js';
+import { newPlanEx } from '../workout/targets.js';
+import { prefillSets } from '../workout/progression.js';
 /** Añade un ejercicio al día seleccionado. Si hay un entreno en curso, añade también sus series (si no, la sesión no podría pintarlo). */
 const addToDay = n => {
   const d = S.plan[S.sel];
@@ -22,8 +33,8 @@ A.lad = (i, b) => {
   R();
   b.textContent = '✓ Añadido';
 };
-let pickState = { g: '', gs: [], q: '', eq: [] };
-const pickBody = () => {
+export let pickState = { g: '', gs: [], q: '', eq: [] };
+export const pickBody = () => {
   const al = exAll().map((e, i) => ({ e, i }));
   const q = pickState.q.toLowerCase().trim();
   const bq = al.filter(o => !q || exSearchText(o.e).includes(q));
@@ -39,7 +50,7 @@ A.pick = () => {
   pickState = { g: '', gs: [], q: '', eq: [] };
   filterOpen.pk = 0;
   filterOpen.pkg = 0;
-  addState = { cat: 'Culturismo' };
+  setAddState({ cat: 'Culturismo' });
   sheet(pickSheet());
 };
 A.pkg = (i, b) => {

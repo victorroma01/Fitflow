@@ -2,13 +2,26 @@
    Lista de programas, vista previa y activación.
    Define: previewProgram  · acciones/registros: 4
 */
-let previewProgram = 0;
+import { fmtMinSec, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A } from '../core/registry.js';
+import { parseProgram, PROGRAM_NAMES, PROGRAM_NOTES } from '../data/library.js';
+import { LEVEL_NAMES, LEVEL_PROGRAM_NOTES } from '../data/levels.js';
+import { S, saveState, W } from '../core/state.js';
+import { confirmDialog, fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { dropResume } from '../workout/resume.js';
+import { restOf } from '../workout/rest.js';
+import { targetText, weeklySetsCard } from '../workout/targets.js';
+import { syncCustomProgram } from './create.js';
+import { isLevel, levelPlan, levelSegment, levelTag, previewLevel, programRow, setPreviewLevel } from './levels.js';
+export let previewProgram = 0;
 A.pv = (i, b) => {
   previewProgram = i;
   if (b)
-    previewLevel = isLevel(S.lv) ? S.lv : 'int';
+    setPreviewLevel(isLevel(S.lv) ? S.lv : 'int');
   if (!isLevel(previewLevel))
-    previewLevel = 'int';
+    setPreviewLevel('int');
   const act = S.cpi < 0 && S.prog == i && previewLevel == S.lv;
   const pl = act ? S.plan : levelPlan(parseProgram(i), previewLevel, i);
   sheet(pgHead(X(PROGRAM_NAMES[i]), 'pg') + '<p class="mu" style="margin:-6px 0 10px">' + X((previewLevel != 'int' && LEVEL_PROGRAM_NOTES[i] && LEVEL_PROGRAM_NOTES[i][previewLevel]) || PROGRAM_NOTES[i] || '') + '</p>' + levelSegment() + weeklySetsCard(pl) + pl.map((d, j) => '<div class="cd" style="margin:8px 0"><div class="row"><b>Día ' + (j + 1) + ' · ' + X(d.n) + '</b>' + (d.ex.length ? '<small>' + d.ex.reduce((s, e) => s + e.s, 0) + ' series</small>' : '') + '</div>' + (d.ex.length ? d.ex.map(e => '<div class="mu" style="font-size:13px;margin-top:3px">' + (e.b ? '<b style="color:#f59e0b;font-size:11px">SS </b>' : '') + X(e.n) + ' · ' + e.s + ' × ' + targetText(e) + ' · ' + fmtMinSec(restOf(e)) + '</div>').join('') : '<div class="mu" style="font-size:13px;margin-top:3px">Descanso</div>') + '</div>').join('') + '<div style="height:84px"></div>' + (act ? '' : (S.cpi < 0 && S.prog == i ? '<button class="sb pr" data-a="lvs" data-v="' + previewLevel + '" style="padding:16px;font-size:16px;border-radius:16px">Usar nivel ' + LEVEL_NAMES[previewLevel].toLowerCase() + '</button>' : '<button class="sb pr" data-a="sp2" data-i="' + i + '" style="padding:16px;font-size:16px;border-radius:16px">Cambiar plan de entrenamiento</button>')));

@@ -35,7 +35,7 @@ function norm(node) {
 }
 function parse(code) {
   const comments = [];
-  const ast = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'script', onComment: (block, text) => comments.push((block ? 'B:' : 'L:') + text.replace(/\s+/g, ' ').trim()) });
+  const ast = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module', onComment: (block, text) => comments.push((block ? 'B:' : 'L:') + text.replace(/\s+/g, ' ').trim()) });
   return { ast: norm(ast), comments: comments.sort() };
 }
 function diffPath(a, b, p) {

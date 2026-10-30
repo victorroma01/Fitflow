@@ -2,6 +2,17 @@
    Resumen del entreno e imagen para compartir.
    Define: pctChange, signed, summaryData, deltaChip, showSummary, summaryImage  · acciones/registros: 1
 */
+import { est1RM, fmtDateShort, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { logError } from '../core/errors.js';
+import { A } from '../core/registry.js';
+import { S } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { dialog, sheet } from '../core/ui.js';
+import { lastSummary, newRecords, setLastSummary } from '../workout/finish.js';
+import { weekStats } from '../dashboard/home.js';
+import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
+import { checkAchievements } from './achievements.js';
 const pctChange = (a, b) => {
   if (!(b > 0))
     return null;
@@ -43,12 +54,12 @@ function summaryData() {
   return o;
 }
 const deltaChip = (txt, cl) => '<span class="f2dc ' + (cl || '') + '">' + txt + '</span>';
-function showSummary() {
+export function showSummary() {
   try {
     const o = summaryData();
     if (!o)
       return;
-    lastSummary = lastSummary || {};
+    setLastSummary(lastSummary || {});
     lastSummary.sm = o;
     const l = o.l;
     let h = '<h3 style="margin:0">Entreno guardado</h3><small class="mu">' + X(l.n) + ' · ' + fmtDateShort(l.d, { weekday: 'long', day: 'numeric', month: 'long' }) + '</small>'

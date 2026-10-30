@@ -2,7 +2,19 @@
    Resumen y edición del día de entreno.
    Define: overviewPage, toggleOverviewEdit  · acciones/registros: 6
 */
-function overviewPage() {
+import { fmtMinSec, X } from '../core/util.js';
+import { A } from '../core/registry.js';
+import { overviewMode, S, saveState, setOverviewMode } from '../core/state.js';
+import { dialog } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { overviewSnapshot, setOverviewSnapshot } from '../routines/builder.js';
+import { dayBlocks, inSuperset } from './day.js';
+import { restOf, restSelect } from './rest.js';
+import { dayMinutes, rangeSelect, rirOf, targetText, tempoOf, unitOf } from './targets.js';
+import { isDeloadWeek } from './deload.js';
+import { coverStyle } from './images.js';
+import { exAnatomy } from '../extras/anatomy.js';
+export function overviewPage() {
   const d = S.plan[S.sel];
   const E = overviewMode == 2;
   const ns = d.ex.reduce((s, e) => s + e.s, 0);
@@ -12,12 +24,12 @@ function overviewPage() {
   }).join('')).join('') + (E ? '<button data-a="pick" style="width:100%;margin:12px 0">+ Añadir ejercicio</button>' : '') + '<div style="height:80px"></div>' + (E ? '' : '<button class="sb" data-a="go" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">Empezar entreno</button>');
 }
 A.zov = () => {
-  overviewMode = 1;
+  setOverviewMode(1);
   R();
   scrollTo(0, 0);
 };
 const toggleOverviewEdit = () => {
-  overviewMode = overviewMode == 2 ? 1 : 2;
+  setOverviewMode(overviewMode == 2 ? 1 : 2);
   R();
 };
 A.zlk = i => {
@@ -41,7 +53,7 @@ A.zlk = i => {
 };
 A.zove = () => {
   if (overviewMode == 1) {
-    overviewSnapshot = JSON.stringify(S.plan[S.sel]);
+    setOverviewSnapshot(JSON.stringify(S.plan[S.sel]));
     toggleOverviewEdit();
     return;
   }
@@ -63,7 +75,7 @@ A.zovb = () => {
   if (overviewMode == 2)
     A.zove();
   else {
-    overviewMode = 0;
+    setOverviewMode(0);
     R();
   }
 };

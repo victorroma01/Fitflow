@@ -2,6 +2,11 @@
    Registro de agua diaria.
    Define: waterGoal, waterCard, nutritionTab  · acciones/registros: 1
 */
+import { dayKey } from '../core/util.js';
+import { A } from '../core/registry.js';
+import { nutriDayOffset, S, saveState } from '../core/state.js';
+import { R } from '../core/render.js';
+import { nutritionBase } from './home.js';
 const waterGoal = () => {
   const w = +S.bio.w;
   return w ? Math.max(2000, Math.round(35 * w / 250) * 250) : 2500;
@@ -19,6 +24,6 @@ A.zwt = i => {
   saveState();
   R();
 };
-function nutritionTab() {
+export function nutritionTab() {
   return nutritionBase().replace('<details class="cd"><summary>Tipo de dieta', waterCard() + '<details class="cd"><summary>Tipo de dieta');
 }

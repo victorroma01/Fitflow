@@ -2,6 +2,13 @@
    Detección de estancamiento.
    Define: stagnation, stagnationCard  · acciones/registros: 2
 */
+import { est1RM, fmtDateShort, round1, X } from '../core/util.js';
+import { A } from '../core/registry.js';
+import { S, saveState } from '../core/state.js';
+import { sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { isDeloadWeek } from '../workout/deload.js';
+import { toDisplayWeight, weightUnit } from '../profile/units.js';
 function stagnation() {
   const out = [];
   if (typeof isDeloadWeek == 'function' && isDeloadWeek(S.wk))
@@ -52,7 +59,7 @@ function stagnation() {
   });
   return out.sort((a, b) => b.k - a.k).slice(0, 3);
 }
-function stagnationCard() {
+export function stagnationCard() {
   try {
     const L = stagnation();
     if (!L.length)

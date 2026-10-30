@@ -2,7 +2,13 @@
    Registro de entrenos y calendario.
    Define: calendarPage, logsPage, logIndex, logText, logRight  · acciones/registros: 4
 */
-function calendarPage() {
+import { $, dayKey, round1, roundInt, X } from '../core/util.js';
+import { A } from '../core/registry.js';
+import { calMonthOffset, S, saveState, setCalMonthOffset } from '../core/state.js';
+import { confirmDialog, fullPage, pgHead, sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
+export function calendarPage() {
   const b = new Date();
   const d = new Date(b.getFullYear(), b.getMonth() + calMonthOffset, 1);
   const n = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
@@ -60,7 +66,7 @@ function logRight(l) {
 }
 /* — manejadores de esta función (registros A / C / U) — */
 A.cm = i => {
-  calMonthOffset += i;
+  setCalMonthOffset(calMonthOffset + i);
   const el = $('#cl');
   /* página Calendario: solo se repinta el mes; en la tarjeta del Dashboard se repinta la pestaña */
   if (el)

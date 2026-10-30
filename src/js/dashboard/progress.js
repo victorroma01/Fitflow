@@ -2,6 +2,11 @@
    Gráficas de progreso por ejercicio.
    Define: progressState, dateShort, progressExercises, progressSeries, progressFmt, axisLabel, progressChart, progressBody, refreshProgress, progressCard, recordEvents, recordsTimeline  · acciones/registros: 3
 */
+import { $, est1RM, round1, roundInt, X } from '../core/util.js';
+import { A, C } from '../core/registry.js';
+import { S } from '../core/state.js';
+import { segmented } from '../core/ui.js';
+import { toDisplayWeight, weightUnit } from '../profile/units.js';
 let progressState = { n: '', m: 'e', p: -1 };
 const dateShort = d => new Date(d + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' });
 const progressExercises = () => Object.keys(S.hist || {}).filter(n => {
@@ -80,7 +85,7 @@ const progressChart = (pts, m, sel, inter) => {
   });
   return s + '</svg>';
 };
-const progressBody = (stat) => {
+export const progressBody = (stat) => {
   const L = progressExercises();
   if (!L.length)
     return '<p class="mu" style="margin:8px 0 0">Cuando registres pesos verás aquí la evolución de cada ejercicio.</p>';
@@ -130,7 +135,7 @@ C.pgn = e => {
   progressState.p = -1;
   refreshProgress();
 };
-const progressCard = () => '<div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">' + progressBody() + '</div></div>';
+export const progressCard = () => '<div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">' + progressBody() + '</div></div>';
 const recordEvents = () => {
   const ev = [];
   Object.keys(S.hist || {}).forEach(n => {
@@ -149,7 +154,7 @@ const recordEvents = () => {
   });
   return ev.sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : b.e - a.e);
 };
-const recordsTimeline = () => {
+export const recordsTimeline = () => {
   const ev = recordEvents().slice(0, 8);
   if (!ev.length)
     return '';

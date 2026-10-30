@@ -2,8 +2,20 @@
    Librería de ejercicios y ficha de cada ejercicio.
    Define: libState, libBody, libPage, exDetailHtml  · acciones/registros: 6
 */
-let libState = { g: '', q: '' };
-function libBody() {
+import { $, roundInt, X } from '../core/util.js';
+import { A, U } from '../core/registry.js';
+import { groupLabel, groupOf, GROUPS } from '../data/library.js';
+import { groupIcon } from '../core/icons.js';
+import { fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
+import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText } from './model.js';
+import { exHero } from './photo.js';
+import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
+import { exTips } from '../workout/day.js';
+import { bestOf } from '../workout/finish.js';
+import { toDisplayWeight, weightUnit } from '../profile/units.js';
+import { exAnatomy, exAnatomyFull } from '../extras/anatomy.js';
+export let libState = { g: '', q: '' };
+export function libBody() {
   const al = exAll().map((e, i) => ({ e, i }));
   const q = (libState.q || '').toLowerCase().trim();
   const g = libState.g;

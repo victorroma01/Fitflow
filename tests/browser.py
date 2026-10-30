@@ -1,8 +1,9 @@
 """Navegador y dirección de la app para las pruebas.
 
 Motor: variable de entorno SF_BROWSER = chromium (por defecto) | webkit (el motor de Safari, el del iPhone) | firefox.
-Dirección: con Chromium la app se abre como archivo (file://); con los demás motores, o con SF_HTTP=1, se sirve por HTTP
-desde su carpeta, como en GitHub Pages (WebKit no guarda datos de páginas abiertas como archivo).
+Dirección: el archivo único, con Chromium, se abre como archivo (file://); el paquete (dist/app, con sw.js al lado) siempre
+se sirve por HTTP desde su carpeta, como en GitHub Pages (sus módulos ES no cargan desde file://), y con los demás motores,
+o con SF_HTTP=1, también el archivo único (WebKit no guarda datos de páginas abiertas como archivo).
 """
 import os, threading, functools, http.server
 
@@ -24,15 +25,20 @@ class _Quiet(http.server.SimpleHTTPRequestHandler):
 def app_url(path):
     """Dirección para abrir el archivo `path`: file:// o, si toca, un servidor HTTP local de su carpeta (vive lo que la prueba)."""
     path = os.path.abspath(path)
-    if not HTTP:
+    if not HTTP and not is_package(path):
         return 'file://' + path
     srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.path.dirname(path)))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return 'http://127.0.0.1:%d/%s' % (srv.server_address[1], os.path.basename(path))
 
 
+def is_package(path):
+    """¿Es el index.html del paquete (con su sw.js al lado)?"""
+    return os.path.exists(os.path.join(os.path.dirname(os.path.abspath(path)), 'sw.js'))
+
+
 def context_opts(path):
-    """Opciones del contexto: por HTTP, el archivo único va sin service worker (no hay sw.js a su lado, como en GitHub Pages)."""
-    if HTTP and not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(path)), 'sw.js')):
+    """Opciones del contexto: por HTTP, el archivo único va sin service worker (no hay sw.js a su lado)."""
+    if HTTP and not is_package(path):
         return {'service_workers': 'block'}
     return {}

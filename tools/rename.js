@@ -11,7 +11,7 @@ function loadTS() {
 }
 const ts = loadTS();
 const ROOT = path.join(__dirname, '..'), JS = path.join(ROOT, 'src/js');
-const mods = fs.readFileSync(path.join(JS, 'modules.txt'), 'utf8').split('\n').map(s => s.trim()).filter(s => s && s[0] !== '#');
+const mods = require('./modules').modules();
 const files = {}; mods.forEach(m => { files[path.join(JS, m)] = fs.readFileSync(path.join(JS, m), 'utf8'); });
 const pairs = fs.readFileSync(process.argv[2], 'utf8').split('\n').map(l => l.replace(/#.*/, '').trim()).filter(Boolean).map(l => l.split(/\s+/));
 const host = {

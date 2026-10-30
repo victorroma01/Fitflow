@@ -2,6 +2,25 @@
    Pestaña Perfil y borrado de datos.
    Define: profileBase, bioCard, planCard, profileTab  · acciones/registros: 2
 */
+import { APPV, roundInt, X } from '../core/util.js';
+import { Store } from '../core/store.js';
+import { errorLog } from '../core/errors.js';
+import { clearSavedState } from '../core/persist.js';
+import { A, C } from '../core/registry.js';
+import { PROGRAM_NAMES } from '../data/library.js';
+import { S, saveState } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { confirmDialog, linkRow } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { WIP_KEY } from '../workout/resume.js';
+import { currentCustomProgram, levelsActive, levelTag, programRow } from '../programs/levels.js';
+import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
+import { accentSwatches, glassCard, themeSegment } from './appearance.js';
+import { unitsCard } from './units.js';
+import { alertSettings } from './feedback.js';
+import { backupAge, plural } from '../system/backup.js';
+import { offlineNote } from '../system/updates.js';
+import { ACHIEVEMENTS } from '../extras/achievements.js';
 function profileBase() {
   const p = S.pf;
   return '<div class="hd"><h1>Perfil</h1></div><div class="cd"><label class="av" style="cursor:pointer;font-size:0">' + (p.img ? '<img src="' + p.img + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block">' : '') + (p.img ? '' : icon('camera', 36)) + '<input type="file" accept="image/*" data-c="ph" hidden></label>' + [['Nombre', 'name'], ['Email', 'email'], ['Teléfono', 'tel']].map(x => '<label>' + x[0] + '</label><input data-c="pf" data-i="' + x[1] + '" value="' + X(p[x[1]] || '') + '">').join('') + '</div>' + bioCard() + '<details class="cd"><summary>Ajustes</summary><label>Apariencia</label>' + themeSegment() + glassCard() + '<label>Color de acento</label>' + accentSwatches() + unitsCard() + '<label><input type="checkbox" style="width:auto" ' + (S.notif ? 'checked' : '') + ' data-c="nt"> Notificaciones activadas</label><label><input type="checkbox" style="width:auto" ' + (S.snd === 0 ? '' : 'checked') + ' data-c="snd"> Sonidos del descanso</label><button data-a="zsnd" style="width:100%;margin-top:8px">Probar sonido</button>' + alertSettings() + '<button data-a="zbk" style="width:100%;margin-top:12px">Copia de seguridad</button><small class="mu" style="display:block;margin-top:6px">' + backupAge() + '</small>' + offlineNote() + '<button data-a="updChk" style="width:100%;margin-top:12px">Comprobar actualizaciones</button><button data-a="diag" style="width:100%;margin-top:12px">Diagnóstico' + (errorLog().length ? ' · ' + plural(errorLog().length, 'error registrado', 'errores registrados') : '') + '</button><button data-a="rst" style="width:100%;margin-top:14px;color:var(--c)">' + 'Borrar todos los datos' + '</button></details><p class="ver v1">StrataFit · versión ' + APPV + '</p><p class="ver v2">© 2026 V. M. Rodriguez Mazuelas. Todos los derechos reservados.</p><p class="ver v3">Los consejos de entrenamiento y nutrición son orientativos y no sustituyen el consejo de un profesional sanitario.</p>';
@@ -24,7 +43,7 @@ const planCard = () => {
   const pl = (S.plan || []).filter(d => d.ex.length).length;
   return '<details class="cd"><summary>Plan de entrenamiento</summary><div style="margin-top:10px">' + programRow(nm, levelsActive() ? levelTag(S.lv) : '') + '<small class="mu">' + pl + (pl == 1 ? ' entreno' : ' entrenos') + ' por semana</small></div><button data-a="pg" style="width:100%;margin-top:12px">Cambiar programa o nivel</button></details>';
 };
-function profileTab() {
+export function profileTab() {
   let h = profileBase();
   const m = '<details class="cd"><summary>Datos biométricos';
   if (h.indexOf(m) >= 0)

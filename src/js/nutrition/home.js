@@ -2,12 +2,19 @@
    Pestaña Nutrición: resumen del día y barras de macros.
    Define: itemMacros, sumMacros, macroBar, nutritionBase
 */
-const itemMacros = it => it.b.map(v => v * it.g / 100);
-const sumMacros = a => a.reduce((s, t) => s.map((v, i) => v + t[i]), [0, 0, 0, 0, 0, 0]);
+import { dayKey, round1, roundInt, X } from '../core/util.js';
+import { A, C } from '../core/registry.js';
+import { MEAL_NAMES, MEAL_SPLITS } from '../data/foods.js';
+import { nutriDayOffset, S, saveState, setNutriDayOffset } from '../core/state.js';
+import { R } from '../core/render.js';
+import { dietCard } from './diet.js';
+import { templateCard } from './templates.js';
+export const itemMacros = it => it.b.map(v => v * it.g / 100);
+export const sumMacros = a => a.reduce((s, t) => s.map((v, i) => v + t[i]), [0, 0, 0, 0, 0, 0]);
 function macroBar(l, v, t, c) {
   return '<div><span style="color:var(' + c + ')">' + l + '</span><div class="bar"><i style="width:' + Math.min(100, v / t * 100 || 0) + '%;background:var(' + c + ')"></i></div><b>' + roundInt(v) + ' / ' + roundInt(t) + ' g</b></div>';
 }
-function nutritionBase() {
+export function nutritionBase() {
   const dt = new Date(Date.now() + nutriDayOffset * 864e5);
   const k = dayKey(dt);
   const n = S.nu;
@@ -36,7 +43,7 @@ function nutritionBase() {
 }
 /* — manejadores de esta función (registros A / C / U) — */
 A.nd = i => {
-  nutriDayOffset += i;
+  setNutriDayOffset(nutriDayOffset + i);
   R();
 };
 C.nk = e => {

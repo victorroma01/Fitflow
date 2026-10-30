@@ -2,16 +2,28 @@
    Mis workouts: lista, editor de bloques y lanzamiento.
    Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineEditor, routineBlockPicker, openRoutines, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 22
 */
-let routineState = { i: -1, k: 1, sel: [], q: '' };
+import { $, fmtMinSec, roundInt, X } from '../core/util.js';
+import { A, C, U } from '../core/registry.js';
+import { groupLabel } from '../data/library.js';
+import { DAY_PHOTOS } from '../data/photos.js';
+import { S, saveState } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { dialog, sheet } from '../core/ui.js';
+import { exAll, exCellHtml, exCompare, exSearchText, groupOfName } from '../library/model.js';
+import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, groupDropdown, groupMatch } from '../library/filters.js';
+import { REST_OPTIONS, restDefault } from '../workout/rest.js';
+import { imagePicker, routineImage } from '../workout/images.js';
+import { exAnatomy } from '../extras/anatomy.js';
+export let routineState = { i: -1, k: 1, sel: [], q: '' };
 const BLOCK_KINDS = ['', 'Suelto', 'Superserie', 'Triserie'];
-const routineExRows = () => {
+export const routineExRows = () => {
   const q = routineState.q.toLowerCase().trim();
   const bq = exAll().filter(e => !q || exSearchText(e).includes(q));
   const base = bq.filter(e => groupMatch(routineState.gs, e));
   return filterRow(groupDropdown('crg', routineState.gs, bq), equipDropdown('cr', routineState.eq, equipIn(base), base, 1)) + base.filter(e => equipMatch(routineState.eq, e)).sort(exCompare).slice(0, 100).map(e => '<div class="it exr" data-a="bp" data-n="' + X(e.n) + '" style="cursor:pointer"><span class="exc">' + exCellHtml(e) + '</span><small class="mu">Añadir +</small></div>').join('') || '<p class="mu">Sin resultados.</p>';
 };
 const routineListPage = () => routineList();
-const routineEditor = () => {
+export const routineEditor = () => {
   const r = S.cr[routineState.i];
   return '<div class="row"><button data-a="cr">‹ Rutinas</button>' + (routineState.nw ? '' : '<button data-a="crx" style="color:var(--c)">Eliminar</button>') + '</div><h2 style="margin:14px 0 4px;letter-spacing:-.02em">Workout personalizado</h2><label>Nombre</label><input data-c="crn" value="' + X(r.n) + '"><label>Imagen del entrenamiento</label>' + imagePicker(r) + '' + r.bl.map((b, j) => '<div class="row" style="margin-top:16px"><b class="mu">SERIE ' + String.fromCharCode(65 + j) + '</b>' + (b.ex.length > 1 ? '<b style="color:#f59e0b">' + BLOCK_KINDS[b.ex.length] + ' · 10 s</b>' : '') + '<button data-a="bd" data-i="' + j + '" style="padding:4px 10px">Quitar</button></div>' + b.ex.map(n => '<div class="ovx"><div class="th">' + exAnatomy(n, 64) + '</div><b style="flex:1">' + X(n) + '</b></div>').join('') + '<div class="row" style="margin-top:6px"><span><button data-a="bs" data-i="' + j + '" data-v="-1">−</button> ' + b.s + ' series <button data-a="bs" data-i="' + j + '" data-v="1">+</button></span><select data-c="br" data-i="' + j + '" style="width:auto">' + REST_OPTIONS.map(v => '<option value="' + v + '"' + (v == b.r ? ' selected' : '') + '>Descanso ' + fmtMinSec(v) + '</option>').join('') + '</select></div>').join('') + '<button data-a="bnew" style="width:100%;margin-top:16px">+ Añadir bloque</button><div style="height:80px"></div><button class="sb" data-a="crc" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">' + (routineState.nw ? 'Crear' : 'Guardar cambios') + '</button>';
 };
@@ -82,7 +94,11 @@ A.crm = i => {
 };
 let routineSnapshot = null;
 let routineEditIndex = -1;
-let overviewSnapshot = '';
+export let overviewSnapshot = '';
+/** Cambia `overviewSnapshot` desde otros módulos (un módulo no puede asignar una variable importada). */
+export const setOverviewSnapshot = v => {
+  overviewSnapshot = v;
+};
 A.crn = () => {
   routineState.nw = true;
   S.cr.push({ n: 'Mi workout ' + (S.cr.length + 1), bl: [] });
@@ -170,7 +186,7 @@ A.crdo = () => {
   saveState();
   refreshRoutineRows();
 };
-const routineToDay = i => {
+export const routineToDay = i => {
   const r = S.cr[i];
   const ex = [];
   r.bl.forEach((b, j) => {
@@ -184,7 +200,7 @@ const routineToDay = i => {
   });
   return { n: r.n, ex, cu: 1, img: routineImage(r) };
 };
-const restorePlanBackup = () => {
+export const restorePlanBackup = () => {
   if (S.pbk) {
     S.plan[S.pbk.sel] = S.pbk.day;
     S.pbk = null;

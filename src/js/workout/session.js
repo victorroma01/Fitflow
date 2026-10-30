@@ -2,7 +2,26 @@
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
    Define: sessionView, currentSet, scrollToCurrent, nextSet, sessionWakeLock, requestSessionWakeLock, setToggle, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, … (+1)  · acciones/registros: 13
 */
-function sessionView() {
+import { $, fmtDuration, fmtMinSec, round1, roundInt, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A, C } from '../core/registry.js';
+import { S, setOverviewMode, setW, W } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { exBadge, exPhotoUrl } from '../library/photo.js';
+import { restorePlanBackup } from '../routines/builder.js';
+import { blockBadge, dayBlocks, exToolsHtml, inSuperset } from './day.js';
+import { restOf } from './rest.js';
+import { targetLine, targetText, unitHead, unitOf, usesWeight } from './targets.js';
+import { lastTimeLine, prefillSets, setText } from './progression.js';
+import { usesBarbell } from './plates.js';
+import { isDeloadWeek } from './deload.js';
+import { progressBody } from '../dashboard/progress.js';
+import { fromDisplayWeight, toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
+import { buzz } from '../profile/feedback.js';
+import { exAnatomy } from '../extras/anatomy.js';
+export function sessionView() {
   const d = S.plan[S.sel];
   const t = roundInt(((W.p || Date.now()) - W.t0) / 1000);
   const L = dayBlocks(d);
@@ -104,7 +123,7 @@ A.zpv = () => {
   scrollToCurrent();
 };
 let sessionWakeLock = null;
-const requestSessionWakeLock = async () => {
+export const requestSessionWakeLock = async () => {
   try {
     if (navigator.wakeLock && W && !sessionWakeLock) {
       sessionWakeLock = await navigator.wakeLock.request('screen');
@@ -119,7 +138,7 @@ const requestSessionWakeLock = async () => {
 };
 A.zdc = () => {
   sheet();
-  W = null;
+  setW(null);
   R();
   restorePlanBackup();
   R();
@@ -210,9 +229,9 @@ A.znx = () => {
   }
 };
 A.go = () => {
-  overviewMode = 0;
+  setOverviewMode(0);
   const d = S.plan[S.sel];
-  W = { t0: Date.now(), re: 0, o: {}, x: d.ex.map(e => Array.from({ length: e.s }, () => ({ r: 10, w: S.last[e.n] || '', ok: 0 }))) };
+  setW({ t0: Date.now(), re: 0, o: {}, x: d.ex.map(e => Array.from({ length: e.s }, () => ({ r: 10, w: S.last[e.n] || '', ok: 0 }))) });
   R();
   scrollTo(0, 0);
   W.x.forEach((a, i) => prefillSets(d.ex[i], a));
@@ -254,7 +273,7 @@ A.drp = (i, b) => {
   W.ri = null;
   R();
 };
-const avgEffort = () => {
+export const avgEffort = () => {
   const q = [];
   W.x.forEach(a => a.forEach(s => {
     if (s.ok && +s.q > 0)

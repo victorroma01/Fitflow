@@ -2,6 +2,17 @@
    Pestaña Dashboard: tarjetas de resumen.
    Define: dashboardBase, recordsCard, weekMonday, weekStats, weekCard, dashboardTab
 */
+import { dayKey, roundInt, X } from '../core/util.js';
+import { S } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { bestOf } from '../workout/finish.js';
+import { itemMacros, sumMacros } from '../nutrition/home.js';
+import { calendarPage } from './history.js';
+import { progressCard, recordsTimeline } from './progress.js';
+import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
+import { backupReminder } from '../system/backup.js';
+import { stagnationCard } from '../extras/stagnation.js';
+import { cardioCard } from '../extras/cardio.js';
 function dashboardBase() {
   const lg = S.logs;
   const now = new Date();
@@ -16,12 +27,12 @@ const recordsCard = () => {
   const l = [...ks].map(n => [n, bestOf(n)]).filter(x => x[1]).sort((a, b) => b[1].e - a[1].e).slice(0, 6);
   return '<div class="cd"><b>Récords personales</b>' + (l.length ? l.map(x => '<div class="it" style="grid-template-columns:1fr auto"><span>' + X(x[0]) + '<br><small>' + x[1].d + '</small></span><span style="text-align:right"><b>' + toDisplayWeight(x[1].w) + ' ' + weightUnit() + ' × ' + x[1].r + '</b><br><small>1RM est. ' + roundInt(toDisplayWeight(x[1].e)) + ' ' + weightUnit() + '</small></span></div>').join('') : '<p class="mu" style="margin:8px 0 0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>') + '</div>';
 };
-const weekMonday = d => {
+export const weekMonday = d => {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
   return x;
 };
-const weekStats = () => {
+export const weekStats = () => {
   const now = new Date();
   const m0 = weekMonday(now);
   const cnt = {};
@@ -73,7 +84,7 @@ const weekCard = () => {
     '<div class="wks"><div><b>' + s.st + '</b><small>' + (s.st == 1 ? 'semana de racha' : 'semanas de racha') + '</small></div><div><b>' + s.best + '</b><small>mejor racha</small></div></div>' +
     '<small class="mu wkn">' + (s.any ? 'La semana cuenta con ' + s.t + ' o más entrenos.' : 'Completa tu primer entreno para empezar la racha.') + '</small></div>';
 };
-function dashboardTab() {
+export function dashboardTab() {
   const h = dashboardBase() + recordsCard();
   const m = '<div class="cd"><b>Volumen por sesión</b>';
   return (h.indexOf(m) >= 0 ? h.replace(m, weekCard() + m) : h + weekCard()) + stagnationCard() + cardioCard() + progressCard() + recordsTimeline() + backupReminder();

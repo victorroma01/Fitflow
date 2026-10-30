@@ -2,6 +2,14 @@
    Plantillas de comidas y hábitos.
    Define: nutriDayKey, dayType, templateCard, habitsCard  · acciones/registros: 5
 */
+import { $, dayKey, roundInt, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A } from '../core/registry.js';
+import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
+import { segmented, sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { itemMacros, sumMacros } from './home.js';
+import { addSheet } from './add.js';
 const nutriDayKey = () => dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
 const dayType = k => {
   if (S.dt && (S.dt[k] == 't' || S.dt[k] == 'r'))
@@ -20,7 +28,7 @@ const dayType = k => {
   });
   return n >= 2 ? 't' : 'r';
 };
-const templateCard = k => {
+export const templateCard = k => {
   const t = dayType(k);
   const tp = (S.tp || {})[t];
   const nm = t == 't' ? 'entreno' : 'descanso';
@@ -86,7 +94,7 @@ A.tpa = () => {
   R();
   toast('Plantilla aplicada a ' + n + (n == 1 ? ' comida' : ' comidas'));
 };
-const habitsCard = m => {
+export const habitsCard = m => {
   const l = Object.keys(S.fq || {}).map(n => [n, S.fq[n]]).filter(x => x[1] && x[1].c > 0 && Array.isArray(x[1].b)).sort((a, b) => b[1].c - a[1].c || (b[1].t || 0) - (a[1].t || 0)).slice(0, 8);
   const yk = dayKey(new Date(Date.now() + (nutriDayOffset - 1) * 864e5));
   const ys = (S.meals[yk] || {})[m] || [];
@@ -126,7 +134,7 @@ A.hay = () => {
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.sd = (i, b) => {
-  addState = { m: i };
+  setAddState({ m: i });
   sheet('<h3>Guardar plato en la librería</h3><input id="pn" value="' + X(b.dataset.n) + '"><button class="pr" data-a="sdo" style="width:100%;margin-top:10px">Guardar</button>');
 };
 A.sdo = () => {

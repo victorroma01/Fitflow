@@ -2,6 +2,17 @@
    Exportación a CSV.
    Define: csvCell, csvBody, mealName, CSV_EXPORTS, downloadAs  · acciones/registros: 2
 */
+import { dayKey, round1 } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A } from '../core/registry.js';
+import { MEAL_NAMES } from '../data/foods.js';
+import { S } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { fullPage, pgHead } from '../core/ui.js';
+import { itemMacros } from '../nutrition/home.js';
+import { isStandalone } from '../system/files.js';
+import { cardioLabel, cardioLogs, cardioPace } from './cardio.js';
+import { measureList, MEASURES } from './measures.js';
 const csvCell = v => {
   if (v == null)
     return '';

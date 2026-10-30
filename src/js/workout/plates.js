@@ -2,9 +2,23 @@
    Calculadora de discos.
    Define: plateTotal, plateBar, usesBarbell, plateSizes, barSizes, plateCalc, plateResult, plateSheet  · acciones/registros: 3
 */
-let plateTotal = 60;
-let plateBar = 20;
-const usesBarbell = n => {
+import { $ } from '../core/util.js';
+import { A, U } from '../core/registry.js';
+import { W } from '../core/state.js';
+import { sheet } from '../core/ui.js';
+import { exAll } from '../library/model.js';
+import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
+export let plateTotal = 60;
+/** Cambia `plateTotal` desde otros módulos (un módulo no puede asignar una variable importada). */
+export const setPlateTotal = v => {
+  plateTotal = v;
+};
+export let plateBar = 20;
+/** Cambia `plateBar` desde otros módulos (un módulo no puede asignar una variable importada). */
+export const setPlateBar = v => {
+  plateBar = v;
+};
+export const usesBarbell = n => {
   const e = exAll().find(x => x.n == n);
   return e && e.q ? ['Barra', 'Barra Z'].includes(e.q) && !/Plancha|Giro|Hiperext|Superman|Encog/.test(n) : /barra|banca|sentadilla|peso muerto/i.test(n);
 };

@@ -2,6 +2,15 @@
    Compartir e importar programas mediante código.
    Define: cleanPlan, programCode, parseImport, ensureExercises, shareState, sharePage, importProgram  · acciones/registros: 7
 */
+import { $, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { A, C } from '../core/registry.js';
+import { EXERCISES, PROGRAM_NAMES } from '../data/library.js';
+import { DAY_PHOTOS } from '../data/photos.js';
+import { S, saveState } from '../core/state.js';
+import { dialog, pgHead, sheet, sheetToTop } from '../core/ui.js';
+import { progDraft, restDay } from './create.js';
+import { cleanText, copyText, downloadFile, fromBase64, toBase64 } from '../system/files.js';
 const cleanPlan = pl => {
   if (!Array.isArray(pl) || !pl.length || pl.length > 7)
     throw 0;

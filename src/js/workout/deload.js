@@ -1,10 +1,18 @@
 /* ═══ workout/deload ═══
    Semana de descarga.
-   Define: deloadEvery, isDeloadWeek, deloadWeekSync, deloadSuggested, deloadCard  · acciones/registros: 4
+   Define: deloadEvery, isDeloadWeek, lastWeek, deloadWeekSync, deloadSuggested, deloadCard  · acciones/registros: 4
 */
+import { toast } from '../core/toast.js';
+import { A } from '../core/registry.js';
+import { LEVEL_NAMES } from '../data/levels.js';
+import { S, saveState } from '../core/state.js';
+import { sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
 const deloadEvery = () => ({ ini: 6, int: 5, ava: 4 })[S.lv || 'int'] || 5;
-const isDeloadWeek = wk => S.dl && S.dl[wk] != null ? !!S.dl[wk] : (wk > 1 && wk % deloadEvery() == 0);
-const deloadWeekSync = () => {
+export const isDeloadWeek = wk => S.dl && S.dl[wk] != null ? !!S.dl[wk] : (wk > 1 && wk % deloadEvery() == 0);
+/** Semana del último render: si baja (otro programa, semana reiniciada), se olvidan las descargas elegidas a mano. */
+let lastWeek = 0;
+export const deloadWeekSync = () => {
   if (S.wk < lastWeek) {
     S.dl = {};
     S.dq = {};
@@ -15,7 +23,7 @@ const deloadSuggested = () => {
   const l = S.logs.filter(x => !x.k).slice(-2);
   return l.length == 2 && l.every(x => +x.q >= 9);
 };
-const deloadCard = () => {
+export const deloadCard = () => {
   const on = isDeloadWeek(S.wk);
   const L = LEVEL_NAMES && LEVEL_NAMES[S.lv || 'int'] ? LEVEL_NAMES[S.lv || 'int'].toLowerCase() : 'intermedio';
   if (on)

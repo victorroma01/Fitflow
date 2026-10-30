@@ -2,42 +2,101 @@
 /* StrataFit · comprobaciones estáticas del código (necesita node y el paquete "typescript")
    Uso:  node tools/check.js            (desde la raíz del repo)
          TS_PATH=/ruta/a/typescript node tools/check.js
+   Los módulos son módulos ES; para analizarlos se unen, sin import/export, en el orden en que se ejecutan al cargar
+   (el de los import desde src/js/main.js), como si fueran un solo programa.
    Qué comprueba (cualquier fallo devuelve código de salida 1):
      1. Sintaxis de todos los módulos.
-     2. Declaraciones globales duplicadas entre módulos.
+     2. Declaraciones de nivel superior repetidas entre módulos (los nombres son únicos en toda la app).
      3. Identificadores sin declarar (typos, módulos que faltan) — salvo los globales del navegador.
-     4. Orden de carga: una sentencia que se ejecuta al cargar no puede usar const/let declarados después.
+     4. Orden de carga: lo que se ejecuta al cargar no puede usar const/let que aún no se han ejecutado.
      5. Registros A / C / U / IC con la misma clave definida dos veces (una pisaría a la otra).
      6. Acciones data-a / data-c / data-u escritas en el HTML generado que no existen en su registro.
-     7. core/boot es el último módulo y core/util el primero.
+     7. main.js importa core/util el primero y core/boot el último.
      8. Ninguna función se reasigna después de declararla (parches encadenados).
+     9. Importaciones: cada nombre de otro módulo se importa de su módulo, que lo exporta; sin importaciones sin usar
+        ni asignaciones a variables importadas (para eso, el setter que exporta su módulo).
 */
 const fs = require('fs'), path = require('path');
 function loadTS() {
-  const cands = [process.env.TS_PATH, 'typescript', path.join(__dirname, '../node_modules/typescript'), '/opt/npm-tools/node_modules/typescript'].filter(Boolean);
+  const cands = [process.env.TS_PATH, 'typescript', path.join(__dirname, '../node_modules/typescript')].filter(Boolean);
   for (const c of cands) { try { return require(c); } catch (e) {} }
-  console.error('No se encuentra el paquete "typescript" (npm i typescript, o TS_PATH=/ruta). Comprobación omitida.');
+  console.error('No se encuentra el paquete "typescript" (npm install, o TS_PATH=/ruta). Comprobación omitida.');
   process.exit(2);
 }
 const ts = loadTS();
-const ROOT = path.join(__dirname, '..');
-const JS = path.join(ROOT, 'src/js');
-const mods = fs.readFileSync(path.join(JS, 'modules.txt'), 'utf8').split('\n').map(s => s.trim()).filter(s => s && s[0] !== '#');
+const { ROOT, JS, modules } = require('./modules');
 const GLOBALS = new Set(JSON.parse(fs.readFileSync(path.join(__dirname, 'globals.json'), 'utf8')));
 // APIs que la app usa solo si el navegador las ofrece (detección de funciones): no existen en todos los navegadores
 ['BarcodeDetector', 'webkitAudioContext', 'webkitSpeechRecognition'].forEach(n => GLOBALS.add(n));
 const errors = [], warns = [];
 const err = m => errors.push(m), warn = m => warns.push(m);
 
-// ---- texto único (igual que build.py) y mapa posición → módulo
+// ---- módulos, sus importaciones y el orden en que se ejecutan
+const listed = modules();
+if (listed[listed.length - 1] !== 'core/boot.js') err('core/boot.js debe ser el último import de main.js');
+if (listed[0] !== 'core/util.js') err('core/util.js debe ser el primer import de main.js');
+const src = {}, parsed = {}, deps = {}, lazy = {};
+const resolve = (from, spec) => path.posix.normalize(path.posix.join(path.posix.dirname(from), spec));
+const load = m => {
+  if (src[m] != null) return;
+  src[m] = fs.readFileSync(path.join(JS, m), 'utf8');
+  parsed[m] = ts.createSourceFile(m, src[m], ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS);
+  deps[m] = [];
+  lazy[m] = [];
+  // import('…') con texto fijo: módulos que se cargan al usarlos (core/lazy)
+  (function w(n) {
+    if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword && n.arguments[0] && ts.isStringLiteral(n.arguments[0])) lazy[m].push(resolve(m, n.arguments[0].text));
+    ts.forEachChild(n, w);
+  })(parsed[m]);
+  for (const s of parsed[m].statements) {
+    if (!ts.isImportDeclaration(s)) continue;
+    const to = resolve(m, s.moduleSpecifier.text), names = [];
+    const nb = s.importClause && s.importClause.namedBindings;
+    if (s.importClause && (s.importClause.name || (nb && !ts.isNamedImports(nb)))) err(m + ': solo se usan importaciones con nombre (import { a } from …)');
+    if (nb && ts.isNamedImports(nb)) nb.elements.forEach(e => { if (e.propertyName) err(m + ': sin renombrar al importar (' + e.getText(parsed[m]) + ')'); names.push(e.name.text); });
+    if (!fs.existsSync(path.join(JS, to))) err(m + ': importa un módulo que no existe: ' + s.moduleSpecifier.text);
+    deps[m].push({ to, names, node: s });
+  }
+  for (const d of deps[m]) if (fs.existsSync(path.join(JS, d.to))) load(d.to);
+  for (const l of lazy[m]) if (fs.existsSync(path.join(JS, l))) load(l); else err(m + ': carga un módulo que no existe: ' + l);
+};
+['main.js'].concat(listed).forEach(load);
+// orden de ejecución: primero lo que importa main.js (en profundidad, como los módulos ES); después, lo que se carga al usarlo
+const order = [], state = {};
+const visit = m => {
+  state[m] = 1;
+  for (const d of deps[m] || []) if (!state[d.to] && src[d.to] != null) visit(d.to);
+  state[m] = 2;
+  if (m !== 'main.js') order.push(m);
+};
+visit('main.js');
+const lazyMods = [...new Set(Object.values(lazy).flat())];
+const staticMods = new Set(order);
+for (const l of lazyMods) {
+  if (staticMods.has(l)) err(l + ' se carga al usarlo (import()) pero algún módulo lo importa al arrancar: iría en el código del arranque');
+  else if (!state[l]) visit(l);
+}
+const mods = order;
+for (const m of listed) if (!order.includes(m)) err('main.js no llega a ' + m);
+for (const f of (function walk(d) { return fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name)) : [path.relative(JS, path.join(d, e.name)).split(path.sep).join('/')]); })(JS))
+  if (f.endsWith('.js') && f !== 'main.js' && !order.includes(f)) err('módulo que no se usa (ni main.js lo importa ni se carga con import()): ' + f);
+
+// ---- texto único sin import/export (las posiciones se conservan: se sustituyen por espacios) y mapa posición → módulo
+const blank = s => s.replace(/[^\n]/g, ' ');
 let code = '', ranges = [];
 mods.forEach(m => {
-  const t = fs.readFileSync(path.join(JS, m), 'utf8').replace(/\n+$/, '');
+  let t = src[m];
+  const sfm = parsed[m], cuts = [];
+  for (const s of sfm.statements) {
+    if (ts.isImportDeclaration(s)) cuts.push([s.getStart(sfm), s.getEnd()]);
+    else if (s.modifiers && s.modifiers.some(x => x.kind === ts.SyntaxKind.ExportKeyword)) { const x = s.modifiers.find(x => x.kind === ts.SyntaxKind.ExportKeyword); cuts.push([x.getStart(sfm), x.getEnd()]); }
+    else if (ts.isExportDeclaration(s) || ts.isExportAssignment(s)) err(m + ': exporta con export { … } o export default; usa «export» delante de la declaración');
+  }
+  cuts.sort((a, b) => b[0] - a[0]).forEach(([a, b]) => { t = t.slice(0, a) + blank(t.slice(a, b)) + t.slice(b); });
+  t = t.replace(/\n+$/, '');
   ranges.push({ m, start: code.length, end: code.length + t.length, line0: code.split('\n').length - 1 });
   code += t + '\n';
 });
-if (mods[mods.length - 1] !== 'core/boot.js') err('core/boot.js debe ser el último módulo');
-if (mods[0] !== 'core/util.js') err('core/util.js debe ser el primero');
 const where = pos => {
   const r = ranges.find(r => pos >= r.start && pos <= r.end) || ranges[ranges.length - 1];
   const before = code.slice(r.start, pos).split('\n').length;
@@ -184,6 +243,41 @@ for (const [k, pos] of missing) err('data-' + k[0].toLowerCase() + '="' + k.slic
   }
   ts.forEachChild(n, w);
 })(sf);
+
+// 9. importaciones: lo que un módulo usa de otro está importado de ese módulo, que lo exporta; nada importado sin usar
+const exportsOf = {};
+for (const m of mods) {
+  exportsOf[m] = new Set();
+  for (const s of parsed[m].statements) {
+    if (!(s.modifiers && s.modifiers.some(x => x.kind === ts.SyntaxKind.ExportKeyword))) continue;
+    if (ts.isFunctionDeclaration(s) && s.name) exportsOf[m].add(s.name.text);
+    else if (ts.isVariableStatement(s)) s.declarationList.declarations.forEach(d => (function c(b) { if (ts.isIdentifier(b)) exportsOf[m].add(b.text); else if (b.elements) b.elements.forEach(e => e.name && c(e.name)); })(d.name));
+  }
+}
+const imported = {};
+for (const m of mods) {
+  imported[m] = new Map();
+  for (const d of deps[m]) for (const n of d.names) {
+    if (!exportsOf[d.to] || !exportsOf[d.to].has(n)) err(m + ': importa «' + n + '» de ' + d.to + ', que no lo exporta');
+    imported[m].set(n, d.to);
+  }
+}
+const usedFrom = Object.fromEntries(mods.map(m => [m, new Set()]));
+(function w(n) {
+  if (ts.isIdentifier(n) && isRef0(n) && isGlobal(n)) {
+    const me = modOf(n.getStart(sf)), d = declAt.get(n.text), owner = d && modOf(d.pos);
+    if (owner && owner !== me) {
+      usedFrom[me].add(n.text);
+      if (imported[me].get(n.text) !== owner) err(me + ' usa «' + n.text + '» de ' + owner + ' sin importarlo @ ' + where(n.getStart(sf)));
+      const p = n.parent;
+      if ((ts.isBinaryExpression(p) && p.left === n && p.operatorToken.kind >= ts.SyntaxKind.FirstAssignment && p.operatorToken.kind <= ts.SyntaxKind.LastAssignment) ||
+          ((ts.isPrefixUnaryExpression(p) || ts.isPostfixUnaryExpression(p)) && (p.operator === ts.SyntaxKind.PlusPlusToken || p.operator === ts.SyntaxKind.MinusMinusToken)))
+        err(me + ' asigna «' + n.text + '», importado de ' + owner + ' (usa el setter que exporte su módulo) @ ' + where(n.getStart(sf)));
+    }
+  }
+  ts.forEachChild(n, w);
+})(sf);
+for (const m of mods) for (const [n, from] of imported[m]) if (!usedFrom[m].has(n)) err(m + ': importa «' + n + '» de ' + from + ' y no lo usa');
 
 // ---- resultado
 warns.forEach(w => console.log('aviso:', w));
