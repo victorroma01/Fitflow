@@ -5,6 +5,7 @@ core/registry.js
 data/library.js
 data/foods.js
 data/photos.js
+data/exphotos.js
 data/anatomy.js
 data/templates.js
 data/levels.js
@@ -14,6 +15,7 @@ core/ui.js
 core/events.js
 core/render.js
 library/model.js
+library/photo.js
 library/filters.js
 library/browse.js
 library/swap.js

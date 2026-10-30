@@ -19,10 +19,10 @@ const zsm=(e,i)=>{const a=W.x[i]||[],ok=a.filter(s=>s.ok).length;return '<div cl
 A.zfd=(i,b)=>{const k=+b.dataset.i;W.fd=W.fd||{};if(W.fd[k])delete W.fd[k];else W.fd[k]=1;R()};
 A.zfa=()=>{const d=S.plan[S.sel],c=zcur(),f=W.fd||{},rest=d.ex.map((e,i)=>i).filter(i=>!c||i!=c[0]),all=rest.length&&rest.every(i=>f[i]);W.fd={};if(!all)rest.forEach(i=>{W.fd[i]=1});R()};
 const anLiveOn=i=>{try{const c=zcur();return !!(c&&c[0]==i&&!W.p&&!W.re)}catch(e){return false}};
-const anTh=(n,i)=>{const on=anLiveOn(i),s=anEx(n,64);
-  if(!on)return '<div class="th">'+s+'</div>';
+const anTh=(n,i)=>{const on=anLiveOn(i),s=anEx(n,64),at=exph(n)?' data-a="exv" data-n="'+X(n)+'" role="button" aria-label="Ver foto de '+X(n)+'"':'';
+  if(!on)return '<div class="th"'+at+'>'+s+exBadge(n)+'</div>';
   const an=s.indexOf('stroke-width="\.7"')>=0||s.indexOf('stroke-width=".7"')>=0;
-  return '<div class="th live">'+s+'</div>'};
+  return '<div class="th live"'+at+'>'+s+exBadge(n)+'</div>'};
 const wsrPill=()=>W&&W.re?'<button class="wsr" data-a="wsr" aria-label="Ir al descanso">Descanso <b id="rt2">'+F(Math.max(0,Math.ceil((W.re-Date.now())/1000)))+'</b></button>':'';
 A.wsr=()=>{const r=document.querySelector('.rr');if(r)r.scrollIntoView({block:'center',behavior:'smooth'})};
 A.ck=(i,b)=>{W.lb=0;setToggle(i,b);const e=S.plan[S.sel].ex[i],s=W.x[i][+b.dataset.j];if(s&&s.ok){ffVib(30);const h=(S.hist||{})[e.n]||[],bw=Math.max(0,...h.flatMap(x=>x.s.map(y=>y[1])));if(s.w>0&&bw>0&&s.w>bw)zt('Nuevo récord en '+e.n+': '+ffDW(s.w)+' '+ffUL())}

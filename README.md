@@ -21,7 +21,7 @@ src/
   css/NN-nombre.css     CSS en trozos contiguos; se concatenan por nombre (el orden importa por la cascada)
   js/modules.txt        ORDEN DE CARGA de los módulos
   js/core/              infraestructura: util, store, registry, state, icons, ui, events, render, boot
-  js/data/              datos grandes: biblioteca de ejercicios, alimentos, fotos, anatomía, plantillas, niveles
+  js/data/              datos grandes: biblioteca de ejercicios, alimentos, fotos de día y de ejercicio, anatomía, plantillas, niveles
   js/library/           modelo de ejercicios, filtros, librería, cambio de ejercicio (swap), selector
   js/routines/          «Mis workouts»
   js/workout/           pestaña Workout, sesión activa, fin de entreno, reanudar, descansos, progresión, discos, descarga…
@@ -31,8 +31,10 @@ src/
   js/profile/           pestaña Perfil: ajustes, apariencia, unidades, sonido y vibración
   js/system/            copias de seguridad, actualización/sin conexión, archivos
   js/extras/            WOD, resumen y compartir, estancamiento, cardio, medidas y fotos, alimentos en línea, logros, CSV, anatomía
+img/ex/                 fotos de ejercicio (WebP) y map.txt: qué ejercicios usa cada foto y con qué otros nombres se busca
 static/                 sw.js, manifest.webmanifest, iconos
 tools/check.js          comprobaciones estáticas
+tools/exphotos.py       convierte src/img/ex/ en src/js/data/exphotos.js (módulo generado)
 tests/                  humo, capturas comparables y paseo aleatorio diferencial
 docs/BACKEND.md         diseño previsto para un servidor
 ```
@@ -67,11 +69,21 @@ docs/BACKEND.md         diseño previsto para un servidor
 5. Si añade claves de estado, dales un valor por defecto en `core/boot` (migración) y piensa si deben entrar en la copia de seguridad (`system/backup`).
 6. `python3 build.py --check` y `python3 tests/smoke.py dist/stratafit.html`.
 
+### Añadir o cambiar fotos de ejercicio
+
+1. Deja la foto recortada (sin textos, unos 480 px de ancho, WebP) en `src/img/ex/<clave>.webp`.
+2. Añade su línea en `src/img/ex/map.txt`: `clave | ejercicios de la biblioteca que la usan | otros nombres para buscarlo`.
+3. `python3 tools/exphotos.py` regenera `src/js/data/exphotos.js` (no se edita a mano) y después `python3 build.py --check`.
+
+La foto aparece en la ficha del ejercicio (librería) y al tocar la miniatura del ejercicio dentro del entreno. La búsqueda ignora tildes
+y también encuentra los nombres alternativos del `map.txt`.
+
 ## Comprobaciones y pruebas
 
 ```
 node tools/check.js                                   # estático (node + typescript)
 python3 tests/smoke.py dist/stratafit.html            # arranque, pestañas, entreno completo, comida, hojas, persistencia
+python3 tests/photos.py dist/stratafit.html           # fotos de ejercicio: enlaces, búsqueda, ficha y entreno
 python3 tests/walk.py run ref.html nueva.html 0,1,2,3 150     # paseo aleatorio: misma secuencia en ambas versiones, compara DOM + datos + sonido
 python3 tests/shots.py snap nueva.html out a,b,c,d,e,f        # 33 pantallas × 6 configuraciones
 python3 tests/shots.py cmp ref_out out                        # comparación píxel a píxel
