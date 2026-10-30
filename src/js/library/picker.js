@@ -1,14 +1,24 @@
 /* ═══ library/picker ═══
    Selector para añadir ejercicios al día.
-   Define: pickState, pickBody, pickSheet  · acciones/registros: 5
+   Define: addToDay, pickState, pickBody, pickSheet  · acciones/registros: 5
 */
-A.lad = (i, b) => {
-  const e = EXERCISES.concat(S.cx)[i];
+/** Añade un ejercicio al día seleccionado. Si hay un entreno en curso, añade también sus series (si no, la sesión no podría pintarlo). */
+const addToDay = n => {
   const d = S.plan[S.sel];
-  d.ex.push(newPlanEx(e.n));
+  const ex = newPlanEx(n);
+  d.ex.push(ex);
   if (d.n == 'Descanso')
     d.n = 'Entreno';
+  if (W) {
+    const sets = Array.from({ length: ex.s }, () => ({ r: 10, w: S.last[n] || '', ok: 0 }));
+    prefillSets(ex, sets);
+    W.x.push(sets);
+    saveSession();
+  }
   saveState();
+};
+A.lad = (i, b) => {
+  addToDay(EXERCISES.concat(S.cx)[i].n);
   R();
   b.textContent = '✓ Añadido';
 };
@@ -52,12 +62,7 @@ A.pc = (i, b) => {
   sheet(pickSheet());
 };
 A.px = i => {
-  const d = S.plan[S.sel];
-  const e = EXERCISES.concat(S.cx)[i];
-  d.ex.push(newPlanEx(e.n));
-  if (d.n == 'Descanso')
-    d.n = 'Entreno';
-  saveState();
+  addToDay(EXERCISES.concat(S.cx)[i].n);
   sheet();
   R();
 };
@@ -66,8 +71,7 @@ A.nx = () => {
   if (!n)
     return;
   S.cx.push({ n, c: categoryOf(pickState.g), g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
-  S.plan[S.sel].ex.push(newPlanEx(n));
-  saveState();
+  addToDay(n);
   sheet();
   R();
 };

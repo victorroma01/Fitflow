@@ -61,5 +61,10 @@ function logRight(l) {
 /* — manejadores de esta función (registros A / C / U) — */
 A.cm = i => {
   calMonthOffset += i;
-  $('#cl').innerHTML = calendarPage();
+  const el = $('#cl');
+  /* página Calendario: solo se repinta el mes; en la tarjeta del Dashboard se repinta la pestaña */
+  if (el)
+    el.innerHTML = calendarPage();
+  else
+    R();
 };

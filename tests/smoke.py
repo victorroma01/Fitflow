@@ -63,6 +63,16 @@ def main(path):
                 ev("document.querySelector('.ck:not(.on)').click()")
                 pg.clock.run_for(200)
         check('se completan series', ev('W.x.flat().filter(s=>s.ok).length') >= 1)
+        # añadir un ejercicio desde la librería con el entreno en marcha (antes rompía la sesión)
+        nx = ev('W.x.length')
+        ev('A.lib();libState.q="remo";document.querySelector("#lr").innerHTML=libBody()')
+        pg.clock.run_for(200)
+        ev("document.querySelector('#lr [data-a=lad]').click()")
+        pg.clock.run_for(200)
+        check('añadir ejercicio en pleno entreno añade sus series', ev('W.x.length') == nx + 1 and ev('W.x.length==S.plan[S.sel].ex.length'))
+        ev('sheet()')
+        pg.clock.run_for(200)
+        check('la sesión se sigue pintando', ev("document.querySelectorAll('.xs').length") == nx + 1)
         ev('A.end()')
         pg.clock.run_for(200)
         check('diálogo de guardar', ev("!!document.querySelector('#dg .dgc')"))
@@ -95,6 +105,16 @@ def main(path):
             except Exception as e:
                 check('abre ' + name, False, str(e)[:120])
             ev("A.cl&&A.cl();sheet()")
+
+        # calendario de la tarjeta del Dashboard: cambiar de mes (antes daba error)
+        ev('S.tab=2;R()')
+        pg.clock.run_for(200)
+        m1 = ev("document.querySelector('[data-a=cm]').parentElement.innerText")
+        ev("document.querySelector('[data-a=cm][data-i=\"1\"]').click()")
+        pg.clock.run_for(200)
+        check('las flechas del calendario del Dashboard cambian de mes', ev("document.querySelector('[data-a=cm]').parentElement.innerText") != m1)
+        ev("document.querySelector('[data-a=cm][data-i=\"-1\"]').click()")
+        pg.clock.run_for(200)
 
         # persistencia
         ev('saveState()')
