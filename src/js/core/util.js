@@ -4,7 +4,7 @@
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
-export const APPV = '1.23.0';
+export const APPV = '1.24.0';
 export const FFDEP = 0; /* 1 en el paquete instalable (dist/app): lo fija build.py; 0 en el archivo único */
 export const $ = q => document.querySelector(q);
 export const X = s => String(s).replace(/[&<>"]/g, c => '&#' + c.charCodeAt(0) + ';');

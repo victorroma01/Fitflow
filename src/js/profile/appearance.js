@@ -7,7 +7,7 @@ import { A, C } from '../core/registry.js';
 import { applyTheme, S, saveState } from '../core/state.js';
 import { R } from '../core/render.js';
 import { html, raw } from '../core/html.js';
-const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#6e5300', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#e8590c', '#702a05', '#fff']];
+export const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#6e5300', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#e8590c', '#702a05', '#fff']];
 export function applyAccent() {
   const a = ACCENTS[S.acc || 0];
   const r = document.documentElement.style;
@@ -34,7 +34,7 @@ A.zth = (i, b) => {
   saveState();
   R();
 };
-const glassMode = () => {
+export const glassMode = () => {
   const m = S.gm;
   return (m === 0 || m === 1 || m === 2 || m === 3) ? m : (S.gl === 0 ? 0 : 2);
 };

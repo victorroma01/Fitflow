@@ -139,11 +139,12 @@ def main(app):
                 vj = os.path.join(site, 'fitflow', 'version.json')
                 vj0 = open(vj, encoding='utf-8').read()
                 check('version.json publicado con la versión de la app', json.loads(vj0)['version'] == ev('APPV'))
-                # Ajustes → Comprobar actualizaciones, sin versión nueva
-                ev("S.tab=3;R();document.querySelectorAll('details').forEach(d=>d.open=true)")
-                pg.click('[data-a=updChk]')
+                # Perfil → Ajustes → Actualizaciones, sin versión nueva
+                ev("S.tab=3;R();A.zaj()")
+                pg.click('#sh [data-a=updChk]')
                 pg.wait_for_timeout(800)
-                check('Comprobar actualizaciones: «Tienes la última versión»', ev("/Tienes la última versión/.test(document.body.innerText)"))
+                check('Ajustes → Actualizaciones: «Tienes la última versión»', ev("/Tienes la última versión/.test(document.body.innerText)"))
+                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updChk] .srv').textContent") == 'V' + ev('APPV'))
 
                 def publish(ver, items, code=True):
                     if code:
@@ -158,7 +159,8 @@ def main(app):
                     reload(pg, log)
                     pg.wait_for_load_state('load')
                 else:
-                    pg.click('[data-a=updChk]')  # sin service worker, el aviso llega desde «Comprobar actualizaciones»
+                    ev("A.zaj()")
+                    pg.click('#sh [data-a=updChk]')  # sin service worker, el aviso llega desde Ajustes → Actualizaciones
                 try:
                     pg.wait_for_selector('#upd.update .updk', timeout=10000)
                 except Exception:
@@ -188,12 +190,12 @@ def main(app):
                     pg.wait_for_timeout(1200)
                     check('la versión nueva abre sin conexión', ev('!!window.__ffok') and ev('APPV') == '9.9.9' and ev("!document.getElementById('ffe')"))
                     c.set_offline(False)
-                # Comprobar actualizaciones cuando hay una versión nueva en el servidor
+                # Ajustes → Actualizaciones cuando hay una versión nueva en el servidor
                 publish('9.9.10', ['Otra mejora'], code=False)
-                ev("S.tab=3;R();document.querySelectorAll('details').forEach(d=>d.open=true)")
-                pg.click('[data-a=updChk]')
+                ev("S.tab=3;R();A.zaj()")
+                pg.click('#sh [data-a=updChk]')
                 pg.wait_for_timeout(800)
-                check('Comprobar actualizaciones encuentra la versión nueva', ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión 9.9.10')
+                check('Ajustes → Actualizaciones encuentra la versión nueva', ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión 9.9.10')
                 pg.click('#upd .updx')
                 pg.wait_for_timeout(200)
                 check('el aviso se puede cerrar', ev("!document.getElementById('upd')"))
@@ -222,7 +224,7 @@ def main(app):
                 p2.on('pageerror', lambda e: e2.append(str(e)[:200]))
                 p2.goto(url)
                 p2.wait_for_timeout(800)
-                p2.evaluate("S.tab=3;saveState();R()")
+                p2.evaluate("S.tab=3;saveState();R();A.zaj()")
                 p2.wait_for_timeout(200)
                 check('instalada: sin aviso de «Añadir a pantalla de inicio»', p2.evaluate("!/Añadir a pantalla de inicio/.test(document.body.innerText)"))
                 p2.evaluate("A.zbk()")
@@ -238,8 +240,8 @@ def main(app):
                 p3 = c.new_page()
                 p3.goto(url)
                 p3.wait_for_timeout(600)
-                p3.evaluate("S.tab=3;saveState();R();document.querySelectorAll('details').forEach(d=>d.open=true)")
-                check('en el navegador: aviso de «Añadir a pantalla de inicio»', p3.evaluate("/Añadir a pantalla de inicio/.test(document.body.innerText)"))
+                p3.evaluate("S.tab=3;saveState();R();A.zaj()")
+                check('en el navegador: aviso de «Añadir a pantalla de inicio» en Ajustes', p3.evaluate("/Añadir a pantalla de inicio/.test(document.body.innerText)"))
                 check('sin errores de JS', not errs and not e2, str((errs + e2)[:3]))
             except Exception:
                 print('  FALLA excepción; últimas navegaciones y errores:', ' | '.join(log[-8:] + errs[-4:]))

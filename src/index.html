@@ -16,6 +16,9 @@ document.getElementById('ffe2').onclick=function(){var t=document.getElementById
 document.getElementById('ffe3').onclick=function(){try{var r=data();if(r)localStorage.setItem('ffbad',JSON.stringify({t:Date.now(),k:'ff',raw:r}))}catch(e){}try{parts().concat('ff','ffw').forEach(function(k){localStorage.removeItem(k)})}catch(e){}location.reload()};
 try{var l=JSON.parse(localStorage.getItem('fferr')||'[]');if(!Array.isArray(l))l=[];l.push({t:Date.now(),w:'arranque',m:String(m).slice(0,300),s:'',v:''});localStorage.setItem('fferr',JSON.stringify(l.slice(-30)))}catch(e){}}
 window.__ffe=fail;
+/* paquete: si no se puede descargar el código de la app (sin conexión ni copia guardada), se dice al momento; el error de
+   un archivo de código no sube hasta window, por eso se escucha en la fase de captura (un atributo onerror no valdría: la CSP no lo deja) */
+window.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName=='SCRIPT')fail('No se ha podido cargar la app. Comprueba la conexión y pulsa Reintentar.')},true);
 var last='';window.addEventListener('error',function(e){var m=(e.message||'Error')+(e.filename?'\n'+String(e.filename).split('/').pop()+':'+e.lineno+':'+e.colno:'');last=m;if(window.__ffok)return;if(window.__ffs||/SyntaxError|Unexpected|Invalid or unexpected/.test(m))fail(m)});
 
 /* si no termina de arrancar: 7 s después de cargar el documento y su código (DOMContentLoaded espera al módulo) o, si el

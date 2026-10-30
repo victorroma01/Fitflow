@@ -1,15 +1,14 @@
 /* ═══ extras/csv ═══
    Exportación a CSV.
-   Define: csvCell, csvBody, mealName, CSV_EXPORTS, downloadAs  · acciones/registros: 2
+   Define: csvCell, csvBody, CSV_EXPORTS, downloadAs  · acciones/registros: 2
 */
 import { dayKey, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
-import { MEAL_NAMES } from '../data/foods.js';
 import { S } from '../core/state.js';
 import { icon } from '../core/icons.js';
 import { fullPage, pgHead } from '../core/ui.js';
-import { itemMacros } from '../nutrition/home.js';
+import { itemMacros, mealName } from '../nutrition/home.js';
 import { isStandalone } from '../system/files.js';
 import { cardioLabel, cardioLogs, cardioPace } from './cardio.js';
 import { measureList, MEASURES } from './measures.js';
@@ -23,10 +22,6 @@ const csvCell = v => {
   return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 };
 const csvBody = rows => '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
-const mealName = i => {
-  const n = (S.nu && S.nu.n) || 3;
-  return n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x => n == 3 ? [0, 2, 4].includes(x) : n == 4 ? [0, 2, 3, 4].includes(x) : n == 2 ? [0, 4].includes(x) : 1)[i]] || ('Comida ' + (i + 1)) : MEAL_NAMES[i] || ('Comida ' + (i + 1));
-};
 const CSV_EXPORTS = {
   ent: { t: 'Entrenos', s: 'Fecha, tipo, series, volumen, minutos y esfuerzo', f: 'entrenos', n: () => (S.logs || []).length, b: () => [['Fecha', 'Tipo', 'Entreno', 'Series', 'Volumen (kg)', 'Minutos', 'RPE medio', 'Detalle']].concat((S.logs || []).filter(l => l && typeof l.d == 'string').slice().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0).map(l => [l.d, l.k == 'c' ? 'Cardio' : l.k == 'w' ? 'WOD' : 'Fuerza', l.n, +l.s || 0, +l.v || 0, +l.m || 0, +l.q || '', (l.x || '') + (l.nt ? ' · ' + l.nt : '')])) },
   ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso y esfuerzo', f: 'series', n: () => Object.keys(S.hist || {}).length, b: () => {
@@ -51,7 +46,7 @@ const CSV_EXPORTS = {
             if (!it || !Array.isArray(it.b))
               return;
             const v = itemMacros(it);
-            r.push([d, mealName(+i), it.n, +it.g || 0, Math.round(v[0]), round1(v[1]), round1(v[2]), round1(v[3]), round1(v[4] || 0), Math.round((v[5] || 0) * 100) / 100]);
+            r.push([d, mealName(+i, (S.nu && S.nu.n) || 3), it.n, +it.g || 0, Math.round(v[0]), round1(v[1]), round1(v[2]), round1(v[3]), round1(v[4] || 0), Math.round((v[5] || 0) * 100) / 100]);
           });
         });
       });

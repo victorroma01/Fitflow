@@ -12,7 +12,7 @@ import { partsFailed, savedFormat, stateRecovered } from './persist.js';
 import { A, C, U } from './registry.js';
 import { groupOf } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
-import { flushState, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
+import { addState, flushState, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
@@ -23,15 +23,23 @@ import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRest
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { updatesOn } from '../system/updates.js';
 import { showSummary } from '../extras/summary.js';
+import { medalSvg } from '../extras/medals.js';
+import { ACHIEVEMENTS } from '../extras/achievements.js';
+import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
+import { dayInfo } from '../nutrition/templates.js';
+import { tdee } from '../nutrition/diet.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
   A: [() => A],
+  ACHIEVEMENTS: [() => ACHIEVEMENTS],
+  addState: [() => addState],
   APPV: [() => APPV],
   buildBackup: [() => buildBackup],
   C: [() => C],
   clearErrorLog: [() => clearErrorLog],
   clone: [() => clone],
   confirmDialog: [() => confirmDialog],
+  dayInfo: [() => dayInfo],
   dayKey: [() => dayKey],
   dialog: [() => dialog],
   errorLog: [() => errorLog],
@@ -41,11 +49,14 @@ const DEBUG_NAMES = {
   exSearchText: [() => exSearchText],
   FFDEP: [() => FFDEP],
   flushState: [() => flushState],
+  FOOD_GROUPS: [() => FOOD_GROUPS],
+  FOODS_SRC: [() => FOODS_SRC],
   groupOf: [() => groupOf],
   icon: [() => icon],
   libBody: [() => libBody],
   libState: [() => libState],
   logError: [() => logError],
+  medalSvg: [() => medalSvg],
   nutriDayOffset: [() => nutriDayOffset],
   partsFailed: [() => partsFailed],
   parseBackup: [() => parseBackup],
@@ -62,6 +73,7 @@ const DEBUG_NAMES = {
   stateRecovered: [() => stateRecovered],
   Store: [() => Store],
   takeSnapshot: [() => takeSnapshot],
+  tdee: [() => tdee],
   U: [() => U],
   updatesOn: [() => updatesOn],
   W: [() => W, setW],

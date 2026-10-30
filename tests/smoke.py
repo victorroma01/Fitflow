@@ -47,6 +47,8 @@ def main(path):
         ev = pg.evaluate
         check('arranca (window.__ffok)', ev('!!window.__ffok'))
         check('sin pantalla de error de arranque', ev("!document.getElementById('ffe')"))
+        pol = ev("(document.querySelector('meta[http-equiv=Content-Security-Policy]')||{}).content||''")
+        check('con política de seguridad (CSP): solo su propio código, sin eval', "script-src" in pol and "'unsafe-inline'" not in pol.split('script-src')[1].split(';')[0] and "'unsafe-eval'" not in pol, pol[:120])
         ev(SEED)
         ev(EXTRA)
         reload(pg)
@@ -102,7 +104,9 @@ def main(path):
         # hojas y pantallas auxiliares: no deben lanzar error
         for name, js in [('librería', 'A.lib()'), ('programas', 'A.pg()'), ('crear programa', 'A.cpn()'), ('calendario', 'A.cl2()'), ('registros', 'A.lg()'),
                          ('menú', 'A.menu()'), ('copia de seguridad', 'A.zbk()'), ('WOD', 'A.wod()'), ('cardio', 'A.cardio()'), ('medidas', 'A.f2ms()'),
-                         ('logros', 'A.f2lg()'), ('exportar CSV', 'A.f2ex()'), ('peso corporal', 'A.zwv()'), ('mis workouts', 'A.cr()')]:
+                         ('logros', 'A.f2lg()'), ('exportar CSV', 'A.f2ex()'), ('peso corporal', 'A.zwv()'), ('mis workouts', 'A.cr()'),
+                         ('mi nutrición', 'A.nmy()'), ('ajustar a mano', 'A.nmm()'), ('buscar alimento en internet', 'A.nfs(0)'), ('ajustes', 'A.zaj()'),
+                         ('informar de un fallo', 'A.rpo()'), ('privacidad', "A.zaj();A.ajp(0,{dataset:{v:'privacidad'}})")]:
             try:
                 ev(js)
                 pg.clock.run_for(300)
@@ -122,15 +126,16 @@ def main(path):
         ev("document.querySelector('[data-a=cm][data-i=\"-1\"]').click()")
         pg.clock.run_for(200)
 
-        # Ajustes → Comprobar actualizaciones (en el archivo único no hay servidor: avisa; en el paquete por file:// no puede leer version.json)
-        ev("S.tab=3;R();document.querySelectorAll('details').forEach(d=>d.open=true)")
+        # Ajustes (su propia página) → Actualizaciones (en el archivo único no hay servidor: avisa; en el paquete por file:// no puede leer version.json)
+        ev("S.tab=3;R();A.zaj()")
         pg.clock.run_for(200)
-        check('Ajustes tiene «Comprobar actualizaciones»', ev("!!document.querySelector('[data-a=updChk]')"))
+        check('Ajustes tiene «Actualizaciones»', ev("!!document.querySelector('#sh [data-a=updChk]')"))
         ev("document.querySelector('[data-a=updChk]').click()")
         pg.clock.run_for(300)
         pg.wait_for_timeout(300)
         pg.clock.run_for(100)
         check('al comprobar responde con un aviso', ev("/se comprueban en la app instalada|No se ha podido comprobar|Tienes la última versión/.test(document.body.innerText)"))
+        ev("sheet()")
 
         # color de la barra del sistema (theme-color): sigue al tema elegido; en automático, al del móvil (etiquetas con media)
         tc = "(()=>{const m=[...document.querySelectorAll('meta[name=theme-color]')].find(m=>!m.media||matchMedia(m.media).matches);return m?m.content:''})()"

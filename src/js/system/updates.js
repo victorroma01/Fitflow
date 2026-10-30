@@ -1,5 +1,5 @@
 /* ═══ system/updates ═══
-   Actualización de la app: service worker, uso sin conexión, Comprobar actualizaciones y aviso de versión nueva con sus novedades.
+   Actualización de la app: service worker, uso sin conexión, Ajustes → Actualizaciones y aviso de versión nueva con sus novedades.
    Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, updateFound, releaseNotesHtml, updatePopupHtml, showPopup, showUpdatePopup, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
 import { APPV, FFDEP, X } from '../core/util.js';
@@ -219,21 +219,23 @@ A.updLater = () => {
   if (d)
     d.remove();
 };
-/** Ajustes → Comprobar actualizaciones. */
+/** Ajustes → Actualizaciones: comprueba si hay versión nueva. */
 A.updChk = async (i, b) => {
   if (!updatesOn) {
     toast('Las actualizaciones se comprueban en la app instalada');
     return;
   }
-  const label = b ? b.textContent : '';
+  /* en la fila de Ajustes cambia solo el valor de la derecha; en un botón normal, su texto */
+  const tx = b && (b.querySelector('.srv') || b);
+  const label = tx ? tx.textContent : '';
   if (b) {
     b.disabled = true;
-    b.textContent = 'Comprobando…';
+    tx.textContent = 'Comprobando…';
   }
   const info = await fetchVersionInfo();
   if (b) {
     b.disabled = false;
-    b.textContent = label;
+    tx.textContent = label;
   }
   if (!info) {
     toast('No se ha podido comprobar. Revisa la conexión.');

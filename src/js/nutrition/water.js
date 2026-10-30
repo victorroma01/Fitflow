@@ -26,5 +26,5 @@ A.zwt = i => {
   R();
 };
 export function nutritionTab() {
-  return nutritionBase().replace('<details class="cd"><summary>Tipo de dieta', html`${waterCard()}<details class="cd"><summary>Tipo de dieta`);
+  return nutritionBase(waterCard());
 }

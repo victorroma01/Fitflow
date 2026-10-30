@@ -18,6 +18,7 @@ import { weightPage } from '../dashboard/weight.js';
 import { profileTab } from '../profile/home.js';
 import { glSync } from '../profile/appearance.js';
 import { updatePopupSync } from '../system/updates.js';
+import { settingsSync } from '../profile/settings.js';
 let lastTab = -1;
 /** Pantalla pintada en el último R() (pestaña, entreno, overview o peso). */
 let lastScreen = '';
@@ -41,6 +42,8 @@ export function R() {
   $('nav').style.display = W || overviewMode ? 'none' : 'flex';
   saveSession();
   updatePopupSync();
+  /* si hay una página de Ajustes abierta, que refleje el cambio (tema, color, unidades…) */
+  settingsSync();
 }
 A.tab = (i, b) => {
   setLevelMenuOpen(false);

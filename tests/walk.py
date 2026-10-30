@@ -12,7 +12,7 @@ def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
     return chr(10).join(l for l in t.split(chr(10)) if not l.startswith('//'))
 COMPAT=_rd('compat.js');SEED=COMPAT+_rd('seed.js');EXTRA=COMPAT+_rd('extra.js');INIT=_rd('init.js')
-SKIP={'rst','zrs','zrd','bkf','f2exd','f2sh','f2sc','f2ln','f2bk','pha','phv','f2os','upr','zbc','shg','shf','pgio','pgi'}  # borrar todo, descargas, cámara, red, recargas
+SKIP={'rst','zrs','zrd','bkf','f2exd','f2sh','f2sc','f2ln','f2bk','pha','phv','f2os','upr','zbc','shg','shf','pgio','pgi','nsc','nfq','rps','rpc'}  # borrar todo, descargas, cámara, red, recargas, enlaces fuera
 CAND="""()=>{const out=[];const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!='hidden'&&!e.disabled};
  document.querySelectorAll('[data-a],[data-c],[data-u]').forEach(e=>{if(!vis(e))return;
   const a=e.getAttribute('data-a'),c=e.getAttribute('data-c'),u=e.getAttribute('data-u');

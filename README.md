@@ -46,9 +46,9 @@
 | **Workout** | Programas listos (Bro Split, Push Pull Legs, Torso / Pierna, Híbrido, Hyrox / CrossFit…) en tres niveles; programas propios, guiados o con tus workouts, y compartidos por código; «Mis workouts» con superseries y triseries. |
 | **Entreno en curso** | Cronómetro, series con repeticiones, peso y esfuerzo (RPE); descanso por ejercicio con avisos sonoros; tempo, calentamiento, progresión sugerida, calculadora de discos, semana de descarga y cambio de ejercicio sin perder el historial. |
 | **Librería** | Más de 550 ejercicios con mapa muscular, fotos y filtros por grupo y equipo. La búsqueda ignora tildes y entiende nombres habituales. |
-| **Nutrición** | Comidas del día con macros, dieta según tu gasto energético, agua, plantillas de día de entreno y de descanso, búsqueda en Open Food Facts y escáner de códigos de barras. |
+| **Nutrición** | Comidas del día con macros, «Mi nutrición» (kcal y macros según tu gasto energético o a mano), agua, día de entreno o de descanso según tu rutina con sus plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras. |
 | **Dashboard** | Progreso por ejercicio, récords, calendario, peso corporal con IMC, medidas y fotos de progreso, cardio, temporizador WOD (AMRAP, EMOM, Tabata, For time), logros y exportación a CSV. |
-| **Perfil** | Datos biométricos, kg o lb, tema claro u oscuro, colores de acento y estilo Cristal; copias de seguridad, diagnóstico y comprobación de actualizaciones. |
+| **Perfil** | Datos personales y biométricos, logros con medallas; Ajustes: kg o lb, tema claro u oscuro, colores de acento y estilo Cristal, sonido, copias de seguridad, actualizaciones, diagnóstico e informe de fallos. |
 
 ## Instalarla en el iPhone
 
@@ -60,11 +60,15 @@
 
 - **Se quedan en tu móvil.** No hay cuentas ni servidor: todo se guarda en el propio dispositivo (almacenamiento del navegador e IndexedDB
   para las fotos). Nada sale del teléfono salvo que tú exportes una copia o copies el informe de diagnóstico.
-- **Copia de seguridad en archivo** (Perfil → Copia de seguridad): guárdala de vez en cuando. Es lo único que te protege si cambias de
+- **Copia de seguridad en archivo** (Perfil → Ajustes → Copia de seguridad): guárdala de vez en cuando. Es lo único que te protege si cambias de
   móvil o borras los datos del navegador.
 - **Copias automáticas**: cada día se guarda una copia en el móvil (las 7 últimas), útil para deshacer un error propio.
 - **Protección ante fallos**: si el móvil no tiene espacio para guardar, la app avisa; si los datos se dañan, se apartan antes de empezar
   de cero para poder recuperarlos desde Ajustes → Diagnóstico.
+- **Informar de un fallo** (Ajustes): eliges el tipo de fallo y lo explicas; se abre ya escrito como incidencia en GitHub o lo
+  compartes por mensaje o correo. Los datos técnicos (versión, navegador y últimos errores) solo van si dejas marcada la casilla.
+- **Solo su propio código**: una política de seguridad (CSP) impide que la página ejecute código que no sea el de la app y que se
+  conecte a otro sitio que no sea el suyo y Open Food Facts.
 
 El detalle de todo lo que se guarda está en [`docs/STATE.md`](docs/STATE.md).
 
@@ -72,7 +76,7 @@ El detalle de todo lo que se guarda está en [`docs/STATE.md`](docs/STATE.md).
 
 <img src="docs/img/aviso.jpg" width="200" align="right" alt="Aviso de versión nueva">
 
-La app instalada comprueba sola si hay una versión nueva cada vez que se abre, y también desde **Ajustes → Comprobar actualizaciones**.
+La app instalada comprueba sola si hay una versión nueva cada vez que se abre, y también desde **Ajustes → Actualizaciones**.
 Cuando la hay, aparece una tarjeta con la versión y sus novedades; **Actualizar** la descarga y vuelve a abrir la app con ella.
 Durante un entreno no se interrumpe: el aviso espera a que termines.
 
@@ -153,9 +157,9 @@ flowchart LR
 │   │   ├── programs/       crear programa, niveles, gestor, compartir por código
 │   │   ├── nutrition/      resumen, dieta, agua, añadir alimentos, plantillas
 │   │   ├── dashboard/      tarjetas, registro y calendario, progreso, peso corporal
-│   │   ├── profile/        Perfil: ajustes, apariencia, unidades, sonido y vibración
-│   │   ├── system/         archivos, copias de seguridad y automáticas, diagnóstico, actualizaciones
-│   │   └── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros, CSV, anatomía
+│   │   ├── profile/        Perfil, página de Ajustes, apariencia, unidades, sonido y vibración
+│   │   ├── system/         archivos, copias de seguridad y automáticas, diagnóstico, actualizaciones, informe de fallos
+│   │   └── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros y medallas, CSV, anatomía
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
 │   └── img/                day/ (portadas, order.txt) y ex/ (fotos de ejercicio, map.txt)
 ├── static/                 sw.js (plantilla), manifiesto e iconos
@@ -213,14 +217,15 @@ en el archivo único van incrustadas.
 | `tools/check.js` | Importaciones (lo usado de otro módulo, importado; nada sin usar), orden real de ejecución al cargar, identificadores sin declarar, nombres y manejadores duplicados, acciones sin manejador y botones sin nombre accesible. |
 | `tests/smoke.py` | Arranque, pestañas, entreno completo, comidas, hojas, actualizaciones y persistencia, en las dos variantes. |
 | `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno. |
-| `tests/security.py` | Nombres, foto de perfil y datos con HTML malicioso en 33 pantallas, también desde una copia manipulada: no debe ejecutarse nada. |
-| `tests/a11y.py` | Accesibilidad en 33 pantallas: botones con nombre, campos con etiqueta, lo que se toca anunciado como botón y, en el entreno (a 390 y 320 px), zona táctil de 44 × 44 px medida tocando. |
+| `tests/security.py` | Nombres, foto de perfil y datos con HTML malicioso en 39 pantallas, también desde una copia manipulada: no debe ejecutarse nada, ni siquiera sin la CSP; y con la CSP, que lo inyectado no se ejecuta ni conecta con otros sitios. Las demás pruebas avisan si la CSP bloquea algo de la app. |
+| `tests/a11y.py` | Accesibilidad en 39 pantallas: botones con nombre, campos con etiqueta, lo que se toca anunciado como botón y, en el entreno (a 390 y 320 px), zona táctil de 44 × 44 px medida tocando. |
 | `tests/safety.py` | Registro de errores, datos dañados, aviso al no poder guardar, copias automáticas y pantalla de error de arranque. |
 | `tests/storage.py` | Guardado por partes: formato, paso desde la 1.20, escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar. |
+| `tests/features.py` | Funciones de la 1.24: tipo de día según la rutina, ayudas, botones de cada comida, objetivos a mano que no se pisan, alimentos por grupos, Perfil y Ajustes, medallas e informe de fallos. |
 | `tests/render.py` | Pintar con cambios mínimos: cada pantalla queda igual que pintada de cero y se conservan foco, texto escrito y desplazamiento. |
 | `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, código y fotos en caché, carga diferida, aviso de versión nueva (publicando de verdad otra versión) y novedades. |
 | `tests/walk.py` | Paseo aleatorio diferencial: la misma secuencia de toques en dos versiones; compara pantalla, datos y sonidos paso a paso. |
-| `tests/shots.py` | 33 pantallas × 6 configuraciones (temas, cristal, tamaños de iPhone), comparadas píxel a píxel. |
+| `tests/shots.py` | 39 pantallas × 6 configuraciones (temas, cristal, tamaños de iPhone), comparadas píxel a píxel. |
 
 Las pruebas usan Chrome (Chromium) por defecto; con `SF_BROWSER=webkit` se pasan en el motor de Safari, sirviendo la app por HTTP como
 GitHub Pages (`tests/browser.py`).

@@ -1,4 +1,4 @@
-"""Capturas de 33 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
+"""Capturas de 39 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
 
   python3 tests/shots.py snap ARCHIVO.html carpeta a,b,c,d,e,f     (genera carpeta/<cfg>_<pantalla>.png)
   python3 tests/shots.py cmp carpeta_referencia carpeta_candidata   (código de salida 1 si hay diferencias)
@@ -46,6 +46,12 @@ SCR={
  'scan':"S.tab=1;R();A.add(0);A.f2sc&&0",
  'bk':"A.zbk()",
  'wdsum':"S.tab=0;R();window.lastSummary=null;showSummary&&0",
+ 'nutri_my':"S.tab=1;R();A.nmy&&A.nmy()",
+ 'nutri_manual':"S.tab=1;R();A.nmy&&(A.nmy(),A.nmm())",
+ 'nutri_buscar':"S.tab=1;R();A.nfs&&A.nfs(0)",
+ 'ajustes':"S.tab=3;R();A.zaj&&A.zaj()",
+ 'ajustes_tema':"S.tab=3;R();A.zaj&&(A.zaj(),A.ajp(0,{dataset:{v:'tema'}}))",
+ 'informe':"S.tab=3;R();A.rpo&&(A.zaj(),A.rpo())",
 }
 CFG={ # nombre: (w,h,scheme,gm,gl)
  'a':(390,844,'dark',3,1),'b':(390,844,'light',3,1),'c':(390,844,'dark',0,0),'d':(390,844,'dark',1,1),'e':(320,568,'dark',3,1),'f':(430,932,'light',2,1),
