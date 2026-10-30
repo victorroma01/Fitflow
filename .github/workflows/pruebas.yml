@@ -32,8 +32,6 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    # solo falla si la solicitud lleva la etiqueta «refactor» (un cambio que no debe alterar nada); si no, es informativa
-    continue-on-error: ${{ !contains(github.event.pull_request.labels.*.name, 'refactor') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -55,4 +53,15 @@ jobs:
           git worktree add /tmp/base ${{ github.event.pull_request.base.sha }}
           (cd /tmp/base && python3 build.py --only single)
       - name: Paseo aleatorio y capturas
+        id: comparar
+        continue-on-error: true
         run: bash tests/compare.sh /tmp/base/dist/stratafit.html /tmp/nueva.html 0,1,2,3 150
+      # informativo, salvo con la etiqueta «refactor» (un cambio que no debe alterar nada): entonces cualquier diferencia falla
+      - name: Resultado
+        env:
+          REFACTOR: ${{ contains(github.event.pull_request.labels.*.name, 'refactor') }}
+          RESULTADO: ${{ steps.comparar.outcome }}
+        run: |
+          if [ "$RESULTADO" = "success" ]; then echo "Sin diferencias con la versión anterior"; exit 0; fi
+          echo "::notice::Hay diferencias de comportamiento o de imagen con la versión anterior (ver el paso anterior)"
+          if [ "$REFACTOR" = "true" ]; then echo "La etiqueta refactor exige que no haya diferencias"; exit 1; fi

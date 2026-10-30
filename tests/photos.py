@@ -47,7 +47,7 @@ def main(path, shots=None):
         miss = ev("Object.values(EX_PHOTO_KEY).filter(k=>!EX_PHOTOS[k])")
         check('cada enlace apunta a una foto', not miss, str(miss))
         check('hay 28 fotos', ev('Object.keys(EX_PHOTOS).length') == 28, str(ev('Object.keys(EX_PHOTOS).length')))
-        bad = ev("""Promise.all(Object.keys(EX_PHOTOS).map(k=>new Promise(r=>{const i=new Image();i.onload=()=>r(i.naturalWidth>100?null:k);i.onerror=()=>r(k);i.src='data:image/webp;base64,'+EX_PHOTOS[k]}))).then(a=>a.filter(Boolean))""")
+        bad = ev("""Promise.all(Object.keys(EX_PHOTOS).map(k=>new Promise(r=>{const i=new Image();i.onload=()=>r(i.naturalWidth>100?null:k);i.onerror=()=>r(k);i.src=EX_PHOTOS[k]}))).then(a=>a.filter(Boolean))""")
         check('todas las fotos se decodifican', not bad, str(bad))
         check('Curl con mancuernas existe (nuevo)', ev("exAll().some(e=>e.n=='Curl con mancuernas'&&groupOf(e)=='Bíceps'&&e.q=='Mancuernas'&&e.p&&e.p[0]=='bi')"))
         check('sin ejercicios repetidos', ev("(()=>{const n=exAll().map(e=>e.n);return n.length==new Set(n).size})()"))

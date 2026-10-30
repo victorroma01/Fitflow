@@ -107,7 +107,7 @@ def main(path):
             ev("A.cl&&A.cl();sheet()")
 
         # calendario de la tarjeta del Dashboard: cambiar de mes (antes daba error)
-        ev('S.tab=2;R()')
+        ev('weightView=0;S.tab=2;R()')
         pg.clock.run_for(200)
         m1 = ev("document.querySelector('[data-a=cm]').parentElement.innerText")
         ev("document.querySelector('[data-a=cm][data-i=\"1\"]').click()")

@@ -38,7 +38,9 @@ def main(path):
         ev = pg.evaluate
         ev(SEED)
         ev(EXTRA)
-        ev('location.reload()')
+        with pg.expect_navigation():
+            ev('location.reload()')
+        pg.wait_for_load_state('load')
         pg.clock.run_for(800)
         check('arranca con datos', ev('!!window.__ffok&&S.logs.length>10'))
 
@@ -103,6 +105,7 @@ def main(path):
         # datos dañados al arrancar
         ev("Store.set(Store.K.app,'{esto no es json')")
         pg.reload()
+        pg.wait_for_load_state('load')
         pg.clock.run_for(1500)
         check('con datos dañados la app arranca igualmente', ev('!!window.__ffok&&S.logs.length==0'))
         bad = ev("JSON.parse(localStorage.getItem('ffbad')||'null')")
@@ -119,6 +122,7 @@ def main(path):
         check('y registra el fallo', any(x['w'] == 'arranque' for x in ev('errorLog()')))
         with pg.expect_navigation():
             pg.click('#ffe3')
+        pg.wait_for_load_state('load')
         pg.clock.run_for(800)
         bad = ev("JSON.parse(localStorage.getItem('ffbad')||'null')")
         check('«Restablecer» guarda una copia de los datos antes de borrarlos', bool(bad) and '2026-01-01' in bad['raw'])
