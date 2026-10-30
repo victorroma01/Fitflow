@@ -346,7 +346,8 @@ def csp_meta(scripts, files):
     sha = ["'sha256-%s'" % base64.b64encode(hashlib.sha256(s.encode('utf-8')).digest()).decode() for s in scripts]
     pol = ["default-src 'self'", ' '.join(['script-src'] + (["'self'"] if files else []) + sha), "style-src 'self' 'unsafe-inline'",
            "img-src 'self' data: blob:", "media-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self' " + CSP_CONNECT,
-           "worker-src 'self'", "manifest-src 'self'", "object-src 'none'", "base-uri 'none'", "form-action 'none'"]
+           # el archivo único no trae manifiesto: system/updates genera uno en un blob: (el paquete usa el estático)
+           "worker-src 'self'", "manifest-src 'self'" + ('' if files else ' blob:'), "object-src 'none'", "base-uri 'none'", "form-action 'none'"]
     return '<meta http-equiv="Content-Security-Policy" content="%s">' % '; '.join(pol)
 
 
