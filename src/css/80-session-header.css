@@ -1,26 +1,156 @@
 /* ═══ css/80-session-header ═══ Cabecera del entreno, icono animado y filas del modo edición */
-
 /* v20: cabecera del entreno fija */
-.wsk{position:sticky;top:0;z-index:7;margin:calc(-6px - env(safe-area-inset-top,0px)) -14px 0;padding:calc(6px + env(safe-area-inset-top,0px)) 14px 2px;background:var(--bg)}
-.wsk::after{content:"";position:absolute;left:0;right:0;top:100%;height:14px;background:linear-gradient(var(--bg),transparent);pointer-events:none}
-.wsk .bar{margin:10px 0 8px!important}
-.wsr{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:650;white-space:nowrap;color:var(--tx);background:color-mix(in srgb,var(--a2) 24%,var(--cd));border:1px solid color-mix(in srgb,var(--a2) 60%,transparent)}
-.wsr b{font-variant-numeric:tabular-nums;font-weight:750}
+.wsk {
+  position:sticky;
+  top:0;
+  z-index:7;
+  margin:calc(-6px - env(safe-area-inset-top,0px)) -14px 0;
+  padding:calc(6px + env(safe-area-inset-top,0px)) 14px 2px;
+  background:var(--bg);
+}
+.wsk::after {
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:100%;
+  height:14px;
+  background:linear-gradient(var(--bg),transparent);
+  pointer-events:none;
+}
+.wsk .bar {
+  margin:10px 0 8px!important;
+}
+.wsr {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 11px;
+  border-radius:999px;
+  font-size:12.5px;
+  font-weight:650;
+  white-space:nowrap;
+  color:var(--tx);
+  background:color-mix(in srgb,var(--a2) 24%,var(--cd));
+  border:1px solid color-mix(in srgb,var(--a2) 60%,transparent);
+}
+.wsr b {
+  font-variant-numeric:tabular-nums;
+  font-weight:750;
+}
 /* v20: icono animado del ejercicio actual (blanco a color, de izquierda a derecha) */
-.th.live{box-shadow:0 0 0 1.5px var(--a2),0 0 18px color-mix(in srgb,var(--a2) 40%,transparent)}
-.anm{position:relative;display:block;width:64px;height:64px}
-.anm>span{position:absolute;inset:0;display:grid;place-items:center}
-.anm .an0 use[stroke-width]{fill:#fff;stroke:rgba(255,255,255,.6)}
-.anm .an0{filter:drop-shadow(0 0 3px rgba(255,255,255,.35))}
-.anm.g .an0{filter:brightness(0) invert(1)}
-.anm .an1{-webkit-mask:linear-gradient(90deg,#000 0,#000 40%,transparent 60%) 100% 0/250% 100% no-repeat;mask:linear-gradient(90deg,#000 0,#000 40%,transparent 60%) 100% 0/250% 100% no-repeat;animation:anSw 2.6s ease-in-out infinite}
-@keyframes anSw{0%{-webkit-mask-position:100% 0;mask-position:100% 0;opacity:1}58%{-webkit-mask-position:0 0;mask-position:0 0;opacity:1}82%{-webkit-mask-position:0 0;mask-position:0 0;opacity:1}100%{-webkit-mask-position:0 0;mask-position:0 0;opacity:0}}
-@media(prefers-reduced-motion:reduce){.anm .an1{animation:none;-webkit-mask:none;mask:none}.anm .an0{display:none}.th.live{box-shadow:0 0 0 1.5px var(--a2)}}
+.th.live {
+  box-shadow:0 0 0 1.5px var(--a2),0 0 18px color-mix(in srgb,var(--a2) 40%,transparent);
+}
+.anm {
+  position:relative;
+  display:block;
+  width:64px;
+  height:64px;
+}
+.anm>span {
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+}
+.anm .an0 use[stroke-width] {
+  fill:#fff;
+  stroke:rgba(255,255,255,.6);
+}
+.anm .an0 {
+  filter:drop-shadow(0 0 3px rgba(255,255,255,.35));
+}
+.anm.g .an0 {
+  filter:brightness(0) invert(1);
+}
+.anm .an1 {
+  -webkit-mask:linear-gradient(90deg,#000 0,#000 40%,transparent 60%) 100% 0/250% 100% no-repeat;
+  mask:linear-gradient(90deg,#000 0,#000 40%,transparent 60%) 100% 0/250% 100% no-repeat;
+  animation:anSw 2.6s ease-in-out infinite;
+}
+@keyframes anSw {
+  0% {
+    -webkit-mask-position:100% 0;
+    mask-position:100% 0;
+    opacity:1;
+  }
+  58% {
+    -webkit-mask-position:0 0;
+    mask-position:0 0;
+    opacity:1;
+  }
+  82% {
+    -webkit-mask-position:0 0;
+    mask-position:0 0;
+    opacity:1;
+  }
+  100% {
+    -webkit-mask-position:0 0;
+    mask-position:0 0;
+    opacity:0;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .anm .an1 {
+    animation:none;
+    -webkit-mask:none;
+    mask:none;
+  }
+  .anm .an0 {
+    display:none;
+  }
+  .th.live {
+    box-shadow:0 0 0 1.5px var(--a2);
+  }
+}
 /* v20: iOS hace zoom al enfocar campos de menos de 16 px */
-@media(pointer:coarse){input,select,textarea{font-size:16px}select[style*="font-size:13px"]{font-size:16px!important}}
+@media(pointer:coarse) {
+  input,select,textarea {
+    font-size:16px;
+  }
+  select[style*="font-size:13px"] {
+    font-size:16px!important;
+  }
+}
 /* v20: filas del modo editar sin desbordes en pantallas estrechas */
-.it[style*="1fr auto 24px"]{grid-template-columns:minmax(0,1fr) auto 28px!important;align-items:center}
-.it[style*="1fr auto 24px"]>span:nth-child(2){white-space:nowrap;display:flex;align-items:center;gap:6px}
-.it[style*="1fr auto 24px"] select{width:100%!important;max-width:100%}
-.it[style*="1fr auto 24px"]>button[data-a="xe"]{width:28px;min-width:0;padding:4px 0!important;text-align:center}
-@media(max-width:460px){.it[style*="1fr auto 24px"]{grid-template-columns:1fr auto!important;row-gap:8px}.it[style*="1fr auto 24px"]>span:first-child{grid-column:1/-1}.it[style*="1fr auto 24px"]>span:nth-child(2){grid-column:1;justify-self:start}.it[style*="1fr auto 24px"]>button[data-a="xe"]{grid-column:2;justify-self:end}.it[style*="1fr auto 24px"] select{margin:3px 0}}
+.it[style*="1fr auto 24px"] {
+  grid-template-columns:minmax(0,1fr) auto 28px!important;
+  align-items:center;
+}
+.it[style*="1fr auto 24px"]>span:nth-child(2) {
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.it[style*="1fr auto 24px"] select {
+  width:100%!important;
+  max-width:100%;
+}
+.it[style*="1fr auto 24px"]>button[data-a="xe"] {
+  width:28px;
+  min-width:0;
+  padding:4px 0!important;
+  text-align:center;
+}
+@media(max-width:460px) {
+  .it[style*="1fr auto 24px"] {
+    grid-template-columns:1fr auto!important;
+    row-gap:8px;
+  }
+  .it[style*="1fr auto 24px"]>span:first-child {
+    grid-column:1/-1;
+  }
+  .it[style*="1fr auto 24px"]>span:nth-child(2) {
+    grid-column:1;
+    justify-self:start;
+  }
+  .it[style*="1fr auto 24px"]>button[data-a="xe"] {
+    grid-column:2;
+    justify-self:end;
+  }
+  .it[style*="1fr auto 24px"] select {
+    margin:3px 0;
+  }
+}

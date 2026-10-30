@@ -1,7 +1,0 @@
-/* ═══ css/92-update-banner ═══ Aviso de nueva versión */
-/* aviso de nueva versión */
-#upd{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:8;display:flex;align-items:center;gap:6px;padding:10px 10px 10px 16px;border-radius:22px;background:var(--cd);border:1px solid var(--ln);box-shadow:0 12px 34px rgba(0,0,0,.35);animation:upi .32s cubic-bezier(.2,.8,.2,1)}
-#upd span{flex:1;font-size:14px;font-weight:600}
-#upd button{border:0;border-radius:15px;padding:9px 14px;font-weight:700;font-size:14px;background:none;color:var(--mu)}
-#upd button[data-a=upr]{background:var(--ac);color:#fff}
-html.gl #upd{background:color-mix(in srgb,var(--cd) var(--pp),transparent);-webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));backdrop-filter:blur(var(--bn)) saturate(var(--sa));border-color:var(--gb);box-shadow:var(--gs),var(--grim)}

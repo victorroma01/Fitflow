@@ -1,0 +1,16 @@
+{
+  "name": "stratafit",
+  "private": true,
+  "description": "StrataFit: app web instalable de entrenamiento y nutrición",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "python3 build.py",
+    "check": "python3 build.py --check",
+    "format": "node tools/format.js && node tools/format_css.js",
+    "test": "bash tests/run.sh"
+  },
+  "devDependencies": {
+    "acorn": "8.18.0",
+    "typescript": "6.0.3"
+  }
+}

@@ -1,24 +1,283 @@
 /* ═══ system/updates ═══
-   Actualización de la app, modo sin conexión y service worker.
-   Define: APPV, ffIcoSvg, FFSW, swTxt, offUI, ffDeploy, ffUp, ffUpT, ffUpShow, upSync  · acciones/registros: 2
+   Actualización de la app: service worker, uso sin conexión, Comprobar actualizaciones y aviso de versión nueva con sus novedades.
+   Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, updateFound, releaseNotesHtml, updatePopupHtml, showPopup, showUpdatePopup, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
-const APPV='1.19.0';
-const ffIcoSvg="<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1024 1024\"><defs> <radialGradient id=\"b1\" cx=\"22%\" cy=\"18%\" r=\"62%\"><stop offset=\"0\" stop-color=\"#8b55ff\"/><stop offset=\"1\" stop-color=\"#8b55ff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b2\" cx=\"88%\" cy=\"28%\" r=\"60%\"><stop offset=\"0\" stop-color=\"#3f7bff\"/><stop offset=\"1\" stop-color=\"#3f7bff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b3\" cx=\"62%\" cy=\"98%\" r=\"68%\"><stop offset=\"0\" stop-color=\"#f0507f\"/><stop offset=\"1\" stop-color=\"#f0507f\" stop-opacity=\"0\"/></radialGradient> <linearGradient id=\"gs\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".30\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".06\"/></linearGradient> <linearGradient id=\"ge\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".85\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".35\"/></linearGradient> <linearGradient id=\"wh\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#ffffff\"/><stop offset=\"1\" stop-color=\"#ddd0ff\"/></linearGradient><filter id=\"sh\" x=\"-30%\" y=\"-30%\" width=\"160%\" height=\"170%\"><feDropShadow dx=\"0\" dy=\"22\" stdDeviation=\"26\" flood-color=\"#1a0a55\" flood-opacity=\".45\"/></filter> <filter id=\"sh2\" x=\"-20%\" y=\"-30%\" width=\"140%\" height=\"180%\"><feDropShadow dx=\"0\" dy=\"12\" stdDeviation=\"12\" flood-color=\"#2a1180\" flood-opacity=\".55\"/></filter></defs> <rect width=\"1024\" height=\"1024\" fill=\"#140f3a\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b1)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b2)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b3)\" opacity=\".9\"/> <g filter=\"url(#sh)\"><circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"url(#gs)\"/></g> <circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"none\" stroke=\"url(#ge)\" stroke-width=\"5\"/> <g filter=\"url(#sh2)\"><rect x=\"362.0\" y=\"498.0\" width=\"300.0\" height=\"28.0\" rx=\"14.0\" fill=\"url(#wh)\"/><rect x=\"343.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"643.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"295.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/><rect x=\"695.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/></g></svg>";
-let FFSW=0;
-(function(){try{const hd=document.head,mk=(t,a)=>{const e=document.createElement(t);Object.keys(a).forEach(k=>e.setAttribute(k,a[k]));hd.appendChild(e);return e};
- mk('meta',{name:'apple-mobile-web-app-capable',content:'yes'});mk('meta',{name:'mobile-web-app-capable',content:'yes'});mk('meta',{name:'apple-mobile-web-app-title',content:'StrataFit'});
- const im=new Image();im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d');x.drawImage(im,0,0,180,180);const ic=c.toDataURL('image/png');mk('link',{rel:'apple-touch-icon',href:ic});
-  const mf={name:'StrataFit',short_name:'StrataFit',display:'standalone',start_url:location.href.split('#')[0],background_color:'#0b0b0d',theme_color:'#0b0b0d',icons:[{src:ic,sizes:'180x180',type:'image/png'}]};
-  mk('link',{rel:'manifest',href:URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/manifest+json'}))})}catch(e){}};
- im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ffIcoSvg);
- if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(()=>{FFSW=1;navigator.serviceWorker.ready.then(()=>{try{fetch(location.href,{cache:'reload'}).catch(()=>{})}catch(e){}}).catch(()=>{})}).catch(()=>{FFSW=-1})}else FFSW=-1}catch(e){FFSW=-1}})();
-const swTxt=()=>{const on=typeof navigator!='undefined'&&navigator.serviceWorker&&navigator.serviceWorker.controller;
- return FFSW<0?'Uso sin conexión: no disponible en este entorno. Tus datos sí quedan guardados en el dispositivo, pero la app necesita internet para abrirse.':on?'Uso sin conexión: activo. Si pierdes la cobertura, StrataFit se abre con la última versión que cargaste.':'Uso sin conexión: se prepara tras cargar la app una vez con conexión y volver a abrirla.'};
-const offUI=()=>'<small class="mu" style="display:block;margin-top:10px">'+swTxt()+'</small>'+(ffSa()?'':'<small class="mu" style="display:block;margin-top:4px">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>');
-let ffDeploy=0,ffUp=0,ffUpT=0;
-const ffUpShow=()=>{if(!ffUp||W||document.getElementById('upd'))return;const d=document.createElement('div');d.id='upd';d.setAttribute('role','status');d.innerHTML='<span>Nueva versión disponible</span><button data-a="upx">Luego</button><button data-a="upr">Actualizar</button>';document.body.appendChild(d)};
-A.upr=()=>{try{location.reload()}catch(e){}};
-A.upx=()=>{ffUp=0;const d=document.getElementById('upd');if(d)d.remove()};
-try{if(ffDeploy&&'serviceWorker' in navigator){navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.t==='upd'){ffUp=1;ffUpShow()}});
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&navigator.serviceWorker.controller&&Date.now()-ffUpT>20*60*1e3){ffUpT=Date.now();fetch('./',{cache:'no-cache'}).catch(()=>{})}});ffUpT=Date.now()}}catch(e){}
-const upSync=()=>{if(!ffUp)return;if(W){const d=document.getElementById('upd');if(d)d.remove()}else ffUpShow()};
+const ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1024 1024\"><defs> <radialGradient id=\"b1\" cx=\"22%\" cy=\"18%\" r=\"62%\"><stop offset=\"0\" stop-color=\"#8b55ff\"/><stop offset=\"1\" stop-color=\"#8b55ff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b2\" cx=\"88%\" cy=\"28%\" r=\"60%\"><stop offset=\"0\" stop-color=\"#3f7bff\"/><stop offset=\"1\" stop-color=\"#3f7bff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b3\" cx=\"62%\" cy=\"98%\" r=\"68%\"><stop offset=\"0\" stop-color=\"#f0507f\"/><stop offset=\"1\" stop-color=\"#f0507f\" stop-opacity=\"0\"/></radialGradient> <linearGradient id=\"gs\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".30\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".06\"/></linearGradient> <linearGradient id=\"ge\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".85\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".35\"/></linearGradient> <linearGradient id=\"wh\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#ffffff\"/><stop offset=\"1\" stop-color=\"#ddd0ff\"/></linearGradient><filter id=\"sh\" x=\"-30%\" y=\"-30%\" width=\"160%\" height=\"170%\"><feDropShadow dx=\"0\" dy=\"22\" stdDeviation=\"26\" flood-color=\"#1a0a55\" flood-opacity=\".45\"/></filter> <filter id=\"sh2\" x=\"-20%\" y=\"-30%\" width=\"140%\" height=\"180%\"><feDropShadow dx=\"0\" dy=\"12\" stdDeviation=\"12\" flood-color=\"#2a1180\" flood-opacity=\".55\"/></filter></defs> <rect width=\"1024\" height=\"1024\" fill=\"#140f3a\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b1)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b2)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b3)\" opacity=\".9\"/> <g filter=\"url(#sh)\"><circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"url(#gs)\"/></g> <circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"none\" stroke=\"url(#ge)\" stroke-width=\"5\"/> <g filter=\"url(#sh2)\"><rect x=\"362.0\" y=\"498.0\" width=\"300.0\" height=\"28.0\" rx=\"14.0\" fill=\"url(#wh)\"/><rect x=\"343.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"643.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"295.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/><rect x=\"695.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/></g></svg>";
+let swState = 0;
+(function () {
+  try {
+    if (!FFDEP) { /* archivo único: metas, icono y manifiesto se crean al vuelo (el paquete instalable los lleva fijos en el HTML) */
+      const hd = document.head;
+      const mk = (t, a) => {
+        const e = document.createElement(t);
+        Object.keys(a).forEach(k => e.setAttribute(k, a[k]));
+        hd.appendChild(e);
+        return e;
+      };
+      mk('meta', { name: 'apple-mobile-web-app-capable', content: 'yes' });
+      mk('meta', { name: 'mobile-web-app-capable', content: 'yes' });
+      mk('meta', { name: 'apple-mobile-web-app-title', content: 'StrataFit' });
+      const im = new Image();
+      im.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = c.height = 180;
+          const x = c.getContext('2d');
+          x.drawImage(im, 0, 0, 180, 180);
+          const ic = c.toDataURL('image/png');
+          mk('link', { rel: 'apple-touch-icon', href: ic });
+          const mf = { name: 'StrataFit', short_name: 'StrataFit', display: 'standalone', start_url: location.href.split('#')[0], background_color: '#0b0b0d', theme_color: '#0b0b0d', icons: [{ src: ic, sizes: '180x180', type: 'image/png' }] };
+          mk('link', { rel: 'manifest', href: URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/manifest+json' })) });
+        }
+        catch (e) {
+          /* icono generado opcional (solo archivo único) */
+        }
+      };
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ICON_SVG);
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(() => {
+        swState = 1;
+        if (!FFDEP)
+          navigator.serviceWorker.ready.then(() => {
+            try {
+              fetch(location.href, { cache: 'reload' }).catch(() => {
+              });
+            }
+            catch (e) {
+              /* recarga en segundo plano opcional */
+            }
+          }).catch(() => {
+          });
+      }).catch(() => {
+        swState = -1;
+      });
+    }
+    else
+      swState = -1;
+  }
+  catch (e) {
+    swState = -1;
+  }
+})();
+const offlineText = () => {
+  const on = typeof navigator != 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller;
+  return swState < 0 ? 'Uso sin conexión: no disponible en este entorno. Tus datos sí quedan guardados en el dispositivo, pero la app necesita internet para abrirse.' : on ? 'Uso sin conexión: activo. Si pierdes la cobertura, StrataFit se abre con la última versión que cargaste.' : 'Uso sin conexión: se prepara tras cargar la app una vez con conexión y volver a abrirla.';
+};
+const offlineNote = () => '<small class="mu" style="display:block;margin-top:10px">' + offlineText() + '</small>' + (isStandalone() ? '' : '<small class="mu" style="display:block;margin-top:4px">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>');
+let updatesOn = FFDEP;
+let updateReady = 0;
+let updateCheckedAt = 0;
+/** Versión publicada que se está anunciando (contenido de version.json) o null si no se pudo leer. */
+let updateInfo = null;
+/** ¿La versión a es posterior a b? Compara número a número: 1.10.0 es posterior a 1.9.3. */
+const isNewerVersion = (a, b) => {
+  const x = String(a || '').split('.').map(Number);
+  const y = String(b || '').split('.').map(Number);
+  for (let i = 0; i < 3; i++)
+    if ((x[i] || 0) != (y[i] || 0))
+      return (x[i] || 0) > (y[i] || 0);
+  return false;
+};
+/** Lee version.json del servidor sin pasar por ninguna caché. Devuelve null si no hay conexión o no es válido. */
+const fetchVersionInfo = async () => {
+  if (location.protocol == 'file:')
+    return null;
+  try {
+    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok)
+      return null;
+    const j = await r.json();
+    return j && typeof j.version == 'string' ? j : null;
+  }
+  catch (e) {
+    logError('comprobar versión', e);
+    return null;
+  }
+};
+/** Lista de cambios de una o varias versiones (si se saltaron versiones, se enseñan todas las posteriores a la instalada). */
+const releaseNotesHtml = (info, current) => {
+  const all = info && Array.isArray(info.history) && info.history.length ? info.history : (info ? [info] : []);
+  const list = current ? all : all.filter(v => isNewerVersion(v.version, APPV));
+  const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
+  const html = shown.map(v => (shown.length > 1 ? '<p class="upv">Versión ' + X(v.version) + '</p>' : '') + (v.sections || []).map(s => '<p class="ups">' + X(s.title) + '</p><ul>' + (s.items || []).slice(0, 8).map(i => '<li>' + X(i) + '</li>').join('') + '</ul>').join('')).join('');
+  return html || '<ul><li>Mejoras y correcciones.</li></ul>';
+};
+/** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
+const updatePopupHtml = (info, mode) => {
+  const v = info && info.version ? info.version : '';
+  return '<div class="updb" data-a="updLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt">'
+    + '<button class="updx" data-a="updLater" aria-label="Cerrar">×</button>'
+    + '<small class="upe">' + (mode == 'news' ? 'Novedades' : 'Nueva versión disponible') + '</small>'
+    + '<h3 id="updt">' + (v ? 'Versión ' + X(v) : 'Versión nueva') + '</h3>'
+    + '<div class="upn">' + releaseNotesHtml(info, mode == 'news') + '</div>'
+    + '<button class="upb" data-a="' + (mode == 'news' ? 'updLater' : 'updApply') + '">' + (mode == 'news' ? 'Entendido' : 'Actualizar') + '</button></div>';
+};
+const showPopup = (info, mode) => {
+  const old = document.getElementById('upd');
+  if (old)
+    old.remove();
+  const d = document.createElement('div');
+  d.id = 'upd';
+  d.className = mode;
+  d.innerHTML = updatePopupHtml(info, mode);
+  document.body.appendChild(d);
+};
+/** Enseña el aviso de versión nueva (nunca en mitad de un entreno: se espera a que termine). */
+const showUpdatePopup = () => {
+  if (!updateReady || W || document.getElementById('upd'))
+    return;
+  showPopup(updateInfo, 'update');
+  if (updateInfo && updateInfo.version)
+    try {
+      Store.set(Store.K.seen, updateInfo.version);
+    }
+    catch (e) {
+      logError('anotar novedades vistas', e);
+    }
+};
+/** El service worker ha descargado otra versión: se averigua cuál es y qué cambia, y se avisa si es posterior a esta.
+   Si no se puede saber (sin conexión), no se avisa: la versión nueva se abrirá sola la próxima vez. */
+let updateFound = 0;
+const onUpdateFound = async () => {
+  if (updateFound)
+    return;
+  updateFound = 1;
+  const info = await fetchVersionInfo();
+  if (!info || !isNewerVersion(info.version, APPV))
+    return;
+  updateInfo = info;
+  updateReady = 1;
+  showUpdatePopup();
+};
+/** ¿Hay que enseñar las novedades de esta versión? Anota la versión abierta; se llama una vez al arrancar (core/boot).
+   Solo en la app instalada y solo si se viene de otra versión cuyas novedades no se vieron ya en el aviso previo. */
+const whatsNewDue = () => {
+  if (!FFDEP)
+    return false;
+  let prev = null;
+  let seen = null;
+  try {
+    prev = Store.get(Store.K.ver);
+    seen = Store.get(Store.K.seen);
+    Store.set(Store.K.ver, APPV);
+  }
+  catch (e) {
+    logError('versión anterior', e);
+    return false;
+  }
+  /* hasta la 1.19.0 no se guardaba la versión: si ya había datos, es una actualización */
+  const updated = prev ? prev != APPV : (S.logs.length > 0 || (S.cp || []).length > 0 || (S.cr || []).length > 0);
+  return updated && seen != APPV && RELEASE.sections.length > 0;
+};
+/** 1 si las novedades esperan a que termine el entreno en curso. */
+let whatsNewPending = 0;
+/** Enseña una vez las novedades de esta versión (botón Entendido). */
+const showWhatsNew = () => {
+  if (W) {
+    whatsNewPending = 1;
+    return;
+  }
+  whatsNewPending = 0;
+  if (document.getElementById('upd'))
+    return;
+  showPopup(RELEASE, 'news');
+  try {
+    Store.set(Store.K.seen, APPV);
+  }
+  catch (e) {
+    logError('anotar novedades vistas', e);
+  }
+};
+/* — manejadores de esta función (registros A / C / U) — */
+/** Actualizar: descarga ya la versión nueva (el service worker la guarda) y vuelve a abrir la app con ella. */
+A.updApply = async (i, b) => {
+  if (b) {
+    b.disabled = true;
+    b.textContent = 'Actualizando…';
+  }
+  try {
+    await Promise.all(['./', 'index.html'].map(u => fetch(u + '?fresh=' + Date.now(), { cache: 'reload' })));
+  }
+  catch (e) {
+    logError('descargar actualización', e);
+  }
+  try {
+    location.reload();
+  }
+  catch (e) {
+    /* recargar puede no estar permitido en algunas vistas */
+  }
+};
+A.updLater = () => {
+  updateReady = 0;
+  const d = document.getElementById('upd');
+  if (d)
+    d.remove();
+};
+/** Ajustes → Comprobar actualizaciones. */
+A.updChk = async (i, b) => {
+  if (!updatesOn) {
+    toast('Las actualizaciones se comprueban en la app instalada');
+    return;
+  }
+  const label = b ? b.textContent : '';
+  if (b) {
+    b.disabled = true;
+    b.textContent = 'Comprobando…';
+  }
+  const info = await fetchVersionInfo();
+  if (b) {
+    b.disabled = false;
+    b.textContent = label;
+  }
+  if (!info) {
+    toast('No se ha podido comprobar. Revisa la conexión.');
+    return;
+  }
+  if (!isNewerVersion(info.version, APPV)) {
+    toast('Tienes la última versión (' + APPV + ')');
+    return;
+  }
+  updateInfo = info;
+  updateReady = 1;
+  showUpdatePopup();
+};
+try {
+  if (updatesOn && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data && e.data.t === 'upd')
+        onUpdateFound();
+    });
+    /* por si el service worker detectó la versión nueva antes de que esta página escuchara */
+    navigator.serviceWorker.ready.then(() => {
+      if (navigator.serviceWorker.controller)
+        navigator.serviceWorker.controller.postMessage({ t: 'ask' });
+    }).catch(e => logError('preguntar por versión nueva', e));
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && navigator.serviceWorker.controller && Date.now() - updateCheckedAt > 20 * 60 * 1e3) {
+        updateCheckedAt = Date.now();
+        fetch('./', { cache: 'no-cache' }).catch(() => {
+        });
+      }
+    });
+    updateCheckedAt = Date.now();
+  }
+}
+catch (e) {
+  logError('aviso de versión nueva', e);
+}
+/** Lo llama R(): durante un entreno se oculta el aviso; al terminar, vuelve. */
+const updatePopupSync = () => {
+  if (whatsNewPending && !W)
+    showWhatsNew();
+  if (!updateReady)
+    return;
+  if (W) {
+    const d = document.getElementById('upd');
+    if (d && d.className == 'update')
+      d.remove();
+  }
+  else
+    showUpdatePopup();
+};

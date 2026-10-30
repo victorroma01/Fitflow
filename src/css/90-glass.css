@@ -1,44 +1,346 @@
-/* ═══ css/90-glass ═══ Estilo Cristal (niveles de vidrio) *//* ===== Estilo Cristal (Liquid Glass) v2 · niveles: 3 máximo, 2 medio, 1 mínimo ===== */
-html.gl[data-gm="1"]{--pn:84%;--pp:90%;--pw:98%;--ps:86%;--pf:94%;--pd:86%;--pm:86%;--pe:90%;--pt:86%;--pk:96%;--pr:90%;--bn:14px;--bs:16px;--bw:12px;--bb:1px;--bd:2px;--sa:1.25;--dk:0.36;--dd:0.5;--gk:0.85}
-html.gl[data-gm="2"]{--pn:52%;--pp:68%;--pw:95%;--ps:54%;--pf:86%;--pd:58%;--pm:52%;--pe:62%;--pt:54%;--pk:90%;--pr:78%;--bn:26px;--bs:30px;--bw:22px;--bb:2px;--bd:4px;--sa:1.8;--dk:0.3;--dd:0.45;--gk:1}
-html.gl[data-gm="3"]{--pn:30%;--pp:46%;--pw:92%;--ps:34%;--pf:76%;--pd:38%;--pm:34%;--pe:46%;--pt:38%;--pk:82%;--pr:64%;--bn:36px;--bs:40px;--bw:30px;--bb:4px;--bd:7px;--sa:2.1;--dk:0.24;--dd:0.38;--gk:1.25}
-html.gl{--gsc:0,0,0;--gf:rgba(255,255,255,var(--gfa));--gb:rgba(255,255,255,var(--gba));--gh:rgba(255,255,255,var(--gha));--gs:0 12px 34px rgba(var(--gsc),var(--gss));--gtop:var(--a3);--gw:rgba(255,255,255,calc(var(--gba)*.35));--gsh:linear-gradient(155deg,rgba(255,255,255,var(--s1)) 0%,rgba(255,255,255,var(--s2)) 46%,rgba(255,255,255,var(--s3)) 100%);--grim:inset 0 1.5px 0 var(--gh),inset 0 -1px 0 var(--gw),inset 0 26px 28px -26px rgba(255,255,255,calc(var(--gha)*.5))}
-html.gl[data-gm="1"]{--gfa:0.05;--gba:0.12;--gha:0.2;--gz:0.35;--gss:0.22;--s1:0.09;--s2:0.03;--s3:0.06}
-html.gl[data-gm="2"]{--gfa:0.09;--gba:0.2;--gha:0.38;--gz:0.8;--gss:0.3;--s1:0.17;--s2:0.05;--s3:0.1}
-html.gl[data-gm="3"]{--gfa:0.14;--gba:0.34;--gha:0.65;--gz:1;--gss:0.4;--s1:0.3;--s2:0.07;--s3:0.18}
-@media(prefers-color-scheme:light){html.gl[data-gm="1"]:not([data-theme="dark"]){--gsc:70,50,140;--gtop:var(--a1);--gfa:0.78;--gba:0.75;--gha:0.95;--gz:0.14;--gss:0.08;--s1:0.86;--s2:0.72;--s3:0.8}html.gl[data-gm="2"]:not([data-theme="dark"]){--gsc:70,50,140;--gtop:var(--a1);--gfa:0.55;--gba:0.85;--gha:1;--gz:0.36;--gss:0.13;--s1:0.72;--s2:0.46;--s3:0.62}html.gl[data-gm="3"]:not([data-theme="dark"]){--gsc:70,50,140;--gtop:var(--a1);--gfa:0.4;--gba:0.95;--gha:1;--gz:0.6;--gss:0.18;--s1:0.6;--s2:0.28;--s3:0.5}}
-html.gl[data-gm="1"][data-theme="light"]{--gsc:70,50,140;--gtop:var(--a1);--gfa:0.78;--gba:0.75;--gha:0.95;--gz:0.14;--gss:0.08;--s1:0.86;--s2:0.72;--s3:0.8}
-html.gl[data-gm="2"][data-theme="light"]{--gsc:70,50,140;--gtop:var(--a1);--gfa:0.55;--gba:0.85;--gha:1;--gz:0.36;--gss:0.13;--s1:0.72;--s2:0.46;--s3:0.62}
-html.gl[data-gm="3"][data-theme="light"]{--gsc:70,50,140;--gtop:var(--a1);--gfa:0.4;--gba:0.95;--gha:1;--gz:0.6;--gss:0.18;--s1:0.6;--s2:0.28;--s3:0.5}
-html.gl body::before{content:"";position:fixed;inset:-8% -8%;z-index:-1;pointer-events:none}
-html.gl[data-gm="1"] body::before{background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -157.37% -14.54%/75.9% 31.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 187.54% 6.21%/63.6% 26.9% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 178.87% 91.06%/61.2% 26.9% no-repeat}
-html.gl[data-gm="2"] body::before{background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -416.42% -20.33%/89.3% 37.4% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 249.04% 3.16%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--a2) min(100%,calc(var(--gz)*100%)),transparent),transparent) -149.04% 70.49%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 228.57% 93.91%/72.0% 31.7% no-repeat}
-html.gl[data-gm="3"] body::before{background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) 0.00% -32.71%/100.0% 46.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 831.25% -2.98%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--a2) min(100%,calc(var(--gz)*100%)),transparent),transparent) -731.25% 73.18%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 550.00% 99.67%/90.0% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*85%)),transparent),transparent) 0.00% 151.50%/100.0% 46.8% no-repeat}
-:where(html.gl) button{background:color-mix(in srgb,var(--tx) 8%,transparent);border-color:var(--gb)}
-html.gl .cd:not(.hero),html.gl .cpo,html.gl .mb,html.gl .tg,html.gl .eqb,html.gl .cpw,html.gl .gg button{background:var(--gsh);border-color:var(--gb);box-shadow:var(--gs),var(--grim)}
-html.gl .hero{box-shadow:var(--gs),var(--grim)}
-html.gl .cd:not(.hero) .cd:not(.hero),html.gl .sp .cd:not(.hero){background:color-mix(in srgb,var(--tx) 6%,transparent);box-shadow:inset 0 1px 0 var(--gh)}
-html.gl .lvp{background:linear-gradient(var(--lb),var(--lb)),color-mix(in srgb,var(--bg) 92%,transparent)}
-html.gl .dy:not(.on){box-shadow:inset 0 1px 0 var(--gh)}html.gl .r2.cur{box-shadow:inset 3px 0 0 var(--a2),inset 0 1px 0 var(--gh)}
-html.gl nav{background:color-mix(in srgb,var(--cd) var(--pn),transparent);border-color:var(--gb);-webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));backdrop-filter:blur(var(--bn)) saturate(var(--sa));box-shadow:var(--gs),inset 0 1px 0 var(--gh),inset 0 -1px 0 var(--gw)}
-html.gl nav button.on{background:linear-gradient(180deg,color-mix(in srgb,var(--a1) 62%,transparent),color-mix(in srgb,var(--a2) 86%,transparent));box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 4px 14px color-mix(in srgb,var(--a2) 45%,transparent)}
-html.gl .pb{background:color-mix(in srgb,var(--cd) var(--pp),transparent);border-color:var(--gb);-webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));backdrop-filter:blur(var(--bn)) saturate(var(--sa));box-shadow:inset 0 1px 0 var(--gh)}
-html.gl .wsk{background:color-mix(in srgb,var(--bg) var(--pw),transparent);-webkit-backdrop-filter:blur(var(--bw)) saturate(var(--sa));backdrop-filter:blur(var(--bw)) saturate(var(--sa));box-shadow:0 1px 0 var(--gb)}
-html.gl .sp{background:color-mix(in srgb,var(--bg) var(--ps),transparent);-webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));backdrop-filter:blur(var(--bs)) saturate(var(--sa));border:1px solid var(--gb);border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.32),inset 0 1px 0 var(--gh)}
-html.gl #sh.full .sp{background:color-mix(in srgb,var(--bg) var(--pf),transparent);border:0}
-html.gl .bk{background:rgba(0,0,0,var(--dk));-webkit-backdrop-filter:blur(var(--bb));backdrop-filter:blur(var(--bb))}
-html.gl .dgb{background:rgba(0,0,0,var(--dd));-webkit-backdrop-filter:blur(var(--bd));backdrop-filter:blur(var(--bd))}
-html.gl .dgc{background:color-mix(in srgb,var(--cd) var(--pd),transparent);border-color:var(--gb);-webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));backdrop-filter:blur(var(--bs)) saturate(var(--sa));box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 1px 0 var(--gh)}
-html.gl .mst{background:color-mix(in srgb,var(--cd) var(--pm),transparent);border-color:var(--gb);-webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));backdrop-filter:blur(var(--bs)) saturate(var(--sa));box-shadow:0 18px 40px rgba(0,0,0,.4),inset 0 -1px 0 var(--gh)}
-html.gl .eqp{background:color-mix(in srgb,var(--cd) var(--pe),transparent);border-color:var(--gb);-webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));backdrop-filter:blur(var(--bn)) saturate(var(--sa));box-shadow:0 18px 44px rgba(0,0,0,.4),inset 0 1px 0 var(--gh)}
-html.gl .eqf{background:color-mix(in srgb,var(--cd) 86%,transparent)}
-html.gl .cd[style*="sticky"]{background:color-mix(in srgb,var(--cd) var(--pk),transparent);-webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));backdrop-filter:blur(var(--bn)) saturate(var(--sa))}
-html.gl .rb{background:linear-gradient(135deg,color-mix(in srgb,var(--a1) var(--pr),transparent),color-mix(in srgb,var(--a2) var(--pr),transparent));-webkit-backdrop-filter:blur(18px) saturate(var(--sa));backdrop-filter:blur(18px) saturate(var(--sa));box-shadow:0 10px 28px color-mix(in srgb,var(--a2) 40%,transparent),inset 0 1px 0 rgba(255,255,255,.4)}
-html.gl .tst{background:color-mix(in srgb,var(--cd) var(--pt),transparent);color:var(--tx);border:1px solid var(--gb);-webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));backdrop-filter:blur(var(--bn)) saturate(var(--sa));box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 var(--gh)}
-html.gl .pr{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -10px 18px rgba(0,0,0,.12),0 8px 24px color-mix(in srgb,var(--a2) 42%,transparent)}
-html.gl .dy.on,html.gl .chip.on,html.gl .ck.on,html.gl .cal .on,html.gl .seg button.on,html.gl .r2.cur .wk2{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 12px color-mix(in srgb,var(--a2) 35%,transparent)}
-html.gl input,html.gl select,html.gl textarea{background:color-mix(in srgb,var(--tx) 6%,transparent);border-color:var(--gb)}
-html.gl .seg{background:color-mix(in srgb,var(--tx) 7%,transparent);border-color:var(--gb)}
-html.gl .mc:not(.on){background:color-mix(in srgb,var(--tx) 6%,transparent);border-color:var(--gb)}
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){html.gl nav,html.gl .pb,html.gl .wsk,html.gl .sp,html.gl .dgc,html.gl .mst,html.gl .eqp,html.gl .tst{background:var(--cd)}}
-@media(prefers-reduced-transparency:reduce){html.gl nav,html.gl .pb,html.gl .wsk,html.gl .sp,html.gl .dgc,html.gl .mst,html.gl .eqp,html.gl .tst,html.gl .cd:not(.hero){background:var(--cd);-webkit-backdrop-filter:none;backdrop-filter:none}html.gl body::before{display:none}}
+/* ═══ css/90-glass ═══ Estilo Cristal (niveles de vidrio) */
+/* ===== Estilo Cristal (Liquid Glass) v2 · niveles: 3 máximo, 2 medio, 1 mínimo ===== */
+html.gl[data-gm="1"] {
+  --pn:84%;
+  --pp:90%;
+  --pw:98%;
+  --ps:86%;
+  --pf:94%;
+  --pd:86%;
+  --pm:86%;
+  --pe:90%;
+  --pt:86%;
+  --pk:96%;
+  --pr:90%;
+  --bn:14px;
+  --bs:16px;
+  --bw:12px;
+  --bb:1px;
+  --bd:2px;
+  --sa:1.25;
+  --dk:0.36;
+  --dd:0.5;
+  --gk:0.85;
+}
+html.gl[data-gm="2"] {
+  --pn:52%;
+  --pp:68%;
+  --pw:95%;
+  --ps:54%;
+  --pf:86%;
+  --pd:58%;
+  --pm:52%;
+  --pe:62%;
+  --pt:54%;
+  --pk:90%;
+  --pr:78%;
+  --bn:26px;
+  --bs:30px;
+  --bw:22px;
+  --bb:2px;
+  --bd:4px;
+  --sa:1.8;
+  --dk:0.3;
+  --dd:0.45;
+  --gk:1;
+}
+html.gl[data-gm="3"] {
+  --pn:30%;
+  --pp:46%;
+  --pw:92%;
+  --ps:34%;
+  --pf:76%;
+  --pd:38%;
+  --pm:34%;
+  --pe:46%;
+  --pt:38%;
+  --pk:82%;
+  --pr:64%;
+  --bn:36px;
+  --bs:40px;
+  --bw:30px;
+  --bb:4px;
+  --bd:7px;
+  --sa:2.1;
+  --dk:0.24;
+  --dd:0.38;
+  --gk:1.25;
+}
+html.gl {
+  --gsc:0,0,0;
+  --gf:rgba(255,255,255,var(--gfa));
+  --gb:rgba(255,255,255,var(--gba));
+  --gh:rgba(255,255,255,var(--gha));
+  --gs:0 12px 34px rgba(var(--gsc),var(--gss));
+  --gtop:var(--a3);
+  --gw:rgba(255,255,255,calc(var(--gba)*.35));
+  --gsh:linear-gradient(155deg,rgba(255,255,255,var(--s1)) 0%,rgba(255,255,255,var(--s2)) 46%,rgba(255,255,255,var(--s3)) 100%);
+  --grim:inset 0 1.5px 0 var(--gh),inset 0 -1px 0 var(--gw),inset 0 26px 28px -26px rgba(255,255,255,calc(var(--gha)*.5));
+}
+html.gl[data-gm="1"] {
+  --gfa:0.05;
+  --gba:0.12;
+  --gha:0.2;
+  --gz:0.35;
+  --gss:0.22;
+  --s1:0.09;
+  --s2:0.03;
+  --s3:0.06;
+}
+html.gl[data-gm="2"] {
+  --gfa:0.09;
+  --gba:0.2;
+  --gha:0.38;
+  --gz:0.8;
+  --gss:0.3;
+  --s1:0.17;
+  --s2:0.05;
+  --s3:0.1;
+}
+html.gl[data-gm="3"] {
+  --gfa:0.14;
+  --gba:0.34;
+  --gha:0.65;
+  --gz:1;
+  --gss:0.4;
+  --s1:0.3;
+  --s2:0.07;
+  --s3:0.18;
+}
+@media(prefers-color-scheme:light) {
+  html.gl[data-gm="1"]:not([data-theme="dark"]) {
+    --gsc:70,50,140;
+    --gtop:var(--a1);
+    --gfa:0.78;
+    --gba:0.75;
+    --gha:0.95;
+    --gz:0.14;
+    --gss:0.08;
+    --s1:0.86;
+    --s2:0.72;
+    --s3:0.8;
+  }
+  html.gl[data-gm="2"]:not([data-theme="dark"]) {
+    --gsc:70,50,140;
+    --gtop:var(--a1);
+    --gfa:0.55;
+    --gba:0.85;
+    --gha:1;
+    --gz:0.36;
+    --gss:0.13;
+    --s1:0.72;
+    --s2:0.46;
+    --s3:0.62;
+  }
+  html.gl[data-gm="3"]:not([data-theme="dark"]) {
+    --gsc:70,50,140;
+    --gtop:var(--a1);
+    --gfa:0.4;
+    --gba:0.95;
+    --gha:1;
+    --gz:0.6;
+    --gss:0.18;
+    --s1:0.6;
+    --s2:0.28;
+    --s3:0.5;
+  }
+}
+html.gl[data-gm="1"][data-theme="light"] {
+  --gsc:70,50,140;
+  --gtop:var(--a1);
+  --gfa:0.78;
+  --gba:0.75;
+  --gha:0.95;
+  --gz:0.14;
+  --gss:0.08;
+  --s1:0.86;
+  --s2:0.72;
+  --s3:0.8;
+}
+html.gl[data-gm="2"][data-theme="light"] {
+  --gsc:70,50,140;
+  --gtop:var(--a1);
+  --gfa:0.55;
+  --gba:0.85;
+  --gha:1;
+  --gz:0.36;
+  --gss:0.13;
+  --s1:0.72;
+  --s2:0.46;
+  --s3:0.62;
+}
+html.gl[data-gm="3"][data-theme="light"] {
+  --gsc:70,50,140;
+  --gtop:var(--a1);
+  --gfa:0.4;
+  --gba:0.95;
+  --gha:1;
+  --gz:0.6;
+  --gss:0.18;
+  --s1:0.6;
+  --s2:0.28;
+  --s3:0.5;
+}
+html.gl body::before {
+  content:"";
+  position:fixed;
+  inset:-8% -8%;
+  z-index:-1;
+  pointer-events:none;
+}
+html.gl[data-gm="1"] body::before {
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -157.37% -14.54%/75.9% 31.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 187.54% 6.21%/63.6% 26.9% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 178.87% 91.06%/61.2% 26.9% no-repeat;
+}
+html.gl[data-gm="2"] body::before {
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -416.42% -20.33%/89.3% 37.4% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 249.04% 3.16%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--a2) min(100%,calc(var(--gz)*100%)),transparent),transparent) -149.04% 70.49%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 228.57% 93.91%/72.0% 31.7% no-repeat;
+}
+html.gl[data-gm="3"] body::before {
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) 0.00% -32.71%/100.0% 46.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 831.25% -2.98%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--a2) min(100%,calc(var(--gz)*100%)),transparent),transparent) -731.25% 73.18%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 550.00% 99.67%/90.0% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*85%)),transparent),transparent) 0.00% 151.50%/100.0% 46.8% no-repeat;
+}
+:where(html.gl) button {
+  background:color-mix(in srgb,var(--tx) 8%,transparent);
+  border-color:var(--gb);
+}
+html.gl .cd:not(.hero),html.gl .cpo,html.gl .mb,html.gl .tg,html.gl .eqb,html.gl .cpw,html.gl .gg button {
+  background:var(--gsh);
+  border-color:var(--gb);
+  box-shadow:var(--gs),var(--grim);
+}
+html.gl .hero {
+  box-shadow:var(--gs),var(--grim);
+}
+html.gl .cd:not(.hero) .cd:not(.hero),html.gl .sp .cd:not(.hero) {
+  background:color-mix(in srgb,var(--tx) 6%,transparent);
+  box-shadow:inset 0 1px 0 var(--gh);
+}
+html.gl .lvp {
+  background:linear-gradient(var(--lb),var(--lb)),color-mix(in srgb,var(--bg) 92%,transparent);
+}
+html.gl .dy:not(.on) {
+  box-shadow:inset 0 1px 0 var(--gh);
+}
+html.gl .r2.cur {
+  box-shadow:inset 3px 0 0 var(--a2),inset 0 1px 0 var(--gh);
+}
+html.gl nav {
+  background:color-mix(in srgb,var(--cd) var(--pn),transparent);
+  border-color:var(--gb);
+  -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  box-shadow:var(--gs),inset 0 1px 0 var(--gh),inset 0 -1px 0 var(--gw);
+}
+html.gl nav button.on {
+  background:linear-gradient(180deg,color-mix(in srgb,var(--a1) 62%,transparent),color-mix(in srgb,var(--a2) 86%,transparent));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 4px 14px color-mix(in srgb,var(--a2) 45%,transparent);
+}
+html.gl .pb {
+  background:color-mix(in srgb,var(--cd) var(--pp),transparent);
+  border-color:var(--gb);
+  -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  box-shadow:inset 0 1px 0 var(--gh);
+}
+html.gl .wsk {
+  background:color-mix(in srgb,var(--bg) var(--pw),transparent);
+  -webkit-backdrop-filter:blur(var(--bw)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bw)) saturate(var(--sa));
+  box-shadow:0 1px 0 var(--gb);
+}
+html.gl .sp {
+  background:color-mix(in srgb,var(--bg) var(--ps),transparent);
+  -webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bs)) saturate(var(--sa));
+  border:1px solid var(--gb);
+  border-bottom:0;
+  box-shadow:0 -10px 40px rgba(0,0,0,.32),inset 0 1px 0 var(--gh);
+}
+html.gl #sh.full .sp {
+  background:color-mix(in srgb,var(--bg) var(--pf),transparent);
+  border:0;
+}
+html.gl .bk {
+  background:rgba(0,0,0,var(--dk));
+  -webkit-backdrop-filter:blur(var(--bb));
+  backdrop-filter:blur(var(--bb));
+}
+html.gl .dgb {
+  background:rgba(0,0,0,var(--dd));
+  -webkit-backdrop-filter:blur(var(--bd));
+  backdrop-filter:blur(var(--bd));
+}
+html.gl .dgc {
+  background:color-mix(in srgb,var(--cd) var(--pd),transparent);
+  border-color:var(--gb);
+  -webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bs)) saturate(var(--sa));
+  box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 1px 0 var(--gh);
+}
+html.gl .mst {
+  background:color-mix(in srgb,var(--cd) var(--pm),transparent);
+  border-color:var(--gb);
+  -webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bs)) saturate(var(--sa));
+  box-shadow:0 18px 40px rgba(0,0,0,.4),inset 0 -1px 0 var(--gh);
+}
+html.gl .eqp {
+  background:color-mix(in srgb,var(--cd) var(--pe),transparent);
+  border-color:var(--gb);
+  -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  box-shadow:0 18px 44px rgba(0,0,0,.4),inset 0 1px 0 var(--gh);
+}
+html.gl .eqf {
+  background:color-mix(in srgb,var(--cd) 86%,transparent);
+}
+html.gl .cd[style*="sticky"] {
+  background:color-mix(in srgb,var(--cd) var(--pk),transparent);
+  -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+}
+html.gl .rb {
+  background:linear-gradient(135deg,color-mix(in srgb,var(--a1) var(--pr),transparent),color-mix(in srgb,var(--a2) var(--pr),transparent));
+  -webkit-backdrop-filter:blur(18px) saturate(var(--sa));
+  backdrop-filter:blur(18px) saturate(var(--sa));
+  box-shadow:0 10px 28px color-mix(in srgb,var(--a2) 40%,transparent),inset 0 1px 0 rgba(255,255,255,.4);
+}
+html.gl .tst {
+  background:color-mix(in srgb,var(--cd) var(--pt),transparent);
+  color:var(--tx);
+  border:1px solid var(--gb);
+  -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  backdrop-filter:blur(var(--bn)) saturate(var(--sa));
+  box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 var(--gh);
+}
+html.gl .pr {
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -10px 18px rgba(0,0,0,.12),0 8px 24px color-mix(in srgb,var(--a2) 42%,transparent);
+}
+html.gl .dy.on,html.gl .chip.on,html.gl .ck.on,html.gl .cal .on,html.gl .seg button.on,html.gl .r2.cur .wk2 {
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 12px color-mix(in srgb,var(--a2) 35%,transparent);
+}
+html.gl input,html.gl select,html.gl textarea {
+  background:color-mix(in srgb,var(--tx) 6%,transparent);
+  border-color:var(--gb);
+}
+html.gl .seg {
+  background:color-mix(in srgb,var(--tx) 7%,transparent);
+  border-color:var(--gb);
+}
+html.gl .mc:not(.on) {
+  background:color-mix(in srgb,var(--tx) 6%,transparent);
+  border-color:var(--gb);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  html.gl nav,html.gl .pb,html.gl .wsk,html.gl .sp,html.gl .dgc,html.gl .mst,html.gl .eqp,html.gl .tst {
+    background:var(--cd);
+  }
+}
+@media(prefers-reduced-transparency:reduce) {
+  html.gl nav,html.gl .pb,html.gl .wsk,html.gl .sp,html.gl .dgc,html.gl .mst,html.gl .eqp,html.gl .tst,html.gl .cd:not(.hero) {
+    background:var(--cd);
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+  }
+  html.gl body::before {
+    display:none;
+  }
+}

@@ -1,0 +1,125 @@
+/* ═══ css/92-update-popup ═══ Aviso de versión nueva y novedades: tarjeta negra con letra blanca y botón del color del tema */
+#upd {
+  position:fixed;
+  inset:0;
+  z-index:40;
+  display:grid;
+  place-items:center;
+  padding:max(20px,env(safe-area-inset-top,0px)) 20px max(20px,env(safe-area-inset-bottom,0px));
+}
+#upd .updb {
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  animation:upf .25s ease;
+}
+#upd .updk {
+  position:relative;
+  width:100%;
+  max-width:340px;
+  max-height:calc(100vh - 80px);
+  display:flex;
+  flex-direction:column;
+  padding:22px 20px 18px;
+  border-radius:26px;
+  background:#000;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 24px 60px rgba(0,0,0,.6);
+  animation:upk .34s cubic-bezier(.2,.8,.2,1);
+}
+#upd .upe {
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.62);
+}
+#upd h3 {
+  margin:6px 40px 10px 0;
+  font-size:26px;
+  line-height:1.1;
+  letter-spacing:-.02em;
+  color:#fff;
+}
+#upd .upn {
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  margin:0 0 18px;
+}
+#upd .upv {
+  margin:14px 0 0;
+  font-weight:700;
+  color:#fff;
+}
+#upd .ups {
+  margin:12px 0 4px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.55);
+}
+#upd ul {
+  margin:0;
+  padding:0 0 0 18px;
+}
+#upd li {
+  margin:6px 0;
+  font-size:14px;
+  line-height:1.4;
+  color:#fff;
+}
+#upd .upb {
+  width:100%;
+  flex:none;
+  border:0;
+  border-radius:16px;
+  padding:15px;
+  background:var(--a1);
+  color:#000;
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  box-shadow:none;
+}
+#upd .upb:disabled {
+  opacity:.75;
+}
+#upd .updx {
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:34px;
+  height:34px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  font-size:22px;
+  line-height:1;
+  box-shadow:none;
+}
+@keyframes upf {
+  from {
+    opacity:0;
+  }
+}
+@keyframes upk {
+  from {
+    opacity:0;
+    transform:translateY(16px) scale(.97);
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  #upd .updb,#upd .updk {
+    animation:none;
+  }
+}
