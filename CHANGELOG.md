@@ -9,6 +9,42 @@ aviso de versión nueva (por eso se escriben para el usuario, en frases cortas);
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.22.0] — 2026-10-30
+
+### Mejoras
+- Al tocar algo, la pantalla ya no se rehace entera: no pierdes la posición ni lo que estás escribiendo.
+- La app pesa un 30 % menos y lo poco usado (WOD, CSV, escáner) se descarga solo al abrirlo.
+- Más protección con los textos que vienen de fuera: copias, programas compartidos y Open Food Facts.
+
+### Interno
+- Código en módulos ES con importaciones explícitas; esbuild los une y los comprime. Archivo único: un solo script. Paquete: `js/`
+  con nombres que cambian con el contenido y WOD, CSV y escáner aparte (`core/lazy`).
+- Plantillas ``html`…` `` con escape automático (`core/html`): 344 plantillas convertidas desde las concatenaciones con el mismo
+  HTML resultante; lo que no se escapa queda marcado con `raw()`.
+- `core/morph`: dentro de una pantalla, `R()` cambia solo lo distinto; al cambiar de pantalla pinta de cero.
+- Service worker: precarga el código, guarda un documento nuevo solo con todo su código y borra el de versiones anteriores.
+- `tools/check.js` para módulos ES (importaciones, orden real de carga, módulos diferidos); `core/debug` da acceso a las pruebas.
+- Pruebas: `tests/render.py` (nueva); `tests/deploy.py` publica de verdad otra versión con otros nombres de archivo.
+- Medido con 3 años de datos y la CPU 4 veces más lenta: guardar un ajuste pasa de 33 a 19 ms y lo que se descarga al abrir, de
+  474 a 330 KB; el arranque y el pintado quedan igual (pintar sin rehacer cuesta un poco más que rehacer, a cambio de no perder nada).
+
+## [1.21.0] — 2026-10-30
+
+### Mejoras
+- Guardar es unas 3 veces más rápido: solo se escribe lo que cambia.
+- Si una parte de tus datos se daña, el resto se conserva.
+
+### Correcciones
+- «Borrar todos los datos» también descarta el entreno en curso.
+
+### Interno
+- Guardado por partes (`core/persist`): núcleo en `ff` y `ff:logs`, `ff:hist` y `ff:meals:AAAA-MM` aparte; solo se escriben las claves
+  que cambian y los `saveState()` de una acción se agrupan en uno. Los datos de la 1.20 pasan solos a partes (si no caben, se sigue
+  guardando entero). Con 3 años de datos, un cambio escribe 7–50 KB en lugar de 645 KB.
+- Pruebas también en Safari (WebKit) en GitHub Actions, con la app servida por HTTP (`tests/browser.py`); prueba nueva del guardado
+  (`tests/storage.py`).
+- Publicación automática desde GitHub Actions: etiqueta `vX.Y.Z` con sus notas y, si Pages publica desde Actions, despliegue.
+
 ## [1.20.0] — 2026-10-30
 
 ### Novedades

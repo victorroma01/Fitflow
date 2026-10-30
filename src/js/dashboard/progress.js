@@ -2,6 +2,12 @@
    Gráficas de progreso por ejercicio.
    Define: progressState, dateShort, progressExercises, progressSeries, progressFmt, axisLabel, progressChart, progressBody, refreshProgress, progressCard, recordEvents, recordsTimeline  · acciones/registros: 3
 */
+import { $, est1RM, round1, roundInt } from '../core/util.js';
+import { A, C } from '../core/registry.js';
+import { S } from '../core/state.js';
+import { segmented } from '../core/ui.js';
+import { toDisplayWeight, weightUnit } from '../profile/units.js';
+import { html, raw } from '../core/html.js';
 let progressState = { n: '', m: 'e', p: -1 };
 const dateShort = d => new Date(d + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' });
 const progressExercises = () => Object.keys(S.hist || {}).filter(n => {
@@ -59,28 +65,28 @@ const progressChart = (pts, m, sel, inter) => {
       b = p.v;
   });
   const tk = [lo, (lo + hi) / 2, hi];
-  let s = '<svg viewBox="0 0 ' + W0 + ' ' + H0 + '" role="img" aria-label="Evolución del ejercicio">';
+  let s = html`<svg viewBox="0 0 ${W0} ${H0}" role="img" aria-label="Evolución del ejercicio">`;
   tk.forEach(v => {
     const y = yy(v);
-    s += '<line x1="' + pl + '" x2="' + (W0 - pr) + '" y1="' + y + '" y2="' + y + '" stroke="var(--ln)" stroke-width="1"/><text x="' + (pl - 6) + '" y="' + (y + 3.5) + '" text-anchor="end" class="pga">' + axisLabel(v) + '</text>';
+    s += html`<line x1="${pl}" x2="${W0 - pr}" y1="${y}" y2="${y}" stroke="var(--ln)" stroke-width="1"/><text x="${pl - 6}" y="${y + 3.5}" text-anchor="end" class="pga">${raw(axisLabel(v))}</text>`;
   });
-  s += '<text x="' + pl + '" y="' + (H0 - 6) + '" class="pga">' + dateShort(pts[0].d) + '</text>';
+  s += html`<text x="${pl}" y="${H0 - 6}" class="pga">${raw(dateShort(pts[0].d))}</text>`;
   if (pts.length > 1)
-    s += '<text x="' + (W0 - pr) + '" y="' + (H0 - 6) + '" text-anchor="end" class="pga">' + dateShort(pts[pts.length - 1].d) + '</text>';
+    s += html`<text x="${W0 - pr}" y="${H0 - 6}" text-anchor="end" class="pga">${raw(dateShort(pts[pts.length - 1].d))}</text>`;
   if (pts.length > 1)
-    s += '<path d="' + pts.map((p, i) => (i ? 'L' : 'M') + xx(i).toFixed(1) + ' ' + yy(toDisplayWeight(p.v)).toFixed(1)).join(' ') + '" fill="none" stroke="var(--a2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    s += html`<path d="${raw(pts.map((p, i) => (i ? 'L' : 'M') + xx(i).toFixed(1) + ' ' + yy(toDisplayWeight(p.v)).toFixed(1)).join(' '))}" fill="none" stroke="var(--a2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   pts.forEach((p, i) => {
     const cx = xx(i).toFixed(1);
     const cy = yy(toDisplayWeight(p.v)).toFixed(1);
     if (i == sel)
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="9" fill="var(--a2)" opacity=".18"/>';
-    s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (i == sel ? 5 : 3.6) + '" fill="' + (p.pr ? 'var(--a2)' : 'var(--cd)') + '" stroke="' + (p.pr ? 'var(--cd)' : 'var(--a2)') + '" stroke-width="2"/>';
+      s += html`<circle cx="${raw(cx)}" cy="${raw(cy)}" r="9" fill="var(--a2)" opacity=".18"/>`;
+    s += html`<circle cx="${raw(cx)}" cy="${raw(cy)}" r="${i == sel ? 5 : 3.6}" fill="${p.pr ? 'var(--a2)' : 'var(--cd)'}" stroke="${p.pr ? 'var(--cd)' : 'var(--a2)'}" stroke-width="2"/>`;
     if (inter)
-      s += '<circle cx="' + cx + '" cy="' + cy + '" r="15" fill="transparent" data-a="pgp" data-i="' + i + '" style="cursor:pointer"/>';
+      s += html`<circle cx="${raw(cx)}" cy="${raw(cy)}" r="15" fill="transparent" data-a="pgp" data-i="${raw(i)}" style="cursor:pointer"/>`;
   });
-  return s + '</svg>';
+  return html`${raw(s)}</svg>`;
 };
-const progressBody = (stat) => {
+export const progressBody = (stat) => {
   const L = progressExercises();
   if (!L.length)
     return '<p class="mu" style="margin:8px 0 0">Cuando registres pesos verás aquí la evolución de cada ejercicio.</p>';
@@ -92,19 +98,18 @@ const progressBody = (stat) => {
   const ML = { e: '1RM estimado', w: 'Peso máximo', v: 'Volumen' };
   let h = '';
   if (!stat) {
-    h += '<select data-c="pgn" aria-label="Ejercicio" style="margin:10px 0 8px">' + L.map((x, i) => '<option value="' + i + '"' + (x == n ? ' selected' : '') + '>' + X(x) + '</option>').join('') + '</select>'
-      + segmented('pgm', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"');
+    h += html`<select data-c="pgn" aria-label="Ejercicio" style="margin:10px 0 8px">${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}</select>${raw(segmented('pgm', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"'))}`;
   }
   if (!pts.length)
-    return h + '<p class="mu" style="margin:10px 0 0">Este ejercicio no tiene pesos registrados.</p>';
+    return html`${raw(h)}<p class="mu" style="margin:10px 0 0">Este ejercicio no tiene pesos registrados.</p>`;
   const sel = stat ? pts.length - 1 : (progressState.p >= 0 && progressState.p < pts.length ? progressState.p : pts.length - 1);
   const p = pts[sel];
-  h += '<div class="pgt2"><span><b>' + progressFmt(p.v, m) + '</b>' + (p.pr ? ' <em class="pgr">RÉCORD</em>' : '') + '</span><small>' + ML[m] + ' · ' + dateShort(p.d) + '</small></div>' + progressChart(pts, m, sel, !stat);
+  h += html`<div class="pgt2"><span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="pgr">RÉCORD</em>' : '')}</span><small>${raw(ML[m])} · ${raw(dateShort(p.d))}</small></div>${progressChart(pts, m, sel, !stat)}`;
   if (pts.length > 1) {
     const a = pts[0].v;
     const z = pts[pts.length - 1].v;
     const dl = (z - a) / a * 100;
-    h += '<div class="mu pgsum">De ' + progressFmt(a, m) + ' a ' + progressFmt(z, m) + ' · <b style="color:' + (dl >= 0 ? 'var(--a1)' : 'inherit') + '">' + (dl >= 0 ? '+' : '') + (Math.round(dl * 10) / 10) + ' %</b>' + (m != 'v' ? '<br><span style="font-size:11.5px">Punto relleno = récord personal</span>' : '') + '</div>';
+    h += html`<div class="mu pgsum">De ${raw(progressFmt(a, m))} a ${raw(progressFmt(z, m))} · <b style="color:${dl >= 0 ? 'var(--a1)' : 'inherit'}">${dl >= 0 ? '+' : ''}${Math.round(dl * 10) / 10} %</b>${raw(m != 'v' ? '<br><span style="font-size:11.5px">Punto relleno = récord personal</span>' : '')}</div>`;
   }
   else
     h += '<div class="mu pgsum">Con una segunda sesión verás la tendencia.</div>';
@@ -130,7 +135,7 @@ C.pgn = e => {
   progressState.p = -1;
   refreshProgress();
 };
-const progressCard = () => '<div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">' + progressBody() + '</div></div>';
+export const progressCard = () => html`<div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">${raw(progressBody())}</div></div>`;
 const recordEvents = () => {
   const ev = [];
   Object.keys(S.hist || {}).forEach(n => {
@@ -149,9 +154,9 @@ const recordEvents = () => {
   });
   return ev.sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : b.e - a.e);
 };
-const recordsTimeline = () => {
+export const recordsTimeline = () => {
   const ev = recordEvents().slice(0, 8);
   if (!ev.length)
     return '';
-  return '<div class="cd"><b>Línea de récords</b>' + ev.map(o => '<div class="it" style="grid-template-columns:1fr auto"><span>' + X(o.n) + '<br><small>' + dateShort(o.d) + '</small></span><span style="text-align:right"><b>' + toDisplayWeight(o.w) + ' ' + weightUnit() + ' × ' + o.r + '</b><br><small>1RM est. ' + (Math.round(toDisplayWeight(o.e) * 10) / 10) + ' (+' + (Math.round(toDisplayWeight(o.up) * 10) / 10) + ')</small></span></div>').join('') + '</div>';
+  return html`<div class="cd"><b>Línea de récords</b>${ev.map(o => html`<div class="it" style="grid-template-columns:1fr auto"><span>${o.n}<br><small>${raw(dateShort(o.d))}</small></span><span style="text-align:right"><b>${toDisplayWeight(o.w)} ${weightUnit()} × ${raw(o.r)}</b><br><small>1RM est. ${Math.round(toDisplayWeight(o.e) * 10) / 10} (+${Math.round(toDisplayWeight(o.up) * 10) / 10})</small></span></div>`)}</div>`;
 };

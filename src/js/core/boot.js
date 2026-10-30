@@ -1,7 +1,29 @@
 /* ═══ core/boot ═══
    Arranque: migraciones, restauración de estado y primer render.
-   Define: lastWeek
 */
+import { $, fmtDuration, fmtMinSec, roundInt } from './util.js';
+import { Store } from './store.js';
+import { logError } from './errors.js';
+import { savedFormat, stateRecovered } from './persist.js';
+import { parseProgram, PROGRAMS } from '../data/library.js';
+import { applyTheme, S, saveState, W } from './state.js';
+import { icon } from './icons.js';
+import { dialog } from './ui.js';
+import { R } from './render.js';
+import { restorePlanBackup } from '../routines/builder.js';
+import { pendingResume, setPendingResume, WIP_KEY } from '../workout/resume.js';
+import { keepAwake } from '../workout/wake.js';
+import { generateProgram } from '../programs/create.js';
+import { isLevel } from '../programs/levels.js';
+import { applyAccent } from '../profile/appearance.js';
+import { beep, buzz } from '../profile/feedback.js';
+import { isStandalone } from '../system/files.js';
+import { plural } from '../system/backup.js';
+import { takeSnapshot } from '../system/snapshots.js';
+import { showWhatsNew, whatsNewDue } from '../system/updates.js';
+import { loadPhotos } from '../extras/measures.js';
+import { checkAchievements } from '../extras/achievements.js';
+import { html, raw } from './html.js';
 (function () {
   try {
     const A_ = Array.isArray;
@@ -123,10 +145,10 @@ S.plan.forEach(d => {
     delete d.img;
 });
 try {
-  pendingResume = JSON.parse(Store.get(WIP_KEY));
+  setPendingResume(JSON.parse(Store.get(WIP_KEY)));
 }
 catch (e) {
-  pendingResume = null;
+  setPendingResume(null);
 }
 (() => {
   const z = pendingResume;
@@ -136,7 +158,7 @@ catch (e) {
     ok = !!c && c.ex.length == z.d.ex.length && c.ex.every((x, i) => x.n == z.d.ex[i].n);
   }
   if (!ok) {
-    pendingResume = null;
+    setPendingResume(null);
     try {
       Store.del(WIP_KEY);
     }
@@ -238,7 +260,6 @@ setInterval(() => {
   }
 })();
 setInterval(keepAwake, 2500);
-let lastWeek = S.wk;
 try {
   const q = Store.get(Store.K.rs);
   if (q) {
@@ -246,7 +267,7 @@ try {
     const o = JSON.parse(q);
     setTimeout(() => {
       try {
-        dialog(o.u ? 'Datos recuperados' : 'Copia restaurada', '<div style="display:grid;gap:6px;text-align:left">' + (o.s || []).map(x => '<div>· ' + X(x) + '</div>').join('') + '</div>' + (o.f ? '<div style="margin-top:10px">Se descartaron ' + plural(o.f, 'elemento dañado', 'elementos dañados') + ' de la copia.</div>' : ''), [['Entendido', 'zno', 'pr']]);
+        dialog(o.u ? 'Datos recuperados' : 'Copia restaurada', html`<div style="display:grid;gap:6px;text-align:left">${(o.s || []).map(x => html`<div>· ${x}</div>`)}</div>${o.f ? html`<div style="margin-top:10px">Se descartaron ${raw(plural(o.f, 'elemento dañado', 'elementos dañados'))} de la copia.</div>` : ''}`, [['Entendido', 'zno', 'pr']]);
       }
       catch (e) {
         logError('arranque: aviso de restauración', e);
@@ -284,12 +305,17 @@ loadPhotos();
   }
 })();
 setTimeout(checkAchievements, 2500);
-$('nav').innerHTML = ['workout', 'nutri', 'dash', 'user'].map((n, i) => '<button data-a="tab" data-i="' + i + '"><span style="display:block;line-height:0;padding-bottom:4px">' + icon(n, 28) + '</span>' + ['Workout', 'Nutrición', 'Dashboard', 'Perfil'][i] + '</button>').join('');
+$('nav').innerHTML = ['workout', 'nutri', 'dash', 'user'].map((n, i) => html`<button data-a="tab" data-i="${i}"><span style="display:block;line-height:0;padding-bottom:4px">${icon(n, 28)}</span>${raw(['Workout', 'Nutrición', 'Dashboard', 'Perfil'][i])}</button>`).join('');
 R();
 window.__ffok = 1;
 /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
-if (stateRecovered)
-  setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
+if (stateRecovered == 1)
+  setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
+else if (stateRecovered == 2)
+  setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
+/* datos de la 1.20 o anteriores: se pasan a partes nada más arrancar (core/persist) */
+if (savedFormat == 'whole')
+  setTimeout(saveState, 1000);
 setTimeout(() => takeSnapshot().catch(e => logError('copia automática', e)), 4000);
 if (whatsNewDue())
   setTimeout(showWhatsNew, 900);

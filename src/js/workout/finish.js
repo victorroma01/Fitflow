@@ -2,7 +2,17 @@
    Fin del entreno: récords, historial, registro del día e instantánea.
    Define: newRecords, logWorkout, saveHistory, bestOf, saveRecords, lastSummary, workoutSnapshot  · acciones/registros: 3
 */
-let newRecords = [];
+import { dayKey, est1RM, roundInt } from '../core/util.js';
+import { logError } from '../core/errors.js';
+import { A } from '../core/registry.js';
+import { S, saveState, setW, W } from '../core/state.js';
+import { confirmDialog, sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { restorePlanBackup } from '../routines/builder.js';
+import { avgEffort } from './session.js';
+import { unitOf } from './targets.js';
+import { showSummary } from '../extras/summary.js';
+export let newRecords = [];
 const logWorkout = () => {
   const d = S.plan[S.sel];
   let v = 0;
@@ -19,7 +29,7 @@ const logWorkout = () => {
     S.logs.push({ d: dayKey(new Date), n: d.n, v, s: n, m: roundInt((Date.now() - W.t0) / 6e4), q: avgEffort(), dl: W.dl ? 1 : 0 });
     S.done[S.wk + '-' + S.sel] = 1;
   }
-  W = null;
+  setW(null);
   saveState();
   R();
 };
@@ -49,7 +59,7 @@ const saveHistory = () => {
 };
 A.end = () => confirmDialog('¿Guardar el entreno?', 'Se registrarán las series completadas en tu historial.', 'zend', 'Guardar y salir');
 A.zdis = () => confirmDialog('¿Salir sin guardar?', 'Se perderán las series de este entreno.', 'zdc', 'Salir y descartar');
-const bestOf = n => {
+export const bestOf = n => {
   let b = (S.pr || {})[n] || null;
   ((S.hist || {})[n] || []).forEach(x => x.s.forEach(q => {
     const r = +q[0];
@@ -82,7 +92,11 @@ const saveRecords = () => {
     logError('guardar récords', x);
   }
 };
-let lastSummary = null;
+export let lastSummary = null;
+/** Cambia `lastSummary` desde otros módulos (un módulo no puede asignar una variable importada). */
+export const setLastSummary = v => {
+  lastSummary = v;
+};
 const workoutSnapshot = () => {
   let sn = null;
   try {

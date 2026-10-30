@@ -83,22 +83,24 @@ Las novedades salen del [historial de cambios](CHANGELOG.md), que es también la
 ## Cómo está hecha
 
 StrataFit es una **aplicación web instalable (PWA)** escrita en JavaScript sin frameworks ni dependencias en tiempo de ejecución. El código
-vive en módulos pequeños dentro de `src/` y `build.py` (Python, sin dependencias) los une en la app que se publica.
+son módulos ES pequeños dentro de `src/`; `build.py` los compila con [esbuild](https://esbuild.github.io/) (unidos y comprimidos) en la
+app que se publica. Lo poco usado (temporizador WOD, exportar a CSV, escáner de códigos) va en archivos aparte que se descargan la
+primera vez que se abren.
 
 ```mermaid
 flowchart LR
   subgraph fuente["src/ · código fuente"]
-    JS["js/ · 69 módulos<br/>(orden en modules.txt)"]
+    JS["js/ · módulos ES<br/>(entrada: main.js)"]
     CSS["css/ · 19 trozos"]
     IMG["img/ · portadas y<br/>fotos de ejercicio"]
   end
   CL["CHANGELOG.md<br/>(novedades de cada versión)"]
-  B(["build.py"])
+  B(["build.py + esbuild"])
   JS --> B
   CSS --> B
   IMG --> B
   CL --> B
-  B --> APP["dist/app/ · se publica<br/>index.html · sw.js · version.json · img/"]
+  B --> APP["dist/app/ · se publica<br/>index.html · js/ · sw.js · version.json · img/"]
   B --> ONE["dist/stratafit.html<br/>archivo único, todo incrustado"]
   APP --> PAGES["GitHub Pages"]
   PAGES --> PHONE["iPhone<br/>(service worker: abre al instante y sin conexión)"]
@@ -106,9 +108,17 @@ flowchart LR
 
 **Principios del código**
 
-- **Estado único `S`**, guardado con `saveState()`; el entreno en curso es `W` y `R()` pinta la pantalla.
+- **Estado único `S`**, guardado con `saveState()`; el entreno en curso es `W` y `R()` pinta la pantalla. Se guarda por partes
+  (`core/persist`): solo se escribe lo que cambia y todos los guardados de una acción se agrupan en uno.
 - **Eventos delegados**: el HTML lleva `data-a`, `data-c` o `data-u` y un único listener llama al manejador `A.nombre`, `C.nombre` o `U.nombre`,
   escrito junto a la función que lo usa.
+- **HTML seguro por defecto**: las pantallas se escriben con plantillas ``html`…${valor}…` `` (`core/html`), que escapan cada valor
+  insertado. Lo que ya es HTML de la app va tal cual (otra plantilla o una lista de ellas); cualquier otra excepción se marca con
+  `raw(…)`, así que todo lo que no se escapa está a la vista.
+- **Pintar sin rehacer**: `R()` compara la pantalla nueva con la que hay y cambia solo lo distinto (`core/morph`): se conservan el foco, lo
+  escrito y el desplazamiento, y el resultado es el mismo HTML que pintando de cero.
+- **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
+  exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
 - **Persistencia solo a través de `Store`** (`core/store`). Ninguna otra parte toca `localStorage`: ahí se enchufaría un servidor
   ([`docs/BACKEND.md`](docs/BACKEND.md)).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Diagnóstico; un `catch` vacío solo se permite con un
@@ -132,8 +142,9 @@ flowchart LR
 ├── src/
 │   ├── index.html          plantilla: cabecera, pantalla de error de arranque y marcadores @@CSS@@ / @@JS@@
 │   ├── js/
-│   │   ├── modules.txt     orden de carga
-│   │   ├── core/           util, store, errors, registry, state, icons, ui, events, render, boot
+│   │   ├── main.js         punto de entrada: importa los módulos en orden de carga
+│   │   ├── core/           util, html (plantillas), toast, morph, store, errors, persist (guardado), registry, state,
+│   │   │                   icons, ui, events, render, lazy (carga diferida), debug (acceso para pruebas), boot
 │   │   ├── data/           ejercicios, alimentos, fotos (media), novedades (release), anatomía, plantillas, niveles
 │   │   ├── library/        modelo de ejercicios, fotos, filtros, librería, cambio de ejercicio, selector
 │   │   ├── routines/       «Mis workouts»
@@ -159,9 +170,9 @@ flowchart LR
 **Requisitos:** Python 3.10+, Node 18+ y, para las pruebas, Playwright.
 
 ```bash
-npm install                                   # typescript y acorn (comprobaciones y formato)
-pip install playwright pillow numpy
-python -m playwright install chromium
+npm install                                   # esbuild (compilar), typescript y acorn (comprobaciones y formato)
+pip install -r tests/requirements.txt
+python -m playwright install chromium webkit
 ```
 
 **Comandos**
@@ -178,8 +189,9 @@ python -m playwright install chromium
 
 **Añadir una función**
 
-1. Crea `src/js/<área>/<nombre>.js` con su cabecera y sus `const` / `function`; los manejadores (`A.miAccion = …`) van en el mismo archivo.
-2. Añádelo a `src/js/modules.txt` después de los módulos que usa al cargar (normalmente justo antes de `core/boot.js`).
+1. Crea `src/js/<área>/<nombre>.js` con su cabecera, sus `import` y sus `export const` / `export function`; los manejadores
+   (`A.miAccion = …`) van en el mismo archivo. El HTML, con plantillas ``html`…` ``.
+2. Impórtalo en `src/js/main.js` antes de `core/boot.js`. Si es algo poco usado, en lugar de eso cárgalo desde `core/lazy`.
 3. Si guarda datos nuevos, documenta la clave en `docs/STATE.md`, dale valor por defecto en `core/boot` y decide si entra en la copia.
 4. `npm run format` y `bash tests/run.sh`.
 
@@ -189,24 +201,30 @@ python -m playwright install chromium
 - Fotos de ejercicio: `src/img/ex/<clave>.webp` (sin textos, unos 480 px de ancho) y su línea en `src/img/ex/map.txt`:
   `clave | ejercicios que la usan | otros nombres para buscarlo`.
 
-`build.py` las convierte en el módulo `data/media`: en el paquete son archivos que el service worker guarda para usar sin conexión
-(así `index.html` pesa unos 480 KB en lugar de 1 MB); en el archivo único van incrustadas.
+`build.py` las convierte en el módulo `data/media`: en el paquete son archivos que el service worker guarda para usar sin conexión;
+en el archivo único van incrustadas.
 
 ## Pruebas y calidad
 
 | Prueba | Qué comprueba |
 |---|---|
-| `tools/check.js` | Orden de carga entre módulos, identificadores sin declarar, globales y manejadores duplicados, acciones sin manejador. |
+| `tools/check.js` | Importaciones (lo usado de otro módulo, importado; nada sin usar), orden real de ejecución al cargar, identificadores sin declarar, nombres y manejadores duplicados, acciones sin manejador. |
 | `tests/smoke.py` | Arranque, pestañas, entreno completo, comidas, hojas, actualizaciones y persistencia, en las dos variantes. |
 | `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno. |
 | `tests/security.py` | Nombres con HTML malicioso en 33 pantallas: no debe ejecutarse nada. |
 | `tests/safety.py` | Registro de errores, datos dañados, aviso al no poder guardar, copias automáticas y pantalla de error de arranque. |
-| `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, fotos en caché, aviso de versión nueva y novedades. |
+| `tests/storage.py` | Guardado por partes: formato, paso desde la 1.20, escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar. |
+| `tests/render.py` | Pintar con cambios mínimos: cada pantalla queda igual que pintada de cero y se conservan foco, texto escrito y desplazamiento. |
+| `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, código y fotos en caché, carga diferida, aviso de versión nueva (publicando de verdad otra versión) y novedades. |
 | `tests/walk.py` | Paseo aleatorio diferencial: la misma secuencia de toques en dos versiones; compara pantalla, datos y sonidos paso a paso. |
 | `tests/shots.py` | 33 pantallas × 6 configuraciones (temas, cristal, tamaños de iPhone), comparadas píxel a píxel. |
 
-GitHub Actions ejecuta `tests/run.sh` en cada cambio de `main` y en cada solicitud de fusión, y además compara la solicitud con la versión
-anterior (paseo aleatorio y capturas). La comparación es informativa salvo con la etiqueta **`refactor`**, que exige que no cambie nada.
+Las pruebas usan Chrome (Chromium) por defecto; con `SF_BROWSER=webkit` se pasan en el motor de Safari, sirviendo la app por HTTP como
+GitHub Pages (`tests/browser.py`).
+
+GitHub Actions ejecuta `tests/run.sh` en Chrome y en Safari en cada cambio de `main` y en cada solicitud de fusión, y además compara la
+solicitud con la versión anterior (paseo aleatorio y capturas). La comparación es informativa salvo con la etiqueta **`refactor`**, que
+exige que no cambie nada.
 
 ## Publicar una versión
 
@@ -214,8 +232,12 @@ anterior (paseo aleatorio y capturas). La comparación es informativa salvo con 
 2. Escribe su entrada en `CHANGELOG.md` (Novedades, Mejoras, Correcciones en frases cortas para el usuario; Interno para desarrollo).
    La compilación se detiene si falta.
 3. `npm run format` y `bash tests/run.sh`.
-4. Copia `dist/app/` a la raíz del repositorio en una rama y abre una solicitud de fusión. Cuando las pruebas estén en verde, fusiónala:
-   GitHub Pages publica en un minuto y la app instalada enseña el aviso con las novedades.
+4. Abre una solicitud de fusión y, cuando las pruebas estén en verde, fusiónala. Al llegar a `main`, GitHub Actions vuelve a probar en
+   Chrome y Safari, crea la etiqueta `vX.Y.Z` con sus notas y publica la app; la app instalada enseña el aviso con las novedades.
+
+La publicación desde GitHub Actions requiere elegir **GitHub Actions** en *Settings → Pages → Source*. Mientras siga en
+*Deploy from a branch*, lo publicado es la copia de `dist/app/` en la raíz del repositorio, que hay que actualizar a mano en la misma
+solicitud de fusión.
 
 ## Siguientes pasos
 

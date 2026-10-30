@@ -1,10 +1,11 @@
 """Prueba de humo de una compilación: arranca, recorre las pestañas y los flujos principales y falla ante cualquier error de JS.
 
   python3 tests/smoke.py dist/stratafit.html         (también vale dist/app/index.html)
-Requiere:  pip install playwright  &&  playwright install chromium
+Requiere:  pip install playwright  &&  playwright install chromium   (otro motor: SF_BROWSER=webkit; ver tests/browser.py)
 """
 import os, sys, json, datetime
 from playwright.sync_api import sync_playwright
+from browser import launch, app_url, context_opts
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,11 +24,17 @@ def check(name, cond, info=''):
     print(('  ok   ' if cond else '  FALLA'), name, ('' if cond else info))
 
 
+def reload(pg):
+    pg.reload()
+    pg.wait_for_load_state('load')
+    pg.clock.run_for(800)
+
+
 def main(path):
     path = os.path.abspath(path)
     with sync_playwright() as p:
-        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
-        c = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=1, has_touch=True, is_mobile=True, color_scheme='dark')
+        b = launch(p, sound=True)
+        c = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=1, has_touch=True, is_mobile=True, color_scheme='dark', **context_opts(path))
         c.add_init_script(INIT)
         pg = c.new_page()
         errs = []
@@ -35,15 +42,14 @@ def main(path):
         pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' else None)
         pg.on('dialog', lambda d: d.accept())
         pg.clock.install(time=datetime.datetime(2026, 10, 29, 12, 0, 0))
-        pg.goto('file://' + path)
+        pg.goto(app_url(path))
         pg.clock.run_for(800)
         ev = pg.evaluate
         check('arranca (window.__ffok)', ev('!!window.__ffok'))
         check('sin pantalla de error de arranque', ev("!document.getElementById('ffe')"))
         ev(SEED)
         ev(EXTRA)
-        ev('location.reload()')
-        pg.clock.run_for(800)
+        reload(pg)
 
         # pestañas
         for i, nm in enumerate(['Workout', 'Nutrición', 'Dashboard', 'Perfil']):
@@ -128,9 +134,9 @@ def main(path):
 
         # persistencia
         ev('saveState()')
-        before = ev("JSON.parse(localStorage.getItem('ff')).logs.length")
-        ev('location.reload()')
-        pg.clock.run_for(800)
+        # entrenos guardados: dentro de 'ff' (1.20 y anteriores) o en su propia clave 'ff:logs' (guardado por partes, 1.21)
+        before = ev("(()=>{const c=JSON.parse(localStorage.getItem('ff'));return (Array.isArray(c.logs)?c.logs:JSON.parse(localStorage.getItem(c.logs))).length})()")
+        reload(pg)
         check('persistencia tras recargar', ev('S.logs.length') == before, '%s vs %s' % (ev('S.logs.length'), before))
         check('sin errores de JS durante la prueba', not errs, '; '.join(errs[:3]))
         b.close()

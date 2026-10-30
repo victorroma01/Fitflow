@@ -2,13 +2,20 @@
    Sugerencias de progresión y autorrelleno de series.
    Define: setText, prefillSets, progressionOf, suggestionBox, lastTimeLine  · acciones/registros: 1
 */
-const setText = (e, s) => {
+import { A } from '../core/registry.js';
+import { S, W } from '../core/state.js';
+import { R } from '../core/render.js';
+import { lastHistory, roundHalf, targetRange, unitOf, weightStep } from './targets.js';
+import { isDeloadWeek } from './deload.js';
+import { fromDisplayWeight, toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
+import { html, raw } from '../core/html.js';
+export const setText = (e, s) => {
   const U = unitOf(e);
   const w = toDisplayWeight(s[1]);
   const x = (s[3] == 1 ? ' (drop)' : '') + (+s[2] > 0 ? ' @' + s[2] : '');
   return U ? s[0] + ' ' + U + (s[1] > 0 ? ' · ' + w + ' ' + weightUnit() : '') + x : s[0] + ' × ' + w + ' ' + weightUnit() + x;
 };
-function prefillSets(e, a) {
+export function prefillSets(e, a) {
   const h = lastHistory(e);
   const U = unitOf(e);
   const r = targetRange(e);
@@ -93,7 +100,7 @@ const suggestionBox = (e, i, P) => {
   else
     t = 'mantén ' + wv + ' ' + u + ' y busca 1 rep más hasta ' + P.hi;
   const dif = W.x[i].some(s => !s.ok && s.t != 1 && Math.abs((+s.w || 0) - P.nw) > 1e-6);
-  return '<div class="sgb"><span><b>Sugerido</b> · ' + t + '</span>' + (dif ? '<button class="chip" data-a="sgap" data-i="' + i + '">Aplicar</button>' : '') + '</div>';
+  return html`<div class="sgb"><span><b>Sugerido</b> · ${raw(t)}</span>${dif ? html`<button class="chip" data-a="sgap" data-i="${raw(i)}">Aplicar</button>` : ''}</div>`;
 };
 A.sgap = i => {
   const e = S.plan[S.sel].ex[i];
@@ -102,11 +109,11 @@ A.sgap = i => {
   prefillSets(e, W.x[i].filter(s => s.t != 1));
   R();
 };
-const lastTimeLine = (e, i) => {
+export const lastTimeLine = (e, i) => {
   const h = lastHistory(e);
   if (!h || !h.s.length)
     return '';
   const U = unitOf(e);
   const P = progressionOf(e);
-  return '<div class="mu" style="font-size:12px">Última vez: ' + h.s.map(x => U ? x[0] + ' ' + U : x[0] + '×' + (x[1] ? toDisplayWeight(x[1]) : '–') + (x[3] == 1 ? ' (drop)' : '')).join(' · ') + '</div>' + suggestionBox(e, i, P);
+  return html`<div class="mu" style="font-size:12px">Última vez: ${raw(h.s.map(x => U ? x[0] + ' ' + U : x[0] + '×' + (x[1] ? toDisplayWeight(x[1]) : '–') + (x[3] == 1 ? ' (drop)' : '')).join(' · '))}</div>${suggestionBox(e, i, P)}`;
 };

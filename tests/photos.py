@@ -4,6 +4,7 @@
 """
 import os, sys, datetime
 from playwright.sync_api import sync_playwright
+from browser import launch, app_url, context_opts
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -28,15 +29,15 @@ def main(path, shots=None):
     if shots:
         os.makedirs(shots, exist_ok=True)
     with sync_playwright() as p:
-        b = p.chromium.launch()
-        c = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, has_touch=True, is_mobile=True, color_scheme='dark')
+        b = launch(p)
+        c = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, has_touch=True, is_mobile=True, color_scheme='dark', **context_opts(path))
         c.add_init_script(INIT)
         pg = c.new_page()
         errs = []
         pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200]))
         pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' else None)
         pg.clock.install(time=datetime.datetime(2026, 10, 29, 12, 0, 0))
-        pg.goto('file://' + path)
+        pg.goto(app_url(path))
         pg.clock.run_for(800)
         ev = pg.evaluate
         check('arranca', ev('!!window.__ffok'))

@@ -2,20 +2,33 @@
    Mis workouts: lista, editor de bloques y lanzamiento.
    Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineEditor, routineBlockPicker, openRoutines, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 22
 */
-let routineState = { i: -1, k: 1, sel: [], q: '' };
+import { $, fmtMinSec, roundInt, X } from '../core/util.js';
+import { A, C, U } from '../core/registry.js';
+import { groupLabel } from '../data/library.js';
+import { DAY_PHOTOS } from '../data/photos.js';
+import { S, saveState } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { dialog, sheet } from '../core/ui.js';
+import { exAll, exCellHtml, exCompare, exSearchText, groupOfName } from '../library/model.js';
+import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, groupDropdown, groupMatch } from '../library/filters.js';
+import { REST_OPTIONS, restDefault } from '../workout/rest.js';
+import { imagePicker, routineImage } from '../workout/images.js';
+import { exAnatomy } from '../extras/anatomy.js';
+import { html, raw } from '../core/html.js';
+export let routineState = { i: -1, k: 1, sel: [], q: '' };
 const BLOCK_KINDS = ['', 'Suelto', 'Superserie', 'Triserie'];
-const routineExRows = () => {
+export const routineExRows = () => {
   const q = routineState.q.toLowerCase().trim();
   const bq = exAll().filter(e => !q || exSearchText(e).includes(q));
   const base = bq.filter(e => groupMatch(routineState.gs, e));
-  return filterRow(groupDropdown('crg', routineState.gs, bq), equipDropdown('cr', routineState.eq, equipIn(base), base, 1)) + base.filter(e => equipMatch(routineState.eq, e)).sort(exCompare).slice(0, 100).map(e => '<div class="it exr" data-a="bp" data-n="' + X(e.n) + '" style="cursor:pointer"><span class="exc">' + exCellHtml(e) + '</span><small class="mu">Añadir +</small></div>').join('') || '<p class="mu">Sin resultados.</p>';
+  return filterRow(groupDropdown('crg', routineState.gs, bq), equipDropdown('cr', routineState.eq, equipIn(base), base, 1)) + base.filter(e => equipMatch(routineState.eq, e)).sort(exCompare).slice(0, 100).map(e => html`<div class="it exr" data-a="bp" data-n="${e.n}" style="cursor:pointer"><span class="exc">${exCellHtml(e)}</span><small class="mu">Añadir +</small></div>`).join('') || '<p class="mu">Sin resultados.</p>';
 };
 const routineListPage = () => routineList();
-const routineEditor = () => {
+export const routineEditor = () => {
   const r = S.cr[routineState.i];
-  return '<div class="row"><button data-a="cr">‹ Rutinas</button>' + (routineState.nw ? '' : '<button data-a="crx" style="color:var(--c)">Eliminar</button>') + '</div><h2 style="margin:14px 0 4px;letter-spacing:-.02em">Workout personalizado</h2><label>Nombre</label><input data-c="crn" value="' + X(r.n) + '"><label>Imagen del entrenamiento</label>' + imagePicker(r) + '' + r.bl.map((b, j) => '<div class="row" style="margin-top:16px"><b class="mu">SERIE ' + String.fromCharCode(65 + j) + '</b>' + (b.ex.length > 1 ? '<b style="color:#f59e0b">' + BLOCK_KINDS[b.ex.length] + ' · 10 s</b>' : '') + '<button data-a="bd" data-i="' + j + '" style="padding:4px 10px">Quitar</button></div>' + b.ex.map(n => '<div class="ovx"><div class="th">' + exAnatomy(n, 64) + '</div><b style="flex:1">' + X(n) + '</b></div>').join('') + '<div class="row" style="margin-top:6px"><span><button data-a="bs" data-i="' + j + '" data-v="-1">−</button> ' + b.s + ' series <button data-a="bs" data-i="' + j + '" data-v="1">+</button></span><select data-c="br" data-i="' + j + '" style="width:auto">' + REST_OPTIONS.map(v => '<option value="' + v + '"' + (v == b.r ? ' selected' : '') + '>Descanso ' + fmtMinSec(v) + '</option>').join('') + '</select></div>').join('') + '<button data-a="bnew" style="width:100%;margin-top:16px">+ Añadir bloque</button><div style="height:80px"></div><button class="sb" data-a="crc" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">' + (routineState.nw ? 'Crear' : 'Guardar cambios') + '</button>';
+  return html`<div class="row"><button data-a="cr">‹ Rutinas</button>${raw(routineState.nw ? '' : '<button data-a="crx" style="color:var(--c)">Eliminar</button>')}</div><h2 style="margin:14px 0 4px;letter-spacing:-.02em">Workout personalizado</h2><label>Nombre</label><input data-c="crn" value="${r.n}"><label>Imagen del entrenamiento</label>${imagePicker(r)}${r.bl.map((b, j) => html`<div class="row" style="margin-top:16px"><b class="mu">SERIE ${raw(String.fromCharCode(65 + j))}</b>${b.ex.length > 1 ? html`<b style="color:#f59e0b">${raw(BLOCK_KINDS[b.ex.length])} · 10 s</b>` : ''}<button data-a="bd" data-i="${raw(j)}" style="padding:4px 10px">Quitar</button></div>${b.ex.map(n => html`<div class="ovx"><div class="th">${exAnatomy(n, 64)}</div><b style="flex:1">${n}</b></div>`)}<div class="row" style="margin-top:6px"><span><button data-a="bs" data-i="${raw(j)}" data-v="-1">−</button> ${raw(b.s)} series <button data-a="bs" data-i="${raw(j)}" data-v="1">+</button></span><select data-c="br" data-i="${raw(j)}" style="width:auto">${REST_OPTIONS.map(v => html`<option value="${v}"${v == b.r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))}</option>`)}</select></div>`)}<button data-a="bnew" style="width:100%;margin-top:16px">+ Añadir bloque</button><div style="height:80px"></div><button class="sb" data-a="crc" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
 };
-const routineBlockPicker = () => '<button data-a="cre" data-i="' + routineState.i + '">‹ Cancelar</button><h3>Nuevo bloque</h3>' + [1, 2, 3].map(k => '<button class="chip' + (routineState.k == k ? ' on' : '') + '" data-a="bk" data-i="' + k + '">' + BLOCK_KINDS[k] + '</button>').join('') + '<p class="mu">Elige el ejercicio ' + (routineState.sel.length + 1) + ' de ' + routineState.k + (routineState.sel.length ? ': ' + routineState.sel.map(X).join(' + ') : '') + '</p><input placeholder="Buscar por nombre, músculo o equipo" data-u="cq"><div id="cl2">' + routineExRows() + '</div>';
+const routineBlockPicker = () => html`<button data-a="cre" data-i="${routineState.i}">‹ Cancelar</button><h3>Nuevo bloque</h3>${[1, 2, 3].map(k => html`<button class="chip${routineState.k == k ? ' on' : ''}" data-a="bk" data-i="${k}">${raw(BLOCK_KINDS[k])}</button>`)}<p class="mu">Elige el ejercicio ${routineState.sel.length + 1} de ${routineState.k}${raw(routineState.sel.length ? ': ' + routineState.sel.map(X).join(' + ') : '')}</p><input placeholder="Buscar por nombre, músculo o equipo" data-u="cq"><div id="cl2">${raw(routineExRows())}</div>`;
 A.bp = (i, b) => {
   routineState.sel.push(b.dataset.n);
   routineState.q = '';
@@ -57,11 +70,11 @@ function routineRows() {
     const ex = [].concat(...r.bl.map(b => b.ex));
     const gs = [...new Set(ex.map(n => groupLabel(groupOfName(n))))];
     const ns = r.bl.reduce((s, b) => s + b.s * b.ex.length, 0);
-    return '<div class="ovx" style="align-items:flex-start;padding:16px 0"><div data-a="cre" data-i="' + i + '" style="width:96px;height:132px;border-radius:16px;flex:none;cursor:pointer;background:url(' + DAY_PHOTOS[k] + ') center/cover"></div><div style="flex:1;min-width:0"><div class="row"><small style="color:var(--a1);font-weight:700">' + icon('prog', 14) + ' Personalizado</small><button data-a="crm" data-i="' + i + '" style="border:0;background:none;padding:4px 8px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><b data-a="cre" data-i="' + i + '" style="font-size:20px;display:block;margin:4px 0 10px;cursor:pointer">' + X(r.n) + '</b><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tg">' + roundInt(ns * 2.4) + ' min</span>' + gs.slice(0, 2).map(g => '<span class="tg">' + g + '</span>').join('') + (gs.length > 2 ? '<span class="tg">+' + (gs.length - 2) + '</span>' : '') + '</div>' + (routineState.m === i ? '<div class="g2" style="margin-top:10px;grid-template-columns:repeat(3,1fr)"><button class="pr" data-a="crgo" data-i="' + i + '">Empezar</button><button data-a="cre" data-i="' + i + '">Editar</button><button data-a="crd" data-i="' + i + '" style="color:var(--c)">Borrar</button></div>' : '') + '</div></div>';
+    return html`<div class="ovx" style="align-items:flex-start;padding:16px 0"><div data-a="cre" data-i="${raw(i)}" style="width:96px;height:132px;border-radius:16px;flex:none;cursor:pointer;background:url(${raw(DAY_PHOTOS[k])}) center/cover"></div><div style="flex:1;min-width:0"><div class="row"><small style="color:var(--a1);font-weight:700">${icon('prog', 14)} Personalizado</small><button data-a="crm" data-i="${raw(i)}" style="border:0;background:none;padding:4px 8px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><b data-a="cre" data-i="${raw(i)}" style="font-size:20px;display:block;margin:4px 0 10px;cursor:pointer">${r.n}</b><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tg">${roundInt(ns * 2.4)} min</span>${gs.slice(0, 2).map(g => html`<span class="tg">${raw(g)}</span>`)}${gs.length > 2 ? html`<span class="tg">+${gs.length - 2}</span>` : ''}</div>${routineState.m === i ? html`<div class="g2" style="margin-top:10px;grid-template-columns:repeat(3,1fr)"><button class="pr" data-a="crgo" data-i="${raw(i)}">Empezar</button><button data-a="cre" data-i="${raw(i)}">Editar</button><button data-a="crd" data-i="${raw(i)}" style="color:var(--c)">Borrar</button></div>` : ''}</div></div>`;
   }).join('') || '<p class="mu">Aún no tienes workouts. Crea el primero con el botón de abajo.</p>';
 }
 function routineList() {
-  return '<div class="row"><button data-a="cl" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 style="font-size:32px;letter-spacing:-.03em;margin:10px 0 16px">Workouts personalizados</h1><div class="row" style="margin-bottom:6px"><input placeholder="Buscar" data-u="crs" value="' + X(routineState.s || '') + '"><button data-a="crso" style="padding:12px 14px">' + icon('swp', 20) + '</button></div><div id="crl">' + routineRows() + '</div><div style="height:90px"></div><button class="sb" data-a="crn" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">Crear workout</button>';
+  return html`<div class="row"><button data-a="cl" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 style="font-size:32px;letter-spacing:-.03em;margin:10px 0 16px">Workouts personalizados</h1><div class="row" style="margin-bottom:6px"><input placeholder="Buscar" data-u="crs" value="${routineState.s || ''}"><button data-a="crso" style="padding:12px 14px">${icon('swp', 20)}</button></div><div id="crl">${raw(routineRows())}</div><div style="height:90px"></div><button class="sb" data-a="crn" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">Crear workout</button>`;
 }
 const refreshRoutineRows = () => {
   const e = $('#crl');
@@ -82,7 +95,11 @@ A.crm = i => {
 };
 let routineSnapshot = null;
 let routineEditIndex = -1;
-let overviewSnapshot = '';
+export let overviewSnapshot = '';
+/** Cambia `overviewSnapshot` desde otros módulos (un módulo no puede asignar una variable importada). */
+export const setOverviewSnapshot = v => {
+  overviewSnapshot = v;
+};
 A.crn = () => {
   routineState.nw = true;
   S.cr.push({ n: 'Mi workout ' + (S.cr.length + 1), bl: [] });
@@ -170,7 +187,7 @@ A.crdo = () => {
   saveState();
   refreshRoutineRows();
 };
-const routineToDay = i => {
+export const routineToDay = i => {
   const r = S.cr[i];
   const ex = [];
   r.bl.forEach((b, j) => {
@@ -184,7 +201,7 @@ const routineToDay = i => {
   });
   return { n: r.n, ex, cu: 1, img: routineImage(r) };
 };
-const restorePlanBackup = () => {
+export const restorePlanBackup = () => {
   if (S.pbk) {
     S.plan[S.pbk.sel] = S.pbk.day;
     S.pbk = null;

@@ -2,6 +2,17 @@
    Logros.
    Define: achStats, ACHIEVEMENTS, checkAchievements, achProgress, achievementsPage  · acciones/registros: 1
 */
+import { dayKey, fmtDateShort, round1, roundInt } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { logError } from '../core/errors.js';
+import { A } from '../core/registry.js';
+import { S, saveState } from '../core/state.js';
+import { icon } from '../core/icons.js';
+import { fullPage, pgHead } from '../core/ui.js';
+import { weekStats } from '../dashboard/home.js';
+import { cardioLogs } from './cardio.js';
+import { measureList, photoCount } from './measures.js';
+import { html, raw } from '../core/html.js';
 function achStats() {
   const L = (S.logs || []).filter(l => l && typeof l.d == 'string');
   const cd = cardioLogs();
@@ -19,7 +30,7 @@ function achStats() {
     }).length,
     ms: measureList().length, ph: photoCount, wl: Array.isArray(S.wl) ? S.wl.length : 0, bk: S.bkd ? 1 : 0 };
 }
-const ACHIEVEMENTS = [
+export const ACHIEVEMENTS = [
   ['e1', 'Primer paso', 'Registra tu primer entreno', 'n', 1], ['e2', 'Constancia', '10 entrenos registrados', 'n', 10], ['e3', 'En forma', '50 entrenos registrados', 'n', 50], ['e4', 'Centenario', '100 entrenos registrados', 'n', 100], ['e5', 'Leyenda', '250 entrenos registrados', 'n', 250],
   ['v1', 'Diez toneladas', 'Mueve 10 toneladas en total', 'vol', 1e4], ['v2', 'Cien toneladas', 'Mueve 100 toneladas en total', 'vol', 1e5], ['v3', 'Quinientas toneladas', 'Mueve 500 toneladas en total', 'vol', 5e5], ['v4', 'Mil toneladas', 'Mueve 1000 toneladas en total', 'vol', 1e6],
   ['s1', 'Racha de un mes', '4 semanas seguidas cumpliendo tu objetivo', 'st', 4], ['s2', 'Racha de un trimestre', '12 semanas seguidas', 'st', 12], ['s3', 'Medio año sin fallar', '26 semanas seguidas', 'st', 26],
@@ -30,7 +41,7 @@ const ACHIEVEMENTS = [
   ['m1', 'Primera medición', 'Guarda tus medidas corporales', 'ms', 1], ['f1', 'Primera foto', 'Guarda una foto de progreso', 'ph', 1], ['f2', 'Antes y después', 'Ten al menos 2 fotos de progreso', 'ph', 2],
   ['b1', 'Peso al día', '10 registros de peso corporal', 'wl', 10], ['k1', 'Datos a salvo', 'Guarda una copia de seguridad', 'bk', 1]
 ];
-function checkAchievements() {
+export function checkAchievements() {
   try {
     const st = achStats();
     const first = !S.ach || typeof S.ach != 'object' || Array.isArray(S.ach);
@@ -66,9 +77,8 @@ function achievementsPage() {
   const a = S.ach || {};
   const dn = ACHIEVEMENTS.filter(x => a[x[0]]);
   const pd = ACHIEVEMENTS.filter(x => !a[x[0]]);
-  const row = (x, on) => '<div class="f2ac' + (on ? ' on' : '') + '"><span class="f2ai">' + icon('trf', 22) + '</span><span style="min-width:0"><b>' + x[1] + '</b><br><small>' + x[2] + '</small>' + (on ? '' : '<div class="bar"><i style="width:' + Math.min(100, Math.round(st[x[3]] / x[4] * 100)) + '%;background:var(--a2)"></i></div>') + '</span><small style="white-space:nowrap">' + (on ? (a[x[0]] && a[x[0]] != '-' ? fmtDateShort(a[x[0]], { day: 'numeric', month: 'short', year: '2-digit' }) : 'Conseguido') : achProgress(x, st)) + '</small></div>';
-  return pgHead('Logros') + '<div class="cd" style="text-align:center"><b style="font-size:32px">' + dn.length + ' de ' + ACHIEVEMENTS.length + '</b><br><small>logros conseguidos</small><div class="bar" style="margin-top:10px"><i style="width:' + Math.round(dn.length / ACHIEVEMENTS.length * 100) + '%;background:var(--a2)"></i></div></div>'
-    + (pd.length ? '<div class="ph">Por conseguir</div>' + pd.map(x => row(x, 0)).join('') : '') + (dn.length ? '<div class="ph">Conseguidos</div>' + dn.map(x => row(x, 1)).join('') : '') + '<div style="height:30px"></div>';
+  const row = (x, on) => html`<div class="f2ac${on ? ' on' : ''}"><span class="f2ai">${icon('trf', 22)}</span><span style="min-width:0"><b>${raw(x[1])}</b><br><small>${raw(x[2])}</small>${on ? '' : html`<div class="bar"><i style="width:${Math.min(100, Math.round(st[x[3]] / x[4] * 100))}%;background:var(--a2)"></i></div>`}</span><small style="white-space:nowrap">${raw(on ? (a[x[0]] && a[x[0]] != '-' ? fmtDateShort(a[x[0]], { day: 'numeric', month: 'short', year: '2-digit' }) : 'Conseguido') : achProgress(x, st))}</small></div>`;
+  return html`${pgHead('Logros')}<div class="cd" style="text-align:center"><b style="font-size:32px">${dn.length} de ${ACHIEVEMENTS.length}</b><br><small>logros conseguidos</small><div class="bar" style="margin-top:10px"><i style="width:${Math.round(dn.length / ACHIEVEMENTS.length * 100)}%;background:var(--a2)"></i></div></div>${pd.length ? html`<div class="ph">Por conseguir</div>${raw(pd.map(x => row(x, 0)).join(''))}` : ''}${dn.length ? html`<div class="ph">Conseguidos</div>${raw(dn.map(x => row(x, 1)).join(''))}` : ''}<div style="height:30px"></div>`;
 }
 A.f2lg = () => {
   checkAchievements();

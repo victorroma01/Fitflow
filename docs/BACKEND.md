@@ -16,7 +16,8 @@ añade en un único sitio sin tocar las pantallas.
 
 | Clave | Contenido | Tamaño típico |
 |---|---|---|
-| `app` | estado completo `S` (perfil, programas, registros, comidas, medidas…) | cientos de KB |
+| `app` | núcleo del estado `S` (perfil, plan, programas, ajustes, peso, medidas…) | decenas de KB |
+| `app` + `:logs`, `:hist`, `:meals:AAAA-MM` | entrenos, historial por ejercicio y comidas de cada mes (`core/persist`) | KB a cientos de KB |
 | `wip` | entreno en curso | pocos KB |
 | `pre`, `rs` | auxiliares de restauración (no se sincronizan) | — |
 | `err`, `bad`, `ver`, `seen` | propios del dispositivo: errores, datos apartados, versión abierta y novedades vistas (no se sincronizan) | — |
@@ -25,7 +26,8 @@ añade en un único sitio sin tocar las pantallas.
 
 ## Gancho ya disponible
 
-`Store.set` / `Store.del` avisan a `Store.remote.changed(clave, valor)` si existe un adaptador (los fallos del adaptador se registran
+`Store.set` / `Store.del` avisan a `Store.remote.changed(clave, valor)` si existe un adaptador. Como el estado se guarda por partes y solo
+se escriben las que cambian, cada aviso trae justo lo modificado (el núcleo, los entrenos, el historial o las comidas de un mes) (los fallos del adaptador se registran
 en Diagnóstico y nunca impiden el guardado local). Un adaptador mínimo haría: cola de cambios en el dispositivo → `PUT` al servidor cuando hay red →
 al abrir, `GET` del estado remoto y fusión.
 

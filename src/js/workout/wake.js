@@ -2,8 +2,9 @@
    Mantener la pantalla activa durante el entreno.
    Define: wakeLockHandle, keepAwake
 */
+import { S, W, wodRun } from '../core/state.js';
 let wakeLockHandle = null;
-const keepAwake = async () => {
+export const keepAwake = async () => {
   try {
     const want = !!(((W && !W.p && S.awk !== 0) || (wodRun && !wodRun.pa && !wodRun.done)) && document.visibilityState == 'visible');
     if (want && !wakeLockHandle && navigator.wakeLock) {

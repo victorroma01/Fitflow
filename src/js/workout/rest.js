@@ -2,8 +2,16 @@
    Descansos por defecto y selector de descanso.
    Define: COMPOUND_RE, REST_OPTIONS, restByName, restOf, restSelect, HEAVY_TYPES, restDefault
 */
-const COMPOUND_RE = /^(Press banca|Press militar|Sentadilla|Peso muerto|Dominadas|Remo con barra|Remo T|Remo Pendlay|Prensa|Hack|Hip thrust|Clean|Snatch|Thruster|Power|Overhead|Push press|Buenos)/;
-const REST_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180, 210, 240, 300];
+import { fmtMinSec } from '../core/util.js';
+import { C } from '../core/registry.js';
+import { EXERCISES, groupOf } from '../data/library.js';
+import { S, saveState, W } from '../core/state.js';
+import { R } from '../core/render.js';
+import { exAll } from '../library/model.js';
+import { unitFromName } from './targets.js';
+import { html, raw } from '../core/html.js';
+export const COMPOUND_RE = /^(Press banca|Press militar|Sentadilla|Peso muerto|Dominadas|Remo con barra|Remo T|Remo Pendlay|Prensa|Hack|Hip thrust|Clean|Snatch|Thruster|Power|Overhead|Push press|Buenos)/;
+export const REST_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180, 210, 240, 300];
 function restByName(n) {
   const e = EXERCISES.concat(S.cx).find(x => x.n == n);
   const g = e ? groupOf(e) : '';
@@ -19,13 +27,13 @@ function restByName(n) {
     return 60;
   return g ? 90 : S.rest;
 }
-const restOf = e => e.r || restDefault(e.n);
-const restSelect = e => {
+export const restOf = e => e.r || restDefault(e.n);
+export const restSelect = e => {
   const r = restOf(e);
-  return '<select data-c="rx" data-i="' + S.plan[S.sel].ex.indexOf(e) + '" style="width:auto;padding:5px 10px;font-size:13px">' + REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => '<option value="' + v + '"' + (v == r ? ' selected' : '') + '>Descanso ' + fmtMinSec(v) + ' por serie</option>').join('') + '</select>';
+  return html`<select data-c="rx" data-i="${raw(S.plan[S.sel].ex.indexOf(e))}" style="width:auto;padding:5px 10px;font-size:13px">${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))} por serie</option>`)}</select>`;
 };
 const HEAVY_TYPES = new Set(['Press plano', 'Press inclinado', 'Press declinado', 'Press vertical', 'Dominadas', 'Remo horizontal', 'Cadena posterior', 'Sentadilla', 'Prensa y hack', 'Bisagra de cadera', 'Empuje de cadera', 'Halterofilia']);
-function restDefault(n) {
+export function restDefault(n) {
   const e = exAll().find(x => x.n == n);
   const u = unitFromName(n);
   if (u)

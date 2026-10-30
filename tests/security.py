@@ -9,6 +9,7 @@ from playwright.sync_api import sync_playwright
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from shots import SCR  # noqa: E402
+from browser import launch, app_url, context_opts  # noqa: E402
 
 
 def rd(n):
@@ -28,18 +29,20 @@ MUT = """(P=>{const deep=o=>{if(o&&typeof o=='object')for(const k in o){const v=
 def main(path):
     path = os.path.abspath(path)
     with sync_playwright() as p:
-        b = p.chromium.launch()
-        c = b.new_context(viewport={'width': 390, 'height': 844})
+        b = launch(p)
+        c = b.new_context(viewport={'width': 390, 'height': 844}, **context_opts(path))
         c.add_init_script(rd('init.js'))
         pg = c.new_page()
         pg.on('dialog', lambda d: d.accept())
         pg.clock.install(time=datetime.datetime(2026, 10, 29, 12, 0, 0))
-        pg.goto('file://' + path)
+        pg.goto(app_url(path))
         pg.clock.run_for(800)
         pg.evaluate(rd('seed.js'))
         pg.evaluate(rd('extra.js'))
         pg.evaluate(MUT)
-        pg.evaluate('location.reload()')
+        with pg.expect_navigation():
+            pg.evaluate('location.reload()')
+        pg.wait_for_load_state('load')
         pg.clock.run_for(800)
         bad = []
         for k, js in SCR.items():

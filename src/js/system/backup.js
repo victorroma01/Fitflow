@@ -2,21 +2,39 @@
    Copias de seguridad, restauración y avisos.
    Define: pendingRestore, backupAge, backupReminder, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, parseBackup, backupDate, askRestore, preRestore, restoreBackup, … (+5)  · acciones/registros: 8
 */
-let pendingRestore = null;
-const backupAge = () => {
+import { $, APPV, dayKey, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { Store } from '../core/store.js';
+import { logError } from '../core/errors.js';
+import { lockSaves, replaceSavedState } from '../core/persist.js';
+import { A, C } from '../core/registry.js';
+import { flushState, S, saveState } from '../core/state.js';
+import { confirmDialog, sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { WIP_KEY } from '../workout/resume.js';
+import { downloadFile } from './files.js';
+import { fillSnapshots } from './snapshots.js';
+import { allPhotosFull, mergePhotos, photoCount } from '../extras/measures.js';
+import { html, raw } from '../core/html.js';
+export let pendingRestore = null;
+/** Cambia `pendingRestore` desde otros módulos (pruebas: core/debug). */
+export const setPendingRestore = v => {
+  pendingRestore = v;
+};
+export const backupAge = () => {
   if (!S.bkd)
     return 'Aún no has guardado ninguna copia.';
   const d = Math.floor((Date.now() - S.bkd) / 864e5);
   return 'Última copia: ' + (d <= 0 ? 'hoy' : d == 1 ? 'ayer' : 'hace ' + d + ' días') + '.';
 };
-const backupReminder = () => {
+export const backupReminder = () => {
   if (S.logs.length < 3 || (S.bkd && Date.now() - S.bkd < 21 * 864e5))
     return '';
-  return '<div class="cd"><b>Haz una copia de seguridad</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Tus entrenos solo viven en este dispositivo. ' + (S.bkd ? backupAge() : 'Aún no has guardado ninguna copia.') + '</div><button data-a="zbk" style="width:100%">Copia de seguridad</button></div>';
+  return html`<div class="cd"><b>Haz una copia de seguridad</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Tus entrenos solo viven en este dispositivo. ${raw(S.bkd ? backupAge() : 'Aún no has guardado ninguna copia.')}</div><button data-a="zbk" style="width:100%">Copia de seguridad</button></div>`;
 };
 const BACKUP_FORMAT = 2;
-const countOf = x => Array.isArray(x) ? x.length : (x && typeof x == 'object' ? Object.keys(x).length : 0);
-const plural = (n, a, b) => n + ' ' + (n == 1 ? a : b);
+export const countOf = x => Array.isArray(x) ? x.length : (x && typeof x == 'object' ? Object.keys(x).length : 0);
+export const plural = (n, a, b) => n + ' ' + (n == 1 ? a : b);
 const wipSession = () => {
   try {
     const z = JSON.parse(Store.get(WIP_KEY));
@@ -31,20 +49,14 @@ const wipSession = () => {
 const backupRows = (s, wip) => {
   const it = Object.values(s.meals || {}).reduce((t, d) => t + (d && typeof d == 'object' ? Object.values(d).reduce((u, l) => u + (Array.isArray(l) ? l.length : 0), 0) : 0), 0);
   const dias = new Set((s.logs || []).map(l => l && l.d)).size;
-  const r = [plural(countOf(s.logs), 'entreno registrado', 'entrenos registrados') + (dias ? ' (' + plural(dias, 'día', 'días') + ')' : ''),
-    'Historial de pesos de ' + plural(countOf(s.hist), 'ejercicio', 'ejercicios') + ' y ' + plural(countOf(s.pr), 'récord personal', 'récords personales'),
-    plural(countOf(s.wl), 'registro de peso corporal', 'registros de peso corporal'),
-    'Comidas de ' + plural(countOf(s.meals), 'día', 'días') + ' (' + plural(it, 'alimento anotado', 'alimentos anotados') + ') y agua de ' + plural(countOf(s.wt), 'día', 'días'),
-    plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos') + ', ' + plural(countOf(s.lib), 'plato guardado', 'platos guardados') + ' y ' + plural(Object.keys(s.tp || {}).length, 'plantilla de día', 'plantillas de día'),
-    plural(countOf(s.cr), 'rutina personalizada', 'rutinas personalizadas') + ', ' + plural(countOf(s.cp), 'programa guardado', 'programas guardados') + ' y ' + plural(countOf(s.cx), 'ejercicio propio', 'ejercicios propios'),
-    'Notas de ' + plural(countOf(s.notes), 'ejercicio', 'ejercicios'), ...backupRowsFull(s),
+  const r = [plural(countOf(s.logs), 'entreno registrado', 'entrenos registrados') + (dias ? ' (' + plural(dias, 'día', 'días') + ')' : ''), 'Historial de pesos de ' + plural(countOf(s.hist), 'ejercicio', 'ejercicios') + ' y ' + plural(countOf(s.pr), 'récord personal', 'récords personales'), plural(countOf(s.wl), 'registro de peso corporal', 'registros de peso corporal'), 'Comidas de ' + plural(countOf(s.meals), 'día', 'días') + ' (' + plural(it, 'alimento anotado', 'alimentos anotados') + ') y agua de ' + plural(countOf(s.wt), 'día', 'días'), plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos') + ', ' + plural(countOf(s.lib), 'plato guardado', 'platos guardados') + ' y ' + plural(Object.keys(s.tp || {}).length, 'plantilla de día', 'plantillas de día'), plural(countOf(s.cr), 'rutina personalizada', 'rutinas personalizadas') + ', ' + plural(countOf(s.cp), 'programa guardado', 'programas guardados') + ' y ' + plural(countOf(s.cx), 'ejercicio propio', 'ejercicios propios'), 'Notas de ' + plural(countOf(s.notes), 'ejercicio', 'ejercicios'), ...backupRowsFull(s),
     'Perfil, objetivos de nutrición, nivel y ajustes (tema, acento, estilo, unidades, avisos)'];
   if (wip)
     r.push('Entreno en curso, para retomarlo');
   return r;
 };
 const backupSummary = s => [plural(countOf(s.logs), 'entreno', 'entrenos'), plural(countOf(s.cr), 'rutina', 'rutinas'), plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos'), 'comidas de ' + plural(countOf(s.meals), 'día', 'días')].join(' · ');
-const buildBackup = () => {
+export const buildBackup = () => {
   const wip = wipSession();
   return JSON.stringify(Object.assign({ _sf: { app: 'StrataFit', fmt: BACKUP_FORMAT, ver: APPV, at: new Date().toISOString(), wip: wip || undefined, sum: backupRows(S, wip) } }, S));
 };
@@ -100,11 +112,11 @@ const parseBackup = txt => {
     wip = w;
   return { s: o, meta, wip, fix };
 };
-const backupDate = (t, l) => {
+export const backupDate = (t, l) => {
   const d = new Date(t);
   return isNaN(d) ? '' : d.toLocaleDateString('es', l ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' });
 };
-const askRestore = txt => {
+export const askRestore = txt => {
   let r;
   try {
     r = parseBackup(txt);
@@ -115,7 +127,7 @@ const askRestore = txt => {
   }
   pendingRestore = r;
   const ds = r.meta && r.meta.at ? backupDate(r.meta.at, 1) : '';
-  confirmDialog('¿Restaurar esta copia?', '<b>Copia' + (ds ? ' del ' + X(ds) : '') + '</b><br>' + X(backupSummary(r.s)) + (r.wip ? '<br>Incluye un entreno en curso.' : '') + (r.meta && Array.isArray(r.meta.ph) && r.meta.ph.length ? '<br>Incluye ' + r.meta.ph.length + ' fotos de progreso (se añaden a las que ya tienes).' : '') + '<br><br><b>Ahora tienes</b><br>' + X(backupSummary(S)) + '<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.', 'bkok', 'Restaurar');
+  confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}${r.meta && Array.isArray(r.meta.ph) && r.meta.ph.length ? html`<br>Incluye ${r.meta.ph.length} fotos de progreso (se añaden a las que ya tienes).` : ''}<br><br><b>Ahora tienes</b><br>${backupSummary(S)}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'bkok', 'Restaurar');
 };
 const preRestore = () => {
   try {
@@ -128,7 +140,7 @@ const preRestore = () => {
   }
   return null;
 };
-const restoreBackup = () => {
+export const restoreBackup = () => {
   const r = pendingRestore;
   if (!r || !r.s)
     return;
@@ -145,7 +157,7 @@ const restoreBackup = () => {
   try {
     const s = r.s;
     s.bkd = Date.now();
-    Store.set(Store.K.app, JSON.stringify(s));
+    replaceSavedState(s);
     if (r.wip) {
       r.wip.t = Date.now();
       Store.set(WIP_KEY, JSON.stringify(r.wip));
@@ -155,9 +167,11 @@ const restoreBackup = () => {
     Store.set(Store.K.rs, JSON.stringify({ s: backupRows(s, r.wip), f: r.fix || 0 }));
   }
   catch (e) {
+    logError('restaurar copia', e);
     try {
       const p = JSON.parse(pre);
-      Store.set(Store.K.app, JSON.stringify(p.s));
+      if (!flushState())
+        throw new Error('no se pudo volver a guardar el estado anterior');
       if (p.w)
         Store.set(WIP_KEY, p.w);
       else
@@ -169,6 +183,7 @@ const restoreBackup = () => {
     toast('No se pudo restaurar; tus datos siguen como estaban');
     return;
   }
+  lockSaves();
   location.reload();
 };
 A.bkun = () => {
@@ -189,7 +204,7 @@ A.bkun2 = () => {
     return;
   }
   try {
-    Store.set(Store.K.app, JSON.stringify(p.s));
+    replaceSavedState(p.s);
     if (p.w)
       Store.set(WIP_KEY, p.w);
     else
@@ -197,15 +212,13 @@ A.bkun2 = () => {
     Store.set(Store.K.rs, JSON.stringify({ s: backupRows(p.s, null), f: 0, u: 1 }));
   }
   catch (e) {
-    try {
-      Store.set(Store.K.app, JSON.stringify(S));
-    }
-    catch (_) {
-      logError('guardar al deshacer restauración', _);
-    }
+    logError('deshacer restauración', e);
+    if (!flushState())
+      logError('guardar al deshacer restauración', new Error('no se pudo volver a guardar el estado actual'));
     toast('No se pudo deshacer');
     return;
   }
+  lockSaves();
   location.reload();
 };
 C.bkim = e => {
@@ -242,21 +255,16 @@ A.bkf = async () => {
 };
 A.zbk = () => {
   const p = preRestore();
-  sheet('<h3>Copia de seguridad</h3><p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">' + backupAge() + '</p>'
-    + '<div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div>'
-    + '<details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">' + backupRows(S, wipSession()).map(x => '<div>· ' + X(x) + '</div>').join('') + '</div></details>'
-    + '<details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto (sin fotos)</summary><textarea id="bk" rows="5" style="margin-top:8px">' + X(buildBackup()) + '</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details>'
-    + '<details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>'
-    + (p ? '<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (' + X(backupDate(p.t)) + ')</button>' : ''));
+  sheet(html`<h3>Copia de seguridad</h3><p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto (sin fotos)</summary><textarea id="bk" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
   fillSnapshots();
 };
-const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;
+export const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;
 A.bknx = () => {
   S.nbk = 1;
   saveState();
   R();
 };
-const restoreBanner = () => '<div class="cd" style="margin:0 0 12px"><b>¿Ya usabas StrataFit?</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="zbk">Importar copia</button><button data-a="bknx">Ahora no</button></div></div>';
+export const restoreBanner = () => '<div class="cd" style="margin:0 0 12px"><b>¿Ya usabas StrataFit?</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="zbk">Importar copia</button><button data-a="bknx">Ahora no</button></div></div>';
 function backupRowsFull(s) {
   const L = (Array.isArray(s.logs) ? s.logs : []).filter(l => l && typeof l == 'object');
   const cd = L.filter(l => l.k == 'c').length;

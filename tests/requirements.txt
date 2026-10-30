@@ -1,0 +1,4 @@
+# Dependencias de las pruebas (pip install -r tests/requirements.txt && python -m playwright install chromium webkit)
+playwright==1.63.0
+pillow
+numpy

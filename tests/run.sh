@@ -11,8 +11,7 @@ run() {
   if [ $code -ne 0 ]; then
     fallos=$((fallos + 1))
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
-      local resumen; resumen=$(echo "$out" | grep -E "FALLA|ERROR|Error|error|sin formatear|Traceback" | head -15)
-      [ -z "$resumen" ] && resumen=$(echo "$out" | tail -15)
+      local resumen; resumen=$( (echo "$out" | grep -E "FALLA|ERROR|Error|error|sin formatear|Traceback" | head -15; echo '…'; echo "$out" | tail -12) )
       resumen=${resumen//'%'/'%25'}; resumen=${resumen//$'\n'/'%0A'}
       echo "::error title=Falla: $*::$resumen"
     fi
@@ -26,6 +25,8 @@ run python3 tests/smoke.py dist/app/index.html
 run python3 tests/photos.py dist/stratafit.html
 run python3 tests/security.py dist/stratafit.html
 run python3 tests/safety.py dist/stratafit.html
+run python3 tests/storage.py dist/stratafit.html
+run python3 tests/render.py dist/stratafit.html
 run python3 tests/deploy.py dist/app
 echo
 if [ $fallos -eq 0 ]; then echo "Todas las pruebas correctas"; else echo "$fallos pruebas fallan"; exit 1; fi

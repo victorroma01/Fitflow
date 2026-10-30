@@ -3,4 +3,4 @@
    de CHANGELOG.md (apartados Novedades, Mejoras y Correcciones). Se enseñan una vez tras actualizar (system/updates).
    Define: RELEASE
 */
-const RELEASE = { version: '', date: '', sections: [] };
+export const RELEASE = { version: '', date: '', sections: [] };
