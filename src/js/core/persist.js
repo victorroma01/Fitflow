@@ -195,7 +195,7 @@ const writeWhole = s => {
 };
 let saveFailedAt = 0;
 /** Registra un fallo al guardar y avisa (como mucho una vez por minuto). */
-export const saveFailed = (k, e) => {
+const saveFailed = (k, e) => {
   logError('guardar ' + k, e);
   if (Date.now() - saveFailedAt < 6e4)
     return;

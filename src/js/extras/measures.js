@@ -1,6 +1,6 @@
 /* ═══ extras/measures ═══
    Medidas corporales y fotos de progreso.
-   Define: MEASURES, PHOTO_ANGLES, measureState, photoCache, photoCount, photoDbPromise, openPhotoDb, photoDb, photoTx, measuresShown, loadPhotos, preparePhoto, photoFull, allPhotosFull, validPhoto, mergePhotos, … (+7)  · acciones/registros: 15
+   Define: MEASURES, PHOTO_ANGLES, measureState, photoCache, photoCount, photoDbPromise, openPhotoDb, photoDb, photoTx, measuresShown, loadPhotos, preparePhoto, photoFull, allPhotosFull, validPhoto, mergePhotos, measureList, measureDelta, measureChart, measuresTab, photosTab, measuresPage, comparePhotos  · acciones/registros: 15
 */
 import { dayKey, fmtDateShort, newId, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';

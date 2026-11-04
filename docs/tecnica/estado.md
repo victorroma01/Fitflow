@@ -5,6 +5,9 @@ Todo lo que la app recuerda está en el objeto `S` (`core/state`), que se guarda
 Las claves son cortas porque están en los datos de cada usuario y en sus copias de seguridad: **no se renombran sin una migración** en
 `core/boot` (versión de esquema en `S.v`). Este documento es el diccionario de datos; si añades una clave, añádela aquí.
 
+En la V1.0.0 (M2) cambia: `pf` deja de guardar nombre, correo y teléfono, desaparecen las fotos de progreso y todo se sincroniza
+con Firebase por partes ([Servidor: Firebase](backend.md)).
+
 ## Claves de almacenamiento (`Store.K`, `core/store`)
 
 | Clave | Contenido |

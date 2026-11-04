@@ -1,0 +1,37 @@
+# Pruebas
+
+`bash tests/run.sh` compila y pasa, en este orden, el formato, el mapa de módulos, las reglas de `tools/check.js` y todas las
+pruebas. Cualquier fallo hace que falle entero. Las pruebas abren la app en un navegador de verdad con Playwright: Chrome (Chromium)
+por defecto o, con `SF_BROWSER=webkit`, el motor de Safari, sirviendo la app por HTTP como GitHub Pages (`tests/browser.py`).
+
+| Prueba | Qué comprueba |
+| --- | --- |
+| `tools/format.js --check` y `tools/format_css.js --check` | Que el código y el CSS están formateados y que la línea «Define:» de cada módulo está al día. |
+| `tools/modindex.js --check` | Que el [mapa de módulos](modulos.md) está al día. |
+| `tools/check.js` | Sintaxis, importaciones, orden de carga, identificadores sin declarar, duplicados, acciones sin manejador, botones sin nombre, código muerto y CSS sin usar ([reglas](desarrollo.md#reglas-de-calidad)). |
+| `tests/smoke.py` | Arranque, pestañas, entreno completo, comidas, hojas, actualizaciones, política de seguridad y persistencia, en el archivo único y en el paquete. |
+| `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno. |
+| `tests/security.py` | Nombres, foto de perfil y datos con HTML malicioso en 39 pantallas, también desde una copia manipulada: no debe ejecutarse nada, ni siquiera sin la CSP; y con la CSP, que lo inyectado no se ejecuta ni conecta con otros sitios. |
+| `tests/a11y.py` | Accesibilidad en 39 pantallas: botones con nombre, campos con etiqueta, lo que se toca anunciado como botón y, en el entreno (a 390 y 320 px), zona táctil de 44 × 44 px medida tocando. También, que la CSP no bloquea nada de la app. |
+| `tests/features.py` | Nutrición (tipo de día según la rutina, ayudas, botones de cada comida, objetivos a mano que no se pisan, alimentos por grupos), Perfil y Ajustes, medallas e informe de fallos. |
+| `tests/safety.py` | Registro de errores, datos dañados, aviso al no poder guardar, copias automáticas y pantalla de error de arranque. |
+| `tests/storage.py` | Guardado por partes: formato, paso desde la 1.20, escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar. |
+| `tests/render.py` | Pintar con cambios mínimos: cada pantalla queda igual que pintada de cero y se conservan foco, texto escrito y desplazamiento. |
+| `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, código y fotos en caché, carga diferida, aviso de versión nueva (publicando de verdad otra versión), novedades y llegada de una versión con un número menor (como la 1.0.0 tras la 1.24.0). |
+
+## Comparar dos versiones
+
+`bash tests/compare.sh vieja.html nueva.html` compara dos compilaciones del archivo único:
+
+| Prueba | Qué compara |
+| --- | --- |
+| `tests/walk.py` | Paseo aleatorio diferencial: la misma secuencia de toques en las dos; compara pantalla, datos guardados y sonidos paso a paso. |
+| `tests/shots.py` | 39 pantallas × 6 configuraciones (temas, cristal, tamaños de iPhone), píxel a píxel. |
+
+Sirve para demostrar que un cambio interno (una limpieza, un cambio de estructura) no altera nada de lo que se ve ni de lo que se guarda.
+
+## En GitHub
+
+GitHub Actions pasa `tests/run.sh` en Chrome y en Safari en cada cambio de `main`, de la rama `desarrollo-1.0.0` y de cada solicitud de
+fusión. En las solicitudes de fusión, además, compara con la versión anterior (paseo aleatorio y capturas). La comparación es
+informativa salvo con la etiqueta **`refactor`**, que exige que no cambie nada.

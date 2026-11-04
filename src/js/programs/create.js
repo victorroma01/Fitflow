@@ -1,6 +1,6 @@
 /* ═══ programs/create ═══
    Crear programa: guiado y a partir de mis workouts.
-   Define: progDraft, clone, restDay, syncCustomProgram, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, dayDuration, programDaysHtml, programRowsHtml, createHome, programNameBox, … (+11)  · acciones/registros: 20
+   Define: progDraft, clone, restDay, syncCustomProgram, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, dayDuration, programDaysHtml, programRowsHtml, createHome, programNameBox, createFromMine, optionChips, guidedForm, makeEx, generateProgram, parseDays, programNameFor, programAdvice, guidedProposal, orderWeekPage, refreshCreate  · acciones/registros: 20
 */
 import { fmtMinSec, X } from '../core/util.js';
 import { toast } from '../core/toast.js';

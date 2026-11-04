@@ -1,6 +1,6 @@
 /* ═══ profile/home ═══
    Pestaña Perfil y borrado de datos.
-   Define: profileBase, bioCard, planCard, profileTab  · acciones/registros: 2
+   Define: pfSummary, profileHead, bioCard, planCard, profileTab  · acciones/registros: 5
 */
 import { APPV, roundInt, safeImage } from '../core/util.js';
 import { Store } from '../core/store.js';

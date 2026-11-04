@@ -1,6 +1,6 @@
 /* ═══ profile/feedback ═══
    Sonido, vibración y avisos de descanso.
-   Define: audioCtx, audioContext, beep, canVibrate, buzz, soundVolume, soundSequence, alertSettings  · acciones/registros: 8
+   Define: audioCtx, audioContext, beep, canVibrate, buzz, soundVolume, soundSequence, alertSettings  · acciones/registros: 9
 */
 import { A, C } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';

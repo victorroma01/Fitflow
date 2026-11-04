@@ -1,6 +1,6 @@
 /* ═══ workout/plates ═══
    Calculadora de discos.
-   Define: plateTotal, plateBar, usesBarbell, plateSizes, barSizes, plateCalc, plateResult, plateSheet  · acciones/registros: 3
+   Define: plateTotal, setPlateTotal, plateBar, setPlateBar, usesBarbell, plateSizes, barSizes, plateCalc, plateResult, plateSheet  · acciones/registros: 3
 */
 import { $ } from '../core/util.js';
 import { A, U } from '../core/registry.js';
@@ -9,12 +9,12 @@ import { sheet } from '../core/ui.js';
 import { exAll } from '../library/model.js';
 import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
-export let plateTotal = 60;
+let plateTotal = 60;
 /** Cambia `plateTotal` desde otros módulos (un módulo no puede asignar una variable importada). */
 export const setPlateTotal = v => {
   plateTotal = v;
 };
-export let plateBar = 20;
+let plateBar = 20;
 /** Cambia `plateBar` desde otros módulos (un módulo no puede asignar una variable importada). */
 export const setPlateBar = v => {
   plateBar = v;

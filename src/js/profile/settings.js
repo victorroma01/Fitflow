@@ -2,7 +2,7 @@
    Ajustes: página propia (no un desplegable) con secciones y filas con icono (Apariencia, Entreno, Datos, App, Información);
    cada fila abre su página, con «←» de vuelta a Ajustes. Mientras una está abierta, cada R() la vuelve a pintar con core/morph
    (settingsSync), así los botones que cambian un ajuste (tema, color, unidades…) se ven al momento.
-   Define: SETTINGS_PAGES, settingsSub, settingsRow, settingsMain, settingsPage, settingsSync, PRIVACY_TEXT, LEGAL_TEXT  · acciones/registros: 2
+   Define: settingsSub, settingsRow, ago, PRIVACY_TEXT, LEGAL_TEXT, SETTINGS_PAGES, settingsMain, settingsPage, settingsSync  · acciones/registros: 2
 */
 import { $, APPV } from '../core/util.js';
 import { errorLog } from '../core/errors.js';

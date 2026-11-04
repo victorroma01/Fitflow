@@ -1,6 +1,6 @@
 /* ═══ workout/resume ═══
    Reanudar un entreno interrumpido (estado en curso guardado).
-   Define: WIP_KEY, pendingResume, saveSession, resumeSync, resumeBanner, dropResume  · acciones/registros: 3
+   Define: WIP_KEY, pendingResume, setPendingResume, saveSession, resumeSync, resumeBanner, dropResume  · acciones/registros: 3
 */
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';

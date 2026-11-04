@@ -1,6 +1,6 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: sessionView, currentSet, scrollToCurrent, nextSet, sessionWakeLock, requestSessionWakeLock, setToggle, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, … (+1)  · acciones/registros: 13
+   Define: sessionView, currentSet, scrollToCurrent, nextSet, sessionWakeLock, requestSessionWakeLock, setToggle, setName, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, blockHeader  · acciones/registros: 17
 */
 import { $, fmtDuration, fmtMinSec, round1, roundInt, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -167,19 +167,6 @@ A.zfd = (i, b) => {
     delete W.fd[k];
   else
     W.fd[k] = 1;
-  R();
-};
-A.zfa = () => {
-  const d = S.plan[S.sel];
-  const c = currentSet();
-  const f = W.fd || {};
-  const rest = d.ex.map((e, i) => i).filter(i => !c || i != c[0]);
-  const all = rest.length && rest.every(i => f[i]);
-  W.fd = {};
-  if (!all)
-    rest.forEach(i => {
-      W.fd[i] = 1;
-    });
   R();
 };
 const anLiveOn = i => {

@@ -1,6 +1,6 @@
 /* ═══ system/backup ═══
    Copias de seguridad, restauración y avisos.
-   Define: pendingRestore, backupAge, backupReminder, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, parseBackup, backupDate, askRestore, preRestore, restoreBackup, … (+5)  · acciones/registros: 8
+   Define: pendingRestore, setPendingRestore, backupAge, backupReminder, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, cleanProfile, parseBackup, backupDate, askRestore, preRestore, restoreBackup, isFreshInstall, restoreBanner, backupRowsFull, buildFullBackup, restoredPhotos  · acciones/registros: 8
 */
 import { $, APPV, dayKey, safeImage, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -21,7 +21,7 @@ export let pendingRestore = null;
 export const setPendingRestore = v => {
   pendingRestore = v;
 };
-export const backupAge = () => {
+const backupAge = () => {
   if (!S.bkd)
     return 'Aún no has guardado ninguna copia.';
   const d = Math.floor((Date.now() - S.bkd) / 864e5);

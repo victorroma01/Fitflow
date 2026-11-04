@@ -2,7 +2,7 @@
    «Mi nutrición» (el icono de cuchillo y tenedor de Nutrición): kcal del día en un anillo con el reparto de macros, peso,
    objetivo (tipo de dieta), actividad y comidas al día; ajustar los objetivos a mano o recalcularlos con tus datos.
    Mientras estén a mano (S.nu.man), cambiar el peso o la actividad no los pisa (nutrition/diet, applyDiet).
-   Define: ringSvg, myNutritionPage, manualPage, refreshGoals, manualValues  · acciones/registros: 8
+   Define: ringSvg, myNutritionPage, refreshGoals, manualPage, manualValues  · acciones/registros: 9
 */
 import { $, clampInt, clampNum, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';

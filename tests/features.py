@@ -1,5 +1,6 @@
-"""Prueba de las funciones de la 1.24: tipo de día automático, ayudas «?», botones de cada comida, «Mi nutrición» (objetivos a
-mano que no se pisan), alimentos por grupos, Perfil y Ajustes, medallas de Logros e «Informar de un fallo».
+"""Prueba de funciones de Nutrición, Perfil y Ajustes: tipo de día automático, ayudas «?», botones de cada comida,
+«Mi nutrición» (objetivos a mano que no se pisan), alimentos por grupos, Perfil y Ajustes, medallas de Logros e
+«Informar de un fallo».
 
   python3 tests/features.py dist/stratafit.html
 Requiere:  pip install playwright  &&  playwright install chromium   (otro motor: SF_BROWSER=webkit; ver tests/browser.py)

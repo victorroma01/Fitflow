@@ -1,6 +1,6 @@
 /* ═══ workout/finish ═══
    Fin del entreno: récords, historial, registro del día e instantánea.
-   Define: newRecords, logWorkout, saveHistory, bestOf, saveRecords, lastSummary, workoutSnapshot  · acciones/registros: 3
+   Define: newRecords, logWorkout, saveHistory, bestOf, saveRecords, lastSummary, setLastSummary, workoutSnapshot  · acciones/registros: 3
 */
 import { dayKey, est1RM, roundInt } from '../core/util.js';
 import { logError } from '../core/errors.js';

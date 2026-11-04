@@ -1,6 +1,6 @@
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, unitName, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+8)  · acciones/registros: 1
+   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
 */
 import { fmtMinSec } from '../core/util.js';
 import { C } from '../core/registry.js';

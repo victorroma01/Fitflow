@@ -1,6 +1,6 @@
 /* ═══ programs/levels ═══
    Niveles de programa (aplicar, variantes, selector).
-   Define: isLevel, round5, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelVars, levelMenuOpen, previewLevel, pendingLevel, levelPill, … (+4)  · acciones/registros: 5
+   Define: isLevel, round5, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelVars, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
 */
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -136,7 +136,7 @@ const planEdited = () => {
 const weekStarted = () => Object.keys(S.done || {}).some(k => k.indexOf(S.wk + '-') == 0 && S.done[k]);
 export const levelDot = v => html`<i class="lvd" style="--lc:${LEVEL_COLORS[v]};--ld:${LEVEL_COLORS[v]}38"></i>`;
 const levelVars = v => '--lc:' + LEVEL_COLORS[v] + ';--lb:' + LEVEL_COLORS[v] + '24;--lr:' + LEVEL_COLORS[v] + '6b';
-export let levelMenuOpen = false;
+let levelMenuOpen = false;
 /** Cambia `levelMenuOpen` desde otros módulos (un módulo no puede asignar una variable importada). */
 export const setLevelMenuOpen = v => {
   levelMenuOpen = v;

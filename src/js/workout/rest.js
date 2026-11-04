@@ -1,6 +1,6 @@
 /* ═══ workout/rest ═══
    Descansos por defecto y selector de descanso.
-   Define: COMPOUND_RE, REST_OPTIONS, restByName, restOf, restSelect, HEAVY_TYPES, restDefault
+   Define: COMPOUND_RE, REST_OPTIONS, restByName, restOf, restSelect, HEAVY_TYPES, restDefault  · acciones/registros: 1
 */
 import { fmtMinSec } from '../core/util.js';
 import { C } from '../core/registry.js';
@@ -56,8 +56,4 @@ C.rx = (e, i) => {
   saveState();
   if (!W)
     R();
-};
-C.rs = e => {
-  S.rest = +e.value || 120;
-  saveState();
 };

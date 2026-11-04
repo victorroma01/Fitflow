@@ -54,10 +54,6 @@ A.lb = (i, b) => {
   sheet(libPage());
   sheetToTop();
 };
-A.leq = (i, b) => {
-  libState.eq = b.dataset.v;
-  $('#lr').innerHTML = libBody();
-};
 const exDetailHtml = (i, nav, w) => {
   const all = exAll();
   const e = all[i];

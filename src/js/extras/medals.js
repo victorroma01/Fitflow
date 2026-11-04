@@ -2,7 +2,7 @@
    Medallas de Logros, dibujadas en SVG: una distinta para cada logro. La forma y el color dicen la familia (entrenos,
    toneladas, rachas, récords, cardio, WOD, comidas, medidas, fotos, peso y copias), el metal del borde el nivel (bronce,
    plata, oro, platino y, para el último de entrenos, amatista) y el dibujo y la cifra del centro, el logro.
-   Define: METALS, FAMILIES, SHAPES, MOTIFS, MEDALS, medalSvg
+   Define: METALS, FAMILIES, ring, poly, burst, SHAPES, MOTIFS, MEDALS, medalN, medalSvg
 */
 import { html, raw } from '../core/html.js';
 /* metal del borde: [claro, medio, oscuro] */

@@ -1,7 +1,7 @@
 /* ═══ core/store ═══
    Capa de almacenamiento. TODA la persistencia local pasa por aquí: ninguna otra parte del código llama a localStorage.
    Hoy escribe en localStorage del dispositivo. Para añadir un servidor no hay que tocar las pantallas: basta con
-   registrar un adaptador en Store.remote (ver docs/BACKEND.md) y Store avisará de cada cambio.
+   registrar un adaptador en Store.remote (ver docs/tecnica/backend.md) y Store avisará de cada cambio.
    Define: Store
 */
 import { logError } from './errors.js';

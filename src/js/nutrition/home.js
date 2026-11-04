@@ -1,6 +1,6 @@
 /* ═══ nutrition/home ═══
    Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones.
-   Define: itemMacros, sumMacros, macroBar, mealName, nutritionBase
+   Define: itemMacros, mealItems, sumMacros, macroBar, mealName, nutritionBase  · acciones/registros: 2
 */
 import { clampNum, dayKey, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';

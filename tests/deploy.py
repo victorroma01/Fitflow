@@ -215,6 +215,25 @@ def main(app):
                 check('y solo una vez', ev("!document.getElementById('upd')"))
                 deploy(orig, os.path.join(site, 'fitflow'))
                 open(vj, 'w', encoding='utf-8').write(vj0)
+                # una versión con un número menor (como la 1.0.0 tras la 1.24.0): el aviso compara números y no sale, pero el
+                # service worker guarda el documento nuevo en cuanto lo ve cambiado y la siguiente apertura ya es esa versión
+                if SW:
+                    reload(pg, log)
+                    pg.wait_for_load_state('load')
+                    pg.wait_for_timeout(1500)
+                    low_popup = ev("!!document.getElementById('upd')")
+                    main_js = [f for f in os.listdir(os.path.join(orig, 'js')) if f.startswith('main-')][0]
+                    for _ in range(30):
+                        if ev("caches.open('ff-app-2').then(c=>c.match(location.href,{ignoreSearch:true})).then(r=>r?r.text():'').then(t=>t.includes(%r))" % main_js):
+                            break
+                        pg.wait_for_timeout(300)
+                    reload(pg, log)
+                    pg.wait_for_load_state('load')
+                    pg.wait_for_timeout(1500)
+                    check('una versión con un número menor llega en la siguiente apertura, sin aviso', ev('APPV') == v0 and not low_popup and ev('!!window.__ffok'),
+                          str([ev('APPV'), v0, low_popup]))
+                else:
+                    skipped('versión con un número menor')
                 # app instalada: compartir copia de seguridad
                 c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
                 c2.add_init_script("Object.defineProperty(navigator,'standalone',{get:()=>true});window.__sh=null;navigator.canShare=()=>true;"

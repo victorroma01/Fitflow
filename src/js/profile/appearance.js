@@ -1,6 +1,6 @@
 /* ═══ profile/appearance ═══
    Tema, color de acento y estilo Cristal.
-   Define: ACCENTS, applyAccent, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, glSync  · acciones/registros: 4
+   Define: ACCENTS, applyAccent, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, glSync  · acciones/registros: 5
 */
 import { logError } from '../core/errors.js';
 import { A, C } from '../core/registry.js';

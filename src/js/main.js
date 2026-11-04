@@ -21,6 +21,7 @@ import './data/levels.js';
 import './core/state.js';
 import './core/icons.js';
 import './core/ui.js';
+import './core/help.js';
 import './core/events.js';
 import './core/render.js';
 import './library/model.js';

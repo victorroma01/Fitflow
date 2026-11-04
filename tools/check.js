@@ -15,6 +15,9 @@
      8. Ninguna función se reasigna después de declararla (parches encadenados).
      9. Importaciones: cada nombre de otro módulo se importa de su módulo, que lo exporta; sin importaciones sin usar
         ni asignaciones a variables importadas (para eso, el setter que exporta su módulo).
+    10. Botones sin nombre accesible.
+    11. Código muerto: declaraciones sin usar, exportaciones que nadie importa, acciones que nada lanza e iconos sin usar.
+    12. CSS sin usar: clases, ids y animaciones que no aparecen en el código ni en la plantilla.
 */
 const fs = require('fs'), path = require('path');
 function loadTS() {
@@ -301,6 +304,66 @@ const flatHtml = n => {
       err('botón sin nombre (añade aria-label): ' + m[0].replace(/\s+/g, ' ').slice(0, 90) + ' @ ' + where(n.getStart(sf)));
   ts.forEachChild(n, w);
 })(sf);
+
+// 11. código muerto (T-03: se comprueba en cada versión): nada declarado, exportado, registrado o dibujado que no se use
+//   a) declaraciones de nivel superior sin ninguna referencia fuera de su propia declaración;
+//   b) exportaciones que ningún módulo importa (si se usan dentro de su módulo, sobra el «export»);
+//   c) acciones A / C / U que nada lanza: ni data-a / data-c / data-u / data-enter en el HTML, ni A.x(…) en el código, ni un
+//      texto igual a su nombre (diálogos, carga diferida y data-v las nombran así);
+//   d) iconos (IC) cuyo nombre no aparece en ningún texto del código.
+const declNode = new Map();
+S.forEach(s => {
+  if (ts.isFunctionDeclaration(s) && s.name) declNode.set(s.name.text, s);
+  else if (ts.isVariableStatement(s)) s.declarationList.declarations.forEach(d => {
+    (function c(b) { if (ts.isIdentifier(b)) declNode.set(b.text, d); else if (b.elements) b.elements.forEach(e => e.name && c(e.name)); })(d.name);
+  });
+});
+const refsOutside = new Map();
+(function w(n) {
+  if (ts.isIdentifier(n) && isRef0(n) && isGlobal(n) && declNode.has(n.text)) {
+    const d = declNode.get(n.text), p = n.getStart(sf);
+    if (p < d.getStart(sf) || p >= d.getEnd()) refsOutside.set(n.text, (refsOutside.get(n.text) || 0) + 1);
+  }
+  ts.forEachChild(n, w);
+})(sf);
+for (const [n, d] of declAt) if (!refsOutside.get(n) && !reg[n]) err('código muerto: «' + n + '» no se usa en ningún sitio @ ' + where(d.pos));
+for (const m of mods) for (const n of exportsOf[m]) {
+  if (!refsOutside.get(n) || reg[n]) continue;
+  if (!mods.some(x => imported[x].get(n) === m)) err(m + ': exporta «' + n + '» y ningún módulo lo importa (quita el export)');
+}
+const literalTexts = new Set(), fired = { A: new Set(), C: new Set(), U: new Set() };
+for (const [t] of textOfLiterals) {
+  literalTexts.add(t);
+  const re = /data-(a|c|u|enter)=\\?["']([A-Za-z0-9_]+)\\?["']/g; let m;
+  while ((m = re.exec(t))) fired[{ a: 'A', c: 'C', u: 'U', enter: 'A' }[m[1]]].add(m[2]);
+}
+(function w(n) {
+  if (ts.isPropertyAccessExpression(n) && ts.isIdentifier(n.expression) && fired[n.expression.text]) {
+    const p = n.parent, isDef = ts.isBinaryExpression(p) && p.left === n && p.operatorToken.kind === ts.SyntaxKind.EqualsToken;
+    if (!isDef) fired[n.expression.text].add(n.name.text);
+  }
+  ts.forEachChild(n, w);
+})(sf);
+for (const r of ['A', 'C', 'U']) for (const [k, pos] of reg[r])
+  if (!fired[r].has(k) && !literalTexts.has(k)) err('código muerto: ' + r + '.' + k + ' no se lanza desde ningún sitio @ ' + where(pos));
+for (const [k, pos] of reg.IC) if (!literalTexts.has(k)) err('código muerto: el icono «' + k + '» no se usa @ ' + where(pos));
+
+// 12. CSS sin usar: clases e ids de los selectores de src/css, y animaciones (@keyframes), que no aparecen en el código ni en
+//     la plantilla (src/index.html). Una clase hecha a trozos ('an' + i) no se ve: se escribe entera, como texto
+const cssDir = path.join(ROOT, 'src', 'css');
+const cssFiles = fs.readdirSync(cssDir).filter(f => f.endsWith('.css')).sort();
+const cssText = Object.fromEntries(cssFiles.map(f => [f, fs.readFileSync(path.join(cssDir, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')]));
+const allCss = Object.values(cssText).join('\n');
+const codeTokens = new Set((mods.map(m => src[m]).join('\n') + fs.readFileSync(path.join(ROOT, 'src', 'index.html'), 'utf8')).match(/[A-Za-z_][\w-]*/g));
+for (const f of cssFiles) {
+  const selectors = cssText[f].replace(/\{[^{}]*\}/g, '{}').replace(/\{[^{}]*\}/g, '{}');
+  const seen = new Set();
+  for (const m of selectors.matchAll(/(?<![\w-])([.#])([A-Za-z_][\w-]*)/g))
+    if (!codeTokens.has(m[2]) && !seen.has(m[0])) { seen.add(m[0]); err('CSS sin usar: ' + m[0] + ' (src/css/' + f + ')'); }
+  for (const m of cssText[f].matchAll(/@keyframes\s+([\w-]+)/g))
+    if ((allCss.match(new RegExp('(?<![\\w-])' + m[1] + '(?![\\w-])', 'g')) || []).length < 2 && !codeTokens.has(m[1]))
+      err('animación sin usar: @keyframes ' + m[1] + ' (src/css/' + f + ')');
+}
 
 // ---- resultado
 warns.forEach(w => console.log('aviso:', w));

@@ -10,7 +10,7 @@ HERE=os.path.dirname(os.path.abspath(__file__))
 def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
     return chr(10).join(l for l in t.split(chr(10)) if not l.startswith('//'))
-COMPAT=_rd('compat.js');SEED=COMPAT+_rd('seed.js');EXTRA=COMPAT+_rd('extra.js')
+SEED=_rd('seed.js');EXTRA=_rd('extra.js')
 # pantallas: nombre -> js (se ejecuta tras cargar y sembrar). Solo se usan las que existen en la app (A.x)
 SCR={
  'workout':"S.tab=0;R()",
@@ -66,13 +66,16 @@ def run(file,out,cfgs):
             pg=c.new_page();errs=[]
             pg.on('pageerror',lambda e:errs.append('PAGEERR '+str(e)))
             for k,js in SCR.items():
+                # cada pantalla desde cero: sin el entreno en curso ni la pestaña que dejó la anterior (si no, lo que hay detrás de
+                # una hoja depende de si un guardado llegó a escribirse antes de cambiar de página)
                 pg.goto('file://'+file);pg.wait_for_timeout(250)
+                pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(250)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
                 pg.evaluate(SEED.replace("S.gm=3;S.gl=1;S.theme='dark';","S.gm=%d;S.gl=%d;S.theme='%s';"%(gm,gl,sch)))
                 pg.evaluate(EXTRA);pg.evaluate("location.reload()");pg.wait_for_timeout(350)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
                 try:
-                    pg.evaluate(COMPAT+js);pg.wait_for_timeout(900 if k in('edit','overview','go_open') else 220)
+                    pg.evaluate(js);pg.wait_for_timeout(900 if k in('edit','overview','go_open') else 220)
                     pg.screenshot(path=f'{out}/{cn}_{k}.png',animations='disabled')
                     res[f'{cn}_{k}']=pg.evaluate("document.body.innerText.length")
                 except Exception as e:

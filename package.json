@@ -6,7 +6,7 @@
   "scripts": {
     "build": "python3 build.py",
     "check": "python3 build.py --check",
-    "format": "node tools/format.js && node tools/format_css.js",
+    "format": "node tools/format.js && node tools/format_css.js && node tools/modindex.js",
     "test": "bash tests/run.sh"
   },
   "devDependencies": {

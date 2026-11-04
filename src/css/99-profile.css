@@ -1,4 +1,4 @@
-/* ═══ css/99-profile ═══ Perfil 1.24: foto y nombre, desplegables con icono, pie con nombre y versión; página de Ajustes con filas */
+/* ═══ css/99-profile ═══ Perfil: foto y nombre, desplegables con icono, pie con nombre y versión; página de Ajustes con filas */
 .pfh {
   display:grid;
   justify-items:center;

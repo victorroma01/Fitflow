@@ -1,19 +1,20 @@
 /* ═══ nutrition/templates ═══
    Plantillas de comidas, tipo de día (entreno o descanso, según la rutina) y hábitos.
-   Define: nutriDayKey, planDayOf, dayInfo, dayType, templateCard, habitGrams, habitsCard  · acciones/registros: 4
+   Define: nutriDayKey, planDayOf, dayInfo, dayType, templateCard, habitGrams, habitsCard  · acciones/registros: 7
 */
 import { $, dayKey, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
-import { HELP, helpDot, sheet } from '../core/ui.js';
+import { sheet } from '../core/ui.js';
+import { HELP, helpDot } from '../core/help.js';
 import { R } from '../core/render.js';
 import { itemMacros, mealItems, sumMacros } from './home.js';
 import { addSheet } from './add.js';
 import { html, raw } from '../core/html.js';
 const nutriDayKey = () => dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
 /** Día del plan que toca en la fecha `k` (AAAA-MM-DD): el Día 1 de la rutina es el lunes y el Día 7 el domingo. */
-export const planDayOf = k => {
+const planDayOf = k => {
   const i = (new Date(k + 'T12:00:00').getDay() + 6) % 7;
   return { i, d: (S.plan || [])[i] || null };
 };

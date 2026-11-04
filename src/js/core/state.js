@@ -1,6 +1,6 @@
 /* ═══ core/state ═══
    Estado global S (se guarda con saveState: core/persist), sesión en curso W, tema y banderas de interfaz.
-   Define: S, saveState, flushState, W, nutriDayOffset, calMonthOffset, weekView, addState, applyTheme, overviewMode, weightView, wodRun
+   Define: S, saveState, flushState, W, setW, nutriDayOffset, setNutriDayOffset, calMonthOffset, setCalMonthOffset, weekView, setWeekView, addState, setAddState, applyTheme, overviewMode, setOverviewMode, weightView, setWeightView, wodRun, setWodRun
 */
 import { loadSavedState, scheduleWrite, writeState } from './persist.js';
 import { parseProgram } from '../data/library.js';

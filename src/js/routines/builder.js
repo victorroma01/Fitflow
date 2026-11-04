@@ -1,6 +1,6 @@
 /* ═══ routines/builder ═══
    Mis workouts: lista, editor de bloques y lanzamiento.
-   Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineEditor, routineBlockPicker, openRoutines, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 22
+   Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineEditor, routineBlockPicker, openRoutines, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, setOverviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 25
 */
 import { $, fmtMinSec, roundInt, X } from '../core/util.js';
 import { A, C, U } from '../core/registry.js';

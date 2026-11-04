@@ -20,11 +20,8 @@ IC.pulse = '<path d="M3 12h4l2-6 4 12 2-6h6"/>';
 IC.ruler = '<path d="M3 17L17 3l4 4L7 21zM8 12l2 2M11 9l2 2M14 6l2 2"/>';
 IC.trf = '<path d="M8 4h8v5a4 4 0 01-8 0zM8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3M12 13v4M8 21h8M10 17h4"/>';
 IC.dwn = '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>';
-IC.scan = '<path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M7 12h10"/>';
 IC.shr = '<path d="M12 15V3M8 7l4-4 4 4M5 12v8h14v-8"/>';
-IC.globe = '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>';
-IC.trnd = '<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>';
-/* v1.24: Nutrición (Mi nutrición, botones de comida), Perfil y Ajustes */
+/* Nutrición (Mi nutrición, botones de comida), Perfil y Ajustes */
 IC.fk = '<g transform="rotate(-42 12 12)"><path d="M9.6 2.6v5.2a2.4 2.4 0 0 0 4.8 0V2.6M12 2.6v4.8M12 10.2v11.2"/></g><g transform="rotate(42 12 12)"><path d="M13.4 2.4v9.8h-3.3c0-4.4 1.2-7.5 3.3-9.8zM11.8 12.2v9.2"/></g>';
 IC.plus = '<path d="M12 5v14M5 12h14"/>';
 IC.bkm = '<path d="M7.5 3.5h9a1 1 0 0 1 1 1V20.5l-5.5-3.8-5.5 3.8V4.5a1 1 0 0 1 1-1z"/>';

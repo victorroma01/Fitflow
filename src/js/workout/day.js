@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, workoutDayBase, TEMPOS, GROUP_TIPS, GENERIC_TIPS, exTips, exToolsHtml, blockBadge, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, workoutTab  · acciones/registros: 2
+   Define: planEx, workoutDayBase, TEMPOS, GROUP_TIPS, GENERIC_TIPS, exTips, exToolsHtml, blockBadge, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, workoutTab  · acciones/registros: 13
 */
 import { A, C } from '../core/registry.js';
 import { EXERCISES, groupOf, PROGRAM_NAMES } from '../data/library.js';

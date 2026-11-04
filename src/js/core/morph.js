@@ -2,7 +2,7 @@
    Pintar sin rehacer: deja un elemento con el contenido de un HTML nuevo cambiando solo lo que es distinto. Lo que sigue
    igual no se vuelve a crear: se conservan el desplazamiento, el foco y lo que se está escribiendo, y las imágenes no se
    vuelven a cargar. El resultado es el mismo HTML que con innerHTML (atributos, valores de los campos y marcas).
-   Define: morph, sameNode, syncAttrs, syncFields, morphChildren
+   Define: sameNode, syncAttrs, syncFields, morphChildren, morph
 */
 /** ¿Se puede actualizar `a` para que sea `b`, o hay que sustituirlo? (otro tipo, otra etiqueta u otro id). Los <canvas> y
     los <video> siempre se sustituyen: su contenido no está en el HTML. */

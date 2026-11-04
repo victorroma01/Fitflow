@@ -3,7 +3,7 @@
    informe se abre ya escrito como incidencia en GitHub (REPORT_URL, sin publicar ningún correo) o se comparte o copia para
    mandarlo por mensaje o correo. No sale nada sin que la persona lo confirme. Los datos técnicos (versión, navegador y
    últimos errores; nada personal) van solo si se deja marcada la casilla, y se pueden ver antes de enviar.
-   Define: REPORT_URL, REPORT_TYPES, REPORT_MAX, reportType, reportPage, reportParts, reportText, reportIssueUrl  · acciones/registros: 4
+   Define: REPORT_URL, REPORT_TYPES, REPORT_MAX, reportType, reportPage, reportTech, reportParts, reportText, reportIssueUrl  · acciones/registros: 5
 */
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';

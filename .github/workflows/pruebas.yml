@@ -1,5 +1,6 @@
 # Pruebas y publicación de StrataFit.
-#  · En cada solicitud de fusión y en cada cambio en main: compilar y probar en Chrome (Chromium) y en Safari (WebKit).
+#  · En cada solicitud de fusión y en cada cambio en main o en la rama de desarrollo de la V1.0.0 (desarrollo-1.0.0): compilar
+#    y probar en Chrome (Chromium) y en Safari (WebKit). En esa rama no se etiqueta ni se publica nada.
 #  · En las solicitudes de fusión, además: comparar con la versión anterior (informativo, salvo con la etiqueta «refactor»).
 #  · Siempre: decir desde dónde publica GitHub Pages y, si publica desde la rama, comprobar que la copia de la raíz es la app
 #    compilada de este código (tools/pages.py).
@@ -9,7 +10,7 @@ name: Pruebas
 
 on:
   push:
-    branches: [main]
+    branches: [main, desarrollo-1.0.0]
   pull_request:
 
 jobs:

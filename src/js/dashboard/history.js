@@ -1,6 +1,6 @@
 /* ═══ dashboard/history ═══
    Registro de entrenos y calendario.
-   Define: calendarPage, logsPage, logIndex, logText, logRight  · acciones/registros: 4
+   Define: calendarPage, logsPage, logIndex, logText, logRight  · acciones/registros: 5
 */
 import { $, dayKey, round1, roundInt, X } from '../core/util.js';
 import { A } from '../core/registry.js';

@@ -1,7 +1,7 @@
 /* ═══ system/diagnostics ═══
    Informe de diagnóstico (Perfil → Ajustes → Diagnóstico): versión, dispositivo, espacio usado, uso sin conexión,
    últimos errores y, si los hubo, datos dañados que se apartaron al arrancar. Nada sale del móvil salvo que se copie.
-   Define: storageUse, badData, diagnosticsText, diagnosticsPage  · acciones/registros: 4
+   Define: storageUse, badData, diagnosticsText, diagBack, diagnosticsPage  · acciones/registros: 6
 */
 import { $, APPV, dayKey, FFDEP } from '../core/util.js';
 import { toast } from '../core/toast.js';

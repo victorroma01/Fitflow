@@ -1,11 +1,11 @@
 /* ═══ library/picker ═══
    Selector para añadir ejercicios al día.
-   Define: addToDay, pickState, pickBody, pickSheet  · acciones/registros: 5
+   Define: addToDay, pickState, pickBody, pickSheet  · acciones/registros: 6
 */
 import { $ } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { EXERCISES } from '../data/library.js';
-import { addState, S, saveState, setAddState, W } from '../core/state.js';
+import { S, saveState, setAddState, W } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { categoryOf, exAll, exCellHtml, exCompare, exSearchText } from './model.js';
@@ -60,19 +60,11 @@ A.pkg = (i, b) => {
   $('#pkgc').innerHTML = groupChips(pickState.g, 'pkg');
   $('#pkr').innerHTML = pickBody();
 };
-A.pkeq = (i, b) => {
-  pickState.eq = b.dataset.v;
-  $('#pkr').innerHTML = pickBody();
-};
 U.pks = v => {
   pickState.q = v;
   $('#pkr').innerHTML = pickBody();
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.pc = (i, b) => {
-  addState.cat = b.dataset.v;
-  sheet(pickSheet());
-};
 A.px = i => {
   addToDay(EXERCISES.concat(S.cx)[i].n);
   sheet();

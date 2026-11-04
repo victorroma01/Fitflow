@@ -104,11 +104,6 @@ input:focus,select:focus,textarea:focus {
 .chip.on {
   background:var(--ac);
 }
-.rb {
-  border-radius:18px;
-  background:linear-gradient(135deg,#b183ff,#7a45ee);
-  box-shadow:0 10px 28px #7a45ee66;
-}
 .sp {
   border-radius:26px 26px 0 0;
   box-shadow:0 -10px 40px #0006;
@@ -145,11 +140,6 @@ details[open]>summary::after {
 .mb {
   border-radius:16px;
 }
-#NF,#NB,#Fc {
-  fill:url(#gB);
-  stroke:#15161d;
-  stroke-width:.9;
-}
 :root {
   --a1:#b183ff;
   --a2:#7a45ee;
@@ -168,13 +158,6 @@ details[open]>summary::after {
 }
 .hero {
   background:radial-gradient(120% 100% at 0 0,var(--a3),var(--cd) 72%);
-}
-.rb {
-  background:linear-gradient(135deg,var(--a1),var(--a2));
-  color:var(--ft);
-}
-.rb button {
-  color:var(--ft);
 }
 nav button.on {
   background:var(--a2);

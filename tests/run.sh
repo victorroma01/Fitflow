@@ -19,6 +19,7 @@ run() {
 }
 run node tools/format.js --check
 run node tools/format_css.js --check
+run node tools/modindex.js --check
 run python3 build.py --check
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
