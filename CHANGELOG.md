@@ -17,11 +17,22 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Tus datos se guardan también en la nube: no los pierdes y puedes usar la app en varios móviles.
 - Sin conexión todo sigue funcionando; lo que hagas se sube solo al volver la red.
 - Ajustes → Cuenta: el estado de la sincronización, cambiar la contraseña y «Cerrar sesión».
+- Programas nuevos: Full Body (entreno y descanso alternos), Glúteo y pierna, y un Push Pull Leg en ciclo de 10 días con un
+  descanso tras cada dos entrenos.
+- Programas recomendados según seas hombre o mujer, arriba en Programas.
+- 10 técnicas de intensidad (pirámide, drop set, rest-pause, myo-reps, cluster, parciales, superserie antagonista, pre y
+  post-agotamiento): cada serie enseña la suya.
+- Semana de descarga en naranja: peso al 65 % y 2 repeticiones menos con las mismas series; la puedes omitir y, en tus programas,
+  elegir cada cuántas semanas toca.
+- Cada 5-6 semanas la app propone rotar los ejercicios accesorios por otra variante; también desde el menú de Workout.
+- Cada ejercicio tiene su propio consejo en Tips y, al tocar su imagen, cómo se hace paso a paso.
 
 ### Mejoras
 - Más privacidad: la app ya no guarda nombre, email, teléfono ni fotos de progreso (ni sus dos logros).
 - La foto de perfil se sube solo si das tu consentimiento, y la puedes quitar cuando quieras.
 - La app ocupa algo menos: se han quitado código y estilos que ya no se usaban.
+- Programas revisados: Bro Split y Torso / Pierna con técnicas de intensidad, y en el programa guiado «Otra variante» pasa a
+  «Volver a generar», con su icono.
 
 ### Interno
 - La numeración empieza de nuevo en la 1.0.0. Los móviles con la 1.24.0 la reciben igual: el service worker guarda el
@@ -57,3 +68,11 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Pruebas: `tests/cloud.py` (dos móviles contra un Firebase de prueba, `tests/fakefb.py`, o el emulador), `tests/merge.test.mjs` y
   `tests/rules.test.mjs`. Las pruebas abren también el archivo único por HTTP: con `file://`, Chromium a veces recargaba la página
   con el almacenamiento vacío.
+- Programas (M3): `workout/week` (semana de 7 días sobre planes de cualquier longitud: `S.sl` día de la semana y `S.sel` día del
+  plan; `done`, Nutrición y Dashboard siguen el ciclo), técnicas en el formato de los programas (`~DS`, `~DS/MYO` para el avanzado:
+  `data/techniques`, `workout/technique`), descarga nueva (`workout/deload`, `dl` de cada programa propio), rotación
+  (`data/rotation`, `programs/rotation`), programas preferentes por sexo (`PROGRAM_PREF`) y el nivel avanzado sin la superserie
+  automática del final.
+- Catálogo de ejercicios (T-05): `data/exinfo`, con el consejo y la ejecución de los 551 ejercicios, se descarga al usarlo
+  (`core/lazy`, `library/howto`); `tests/exinfo.test.mjs` comprueba que están todos y que no hay dos textos iguales ni parecidos.
+- Pruebas: `tests/programs.py` (ciclos, sexo, técnicas, descarga, rotación, «Volver a generar», consejo y ejecución).

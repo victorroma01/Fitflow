@@ -8,6 +8,9 @@ const IC = { workout: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>', nutr
 export const icon = (n, s) => html`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${raw(IC[n])}</svg>`;
 export const groupIcon = (g, s) => IC[g] ? html`<span style="display:grid;place-items:center;height:${s}px">${icon(g, s * .6)}</span>` : groupAnatomy(g, s);
 IC.prv = '<path d="M6 5v14M19 5L9 12l10 7z"/>';
+/* semana de descarga (workout/deload) y «Volver a generar» (programs/create) */
+IC.dlw = '<path d="M3 7l6 6 4-4 8 8"/><path d="M21 11v6h-6"/>';
+IC.rgn = '<path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20.5V16h-4.5"/>';
 IC.nxt = '<path d="M18 5v14M5 5l10 7-10 7z"/>';
 IC.pau = '<path d="M8 5v14M16 5v14" stroke-width="3"/>';
 IC.ply = '<path d="M7 5l12 7-12 7z"/>';

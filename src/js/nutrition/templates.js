@@ -11,12 +11,16 @@ import { HELP, helpDot } from '../core/help.js';
 import { R } from '../core/render.js';
 import { itemMacros, mealItems, sumMacros } from './home.js';
 import { addSheet } from './add.js';
+import { planIndex, weekOffset } from '../workout/week.js';
 import { html, raw } from '../core/html.js';
 const nutriDayKey = () => dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
-/** Día del plan que toca en la fecha `k` (AAAA-MM-DD): el Día 1 de la rutina es el lunes y el Día 7 el domingo. */
+/** Día del plan que toca en la fecha `k` (AAAA-MM-DD): la semana de entreno va de lunes a domingo y, en un ciclo que no es
+    de 7 días (workout/week), las semanas de antes o de después siguen el ciclo desde la semana actual. */
 const planDayOf = k => {
-  const i = (new Date(k + 'T12:00:00').getDay() + 6) % 7;
-  return { i, d: (S.plan || [])[i] || null };
+  const t = new Date(k + 'T12:00:00');
+  const i = (t.getDay() + 6) % 7;
+  const pl = S.plan || [];
+  return { i, d: pl.length ? pl[planIndex(i, S.wk + weekOffset(t), pl)] || null : null };
 };
 /** Tipo de día ('t' entreno, 'r' descanso) y por qué, sin elegirlo a mano:
     · con un entreno registrado ese día, entreno (aunque la rutina dijera descanso);

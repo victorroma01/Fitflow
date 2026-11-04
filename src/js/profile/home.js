@@ -20,6 +20,7 @@ import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { acctName, isAdmin, signedIn } from '../cloud/session.js';
 import { wipeCloudData } from '../cloud/sync.js';
 import { html, raw } from '../core/html.js';
+import { perWeekText } from '../workout/week.js';
 /* cabecera de un desplegable de Perfil con su icono y una línea que dice qué hay dentro, como las filas de Medidas o Logros */
 const pfSummary = (ic, t, s) => html`<summary class="pfs">${icon(ic, 30)}<span><b>${raw(t)}</b><br><small>${s}</small></span></summary>`;
 function profileHead() {
@@ -50,13 +51,12 @@ function bioCard() {
   const b = S.bio;
   const t = tdee();
   const f = (l, k, u) => html`<label>${raw(l)}</label><input type="number" inputmode="decimal" data-c="bio" data-i="${k}" value="${b[k] || ''}" placeholder="${u}" aria-label="${l}">`;
-  return html`<details class="cd">${pfSummary('bio', 'Datos biométricos', 'Edad, altura, peso, actividad y objetivo')}<label>Sexo</label><select data-c="bio" data-i="sex" aria-label="Sexo"><option value="M">Hombre</option><option value="F"${b.sex == 'F' ? ' selected' : ''}>Mujer</option></select>${raw(f('Edad', 'age', 'años'))}${raw(f('Altura', 'h', 'cm'))}${raw(f('Peso', 'w', 'kg'))}<label>Actividad diaria</label><select data-c="bio" data-i="act" aria-label="Actividad diaria">${ACTIVITY_LEVELS.map((a, i) => html`<option value="${i}"${(b.act == null ? 1 : b.act) == i ? ' selected' : ''}>${raw(a[0])} · ${raw(a[1])}</option>`)}</select><label>Objetivo físico</label><select data-c="bio" data-i="goal" aria-label="Objetivo físico">${GOAL_LABELS.map((g, i) => html`<option value="${i}"${(b.goal == null ? 1 : b.goal) == i ? ' selected' : ''}>${raw(g)}</option>`)}</select>${raw(t ? html`<p><b>Metabolismo basal: ${roundInt(t.bm)} kcal</b><br><small>Gasto diario estimado: ${roundInt(t.td)} kcal (fórmula Mifflin-St Jeor)</small></p>` : '<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>')}</details>`;
+  return html`<details class="cd">${pfSummary('bio', 'Datos biométricos', 'Edad, altura, peso, actividad y objetivo')}<label>Sexo</label><select data-c="bio" data-i="sex" aria-label="Sexo">${raw(b.sex == 'M' || b.sex == 'F' ? '' : '<option value="" selected disabled>Sin indicar</option>')}<option value="M"${b.sex == 'M' ? ' selected' : ''}>Hombre</option><option value="F"${b.sex == 'F' ? ' selected' : ''}>Mujer</option></select>${raw(f('Edad', 'age', 'años'))}${raw(f('Altura', 'h', 'cm'))}${raw(f('Peso', 'w', 'kg'))}<label>Actividad diaria</label><select data-c="bio" data-i="act" aria-label="Actividad diaria">${ACTIVITY_LEVELS.map((a, i) => html`<option value="${i}"${(b.act == null ? 1 : b.act) == i ? ' selected' : ''}>${raw(a[0])} · ${raw(a[1])}</option>`)}</select><label>Objetivo físico</label><select data-c="bio" data-i="goal" aria-label="Objetivo físico">${GOAL_LABELS.map((g, i) => html`<option value="${i}"${(b.goal == null ? 1 : b.goal) == i ? ' selected' : ''}>${raw(g)}</option>`)}</select>${raw(t ? html`<p><b>Metabolismo basal: ${roundInt(t.bm)} kcal</b><br><small>Gasto diario estimado: ${roundInt(t.td)} kcal (fórmula Mifflin-St Jeor)</small></p>` : '<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>')}</details>`;
 }
 const planCard = () => {
   const p = currentCustomProgram();
   const nm = p ? p.n : PROGRAM_NAMES[S.prog];
-  const pl = (S.plan || []).filter(d => d.ex.length).length;
-  return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + pl + (pl == 1 ? ' entreno' : ' entrenos') + ' por semana')}<div style="margin-top:10px">${programRow(nm, levelsActive() ? levelTag(S.lv) : '')}</div><button data-a="pg" style="width:100%;margin-top:12px">Cambiar programa o nivel</button></details>`;
+  return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}<div style="margin-top:10px">${programRow(nm, levelsActive() ? levelTag(S.lv) : '')}</div><button data-a="pg" style="width:100%;margin-top:12px">Cambiar programa o nivel</button></details>`;
 };
 export function profileTab() {
   const a = S.ach || {};

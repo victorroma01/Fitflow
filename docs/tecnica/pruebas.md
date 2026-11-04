@@ -12,16 +12,18 @@ Firebase de prueba en memoria (`tests/fakefb.py`) y, en GitHub, con el emulador 
 | `tools/modindex.js --check` | Que el [mapa de módulos](modulos.md) está al día. |
 | `tools/check.js` | Sintaxis, importaciones, orden de carga, identificadores sin declarar, duplicados, acciones sin manejador, botones sin nombre, código muerto y CSS sin usar ([reglas](desarrollo.md#reglas-de-calidad)). |
 | `tests/merge.test.mjs` | La fusión de datos entre dispositivos (`cloud/merge`), sin navegador: cada lado gana lo suyo, comidas e historial se juntan, lo borrado se borra. |
+| `tests/exinfo.test.mjs` | El catálogo de ejercicios (T-05), sin navegador: cada ejercicio de la librería tiene su consejo y su ejecución, y no hay dos iguales ni parecidos (más de la mitad de las secuencias de tres palabras en común), ni un consejo igual a una ejecución. |
 | `tests/smoke.py` | Arranque, pestañas, entreno completo, comidas, hojas, actualizaciones, política de seguridad y persistencia, en el archivo único y en el paquete. |
-| `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno. |
+| `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno (al tocar la imagen, cómo se hace y la ficha). |
 | `tests/security.py` | Nombres, foto de perfil y datos con HTML malicioso en 39 pantallas, también desde una copia manipulada: no debe ejecutarse nada, ni siquiera sin la CSP; y con la CSP, que lo inyectado no se ejecuta ni conecta con otros sitios. |
 | `tests/a11y.py` | Accesibilidad en 39 pantallas: botones con nombre, campos con etiqueta, lo que se toca anunciado como botón y, en el entreno (a 390 y 320 px), zona táctil de 44 × 44 px medida tocando. También, que la CSP no bloquea nada de la app. |
 | `tests/features.py` | Nutrición (tipo de día según la rutina, ayudas, botones de cada comida, objetivos a mano que no se pisan, alimentos por grupos), Perfil y Ajustes (sin datos personales, con «Cerrar sesión»), medallas e informe de fallos. |
+| `tests/programs.py` | Los programas de M3: ciclos de Push Pull Leg y Full Body (semanas que siguen el ciclo, Workout y Nutrición), programas según el sexo, técnicas en los programas y en el entreno (pirámide, drop set, rest-pause, myo-reps), semana de descarga (aviso, hoja, 65 % y 2 repeticiones menos, omitir, configurable), rotación de ejercicios, «Volver a generar» y consejo y ejecución de cada ejercicio. |
 | `tests/safety.py` | Registro de errores, datos dañados, aviso al no poder guardar, copias automáticas y pantalla de error de arranque. |
 | `tests/storage.py` | Guardado por partes: formato, datos de la serie de prueba (no se migran), escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar (sin conexión, no borra nada). |
 | `tests/render.py` | Pintar con cambios mínimos: cada pantalla queda igual que pintada de cero y se conservan foco, texto escrito y desplazamiento. |
 | `tests/cloud.py` | La cuenta y la nube con dos móviles: registro e inicio de sesión, sincronización (también sin conexión y con cambios en los dos), preferencias, borrar en uno, espera tras cinco fallos, Administración, contraseña temporal y sesión caducada, foto con consentimiento, cerrar sesión y borrar todos los datos, sin código inyectado ni choques con la CSP. Con el Firebase de prueba (`tests/fakefb.py`) o, con `SF_CLOUD=emulador`, con el emulador. |
-| `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, código y fotos en caché, carga diferida, aviso de versión nueva (publicando de verdad otra versión), novedades y llegada de una versión con un número menor (como la 1.0.0 tras la 1.24.0). |
+| `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, código y fotos en caché, carga diferida (WOD, CSV, escáner y el catálogo de ejercicios), aviso de versión nueva (publicando de verdad otra versión), novedades y llegada de una versión con un número menor (como la 1.0.0 tras la 1.24.0). |
 
 ## Comparar dos versiones
 

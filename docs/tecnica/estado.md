@@ -42,22 +42,30 @@ progreso de la serie de prueba se borra al arrancar.
 | `prog` | número | Programa predefinido activo (índice en `PROGRAMS`). |
 | `cpi` | número | Programa propio activo (índice en `cp`); `-1` si el activo es uno predefinido. |
 | `lv` | `'ini'` \| `'int'` \| `'ava'` | Nivel del programa (principiante, intermedio, avanzado). |
-| `plan` | día[] | La semana actual: `[{ n: nombre, ex: [ejercicio del plan] }]`; un día sin ejercicios es descanso. |
+| `plan` | día[] | Los días del plan: `[{ n: nombre, ex: [ejercicio del plan] }]`; un día sin ejercicios es descanso. Con 7 días es la semana; con otra longitud es un ciclo que sigue de una semana a otra (Push Pull Leg de 10 días, Full Body de 6: `workout/week`). |
 | `wk` | número | Semana en curso (empieza en 1). |
-| `sel` | número | Día seleccionado (índice en `plan`). |
-| `done` | `{ 'semana-día': true }` | Días completados. |
+| `sl` | 0-6 | Día elegido de la semana. No se sincroniza (`LOCAL_ONLY`). |
+| `sel` | número | Día del plan que le toca a `sl` en la semana `wk` (índice en `plan`; `syncSel`). |
+| `done` | `{ 'semana-díaDeLaSemana': true }` | Días completados (el día es el de la semana, 0-6). |
 | `pbk` | `{ sel, day }` \| null | Día original guardado al lanzar un workout propio sobre el plan (se restaura al terminar). |
-| `dl` / `dq` | `{ semana: bool }` | Semanas de descarga forzadas o descartadas / ya preguntadas. |
+| `dl` / `dq` | `{ semana: 1 \| 0 }` | Semanas de descarga activadas (1) u omitidas (0) a mano / en las que se dijo «Ahora no» a la sugerencia por esfuerzo (`workout/deload`). |
+| `dls` | número | Última semana de descarga cuya hoja de inicio ya salió. |
+| `rw` / `rq` | número | Semana de la última rotación de ejercicios (o del inicio del plan) / en la que se aplazó la propuesta (`programs/rotation`). |
 
 **Ejercicio del plan:** `{ n: nombre, s: series, rg: [mín, máx], u?: unidad ('s', 'min', 'm', 'km', 'cal'), r?: descanso en s,
-t?: tempo, b?: bloque (superseries), o?: nombre original si se cambió (swap), img?/cu?: portada propia }`.
+t?: tempo, b?: bloque (superseries), tk?: técnica de intensidad (`DS`, `RP`, `SS`, `CL`, `PAR`, `MYO`, `PRE`, `POST`, `PIR`,
+`PIR+DS`, `PIR+PAR`: `data/techniques`), o?: nombre original si se cambió (swap), img?/cu?: portada propia }`. En los programas
+predefinidos, `ta` es la técnica del nivel avanzado; `programs/levels` la aplica y la quita, y no llega a guardarse.
+
+**Serie del entreno en curso** (`W.x[ejercicio][serie]`): `{ r: reps, w: kg, ok, q?: esfuerzo, k?: técnica de la serie, t?: 1 fila
+del drop set, 2 bloque del rest-pause }`. `W.dl = 1` en la semana de descarga.
 
 ### Registros
 
 | Clave | Tipo | Qué es |
 |---|---|---|
 | `logs` | registro[] | Entrenos hechos: `{ id, d: 'AAAA-MM-DD', n, v: volumen kg, s: series, m: minutos, q?: esfuerzo, k?: 'c' cardio \| 'w' WOD, c?: datos de cardio, x?: resumen, nt?: nota }`. El `id` (lo pone `core/repair` a partir del contenido) identifica cada entreno al juntar los de dos dispositivos. |
-| `hist` | `{ ejercicio: [{ d, s: [[reps, kg, rpe, drop]] }] }` | Historial por ejercicio, el más reciente primero. |
+| `hist` | `{ ejercicio: [{ d, s: [[reps, kg, rpe, extra, técnica?]] }] }` | Historial por ejercicio, el más reciente primero. `extra`: 0 serie, 1 drop set, 2 rest-pause; la técnica, si no fue una serie normal. |
 | `last` | `{ ejercicio: kg }` | Último peso usado (para rellenar). |
 | `pr` | `{ ejercicio: { w, r, e } }` | Mejores marcas (peso, repeticiones, 1RM estimado). |
 | `pc` | número | Récords batidos en total (para logros). |
@@ -71,7 +79,7 @@ t?: tempo, b?: bloque (superseries), o?: nombre original si se cambió (swap), i
 
 | Clave | Tipo | Qué es |
 |---|---|---|
-| `cp` | programa[] | Programas propios: `{ n, plan, t: creado, src: 'mine' \| 'guide' \| 'import', o?: respuestas del guiado, d: descripción }`. |
+| `cp` | programa[] | Programas propios: `{ n, plan, t: creado, src: 'mine' \| 'guide' \| 'import', o?: respuestas del guiado, d: descripción, dl?: semanas entre descargas (0 nunca; sin él, según el nivel) }`. |
 | `cr` | rutina[] | «Mis workouts»: `{ n, bl: [{ ex: [nombres], s, r, … }], img? }`. |
 | `cx` | ejercicio[] | Ejercicios creados por el usuario: `{ n, c, g: 'Propio', t, p, s, q }`. |
 
@@ -80,11 +88,11 @@ t?: tempo, b?: bloque (superseries), o?: nombre original si se cambió (swap), i
 | Clave | Tipo | Qué es |
 |---|---|---|
 | `nu` | `{ k, c, p, f, n, dt?, man? }` | Objetivo: kcal (800–8000), % hidratos/proteína/grasa, número de comidas (2–8), tipo de dieta; `man: 1` si las kcal y los macros están puestos a mano (no se recalculan solos). `core/boot` los deja válidos (`cleanGoals`). |
-| `bio` | `{ age, h, w, sex, act, goal }` | Datos biométricos (edad, altura cm, peso kg, sexo, actividad, objetivo) para el gasto energético. |
+| `bio` | `{ age, h, w, sex, act, goal }` | Datos biométricos (edad, altura cm, peso kg, sexo `'M'` \| `'F'`, actividad, objetivo) para el gasto energético. El sexo ordena también los programas (`PROGRAM_PREF`) y va al perfil de Firebase (`sx`). |
 | `meals` | `{ 'AAAA-MM-DD': { comida: [{ n, g, b: [kcal, hc, prot, grasa, fibra, sal por 100 g] }] } }` | Comidas del día. |
 | `cf` | `[{ n, b }]` | Alimentos creados por el usuario. |
 | `lib` | `[{ n, it }]` | Platos guardados (librería de comidas). |
-| `tp` | `{ 't' \| 'r': { comida: [...] } }` | Plantillas de día de entreno / descanso. El tipo de cada día ya no se guarda: sale de la rutina (el Día 1 es el lunes) y de los entrenos registrados (`nutrition/templates`, `dayInfo`); hasta la 1.23 se elegía a mano en `dt`, que se borra al arrancar. |
+| `tp` | `{ 't' \| 'r': { comida: [...] } }` | Plantillas de día de entreno / descanso. El tipo de cada día ya no se guarda: sale de la rutina (la semana de entreno va de lunes a domingo y sigue el ciclo del plan) y de los entrenos registrados (`nutrition/templates`, `dayInfo`); hasta la 1.23 se elegía a mano en `dt`, que se borra al arrancar. |
 | `fq` | `{ alimento: { c, t, b } }` | Alimentos frecuentes (hábitos). |
 | `wt` | `{ fecha: ml }` | Agua. |
 | `bc` | `{ código: { n, b, t } }` | Caché de códigos de barras consultados. |

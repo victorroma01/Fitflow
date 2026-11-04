@@ -24,11 +24,12 @@ const csvCell = v => {
 const csvBody = rows => '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
 const CSV_EXPORTS = {
   ent: { t: 'Entrenos', s: 'Fecha, tipo, series, volumen, minutos y esfuerzo', f: 'entrenos', n: () => (S.logs || []).length, b: () => [['Fecha', 'Tipo', 'Entreno', 'Series', 'Volumen (kg)', 'Minutos', 'RPE medio', 'Detalle']].concat((S.logs || []).filter(l => l && typeof l.d == 'string').slice().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0).map(l => [l.d, l.k == 'c' ? 'Cardio' : l.k == 'w' ? 'WOD' : 'Fuerza', l.n, +l.s || 0, +l.v || 0, +l.m || 0, +l.q || '', (l.x || '') + (l.nt ? ' · ' + l.nt : '')])) },
-  ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso y esfuerzo', f: 'series', n: () => Object.keys(S.hist || {}).length, b: () => {
-      const r = [['Fecha', 'Ejercicio', 'Serie', 'Repeticiones', 'Peso (kg)', 'RPE']];
+  ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso, esfuerzo y técnica', f: 'series', n: () => Object.keys(S.hist || {}).length, b: () => {
+      const r = [['Fecha', 'Ejercicio', 'Serie', 'Repeticiones', 'Peso (kg)', 'RPE', 'Técnica']];
       Object.keys(S.hist || {}).sort().forEach(n => {
         (Array.isArray(S.hist[n]) ? S.hist[n] : []).slice().reverse().forEach(x => {
-          (x && Array.isArray(x.s) ? x.s : []).forEach((q, i) => r.push([x.d, n, i + 1, +q[0] || 0, +q[1] || 0, +q[2] || '']));
+          /* técnica de la serie (data/techniques): la guardada o, en las filas extra antiguas, DS (1) y RP (2) */
+          (x && Array.isArray(x.s) ? x.s : []).forEach((q, i) => r.push([x.d, n, i + 1, +q[0] || 0, +q[1] || 0, +q[2] || '', typeof q[4] == 'string' ? q[4] : q[3] == 1 ? 'DS' : q[3] == 2 ? 'RP' : 'WRK']));
         });
       });
       return r;

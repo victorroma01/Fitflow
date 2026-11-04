@@ -39,6 +39,20 @@ python -m playwright install chromium webkit
 5. Si el usuario lo ve, descríbelo en la [documentación funcional](../funcional/README.md).
 6. `npm run format` y `bash tests/run.sh`.
 
+## Programas, técnicas y catálogo de ejercicios
+
+- **Programas predefinidos** (`data/library`, `PROGRAMS`): cada día es `Nombre:ejercicio,ejercicio…` y cada ejercicio
+  `Nombre*series/repeticiones@descanso~técnica`, con `+` delante para unirlo al anterior en un bloque. La técnica es una de
+  `data/techniques` (`~DS`) o la del intermedio y la del avanzado (`~DS/MYO`, `~/CL`: sin técnica en intermedio). Un programa nuevo
+  va al final de la lista (los índices ya guardados en `S.prog` no se mueven), con su nota en `PROGRAM_NOTES`, sus días por nivel
+  en `LEVEL_LAYOUTS` y, si es preferente para un sexo, en `PROGRAM_PREF`.
+- **Ciclos**: un programa de 7 días es la semana; uno de otra longitud es un ciclo que no se corta (`workout/week`). Todo lo que
+  depende del día de la semana pasa por `planIndex` (Workout, Nutrición, Dashboard).
+- **Rotación** (`data/rotation`): grupos de variantes del mismo movimiento; cada ejercicio, en un grupo como mucho, y los básicos,
+  en ninguno.
+- **Catálogo** (`data/exinfo`): una línea por ejercicio de la librería, `Nombre|consejo|cómo se hace`. Cada ejercicio nuevo
+  necesita la suya, con textos propios: `tests/exinfo.test.mjs` falla si falta alguno o si dos se parecen demasiado.
+
 ## Fotos
 
 - Portadas de día: `src/img/day/<clave>.jpg` y su orden en `src/img/day/order.txt`.

@@ -1,6 +1,6 @@
 /* ═══ programs/levels ═══
    Niveles de programa (aplicar, variantes, selector).
-   Define: isLevel, round5, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelVars, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
+   Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelVars, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
 */
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -15,10 +15,23 @@ import { previewProgram } from './manager.js';
 import { html, raw } from '../core/html.js';
 export const isLevel = v => LEVEL_KEYS.includes(v);
 const round5 = x => Math.max(5, Math.round(x / 5) * 5);
+/** Técnica de intensidad del nivel (data/techniques): ninguna en principiante; en avanzado, la suya si la tiene (ta). */
+const levelTech = (e, lv) => {
+  if (lv == 'ini')
+    delete e.tk;
+  else if (lv == 'ava' && e.ta != null) {
+    if (e.ta)
+      e.tk = e.ta;
+    else
+      delete e.tk;
+  }
+  delete e.ta;
+  return e;
+};
 const levelDay = (d, lv) => {
   if (!d.ex.length)
     return { n: d.n, ex: [] };
-  const src = d.ex.map(e => ({ ...e, rg: e.rg ? e.rg.slice() : e.rg }));
+  const src = d.ex.map(e => levelTech({ ...e, rg: e.rg ? e.rg.slice() : e.rg }, lv));
   const sw = LEVEL_SWAPS[lv] || {};
   let ex = [];
   src.forEach(e => {
@@ -79,14 +92,6 @@ const levelDay = (d, lv) => {
       }
     }
   });
-  if (lv == 'ava' && ex.length >= 5) {
-    const a = ex.length - 2;
-    const c = ex.length - 1;
-    if (!ex[a].u && !ex[c].u && ex[a].b == null && ex[c].b == null) {
-      const m = Math.max(0, ...ex.map(x => x.b || 0)) + 1;
-      ex[a].b = ex[c].b = m;
-    }
-  }
   ex.forEach(e => {
     if (e.sw) {
       const o = LEVEL_OVERRIDES[e.n];
@@ -103,19 +108,22 @@ const levelDay = (d, lv) => {
   ex.forEach(e => {
     if (e.b != null && cnt[e.b] < 2)
       delete e.b;
+    /* las técnicas de dos ejercicios (superserie, pre y post-agotamiento) solo valen dentro de su bloque */
+    if (e.b == null && /^(SS|PRE|POST)$/.test(e.tk || ''))
+      delete e.tk;
   });
   return { n: d.n, ex };
 };
 export const levelPlan = (pl, lv, id) => {
   if (!isLevel(lv) || lv == 'int')
-    return pl;
+    return pl.map(d => ({ n: d.n, ex: d.ex.map(e => levelTech({ ...e }, 'int')) }));
   const tx = pl.map(d => levelDay(d, lv));
   const L = (LEVEL_LAYOUTS[id] || {})[lv];
   if (!L)
     return tx;
   return L.map(k => k === -1 ? { n: 'Descanso', ex: [] } : typeof k == 'string' ? parseDays(LEVEL_EXTRA_DAYS[k])[0] : tx[k]);
 };
-const planSignature = pl => JSON.stringify(pl.map(d => [d.n, d.ex.map(e => [e.n, e.s, e.rg || 0, e.u || 0, e.r || 0, e.b || 0])]));
+const planSignature = pl => JSON.stringify(pl.map(d => [d.n, d.ex.map(e => [e.n, e.s, e.rg || 0, e.u || 0, e.r || 0, e.b || 0, e.tk || 0])]));
 export const currentCustomProgram = () => S.cpi >= 0 ? S.cp[S.cpi] : null;
 export const levelsActive = () => S.cpi < 0 || !!(currentCustomProgram() && currentCustomProgram().o);
 const levelGenerate = (v) => {
@@ -180,6 +188,9 @@ const applyLevel = v => {
     }
     dropResume();
     S.lv = v;
+    /* plan nuevo: la próxima rotación (programs/rotation) cuenta desde esta semana */
+    S.rw = S.wk;
+    S.sl = 0;
     S.sel = 0;
     Object.keys(S.done || {}).forEach(k => {
       if (k.indexOf(S.wk + '-') == 0)

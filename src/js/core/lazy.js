@@ -3,7 +3,7 @@
    aparte que se descargan la primera vez que se abren (el service worker los guarda para usarlos sin conexión).
    Hasta entonces, los botones que lo abren tienen aquí un manejador provisional: carga el módulo, que registra los de
    verdad, y repite la acción. En el archivo único todo va dentro y carga al instante.
-   Define: lazyAction
+   Define: lazyAction, loadExInfo
 */
 import { logError } from './errors.js';
 import { toast } from './toast.js';
@@ -23,3 +23,5 @@ const lazyAction = (load, names) => names.forEach(n => {
 lazyAction(() => import('../extras/wod.js'), ['wod']);
 lazyAction(() => import('../extras/csv.js'), ['f2ex']);
 lazyAction(() => import('../extras/foods-online.js'), ['f2os', 'f2sc']);
+/** Catálogo de consejos y ejecución de los ejercicios (data/exinfo, unos 200 KB): se descarga la primera vez que hace falta. */
+export const loadExInfo = () => import('../data/exinfo.js');

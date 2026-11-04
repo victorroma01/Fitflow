@@ -14,6 +14,7 @@ import { backupReminder } from '../system/backup.js';
 import { stagnationCard } from '../extras/stagnation.js';
 import { cardioCard } from '../extras/cardio.js';
 import { html, raw } from '../core/html.js';
+import { sessionsPerWeek, trainingDays } from '../workout/week.js';
 function dashboardBase() {
   const lg = S.logs;
   const now = new Date();
@@ -48,8 +49,10 @@ export const weekStats = () => {
     cnt[k] = (cnt[k] || 0) + 1;
     day[l.d] = 1;
   });
-  const g = Math.max(1, (S.plan || []).filter(d => d.ex.length).length);
-  const t = g >= 4 ? g - 1 : g;
+  /* meta de esta semana: sus entrenos del plan; para la racha, los de la semana con menos (en un ciclo cambian: workout/week) */
+  const g = Math.max(1, trainingDays(S.wk, S.plan || []).length);
+  const lo = Math.max(1, sessionsPerWeek(S.plan || [])[0]);
+  const t = lo >= 4 ? lo - 1 : lo;
   const at = k => new Date(m0.getFullYear(), m0.getMonth(), m0.getDate() - 7 * k);
   const wk = k => cnt[dayKey(at(k))] || 0;
   let st = wk(0) >= t ? 1 : 0;

@@ -9,7 +9,7 @@
 | **Medidas** | Cintura, brazo, pecho y más, con su gráfica, la última medición y el historial. (Las fotos de progreso de la serie de prueba ya no existen: no se guardan datos personales.) |
 | **Logros** | 25 logros, cada uno con su medalla: la forma y el color dicen el tipo de logro y el metal (bronce, plata, oro, platino o amatista), la dificultad. Las conseguidas salen juntas bajo el recuento; las que faltan, en gris. |
 | **Exportar datos (CSV)** | Entrenos, series, peso, medidas, comidas y cardio en archivos CSV para una hoja de cálculo. |
-| **Datos biométricos** | Sexo, edad, altura, peso, actividad diaria y objetivo físico. Con ellos se calculan el metabolismo basal, el gasto diario y los objetivos de Nutrición. |
+| **Datos biométricos** | Sexo, edad, altura, peso, actividad diaria y objetivo físico. Con ellos se calculan el metabolismo basal, el gasto diario y los objetivos de Nutrición. El sexo (hombre o mujer, se puede cambiar cuando quieras) decide además qué programas salen arriba en Programas. |
 | **Administración** | Solo para el administrador: contraseñas temporales y cuentas ([Cuenta](cuenta.md#administración-solo-el-administrador)). |
 | **Ajustes** | Abre la página de Ajustes. |
 

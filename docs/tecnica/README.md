@@ -19,7 +19,8 @@ StrataFit es una **aplicación web instalable (PWA)** escrita en JavaScript sin 
 instala desde Safari en iPhone y desde Chrome en Android, y funciona sin conexión. Las cuentas y la copia de los datos en la nube van
 con [Firebase](backend.md) (Authentication y Firestore), por su API REST. El código son módulos ES pequeños dentro de `src/`;
 `build.py` los compila con [esbuild](https://esbuild.github.io/) (unidos y comprimidos) en la app que se publica. Lo poco usado
-(temporizador WOD, exportar a CSV, escáner de códigos) va en archivos aparte que se descargan la primera vez que se abren.
+(temporizador WOD, exportar a CSV, escáner de códigos y el catálogo de consejos y ejecución de los ejercicios) va en archivos
+aparte que se descargan la primera vez que se abren.
 
 ```mermaid
 flowchart LR

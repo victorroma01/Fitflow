@@ -35,7 +35,7 @@ La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V
 | M0 · Análisis y validación | Dudas, diseño del servidor y simulaciones. Hecho. |
 | M1 · Base técnica | Limpieza del código, versión 1.0.0 y documentación. Hecho. |
 | M2 · Cuentas y Firebase | Usuario y contraseña, roles, datos en la nube y seguridad. Hecho en la rama. |
-| M3 · Programas | Técnicas de intensidad, programas nuevos y por género, rotación y semana de descarga. |
+| M3 · Programas | Técnicas de intensidad, programas nuevos y por género, rotación, semana de descarga y consejo y ejecución de cada ejercicio. Hecho en la rama. |
 | M4 · Pantalla de entrenamiento | Iconos, peso sugerido, superseries encadenadas y reloj del WOD. |
 | M5 · Perfil y seguimiento | Aviso de pesaje, análisis mensual en PDF, informes con respuesta y copia en la nube. |
 | M6 · Experiencia y plataformas | Personalización, tour de la primera vez, gestos y pruebas en Android e iPhone. |
@@ -46,7 +46,7 @@ La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V
 
 | Área | Funciones |
 | --- | --- |
-| **Workout** | Programas listos en tres niveles, programas propios (guiados o con tus workouts) y compartidos por código; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida, discos y semana de descarga; librería de más de 550 ejercicios; WOD y cardio. |
+| **Workout** | Programas listos en tres niveles (entre ellos Push Pull Leg y Full Body en ciclo y Glúteo y pierna), recomendados según el sexo; programas propios (guiados o con tus workouts) y compartidos por código; 10 técnicas de intensidad; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida y discos; semana de descarga y rotación de ejercicios; librería de más de 550 ejercicios, cada uno con su consejo y su ejecución; WOD y cardio. |
 | **Nutrición** | Comidas del día con macros, día de entreno o de descanso según tu rutina, «Mi nutrición» (objetivos según tu gasto o a mano), agua, plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras. |
 | **Dashboard** | Entrenos, volumen, rachas, récords, progreso por ejercicio, calendario y peso corporal. |
 | **Perfil** | Plan, medidas, logros con medallas, exportación a CSV, datos biométricos y Ajustes (cuenta, apariencia, unidades, sonido, copia de seguridad, actualizaciones, diagnóstico e informe de fallos). |

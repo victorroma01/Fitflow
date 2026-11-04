@@ -19,7 +19,7 @@ export const setPendingResume = v => {
 export const saveSession = () => {
   try {
     if (W)
-      Store.set(WIP_KEY, JSON.stringify({ W, d: S.plan[S.sel], sel: S.sel, wk: S.wk, pb: !!S.pbk, t: Date.now() }));
+      Store.set(WIP_KEY, JSON.stringify({ W, d: S.plan[S.sel], sel: S.sel, sl: S.sl, wk: S.wk, pb: !!S.pbk, t: Date.now() }));
     else if (!pendingResume)
       Store.del(WIP_KEY);
   }
@@ -37,6 +37,7 @@ A.zres = () => {
   if (!z)
     return;
   S.sel = z.sel;
+  S.sl = z.sl >= 0 && z.sl < 7 ? z.sl : z.sel % 7;
   S.wk = z.wk;
   if (z.pb) {
     S.pbk = { sel: z.sel, day: S.plan[z.sel] };

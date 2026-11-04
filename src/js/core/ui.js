@@ -68,7 +68,7 @@ export const fullPage = h => {
 };
 export const pgHead = (t, back) => html`<div class="row"><button data-a="${back || 'cl'}" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 class="pgt">${raw(t)}</h1>`;
 A.menu = () => {
-  $('#mn').innerHTML = html`<div class="mbk" data-a="mnc"></div><div class="msd"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="mnc" aria-label="Cerrar">${icon('x', 22)}</button><div class="mti">Menú</div>${[['pg', 'prog', 'Programas'], ['cl2', 'cal', 'Calendario'], ['lg', 'log', 'Registros'], ['rw', 'reset', 'Reiniciar semana']].map((x, i) => html`<button class="mi" style="--d:${70 + i * 60}ms" data-a="mnx" data-v="${x[0]}"><span>${raw(x[2])}</span>${icon(x[1], 22)}</button>`)}</div></div>`;
+  $('#mn').innerHTML = html`<div class="mbk" data-a="mnc"></div><div class="msd"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="mnc" aria-label="Cerrar">${icon('x', 22)}</button><div class="mti">Menú</div>${[['pg', 'prog', 'Programas'], ['cl2', 'cal', 'Calendario'], ['lg', 'log', 'Registros'], ['rtv', 'swp', 'Rotar ejercicios'], ['rw', 'reset', 'Reiniciar semana']].map((x, i) => html`<button class="mi" style="--d:${70 + i * 60}ms" data-a="mnx" data-v="${x[0]}"><span>${raw(x[2])}</span>${icon(x[1], 22)}</button>`)}</div></div>`;
 };
 A.mnc = () => {
   const s = $('.msd');

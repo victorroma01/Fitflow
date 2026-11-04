@@ -7,13 +7,15 @@ import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
 import { EXERCISES, PROGRAM_NAMES } from '../data/library.js';
 import { DAY_PHOTOS } from '../data/photos.js';
+import { TECH_CODES } from '../data/techniques.js';
 import { S, saveState } from '../core/state.js';
 import { dialog, pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { progDraft, restDay } from './create.js';
 import { cleanText, copyText, downloadFile, fromBase64, toBase64 } from '../system/files.js';
 import { html } from '../core/html.js';
+/** Plan válido a partir de lo importado: una semana de 7 días o un ciclo de hasta 14 (workout/week), con lo que se conoce. */
 const cleanPlan = pl => {
-  if (!Array.isArray(pl) || !pl.length || pl.length > 7)
+  if (!Array.isArray(pl) || !pl.length || pl.length > 14)
     throw 0;
   const o = pl.map(d => {
     if (!d || typeof d.n != 'string' || !Array.isArray(d.ex) || d.ex.length > 24)
@@ -32,6 +34,8 @@ const cleanPlan = pl => {
           x.b = e.b;
         if (typeof e.t == 'string' && /^([0-9X]\/[0-9X]\/[0-9X]\/[0-9X]|Libre)$/.test(e.t))
           x.t = e.t;
+        if (TECH_CODES.has(e.tk))
+          x.tk = e.tk;
         return x;
       }) };
     if (d.cu && typeof d.img == 'string' && DAY_PHOTOS[d.img]) {
@@ -40,8 +44,10 @@ const cleanPlan = pl => {
     }
     return r;
   });
-  while (o.length < 7)
-    o.push(restDay());
+  /* un solo día no es un ciclo: se completa la semana con descansos */
+  if (o.length == 1)
+    while (o.length < 7)
+      o.push(restDay());
   return o;
 };
 const programCode = (n, plan) => 'FFP1:' + toBase64(JSON.stringify({ n: cleanText(n, 60), plan: cleanPlan(plan) }));

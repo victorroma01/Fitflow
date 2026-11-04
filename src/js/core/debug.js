@@ -10,7 +10,7 @@ import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
 import { stateRecovered } from './persist.js';
 import { A, C, U } from './registry.js';
-import { groupOf } from '../data/library.js';
+import { groupOf, parseProgram } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
 import { addState, flushState, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
@@ -18,7 +18,10 @@ import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
 import { exAll, exSearchText } from '../library/model.js';
 import { libBody, libState } from '../library/browse.js';
-import { clone } from '../programs/create.js';
+import { clone, progDraft } from '../programs/create.js';
+import { levelPlan } from '../programs/levels.js';
+import { isDeloadWeek } from '../workout/deload.js';
+import { planIndex } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { updatesOn } from '../system/updates.js';
@@ -56,14 +59,19 @@ const DEBUG_NAMES = {
   FOODS_SRC: [() => FOODS_SRC],
   groupOf: [() => groupOf],
   icon: [() => icon],
+  isDeloadWeek: [() => isDeloadWeek],
+  levelPlan: [() => levelPlan],
   libBody: [() => libBody],
   libState: [() => libState],
   logError: [() => logError],
   medalSvg: [() => medalSvg],
   nutriDayOffset: [() => nutriDayOffset],
   parseBackup: [() => parseBackup],
+  parseProgram: [() => parseProgram],
   pendingDocs: [() => pendingDocs],
   pendingRestore: [() => pendingRestore, setPendingRestore],
+  planIndex: [() => planIndex],
+  progDraft: [() => progDraft],
   R: [() => R],
   restoreBackup: [() => restoreBackup],
   S: [() => S],

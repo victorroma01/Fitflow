@@ -38,6 +38,9 @@ se interrumpe: el aviso espera a que termines. Lo que cambia en cada versión es
 ## Lo que llega en la V1.0.0
 
 La V1.0.0 está en desarrollo, por milestones (M1 a M8) que se siguen en GitHub. Ya están en la rama de desarrollo las cuentas con
-usuario y contraseña, los datos en la nube con Firebase y los roles de administrador y usuario (M2). Faltan: técnicas de intensidad y
-programas nuevos, semana de descarga en naranja, tour de la primera vez, análisis mensual descargable en PDF, informes de fallos con
-respuesta y las pruebas en Android e iPhone. Esta documentación se completa a medida que cada parte llega a la app.
+usuario y contraseña, los datos en la nube con Firebase y los roles de administrador y usuario (M2), y los programas nuevos (M3):
+Push Pull Leg y Full Body en ciclo, Glúteo y pierna, programas recomendados según el sexo, 10 técnicas de intensidad, semana de
+descarga en naranja que se puede omitir, rotación de ejercicios y un consejo y una explicación de ejecución propios de cada
+ejercicio. Faltan: la pantalla de entrenamiento con iconos y temporizadores nuevos, el tour de la primera vez, el análisis mensual
+descargable en PDF, los informes de fallos con respuesta y las pruebas en Android e iPhone. Esta documentación se completa a medida
+que cada parte llega a la app.

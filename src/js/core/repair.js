@@ -2,22 +2,24 @@
    Deja el estado S válido: tipos, rangos y valores conocidos, sin datos personales y con un id en cada entreno. Lo usan el
    arranque (core/boot) y la sincronización, tras juntar lo que llega de Firebase (cloud/sync): unos datos dañados o
    manipulados nunca llegan a las pantallas. Se puede llamar las veces que haga falta (lo ya válido no cambia).
-   Define: repairShape, repairPrograms, repairLevels, repairSettings, repairRecords, logIds, repairState
+   Define: repairShape, repairPrograms, repairLevels, repairTraining, repairSettings, repairRecords, logIds, repairState
 */
 import { logError } from './errors.js';
 import { parseProgram, PROGRAMS } from '../data/library.js';
+import { TECH_CODES, TECHNIQUES } from '../data/techniques.js';
 import { S } from './state.js';
 import { generateProgram } from '../programs/create.js';
 import { isLevel } from '../programs/levels.js';
 import { cleanProfile } from '../system/backup.js';
 import { cleanGoals } from '../nutrition/diet.js';
 import { hashOf } from '../cloud/merge.js';
+import { syncSel } from '../workout/week.js';
 /* forma básica: plan, pestaña, semana, listas y objetos; objetivos de nutrición válidos y perfil sin datos personales */
 const repairShape = () => {
   try {
     const A_ = Array.isArray;
     const O_ = x => x && typeof x == 'object' && !A_(x);
-    if (!(S.prog >= 0 && S.prog < 5))
+    if (!(S.prog >= 0 && S.prog < PROGRAMS.length))
       S.prog = 0;
     if (!A_(S.plan) || !S.plan.length || !S.plan.every(d => d && typeof d.n == 'string' && A_(d.ex) && d.ex.every(e => e && typeof e.n == 'string' && +e.s > 0)))
       S.plan = parseProgram(S.prog);
@@ -27,6 +29,10 @@ const repairShape = () => {
       S.tab = 0;
     if (!(S.wk >= 1))
       S.wk = 1;
+    /* día elegido de la semana (0-6) y el del plan que le toca (workout/week) */
+    if (!(S.sl >= 0 && S.sl < 7))
+      S.sl = S.plan.length == 7 ? S.sel : 0;
+    syncSel();
     ['logs', 'cr', 'cx', 'cf', 'lib'].forEach(k => {
       if (!A_(S[k]))
         S[k] = [];
@@ -107,6 +113,30 @@ const repairLevels = () => {
     S.lv = 'int';
   }
 };
+/* técnicas de intensidad conocidas en los planes (data/techniques), descarga de los programas propios (F-20: 0 o 2-16
+   semanas) y semanas de la descarga y la rotación (workout/deload, programs/rotation) */
+const repairTraining = () => {
+  try {
+    const okTech = d => d.ex.forEach(e => {
+      if (e.tk != null && !TECH_CODES.has(e.tk))
+        delete e.tk;
+      delete e.ta;
+    });
+    S.plan.forEach(okTech);
+    S.cp.forEach(p => {
+      p.plan.forEach(okTech);
+      if (p.dl != null && !(p.dl === 0 || Number.isInteger(p.dl) && p.dl >= 2 && p.dl <= 16))
+        delete p.dl;
+    });
+    ['dls', 'rw', 'rq'].forEach(k => {
+      if (S[k] != null && !(Number.isInteger(S[k]) && S[k] >= 0))
+        delete S[k];
+    });
+  }
+  catch (e) {
+    logError('reparar técnicas y semanas', e);
+  }
+};
 /* ajustes con valores conocidos e historial con series bien formadas */
 const repairSettings = () => {
   try {
@@ -134,6 +164,11 @@ const repairSettings = () => {
         return;
       }
       S.hist[n] = h.filter(x => x && typeof x.d == 'string' && Array.isArray(x.s) && x.s.every(y => Array.isArray(y)));
+      /* la técnica de cada serie (quinto valor), solo si es una conocida */
+      S.hist[n].forEach(x => x.s.forEach(y => {
+        if (y.length > 4 && !Object.keys(TECHNIQUES).includes(y[4]))
+          y.length = 4;
+      }));
     });
   }
   catch (e) {
@@ -190,6 +225,7 @@ export const repairState = () => {
   repairShape();
   repairPrograms();
   repairLevels();
+  repairTraining();
   repairSettings();
   repairRecords();
   logIds();

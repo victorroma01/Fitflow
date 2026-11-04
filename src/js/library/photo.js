@@ -4,7 +4,7 @@
 */
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
 import { html } from '../core/html.js';
-export const exPhotoUrl = n => {
+const exPhotoUrl = n => {
   const k = EX_PHOTO_KEY[n];
   return k && EX_PHOTOS[k] ? EX_PHOTOS[k] : '';
 };

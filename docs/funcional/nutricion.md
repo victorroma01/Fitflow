@@ -2,9 +2,9 @@
 
 ## El día
 
-- Arriba, el día (‹ Hoy ›) y si es **día de entreno** o **día de descanso**. No se elige: lo decide la rutina, con el Día 1 del
-  programa en lunes. Si entrenas, el día cuenta como de entreno aunque tocara descanso; un día de entreno que acaba sin entreno
-  cuenta como de descanso.
+- Arriba, el día (‹ Hoy ›) y si es **día de entreno** o **día de descanso**. No se elige: lo decide la rutina, con la semana
+  de entreno de lunes a domingo (en un ciclo como el del Push Pull Leg, lo que toque ese día del ciclo). Si entrenas, el día
+  cuenta como de entreno aunque tocara descanso; un día de entreno que acaba sin entreno cuenta como de descanso.
 - El **resumen** enseña lo que llevas de hidratos, proteínas y grasas (cada uno con su color) y las kcal frente a tu objetivo.
 - **Agua**: botones de −250, +250 y +500 ml frente a tu objetivo del día.
 

@@ -22,12 +22,14 @@ run node tools/format_css.js --check
 run node tools/modindex.js --check
 run python3 build.py --check
 run node --test --test-reporter=dot tests/merge.test.mjs
+run node --test --test-reporter=dot tests/exinfo.test.mjs
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
 run python3 tests/photos.py dist/stratafit.html
 run python3 tests/security.py dist/stratafit.html
 run python3 tests/a11y.py dist/stratafit.html
 run python3 tests/features.py dist/stratafit.html
+run python3 tests/programs.py dist/stratafit.html
 run python3 tests/safety.py dist/stratafit.html
 run python3 tests/storage.py dist/stratafit.html
 run python3 tests/render.py dist/stratafit.html
