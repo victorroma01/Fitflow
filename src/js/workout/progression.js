@@ -1,6 +1,6 @@
 /* ═══ workout/progression ═══
    Sugerencias de progresión y autorrelleno de series.
-   Define: EXTRA_ROW, setText, stepUp, deloadWeight, prefillSets, progressionOf, suggestionBox, lastTimeLine  · acciones/registros: 1
+   Define: EXTRA_ROW, setText, stepUp, deloadWeight, prefillSets, suggestAfter, progressionOf, suggestionBox, lastTimeLine  · acciones/registros: 1
 */
 import { A } from '../core/registry.js';
 import { S, W } from '../core/state.js';
@@ -69,6 +69,8 @@ export function prefillSets(e, a) {
     }
     q.r = r;
     q.w = w;
+    /* lo que propone la app es una sugerencia (F-10): se ve en gris hasta que se escribe o se hace la serie */
+    q.ws = +w > 0 ? 1 : 0;
   });
   a.forEach((q, j) => {
     const p = a[j - 1];
@@ -83,8 +85,30 @@ export function prefillSets(e, a) {
       q.r = Math.max(2, Math.round(p.r / 3));
       q.w = p.w;
     }
+    q.ws = +q.w > 0 ? 1 : 0;
   });
 }
+/** Peso sugerido (F-10): el peso escrito en la fila `j` pasa como sugerencia a las filas siguientes que no estén hechas ni
+    escritas a mano. En una pirámide, un escalón más en cada serie; en el drop set, un 25 % menos; en el rest-pause, el mismo.
+    Una serie ya hecha o escrita a mano manda en las que vienen detrás. */
+export const suggestAfter = (e, a, j) => {
+  let m = +a[j].w || 0;
+  if (!(m > 0) || a[j].t)
+    return;
+  const pyr = /^PIR/.test(e.tk || '') && !(W && W.dl);
+  for (let k = j + 1; k < a.length; k++) {
+    const q = a[k];
+    const own = q.ok || (+q.w > 0 && !q.ws);
+    if (!q.t) {
+      const nw = pyr ? stepUp(m, e) : m;
+      m = own ? +q.w || nw : nw;
+    }
+    if (own)
+      continue;
+    q.w = q.t == 1 ? dropWeight(m) : m;
+    q.ws = 1;
+  }
+};
 function progressionOf(e) {
   const h = lastHistory(e);
   if (!h || !h.s.length || unitOf(e))

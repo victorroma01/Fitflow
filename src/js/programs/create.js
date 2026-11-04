@@ -1,6 +1,6 @@
 /* ═══ programs/create ═══
    Crear programa: guiado y a partir de mis workouts.
-   Define: progDraft, clone, restDay, syncCustomProgram, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, dayDuration, techLegend, programDaysHtml, programRowsHtml, createHome, programNameBox, createFromMine, optionChips, guidedForm, makeEx, ANTAGONISTS, antagonist, guideTechniques, generateProgram, parseDays, programNameFor, programAdvice, guidedProposal, orderWeekPage, refreshCreate, setProgramDeload, refreshDeload  · acciones/registros: 22
+   Define: progDraft, clone, restDay, syncCustomProgram, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, techLegend, programDaysHtml, programRowsHtml, createHome, programNameBox, createFromMine, optionChips, guidedForm, makeEx, ANTAGONISTS, antagonist, guideTechniques, generateProgram, parseDays, programNameFor, programAdvice, guidedProposal, orderWeekPage, refreshCreate, setProgramDeload, refreshDeload  · acciones/registros: 22
 */
 import { fmtMinSec, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -16,8 +16,8 @@ import { R } from '../core/render.js';
 import { groupOfName } from '../library/model.js';
 import { routineToDay } from '../routines/builder.js';
 import { dropResume } from '../workout/resume.js';
-import { restOf } from '../workout/rest.js';
-import { planLine, targetRange, unitOf, weeklySetsCard } from '../workout/targets.js';
+import { restAt } from '../workout/rest.js';
+import { dayMinutes, planLine, unitOf, weeklySetsCard } from '../workout/targets.js';
 import { deloadChips } from '../workout/deload.js';
 import { techLabel } from '../workout/technique.js';
 import { isCycle } from '../workout/week.js';
@@ -83,20 +83,6 @@ const orderRoutines = sel => {
 const buildFromMine = () => {
   progDraft.plan = progDraft.sel.length ? layoutWeek(orderRoutines(progDraft.sel).map(i => routineToDay(i)), progDraft.sel.length) : null;
 };
-const dayDuration = d => {
-  if (!d.ex.length)
-    return 0;
-  let t = 300;
-  d.ex.forEach((e, i) => {
-    const U = unitOf(e);
-    const r = targetRange(e);
-    const v = (r[0] + r[1]) / 2;
-    const w = U ? (U == 'm' ? (v <= 100 ? 45 : v / 3) : U == 's' ? v : U == 'min' ? v * 60 : v * 3) : v * 3 + 12;
-    const sb = e.b != null && d.ex[i + 1] && d.ex[i + 1].b == e.b;
-    t += e.s * (w + (sb ? 10 : restOf(e)));
-  });
-  return Math.max(5, Math.round(t / 300) * 5);
-};
 /** Técnicas de intensidad que usa el plan, con su abreviatura y su nombre (data/techniques). */
 const techLegend = pl => {
   const c = new Set();
@@ -111,10 +97,10 @@ const techLegend = pl => {
   return l.length ? html`<div class="cd tql"><b>Técnicas de intensidad</b><div>${l.map(x => html`<span><b class="tqa">${x[0]}</b>${x[1]}</span>`)}</div></div>` : '';
 };
 /** Días del plan con sus ejercicios, series, técnica y descanso (vista de un programa); en un ciclo, cómo se repite. */
-export const programDaysHtml = pl => (isCycle(pl) ? html`<p class="mu cyn">Ciclo de ${raw(pl.length)} días que no se corta con la semana: cada semana empieza donde acabó la anterior.</p>` : '') + weeklySetsCard(pl) + techLegend(pl) + pl.map((d, j) => html`<div class="cd" style="margin:8px 0"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b>${d.ex.length ? html`<small>${raw(d.ex.reduce((s, e) => s + e.s, 0))} series</small>` : ''}</div>${raw(d.ex.length ? d.ex.map(e => html`<div class="mu" style="font-size:13px;margin-top:3px">${raw(techLabel(e) ? html`<b class="tqa">${techLabel(e)}</b>` : '')}${e.n} · ${raw(planLine(e))} · ${raw(fmtMinSec(restOf(e)))}</div>`).join('') : '<div class="mu" style="font-size:13px;margin-top:3px">Descanso</div>')}</div>`).join('');
+export const programDaysHtml = pl => (isCycle(pl) ? html`<p class="mu cyn">Ciclo de ${raw(pl.length)} días que no se corta con la semana: cada semana empieza donde acabó la anterior.</p>` : '') + weeklySetsCard(pl) + techLegend(pl) + pl.map((d, j) => html`<div class="cd" style="margin:8px 0"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b>${d.ex.length ? html`<small>${raw(d.ex.reduce((s, e) => s + e.s, 0))} series</small>` : ''}</div>${raw(d.ex.length ? d.ex.map((e, i) => html`<div class="mu" style="font-size:13px;margin-top:3px">${raw(techLabel(e) ? html`<b class="tqa">${techLabel(e)}</b>` : '')}${e.n} · ${raw(planLine(e))} · ${raw(fmtMinSec(restAt(d, i)))}</div>`).join('') : '<div class="mu" style="font-size:13px;margin-top:3px">Descanso</div>')}</div>`).join('');
 const programRowsHtml = pl => pl.map((d, j) => {
   const r = !d.ex.length;
-  return html`<div class="cd cpr${r ? ' rs' : ''}"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b><span class="cpm"><button data-a="cpu" data-i="${j}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button><button data-a="cpd" data-i="${j}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>${icon('chev', 18)}</button></span></div>${raw(r ? '<div class="mu" style="font-size:13px">Descanso</div>' : html`<div class="mu" style="font-size:12px;margin-top:2px">${d.ex.length}${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayDuration(d)} min</div><div class="mu cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}</div>`;
+  return html`<div class="cd cpr${r ? ' rs' : ''}"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b><span class="cpm"><button data-a="cpu" data-i="${j}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button><button data-a="cpd" data-i="${j}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>${icon('chev', 18)}</button></span></div>${raw(r ? '<div class="mu" style="font-size:13px">Descanso</div>' : html`<div class="mu" style="font-size:12px;margin-top:2px">${d.ex.length}${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayMinutes(d)} min</div><div class="mu cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}</div>`;
 }).join('');
 const createHome = () => html`${pgHead('Crear programa', 'pg')}<p class="mu" style="margin:-6px 0 14px">Elige cómo quieres montarlo.</p><button class="cpo" data-a="cpm"><span class="cpi">${icon('log', 26)}</span><span><b>Con mis workouts</b><small>${raw(S.cr.length ? S.cr.length + (S.cr.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}</small></span>›</button><button class="cpo" data-a="cpg"><span class="cpi">${icon('prog', 26)}</span><span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›</button>`;
 const programNameBox = () => html`<div class="ph">Nombre del programa</div><input data-u="cpn" value="${progDraft.name}" aria-label="Nombre del programa" placeholder="Mi programa" maxlength="60">`;

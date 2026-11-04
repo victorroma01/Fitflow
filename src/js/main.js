@@ -39,6 +39,7 @@ import './library/picker.js';
 import './routines/builder.js';
 import './workout/week.js';
 import './workout/technique.js';
+import './workout/order.js';
 import './workout/day.js';
 import './workout/session.js';
 import './workout/finish.js';

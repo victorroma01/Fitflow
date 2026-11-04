@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, workoutDayBase, TEMPOS, exToolsHtml, blockBadge, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, workoutTab  · acciones/registros: 13
+   Define: planEx, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, workoutTab  · acciones/registros: 13
 */
 import { A, C } from '../core/registry.js';
 import { PROGRAM_NAMES } from '../data/library.js';
@@ -36,10 +36,15 @@ function workoutDayBase() {
   return html`${raw(h)}<div class="cd hero" style="${coverStyle(d.n, d)}"><h2>${d.n}</h2><div class="st"><div><b>${d.ex.length}</b><small>Ejercicios</small></div><div><b>${raw(ns)}</b><small>Series</small></div><div><b>${dayMinutes(d)}</b><small>Minutos</small></div></div><div class="g2"><button data-a="zov">Overview</button><button class="pr" data-a="go">${S.done[k] ? 'Repetir' : 'Empezar'} día ${raw(S.sl + 1)}</button></div></div>`;
 }
 const TEMPOS = [['2/0/2/0', 'Estándar'], ['3/0/1/0', 'Excéntrico controlado'], ['3/0/3/0', 'Lento y controlado'], ['4/1/1/0', 'Excéntrico lento con pausa'], ['3/1/X/0', 'Pausa abajo y subida explosiva'], ['1/0/X/0', 'Explosivo'], ['2/2/2/0', 'Pausa en la contracción'], ['5/0/1/0', 'Excéntrico muy lento'], ['1/1/1/1', 'Pausa en ambos extremos'], ['Libre', 'Sin tempo fijo']];
+/** Desplegable corto (F-09): enseña solo su nombre («Tempo», «Descanso»), porque el valor ya está en el objetivo de arriba;
+    al tocarlo se abre la lista de siempre (el select va encima, transparente). */
+const shortSelect = (l, sel) => html`<label class="psel"><span>${l}</span>${icon('chev', 14)}${raw(sel)}</label>`;
 export function exToolsHtml(e, i) {
   const o = W.o;
   const t = tempoOf(e) || '2/0/2/0';
-  return html`<div style="display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap"><button class="chip${o[i + 't'] ? ' on' : ''}" data-a="tg" data-i="${i}" data-v="t" style="margin:0">Tips</button><button class="chip${o[i + 'n'] ? ' on' : ''}" data-a="tg" data-i="${i}" data-v="n" style="margin:0">Notas</button>${unitOf(e) ? '' : html`<select data-c="tp" data-i="${i}" aria-label="${'Tempo, ' + e.n}" style="width:auto;flex:1;min-width:130px">${TEMPOS.map(m => html`<option value="${m[0]}"${m[0] == t ? ' selected' : ''}>Tempo ${raw(m[0])} · ${raw(m[1])}</option>`)}</select>`}</div><div style="margin:-2px 0 8px">${restSelect(e)}</div>${o[i + 't'] ? html`<div class="mu tip">${exTip(e.n) || 'Cargando…'}</div>` : ''}${o[i + 'n'] ? html`<textarea rows="3" data-c="no" data-i="${i}" aria-label="${'Notas, ' + e.n}" placeholder="Anota lo que quieras sobre este ejercicio" style="margin-bottom:8px">${S.notes[e.n] || ''}</textarea>` : ''}`;
+  /* en una superserie solo el último ejercicio tiene descanso que elegir (el de la ronda): entre ejercicios son 10 s fijos */
+  const rs = inSuperset(i) ? '' : shortSelect('Descanso', restSelect(e, 1));
+  return html`<div class="xtl"><button class="chip ic${o[i + 't'] ? ' on' : ''}" data-a="tg" data-i="${i}" data-v="t" aria-label="${'Tips, ' + e.n}" aria-pressed="${o[i + 't'] ? 'true' : 'false'}">${icon('info', 18)}</button><button class="chip${o[i + 'n'] ? ' on' : ''}" data-a="tg" data-i="${i}" data-v="n" style="margin:0">Notas</button>${unitOf(e) ? '' : raw(shortSelect('Tempo', html`<select data-c="tp" data-i="${i}" aria-label="${'Tempo, ' + e.n}">${TEMPOS.map(m => html`<option value="${m[0]}"${m[0] == t ? ' selected' : ''}>${raw(m[0])} · ${raw(m[1])}</option>`)}</select>`))}${raw(rs)}</div>${o[i + 't'] ? html`<div class="mu tip">${exTip(e.n) || 'Cargando…'}</div>` : ''}${o[i + 'n'] ? html`<textarea rows="3" data-c="no" data-i="${i}" aria-label="${'Notas, ' + e.n}" placeholder="Anota lo que quieras sobre este ejercicio" style="margin-bottom:8px">${S.notes[e.n] || ''}</textarea>` : ''}`;
 }
 A.tg = (i, b) => {
   const k = i + b.dataset.v;
@@ -55,7 +60,7 @@ export const blockBadge = (a, i) => {
     return '';
   const m = a.filter(x => x.b == e.b).length;
   const k = a.filter((x, j) => x.b == e.b && j <= i).length;
-  return m < 2 ? '' : html`<small style="color:#f59e0b;font-weight:700">${m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}${k < m ? ' · 10 s hasta el siguiente' : ' · descanso tras el bloque'}</small><br>`;
+  return m < 2 ? '' : html`<small style="color:#f59e0b;font-weight:700">${m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}${k < m ? ' · 10 s hasta el siguiente' : ' · descanso de la ronda'}</small><br>`;
 };
 A.jn = i => {
   const a = S.plan[S.sel].ex;
@@ -157,6 +162,7 @@ A.rw = () => {
 C.tp = (e, i) => {
   S.plan[S.sel].ex[i].t = e.value;
   saveState();
+  R();
 };
 C.no = (e, i) => {
   S.notes[S.plan[S.sel].ex[i].n] = e.value;

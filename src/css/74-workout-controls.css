@@ -1,0 +1,85 @@
+/* ═══ css/74-workout-controls ═══ Entreno en curso: Tips y Discos con icono (F-08), desplegables cortos (F-09), peso sugerido (F-10), etiqueta de técnica que se toca (F-11) y barra inferior pegada al borde (F-15) */
+.xtl {
+  display:flex;
+  gap:6px;
+  align-items:center;
+  margin:8px 0;
+  flex-wrap:wrap;
+}
+.xtl .chip {
+  margin:0;
+}
+/* botones con icono en lugar de texto (Tips, Discos) */
+.chip.ic {
+  display:inline-grid;
+  place-items:center;
+  min-width:42px;
+  padding:6px 9px;
+  vertical-align:middle;
+}
+/* desplegable corto: se ve su nombre; el select va encima, transparente, y abre la lista de siempre */
+.psel {
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:44px;
+  margin:0;
+  padding:0 12px;
+  border:1px solid var(--ln);
+  border-radius:999px;
+  background:var(--ib);
+  color:var(--tx);
+  font-size:13.5px;
+  font-weight:600;
+}
+html.gl .psel {
+  background:color-mix(in srgb,var(--tx) 6%,transparent);
+  border-color:var(--gb);
+}
+.psel svg {
+  opacity:.65;
+}
+.psel select {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  margin:0;
+  padding:0;
+  border:0;
+  opacity:0;
+  cursor:pointer;
+}
+.psel:focus-within {
+  border-color:var(--ac);
+  box-shadow:0 0 0 3px #9b5cf633;
+}
+/* peso sugerido (F-10): gris oscuro, menos destacado que un peso ya registrado */
+.r2 input.sug {
+  color:color-mix(in srgb,var(--mu) 70%,var(--bg));
+  font-weight:600;
+}
+/* etiqueta de técnica (F-11): se toca para ver qué técnica es */
+.r2 button.wk2 {
+  position:relative;
+  padding:7px 0;
+  border:0;
+  font:inherit;
+  font-size:11px;
+  font-weight:700;
+}
+.r2 button.wk2::after {
+  content:"";
+  position:absolute;
+  inset:-8px -4px;
+}
+/* barra atrás / pausa / avance (F-15): más baja y ajustada al borde inferior, sin pisar la barra de inicio del iPhone */
+.pb {
+  padding:2px 18px max(4px,calc(env(safe-area-inset-bottom,0px) - 16px));
+  border-radius:22px 22px 0 0;
+  border-bottom:0;
+}
+.pb button {
+  padding:9px 20px;
+}

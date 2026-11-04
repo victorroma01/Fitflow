@@ -73,45 +73,93 @@
   display:grid;
   place-items:center;
 }
-.f2p {
-  margin-top:clamp(10px,4vh,36px);
+/* reloj circular (F-22): el anillo se vacía con lo que queda del tramo (o se llena en el For time) y la cuenta va dentro */
+.f2rg {
+  position:relative;
+  width:min(84vw,52vh,380px);
+  aspect-ratio:1;
+  margin:clamp(8px,3vh,28px) auto 0;
+}
+.f2rg svg {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  transform:rotate(-90deg);
+  /* el brillo va en el svg y no en el círculo: Safari no aplica filtros CSS a las figuras de dentro */
+  filter:drop-shadow(0 0 6px #ffffff40);
+}
+.f2rb,.f2rp {
+  fill:none;
+  stroke-width:7;
+}
+.f2rb {
+  stroke:#ffffff1f;
+}
+.f2rp {
+  stroke:#fff;
+  stroke-linecap:round;
+  /* la longitud del anillo, 2π · 54 (RING en extras/wod) */
+  stroke-dasharray:339.29;
+  stroke-dashoffset:0;
+}
+#f2w[data-ph="pre"] .f2rp {
+  stroke:color-mix(in srgb,var(--a2) 55%,#fff);
+}
+#f2w[data-ph="work"] .f2rp {
+  stroke:#5eead4;
+}
+#f2w[data-ph="rest"] .f2rp {
+  stroke:#fcd34d;
+}
+.f2rc {
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
   text-align:center;
-  font-size:15px;
+}
+.f2p {
+  font-size:14px;
   font-weight:800;
   letter-spacing:.18em;
   text-transform:uppercase;
   opacity:.9;
 }
 .f2t {
-  font-size:clamp(80px,27vw,170px);
+  font-size:clamp(56px,19vw,112px);
   font-weight:800;
   letter-spacing:-.045em;
-  text-align:center;
   font-variant-numeric:tabular-nums;
   line-height:1.02;
-  margin:6px 0 2px;
+  margin:4px 0 2px;
 }
 .f2s {
-  text-align:center;
-  font-size:18px;
+  font-size:17px;
   font-weight:700;
-  min-height:26px;
+  min-height:24px;
   opacity:.92;
 }
-.f2b {
-  height:10px;
-  border-radius:8px;
-  background:#ffffff26;
-  overflow:hidden;
-  margin:16px 4px;
+/* lo que viene después y el total (F-24), y saltar la cuenta atrás de inicio (F-23) */
+.f2nx {
+  min-height:22px;
+  margin:12px 4px 0;
+  text-align:center;
+  font-size:14px;
+  font-weight:600;
+  color:#ffffffc7;
+  font-variant-numeric:tabular-nums;
 }
-.f2b i {
-  display:block;
-  height:100%;
-  width:0;
-  background:#fff;
-  border-radius:8px;
-  transition:width .25s linear;
+#f2w .f2sk {
+  margin-top:10px;
+  padding:12px 20px;
+  border-radius:999px;
+  background:#ffffff26;
+  border:1px solid #ffffff44;
+  color:#fff;
+  font-weight:700;
 }
 .f2sp {
   flex:1;

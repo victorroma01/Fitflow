@@ -9,7 +9,7 @@ import { S, saveState, W } from '../core/state.js';
 import { R } from '../core/render.js';
 import { exAll } from '../library/model.js';
 import { inSuperset } from './day.js';
-import { COMPOUND_RE, restOf } from './rest.js';
+import { blockEnd, COMPOUND_RE, restAt } from './rest.js';
 import { warmupHtml } from './warmup.js';
 import { html, raw } from '../core/html.js';
 import { isCycle } from './week.js';
@@ -113,7 +113,7 @@ export const dayMinutes = d => {
     const r = targetRange(e);
     const v = (r[0] + r[1]) / 2;
     const w = U ? (U == 'm' ? (v <= 100 ? 45 : v / 3) : U == 's' ? v : U == 'min' ? v * 60 : v * 3) : v * 3 + 12;
-    t += e.s * (w + (inSuperset(i) ? 10 : restOf(e)));
+    t += e.s * (w + restAt(d, i));
   });
   return Math.max(5, Math.round(t / 300) * 5);
 };
@@ -152,7 +152,7 @@ export const targetLine = (e, i) => {
   const dl = !!(W && W.dl);
   const p = [];
   if (e.s > 1)
-    p.push('Descanso ' + fmtMinSec(inSuperset(i) ? 10 : restOf(e)));
+    p.push(inSuperset(i) ? '10 s al siguiente' : (blockEnd(S.plan[S.sel], i) ? 'Descanso de la ronda ' : 'Descanso ') + fmtMinSec(restAt(S.plan[S.sel], i)));
   if (!U)
     p.push('Tempo ' + tempoOf(e));
   /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */

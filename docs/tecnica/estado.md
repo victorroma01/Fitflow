@@ -53,12 +53,18 @@ progreso de la serie de prueba se borra al arrancar.
 | `rw` / `rq` | número | Semana de la última rotación de ejercicios (o del inicio del plan) / en la que se aplazó la propuesta (`programs/rotation`). |
 
 **Ejercicio del plan:** `{ n: nombre, s: series, rg: [mín, máx], u?: unidad ('s', 'min', 'm', 'km', 'cal'), r?: descanso en s,
-t?: tempo, b?: bloque (superseries), tk?: técnica de intensidad (`DS`, `RP`, `SS`, `CL`, `PAR`, `MYO`, `PRE`, `POST`, `PIR`,
+t?: tempo, b?: bloque (superseries y triseries: los ejercicios seguidos con el mismo `b`; el `r` del último es el descanso de la
+ronda, y si no tiene, 2:30), tk?: técnica de intensidad (`DS`, `RP`, `SS`, `CL`, `PAR`, `MYO`, `PRE`, `POST`, `PIR`,
 `PIR+DS`, `PIR+PAR`: `data/techniques`), o?: nombre original si se cambió (swap), img?/cu?: portada propia }`. En los programas
 predefinidos, `ta` es la técnica del nivel avanzado; `programs/levels` la aplica y la quita, y no llega a guardarse.
 
 **Serie del entreno en curso** (`W.x[ejercicio][serie]`): `{ r: reps, w: kg, ok, q?: esfuerzo, k?: técnica de la serie, t?: 1 fila
-del drop set, 2 bloque del rest-pause }`. `W.dl = 1` en la semana de descarga.
+del drop set, 2 bloque del rest-pause, ws?: 1 si el peso es sugerido (del historial o de la serie anterior) y aún no registrado }`.
+`W.dl = 1` en la semana de descarga. `W.ri` es la serie que empezó el descanso en curso y `W.re`, cuándo acaba. El orden en que se
+hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se guarda.
+
+**Técnicas** (`data/techniques`): `TECHNIQUES[código] = [nombre, cómo se hace, qué hace la app con ella]`, sin prototipo; los dos
+últimos textos son los de la ventana que se abre al tocar la etiqueta de la serie (F-11).
 
 ### Registros
 

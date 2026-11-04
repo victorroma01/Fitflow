@@ -25,7 +25,8 @@
 ## Técnicas de intensidad
 
 Los programas combinan 10 técnicas según el ejercicio. En el entreno, cada serie lleva a la izquierda su abreviatura (WRK en las
-normales) y el objetivo del ejercicio dice la técnica; en la vista del programa hay una leyenda con las que usa.
+normales) y el objetivo del ejercicio dice la técnica; al tocar la abreviatura se abre una ventana pequeña con qué técnica es,
+cómo se hace y qué hace la app con ella. En la vista del programa hay una leyenda con las que usa.
 
 | Abreviatura | Técnica | En el entreno |
 | --- | --- | --- |
@@ -36,7 +37,7 @@ normales) y el objetivo del ejercicio dice la técnica; en la vista del programa
 | MYO | Myo-reps | Una serie de activación y después mini series de 3-5 repeticiones con 15 s de descanso. |
 | CL | Cluster | Cada serie se hace en bloques de 2-3 repeticiones con micropausas de 15 s. |
 | PAR | Parciales | La última serie se alarga con repeticiones cortas en la posición de estiramiento. |
-| SS | Superserie antagonista | Dos ejercicios de músculos opuestos seguidos, con 10 s entre ellos. |
+| SS | Superserie antagonista | Dos ejercicios de músculos opuestos por rondas, con 10 s entre ellos y el descanso al acabar la ronda. |
 | PRE | Pre-agotamiento | Un aislamiento y, sin descanso, el multiarticular del mismo músculo. |
 | POST | Post-agotamiento | Un multiarticular y, sin descanso, un aislamiento que termina el músculo. |
 
@@ -72,15 +73,24 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 
 ## El entreno en curso
 
-- Arriba, el **cronómetro** del entreno y la serie en la que vas. Abajo, la barra para ir a la serie anterior, pausar o pasar a la
-  siguiente.
+- Arriba, el **cronómetro** del entreno y la serie en la que vas. Abajo, pegada al borde, la barra para ir a la serie anterior,
+  pausar o pasar a la siguiente.
 - Cada ejercicio enseña su objetivo (series × repeticiones, repeticiones en reserva, descanso y tempo), el **calentamiento**
   propuesto, lo que hiciste la última vez y una **sugerencia** de peso y repeticiones para progresar.
 - Cada serie se anota con sus repeticiones y su peso, y se marca hecha con ✓. Se pueden añadir o quitar series.
-- **Descanso**: al marcar una serie empieza la cuenta atrás del descanso de ese ejercicio, con avisos sonoros (y vibración en los móviles que la permiten). El descanso
-  y el tempo se cambian en sus desplegables.
-- **Tips**: el consejo propio de cada ejercicio (no hay dos iguales). **Notas**, **Historial** de sus series anteriores, **Swap**
-  para cambiarlo por otro parecido sin perder el historial y **Discos**, que calcula qué discos poner en cada lado de la barra.
+- **Peso sugerido**: al escribir el peso de una serie, las siguientes lo traen sugerido en gris oscuro, menos destacado que un
+  peso ya registrado (en una pirámide, un escalón más en cada serie; en la bajada del drop set, un 25 % menos). Si cambias la
+  serie 2, las siguientes sugieren el peso nuevo; una serie con el peso escrito a mano no cambia sola. El peso sugerido queda
+  registrado al marcar la serie hecha. Lo que propone el historial llega también como sugerido.
+- **Descanso**: al marcar una serie empieza la cuenta atrás del descanso de ese ejercicio, con avisos sonoros (y vibración en los
+  móviles que la permiten). El descanso y el tempo se cambian en sus desplegables, que solo dicen «Descanso» y «Tempo»: el valor
+  elegido se ve arriba, en el objetivo del ejercicio.
+- **Superseries y triseries**: se hacen por rondas. Tras la serie 1 del primer ejercicio van 10 s fijos y la serie 1 del
+  siguiente; al acabar la ronda, su descanso, que es el del último ejercicio del bloque (el que diga el programa o elijas en su
+  desplegable; si no hay ninguno, 2:30), y vuelta al primero. Al acabar cada descanso, la pantalla pasa sola a la serie que toca.
+- **Tips** (el icono «i»): el consejo propio de cada ejercicio (no hay dos iguales). **Notas**, **Historial** de sus series
+  anteriores, **Swap** para cambiarlo por otro parecido sin perder el historial y **Discos** (el icono del disco), que calcula qué
+  discos poner en cada lado de la barra.
 - **Cómo se hace**: al tocar la imagen del ejercicio (la foto o la figura) se abre su ejecución paso a paso, también propia de
   cada ejercicio, con un enlace a su ficha.
 - Al terminar, un **resumen** con el volumen, los récords y las series, que se puede compartir como imagen. Un entreno a medias se
@@ -99,5 +109,8 @@ Bloques sueltos, superseries y triseries que puedes montar a tu gusto y usar des
 
 ## Temporizador WOD y cardio
 
-- **WOD**: AMRAP, EMOM, Tabata y For time, con sus rondas, tiempos de trabajo y descansos.
+- **WOD**: AMRAP, EMOM, Tabata y For time, con sus rondas, tiempos de trabajo y descansos. La cuenta va en el centro de un reloj
+  circular que se vacía con lo que queda de cada tramo (en el For time se llena con lo que va), con un color para el trabajo y
+  otro para el descanso; debajo dice lo que viene después y el tiempo total. La cuenta atrás inicial se puede saltar y el AMRAP
+  avisa del último minuto.
 - **Cardio**: se registran distancia y tiempo; la app calcula el ritmo y lo suma a los logros.

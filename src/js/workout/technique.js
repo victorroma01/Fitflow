@@ -6,8 +6,8 @@
 */
 import { S, W } from '../core/state.js';
 import { fromDisplayWeight, toDisplayWeight, usesLb } from '../profile/units.js';
-import { inSuperset } from './day.js';
-import { restOf } from './rest.js';
+import { blockOf, roundOf, setOrder } from './order.js';
+import { restAt } from './rest.js';
 /* técnicas que van solo en la última serie del ejercicio */
 const LAST_SET = new Set(['DS', 'RP', 'PAR']);
 /** Técnica de la serie `j` de `n` de un ejercicio del plan: su abreviatura, o 'WRK' si es una serie normal. */
@@ -34,15 +34,17 @@ export const withTechnique = (e, a) => {
   });
   const l = a[n - 1];
   if (l && l.k == 'DS')
-    a.push({ r: l.r, w: +l.w > 0 ? dropWeight(l.w) : '', ok: 0, t: 1, k: 'DS' });
+    a.push({ r: l.r, w: +l.w > 0 ? dropWeight(l.w) : '', ws: 1, ok: 0, t: 1, k: 'DS' });
   else if (l && l.k == 'RP')
-    a.push({ r: Math.max(2, Math.round(l.r / 3)), w: l.w, ok: 0, t: 2, k: 'RP' });
+    a.push({ r: Math.max(2, Math.round(l.r / 3)), w: l.w, ws: 1, ok: 0, t: 2, k: 'RP' });
   return a;
 };
 /** Segundos de descanso tras la serie `j` del ejercicio `i` del entreno en curso: ninguno antes del drop set, 20 s antes del
-    bloque de rest-pause, 15 s entre las mini series de myo-reps, 10 s dentro de una superserie y, si no, el del ejercicio. */
+    bloque de rest-pause, 15 s entre las mini series de myo-reps y, en una superserie o triserie, 10 s hasta el siguiente
+    ejercicio de la ronda y el descanso de la ronda al acabarla (F-12); si no, el del ejercicio. */
 export const restAfterSet = (i, j) => {
-  const e = S.plan[S.sel].ex[i];
+  const d = S.plan[S.sel];
+  const e = d.ex[i];
   const nx = W && W.x[i] && W.x[i][j + 1];
   if (nx && nx.t == 1)
     return 0;
@@ -50,5 +52,12 @@ export const restAfterSet = (i, j) => {
     return 20;
   if (nx && e.tk == 'MYO' && !W.dl)
     return 15;
-  return inSuperset(i) ? 10 : restOf(e);
+  const bk = blockOf(i);
+  if (bk.length < 2)
+    return restAt(d, i);
+  const o = setOrder();
+  const n = o[o.findIndex(x => x[0] == i && x[1] == j) + 1];
+  if (n && n[0] != i && bk.includes(n[0]) && roundOf(n[0], n[1]) == roundOf(i, j))
+    return 10;
+  return restAt(d, bk[bk.length - 1]);
 };

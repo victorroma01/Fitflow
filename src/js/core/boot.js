@@ -14,6 +14,7 @@ import { R } from './render.js';
 import { restorePlanBackup } from '../routines/builder.js';
 import { pendingResume, setPendingResume, WIP_KEY } from '../workout/resume.js';
 import { keepAwake } from '../workout/wake.js';
+import { restEnded } from '../workout/session.js';
 import { applyAccent } from '../profile/appearance.js';
 import { beep, buzz } from '../profile/feedback.js';
 import { isStandalone } from '../system/files.js';
@@ -54,6 +55,7 @@ setInterval(() => {
         beep(1);
       }
       R();
+      restEnded();
     }
     else {
       if (l <= 3 && W.lb !== l) {

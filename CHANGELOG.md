@@ -26,6 +26,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   elegir cada cuántas semanas toca.
 - Cada 5-6 semanas la app propone rotar los ejercicios accesorios por otra variante; también desde el menú de Workout.
 - Cada ejercicio tiene su propio consejo en Tips y, al tocar su imagen, cómo se hace paso a paso.
+- Superseries y triseries por rondas: tras cada serie, 10 s y la serie del siguiente ejercicio; al acabar la ronda, su descanso
+  (2:30 si no eliges otro). Al acabar cada descanso, la pantalla pasa sola a la serie que toca.
+- Peso sugerido: el peso que escribes en una serie pasa en gris a las siguientes (en una pirámide, un escalón más); si cambias
+  una, las siguientes sugieren el nuevo.
+- Al tocar la abreviatura de una serie (PIR, DS, WRK…) se abre una ventana con qué técnica es y cómo se hace.
+- WOD: reloj circular con la cuenta en el centro, y la cuenta atrás inicial se puede saltar.
 
 ### Mejoras
 - Más privacidad: la app ya no guarda nombre, email, teléfono ni fotos de progreso (ni sus dos logros).
@@ -33,6 +39,15 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - La app ocupa algo menos: se han quitado código y estilos que ya no se usaban.
 - Programas revisados: Bro Split y Torso / Pierna con técnicas de intensidad, y en el programa guiado «Otra variante» pasa a
   «Volver a generar», con su icono.
+- Entreno más limpio: Tips y Discos con icono, y los desplegables de tempo y descanso solo dicen «Tempo» y «Descanso» (el valor
+  está arriba, en el objetivo).
+- La barra de atrás, pausa y avance va más baja, pegada al borde de abajo.
+- WOD: un color para el trabajo y otro para el descanso, lo que viene después y el tiempo total, aviso del último minuto en el
+  AMRAP y la cuenta al día nada más volver a la app.
+- Sin descanso automático, la pantalla pasa enseguida al ejercicio que toca.
+
+### Correcciones
+- Al cambiar el descanso o el tempo durante el entreno, el objetivo de arriba no se actualizaba hasta salir.
 
 ### Interno
 - La numeración empieza de nuevo en la 1.0.0. Los móviles con la 1.24.0 la reciben igual: el service worker guarda el
@@ -76,3 +91,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Catálogo de ejercicios (T-05): `data/exinfo`, con el consejo y la ejecución de los 551 ejercicios, se descarga al usarlo
   (`core/lazy`, `library/howto`); `tests/exinfo.test.mjs` comprueba que están todos y que no hay dos textos iguales ni parecidos.
 - Pruebas: `tests/programs.py` (ciclos, sexo, técnicas, descarga, rotación, «Volver a generar», consejo y ejecución).
+- Pantalla de entrenamiento (M4): `workout/order` (orden de las series, por rondas dentro de un bloque: serie actual, «Anterior»
+  y descanso tras cada serie), `restAt` y `blockEnd` en `workout/rest` (10 s dentro del bloque y el descanso de la ronda al
+  cerrarlo), `restEnded` (al acabar un descanso, la pantalla va a la serie siguiente si es de otro ejercicio), peso sugerido con
+  `ws` en cada serie y `suggestAfter` (`workout/progression`), `TECHNIQUES` con un tercer texto (qué hace la app) y sin prototipo,
+  y el reloj del WOD con un anillo SVG que se pinta en cada fotograma (`extras/wod`). CSS nuevo: `74-workout-controls`.
+- Pruebas: `tests/session.py` (iconos, desplegables, peso sugerido, técnicas, superseries y triseries, barra inferior y WOD).
