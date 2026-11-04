@@ -1,6 +1,7 @@
 /* ═══ profile/home ═══
-   Pestaña Perfil y borrado de datos.
-   Define: pfSummary, profileHead, bioCard, planCard, profileTab  · acciones/registros: 5
+   Pestaña Perfil (foto, usuario, plan, medidas, logros, exportar, datos biométricos y, para el admin, Administración) y
+   «Borrar todos los datos». La foto de perfil se sube a la cuenta solo con consentimiento (pf.pc: cuándo se dio).
+   Define: pfSummary, profileHead, bioCard, planCard, profileTab  · acciones/registros: 8
 */
 import { APPV, roundInt, safeImage } from '../core/util.js';
 import { Store } from '../core/store.js';
@@ -10,26 +11,41 @@ import { PROGRAM_NAMES } from '../data/library.js';
 import { S, saveState } from '../core/state.js';
 import { toast } from '../core/toast.js';
 import { icon } from '../core/icons.js';
-import { confirmDialog, linkRow } from '../core/ui.js';
+import { confirmDialog, dialog, linkRow } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
 import { currentCustomProgram, levelsActive, levelTag, programRow } from '../programs/levels.js';
 import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
+import { acctName, isAdmin, signedIn } from '../cloud/session.js';
+import { wipeCloudData } from '../cloud/sync.js';
 import { html, raw } from '../core/html.js';
 /* cabecera de un desplegable de Perfil con su icono y una línea que dice qué hay dentro, como las filas de Medidas o Logros */
 const pfSummary = (ic, t, s) => html`<summary class="pfs">${icon(ic, 30)}<span><b>${raw(t)}</b><br><small>${s}</small></span></summary>`;
 function profileHead() {
   const p = S.pf;
   const img = safeImage(p.img);
-  return html`<div class="hd"><h1>Perfil</h1></div><div class="cd pfh"><label class="av" style="cursor:pointer;font-size:0" aria-label="Foto de perfil">${img ? html`<img src="${img}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">` : ''}${img ? '' : icon('camera', 36)}<input type="file" accept="image/*" data-c="ph" hidden></label>${p.name ? html`<b class="pfn">${p.name}</b>` : ''}</div><details class="cd">${pfSummary('idc', 'Datos', 'Nombre, email y teléfono')}${[['Nombre', 'name'], ['Email', 'email'], ['Teléfono', 'tel']].map(x => html`<label>${raw(x[0])}</label><input data-c="pf" data-i="${x[1]}" value="${p[x[1]] || ''}" aria-label="${x[0]}">`)}</details>`;
+  const pic = html`${img ? html`<img src="${img}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">` : ''}${img ? '' : icon('camera', 36)}`;
+  /* sin consentimiento, la foto abre antes el aviso (A.avc); con él, el selector de fotos */
+  const av = +p.pc > 0 ? html`<label class="av" style="cursor:pointer;font-size:0" aria-label="Foto de perfil">${raw(pic)}<input type="file" accept="image/*" data-c="ph" hidden id="avf"></label>` : html`<button class="av" data-a="avc" style="font-size:0;padding:0" aria-label="Foto de perfil">${raw(pic)}</button><input type="file" accept="image/*" data-c="ph" hidden id="avf">`;
+  return html`<div class="hd"><h1>Perfil</h1></div><div class="cd pfh">${raw(av)}<b class="pfn">${acctName()}</b>${isAdmin() ? html`<small class="pfa">Administrador</small>` : ''}${img ? html`<button class="pfq" data-a="avdel">Quitar foto</button>` : ''}</div>`;
 }
-A.zrs = () => {
+A.zrs = async () => {
+  /* primero en la nube: si no, la próxima sincronización los volvería a bajar */
+  if (signedIn())
+    try {
+      toast('Borrando…');
+      await wipeCloudData();
+    }
+    catch (e) {
+      toast(e.code == 'NETWORK' ? 'Sin conexión: para borrar también los datos de tu cuenta hace falta internet' : 'No se pudieron borrar los datos de tu cuenta (' + e.code + ')');
+      return;
+    }
   clearSavedState();
   Store.del(WIP_KEY);
   location.reload();
 };
-A.rst = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tu perfil, programas, registros y peso. No se puede deshacer.', 'zrs', 'Borrar todo');
+A.rst = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta. Tu usuario se mantiene. No se puede deshacer.', 'zrs', 'Borrar todo');
 function bioCard() {
   const b = S.bio;
   const t = tdee();
@@ -45,7 +61,7 @@ const planCard = () => {
 export function profileTab() {
   const a = S.ach || {};
   const nd = ACHIEVEMENTS.filter(x => a[x[0]]).length;
-  return html`${profileHead()}${planCard()}${linkRow('ruler', 'Medidas y fotos', 'Cintura, brazo, pecho… y antes y después', 'f2ms')}${linkRow('trf', 'Logros', nd + ' de ' + ACHIEVEMENTS.length + ' conseguidos', 'f2lg')}${linkRow('dwn', 'Exportar datos (CSV)', 'Entrenos, series, peso, medidas, comidas y cardio', 'f2ex')}${bioCard()}${linkRow('gear', 'Ajustes', 'Apariencia, unidades, sonido, copias y más', 'zaj')}<div class="brand" aria-label="${'StrataFit, versión ' + APPV}"><span class="bw">STRATAFIT</span><span class="bv">V${APPV}</span></div>`;
+  return html`${profileHead()}${planCard()}${linkRow('ruler', 'Medidas', 'Cintura, brazo, pecho… y cómo cambian', 'f2ms')}${linkRow('trf', 'Logros', nd + ' de ' + ACHIEVEMENTS.length + ' conseguidos', 'f2lg')}${linkRow('dwn', 'Exportar datos (CSV)', 'Entrenos, series, peso, medidas, comidas y cardio', 'f2ex')}${bioCard()}${isAdmin() ? linkRow('adm', 'Administración', 'Contraseñas temporales y cuentas', 'adm') : ''}${linkRow('gear', 'Ajustes', 'Cuenta, apariencia, unidades, sonido, copias y más', 'zaj')}<div class="brand" aria-label="${'StrataFit, versión ' + APPV}"><span class="bw">STRATAFIT</span><span class="bv">V${APPV}</span></div>`;
 }
 /* — manejadores de esta función (registros A / C / U) — */
 C.bio = e => {
@@ -55,14 +71,6 @@ C.bio = e => {
     S.nu.dt = GOAL_DIET[+e.value];
   /* elegir el objetivo físico es elegir un plan: recalcula aunque las kcal estuvieran a mano; el resto de datos, no */
   applyDiet(k == 'goal');
-  saveState();
-  R();
-};
-C.pf = e => {
-  const k = e.dataset.i;
-  if (k != 'name' && k != 'email' && k != 'tel')
-    return;
-  S.pf[k] = String(e.value).trim().slice(0, 120);
   saveState();
   R();
 };
@@ -84,6 +92,7 @@ C.ph = e => {
       const q = Math.min(im.width, im.height);
       c.getContext('2d').drawImage(im, (im.width - q) / 2, (im.height - q) / 2, q, q, 0, 0, 160, 160);
       S.pf.img = c.toDataURL('image/jpeg', .7);
+      S.pf.pc = S.pf.pc || Date.now();
       saveState();
       R();
     };
@@ -91,4 +100,19 @@ C.ph = e => {
     im.src = r.result;
   };
   r.readAsDataURL(f);
+};
+/* consentimiento antes de la primera foto: se sube a la cuenta (cloud/sync, documento private/avatar) */
+A.avc = () => dialog('Foto de perfil', 'La foto se guarda en tu cuenta, en la nube (Firebase), para verla en tus otros móviles. Solo la ves tú y puedes quitarla cuando quieras.', [['Cancelar', 'zno', ''], ['Aceptar y elegir', 'avok', 'pr']]);
+A.avok = () => {
+  S.pf.pc = Date.now();
+  saveState();
+  const f = document.getElementById('avf');
+  f && f.click();
+};
+A.avdel = () => confirmDialog('¿Quitar la foto?', 'Se borra de este móvil y de tu cuenta.', 'avdl', 'Quitar');
+A.avdl = () => {
+  delete S.pf.img;
+  delete S.pf.pc;
+  saveState();
+  R();
 };

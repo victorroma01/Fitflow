@@ -16,9 +16,11 @@ python -m playwright install chromium webkit
 | --- | --- |
 | `python3 build.py` | Compila `dist/app/` (lo que se publica) y `dist/stratafit.html` (archivo único). |
 | `python3 build.py --check` | Además pasa las reglas de `tools/check.js`. |
+| `python3 build.py --emulador` | Solo el archivo único, en `dist/emu/`, conectado al emulador de Firebase de este ordenador (pruebas de la nube). |
 | `npm run format` | Formatea JS y CSS, pone al día la línea «Define:» de cada módulo y el [mapa de módulos](modulos.md). |
 | `bash tests/run.sh` | Formato, reglas, mapa de módulos y todas las pruebas. |
 | `bash tests/compare.sh vieja.html nueva.html` | Compara el comportamiento y la imagen de dos compilaciones. |
+| `npx firebase emulators:exec --only auth,firestore --project demo-stratafit "node --test tests/rules.test.mjs"` | Prueba las reglas de Firestore con el emulador (necesita Java y `npm install --no-save firebase-tools@15`). |
 | `node tools/rename.js mapa.txt` | Renombra globales (líneas «viejo nuevo») entendiendo ámbitos. |
 | `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. |
 | `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo si GitHub Pages volviera a publicar desde la rama). |
@@ -29,10 +31,13 @@ python -m playwright install chromium webkit
    `export const` / `export function`. Los manejadores (`A.miAccion = …`) van en el mismo archivo y el HTML, con plantillas
    ``html`…` ``.
 2. Impórtalo en `src/js/main.js` antes de `core/boot.js`. Si es algo poco usado, en lugar de eso cárgalo desde `core/lazy`.
-3. Si guarda datos nuevos, documenta la clave en [estado.md](estado.md), dale valor por defecto en `core/boot` y decide si entra en la
-   copia de seguridad.
-4. Si el usuario lo ve, descríbelo en la [documentación funcional](../funcional/README.md).
-5. `npm run format` y `bash tests/run.sh`.
+3. Si guarda datos nuevos, documenta la clave en [estado.md](estado.md), valídala en `core/repair` (al arrancar y tras cada
+   sincronización) y decide dónde va: con la cuenta (se sincroniza sola, en `data/core`), en el perfil (preferencias: `PREF_KEYS`
+   de `cloud/sync` y `firestore.rules`) o solo en el dispositivo (`LOCAL_ONLY` de `cloud/sync`).
+4. Si cambia lo que se guarda en Firestore (un documento o un campo nuevo), cambia también `firestore.rules` y su prueba,
+   `tests/rules.test.mjs`.
+5. Si el usuario lo ve, descríbelo en la [documentación funcional](../funcional/README.md).
+6. `npm run format` y `bash tests/run.sh`.
 
 ## Fotos
 
@@ -89,6 +94,13 @@ GitHub Pages publica desde GitHub Actions (*Settings → Pages → Source*: **Gi
 copia compilada: lo publicado siempre sale del código de `main`. Si algún día se vuelve a *Deploy from a branch*, lo publicado sería
 la raíz del repositorio: `python3 tools/pages.py copiar` pone ahí `dist/app/`, y GitHub Actions falla si falta o no coincide con la
 app compilada.
+
+### Firebase
+
+El diseño, los documentos y la sincronización están en [Servidor: Firebase](backend.md). Para administrar las cuentas no hace falta
+entrar en la consola: los flujos de GitHub Actions *Restablecer contraseña*, *Asignar rol* y *Comprobar Firebase* se lanzan desde
+Actions (cuando están en `main`), y *Desplegar reglas* se lanza solo al fusionar un cambio de `firestore.rules`. Todos usan el secreto
+`FIREBASE_SERVICE_ACCOUNT`; nunca guardes la clave en el repositorio.
 
 ### Paso de la 1.24.0 a la 1.0.0
 

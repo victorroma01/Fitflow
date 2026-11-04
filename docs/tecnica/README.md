@@ -8,7 +8,7 @@ ver la [documentación funcional](../funcional/README.md).
 | [Este archivo](#cómo-está-hecha) | Arquitectura, principios del código, convenciones y estructura del repositorio. |
 | [Mapa de módulos](modulos.md) | Qué hace cada módulo de `src/js`, qué declara y cuántas acciones registra. Se genera solo. |
 | [Estado y datos](estado.md) | Diccionario de datos: cada clave de `S` y del almacenamiento, y qué entra en la copia de seguridad. |
-| [Servidor: Firebase](backend.md) | Diseño aprobado del servidor (cuentas, roles, datos, sincronización y seguridad), que llega en M2. |
+| [Servidor: Firebase](backend.md) | El servidor: cuentas, roles, documentos de Firestore, sincronización sin conexión, reglas de seguridad y administración desde GitHub. |
 | [Desarrollo](desarrollo.md) | Requisitos, comandos, cómo añadir una función, reglas de calidad y cómo se publica una versión. |
 | [Pruebas](pruebas.md) | Qué comprueba cada prueba, en qué navegadores y cuándo se pasan. |
 | [Versiones de prueba](versiones-de-prueba.md) | Historial de la serie 1.19 – 1.24, anterior a la V1.0.0. |
@@ -16,7 +16,8 @@ ver la [documentación funcional](../funcional/README.md).
 ## Cómo está hecha
 
 StrataFit es una **aplicación web instalable (PWA)** escrita en JavaScript sin frameworks ni dependencias en tiempo de ejecución. Se
-instala desde Safari en iPhone y desde Chrome en Android, y funciona sin conexión. El código son módulos ES pequeños dentro de `src/`;
+instala desde Safari en iPhone y desde Chrome en Android, y funciona sin conexión. Las cuentas y la copia de los datos en la nube van
+con [Firebase](backend.md) (Authentication y Firestore), por su API REST. El código son módulos ES pequeños dentro de `src/`;
 `build.py` los compila con [esbuild](https://esbuild.github.io/) (unidos y comprimidos) en la app que se publica. Lo poco usado
 (temporizador WOD, exportar a CSV, escáner de códigos) va en archivos aparte que se descargan la primera vez que se abren.
 
@@ -37,6 +38,8 @@ flowchart LR
   B --> ONE["dist/stratafit.html<br/>archivo único, todo incrustado"]
   APP --> PAGES["GitHub Pages"]
   PAGES --> PHONE["Móvil<br/>(service worker: abre al instante y sin conexión)"]
+  PHONE <-->|"sincronización (cloud/sync)"| FB["Firebase<br/>Authentication · Firestore"]
+  GHA["GitHub Actions<br/>reglas · contraseña temporal · rol"] --> FB
 ```
 
 El paquete `dist/app/` es lo que se publica. El archivo único `dist/stratafit.html` lleva todo dentro (código, estilos y fotos) y es
@@ -52,19 +55,22 @@ el que usan la mayoría de las pruebas.
   insertado. Lo que ya es HTML de la app va tal cual (otra plantilla o una lista de ellas); cualquier otra excepción se marca con
   `raw(…)`, así que todo lo que no se escapa está a la vista.
 - **Solo su propio código**: una política de seguridad (CSP) en una etiqueta `<meta>` (`build.py`) solo deja ejecutar el código de la
-  app y solo conectar con su propia web y con Open Food Facts.
+  app y solo conectar con su propia web, con Firebase y con Open Food Facts.
+- **El móvil manda** (*offline-first*): las pantallas leen y escriben siempre en local; `cloud/sync` sube y baja los cambios cuando hay
+  red y junta lo de varios dispositivos. Sin sesión, la app solo enseña el inicio de sesión (`account/login`).
 - **Pintar sin rehacer**: `R()` compara la pantalla nueva con la que hay y cambia solo lo distinto (`core/morph`): se conservan el foco,
   lo escrito y el desplazamiento, y el resultado es el mismo HTML que pintando de cero.
 - **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
   exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
-- **Persistencia solo a través de `Store`** (`core/store`). Ninguna otra parte toca `localStorage`: ahí se enchufa el servidor
-  ([Firebase](backend.md)).
+- **Persistencia solo a través de `Store`** (`core/store`). Ninguna otra parte toca `localStorage`, y `Store` avisa de cada parte que
+  cambia a la sincronización con [Firebase](backend.md) (`Store.remote`).
 - **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
   `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Ajustes → Diagnóstico; un `catch` vacío solo se
   permite con un comentario que explique por qué el fallo es esperable.
-- **Arranque explícito**: todo lo que se ejecuta al cargar (comprobar los datos, reanudar un entreno, primer render) vive en `core/boot`,
-  en orden. El resto de módulos solo define.
+- **Arranque explícito**: todo lo que se ejecuta al cargar (comprobar los datos con `core/repair`, reanudar un entreno, primer render y
+  empezar a sincronizar) vive en `core/boot`, en orden. El resto de módulos solo define (salvo `cloud/session`, que antes de leer el
+  estado borra los datos de otra cuenta).
 - **Sin código muerto**: `tools/check.js` falla si algo declarado, exportado, registrado o dibujado no se usa, incluido el CSS
   ([reglas](desarrollo.md#reglas-de-calidad)).
 
@@ -96,16 +102,20 @@ el que usan la mayoría de las pruebas.
 │   │   ├── dashboard/      tarjetas, registro y calendario, progreso y peso corporal
 │   │   ├── profile/        Perfil, página de Ajustes, apariencia, unidades, sonido y vibración
 │   │   ├── system/         archivos, copias de seguridad, diagnóstico, actualizaciones e informe de fallos
-│   │   └── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros, medallas, CSV y anatomía
+│   │   ├── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros, medallas, CSV y anatomía
+│   │   ├── cloud/          Firebase por REST: configuración, peticiones, sesión, cuentas, Firestore, fusión y sincronización
+│   │   └── account/        inicio de sesión y registro, la cuenta en Ajustes y Administración
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
 │   └── img/                day/ (portadas, order.txt) y ex/ (fotos de ejercicio, map.txt)
 ├── static/                 sw.js (plantilla), manifiesto e iconos
 ├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py
+│   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar)
 ├── tests/                  pruebas, run.sh y compare.sh
 ├── docs/
 │   ├── funcional/          qué hace la app, pantalla a pantalla
 │   ├── tecnica/            esta documentación
 │   └── img/                capturas
-├── .github/workflows/      pruebas y publicación automáticas
+├── .github/workflows/      pruebas y publicación automáticas, y los flujos de Firebase (reglas y administración)
+├── firestore.rules · firestore.indexes.json · firebase.json · .firebaserc     reglas, índices y proyecto de Firebase
 └── build.py · package.json · CHANGELOG.md · LICENSE
 ```

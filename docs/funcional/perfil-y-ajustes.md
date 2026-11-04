@@ -4,13 +4,13 @@
 
 | Apartado | Qué tiene |
 | --- | --- |
-| Foto y nombre | Arriba, tu foto de perfil y tu nombre. |
-| **Datos** | Nombre, email y teléfono. Desaparece en la V1.0.0 (M2): sin datos personales, solo un nombre de usuario. |
+| Foto y usuario | Arriba, tu foto de perfil y tu nombre de usuario (y «Administrador», si lo eres). La primera vez que tocas la foto, la app pide tu consentimiento: la foto se guarda en tu cuenta para verla en tus otros móviles y solo la ves tú. **Quitar foto** la borra del móvil y de la cuenta. |
 | **Plan de entrenamiento** | El programa y el nivel actuales y cuántos entrenos por semana. |
-| **Medidas y fotos** | Cintura, brazo, pecho y más, con su evolución; y fotos de progreso para comparar antes y después. En la V1.0.0 (M2) quedan solo las medidas. |
-| **Logros** | 27 logros, cada uno con su medalla: la forma y el color dicen el tipo de logro y el metal (bronce, plata, oro, platino o amatista), la dificultad. Las conseguidas salen juntas bajo el recuento; las que faltan, en gris. |
+| **Medidas** | Cintura, brazo, pecho y más, con su gráfica, la última medición y el historial. (Las fotos de progreso de la serie de prueba ya no existen: no se guardan datos personales.) |
+| **Logros** | 25 logros, cada uno con su medalla: la forma y el color dicen el tipo de logro y el metal (bronce, plata, oro, platino o amatista), la dificultad. Las conseguidas salen juntas bajo el recuento; las que faltan, en gris. |
 | **Exportar datos (CSV)** | Entrenos, series, peso, medidas, comidas y cardio en archivos CSV para una hoja de cálculo. |
 | **Datos biométricos** | Sexo, edad, altura, peso, actividad diaria y objetivo físico. Con ellos se calculan el metabolismo basal, el gasto diario y los objetivos de Nutrición. |
+| **Administración** | Solo para el administrador: contraseñas temporales y cuentas ([Cuenta](cuenta.md#administración-solo-el-administrador)). |
 | **Ajustes** | Abre la página de Ajustes. |
 
 Abajo, el nombre de la app y su versión.
@@ -21,11 +21,17 @@ Página propia, ordenada por secciones. Cada fila abre su página, con «←» p
 
 | Sección | Filas |
 | --- | --- |
+| Cuenta | **Cuenta** (usuario, tipo de cuenta, sincronización y Cambiar contraseña) y **Sincronización** (su estado; al tocarla, sincroniza). |
 | Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico) y **Color de acento**. |
 | Entreno | **Unidades de carga** (kg o lb) y **Sonido y avisos** (notificaciones, sonidos del descanso y vibración). |
 | Datos | **Copia de seguridad** y **Borrar todos los datos**. |
 | App | **Actualizaciones** (comprueba si hay versión nueva), **Diagnóstico** (versión, dispositivo, espacio y errores registrados) e **Informar de un fallo**. |
 | Información | **Privacidad** y **Aviso legal** (copyright, licencia, aviso de salud y origen de los datos de Open Food Facts). |
+
+Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesión)).
+
+**Borrar todos los datos** borra tus programas, entrenos, comidas, medidas y peso del móvil y de tu cuenta (tu usuario se queda).
+Necesita conexión: sin ella no borra nada, porque la siguiente sincronización los volvería a traer de la cuenta.
 
 ### Copia de seguridad
 

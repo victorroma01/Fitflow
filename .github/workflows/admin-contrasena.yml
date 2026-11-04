@@ -1,0 +1,39 @@
+# Restablecer la contraseña de una cuenta de StrataFit (Actions → Restablecer contraseña → Run workflow).
+# Crea una contraseña temporal que el admin ve en la app (Perfil → Administración) durante 24 h; al entrar con ella, el
+# usuario tiene que cambiarla. La contraseña no sale en este registro, que es público. Usa la cuenta de servicio de
+# Firebase, que solo existe como secreto del repositorio (FIREBASE_SERVICE_ACCOUNT). Código: tools/admin/contrasena.mjs.
+name: Restablecer contraseña
+
+on:
+  workflow_dispatch:
+    inputs:
+      usuario:
+        description: Usuario de la cuenta (como lo escribe al entrar)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-firebase
+  cancel-in-progress: false
+
+jobs:
+  restablecer:
+    name: Contraseña temporal para ${{ inputs.usuario }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: firebase-admin
+        run: npm install --no-save --no-audit --no-fund firebase-admin@13
+      # el usuario llega por una variable de entorno, nunca pegado en el código del paso
+      - name: Restablecer
+        env:
+          USUARIO: ${{ inputs.usuario }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tools/admin/contrasena.mjs "$USUARIO"

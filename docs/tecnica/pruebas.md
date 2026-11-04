@@ -3,20 +3,24 @@
 `bash tests/run.sh` compila y pasa, en este orden, el formato, el mapa de módulos, las reglas de `tools/check.js` y todas las
 pruebas. Cualquier fallo hace que falle entero. Las pruebas abren la app en un navegador de verdad con Playwright: Chrome (Chromium)
 por defecto o, con `SF_BROWSER=webkit`, el motor de Safari, sirviendo la app por HTTP como GitHub Pages (`tests/browser.py`).
+Todas entran con una sesión de prueba y sin red hacia Firebase (`tests/init.js`); la cuenta y la nube se prueban aparte, con un
+Firebase de prueba en memoria (`tests/fakefb.py`) y, en GitHub, con el emulador de Firebase.
 
 | Prueba | Qué comprueba |
 | --- | --- |
 | `tools/format.js --check` y `tools/format_css.js --check` | Que el código y el CSS están formateados y que la línea «Define:» de cada módulo está al día. |
 | `tools/modindex.js --check` | Que el [mapa de módulos](modulos.md) está al día. |
 | `tools/check.js` | Sintaxis, importaciones, orden de carga, identificadores sin declarar, duplicados, acciones sin manejador, botones sin nombre, código muerto y CSS sin usar ([reglas](desarrollo.md#reglas-de-calidad)). |
+| `tests/merge.test.mjs` | La fusión de datos entre dispositivos (`cloud/merge`), sin navegador: cada lado gana lo suyo, comidas e historial se juntan, lo borrado se borra. |
 | `tests/smoke.py` | Arranque, pestañas, entreno completo, comidas, hojas, actualizaciones, política de seguridad y persistencia, en el archivo único y en el paquete. |
 | `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno. |
 | `tests/security.py` | Nombres, foto de perfil y datos con HTML malicioso en 39 pantallas, también desde una copia manipulada: no debe ejecutarse nada, ni siquiera sin la CSP; y con la CSP, que lo inyectado no se ejecuta ni conecta con otros sitios. |
 | `tests/a11y.py` | Accesibilidad en 39 pantallas: botones con nombre, campos con etiqueta, lo que se toca anunciado como botón y, en el entreno (a 390 y 320 px), zona táctil de 44 × 44 px medida tocando. También, que la CSP no bloquea nada de la app. |
-| `tests/features.py` | Nutrición (tipo de día según la rutina, ayudas, botones de cada comida, objetivos a mano que no se pisan, alimentos por grupos), Perfil y Ajustes, medallas e informe de fallos. |
+| `tests/features.py` | Nutrición (tipo de día según la rutina, ayudas, botones de cada comida, objetivos a mano que no se pisan, alimentos por grupos), Perfil y Ajustes (sin datos personales, con «Cerrar sesión»), medallas e informe de fallos. |
 | `tests/safety.py` | Registro de errores, datos dañados, aviso al no poder guardar, copias automáticas y pantalla de error de arranque. |
-| `tests/storage.py` | Guardado por partes: formato, paso desde la 1.20, escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar. |
+| `tests/storage.py` | Guardado por partes: formato, datos de la serie de prueba (no se migran), escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar (sin conexión, no borra nada). |
 | `tests/render.py` | Pintar con cambios mínimos: cada pantalla queda igual que pintada de cero y se conservan foco, texto escrito y desplazamiento. |
+| `tests/cloud.py` | La cuenta y la nube con dos móviles: registro e inicio de sesión, sincronización (también sin conexión y con cambios en los dos), preferencias, borrar en uno, espera tras cinco fallos, Administración, contraseña temporal y sesión caducada, foto con consentimiento, cerrar sesión y borrar todos los datos, sin código inyectado ni choques con la CSP. Con el Firebase de prueba (`tests/fakefb.py`) o, con `SF_CLOUD=emulador`, con el emulador. |
 | `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, código y fotos en caché, carga diferida, aviso de versión nueva (publicando de verdad otra versión), novedades y llegada de una versión con un número menor (como la 1.0.0 tras la 1.24.0). |
 
 ## Comparar dos versiones
@@ -33,5 +37,7 @@ Sirve para demostrar que un cambio interno (una limpieza, un cambio de estructur
 ## En GitHub
 
 GitHub Actions pasa `tests/run.sh` en Chrome y en Safari en cada cambio de `main`, de la rama `desarrollo-1.0.0` y de cada solicitud de
-fusión. En las solicitudes de fusión, además, compara con la versión anterior (paseo aleatorio y capturas). La comparación es
+fusión, y el trabajo **Reglas y nube** arranca el emulador de Firebase (Authentication y Firestore, con `firestore.rules`) para
+probar las reglas (`tests/rules.test.mjs`: qué puede leer y escribir cada cuenta y el admin) y la app entera contra él
+(`tests/cloud.py` sobre `dist/emu/stratafit.html`, con el script de verdad de la contraseña temporal). En las solicitudes de fusión, además, compara con la versión anterior (paseo aleatorio y capturas). La comparación es
 informativa salvo con la etiqueta **`refactor`**, que exige que no cambie nada.

@@ -1,5 +1,5 @@
 /* ═══ core/render ═══
-   Render principal R() y cambio de pestaña.
+   Render principal R() y cambio de pestaña. Sin sesión, R() pinta el inicio de sesión (account/login).
    Define: lastTab, lastScreen, R  · acciones/registros: 1
 */
 import { $ } from './util.js';
@@ -19,10 +19,18 @@ import { profileTab } from '../profile/home.js';
 import { glSync } from '../profile/appearance.js';
 import { updatePopupSync } from '../system/updates.js';
 import { settingsSync } from '../profile/settings.js';
+import { account } from '../cloud/session.js';
+import { loginSync } from '../account/login.js';
 let lastTab = -1;
 /** Pantalla pintada en el último R() (pestaña, entreno, overview o peso). */
 let lastScreen = '';
 export function R() {
+  /* sin sesión (o con una contraseña temporal por cambiar), solo el inicio de sesión: account/login */
+  if (!account || account.mc) {
+    lastScreen = 'login';
+    loginSync();
+    return;
+  }
   glSync();
   deloadWeekSync();
   resumeSync();

@@ -1,29 +1,41 @@
 # Datos y privacidad
 
-## Hoy (hasta la V1.0.0)
+## Qué se guarda y dónde
 
-- **Todo se queda en tu móvil.** No hay cuentas ni servidor: perfil, entrenos, comidas, medidas y fotos se guardan en el propio
-  dispositivo. Nadie más los ve.
-- **Copia de seguridad en archivo** (Ajustes → Copia de seguridad): guárdala de vez en cuando; es lo único que te protege si cambias de
-  móvil o borras los datos del navegador.
-- **Copias automáticas**: cada día se guarda una copia en el móvil (las 7 últimas), útil para deshacer un error propio.
-- **Protección ante fallos**: si el móvil no tiene espacio para guardar, la app avisa; si los datos se dañan, se apartan antes de empezar
-  de cero para poder recuperarlos desde Ajustes → Diagnóstico.
-- **Lo que sale del móvil**, y solo cuando tú lo haces: la copia de seguridad que guardas, el informe de Diagnóstico o de un fallo que
-  envías, y el texto o el código de barras que buscas en Open Food Facts (la imagen de la cámara no sale del móvil).
-- **Sin publicidad, sin cookies de seguimiento y sin analítica.** GitHub Pages, que sirve la app, registra como cualquier servidor datos
-  técnicos de la conexión (por ejemplo, la dirección IP).
+- **Tu cuenta es un usuario y una contraseña.** No se guarda ningún dato personal: ni nombre, ni correo, ni teléfono. Las fotos de
+  progreso de la serie de prueba desaparecieron con la V1.0.0.
+- **En el móvil y en tu cuenta.** Entrenos, comidas, medidas, programas y ajustes se guardan en el móvil (la app abre al instante y
+  funciona sin conexión) y, cuando hay internet, en tu cuenta en la nube: Firebase, de Google. Los datos de la app están en sus
+  servidores de Madrid; el usuario y la contraseña (cifrada) los guarda Firebase Authentication.
+- **Solo tu cuenta los lee.** Las reglas del servidor no dejan que otra cuenta lea ni escriba los tuyos.
+- **El administrador** ve de cada cuenta el usuario, el sexo, la fecha de alta y las preferencias (tema, color, unidades y sonido);
+  nunca tus entrenos, tus comidas, tus medidas ni tu foto.
+- **La foto de perfil** solo se sube si das tu consentimiento, y solo la ves tú. «Quitar foto» la borra del móvil y de la cuenta.
+
+## Lo que sale del móvil
+
+Además de la sincronización con tu cuenta, y solo cuando tú lo haces:
+
+- la copia de seguridad que guardas en un archivo;
+- el informe de Diagnóstico o de un fallo que envías;
+- el texto o el código de barras que buscas en Open Food Facts (la imagen de la cámara no sale del móvil).
+
+Sin publicidad, sin cookies de seguimiento y sin analítica. GitHub Pages, que sirve la app, registra como cualquier servidor datos
+técnicos de la conexión (por ejemplo, la dirección IP).
+
+## Protección
+
 - **Solo su propio código**: una política de seguridad impide que la página ejecute código que no sea el de la app y que se conecte a
-  otro sitio que no sea el suyo y Open Food Facts.
-- **Borrar todos los datos** (Ajustes) elimina todo lo guardado en el móvil.
+  otro sitio que no sean ella misma, Firebase y Open Food Facts.
+- **Contraseñas**: 8 caracteres o más; tras cinco fallos seguidos hay que esperar antes de volver a probar, y Firebase bloquea un rato
+  los intentos repetidos. Una contraseña temporal (la que da el administrador si olvidas la tuya) hay que cambiarla al entrar.
+- **Copias automáticas**: cada día se guarda una copia en el móvil (las 7 últimas), útil para deshacer un error propio.
+- **Ante fallos**: si el móvil no tiene espacio para guardar, la app avisa; si los datos se dañan, se apartan antes de empezar de cero
+  para poder recuperarlos desde Ajustes → Diagnóstico.
 
-## Con la V1.0.0
+## Borrar
 
-- Cada persona entra con su **nombre de usuario y contraseña**. No se guarda ningún dato personal: ni nombre, ni correo, ni teléfono.
-- Los datos se guardan también en la nube (Firebase), para no perderlos y usarlos en varios móviles. La app sigue funcionando sin
-  conexión y sincroniza al volver la red.
-- Cada cuenta solo ve sus propios datos. El administrador ve la ficha básica de cada cuenta (usuario, sexo y preferencias) y los
-  informes de fallos; nunca los entrenos, las comidas, las medidas ni la foto.
-- Las fotos de progreso desaparecen. La foto de perfil se puede subir solo si das tu consentimiento.
+- **Cerrar sesión** borra los datos de la cuenta de este móvil; siguen en tu cuenta.
+- **Borrar todos los datos** (Ajustes) los borra del móvil y de tu cuenta; tu usuario se queda.
 
 El detalle técnico está en [Servidor: Firebase](../tecnica/backend.md).

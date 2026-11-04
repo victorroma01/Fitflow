@@ -2,17 +2,18 @@
 
 Todo lo que la app recuerda está en el objeto `S` (`core/state`), que se guarda con `saveState()` (`core/persist`): el núcleo en la clave
 `ff` y las colecciones que más crecen (entrenos, historial y comidas) en claves propias, para escribir solo lo que cambia.
-Las claves son cortas porque están en los datos de cada usuario y en sus copias de seguridad: **no se renombran sin una migración** en
-`core/boot` (versión de esquema en `S.v`). Este documento es el diccionario de datos; si añades una clave, añádela aquí.
+Las claves son cortas porque están en los datos de cada usuario, en Firebase y en sus copias de seguridad: **no se renombran** sin
+una migración. `core/repair` deja el estado válido al arrancar y tras cada sincronización. Este documento es el diccionario de
+datos; si añades una clave, añádela aquí (y, si es del dispositivo y no de la cuenta, en `LOCAL_ONLY` de `cloud/sync`).
 
-En la V1.0.0 (M2) cambia: `pf` deja de guardar nombre, correo y teléfono, desaparecen las fotos de progreso y todo se sincroniza
-con Firebase por partes ([Servidor: Firebase](backend.md)).
+Desde la V1.0.0 todo se sincroniza con Firebase ([Servidor: Firebase](backend.md)): el núcleo en `data/core`, los entrenos y el
+historial por año, las comidas por mes, las preferencias en el perfil y la foto en su documento privado. No hay datos personales.
 
 ## Claves de almacenamiento (`Store.K`, `core/store`)
 
 | Clave | Contenido |
 |---|---|
-| `ff` (`app`) | Núcleo del estado `S`: todo menos `logs`, `hist` y `meals`, que quedan como el nombre de su clave (`"logs": "ff:logs"`), más la marca `_parts: 1`. Hasta la 1.20 era el estado completo; esos datos se leen igual y pasan a partes en el primer guardado. |
+| `ff` (`app`) | Núcleo del estado `S`: todo menos `logs`, `hist` y `meals`, que quedan como el nombre de su clave (`"logs": "ff:logs"`), más la marca `_parts: 1`. Un `ff` sin la marca (el estado entero de la 1.20 y anteriores) no se lee: los datos de la serie de prueba no se migran. |
 | `ff:logs` | `S.logs`. |
 | `ff:hist` | `S.hist`. |
 | `ff:meals:AAAA-MM` | Los días de `S.meals` de ese mes (`ff:meals:otros` para claves que no son fechas). Un mes sin comidas no tiene clave. |
@@ -23,8 +24,13 @@ con Firebase por partes ([Servidor: Firebase](backend.md)).
 | `ffbad` (`bad`) | Copia de un estado que no se pudo leer al arrancar, apartada antes de empezar de cero. |
 | `ffver` (`ver`) | Última versión de la app abierta en este dispositivo (para enseñar las novedades tras actualizar). |
 | `ffseen` (`seen`) | Versión cuyas novedades ya se enseñaron, para no repetirlas. |
+| `ffacct` (`acct`) | Sesión de la cuenta: `{ uid, u: usuario, it: token de sesión, rt: token de renovación, exp, x: 1 si caducó, mc: 1 o 2 si hay que cambiar una contraseña temporal }` (`cloud/session`). No se sincroniza. |
+| `ffown` (`own`) | uid de la cuenta cuyos datos hay en el móvil. Si entra otra, se borran antes de leer el estado. |
+| `ffsync` (`sync`) | Sincronización (`cloud/sync`): `{ dev: id del dispositivo, base: { parte: { r: versión, h: huellas de cada elemento } }, lt: último cambio local por tipo, pt: de las preferencias, fresh: 1 tras entrar, last: última sincronización }`. |
+| `fflgn` (`lgn`) | Intentos fallidos de entrar `{ n, t }`, para la espera creciente (`account/login`). |
 
-En IndexedDB: `ffph` (fotos de progreso: miniaturas `m` y fotos completas `f`) y `ffsnap` (copias automáticas diarias, las 7 últimas).
+En IndexedDB: `ffsnap` (copias automáticas diarias, las 7 últimas; se borran al cerrar sesión). La base `ffph` de las fotos de
+progreso de la serie de prueba se borra al arrancar.
 
 ## El estado `S`
 
@@ -50,7 +56,7 @@ t?: tempo, b?: bloque (superseries), o?: nombre original si se cambió (swap), i
 
 | Clave | Tipo | Qué es |
 |---|---|---|
-| `logs` | registro[] | Entrenos hechos: `{ d: 'AAAA-MM-DD', n, v: volumen kg, s: series, m: minutos, q?: esfuerzo, k?: 'c' cardio \| 'w' WOD, c?: datos de cardio, x?: resumen, nt?: nota }`. |
+| `logs` | registro[] | Entrenos hechos: `{ id, d: 'AAAA-MM-DD', n, v: volumen kg, s: series, m: minutos, q?: esfuerzo, k?: 'c' cardio \| 'w' WOD, c?: datos de cardio, x?: resumen, nt?: nota }`. El `id` (lo pone `core/repair` a partir del contenido) identifica cada entreno al juntar los de dos dispositivos. |
 | `hist` | `{ ejercicio: [{ d, s: [[reps, kg, rpe, drop]] }] }` | Historial por ejercicio, el más reciente primero. |
 | `last` | `{ ejercicio: kg }` | Último peso usado (para rellenar). |
 | `pr` | `{ ejercicio: { w, r, e } }` | Mejores marcas (peso, repeticiones, 1RM estimado). |
@@ -96,7 +102,7 @@ t?: tempo, b?: bloque (superseries), o?: nombre original si se cambió (swap), i
 | `snd` / `snt` / `vol` / `vib` | Sonido activado, tipo de pitido, volumen y vibración. |
 | `awk` | 0 para no mantener la pantalla encendida durante el entreno. |
 | `notif` | Notificaciones activadas. |
-| `pf` | Perfil: `name`, `email` y `tel` (hasta 120 caracteres) y foto (`img`, JPEG, PNG o WebP en base64). |
+| `pf` | Perfil: solo la foto (`img`, JPEG, PNG o WebP en base64) y `pc`, cuándo se dio el consentimiento para subirla (sin él, la foto no sale del móvil). Nombre, email y teléfono ya no existen: se borran al arrancar y al restaurar una copia. |
 | `wdc` | Última configuración del temporizador WOD. |
 | `rg` | Rango de la gráfica de peso: 0 semanas, 1 meses, 2 años. |
 
@@ -106,9 +112,9 @@ t?: tempo, b?: bloque (superseries), o?: nombre original si se cambió (swap), i
 |---|---|
 | `bkd` | Fecha (ms) de la última copia de seguridad guardada en archivo. |
 | `nbk` | 1 si se descartó el aviso «¿Ya usabas StrataFit?». |
-| `v` | Versión del esquema de datos (hoy 4); las migraciones están en `core/boot`. |
+
 
 ## Copia de seguridad
 
-Un archivo JSON con `{ _sf: { app, fmt, ver, at, wip, ph }, ...S }`: el estado completo, el entreno en curso y, si las hay, las fotos de
-progreso (`system/backup`). Las copias automáticas del móvil usan el mismo formato, sin fotos.
+Un archivo JSON con `{ _sf: { app, fmt, ver, at, wip }, ...S }`: el estado completo y el entreno en curso (`system/backup`). Las
+copias automáticas del móvil usan el mismo formato. Las fotos de progreso de copias antiguas (`_sf.ph`) se ignoran.

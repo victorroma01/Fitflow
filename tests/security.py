@@ -108,13 +108,13 @@ def main(path):
     print('  ' + ('ok    ' if not hit else 'FALLA ') + 'ninguna ejecuta HTML inyectado', hit or '')
     print('  ' + ('ok    ' if control else 'FALLA ') + 'control: sin la CSP, un HTML inyectado sí se ejecutaría (la prueba lo detecta)')
     print('  ' + ('ok    ' if stored else 'FALLA ') + 'al arrancar se descarta una foto de perfil que no es una imagen')
-    print('  ' + ('ok    ' if restored[0] and restored[1] == 'Ana' and restored[2] >= 1 else 'FALLA ') + 'una copia con la foto manipulada se restaura sin ella', '' if restored[0] else restored)
+    print('  ' + ('ok    ' if restored[0] and restored[1] is None and restored[2] >= 1 else 'FALLA ') + 'una copia con la foto manipulada se restaura sin ella (y sin datos personales)', '' if restored[0] else restored)
     print('  ' + ('ok    ' if good else 'FALLA ') + 'una foto de perfil de verdad sí se conserva')
     for name, cond, info in csp:
         print('  ' + ('ok    ' if cond else 'FALLA ') + name, '' if cond else info)
     if bad:
         print('  FALLA errores al abrir pantallas:', bad[:5])
-    ok = not hit and not bad and stored and restored[0] and restored[1] == 'Ana' and restored[2] >= 1 and good and control and all(x[1] for x in csp)
+    ok = not hit and not bad and stored and restored[0] and restored[1] is None and restored[2] >= 1 and good and control and all(x[1] for x in csp)
     print('\n' + ('TODO CORRECTO' if ok else 'FALLAN'))
     sys.exit(0 if ok else 1)
 

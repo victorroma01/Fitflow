@@ -8,6 +8,8 @@ Requiere:  pip install playwright  &&  playwright install chromium
 import os, sys, re, json, shutil, tempfile, threading, functools, http.server
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, ENGINE
+# con la sesión de prueba de tests/init.js: sin cuenta, la app solo enseña el inicio de sesión
+INIT = '\n'.join(l for l in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'init.js'), encoding='utf-8').read().split('\n') if not l.startswith('//'))
 
 fails = []
 
@@ -81,6 +83,7 @@ def main(app):
         with sync_playwright() as p:
             b = launch(p)
             c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark', **CTX)
+            c.add_init_script(INIT)
             pg = c.new_page()
             errs = []
             pg.on('framenavigated', lambda f: log.append('navega ' + f.url[-50:]) if f == pg.main_frame else None)
@@ -236,6 +239,7 @@ def main(app):
                     skipped('versión con un número menor')
                 # app instalada: compartir copia de seguridad
                 c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
+                c2.add_init_script(INIT)
                 c2.add_init_script("Object.defineProperty(navigator,'standalone',{get:()=>true});window.__sh=null;navigator.canShare=()=>true;"
                                    "navigator.share=async d=>{if(window.__abort){const e=new Error('x');e.name='AbortError';throw e}window.__sh=[d.files[0].name,d.files[0].size>100,d.files[0].type]}")
                 p2 = c2.new_page()

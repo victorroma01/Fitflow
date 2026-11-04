@@ -7,7 +7,8 @@ import { $, APPV, dayKey, FFDEP } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
 import { clearErrorLog, errorLog, logError } from '../core/errors.js';
-import { partKey, partsFailed, savedFormat } from '../core/persist.js';
+import { partKey } from '../core/persist.js';
+import { syncLine } from '../cloud/sync.js';
 import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { confirmDialog, fullPage, pgHead } from '../core/ui.js';
@@ -48,7 +49,7 @@ const badData = () => {
 export const diagnosticsText = () => {
   const errs = errorLog().slice().reverse();
   const bad = badData();
-  return ['StrataFit ' + APPV + (FFDEP ? ' · app instalable' : ' · archivo único'), 'Fecha: ' + new Date().toISOString(), 'Navegador: ' + navigator.userAgent, 'Abierta como app: ' + (isStandalone() ? 'sí' : 'no'), offlineText(), 'Almacenamiento: ' + storageUse().filter(x => x[1]).map(x => x[0] + ' ' + Math.ceil(x[1] / 1024) + ' KB').join(', '), 'Guardado: ' + ({ parts: 'por partes', whole: 'entero' + (partsFailed ? ' (sin espacio para dividirlo)' : '') }[savedFormat] || 'sin datos'), 'Entrenos registrados: ' + S.logs.length, bad ? 'Datos dañados apartados el ' + new Date(bad.t).toISOString().slice(0, 10) + ' (' + Math.ceil(bad.raw.length / 1024) + ' KB)' : 'Sin datos dañados', 'Errores registrados: ' + errs.length].concat(errs.map(e => '· ' + new Date(e.t).toISOString().slice(0, 16).replace('T', ' ') + ' · ' + e.w + ' · ' + e.m + (e.v ? ' · v' + e.v : ''))).join('\n');
+  return ['StrataFit ' + APPV + (FFDEP ? ' · app instalable' : ' · archivo único'), 'Fecha: ' + new Date().toISOString(), 'Navegador: ' + navigator.userAgent, 'Abierta como app: ' + (isStandalone() ? 'sí' : 'no'), offlineText(), 'Almacenamiento: ' + storageUse().filter(x => x[1]).map(x => x[0] + ' ' + Math.ceil(x[1] / 1024) + ' KB').join(', '), 'Sincronización: ' + syncLine(), 'Entrenos registrados: ' + S.logs.length, bad ? 'Datos dañados apartados el ' + new Date(bad.t).toISOString().slice(0, 10) + ' (' + Math.ceil(bad.raw.length / 1024) + ' KB)' : 'Sin datos dañados', 'Errores registrados: ' + errs.length].concat(errs.map(e => '· ' + new Date(e.t).toISOString().slice(0, 16).replace('T', ' ') + ' · ' + e.w + ' · ' + e.m + (e.v ? ' · v' + e.v : ''))).join('\n');
 };
 /* «←» de Diagnóstico: a Ajustes si se abrió desde allí */
 let diagBack = 'cl';

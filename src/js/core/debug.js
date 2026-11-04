@@ -8,7 +8,7 @@
 import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { partsFailed, savedFormat, stateRecovered } from './persist.js';
+import { stateRecovered } from './persist.js';
 import { A, C, U } from './registry.js';
 import { groupOf } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
@@ -28,9 +28,12 @@ import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { dayInfo } from '../nutrition/templates.js';
 import { tdee } from '../nutrition/diet.js';
+import { account } from '../cloud/session.js';
+import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
   A: [() => A],
+  account: [() => account],
   ACHIEVEMENTS: [() => ACHIEVEMENTS],
   addState: [() => addState],
   APPV: [() => APPV],
@@ -58,13 +61,12 @@ const DEBUG_NAMES = {
   logError: [() => logError],
   medalSvg: [() => medalSvg],
   nutriDayOffset: [() => nutriDayOffset],
-  partsFailed: [() => partsFailed],
   parseBackup: [() => parseBackup],
+  pendingDocs: [() => pendingDocs],
   pendingRestore: [() => pendingRestore, setPendingRestore],
   R: [() => R],
   restoreBackup: [() => restoreBackup],
   S: [() => S],
-  savedFormat: [() => savedFormat],
   saveState: [() => saveState],
   sheet: [() => sheet],
   showSummary: [() => showSummary],
@@ -72,6 +74,8 @@ const DEBUG_NAMES = {
   snapTx: [() => snapTx],
   stateRecovered: [() => stateRecovered],
   Store: [() => Store],
+  syncNow: [() => syncNow],
+  syncState: [() => syncState],
   takeSnapshot: [() => takeSnapshot],
   tdee: [() => tdee],
   U: [() => U],

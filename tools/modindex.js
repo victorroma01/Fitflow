@@ -18,7 +18,9 @@ const AREAS = {
   dashboard: 'Dashboard: progreso, historial, calendario y peso',
   extras: 'Funciones extra: logros, medidas, cardio, WOD, resumen y exportar',
   profile: 'Perfil y Ajustes',
-  system: 'Sistema: copias de seguridad, diagnóstico, actualizaciones, archivos e informe de fallos'
+  system: 'Sistema: copias de seguridad, diagnóstico, actualizaciones, archivos e informe de fallos',
+  cloud: 'Nube: Firebase por su API REST (sesión, cuentas y Firestore) y la sincronización sin conexión',
+  account: 'Cuenta: inicio de sesión y registro, la cuenta en Ajustes y Administración'
 };
 const lazy = new Set(lazyModules());
 const cell = s => s.replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();

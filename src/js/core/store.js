@@ -1,7 +1,7 @@
 /* ═══ core/store ═══
    Capa de almacenamiento. TODA la persistencia local pasa por aquí: ninguna otra parte del código llama a localStorage.
-   Hoy escribe en localStorage del dispositivo. Para añadir un servidor no hay que tocar las pantallas: basta con
-   registrar un adaptador en Store.remote (ver docs/tecnica/backend.md) y Store avisará de cada cambio.
+   Escribe en localStorage del dispositivo y avisa de cada cambio al adaptador de Store.remote: cloud/sync, que sube a
+   Firebase las partes del estado que cambian (ver docs/tecnica/backend.md).
    Define: Store
 */
 import { logError } from './errors.js';
@@ -15,10 +15,14 @@ import { logError } from './errors.js';
    bad  → copia del estado que no se pudo leer, apartada antes de empezar de cero (no se sincroniza)
    ver  → última versión de la app abierta en este dispositivo (para enseñar las novedades tras actualizar)
    seen → versión cuyas novedades ya se enseñaron (para no repetirlas)
-   Las fotos de progreso viven en IndexedDB (base "ffph"; ver extras/measures) y las copias automáticas
-   también (base "ffsnap"; ver system/snapshots). */
+   acct → sesión de la cuenta en este dispositivo: usuario, uid y tokens de Firebase (cloud/session; no se sincroniza)
+   own  → uid de la cuenta cuyos datos hay en el móvil (si entra otra cuenta, se borran antes: cloud/session)
+   sync → estado de la sincronización con Firebase: versión de cada documento y huellas de lo último sincronizado
+          (cloud/sync)
+   lgn  → intentos fallidos de entrar, para la espera creciente (account/login)
+   Las copias automáticas viven en IndexedDB (base "ffsnap"; ver system/snapshots). */
 export const Store = {
-  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen' },
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn' },
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…) */
   get(k) {

@@ -33,8 +33,8 @@ La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V
 | Milestone | Contenido |
 | --- | --- |
 | M0 · Análisis y validación | Dudas, diseño del servidor y simulaciones. Hecho. |
-| M1 · Base técnica | Limpieza del código, versión 1.0.0 y documentación. |
-| M2 · Cuentas y Firebase | Usuario y contraseña, roles, datos en la nube y seguridad. |
+| M1 · Base técnica | Limpieza del código, versión 1.0.0 y documentación. Hecho. |
+| M2 · Cuentas y Firebase | Usuario y contraseña, roles, datos en la nube y seguridad. Hecho en la rama. |
 | M3 · Programas | Técnicas de intensidad, programas nuevos y por género, rotación y semana de descarga. |
 | M4 · Pantalla de entrenamiento | Iconos, peso sugerido, superseries encadenadas y reloj del WOD. |
 | M5 · Perfil y seguimiento | Aviso de pesaje, análisis mensual en PDF, informes con respuesta y copia en la nube. |
@@ -49,7 +49,8 @@ La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V
 | **Workout** | Programas listos en tres niveles, programas propios (guiados o con tus workouts) y compartidos por código; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida, discos y semana de descarga; librería de más de 550 ejercicios; WOD y cardio. |
 | **Nutrición** | Comidas del día con macros, día de entreno o de descanso según tu rutina, «Mi nutrición» (objetivos según tu gasto o a mano), agua, plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras. |
 | **Dashboard** | Entrenos, volumen, rachas, récords, progreso por ejercicio, calendario y peso corporal. |
-| **Perfil** | Plan, medidas, logros con medallas, exportación a CSV, datos biométricos y Ajustes (apariencia, unidades, sonido, copia de seguridad, actualizaciones, diagnóstico e informe de fallos). |
+| **Perfil** | Plan, medidas, logros con medallas, exportación a CSV, datos biométricos y Ajustes (cuenta, apariencia, unidades, sonido, copia de seguridad, actualizaciones, diagnóstico e informe de fallos). |
+| **Cuenta** | Usuario y contraseña, sin datos personales; datos en la nube (Firebase) para usar varios móviles, también sin conexión; roles de administrador y usuario. |
 
 Todo, pantalla a pantalla, en la [documentación funcional](docs/funcional/README.md).
 
@@ -69,12 +70,14 @@ novedades.
 | [Nutrición](docs/funcional/nutricion.md) | [Mapa de módulos](docs/tecnica/modulos.md) |
 | [Dashboard](docs/funcional/dashboard.md) | [Estado y datos](docs/tecnica/estado.md) |
 | [Perfil y Ajustes](docs/funcional/perfil-y-ajustes.md) | [Servidor: Firebase](docs/tecnica/backend.md) |
-| [Datos y privacidad](docs/funcional/datos-y-privacidad.md) | [Desarrollo](docs/tecnica/desarrollo.md) · [Pruebas](docs/tecnica/pruebas.md) |
+| [Cuenta](docs/funcional/cuenta.md) | [Desarrollo](docs/tecnica/desarrollo.md) |
+| [Datos y privacidad](docs/funcional/datos-y-privacidad.md) | [Pruebas](docs/tecnica/pruebas.md) |
 
 ## Desarrollo
 
 StrataFit es una aplicación web instalable (PWA) en JavaScript, sin frameworks ni dependencias en tiempo de ejecución: módulos ES en
-`src/` que `build.py` compila con esbuild.
+`src/` que `build.py` compila con esbuild. Las cuentas y los datos en la nube van con Firebase (Authentication y Firestore), por su
+API REST.
 
 ```bash
 npm install && pip install -r tests/requirements.txt && python -m playwright install chromium webkit

@@ -1,80 +1,126 @@
 # Servidor: Firebase
 
-Diseño aprobado en M0 (4 de noviembre de 2026) y que se programa en M2. Hasta entonces la app no tiene servidor: todo se guarda
-en el móvil. El móvil sigue mandando y Firebase es la copia de referencia y el punto de encuentro entre dispositivos, así que la
-app abre al instante y funciona en un gimnasio sin cobertura (*offline-first*).
+Diseño aprobado en M0 (4 de noviembre de 2026) y programado en M2. El móvil sigue mandando y Firebase es la copia de referencia
+y el punto de encuentro entre dispositivos: la app abre al instante, lee siempre del almacenamiento local y funciona en un
+gimnasio sin cobertura (*offline-first*).
 
 ## Decisiones
 
 | Tema | Decisión |
 | --- | --- |
 | Plan | **Spark**: gratis y sin tarjeta. Solo Authentication y Firestore; sin Cloud Functions ni Cloud Storage. |
-| Proyecto | `stratafit-960ec`, con Firestore en `europe-southwest1` (Madrid). La configuración web no es secreta: va en el código. |
-| Dominio autorizado | `victorroma01.github.io` (la app sigue publicándose en GitHub Pages). |
-| Cuentas | Registro libre con usuario y contraseña. Firebase Authentication usa un correo técnico interno, `usuario@stratafit.app`, que el usuario nunca ve y al que nunca se envía nada. |
-| Usuario | Único, de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo; sin distinguir mayúsculas. |
-| Contraseña | 8 caracteres o más. Firebase bloquea un rato los intentos fallidos repetidos y la app añade una espera creciente a partir del quinto fallo. |
+| Proyecto | `stratafit-960ec`, con Firestore en `europe-southwest1` (Madrid). La configuración web no es secreta: va en el código (`cloud/config`). La clave de la API está limitada a `https://victorroma01.github.io/*` (Google Cloud → Credenciales). |
+| Cliente | La API REST de Firebase, **sin SDK**: ninguna dependencia en tiempo de ejecución, la CSP abre solo tres dominios y todo se prueba sin red (`tests/fakefb.py`) y con el emulador. |
+| Cuentas | Registro libre con usuario y contraseña. Authentication usa un correo técnico interno, `usuario@stratafit.app`, que el usuario nunca ve y al que nunca se envía nada. |
+| Usuario | Único, de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo, sin punto al principio, al final ni dos seguidos (no valdría como correo); sin distinguir mayúsculas (se guarda como se registró). |
+| Contraseña | 8 caracteres o más. Firebase bloquea un rato los intentos fallidos repetidos y la app añade una espera que se dobla a partir del quinto fallo (5 s, 10 s… hasta 5 min). |
 | Roles | Admin y Usuario, con *custom claims* (`role: "admin"`) en el token de la sesión: la app no puede cambiarlos. Admin: `VictorAdmin_`. |
 | Contraseña olvidada | La restablece el admin con un flujo de GitHub Actions, solo para el usuario que lo necesita (más adelante, el propio usuario). |
 | Datos personales | Ninguno: ni nombre, ni correo, ni teléfono, ni fotos de progreso. La foto de perfil se queda, con consentimiento, y solo la ve su dueño. |
-| Aviso de pesaje | Dentro de la app, al abrirla. Una notificación con la app cerrada necesitaría Cloud Functions (plan Blaze). |
-| Copia de seguridad | En la nube: una sola por usuario, que se sobrescribe. |
-| Datos de la serie de prueba (1.24 y anteriores) | No se migran: son de prueba. |
+| Aviso de pesaje | Dentro de la app, al abrirla (M5). Una notificación con la app cerrada necesitaría Cloud Functions (plan Blaze). |
+| Copia de seguridad | En la nube (M5): una sola por usuario, que se sobrescribe. |
+| Datos de la serie de prueba (1.24 y anteriores) | No se migran: al entrar por primera vez se borran del móvil. |
+
+## Módulos
+
+| Módulo | Qué hace |
+| --- | --- |
+| `cloud/config` | Proyecto y direcciones de Authentication y Firestore. `build.py --emulador` las cambia por las del emulador. |
+| `cloud/net` | Peticiones JSON con límite de tiempo; cada fallo, un código estable (`NETWORK`, `EMAIL_EXISTS`, `FAILED_PRECONDITION`…). |
+| `cloud/session` | La sesión del dispositivo (Store `acct`) y de quién son los datos del móvil (`own`): si entra otra cuenta, se borran antes de leer el estado. |
+| `cloud/auth` | Registro, entrada, renovación del token (dura una hora) y cambio de contraseña; textos de error en español. |
+| `cloud/firestore` | Leer, leer varios, listar, escribir varios a la vez con condición (`commit`) y borrar. |
+| `cloud/merge` | Fusión a tres bandas, código puro (`tests/merge.test.mjs`). |
+| `cloud/sync` | La sincronización (abajo). |
+| `account/login` | Inicio de sesión, registro, contraseña temporal y volver a entrar si la sesión caduca. |
+| `account/account` | Ajustes → Cuenta, Cambiar contraseña y «Cerrar sesión». |
+| `account/admin` | Perfil → Administración. |
+| `core/repair` | Deja `S` válido al arrancar y tras juntar lo que llega de la nube. |
 
 ## Datos en Firestore
 
-Firebase guarda lo mismo que el móvil, dividido en las mismas partes (`core/persist`) y en documentos de menos de 1 MB.
+Firebase guarda lo mismo que el móvil, dividido en documentos de menos de 1 MB. Cada parte guarda su contenido como texto JSON
+en el campo `j` (Firestore no admite listas dentro de listas, y el historial las tiene), con `m` (cuándo, en ms), `r` (su versión),
+`v` (formato, 1) y `d` (dispositivo).
 
 | Documento | Qué guarda | Lee | Escribe |
 | --- | --- | --- | --- |
-| `users/{uid}` | Usuario, sexo, preferencias (tema, color, unidades, sonido), si vio el tour, aviso de pesaje (cada cuánto y próxima fecha) y si debe cambiar la contraseña | Su dueño y el admin | Su dueño, salvo el rol |
-| `users/{uid}/data/core` | Núcleo del estado `S`: plan y programa activo, programas propios, semana y descarga elegida, datos biométricos, peso corporal, medidas, objetivos de nutrición y ajustes del entreno | Su dueño | Su dueño |
-| `users/{uid}/logs/{año}` | Entrenos de ese año | Su dueño | Su dueño |
+| `users/{uid}` | `u` usuario, `sx` sexo, `pr` preferencias (tema, color, Cristal, unidades, sonido y avisos), `ca` alta, `m` último cambio y `mc` si debe cambiar la contraseña | Su dueño y el admin | Su dueño crea `u` (el de su correo técnico) y cambia `sx`, `pr` y `m`; `mc` solo lo puede quitar |
+| `users/{uid}/data/index` | `p`: la versión de cada parte (`{ "core": "…", "logs:2026": "…" }`) | Su dueño | Su dueño |
+| `users/{uid}/data/core` | El núcleo de `S` sin lo que es del dispositivo, ni lo que tiene su propio documento, ni las preferencias | Su dueño | Su dueño |
+| `users/{uid}/logs/{año}` | Entrenos de ese año (cada uno con su `id`) | Su dueño | Su dueño |
 | `users/{uid}/hist/{año}` | Historial por ejercicio de ese año | Su dueño | Su dueño |
 | `users/{uid}/meals/{año-mes}` | Comidas de ese mes | Su dueño | Su dueño |
-| `users/{uid}/private/avatar` | Foto de perfil pequeña (JPEG de unos 30 KB), solo con consentimiento | Su dueño | Su dueño |
-| `users/{uid}/backup/…` | Copia de seguridad: sus partes y una ficha con la fecha; cada copia sobrescribe la anterior | Su dueño | Su dueño |
-| `reports/{id}` | Informe: fallo o sugerencia, categoría, texto, datos técnicos opcionales, estado y respuesta | Su autor y el admin | El autor lo crea; el admin cambia el estado y responde |
-| `adminInbox/{id}` | Contraseñas temporales creadas desde GitHub, con caducidad de 24 h | El admin | GitHub Actions; el admin las borra al entregarlas |
-
-El estado de un informe lo ve el admin como *pendiente, vista o arreglada* y su autor como *pendiente, vista o contestada*.
+| `users/{uid}/private/avatar` | Foto de perfil pequeña (JPEG de 160 × 160, unos 10 KB) y cuándo se dio el consentimiento | Su dueño | Su dueño |
+| `adminInbox/{id}` | Contraseñas temporales (`u`, `p`, `exp`): caducan a las 24 h | El admin | GitHub Actions; el admin las borra al entregarlas |
+| `users/{uid}/backup/…`, `reports/{id}` | Copia de seguridad e informes: llegan en M5 | — | — |
 
 Fuera de Firebase, en el código de la app: el catálogo de ejercicios con sus tips y explicaciones (T-05) y la nota de cada versión,
-que sale del `CHANGELOG.md` (T-20). Así funcionan sin conexión y van versionados. No se sincronizan el entreno en curso, el registro de
-errores ni las copias automáticas del móvil: son de cada dispositivo.
+que sale del `CHANGELOG.md` (T-20). No se sincronizan el entreno en curso, el registro de errores ni las copias automáticas del
+móvil, ni lo que es del dispositivo: pestaña y día elegidos, rango de la gráfica de peso, fecha de la última copia en archivo.
+Los índices de un solo campo están desactivados para `j` y `p` (`firestore.indexes.json`): nadie busca por ellos.
 
-## Sincronización
+## Sincronización (`cloud/sync`)
 
-1. El móvil guarda por partes, como hasta ahora. `Store` avisa de cada parte que cambia a `Store.remote.changed(clave, valor)`
-   (`core/store`), que la pone en una cola en el móvil y la sube cuando hay red. Lo escrito sin red no se pierde aunque se cierre la app.
-2. Al entrar con red se bajan las partes más nuevas que las del móvil. Si una parte cambió en dos móviles, entrenos y comidas se juntan
-   elemento a elemento; en el resto gana el cambio más reciente.
-3. «Cerrar sesión» termina de subir lo pendiente, borra del móvil los datos de esa cuenta y vuelve al inicio de sesión.
+1. Cada parte del estado que se guarda (`core/persist`) se avisa a `Store.remote`; unos segundos después, y al volver la red o la
+   app a primer plano, se sincroniza. Sin red no pasa nada: lo cambiado sigue en el móvil y se sube después, aunque se cierre la app.
+2. **Perfil.** Se juntan las preferencias del móvil y las de la nube (cada una por separado, gana el cambio más reciente). Si no
+   existe (cuenta recién creada), se crea.
+3. **Bajar.** El índice dice qué partes cambiaron en la nube desde la última vez (su versión no es la recordada). Se bajan de una
+   vez y se juntan con lo local **sin esperas por medio**, así nada cambia `S` mientras tanto. Con un entreno en curso se espera a
+   que acabe.
+4. **Subir.** Lo que cambió en el móvil se sube con el índice en una sola escritura (todo o nada) con la condición de que el índice
+   siga como se leyó. Si otro dispositivo subió algo entretanto, la condición falla y se vuelve al paso 3.
+
+Lo de cada parte en la última sincronización se recuerda por **huellas** (una por elemento, Store `sync`), no por copias, así el
+móvil no duplica sus datos. La fusión es a tres bandas (`cloud/merge`): cada parte se divide en elementos (un entreno por su `id`,
+un día de comidas, el historial de un ejercicio, cada clave del núcleo, cada preferencia) y
+
+- lo que cambió en un solo lado gana; lo borrado en un lado y sin tocar en el otro se borra;
+- si cambió en los dos: un día de comidas junta los alimentos de ambos, el historial de un ejercicio junta sus registros y en el
+  resto gana el cambio más reciente;
+- justo después de entrar, en un conflicto gana la nube (el móvil aún no tenía nada de la cuenta).
+
+Al entrar, los datos del móvil se borran si son de otra cuenta, se bajan los de la cuenta y la app se abre de nuevo con ellos.
+«Cerrar sesión» intenta subir lo pendiente y avisa si no puede; después borra del móvil los datos de la cuenta. «Borrar todos los
+datos» los borra primero de la nube (sin conexión no borra nada: si no, la siguiente sincronización los volvería a bajar).
 
 ## Seguridad
 
-- Reglas de Firestore en el repositorio (`firestore.rules`): cada usuario solo lee y escribe lo suyo; el admin solo lee perfiles e
-  informes; nadie puede ponerse un rol. Comprueban tipos y tamaños (un informe de 1500 caracteres como mucho, una foto de 100 KB como
-  mucho).
-- Las reglas se prueban con el emulador de Firebase en GitHub Actions y se despliegan desde allí al fusionar en `main`.
-- La clave de administrador (cuenta de servicio) solo existe como secreto de GitHub, `FIREBASE_SERVICE_ACCOUNT`: nunca en el código.
-- La política de seguridad de la página (CSP, `build.py`) se amplía solo a los dominios de Firebase.
+- **Reglas** (`firestore.rules`): cada cuenta lee y escribe solo lo suyo, con la forma y el tamaño que usa la app (sin campos de más,
+  sin documentos con otros nombres, 1 MB por parte y 150 KB la foto); el admin lee además los perfiles y `adminInbox`, nunca los
+  datos de nadie; solo valen cuentas con correo técnico; lo demás está denegado.
+- **Pruebas**: `tests/rules.test.mjs` las comprueba con el emulador en cada cambio (CI, «Reglas y nube»), junto con la app entera
+  contra el emulador (`tests/cloud.py`). Se despliegan desde GitHub Actions al fusionar en `main` («Desplegar reglas»).
+- La clave de administrador (cuenta de servicio) solo existe como secreto de GitHub, `FIREBASE_SERVICE_ACCOUNT`: nunca en el código,
+  en el registro ni en el chat. `.gitignore` excluye cualquier archivo de clave.
+- La CSP (`build.py`) abre solo `identitytoolkit`, `securetoken` y `firestore.googleapis.com`, además de Open Food Facts.
+- Lo que llega de la nube pasa por `core/repair` antes de pintarse, y todo se escapa al pintar (`core/html`).
+- El token de sesión se renueva una vez en cada apertura: un rol nuevo vale al volver a abrir la app. Al cambiar la contraseña,
+  Firebase cierra las demás sesiones; la app lo avisa y deja volver a entrar sin perder lo del móvil.
 
 ## Administración desde GitHub
 
-Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run workflow*) y usan la cuenta de servicio:
+Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run workflow*) y usan la cuenta de servicio
+(`tools/admin`, con `firebase-admin`). El usuario les llega por una variable de entorno, nunca pegado en el código del paso.
 
-| Flujo | Qué hace |
-| --- | --- |
-| Restablecer contraseña | Se escribe el usuario. Crea una contraseña temporal que el admin ve en su Perfil → Administración durante 24 h; al entrar con ella, el usuario tiene que cambiarla. No aparece en el registro de GitHub, que es público. |
-| Asignar rol | Usuario y rol (admin o usuario). |
-| Desplegar reglas | Se lanza solo al fusionar en `main`. |
+| Flujo | Archivo | Qué hace |
+| --- | --- | --- |
+| Restablecer contraseña | `admin-contrasena.yml` | Se escribe el usuario. Le pone una contraseña temporal, cierra sus sesiones y marca `mc` en su perfil; la contraseña solo se guarda en `adminInbox`, que el admin ve en Perfil → Administración durante 24 h. No aparece en el registro, que es público. |
+| Asignar rol | `admin-rol.yml` | Usuario y rol (admin o usuario). Vale la próxima vez que esa persona abra la app. |
+| Desplegar reglas | `firebase-reglas.yml` | Reglas e índices de Firestore. Se lanza solo al fusionar en `main` un cambio de esos archivos. |
+| Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuentas y acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
+
+Los flujos manuales solo aparecen en Actions cuando están en `main`.
 
 ## Límites del plan Spark
 
-- Cada día, 50.000 lecturas y 20.000 escrituras de Firestore sin coste. La app usa unas decenas por sesión: da para cientos de
-  usuarios activos al día.
-- Si un día se superase, Firestore dejaría de responder hasta el día siguiente; no hay cobro posible porque no hay tarjeta.
-- Notificaciones con la app cerrada o fotos en la nube necesitarían pasar a Blaze.
+- Cada día, 50.000 lecturas y 20.000 escrituras de Firestore sin coste. Una sincronización sin cambios cuesta una lectura (el índice;
+  el perfil se vuelve a leer cada 10 minutos o al volver a la app) y una con cambios, una escritura por parte cambiada más el
+  índice: da para cientos de usuarios activos al día.
+- Si un día se superase, Firestore dejaría de responder hasta el día siguiente (la app seguiría en local); no hay cobro posible
+  porque no hay tarjeta.
+- Notificaciones con la app cerrada o fotos en Cloud Storage necesitarían pasar a Blaze.
 
-Fuente: [Firebase pricing plans](https://firebase.google.com/docs/projects/billing/firebase-pricing-plans).
+Fuentes: [Firebase pricing plans](https://firebase.google.com/docs/projects/billing/firebase-pricing-plans) ·
+[Claves de API de Firebase](https://firebase.google.com/docs/projects/api-keys).

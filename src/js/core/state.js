@@ -1,10 +1,18 @@
 /* ═══ core/state ═══
    Estado global S (se guarda con saveState: core/persist), sesión en curso W, tema y banderas de interfaz.
-   Define: S, saveState, flushState, W, setW, nutriDayOffset, setNutriDayOffset, calMonthOffset, setCalMonthOffset, weekView, setWeekView, addState, setAddState, applyTheme, overviewMode, setOverviewMode, weightView, setWeightView, wodRun, setWodRun
+   Define: freshState, S, resetState, saveState, flushState, W, setW, nutriDayOffset, setNutriDayOffset, calMonthOffset, setCalMonthOffset, weekView, setWeekView, addState, setAddState, applyTheme, overviewMode, setOverviewMode, weightView, setWeightView, wodRun, setWodRun
 */
 import { loadSavedState, scheduleWrite, writeState } from './persist.js';
 import { parseProgram } from '../data/library.js';
-export let S = Object.assign({ tab: 0, prog: 0, plan: parseProgram(0), wk: 1, sel: 0, done: {}, logs: [], last: {}, rest: 120, theme: '', notif: 1, pf: {}, nu: { k: 1942, c: 50, p: 20, f: 30, n: 3 }, meals: {}, lib: [], cf: [], cx: [] }, loadSavedState());
+/** Estado de una cuenta nueva. */
+const freshState = () => ({ tab: 0, prog: 0, plan: parseProgram(0), wk: 1, sel: 0, done: {}, logs: [], last: {}, rest: 120, theme: '', notif: 1, pf: {}, nu: { k: 1942, c: 50, p: 20, f: 30, n: 3 }, meals: {}, lib: [], cf: [], cx: [] });
+export const S = Object.assign(freshState(), loadSavedState());
+/** Vuelve S al estado de una cuenta nueva, sin cambiar el objeto (al entrar con otra cuenta: account/login). */
+export const resetState = () => {
+  for (const k of Object.keys(S))
+    delete S[k];
+  Object.assign(S, freshState());
+};
 /** Guarda S al terminar la acción en curso; solo se escribe lo que ha cambiado (core/persist). */
 export const saveState = () => scheduleWrite(S);
 /** Guarda S ya, sin esperar al final de la acción. Devuelve false si no se pudo. */
