@@ -4,7 +4,7 @@
    Comprueba: el secreto FIREBASE_SERVICE_ACCOUNT (y que es de stratafit-960ec), Authentication (cuántas cuentas hay y si
    el acceso con correo y contraseña está activo), que existe la base de datos de Firestore y en qué ubicación, y que la
    cuenta de servicio puede desplegar las reglas. */
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { connect, PROJECT } from './firebase.mjs';
 
 const rows = [];
@@ -68,8 +68,15 @@ catch (e) {
 
 try {
   const r = await google('https://firebaserules.googleapis.com/v1/projects/' + PROJECT + '/releases');
-  const fs = (r.releases || []).find(x => /cloud\.firestore/.test(x.name));
-  row('Reglas de Firestore', true, fs ? 'desplegadas el ' + String(fs.updateTime || fs.createTime).slice(0, 10) : 'aún sin desplegar (se despliegan al fusionar en main)');
+  const rel = (r.releases || []).find(x => /cloud\.firestore/.test(x.name));
+  let same = false;
+  if (rel) {
+    const rs = await google('https://firebaserules.googleapis.com/v1/' + rel.rulesetName);
+    const src = ((rs.source && rs.source.files) || []).map(f => f.content).join('\n').trim();
+    same = src == readFileSync(new URL('../../firestore.rules', import.meta.url), 'utf8').trim();
+  }
+  const when = rel ? ' (desplegadas el ' + String(rel.updateTime || rel.createTime).slice(0, 10) + ')' : '';
+  row('Reglas de Firestore', true, same ? 'las de este repositorio' + when : 'aún no son las de este repositorio' + when + ': se despliegan al fusionar en main');
 }
 catch (e) {
   row('Reglas de Firestore', false, 'la cuenta de servicio no puede leerlas (' + why(e) + ')', false);
