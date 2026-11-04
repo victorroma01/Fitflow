@@ -1,9 +1,9 @@
 /* ═══ profile/home ═══
    Pestaña Perfil (foto, usuario, plan, medidas, logros, exportar, datos biométricos y, para el admin, Administración) y
    «Borrar todos los datos». La foto de perfil se sube a la cuenta solo con consentimiento (pf.pc: cuándo se dio).
-   Define: pfSummary, profileHead, bioCard, planCard, profileTab  · acciones/registros: 8
+   Define: pfSummary, profileHead, bioCard, planCard, firstUseDay, analysisFrom, analysisLine, profileTab  · acciones/registros: 8
 */
-import { APPV, roundInt, safeImage } from '../core/util.js';
+import { APPV, dayKey, fmtDateShort, roundInt, safeImage } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { clearSavedState } from '../core/persist.js';
 import { A, C } from '../core/registry.js';
@@ -19,6 +19,8 @@ import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, tdee } from '../nut
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { acctName, isAdmin, signedIn } from '../cloud/session.js';
 import { wipeCloudData } from '../cloud/sync.js';
+import { wipeCloudBackup } from '../cloud/backup.js';
+import { reportsLine } from '../system/report.js';
 import { html, raw } from '../core/html.js';
 import { perWeekText } from '../workout/week.js';
 /* cabecera de un desplegable de Perfil con su icono y una línea que dice qué hay dentro, como las filas de Medidas o Logros */
@@ -37,6 +39,7 @@ A.zrs = async () => {
     try {
       toast('Borrando…');
       await wipeCloudData();
+      await wipeCloudBackup();
     }
     catch (e) {
       toast(e.code == 'NETWORK' ? 'Sin conexión: para borrar también los datos de tu cuenta hace falta internet' : 'No se pudieron borrar los datos de tu cuenta (' + e.code + ')');
@@ -46,7 +49,7 @@ A.zrs = async () => {
   Store.del(WIP_KEY);
   location.reload();
 };
-A.rst = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta. Tu usuario se mantiene. No se puede deshacer.', 'zrs', 'Borrar todo');
+A.rst = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta, y también la copia de seguridad de la nube. Tu usuario se mantiene. No se puede deshacer.', 'zrs', 'Borrar todo');
 function bioCard() {
   const b = S.bio;
   const t = tdee();
@@ -58,10 +61,36 @@ const planCard = () => {
   const nm = p ? p.n : PROGRAM_NAMES[S.prog];
   return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}<div style="margin-top:10px">${programRow(nm, levelsActive() ? levelTag(S.lv) : '')}</div><button data-a="pg" style="width:100%;margin-top:12px">Cambiar programa o nivel</button></details>`;
 };
+/** Primer día con datos (entrenos, comidas, peso o medidas), o '' si aún no hay ninguno. */
+const firstUseDay = () => {
+  let m = '';
+  const t = d => {
+    if (typeof d == 'string' && /^\d{4}-\d\d-\d\d$/.test(d) && (!m || d < m))
+      m = d;
+  };
+  (S.logs || []).forEach(l => l && t(l.d));
+  Object.keys(S.meals || {}).forEach(t);
+  (S.wl || []).forEach(p => p && t(p.d));
+  (S.ms || []).forEach(p => p && t(p.d));
+  return m;
+};
+/** Análisis mensual (F-26): [primer día con datos, día desde el que se puede ver (un mes después)], o ['', ''] sin datos. */
+export const analysisFrom = () => {
+  const f = firstUseDay();
+  if (!f)
+    return ['', ''];
+  const t = new Date(f + 'T12:00:00');
+  t.setDate(t.getDate() + 30);
+  return [f, dayKey(t)];
+};
+const analysisLine = () => {
+  const a = analysisFrom()[1];
+  return !a ? 'Disponible tras tu primer mes de uso' : a > dayKey(new Date()) ? 'Disponible desde el ' + fmtDateShort(a, { day: 'numeric', month: 'long' }) : 'Entrenos, peso y alimentación de cada mes, también en PDF';
+};
 export function profileTab() {
   const a = S.ach || {};
   const nd = ACHIEVEMENTS.filter(x => a[x[0]]).length;
-  return html`${profileHead()}${planCard()}${linkRow('ruler', 'Medidas', 'Cintura, brazo, pecho… y cómo cambian', 'f2ms')}${linkRow('trf', 'Logros', nd + ' de ' + ACHIEVEMENTS.length + ' conseguidos', 'f2lg')}${linkRow('dwn', 'Exportar datos (CSV)', 'Entrenos, series, peso, medidas, comidas y cardio', 'f2ex')}${bioCard()}${isAdmin() ? linkRow('adm', 'Administración', 'Contraseñas temporales y cuentas', 'adm') : ''}${linkRow('gear', 'Ajustes', 'Cuenta, apariencia, unidades, sonido, copias y más', 'zaj')}<div class="brand" aria-label="${'StrataFit, versión ' + APPV}"><span class="bw">STRATAFIT</span><span class="bv">V${APPV}</span></div>`;
+  return html`${profileHead()}${planCard()}${linkRow('ruler', 'Medidas', 'Cintura, brazo, pecho… y cómo cambian', 'f2ms')}${linkRow('trf', 'Logros', nd + ' de ' + ACHIEVEMENTS.length + ' conseguidos', 'f2lg')}${linkRow('bar', 'Ver análisis mensual', analysisLine(), 'ana')}${linkRow('dwn', 'Exportar datos (CSV)', 'Entrenos, series, peso, medidas, comidas y cardio', 'f2ex')}${bioCard()}${linkRow('bug', 'Fallos y sugerencias', reportsLine(), 'rpl')}${isAdmin() ? linkRow('adm', 'Administración', 'Fallos y sugerencias, contraseñas temporales y cuentas', 'adm') : ''}${linkRow('gear', 'Ajustes', 'Cuenta, apariencia, unidades, sonido, copias y más', 'zaj')}<div class="brand" aria-label="${'StrataFit, versión ' + APPV}"><span class="bw">STRATAFIT</span><span class="bv">V${APPV}</span></div>`;
 }
 /* — manejadores de esta función (registros A / C / U) — */
 C.bio = e => {

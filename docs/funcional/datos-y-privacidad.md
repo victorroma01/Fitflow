@@ -9,15 +9,19 @@
   servidores de Madrid; el usuario y la contraseña (cifrada) los guarda Firebase Authentication.
 - **Solo tu cuenta los lee.** Las reglas del servidor no dejan que otra cuenta lea ni escriba los tuyos.
 - **El administrador** ve de cada cuenta el usuario, el sexo, la fecha de alta y las preferencias (tema, color, unidades y sonido);
-  nunca tus entrenos, tus comidas, tus medidas ni tu foto.
+  nunca tus entrenos, tus comidas, tus medidas, tu foto ni tu copia de seguridad. Sí ve los fallos y sugerencias que le envías:
+  tu usuario, el texto y, si los adjuntas, los datos técnicos.
+- **La copia de seguridad en la nube** es una sola por cuenta (cada copia sustituye a la anterior) y, como el resto de tus datos,
+  solo la lee tu cuenta.
 - **La foto de perfil** solo se sube si das tu consentimiento, y solo la ves tú. «Quitar foto» la borra del móvil y de la cuenta.
 
 ## Lo que sale del móvil
 
-Además de la sincronización con tu cuenta, y solo cuando tú lo haces:
+Además de la sincronización con tu cuenta (y de su copia de seguridad semanal), y solo cuando tú lo haces:
 
-- la copia de seguridad que guardas en un archivo;
-- el informe de Diagnóstico o de un fallo que envías;
+- los archivos que guardas o compartes: la copia de seguridad (siempre con el mismo nombre), el análisis mensual en PDF (se hace en
+  el móvil, sin conexión) y el evento del recordatorio de pesaje para tu calendario;
+- el informe de Diagnóstico y los fallos o sugerencias que envías (al administrador, dentro de la app);
 - el texto o el código de barras que buscas en Open Food Facts (la imagen de la cámara no sale del móvil).
 
 Sin publicidad, sin cookies de seguimiento y sin analítica. GitHub Pages, que sirve la app, registra como cualquier servidor datos
@@ -36,6 +40,7 @@ técnicos de la conexión (por ejemplo, la dirección IP).
 ## Borrar
 
 - **Cerrar sesión** borra los datos de la cuenta de este móvil; siguen en tu cuenta.
-- **Borrar todos los datos** (Ajustes) los borra del móvil y de tu cuenta; tu usuario se queda.
+- **Borrar todos los datos** (Ajustes) los borra del móvil y de tu cuenta, también la copia de seguridad de la nube; tu usuario se
+  queda. Los fallos y sugerencias enviados se quedan con el administrador.
 
 El detalle técnico está en [Servidor: Firebase](../tecnica/backend.md).

@@ -1,6 +1,6 @@
 """Prueba de funciones de Nutrición, Perfil y Ajustes: tipo de día automático, ayudas «?», botones de cada comida,
 «Mi nutrición» (objetivos a mano que no se pisan), alimentos por grupos, Perfil y Ajustes, medallas de Logros e
-«Informar de un fallo».
+«Informar de un fallo» (fallo o sugerencia, que sin conexión espera a la red).
 
   python3 tests/features.py dist/stratafit.html
 Requiere:  pip install playwright  &&  playwright install chromium   (otro motor: SF_BROWSER=webkit; ver tests/browser.py)
@@ -192,7 +192,7 @@ def main(path):
         ev("A.zaj()")
         run()
         rows = ev("[...document.querySelectorAll('#ajs .sr')].map(b=>b.dataset.a+(b.dataset.v?':'+b.dataset.v:''))")
-        want = ['ajp:cuenta', 'snc', 'ajp:tema', 'ajp:acento', 'ajp:unidades', 'ajp:sonido', 'zbk', 'rst', 'updChk', 'diag', 'rpo', 'ajp:privacidad', 'ajp:legal', 'sout']
+        want = ['ajp:cuenta', 'snc', 'ajp:tema', 'ajp:acento', 'ajp:unidades', 'ajp:sonido', 'zbk', 'rst', 'updChk', 'ajp:nota', 'diag', 'rpo', 'ajp:privacidad', 'ajp:legal', 'sout']
         check('Ajustes tiene todas sus filas', rows == want, str(rows))
         check('con secciones', ev("[...document.querySelectorAll('#ajs .ph')].map(e=>e.innerText.trim().toLowerCase())") == ['cuenta', 'apariencia', 'entreno', 'datos', 'app', 'información'])
         check('«Cerrar sesión», en rojo y con su icono, al final', ev("(()=>{const b=document.querySelector('#ajs .sro [data-a=sout]');return !!b&&!!b.querySelector('.srl.red')&&!!b.querySelector('.sri.red svg')})()"))
@@ -230,33 +230,38 @@ def main(path):
         print('Informar de un fallo')
         ev("A.zaj();A.rpo()")
         run()
-        check('nueve tipos de fallo para elegir', ev("document.querySelectorAll('.rpt button').length") == 9)
-        ev("window.__href=null;HTMLAnchorElement.prototype.click=function(){window.__href=this.href}")
+        check('dos tipos: fallo o sugerencia de mejora', ev("[...document.querySelectorAll('.rpk button')].map(b=>b.innerText)") == ['Fallo', 'Sugerencia de mejora'])
         ev("A.rps()")
         run(200)
-        check('sin tipo no se envía (y lo dice)', ev("window.__href") is None and 'Elige el tipo' in ev("document.getElementById('tt').innerText"))
+        check('sin tipo no se envía (y lo dice)', not ev("(S.rp||[]).length") and 'fallo o una sugerencia' in ev("document.getElementById('tt').innerText"))
+        ev("document.querySelector('[data-a=rpk][data-v=f]').click()")
+        run()
+        check('un fallo deja elegir dónde (8 sitios)', ev("document.querySelectorAll('.rpt button').length") == 8)
         ev("A.rpt(1)")
-        check('elegir un tipo lo marca', ev("document.querySelector('.rpt [data-i=\"1\"]').getAttribute('aria-checked')") == 'true')
+        check('elegir un sitio lo marca', ev("document.querySelector('.rpt [data-i=\"1\"]').getAttribute('aria-checked')") == 'true')
         ev("document.getElementById('rpx').value='corto'")
         ev("A.rps()")
         run(200)
-        check('con un texto muy corto no se envía (y lo dice)', ev("window.__href") is None and 'al menos 10' in ev("document.getElementById('tt').innerText"))
+        check('con un texto muy corto no se envía (y lo dice)', not ev("(S.rp||[]).length") and 'al menos 10' in ev("document.getElementById('tt').innerText"))
         txt = 'Al guardar el entreno se perdió la serie 3 <img src=x onerror="window.__x=1">'
         ev("document.getElementById('rpx').value=%s;document.getElementById('rpd').checked=false" % json.dumps(txt))
         ev("A.rps()")
-        run(200)
-        href = ev("window.__href") or ''
-        from urllib.parse import urlparse, parse_qs
-        q = parse_qs(urlparse(href).query)
-        check('abre una incidencia nueva en GitHub', href.startswith('https://github.com/victorroma01/Fitflow/issues/new?'), href[:80])
-        check('con el tipo en el título y el texto en el cuerpo', q.get('title', [''])[0].startswith('[Se han perdido datos]') and txt in q.get('body', [''])[0])
-        check('sin datos técnicos si se desmarca la casilla', 'Navegador' not in q.get('body', [''])[0])
-        ev("document.getElementById('rpd').checked=true;A.rps()")
-        run(200)
-        q = parse_qs(urlparse(ev("window.__href") or '').query)
-        check('con datos técnicos si se deja marcada', 'Navegador' in q.get('body', [''])[0] and len(ev("window.__href")) < 8000)
-        check('el texto no se ejecuta en ningún momento', not ev("window.__x"))
-        ev("A.cl()")
+        run(600)
+        it = ev("S.rp&&S.rp[0]") or {}
+        check('sin conexión, el aviso se guarda para enviarlo al volver la red (y lo dice)', it.get('t') == txt and it.get('s') == 0 and it.get('k') == 'f' and it.get('a') == 'Se han perdido datos' and 'Sin conexión' in ev("document.getElementById('tt').innerText"), str(it))
+        check('con su id: el de la cuenta y el momento', it.get('id', '').startswith('prueba-'))
+        check('sin datos técnicos si se desmarca la casilla', 'dx' not in it)
+        check('después enseña la lista, con el aviso «Sin enviar»', 'Sin enviar' in ev("document.querySelector('#rpl').innerText") and txt in ev("document.querySelector('#rpl').innerText"))
+        check('el texto no se ejecuta en ningún momento', not ev("window.__x") and not ev("!!document.querySelector('#rpl img')"))
+        ev("A.rpo();document.querySelector('[data-a=rpk][data-v=s]').click()")
+        run()
+        check('una sugerencia no pide el sitio y no adjunta datos técnicos por defecto', not ev("!!document.querySelector('.rpt')") and not ev("document.getElementById('rpd').checked"))
+        ev("document.getElementById('rpx').value='Poder exportar el análisis también en Excel';document.getElementById('rpd').checked=true;A.rps()")
+        run(600)
+        check('con la casilla marcada, lleva los datos técnicos', 'Navegador' in (ev("S.rp[0].dx") or '') and ev("S.rp.length") == 2)
+        ev("A.cl();S.tab=3;R()")
+        run()
+        check('Perfil dice que hay avisos sin enviar', 'sin enviar' in ev("document.querySelector('[data-a=rpl]').innerText"))
 
         check('la CSP no ha bloqueado nada de la app', not ev('window.__csp||[]'), str(ev('window.__csp||[]'))[:200])
         check('sin errores de JS', not errs, '; '.join(errs[:3]))

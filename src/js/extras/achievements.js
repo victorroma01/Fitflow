@@ -28,7 +28,7 @@ function achStats() {
       const m = S.meals[k];
       return m && typeof m == 'object' && Object.values(m).some(a => Array.isArray(a) && a.length);
     }).length,
-    ms: measureList().length, wl: Array.isArray(S.wl) ? S.wl.length : 0, bk: S.bkd ? 1 : 0 };
+    ms: measureList().length, wl: Array.isArray(S.wl) ? S.wl.length : 0, bk: S.bkd || S.cb ? 1 : 0 };
 }
 export const ACHIEVEMENTS = [
   ['e1', 'Primer paso', 'Registra tu primer entreno', 'n', 1], ['e2', 'Constancia', '10 entrenos registrados', 'n', 10], ['e3', 'En forma', '50 entrenos registrados', 'n', 50], ['e4', 'Centenario', '100 entrenos registrados', 'n', 100], ['e5', 'Leyenda', '250 entrenos registrados', 'n', 250],

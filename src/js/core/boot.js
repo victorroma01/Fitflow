@@ -15,6 +15,7 @@ import { restorePlanBackup } from '../routines/builder.js';
 import { pendingResume, setPendingResume, WIP_KEY } from '../workout/resume.js';
 import { keepAwake } from '../workout/wake.js';
 import { restEnded } from '../workout/session.js';
+import { checkWeighIn } from '../dashboard/reminder.js';
 import { applyAccent } from '../profile/appearance.js';
 import { beep, buzz } from '../profile/feedback.js';
 import { isStandalone } from '../system/files.js';
@@ -151,6 +152,8 @@ if (signedIn()) {
   setTimeout(() => takeSnapshot().catch(e => logError('copia automática', e)), 4000);
   if (whatsNewDue())
     setTimeout(showWhatsNew, 900);
+  /* «Día de pesarse» (F-25), tras las novedades: si estas salen, el aviso espera a la próxima vez que se vuelva a la app */
+  setTimeout(checkWeighIn, 1600);
   startSync();
 }
 /* pide al navegador que no borre los datos de la app instalada cuando falte espacio (sin efecto si no lo admite) */

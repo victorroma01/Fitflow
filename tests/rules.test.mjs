@@ -138,7 +138,72 @@ test('cuentas sin correo técnico y peticiones sin sesión: nada', async () => {
   assert.ok(denied(await get('adminInbox')));
 });
 
-test('informes (llegan en M5): aún denegados', async () => {
-  assert.ok(denied(await set('reports/x1', { t: 'fallo' }, ana.t)));
-  assert.ok(denied(await get('reports/x1', adm.t)));
+test('copia de seguridad en la nube: meta y trozos c0…c23, solo de su dueño y con su forma', async () => {
+  const u = 'users/' + ana.uid + '/backup/';
+  const meta = { at: Date.now(), v: '1.0.0', n: 2, z: true, sz: 10, h: 'abc123', lg: 4, md: 9 };
+  assert.ok(allowed(await commit(ana.t, [
+    { update: { name: ROOT + '/' + u + 'c0', fields: fields({ j: 'H4sI', i: 0 }) } },
+    { update: { name: ROOT + '/' + u + 'c1', fields: fields({ j: 'AAAA', i: 1 }) } },
+    { update: { name: ROOT + '/' + u + 'meta', fields: fields(meta) } }
+  ])), 'la copia entera en una escritura');
+  assert.ok(allowed(await get(u + 'meta', ana.t)));
+  assert.ok(allowed(await get(u + 'c1', ana.t)));
+  assert.ok(denied(await get(u + 'meta', bea.t)), 'otra cuenta no la lee');
+  assert.ok(denied(await get(u + 'meta', adm.t)), 'el admin tampoco');
+  assert.ok(denied(await set(u + 'c0', { j: 'x', i: 0 }, bea.t)), 'otra cuenta no la escribe');
+  assert.ok(denied(await set(u + 'meta', Object.assign({}, meta, { n: 25 }), ana.t)), 'más de 24 trozos');
+  assert.ok(denied(await set(u + 'meta', Object.assign({}, meta, { email: 'a@b.c' }), ana.t)), 'campo de más');
+  assert.ok(denied(await set(u + 'c24', { j: 'x', i: 24 }, ana.t)), 'el trozo 24 no existe');
+  assert.ok(denied(await set(u + 'otra', { j: 'x', i: 0 }, ana.t)), 'otro documento');
+  assert.ok(denied(await set(u + 'c2', { j: 'x'.repeat(300001), i: 2 }, ana.t)), 'trozo de más de 300.000');
+  assert.ok(allowed(await del(u + 'c1', ana.t)), 'su dueño borra lo que sobra');
+});
+
+const report = (who, user, extra = {}) => {
+  const ca = Date.now();
+  return [who.uid + '-' + ca, Object.assign({ uid: who.uid, u: user, k: 'f', a: 'Algo se ve mal', t: 'Al abrir Nutrición no sale nada', dx: 'Versión 1.0.0', v: '1.0.0', ca, st: 'p', m: ca }, extra)];
+};
+test('fallos y sugerencias: cada cuenta crea los suyos, pendientes y con su usuario', async () => {
+  const [id, d] = report(ana, 'Ana_1');
+  assert.ok(allowed(await set('reports/' + id, d, ana.t, { pre: { exists: false } })));
+  const [id2, d2] = report(ana, 'Ana_1', { k: 's', a: '', dx: '' });
+  assert.ok(allowed(await set('reports/' + id2, d2, ana.t, { pre: { exists: false } })), 'una sugerencia');
+  const [id3, d3] = report(ana, 'bea');
+  assert.ok(denied(await set('reports/' + id3, d3, ana.t)), 'con el usuario de otra cuenta');
+  const [, d4] = report(ana, 'Ana_1');
+  assert.ok(denied(await set('reports/' + bea.uid + '-' + d4.ca, d4, ana.t)), 'con el id de otra cuenta');
+  const [id5, d5] = report(ana, 'Ana_1', { st: 'a' });
+  assert.ok(denied(await set('reports/' + id5, d5, ana.t)), 'ya arreglado');
+  const [id6, d6] = report(ana, 'Ana_1', { rp: 'Solucionado' });
+  assert.ok(denied(await set('reports/' + id6, d6, ana.t)), 'con respuesta');
+  const [id7, d7] = report(ana, 'Ana_1', { k: 'x' });
+  assert.ok(denied(await set('reports/' + id7, d7, ana.t)), 'tipo desconocido');
+  const [id8, d8] = report(ana, 'Ana_1', { t: 'corto' });
+  assert.ok(denied(await set('reports/' + id8, d8, ana.t)), 'texto de menos de 10');
+  const [id9, d9] = report(ana, 'Ana_1', { t: 'x'.repeat(1501) });
+  assert.ok(denied(await set('reports/' + id9, d9, ana.t)), 'texto de más de 1500');
+  const [id10, d10] = report(ana, 'Ana_1', { tel: '600' });
+  assert.ok(denied(await set('reports/' + id10, d10, ana.t)), 'campo de más');
+  const [id11, d11] = report(ext, 'alguien');
+  assert.ok(denied(await set('reports/' + id11, d11, ext.t)), 'cuenta sin correo técnico');
+});
+
+test('fallos y sugerencias: cada uno lee los suyos; el admin, todos, y solo cambia el estado y la respuesta', async () => {
+  const [id, d] = report(bea, 'bea');
+  assert.ok(allowed(await set('reports/' + id, d, bea.t, { pre: { exists: false } })));
+  assert.ok(allowed(await get('reports/' + id, bea.t)), 'quien lo envió');
+  assert.ok(denied(await get('reports/' + id, ana.t)), 'otra cuenta');
+  assert.equal((await get('reports/' + bea.uid + '-1', bea.t)).status, 404, 'uno que no existe: no encontrado, no denegado (la app pregunta por los suyos)');
+  assert.ok(denied(await get('reports', bea.t)), 'un usuario no lista los de todos');
+  assert.ok(allowed(await get('reports', adm.t)), 'el admin los lista');
+  assert.ok(allowed(await get('reports/' + id, adm.t)));
+  assert.ok(denied(await set('reports/' + id, { st: 'a', m: Date.now() }, bea.t, { mask: ['st', 'm'] })), 'el usuario no cambia el estado');
+  assert.ok(denied(await set('reports/' + id, { t: 'Ya no pasa nada raro', m: Date.now() }, bea.t, { mask: ['t', 'm'] })), 'ni el texto');
+  assert.ok(allowed(await set('reports/' + id, { st: 'v', sa: Date.now(), m: Date.now() }, adm.t, { mask: ['st', 'sa', 'm'], pre: { exists: true } })), 'visto');
+  assert.ok(allowed(await set('reports/' + id, { st: 'a', rp: 'Arreglado en la 1.0.1', ra: Date.now(), m: Date.now() }, adm.t, { mask: ['st', 'rp', 'ra', 'm'] })), 'arreglado y contestado');
+  assert.ok(denied(await set('reports/' + id, { st: 'x', m: Date.now() }, adm.t, { mask: ['st', 'm'] })), 'estado desconocido');
+  assert.ok(denied(await set('reports/' + id, { t: 'Otra cosa distinta', m: Date.now() }, adm.t, { mask: ['t', 'm'] })), 'el admin no cambia el texto');
+  assert.ok(denied(await set('reports/' + id, { rp: 'x'.repeat(1501), m: Date.now() }, adm.t, { mask: ['rp', 'm'] })), 'respuesta de más de 1500');
+  assert.ok(denied(await del('reports/' + id, bea.t)), 'el usuario no lo borra');
+  assert.ok(allowed(await del('reports/' + id, adm.t)), 'el admin, sí');
 });

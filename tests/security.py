@@ -1,5 +1,5 @@
 """Prueba de inyección de HTML: rellena nombres, notas, campos numéricos y la foto de perfil con código HTML malicioso y
-recorre las 39 pantallas de tests/shots.py. Falla si alguna pantalla llega a ejecutar ese código (un dato mal escapado).
+recorre las 43 pantallas de tests/shots.py. Falla si alguna pantalla llega a ejecutar ese código (un dato mal escapado).
 Ese recorrido va sin la CSP (bypass_csp), para probar el escapado por sí solo; luego se prueba la CSP, la segunda barrera:
 con ella, ni un atributo on…= ni un <script> añadido se ejecutan, y no salen imágenes ni conexiones a otros sitios.
 Además comprueba que una copia de seguridad o unos datos guardados con una foto de perfil manipulada no la cargan.

@@ -2,7 +2,7 @@
    Deja el estado S válido: tipos, rangos y valores conocidos, sin datos personales y con un id en cada entreno. Lo usan el
    arranque (core/boot) y la sincronización, tras juntar lo que llega de Firebase (cloud/sync): unos datos dañados o
    manipulados nunca llegan a las pantallas. Se puede llamar las veces que haga falta (lo ya válido no cambia).
-   Define: repairShape, repairPrograms, repairLevels, repairTraining, repairSettings, repairRecords, logIds, repairState
+   Define: repairShape, repairPrograms, repairLevels, repairTraining, repairSettings, repairRecords, repairFollowUp, logIds, repairState
 */
 import { logError } from './errors.js';
 import { parseProgram, PROGRAMS } from '../data/library.js';
@@ -14,6 +14,8 @@ import { cleanProfile } from '../system/backup.js';
 import { cleanGoals } from '../nutrition/diet.js';
 import { hashOf } from '../cloud/merge.js';
 import { syncSel } from '../workout/week.js';
+import { WEIGH_UNITS } from '../dashboard/reminder.js';
+import { REPORT_MAX } from '../system/report.js';
 /* forma básica: plan, pestaña, semana, listas y objetos; objetivos de nutrición válidos y perfil sin datos personales */
 const repairShape = () => {
   try {
@@ -205,6 +207,25 @@ const repairRecords = () => {
     logError('reparar medidas y registros', e);
   }
 };
+/* recordatorio de pesaje (dashboard/reminder), última copia en la nube (cloud/backup) y avisos enviados con valores válidos */
+const repairFollowUp = () => {
+  try {
+    const day = v => v == null || typeof v == 'string' && /^\d{4}-\d\d-\d\d$/.test(v);
+    const r = S.wr;
+    if (r != null && !(r && typeof r == 'object' && Object.prototype.hasOwnProperty.call(WEIGH_UNITS, r.u) && Number.isInteger(r.n) && r.n >= 1 && r.n <= WEIGH_UNITS[r.u][2] && +r.t > 0 && day(r.sh) && day(r.sn) && (r.c == null || typeof r.c == 'string' && /^[a-z0-9]{1,24}$/.test(r.c))))
+      delete S.wr;
+    const c = S.cb;
+    if (c != null && !(c && typeof c == 'object' && +c.at > 0 && Number.isInteger(c.lg) && Number.isInteger(c.md)))
+      delete S.cb;
+    /* fallos y sugerencias enviados (system/report): forma, tipos y tamaños como los admiten las reglas */
+    const txt = (v, a, b) => typeof v == 'string' && v.length >= a && v.length <= b;
+    if (S.rp != null)
+      S.rp = (Array.isArray(S.rp) ? S.rp : []).filter(x => x && typeof x == 'object' && typeof x.id == 'string' && /^[A-Za-z0-9]{1,128}-\d{13}$/.test(x.id) && (x.k == 'f' || x.k == 's') && txt(x.a, 0, 60) && txt(x.t, 10, REPORT_MAX) && +x.ca > 0 && (x.s === 0 || x.s === 1) && (x.st == null || ['p', 'v', 'a'].includes(x.st)) && (x.rp == null || txt(x.rp, 0, REPORT_MAX)) && (x.dx == null || txt(x.dx, 0, REPORT_MAX))).slice(0, 30);
+  }
+  catch (e) {
+    logError('reparar recordatorio y copia', e);
+  }
+};
 /** Un id para cada entreno que no lo tenga, sacado de su contenido: dos dispositivos con el mismo entreno le dan el mismo id
   (así la sincronización los reconoce como uno solo: cloud/merge). */
 export const logIds = () => {
@@ -228,5 +249,6 @@ export const repairState = () => {
   repairTraining();
   repairSettings();
   repairRecords();
+  repairFollowUp();
   logIds();
 };

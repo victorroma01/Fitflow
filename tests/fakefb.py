@@ -3,7 +3,8 @@
 Se engancha a un contexto de Playwright con `install(contexto)`: las peticiones a *.googleapis.com las contesta este objeto,
 sin red. Dos contextos con el mismo FakeFirebase son dos móviles con la misma nube.
 Las reglas de verdad (firestore.rules) se prueban aparte con el emulador (tests/rules.test.mjs); aquí solo se aplica lo
-esencial: cada cuenta lo suyo, el admin además los perfiles y adminInbox. `set_offline(contexto, True)` corta la red de un
+esencial: cada cuenta lo suyo, el admin además los perfiles y adminInbox, y los avisos (reports): cada cuenta crea los suyos
+(id con su uid) y los lee; el admin los lista, los cambia y los borra. `set_offline(contexto, True)` corta la red de un
 móvil (como sin cobertura).
 """
 import json, base64, secrets, time, re
@@ -170,6 +171,13 @@ class FakeFirebase:
             return admin and not write
         if parts[0] == 'adminInbox':
             return admin
+        if parts[0] == 'reports' and len(parts) == 2:
+            if admin:
+                return True
+            d = self.docs.get(path)
+            if not write:
+                return d is None or _dec(d['fields'].get('uid', {'nullValue': None})) == who['user_id']
+            return d is None and parts[1].startswith(who['user_id'] + '-')
         return False
 
     def _firestore(self, req, path, q, b):
@@ -212,7 +220,7 @@ class FakeFirebase:
             return 200, {'writeResults': res, 'commitTime': self._stamp()}
         p = rest.lstrip('/')
         if req.method == 'GET' and p.count('/') % 2 == 0:     # colección
-            if not self._can(who, p + '/x' if p != 'users' else 'users', False):
+            if p == 'reports' and who.get('role') != 'admin' or not self._can(who, p + '/x' if p != 'users' else 'users', False):
                 raise _Fail(403, 'Missing or insufficient permissions.', 'PERMISSION_DENIED')
             docs = [self._doc(k) for k in sorted(self.docs) if k.rsplit('/', 1)[0] == p]
             return 200, ({'documents': docs} if docs else {})

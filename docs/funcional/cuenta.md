@@ -44,6 +44,9 @@ cuenta: al volver a entrar, en este móvil o en otro, vuelven.
 
 El administrador ve en Perfil la fila **Administración**:
 
+- **Fallos y sugerencias**: los de todos los usuarios, lo más nuevo primero, con cuántos hay pendientes y filtros por estado
+  (pendientes, vistas, arregladas o todas). Al abrir uno pendiente pasa a visto; se le cambia el estado y se contesta: la respuesta
+  la ve quien lo envió en su Perfil ([Perfil y Ajustes](perfil-y-ajustes.md#fallos-y-sugerencias)).
 - **Contraseñas temporales**: las que ha creado para quien olvidó la suya, durante 24 horas. Cada una sale oculta; **Ver** la enseña,
   **Copiar** la copia y **Entregada** la borra.
 - **Cuentas**: el usuario, el sexo y la fecha de alta de cada cuenta. Nunca sus entrenos, comidas, medidas ni foto.

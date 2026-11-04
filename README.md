@@ -37,7 +37,7 @@ La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V
 | M2 · Cuentas y Firebase | Usuario y contraseña, roles, datos en la nube y seguridad. Hecho en la rama. |
 | M3 · Programas | Técnicas de intensidad, programas nuevos y por género, rotación, semana de descarga y consejo y ejecución de cada ejercicio. Hecho en la rama. |
 | M4 · Pantalla de entrenamiento | Iconos, desplegables cortos, peso sugerido, ventana de cada técnica, superseries encadenadas, barra inferior y reloj del WOD. Hecho en la rama. |
-| M5 · Perfil y seguimiento | Aviso de pesaje, análisis mensual en PDF, informes con respuesta y copia en la nube. |
+| M5 · Perfil y seguimiento | Recordatorio de pesaje, análisis mensual en PDF, fallos y sugerencias con respuesta, nota de actualización y copia de seguridad única en la nube. Hecho en la rama. |
 | M6 · Experiencia y plataformas | Personalización, tour de la primera vez, gestos y pruebas en Android e iPhone. |
 | M7 · Imágenes | Pospuesto. |
 | M8 · Cierre | Revisión final, informe de issues y publicación. |

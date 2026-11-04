@@ -28,6 +28,7 @@ import { netError } from './net.js';
 import { idToken } from './auth.js';
 import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.js';
 import { hashMap, hashOf, KINDS, merge3, sameHashes } from './merge.js';
+import { afterSync } from './hooks.js';
 /** Preferencias de la cuenta (van en el perfil, users/{uid}): tema, color, estilo Cristal, unidades, sonido y avisos. */
 const PREF_KEYS = ['theme', 'acc', 'gm', 'gl', 'gk', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'notif'];
 /** Claves de S que no van en data/core: lo que es de este dispositivo (pestaña, día elegido, rango de la gráfica, día del plan
@@ -406,6 +407,8 @@ const syncRound = async () => {
         fails = 0;
         saveMeta();
         setStatus('ok');
+        if (!quiet)
+          afterSync.forEach(f => f());
         return;
       }
     }

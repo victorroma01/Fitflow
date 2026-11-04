@@ -1,4 +1,4 @@
-"""Capturas de 39 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
+"""Capturas de 43 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
 
   python3 tests/shots.py snap ARCHIVO.html carpeta a,b,c,d,e,f     (genera carpeta/<cfg>_<pantalla>.png)
   python3 tests/shots.py cmp carpeta_referencia carpeta_candidata   (código de salida 1 si hay diferencias)
@@ -52,6 +52,10 @@ SCR={
  'ajustes':"S.tab=3;R();A.zaj&&A.zaj()",
  'ajustes_tema':"S.tab=3;R();A.zaj&&(A.zaj(),A.ajp(0,{dataset:{v:'tema'}}))",
  'informe':"S.tab=3;R();A.rpo&&(A.zaj(),A.rpo())",
+ 'peso':"S.wr={n:2,u:'w',t:Date.now()};S.tab=2;R();A.zwv&&A.zwv()",
+ 'analisis':"S.tab=3;R();A.ana&&A.ana()",
+ 'avisos':"S.rp=[{id:'prueba-1793782800000',k:'f',a:'Algo se ve mal',t:'La gráfica de peso no se ve bien',ca:1793782800000,s:1,st:'v',rp:'Arreglado en la próxima versión',ra:1793869200000}];S.tab=3;R();A.rpl&&A.rpl()",
+ 'nota':"S.tab=3;R();A.zaj&&(A.zaj(),A.ajp(0,{dataset:{v:'nota'}}))",
 }
 CFG={ # nombre: (w,h,scheme,gm,gl)
  'a':(390,844,'dark',3,1),'b':(390,844,'light',3,1),'c':(390,844,'dark',0,0),'d':(390,844,'dark',1,1),'e':(320,568,'dark',3,1),'f':(430,932,'light',2,1),

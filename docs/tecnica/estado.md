@@ -80,6 +80,8 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `ms` | `[{ d, v: { ci, br, pe… } }]` | Medidas corporales (cm). |
 | `ach` | `{ id: valor }` | Logros conseguidos (ver `ACHIEVEMENTS`). |
 | `stz` | `{ ejercicio: fecha (ms) }` | Avisos de estancamiento descartados. |
+| `wr` | `{ n, u: 'd' \| 'w' \| 'm', t, sh?, sn?, c? }` | Recordatorio de pesaje (`dashboard/reminder`): cada `n` días, semanas o meses, desde el último pesaje o desde `t` (cuándo se activó, ms) si es posterior; `sh` último día en que se avisó, `sn` pospuesto hasta ese día, `c` id del evento de calendario. Sin él, no hay recordatorio. |
+| `rp` | `[{ id, k, a, t, ca, s, st?, rp?, ra?, sn?, dx? }]` | Fallos y sugerencias enviados desde la cuenta (`system/report`), los más nuevos primero (30 como mucho): id `uid-ms`, tipo (`f` / `s`), dónde, texto, cuándo, `s` 1 si ya llegó a la nube, estado, respuesta y cuándo, `sn` 1 si la respuesta ya se vio y `dx` los datos técnicos hasta enviarlo. |
 
 ### Programas y ejercicios propios
 
@@ -125,10 +127,13 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | Clave | Qué es |
 |---|---|
 | `bkd` | Fecha (ms) de la última copia de seguridad guardada en archivo. |
+| `cb` | `{ at, lg, md }`: la última copia en la nube (cuándo, entrenos y días de comidas), para todos los móviles de la cuenta (`cloud/backup`). |
 | `nbk` | 1 si se descartó el aviso «¿Ya usabas StrataFit?». |
 
 
 ## Copia de seguridad
 
-Un archivo JSON con `{ _sf: { app, fmt, ver, at, wip }, ...S }`: el estado completo y el entreno en curso (`system/backup`). Las
-copias automáticas del móvil usan el mismo formato. Las fotos de progreso de copias antiguas (`_sf.ph`) se ignoran.
+Un archivo JSON con `{ _sf: { app, fmt, ver, at, wip }, ...S }`: el estado completo y el entreno en curso (`system/backup`), que se
+guarda siempre como `StrataFit-copia.json`. La copia en la nube (`cloud/backup`) y las copias automáticas del móvil usan el mismo
+formato; la de la nube va comprimida (gzip, en base64) y partida en trozos ([Servidor: Firebase](backend.md)). Las fotos de progreso
+de copias antiguas (`_sf.ph`) se ignoran.

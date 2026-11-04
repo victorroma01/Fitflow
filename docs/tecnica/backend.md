@@ -17,8 +17,10 @@ gimnasio sin cobertura (*offline-first*).
 | Roles | Admin y Usuario, con *custom claims* (`role: "admin"`) en el token de la sesión: la app no puede cambiarlos. Admin: `VictorAdmin_`. |
 | Contraseña olvidada | La restablece el admin con un flujo de GitHub Actions, solo para el usuario que lo necesita (más adelante, el propio usuario). |
 | Datos personales | Ninguno: ni nombre, ni correo, ni teléfono, ni fotos de progreso. La foto de perfil se queda, con consentimiento, y solo la ve su dueño. |
-| Aviso de pesaje | Dentro de la app, al abrirla (M5). Una notificación con la app cerrada necesitaría Cloud Functions (plan Blaze). |
-| Copia de seguridad | En la nube (M5): una sola por usuario, que se sobrescribe. |
+| Aviso de pesaje | Dentro de la app, al abrirla o volver a ella (M5: `dashboard/reminder`). Una notificación con la app cerrada desde el servidor necesitaría Cloud Functions (plan Blaze); en su lugar, la app crea un evento de calendario que se repite con su aviso (archivo .ics). |
+| Copia de seguridad | En la nube (M5: `cloud/backup`): una sola por usuario, que se sustituye entera; semanal y a mano. El archivo del móvil, siempre con el mismo nombre. |
+| Fallos y sugerencias | En Firestore (M5: `system/report`, `account/reports`): cada usuario crea los suyos y lee solo los suyos; el admin los lee todos y solo cambia el estado y la respuesta. Sin consultas ni índices: el usuario lee los suyos por id (los guarda en `S.rp`) y el admin lista la colección. |
+| Análisis mensual | Se calcula y se hace el PDF en el móvil (M5: `profile/analysis`, `system/pdf`), sin servidor ni bibliotecas. |
 | Datos de la serie de prueba (1.24 y anteriores) | No se migran: al entrar por primera vez se borran del móvil. |
 
 ## Módulos
@@ -35,6 +37,9 @@ gimnasio sin cobertura (*offline-first*).
 | `account/login` | Inicio de sesión, registro, contraseña temporal y volver a entrar si la sesión caduca. |
 | `account/account` | Ajustes → Cuenta, Cambiar contraseña y «Cerrar sesión». |
 | `account/admin` | Perfil → Administración. |
+| `account/reports` | Administración → Fallos y sugerencias: estado y respuesta. |
+| `cloud/backup` | Copia de seguridad en la nube: escribir, leer, la semanal y borrarla. |
+| `cloud/hooks` | Tareas tras cada sincronización correcta (`afterSync`): la copia semanal y los avisos pendientes. |
 | `core/repair` | Deja `S` válido al arrancar y tras juntar lo que llega de la nube. |
 
 ## Datos en Firestore
@@ -53,7 +58,9 @@ en el campo `j` (Firestore no admite listas dentro de listas, y el historial las
 | `users/{uid}/meals/{año-mes}` | Comidas de ese mes | Su dueño | Su dueño |
 | `users/{uid}/private/avatar` | Foto de perfil pequeña (JPEG de 160 × 160, unos 10 KB) y cuándo se dio el consentimiento | Su dueño | Su dueño |
 | `adminInbox/{id}` | Contraseñas temporales (`u`, `p`, `exp`): caducan a las 24 h | El admin | GitHub Actions; el admin las borra al entregarlas |
-| `users/{uid}/backup/…`, `reports/{id}` | Copia de seguridad e informes: llegan en M5 | — | — |
+| `users/{uid}/backup/meta` | La copia de seguridad: `at` cuándo, `v` versión, `n` trozos (1-24), `z` si va comprimida (gzip en base64), `sz` tamaño, `h` huella, `lg` entrenos y `md` días de comidas que tiene | Su dueño | Su dueño |
+| `users/{uid}/backup/c0` … `c23` | Los trozos de la copia (`j`, de hasta 300.000 caracteres, e `i`, su orden): se escriben con la meta en una sola operación | Su dueño | Su dueño |
+| `reports/{uid}-{ms}` | Un fallo o sugerencia: `uid`, `u` usuario, `k` tipo (`f` fallo, `s` sugerencia), `a` dónde, `t` texto, `dx` datos técnicos, `v` versión, `ca` cuándo, `st` estado (`p` pendiente, `v` vista, `a` arreglada), `rp` respuesta, `ra` cuándo se contestó, `sa` cuándo cambió el estado, `m` último cambio | Quien lo envió y el admin | Quien lo envía lo crea (pendiente, sin respuesta); el admin cambia `st`, `rp`, `ra`, `sa` y `m`, y lo borra |
 
 Fuera de Firebase, en el código de la app: el catálogo de ejercicios con sus tips y explicaciones (T-05) y la nota de cada versión,
 que sale del `CHANGELOG.md` (T-20). No se sincronizan el entreno en curso, el registro de errores ni las copias automáticas del
@@ -88,8 +95,10 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
 ## Seguridad
 
 - **Reglas** (`firestore.rules`): cada cuenta lee y escribe solo lo suyo, con la forma y el tamaño que usa la app (sin campos de más,
-  sin documentos con otros nombres, 1 MB por parte y 150 KB la foto); el admin lee además los perfiles y `adminInbox`, nunca los
-  datos de nadie; solo valen cuentas con correo técnico; lo demás está denegado.
+  sin documentos con otros nombres, 1 MB por parte, 150 KB la foto, 24 trozos de 300.000 caracteres la copia); el admin lee además
+  los perfiles, `adminInbox` y los fallos y sugerencias, nunca los datos ni la copia de nadie; un aviso solo lo crea su dueño (id con
+  su uid, su usuario, pendiente y sin respuesta) y el admin solo le cambia el estado y la respuesta; solo valen cuentas con correo
+  técnico; lo demás está denegado.
 - **Pruebas**: `tests/rules.test.mjs` las comprueba con el emulador en cada cambio (CI, «Reglas y nube»), junto con la app entera
   contra el emulador (`tests/cloud.py`). Se despliegan desde GitHub Actions al fusionar en `main` («Desplegar reglas»).
 - La clave de administrador (cuenta de servicio) solo existe como secreto de GitHub, `FIREBASE_SERVICE_ACCOUNT`: nunca en el código,

@@ -14,7 +14,9 @@ export const isStandalone = () => {
     return false;
   }
 };
-export const downloadFile = async (name, data) => {
+/** Guarda un archivo en el móvil: en la app instalada, con «Compartir» (en el iPhone, «Guardar en Archivos»); si no, como
+    descarga. `type`: su tipo (JSON si no se dice). Devuelve 'saved', 'declined' o 'fail'. */
+export const downloadFile = async (name, data, type = 'application/json') => {
   let d = null;
   try {
     d = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
@@ -33,7 +35,7 @@ export const downloadFile = async (name, data) => {
   }
   if (isStandalone() && navigator.canShare && typeof File != 'undefined') {
     try {
-      const f = new File([data], name, { type: 'application/json' });
+      const f = new File([data], name, { type });
       if (navigator.canShare({ files: [f] })) {
         await navigator.share({ files: [f] });
         return 'saved';
@@ -45,7 +47,7 @@ export const downloadFile = async (name, data) => {
     }
   }
   try {
-    const b = new Blob([data], { type: 'application/json' });
+    const b = new Blob([data], { type });
     const u = URL.createObjectURL(b);
     const a = document.createElement('a');
     a.href = u;

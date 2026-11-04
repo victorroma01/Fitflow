@@ -114,10 +114,11 @@ def main(app):
                 # comprimido: líneas muy largas (el catálogo de ejercicios es texto, una línea por ejercicio: no cuenta)
                 check('el código va aparte y comprimido', bool(code) and ev("!!document.querySelector('script[type=module][src^=\"js/\"]')") and
                       all(len(s) < 2000 or len(s) / (s.count('\n') + 1) > 1000 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not f.startswith('js/exinfo-'))))
-                # lo poco usado (WOD, CSV, escáner y el catálogo de consejos y ejecución) va aparte y no se descarga al arrancar
-                lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo)-', f)]
+                # lo poco usado (WOD, CSV, escáner, el catálogo de consejos y ejecución, el análisis mensual y el PDF) va aparte y no se
+                # descarga al arrancar
+                lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo|analysis|pdf)-', f)]
                 loaded = ev("performance.getEntriesByType('resource').map(e=>e.name.split('/').pop())")
-                check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 4 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
+                check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 6 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
                 assets = ev("[...new Set([...document.documentElement.outerHTML.matchAll(/(?:src=\"|url\\()((?:img)\\/[^\"')]+)/g)].map(m=>m[1]))]")
                 # sin conexión
                 if SW:
@@ -256,7 +257,7 @@ def main(app):
                 p2.click('[data-a=bkf]')
                 p2.wait_for_timeout(600)
                 sh = p2.evaluate("window.__sh")
-                check('instalada: comparte la copia como archivo JSON', bool(sh) and sh[0].startswith('stratafit-copia-') and sh[1] and sh[2] == 'application/json', str(sh))
+                check('instalada: comparte la copia como archivo JSON, siempre con el mismo nombre', bool(sh) and sh[0] == 'StrataFit-copia.json' and sh[1] and sh[2] == 'application/json', str(sh))
                 p2.evaluate("window.__abort=1;window.__sh=null")
                 p2.click('[data-a=bkf]')
                 p2.wait_for_timeout(600)

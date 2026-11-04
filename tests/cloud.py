@@ -1,6 +1,7 @@
-"""Prueba de la cuenta y la nube (M2): inicio de sesión y registro, sincronización entre dos móviles (también sin conexión y
-con cambios en los dos), cerrar sesión, espera tras fallos, Administración, contraseña temporal, foto con consentimiento,
-borrar todos los datos y seguridad (sin código inyectado ni choques con la CSP).
+"""Prueba de la cuenta y la nube (M2 y M5): inicio de sesión y registro, sincronización entre dos móviles (también sin conexión y
+con cambios en los dos), cerrar sesión, espera tras fallos, Administración, contraseña temporal, fallos y sugerencias (enviar,
+sin conexión, vista, respuesta y arreglado), copia de seguridad en la nube (a mano, semanal, sin pisar una copia con más datos,
+restaurar), foto con consentimiento, borrar todos los datos y seguridad (sin código inyectado ni choques con la CSP).
 
   python3 tests/cloud.py dist/stratafit.html                          (Firebase de prueba en memoria: tests/fakefb.py)
   SF_CLOUD=emulador python3 tests/cloud.py dist/emu/stratafit.html    (emulador de Firebase, con firestore.rules; en la CI)
@@ -300,7 +301,97 @@ def main(path):
         p4.evaluate("document.querySelector('#dg [data-v=adxx]').click()")
         p4.wait_for_timeout(800)
         check('«Entregada» la borra de Administración', temp not in p4.inner_text('#sh'))
+
+        # ── fallos y sugerencias (M5, F-27): los envía el usuario; el admin los ve, los marca y los contesta ──
+        sync(p2)
+        p2.evaluate("A.rpo();document.querySelector('[data-a=rpk][data-v=f]').click()")
+        p2.evaluate("A.rpt(2);document.getElementById('rpx').value='La gráfica de peso no se ve <b>bien</b> en modo claro';A.rps()")
+        wait(p2, "S.rp && S.rp[0] && S.rp[0].s==1", 15000)
+        rid = p2.evaluate('S.rp[0].id')
+        rdoc = fb.data('reports/' + rid) or {}
+        check('el aviso llega a la nube: pendiente, con el usuario y el id de la cuenta', rdoc.get('st') == 'p' and rdoc.get('u') == 'Ana_1' and rdoc.get('uid') == uid and rid.startswith(uid + '-') and rdoc.get('k') == 'f' and rdoc.get('a') == 'Algo se ve mal', str(rdoc))
+        check('con los datos técnicos (versión y navegador; nada personal)', 'StrataFit 1.0.0' in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@stratafit.app' not in json.dumps(rdoc))
+        fb.set_offline(c2, True)
+        p2.evaluate("A.rpo();document.querySelector('[data-a=rpk][data-v=s]').click()")
+        p2.evaluate("document.getElementById('rpx').value='Poder exportar el análisis también en Excel';A.rps()")
+        wait(p2, "S.rp.length==2", 10000)
+        check('sin conexión, la sugerencia queda en el móvil para enviarla después', p2.evaluate('S.rp[0].s') == 0 and 'sin enviar' in p2.evaluate("(S.tab=3,sheet(),R(),document.querySelector('[data-a=rpl]').innerText)"))
+        fb.set_offline(c2, False)
+        sync(p2)
+        wait(p2, "S.rp[0].s==1", 15000)
+        sid = p2.evaluate('S.rp[0].id')
+        check('al volver la red se envía sola, una vez', (fb.data('reports/' + sid) or {}).get('k') == 's' and sync(p2) == 'ok')
+        p4.evaluate('A.adm()')
+        wait(p4, "document.querySelector('#sh') && !document.querySelector('#sh').innerText.includes('Cargando')", 15000)
+        check('Administración dice cuántos hay pendientes', '2 pendientes' in p4.inner_text('#sh [data-a=adr]'), p4.inner_text('#sh')[:200])
+        p4.evaluate('A.adr()')
+        wait(p4, "!!document.querySelector('#sh .adrf')", 15000)
+        check('el admin ve los dos, con su usuario y el tipo', p4.evaluate("document.querySelectorAll('#sh .adr').length") == 2 and 'Sugerencia de mejora' in p4.inner_text('#sh') and 'Ana_1' in p4.inner_text('#sh'))
+        check('el texto con código se ve como texto', p4.evaluate("!document.querySelector('#sh .rptx b') && document.querySelector('#sh').innerText.includes('<b>bien</b>')"))
+        p4.evaluate("document.querySelector('#sh [data-a=adro][data-v=\"%s\"]').click()" % rid)
+        wait(p4, "!document.querySelector('#sh [data-a=adrs][disabled]')", 15000)
+        check('al abrir uno pendiente pasa a «vista»', (fb.data('reports/' + rid) or {}).get('st') == 'v')
+        p2.evaluate('refreshReports(1)')
+        wait(p2, "S.rp.find(x=>x.id==%s).st=='v'" % json.dumps(rid), 15000)
+        check('y el usuario lo ve como «Vista»', 'Vista' in p2.evaluate("(A.rpl(),document.querySelector('#rpl').innerText)"))
+        p2.evaluate('sheet()')
+        p4.fill('#adrt', 'Gracias: queda arreglado en la próxima versión.')
+        p4.evaluate("document.querySelector('#sh [data-a=adrr]').click()")
+        wait(p4, "!document.querySelector('#sh [data-a=adrr][disabled]') && (document.querySelector('#sh [data-a=adrr]')||{}).textContent=='Cambiar la respuesta'", 15000)
+        p4.evaluate("document.querySelector('#sh [data-a=adrs][data-v=\"%s:a\"]').click()" % rid)
+        wait(p4, "!document.querySelector('#sh [data-a=adrs][disabled]') && document.querySelector('#sh [data-a=adrs][data-v$=\":a\"]').classList.contains('on')", 15000)
+        rdoc = fb.data('reports/' + rid) or {}
+        check('el admin contesta y lo marca como arreglado', rdoc.get('st') == 'a' and rdoc.get('rp', '').startswith('Gracias') and rdoc.get('ra'), str(rdoc))
+        p2.evaluate('refreshReports(1)')
+        wait(p2, "!!S.rp.find(x=>x.id==%s).rp" % json.dumps(rid), 15000)
+        check('el usuario ve en Perfil que tiene una respuesta nueva', '1 respuesta nueva' in p2.evaluate("(S.tab=3,R(),document.querySelector('[data-a=rpl]').innerText)"))
+        p2.evaluate('A.rpl()')
+        txt = p2.inner_text('#rpl')
+        check('y en su lista: «Contestada», con la respuesta', 'Contestada' in txt and 'queda arreglado' in txt, txt[:300])
+        check('al verla deja de ser nueva', p2.evaluate("(sheet(),R(),document.querySelector('[data-a=rpl]').innerText)").find('respuesta nueva') < 0)
         c4.close()
+
+        # ── copia de seguridad en la nube (M5, F-30): una sola, que se sustituye ──
+        # con datos y sin copia, la primera ya se hizo sola tras sincronizar
+        wait(p2, "!!S.cb", 20000)
+        check('la primera copia se hace sola al sincronizar', (fb.data('users/%s/backup/meta' % uid) or {}).get('n', 0) >= 1)
+        cb0 = p2.evaluate('S.cb.at')
+        p2.evaluate('sheet();A.zbk()')
+        p2.evaluate("document.querySelector('#sh [data-a=cbs]').click()")
+        wait(p2, "S.cb.at>%d" % cb0, 20000)
+        meta = fb.data('users/%s/backup/meta' % uid) or {}
+        check('«Guardar ahora» sube la copia: meta y trozos', meta.get('n', 0) >= 1 and fb.data('users/%s/backup/c0' % uid) is not None and meta.get('lg') == p2.evaluate('S.logs.length'), str({k: v for k, v in meta.items() if k != 'h'}))
+        check('comprimida (gzip) y con su huella', meta.get('z') is True and len(meta.get('h', '')) > 4)
+        p2.evaluate("A.cbr()")
+        wait(p2, "!!document.querySelector('#dg [data-v=bkok]')", 15000)
+        check('restaurar la copia de la nube pide confirmar, con su fecha y lo que tiene', 'Restaurar esta copia' in p2.inner_text('#dg') and 'entreno' in p2.inner_text('#dg'))
+        p2.evaluate("document.querySelector('#dg [data-v=zno]').click()")
+        at0 = meta.get('at', 0)
+        p2.evaluate("S.cb.at=Date.now()-8*864e5;saveState()")
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        sync(p2)
+        wait(p2, "S.cb && Date.now()-S.cb.at<6e4", 20000)
+        check('pasada una semana, la copia se hace sola tras sincronizar (y sustituye a la anterior)', (fb.data('users/%s/backup/meta' % uid) or {}).get('at', 0) > at0)
+        big = {'at': {'integerValue': '1790000000000'}, 'v': {'stringValue': '1.0.0'}, 'n': {'integerValue': '1'}, 'z': {'booleanValue': False}, 'sz': {'integerValue': '2'}, 'h': {'stringValue': 'x'}, 'lg': {'integerValue': '40'}, 'md': {'integerValue': '30'}}
+        fb.put('users/%s/backup/meta' % uid, big)
+        p2.evaluate("S.cb.at=Date.now()-8*864e5;saveState()")
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        sync(p2)
+        wait(p2, "!!document.querySelector('#dg h3')", 20000)
+        check('pero no sustituye sola una copia con muchos más entrenos: lo avisa', 'más datos' in p2.inner_text('#dg') and (fb.data('users/%s/backup/meta' % uid) or {}).get('lg') == 40)
+        p2.evaluate("document.querySelector('#dg [data-v=zno]').click()")
+        p2.evaluate("A.zbk();document.querySelector('#sh [data-a=cbs]').click()")
+        wait(p2, "!!document.querySelector('#dg [data-v=cbs2]')", 15000)
+        check('y a mano, pregunta antes de sustituirla', 'Sustituir' in p2.inner_text('#dg'))
+        p2.evaluate("document.querySelector('#dg [data-v=cbs2]').click()")
+        for _ in range(150):
+            if (fb.data('users/%s/backup/meta' % uid) or {}).get('lg') != 40:
+                break
+            p2.wait_for_timeout(100)
+        check('al confirmar, la sustituye', (fb.data('users/%s/backup/meta' % uid) or {}).get('lg') == p2.evaluate('S.logs.length'))
+        p2.evaluate('sheet()')
 
         # ── borrar todos los datos: también en la nube ──
         fb.set_offline(c2, True)
@@ -313,6 +404,7 @@ def main(path):
             p2.evaluate('A.zrs()')
         wait(p2, 'window.__ffok')
         check('con conexión se borran del móvil (también el entreno en curso) y de la nube; el usuario se queda', p2.evaluate("S.logs.length==0 && !localStorage.getItem('ffw')") and fb.data('users/%s/data/index' % uid) is None and fb.data('users/%s/logs/2026' % uid) is None and (fb.data('users/' + uid) or {}).get('u') == 'Ana_1')
+        check('y también la copia de seguridad de la nube', fb.data('users/%s/backup/meta' % uid) is None and fb.data('users/%s/backup/c0' % uid) is None)
         sync(p2)
         check('y la cuenta sigue sincronizando, vacía', p2.evaluate('syncState().st') == 'ok' and fb.data('users/%s/data/index' % uid) is not None)
 

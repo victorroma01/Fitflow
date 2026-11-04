@@ -8,9 +8,11 @@
 | **Plan de entrenamiento** | El programa y el nivel actuales y cuántos entrenos por semana. |
 | **Medidas** | Cintura, brazo, pecho y más, con su gráfica, la última medición y el historial. (Las fotos de progreso de la serie de prueba ya no existen: no se guardan datos personales.) |
 | **Logros** | 25 logros, cada uno con su medalla: la forma y el color dicen el tipo de logro y el metal (bronce, plata, oro, platino o amatista), la dificultad. Las conseguidas salen juntas bajo el recuento; las que faltan, en gris. |
+| **Ver análisis mensual** | El resumen de cada mes, a partir del primer mes de uso, en una pantalla propia y descargable en PDF ([abajo](#análisis-mensual)). |
 | **Exportar datos (CSV)** | Entrenos, series, peso, medidas, comidas y cardio en archivos CSV para una hoja de cálculo. |
 | **Datos biométricos** | Sexo, edad, altura, peso, actividad diaria y objetivo físico. Con ellos se calculan el metabolismo basal, el gasto diario y los objetivos de Nutrición. El sexo (hombre o mujer, se puede cambiar cuando quieras) decide además qué programas salen arriba en Programas. |
-| **Administración** | Solo para el administrador: contraseñas temporales y cuentas ([Cuenta](cuenta.md#administración-solo-el-administrador)). |
+| **Fallos y sugerencias** | Lo que has enviado con «Informar de un fallo», con su estado (pendiente, vista o contestada) y la respuesta ([abajo](#fallos-y-sugerencias)). |
+| **Administración** | Solo para el administrador: fallos y sugerencias de todos, contraseñas temporales y cuentas ([Cuenta](cuenta.md#administración-solo-el-administrador)). |
 | **Ajustes** | Abre la página de Ajustes. |
 
 Abajo, el nombre de la app y su versión.
@@ -25,24 +27,55 @@ Página propia, ordenada por secciones. Cada fila abre su página, con «←» p
 | Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico) y **Color de acento**. |
 | Entreno | **Unidades de carga** (kg o lb) y **Sonido y avisos** (notificaciones, sonidos del descanso y vibración). |
 | Datos | **Copia de seguridad** y **Borrar todos los datos**. |
-| App | **Actualizaciones** (comprueba si hay versión nueva), **Diagnóstico** (versión, dispositivo, espacio y errores registrados) e **Informar de un fallo**. |
+| App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **Diagnóstico** (versión, dispositivo, espacio y errores registrados) e **Informar de un fallo**. |
 | Información | **Privacidad** y **Aviso legal** (copyright, licencia, aviso de salud y origen de los datos de Open Food Facts). |
 
 Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesión)).
 
-**Borrar todos los datos** borra tus programas, entrenos, comidas, medidas y peso del móvil y de tu cuenta (tu usuario se queda).
+**Borrar todos los datos** borra tus programas, entrenos, comidas, medidas y peso del móvil y de tu cuenta, y la copia de seguridad
+de la nube (tu usuario se queda).
 Necesita conexión: sin ella no borra nada, porque la siguiente sincronización los volvería a traer de la cuenta.
 
 ### Copia de seguridad
 
-Guarda todos tus datos en un archivo para recuperarlos en otro móvil o después de borrarlos. Además, cada día se guarda en el móvil
-una copia automática (las 7 últimas), útil para deshacer un error propio. En la V1.0.0 (M5) pasa a la nube: una sola copia por
-usuario que se sobrescribe.
+Tus datos se guardan en el móvil y se sincronizan con tu cuenta. La copia de seguridad es otra cosa: una foto de tus datos en un
+momento, que no cambia aunque luego borres algo, para volver a ella.
+
+- **Copia en la nube**: una sola por cuenta; cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y cuando
+  quieras con **Guardar ahora**. Si la copia de la nube tiene bastantes más entrenos o comidas que el móvil (quizá porque algo se
+  borró por error), la semanal no la sustituye y lo avisa; a mano, pregunta antes. **Restaurar** la baja y la pone en lugar de tus
+  datos actuales, que se guardan antes para poder deshacerlo.
+- **Archivo en el móvil**: siempre con el mismo nombre, `StrataFit-copia.json`, así cada archivo nuevo sustituye al anterior y no se
+  acumulan copias en el teléfono. **Importar archivo** lo restaura.
+- Además, cada día se guarda en el móvil una copia automática (las 7 últimas), útil para deshacer un error propio.
 
 ### Informar de un fallo
 
-Eliges el tipo de fallo (9 tipos, como «No arranca o se cierra», «Un cálculo no cuadra» o «Una idea o sugerencia»), lo explicas con
-tus palabras (hasta 1500 caracteres) y decides si adjuntar los datos técnicos (versión, navegador y últimos errores; nada personal),
-que puedes ver antes de enviar. **Enviar** abre el informe ya escrito como incidencia de GitHub (hace falta una cuenta gratuita);
-**Compartir** lo manda por mensaje o correo. No sale nada sin que lo confirmes. En la V1.0.0 (M5) los informes llegan al admin dentro
-de la app, con su estado y su respuesta.
+Eliges si es un **fallo** o una **sugerencia de mejora**; en un fallo, si quieres, dónde ha sido («No arranca o se cierra», «Un
+cálculo no cuadra»…). Lo explicas con tus palabras (de 10 a 1500 caracteres) y decides si adjuntar los datos técnicos (versión,
+navegador y últimos errores; nada personal), que puedes ver antes de enviar. **Enviar** lo manda al administrador dentro de la app;
+sin conexión se guarda en el móvil y se envía solo al volver la red.
+
+### Fallos y sugerencias
+
+En Perfil, la lista de lo que has enviado, lo más nuevo primero, con su estado: **pendiente** (aún no lo ha visto), **vista** o
+**contestada**, con la respuesta o la solución. La fila de Perfil avisa de las respuestas nuevas. El administrador los ve todos en
+Administración, con su estado (pendiente, vista o arreglada), y los contesta.
+
+## Análisis mensual
+
+Disponible cuando llevas un mes registrando entrenos, comidas o tu peso (antes, la fila dice desde qué día). Se abre en una pantalla
+propia con un mes (a primeros de mes, el anterior, completo; ‹ › para cambiar) y estos apartados:
+
+- **Cifras del mes**: entrenos, tiempo, volumen, récords, cambio de peso y días dentro del objetivo de Nutrición, comparados con el
+  mes anterior.
+- **Entrenamientos**: entrenos de fuerza, WOD y cardio (con los km), series y esfuerzo medio; una gráfica por semanas frente a lo
+  que marca tu plan; los ejercicios en los que has mejorado tu 1RM estimado y los de más volumen.
+- **Peso corporal**: la gráfica del mes, si sube, baja o se mantiene, y si va con tu objetivo (Definir, Mantenimiento, Volumen o
+  Recomposición).
+- **Alimentación**: días con comidas registradas, media de kcal y de proteína frente a tu objetivo, días dentro de él (±10 %) y si
+  se cumple (cumplido, a medias o no cumplido), con las kcal de cada día en colores.
+- **Otros datos**: medidas que cambian, logros conseguidos y agua.
+- **Conclusión**: lo más importante del mes en frases cortas.
+
+**Descargar PDF** guarda el mismo análisis en un PDF (A4) que se hace en el móvil, sin conexión.

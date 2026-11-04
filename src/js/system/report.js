@@ -1,25 +1,42 @@
 /* ═══ system/report ═══
-   «Informar de un fallo» (Ajustes): se elige el tipo de fallo y se explica con texto libre. La app no tiene servidor: el
-   informe se abre ya escrito como incidencia en GitHub (REPORT_URL, sin publicar ningún correo) o se comparte o copia para
-   mandarlo por mensaje o correo. No sale nada sin que la persona lo confirme. Los datos técnicos (versión, navegador y
-   últimos errores; nada personal) van solo si se deja marcada la casilla, y se pueden ver antes de enviar.
-   Define: REPORT_URL, REPORT_TYPES, REPORT_MAX, reportType, reportPage, reportTech, reportParts, reportText, reportIssueUrl  · acciones/registros: 5
+   Fallos y sugerencias (F-27). «Informar de un fallo» (Ajustes, o «Nuevo» en Perfil → Fallos y sugerencias) envía un aviso de
+   uno de dos tipos, fallo o sugerencia de mejora, a Firestore (reports/{uid}-{ms}), con datos técnicos si se deja marcada la
+   casilla (versión, navegador y últimos errores; nada personal) y que se pueden ver antes de enviar.
+   El admin los ve en Perfil → Administración (account/reports), con su estado (pendiente, vista o arreglada), y los contesta.
+   Cada usuario ve los suyos en Perfil → Fallos y sugerencias, con su estado (pendiente, vista o contestada) y la respuesta.
+   Sin conexión, el aviso se guarda en el móvil y se envía solo tras la siguiente sincronización (cloud/sync: afterSync); su id
+   va puesto desde el principio, así nunca llega dos veces.
+   Estado: S.rp = [{ id, k: 'f' | 's', a: área del fallo, t: texto, dx: datos técnicos (hasta enviarlo), ca: cuándo, s: 1 si
+   ya se envió, st: 'p' | 'v' | 'a', rp: respuesta, ra: cuándo se contestó, sn: 1 si la respuesta ya se vio }], los más nuevos
+   primero (los 30 últimos).
+   Define: REPORT_KINDS, REPORT_AREAS, REPORT_MAX, REPORT_KEEP, REFRESH_EVERY, reportKind, reportArea, reportBack, refreshedAt, reportTech, reportPage, reportStatus, reportDoc, sendReport, flushReports, refreshReports, reportsUnseen, reportsLine, reportListPage, reportListSync  · acciones/registros: 7
 */
-import { $ } from '../core/util.js';
+import { $, APPV, dayKey, fmtDateShort } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A, U } from '../core/registry.js';
-import { pgHead, sheet } from '../core/ui.js';
+import { S, saveState } from '../core/state.js';
+import { fullPage, pgHead, sheet } from '../core/ui.js';
+import { R } from '../core/render.js';
+import { account, acctName } from '../cloud/session.js';
+import { batchGet, commitWrites, setWrite } from '../cloud/firestore.js';
+import { afterSync } from '../cloud/hooks.js';
 import { diagnosticsText } from './diagnostics.js';
-import { copyText } from './files.js';
-import { html } from '../core/html.js';
-/* adónde llegan los informes: incidencias nuevas del repositorio (para usar otro sitio, basta con cambiar esta dirección) */
-const REPORT_URL = 'https://github.com/victorroma01/Fitflow/issues/new';
-const REPORT_TYPES = ['No arranca o se cierra', 'Se han perdido datos', 'Algo se ve mal', 'Un botón no hace nada', 'Un cálculo no cuadra', 'Entreno o temporizador', 'Nutrición o alimentos', 'Una idea o sugerencia', 'Otro'];
-const REPORT_MAX = 1500;
-let reportType = -1;
-const reportPage = () => html`<div id="rpp">${pgHead('Informar de un fallo', 'zaj')}<p class="mu" style="margin:-6px 0 14px">Cuéntanos qué ha fallado y lo arreglamos. No se envía nada hasta que lo confirmes.</p><label>Tipo de fallo</label><div class="rpt" role="radiogroup" aria-label="Tipo de fallo">${REPORT_TYPES.map((t, i) => html`<button class="chip${i == reportType ? ' on' : ''}" data-a="rpt" data-i="${i}" role="radio" aria-checked="${i == reportType ? 'true' : 'false'}">${t}</button>`)}</div><label for="rpx">Qué ha pasado</label><textarea id="rpx" rows="6" maxlength="${REPORT_MAX}" placeholder="Qué estabas haciendo, qué esperabas y qué ocurrió" data-u="rpx"></textarea><small id="rpn" class="mu" style="display:block;text-align:right;margin-top:4px">0 / ${REPORT_MAX}</small><label class="srk"><input type="checkbox" id="rpd" checked> Adjuntar datos técnicos (versión, navegador y últimos errores; nada personal)</label><details class="cd" style="margin-top:6px"><summary>Ver los datos técnicos</summary><pre class="rpv">${reportTech()}</pre></details><p class="mu" style="font-size:13px;margin:12px 2px">«Enviar» abre GitHub con el informe ya escrito; hace falta una cuenta gratuita. Si no tienes, usa «Compartir» y mándalo por mensaje o correo.</p><div style="height:110px"></div><div class="sb rpb"><button data-a="rpc">Compartir</button><button class="pr" data-a="rps">Enviar</button></div></div>`;
-/* datos técnicos del informe: los del Diagnóstico, con solo los 5 últimos errores y cortados para que quepan en una dirección */
+import { html, raw } from '../core/html.js';
+/** Los dos tipos de aviso: [código, nombre]. */
+export const REPORT_KINDS = [['f', 'Fallo'], ['s', 'Sugerencia de mejora']];
+/** Dónde está el fallo (opcional; las reglas admiten hasta 60 caracteres). */
+const REPORT_AREAS = ['No arranca o se cierra', 'Se han perdido datos', 'Algo se ve mal', 'Un botón no hace nada', 'Un cálculo no cuadra', 'Entreno o temporizador', 'Nutrición o alimentos', 'Otro'];
+export const REPORT_MAX = 1500;
+const REPORT_KEEP = 30;
+/* los estados se vuelven a consultar como mucho cada 6 horas (o al abrir la lista) */
+const REFRESH_EVERY = 6 * 36e5;
+let reportKind = '';
+let reportArea = -1;
+/* adónde vuelve «←» del formulario: Ajustes o la lista de Perfil */
+let reportBack = 'zaj';
+let refreshedAt = 0;
+/* datos técnicos del aviso: los del Diagnóstico, con solo los 5 últimos errores */
 const reportTech = () => {
   try {
     const L = diagnosticsText().split('\n');
@@ -32,47 +49,143 @@ const reportTech = () => {
     return 'Sin datos técnicos';
   }
 };
-/** Lo escrito en el formulario: [tipo, texto, datos técnicos o ''] o null si falta algo (y lo dice). */
-const reportParts = () => {
-  const x = $('#rpx');
-  const t = String((x || {}).value || '').trim().slice(0, REPORT_MAX);
-  if (!(reportType >= 0 && reportType < REPORT_TYPES.length)) {
-    toast('Elige el tipo de fallo');
-    return null;
+const reportPage = () => html`<div id="rpp">${pgHead('Informar de un fallo', reportBack)}<p class="mu" style="margin:-6px 0 14px">Cuéntanos qué ha fallado o qué mejorarías. Te contestamos aquí: verás el estado y la respuesta en Perfil → Fallos y sugerencias.</p><label>Tipo</label><div class="rpk" role="radiogroup" aria-label="Tipo">${REPORT_KINDS.map(k => html`<button class="chip${reportKind == k[0] ? ' on' : ''}" data-a="rpk" data-v="${k[0]}" role="radio" aria-checked="${reportKind == k[0] ? 'true' : 'false'}">${k[1]}</button>`)}</div>${reportKind == 'f' ? html`<label>Dónde (si lo sabes)</label><div class="rpt" role="radiogroup" aria-label="Dónde">${REPORT_AREAS.map((t, i) => html`<button class="chip${i == reportArea ? ' on' : ''}" data-a="rpt" data-i="${i}" role="radio" aria-checked="${i == reportArea ? 'true' : 'false'}">${t}</button>`)}</div>` : ''}<label for="rpx">${reportKind == 's' ? 'Tu idea' : 'Qué ha pasado'}</label><textarea id="rpx" rows="6" maxlength="${REPORT_MAX}" placeholder="${reportKind == 's' ? 'Qué mejorarías y para qué te serviría' : 'Qué estabas haciendo, qué esperabas y qué ocurrió'}" data-u="rpx"></textarea><small id="rpn" class="mu" style="display:block;text-align:right;margin-top:4px">0 / ${REPORT_MAX}</small><label class="srk"><input type="checkbox" id="rpd"${reportKind == 's' ? '' : ' checked'}> Adjuntar datos técnicos (versión, navegador y últimos errores; nada personal)</label><details class="cd" style="margin-top:6px"><summary>Ver los datos técnicos</summary><pre class="rpv">${reportTech()}</pre></details><div style="height:110px"></div><div class="sb"><button class="pr" data-a="rps" style="width:100%;padding:15px;border-radius:16px;font-size:16px">Enviar</button></div></div>`;
+/** Estado de un aviso para quien lo envió: [texto, clase]. */
+const reportStatus = x => !x.s ? ['Sin enviar', 'off'] : x.rp ? ['Contestada', 'ok'] : x.st == 'v' || x.st == 'a' ? ['Vista', 'seen'] : ['Pendiente', 'wait'];
+/* el documento de Firestore de un aviso (las reglas exigen esta forma, el usuario de la cuenta y el id uid-ms) */
+const reportDoc = x => ({ uid: account.uid, u: acctName(), k: x.k, a: x.a, t: x.t, dx: x.dx || '', v: APPV, ca: x.ca, st: 'p', m: x.ca });
+const sendReport = async (x) => {
+  try {
+    await commitWrites([setWrite('reports/' + x.id, reportDoc(x), { exists: false })]);
   }
-  if (t.length < 10) {
-    toast('Explica un poco qué ha pasado (al menos 10 letras)');
-    if (x)
-      x.focus();
-    return null;
+  catch (e) {
+    /* ya llegó (desde este móvil o desde otro con la misma cuenta) */
+    if (e.code != 'ALREADY_EXISTS')
+      throw e;
   }
-  const d = $('#rpd');
-  return [REPORT_TYPES[reportType], t, d && d.checked ? reportTech() : ''];
+  x.s = 1;
+  x.st = 'p';
+  delete x.dx;
 };
-/** Texto del informe; con `md`, en Markdown para la incidencia de GitHub. */
-const reportText = (p, md) => md ? '**Tipo:** ' + p[0] + '\n\n**Qué ha pasado:**\n\n' + p[1] + (p[2] ? '\n\n<details><summary>Datos técnicos</summary>\n\n```\n' + p[2].split('```').join("'''") + '\n```\n</details>' : '') : 'Informe de fallo de StrataFit\nTipo: ' + p[0] + '\n\n' + p[1] + (p[2] ? '\n\n— Datos técnicos —\n' + p[2] : '');
-/** Dirección de la incidencia nueva con título y texto; si no cabe en una dirección (unos 8000 caracteres), recorta los datos técnicos. */
-const reportIssueUrl = p => {
-  const title = '[' + p[0] + '] ' + p[1].replace(/\s+/g, ' ').slice(0, 70);
-  let q = p.slice();
-  let u = '';
-  for (let n = 0; n < 6; n++) {
-    u = REPORT_URL + '?title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(reportText(q, 1));
-    if (u.length < 7500)
-      break;
-    q = [q[0], q[1].slice(0, Math.floor(q[1].length * .7)), q[2].slice(0, Math.floor(q[2].length * .5))];
+/* tras sincronizar: se envía lo que quedó sin conexión */
+const flushReports = async () => {
+  const L = (S.rp || []).filter(x => !x.s);
+  if (!L.length || !account)
+    return;
+  let n = 0;
+  for (const x of L)
+    try {
+      await sendReport(x);
+      n++;
+    }
+    catch (e) {
+      if (e.code == 'NETWORK')
+        break;
+      logError('enviar aviso', e);
+    }
+  if (n) {
+    saveState();
+    R();
   }
-  return u;
+};
+/** Pregunta a la nube cómo van los avisos enviados que no están cerrados (arreglados y contestados). */
+export const refreshReports = async (force) => {
+  const L = (S.rp || []).filter(x => x.s && !(x.st == 'a' && x.rp));
+  if (!L.length || !account || !force && Date.now() - refreshedAt < REFRESH_EVERY)
+    return;
+  refreshedAt = Date.now();
+  try {
+    const docs = await batchGet(L.map(x => 'reports/' + x.id));
+    let ch = 0;
+    for (const x of L) {
+      const d = docs['reports/' + x.id];
+      if (!d)
+        continue;
+      const o = d.data;
+      const st = ['p', 'v', 'a'].includes(o.st) ? o.st : 'p';
+      const rp = typeof o.rp == 'string' ? o.rp.slice(0, REPORT_MAX) : '';
+      if (st != x.st || rp != (x.rp || '')) {
+        if (rp != (x.rp || ''))
+          x.sn = 0;
+        x.st = st;
+        if (rp) {
+          x.rp = rp;
+          x.ra = +o.ra || Date.now();
+        }
+        else {
+          delete x.rp;
+          delete x.ra;
+        }
+        ch = 1;
+      }
+    }
+    if (ch) {
+      saveState();
+      R();
+      reportListSync();
+    }
+  }
+  catch (e) {
+    if (e.code != 'NETWORK')
+      logError('estado de los avisos', e);
+  }
+};
+afterSync.push(flushReports, () => refreshReports(0));
+/** Respuestas que aún no se han visto. */
+const reportsUnseen = () => (S.rp || []).filter(x => x.rp && !x.sn).length;
+/** Línea de la fila de Perfil. */
+export const reportsLine = () => {
+  const L = S.rp || [];
+  const nw = reportsUnseen();
+  const off = L.filter(x => !x.s).length;
+  const open = L.filter(x => x.s && !x.rp).length;
+  return nw ? nw + (nw == 1 ? ' respuesta nueva' : ' respuestas nuevas') : off ? off + ' sin enviar: se envía al volver la red' : L.length ? open ? open + (open == 1 ? ' pendiente de respuesta' : ' pendientes de respuesta') : 'Todos contestados' : 'Avisa de un fallo o propón una mejora';
+};
+/** Perfil → Fallos y sugerencias: los avisos propios con su estado y la respuesta. */
+const reportListPage = () => {
+  const L = S.rp || [];
+  const items = L.map(x => {
+    const [sl, sc] = reportStatus(x);
+    const kd = (REPORT_KINDS.find(k => k[0] == x.k) || REPORT_KINDS[0])[1];
+    return html`<div class="cd rpi"><div class="row"><span class="rpkd">${kd}${x.a ? ' · ' + x.a : ''}</span><span class="rps ${sc}">${sl}</span></div><small class="mu">${fmtDateShort(dayKey(new Date(+x.ca)), { day: 'numeric', month: 'long', year: 'numeric' })}</small><p class="rptx">${x.t}</p>${x.rp ? html`<div class="rpr${x.sn ? '' : ' nw'}"><b>Respuesta${x.ra ? ' · ' + fmtDateShort(dayKey(new Date(+x.ra))) : ''}</b><p>${x.rp}</p></div>` : ''}</div>`;
+  }).join('');
+  return html`<div id="rpl">${pgHead('Fallos y sugerencias')}<p class="mu" style="margin:-6px 0 12px">Lo que nos has enviado, con su estado: pendiente, vista o contestada.</p><button class="pr" data-a="rpnw" style="width:100%;margin-bottom:12px">Nuevo aviso</button>${raw(items || '<p class="mu">Aún no has enviado ninguno.</p>')}</div>`;
+};
+/* con la lista abierta, se pinta de nuevo al llegar estados nuevos; las respuestas a la vista quedan vistas */
+const reportListSync = () => {
+  if (!$('#rpl'))
+    return;
+  sheet(reportListPage());
+  if (reportsUnseen()) {
+    (S.rp || []).forEach(x => {
+      if (x.rp)
+        x.sn = 1;
+    });
+    saveState();
+  }
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.rpo = () => {
-  reportType = -1;
+  reportKind = '';
+  reportArea = -1;
+  reportBack = $('#rpl') ? 'rpl' : 'zaj';
+  fullPage(reportPage());
+};
+A.rpnw = () => A.rpo();
+A.rpk = (i, b) => {
+  const t = ($('#rpx') || {}).value || '';
+  reportKind = b.dataset.v == 's' ? 's' : 'f';
   sheet(reportPage());
+  const x = $('#rpx');
+  if (x) {
+    x.value = t;
+    U.rpx(t);
+  }
 };
 A.rpt = i => {
-  reportType = i;
+  reportArea = reportArea == i ? -1 : i;
   document.querySelectorAll('.rpt button').forEach(b => {
-    const on = +b.dataset.i == i;
+    const on = +b.dataset.i == reportArea;
     b.classList.toggle('on', on);
     b.setAttribute('aria-checked', on ? 'true' : 'false');
   });
@@ -82,50 +195,45 @@ U.rpx = v => {
   if (e)
     e.textContent = String(v).length + ' / ' + REPORT_MAX;
 };
-A.rps = () => {
-  const p = reportParts();
-  if (!p)
+A.rps = async () => {
+  const x = $('#rpx');
+  const t = String((x || {}).value || '').trim().slice(0, REPORT_MAX);
+  if (!reportKind) {
+    toast('Elige si es un fallo o una sugerencia');
     return;
-  /* un enlace pulsado (y no window.open) también abre el navegador desde la app instalada en el iPhone */
+  }
+  if (t.length < 10) {
+    toast('Explícalo un poco más (al menos 10 letras)');
+    if (x)
+      x.focus();
+    return;
+  }
+  if (!account) {
+    toast('Entra en tu cuenta para enviarlo');
+    return;
+  }
+  const d = $('#rpd');
+  const ca = Date.now();
+  const it = { id: account.uid + '-' + ca, k: reportKind, a: reportKind == 'f' && reportArea >= 0 ? REPORT_AREAS[reportArea] : '', t, ca, s: 0 };
+  if (d && d.checked)
+    it.dx = reportTech();
+  S.rp = [it].concat(S.rp || []).slice(0, REPORT_KEEP);
+  saveState();
   try {
-    const a = document.createElement('a');
-    a.href = reportIssueUrl(p);
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    toast('Se abre GitHub con tu informe: pulsa «Create» para enviarlo');
+    await sendReport(it);
+    saveState();
+    toast('Enviado. Te contestaremos en Perfil → Fallos y sugerencias');
   }
   catch (e) {
-    logError('informe: abrir GitHub', e);
-    toast('No se ha podido abrir GitHub: usa «Compartir»');
+    if (e.code != 'NETWORK')
+      logError('enviar aviso', e);
+    toast(e.code == 'NETWORK' ? 'Sin conexión: se enviará solo al volver la red' : 'No se ha podido enviar ahora; se reintentará solo');
   }
+  fullPage(reportListPage());
+  R();
 };
-A.rpc = async () => {
-  const p = reportParts();
-  if (!p)
-    return;
-  const t = reportText(p, 0);
-  try {
-    if (navigator.share) {
-      await navigator.share({ title: 'Informe de fallo de StrataFit', text: t });
-      return;
-    }
-  }
-  catch (e) {
-    /* compartir cancelado o no disponible: se copia al portapapeles */
-    if (e && e.name == 'AbortError')
-      return;
-  }
-  /* sin «compartir»: al portapapeles (si no hay permiso, con un cuadro de texto oculto que lleva el informe entero) */
-  const tmp = document.createElement('textarea');
-  tmp.value = t;
-  tmp.setAttribute('readonly', '');
-  tmp.setAttribute('aria-hidden', 'true');
-  tmp.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0';
-  document.body.appendChild(tmp);
-  const ok = await copyText(t, tmp);
-  tmp.remove();
-  toast(ok ? 'Informe copiado: pégalo en un mensaje o correo' : 'No se ha podido copiar el informe');
+A.rpl = () => {
+  fullPage(reportListPage());
+  reportListSync();
+  refreshReports(1);
 };

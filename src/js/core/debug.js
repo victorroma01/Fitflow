@@ -33,6 +33,7 @@ import { dayInfo } from '../nutrition/templates.js';
 import { tdee } from '../nutrition/diet.js';
 import { account } from '../cloud/session.js';
 import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
+import { refreshReports } from '../system/report.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
   A: [() => A],
@@ -73,6 +74,7 @@ const DEBUG_NAMES = {
   planIndex: [() => planIndex],
   progDraft: [() => progDraft],
   R: [() => R],
+  refreshReports: [() => refreshReports],
   restoreBackup: [() => restoreBackup],
   S: [() => S],
   saveState: [() => saveState],

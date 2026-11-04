@@ -32,6 +32,13 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   una, las siguientes sugieren el nuevo.
 - Al tocar la abreviatura de una serie (PIR, DS, WRK…) se abre una ventana con qué técnica es y cómo se hace.
 - WOD: reloj circular con la cuenta en el centro, y la cuenta atrás inicial se puede saltar.
+- Recordatorio de pesaje: cada 2 o 4 semanas, cada mes, cada 5 semanas o lo que elijas. Cuando toca, la app te dice «Día de
+  pesarse», y puedes añadirlo al calendario del móvil para que te avise aunque la app esté cerrada.
+- Perfil → Ver análisis mensual: tus entrenos, tu peso y tu alimentación de cada mes, con gráficas y una conclusión, y en PDF.
+- Fallos y sugerencias: lo que envías desde «Informar de un fallo» le llega al administrador, y en Perfil ves si está pendiente,
+  visto o contestado, con la respuesta.
+- Ajustes → Ver nota de actualización: los cambios de la versión que tienes instalada.
+- Copia de seguridad en la nube: una sola, que se hace sola cada semana y puedes restaurar cuando quieras.
 
 ### Mejoras
 - Más privacidad: la app ya no guarda nombre, email, teléfono ni fotos de progreso (ni sus dos logros).
@@ -45,6 +52,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - WOD: un color para el trabajo y otro para el descanso, lo que viene después y el tiempo total, aviso del último minuto en el
   AMRAP y la cuenta al día nada más volver a la app.
 - Sin descanso automático, la pantalla pasa enseguida al ejercicio que toca.
+- El archivo de copia de seguridad se llama siempre igual (StrataFit-copia.json): cada copia sustituye a la anterior y no se
+  acumulan en el teléfono.
+- Administración avisa de cuántos fallos y sugerencias hay pendientes y deja contestarlos.
 
 ### Correcciones
 - Al cambiar el descanso o el tempo durante el entreno, el objetivo de arriba no se actualizaba hasta salir.
@@ -97,3 +107,14 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   `ws` en cada serie y `suggestAfter` (`workout/progression`), `TECHNIQUES` con un tercer texto (qué hace la app) y sin prototipo,
   y el reloj del WOD con un anillo SVG que se pinta en cada fotograma (`extras/wod`). CSS nuevo: `74-workout-controls`.
 - Pruebas: `tests/session.py` (iconos, desplegables, peso sugerido, técnicas, superseries y triseries, barra inferior y WOD).
+- Perfil, ajustes y seguimiento (M5): `dashboard/reminder` (recordatorio de pesaje en `S.wr`, aviso al abrir o volver a la app,
+  tarjeta del Dashboard y evento .ics que se repite), `profile/analysis` (análisis mensual, cargado al usarlo) y `system/pdf` (PDF
+  A4 sin bibliotecas, con Helvetica en Windows-1252; también se carga al usarlo), `system/report` y `account/reports` (avisos en
+  `reports/{uid}-{ms}` y `S.rp`, cola sin conexión, estados y respuesta), `cloud/backup` (copia en `users/{uid}/backup`: meta y
+  trozos de 300.000 caracteres, gzip, huella, semanal sin pisar una copia con más datos; `S.cb`) y `cloud/hooks` (tareas tras cada
+  sincronización). Fuera el aviso «Haz una copia de seguridad» del Dashboard: la copia ya es automática.
+- Reglas de Firestore para la copia de seguridad y los fallos y sugerencias, con sus pruebas en `tests/rules.test.mjs`; el Firebase
+  de prueba (`tests/fakefb.py`) entiende los avisos.
+- Pruebas: `tests/followup.py` (recordatorio, análisis y PDF, nota de actualización, copia con nombre fijo y datos dañados) y, en
+  `tests/cloud.py`, los avisos con el admin y la copia en la nube. Cuatro pantallas más en `tests/shots.py` (43): peso con el
+  recordatorio, análisis, fallos y sugerencias, y nota de actualización.

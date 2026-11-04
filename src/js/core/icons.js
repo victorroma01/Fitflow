@@ -13,6 +13,8 @@ IC.dlw = '<path d="M3 7l6 6 4-4 8 8"/><path d="M21 11v6h-6"/>';
 /* entreno: «Tips» (una i en un círculo) y «Discos» (un disco de pesa) (F-08) */
 IC.info = '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.5v.01" stroke-width="2.6"/>';
 IC.plate = '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.8"/><path d="M9.63 6.93A5.6 5.6 0 0 1 14.37 6.93M17.58 12.49A5.6 5.6 0 0 1 15.21 16.59M8.79 16.59A5.6 5.6 0 0 1 6.42 12.49"/>';
+IC.news = '<path d="M11 3.5l1.9 4.8 4.8 1.9-4.8 1.9L11 16.9l-1.9-4.8-4.8-1.9 4.8-1.9z"/><path d="M18.5 14.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/>';
+IC.scale = '<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8.6 10.2a4.6 4.6 0 016.8 0"/><path d="M12 11.6l1.6-2"/>';
 IC.rgn = '<path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20.5V16h-4.5"/>';
 IC.nxt = '<path d="M18 5v14M5 5l10 7-10 7z"/>';
 IC.pau = '<path d="M8 5v14M16 5v14" stroke-width="3"/>';

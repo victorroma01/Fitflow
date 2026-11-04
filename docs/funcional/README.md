@@ -41,6 +41,7 @@ La V1.0.0 está en desarrollo, por milestones (M1 a M8) que se siguen en GitHub.
 usuario y contraseña, los datos en la nube con Firebase y los roles de administrador y usuario (M2), y los programas nuevos (M3):
 Push Pull Leg y Full Body en ciclo, Glúteo y pierna, programas recomendados según el sexo, 10 técnicas de intensidad, semana de
 descarga en naranja que se puede omitir, rotación de ejercicios y un consejo y una explicación de ejecución propios de cada
-ejercicio. Faltan: la pantalla de entrenamiento con iconos y temporizadores nuevos, el tour de la primera vez, el análisis mensual
-descargable en PDF, los informes de fallos con respuesta y las pruebas en Android e iPhone. Esta documentación se completa a medida
-que cada parte llega a la app.
+ejercicio; la pantalla de entrenamiento renovada, con peso sugerido, superseries por rondas y el reloj circular del WOD (M4); y el
+seguimiento (M5): recordatorio de pesaje, análisis mensual descargable en PDF, fallos y sugerencias con respuesta, nota de
+actualización y copia de seguridad única en la nube. Faltan la personalización, el tour de la primera vez, los gestos y las pruebas
+en Android e iPhone (M6). Esta documentación se completa a medida que cada parte llega a la app.
