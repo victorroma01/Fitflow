@@ -368,8 +368,9 @@ def main(path):
               return {st:document.querySelector('#tour .trst').textContent,t:document.querySelector('#tour .trtp b').textContent,tab:S.tab,
                 on:[...document.querySelectorAll('#tour .trdt i')].findIndex(i=>i.classList.contains('on')),
                 inside:l<=r.left+.5&&tp<=r.top+.5&&l+w>=r.right-.5&&tp+h>=r.bottom-.5,clear:p.offsetTop+p.offsetHeight<=r.top+1||p.offsetTop>=r.bottom-1,
-                seen:r.top>=0&&r.bottom<=innerHeight,next:document.querySelector('#tour [data-a=trn]').textContent,skip:!!document.querySelector('#tour [data-a=trx]')}})()""" % el)
-            check('paso %d: «%s», en su pestaña, iluminado y con la tarjeta al lado' % (k + 1, tt), o['st'] == 'Paso %d de 5' % (k + 1) and o['t'] == tt and o['tab'] == tb and o['on'] == k and o['inside'] and o['clear'] and o['seen'] and o['skip'] and o['next'] == ('Terminar' if k == 4 else 'Siguiente'), str(o))
+                seen:r.top>=0&&r.bottom<=innerHeight,next:document.querySelector('#tour [data-a=trn]').textContent,skip:!!document.querySelector('#tour [data-a=trx]'),
+                free:![...document.getElementById('app').children].some(e=>getComputedStyle(e).position=='sticky'&&!e.contains(t)&&(q=>q.bottom>r.top+1&&q.top<r.bottom-1)(e.getBoundingClientRect()))}})()""" % el)
+            check('paso %d: «%s», en su pestaña, iluminado y con la tarjeta al lado' % (k + 1, tt), o['st'] == 'Paso %d de 5' % (k + 1) and o['t'] == tt and o['tab'] == tb and o['on'] == k and o['inside'] and o['clear'] and o['seen'] and o['free'] and o['skip'] and o['next'] == ('Terminar' if k == 4 else 'Siguiente'), str(o))
             if k == 1:
                 check('en el paso de las pestañas se puede probar la barra', int(ev("getComputedStyle(document.querySelector('nav')).zIndex")) > int(ev("getComputedStyle(document.getElementById('tour')).zIndex")))
                 ev("document.querySelectorAll('nav button')[2].click()")
@@ -382,6 +383,18 @@ def main(path):
         ev("document.querySelector('#tour [data-a=trd]').click()")
         run()
         check('que cierra el recorrido en Workout', not ev("!!document.getElementById('tour')") and ev('S.tab') == 0 and not ev("document.querySelector('nav').classList.contains('trlv')"))
+        pg.set_viewport_size({'width': 320, 'height': 568})
+        ev("S.meals[dayKey(new Date())]={0:[{n:'Arroz',g:150,b:[130,28,2.7,.3,0,0]},{n:'Pollo',g:180,b:[165,0,31,3.6,0,0]}]};saveState();S.tab=0;R();A.trgo();A.trn();A.trn()")
+        run(400)
+        o = ev("""(()=>{const t=document.querySelector('#app .mlb'),r=t.getBoundingClientRect(),s=document.querySelector('#tour .trsp').style,p=document.querySelector('#tour .trtp');
+          const l=parseFloat(s.left),tp=parseFloat(s.top),w=parseFloat(s.width),h=parseFloat(s.height);
+          return {st:document.querySelector('#tour .trst').textContent,inside:l<=r.left+.5&&tp<=r.top+.5&&l+w>=r.right-.5&&tp+h>=r.bottom-.5,seen:tp>=0&&tp+h<=innerHeight,
+            clear:p.offsetTop+p.offsetHeight<=tp+1||p.offsetTop>=tp+h-1,
+            free:![...document.getElementById('app').children].some(e=>getComputedStyle(e).position=='sticky'&&!e.contains(t)&&(q=>q.bottom>tp+1&&q.top<tp+h-1)(e.getBoundingClientRect()))}})()""")
+        check('en un iPhone pequeño (320 × 568), con comidas, el paso de Nutrición ilumina sus botones y se ve entero, sin taparlo el resumen pegado arriba', o['st'] == 'Paso 3 de 5' and o['inside'] and o['seen'] and o['clear'] and o['free'], str(o))
+        ev("A.trx();delete S.meals[dayKey(new Date())];saveState()")
+        pg.set_viewport_size({'width': 390, 'height': 844})
+        run()
         rest = ev("(()=>{for(let i=0;i<7;i++){S.sl=i;R();if(document.querySelector('#app .cd.hero [data-a=rd]'))return i}return -1})()")
         ev("A.trgo()")
         run()
