@@ -1,6 +1,8 @@
 # Desplegar en Firebase las reglas de seguridad y los índices de Firestore (firestore.rules y firestore.indexes.json).
 # Solo desde main: se lanza solo al fusionar un cambio de esos archivos (o a mano, desde main). Antes, la CI los prueba
 # con el emulador en cada cambio (pruebas.yml, «Reglas y nube»).
+# Con firebase-admin (tools/admin/reglas.mjs) y no con firebase-tools, que antes de desplegar comprueba qué APIs tiene
+# activas el proyecto, y la cuenta de servicio no tiene permiso para eso.
 name: Desplegar reglas
 
 on:
@@ -10,6 +12,7 @@ on:
       - firestore.rules
       - firestore.indexes.json
       - firebase.json
+      - tools/admin/reglas.mjs
       - .github/workflows/firebase-reglas.yml
   workflow_dispatch:
 
@@ -32,15 +35,10 @@ jobs:
         with:
           package-manager-cache: false
           node-version: 22
-      - name: firebase-tools
-        run: npm install --no-save --no-audit --no-fund firebase-tools@15
-      # la clave va a un archivo temporal del ejecutor (que se borra con él), nunca al repositorio ni al registro
+      - name: firebase-admin
+        run: npm install --no-save --no-audit --no-fund firebase-admin@13
+      # la clave llega solo como variable de entorno del paso (tools/admin/firebase.mjs), nunca al repositorio ni al registro
       - name: Desplegar
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: |
-          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then echo "::error::Falta el secreto FIREBASE_SERVICE_ACCOUNT"; exit 1; fi
-          umask 077
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
-          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json" npx firebase deploy --only firestore:rules,firestore:indexes --project stratafit-960ec --non-interactive
-          rm -f "$RUNNER_TEMP/sa.json"
+        run: node tools/admin/reglas.mjs

@@ -118,7 +118,7 @@ Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run wor
 | --- | --- | --- |
 | Restablecer contraseña | `admin-contrasena.yml` | Se escribe el usuario. Le pone una contraseña temporal, cierra sus sesiones y marca `mc` en su perfil; la contraseña solo se guarda en `adminInbox`, que el admin ve en Perfil → Administración durante 24 h. No aparece en el registro, que es público. |
 | Asignar rol | `admin-rol.yml` | Usuario y rol (admin o usuario). Vale la próxima vez que esa persona abra la app. |
-| Desplegar reglas | `firebase-reglas.yml` | Reglas e índices de Firestore. Se lanza solo al fusionar en `main` un cambio de esos archivos. |
+| Desplegar reglas | `firebase-reglas.yml` | Reglas e índices de Firestore (`tools/admin/reglas.mjs`: las reglas con la API de reglas de Firebase y los índices con la de Firestore; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Se lanza solo al fusionar en `main` un cambio de esos archivos. |
 | Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuentas y acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
 
 Los flujos manuales solo aparecen en Actions cuando están en `main`.
