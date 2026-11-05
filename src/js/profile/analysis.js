@@ -475,7 +475,7 @@ A.anpdf = async () => {
   try {
     const b = await analysisPdf(anaYm);
     const r = await downloadFile('StrataFit-analisis-' + anaYm + '.pdf', b, 'application/pdf');
-    toast(r == 'saved' || r == 'delivered' ? 'PDF guardado' : r == 'declined' ? 'No se ha guardado el PDF' : 'No se ha podido guardar el PDF');
+    toast(r == 'saved' ? 'PDF guardado' : r == 'declined' ? 'No se ha guardado el PDF' : 'No se ha podido guardar el PDF');
   }
   catch (e) {
     logError('análisis en PDF', e);

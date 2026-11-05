@@ -261,7 +261,7 @@ A.bkf = async () => {
   S.bkd = Date.now();
   saveState();
   const r = await downloadFile(BACKUP_FILE, buildBackup());
-  if (r == 'saved' || r == 'delivered')
+  if (r == 'saved')
     toast('Copia guardada');
   else {
     S.bkd = pv;

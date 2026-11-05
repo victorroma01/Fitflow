@@ -30,8 +30,8 @@ import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.
 import { hashMap, hashOf, KINDS, merge3, sameHashes } from './merge.js';
 import { afterSync } from './hooks.js';
 /** Preferencias de la cuenta (van en el perfil, users/{uid}): tema, color (y el propio), estilo Cristal, animaciones, unidades,
-  sonido y avisos, la pestaña al abrir la app y si ya se vio el recorrido (system/tour). Las mismas que deja firestore.rules. */
-const PREF_KEYS = ['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'notif', 'st0', 'tour'];
+  sonido y vibración, la pestaña al abrir la app y si ya se vio el recorrido (system/tour). Las mismas que deja firestore.rules. */
+const PREF_KEYS = ['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'st0', 'tour'];
 /** Claves de S que no van en data/core: lo que es de este dispositivo (pestaña, día elegido, rango de la gráfica, día del plan
   apartado durante un workout, fecha de la última copia en archivo, aviso descartado, globo del icono: system/phone), lo que va
   en su propio documento y las preferencias. */

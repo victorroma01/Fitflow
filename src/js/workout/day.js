@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, workoutTab  · acciones/registros: 13
+   Define: planEx, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, workoutTab  · acciones/registros: 13
 */
 import { A, C } from '../core/registry.js';
 import { PROGRAM_NAMES } from '../data/library.js';
@@ -54,26 +54,46 @@ A.tg = (i, b) => {
   if (W.o[k] && b.dataset.v == 't')
     withExInfo(R);
 };
+/** Etiqueta del ejercicio `i` dentro de su bloque (el de los ejercicios seguidos que van unidos: dayBlocks). */
 export const blockBadge = (a, i) => {
-  const e = a[i];
-  if (!e.b)
+  if (a[i].b == null)
     return '';
-  const m = a.filter(x => x.b == e.b).length;
-  const k = a.filter((x, j) => x.b == e.b && j <= i).length;
-  return m < 2 ? '' : html`<small style="color:#f59e0b;font-weight:700">${m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}${k < m ? ' · 10 s hasta el siguiente' : ' · descanso de la ronda'}</small><br>`;
+  const x = dayBlocks({ ex: a }).find(k => k.x.includes(i)).x;
+  const m = x.length;
+  const k = x.indexOf(i) + 1;
+  return m < 2 ? '' : html`<small style="color:var(--wnx);font-weight:700">${m > 3 ? 'CIRCUITO' : m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}${k < m ? ' · 10 s hasta el siguiente' : ' · descanso de la ronda'}</small><br>`;
 };
-A.jn = i => {
-  const a = S.plan[S.sel].ex;
+/** «Unir al anterior» y «Separar» (en la semana y en el Overview). Une el ejercicio `i` de la lista `a` al bloque del
+    anterior, con los que vayan unidos a él detrás, o, si ya va unido al anterior, parte el bloque por ahí. Un bloque que
+    se queda con un solo ejercicio deja de serlo. */
+export const linkPrev = (a, i) => {
   const e = a[i];
   const p = a[i - 1];
-  if (e.b && p.b == e.b)
-    delete e.b;
-  else if (p) {
-    if (!p.b)
-      p.b = 'b' + Date.now();
-    if (a.filter(x => x.b == p.b).length < 3)
-      e.b = p.b;
+  if (!e || !p)
+    return;
+  const old = e.b;
+  const tail = b => {
+    for (let j = i; j < a.length && (j == i || (old != null && a[j].b == old)); j++)
+      a[j].b = b;
+  };
+  if (old != null && p.b == old) {
+    tail('b' + Date.now());
+    /* entre los ejercicios de un bloque no se descansa: si quedó guardado un descanso de 10 s, vuelve el normal */
+    e.r = e.r == 10 ? 90 : e.r;
+    p.r = p.r == 10 ? 90 : p.r;
   }
+  else {
+    if (p.b == null)
+      p.b = 'b' + Date.now();
+    tail(p.b);
+  }
+  dayBlocks({ ex: a }).forEach(k => {
+    if (k.x.length == 1)
+      delete a[k.x[0]].b;
+  });
+};
+A.jn = i => {
+  linkPrev(S.plan[S.sel].ex, i);
   saveState();
   R();
 };

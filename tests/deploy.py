@@ -114,9 +114,10 @@ def main(app):
                     check('precarga completa (también el código js/)', all(n in cached for n in need), str([n for n in need if n not in cached]))
                 else:
                     skipped('service worker y precarga')
-                # comprimido: líneas muy largas (el catálogo de ejercicios es texto, una línea por ejercicio: no cuenta)
+                # comprimido: líneas muy largas, de media más de 500 caracteres (los saltos que quedan son los de dentro de los textos;
+                # un archivo de menos de 5 KB no cuenta, ni el catálogo de ejercicios, que es texto, una línea por ejercicio)
                 check('el código va aparte y comprimido', bool(code) and ev("!!document.querySelector('script[type=module][src^=\"js/\"]')") and
-                      all(len(s) < 2000 or len(s) / (s.count('\n') + 1) > 1000 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not f.startswith('js/exinfo-'))))
+                      all(len(s) < 5000 or len(s) / (s.count('\n') + 1) > 500 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not f.startswith('js/exinfo-'))))
                 # lo poco usado (WOD, CSV, escáner, el catálogo de consejos y ejecución, el análisis mensual y el PDF) va aparte y no se
                 # descarga al arrancar
                 lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo|analysis|pdf)-', f)]

@@ -88,6 +88,9 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 - **Superseries y triseries**: se hacen por rondas. Tras la serie 1 del primer ejercicio van 10 s fijos y la serie 1 del
   siguiente; al acabar la ronda, su descanso, que es el del último ejercicio del bloque (el que diga el programa o elijas en su
   desplegable; si no hay ninguno, 2:30), y vuelta al primero. Al acabar cada descanso, la pantalla pasa sola a la serie que toca.
+  Se montan al editar el día: **Unir al anterior** (en el Overview, **Enlazar**) junta un ejercicio con el de arriba (y con el
+  que lleve unido detrás) y **Separar** parte el bloque por ese ejercicio. De cuatro ejercicios seguidos en adelante, es un
+  **circuito**, que se hace igual, por rondas.
 - **Tips** (el icono «i»): el consejo propio de cada ejercicio (no hay dos iguales). **Notas**, **Historial** de sus series
   anteriores, **Swap** para cambiarlo por otro parecido sin perder el historial y **Discos** (el icono del disco), que calcula qué
   discos poner en cada lado de la barra.

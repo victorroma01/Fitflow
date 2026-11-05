@@ -305,7 +305,17 @@ def main(path):
         if st == 'dead':
             wait(p2, "!!document.querySelector('#dg [data-v=lgre]')")
             p2.evaluate("document.querySelector('#dg [data-v=lgre]').click()")
+            # cinco contraseñas mal: la misma espera que en el inicio de sesión
+            for k in range(5):
+                p2.fill('#lrp', 'mal-clave-%d' % k)
+                p2.click('[data-a=lgrs]')
+                wait(p2, "/incorrect/.test(document.getElementById('lre').textContent)", 15000)
+                p2.evaluate("document.getElementById('lre').textContent=''")
             p2.fill('#lrp', 'nueva-clave-9')
+            p2.click('[data-a=lgrs]')
+            p2.wait_for_timeout(300)
+            check('volver a entrar: tras cinco intentos fallidos, hay que esperar', 'Espera' in p2.inner_text('#lre'), p2.inner_text('#lre'))
+            p2.evaluate("localStorage.removeItem('fflgn')")
             p2.click('[data-a=lgrs]')
             wait(p2, "!document.querySelector('#sh #lrp')", 15000)
             check('al volver a entrar, sigue con sus datos y sincroniza', p2.evaluate('S.logs.length') == n_logs and sync(p2) == 'ok')

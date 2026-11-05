@@ -1,6 +1,6 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: sessionView, scrollToCurrent, nextSet, restEnded, sessionWakeLock, requestSessionWakeLock, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, blockHeader  · acciones/registros: 18
+   Define: sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, blockHeader  · acciones/registros: 18
 */
 import { $, fmtDuration, fmtMinSec, round1, roundInt, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -130,20 +130,6 @@ A.zpv = () => {
   R();
   scrollToCurrent();
 };
-let sessionWakeLock = null;
-export const requestSessionWakeLock = async () => {
-  try {
-    if (navigator.wakeLock && W && !sessionWakeLock) {
-      sessionWakeLock = await navigator.wakeLock.request('screen');
-      sessionWakeLock.addEventListener('release', () => {
-        sessionWakeLock = null;
-      });
-    }
-  }
-  catch (e) {
-    /* bloqueo de pantalla opcional: no todos los navegadores lo permiten */
-  }
-};
 A.zdc = () => {
   sheet();
   setW(null);
@@ -196,10 +182,7 @@ const exThumb = (n, i) => {
   const s = exAnatomy(n, 64);
   /* al tocar la imagen, cómo se hace el ejercicio (F-14: library/howto) */
   const at = ' data-a="exh" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Cómo se hace: ' + X(n) + '"';
-  if (!on)
-    return html`<div class="th"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
-  const an = s.indexOf('stroke-width="\.7"') >= 0 || s.indexOf('stroke-width=".7"') >= 0;
-  return html`<div class="th live"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
+  return html`<div class="th${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
 };
 const restPill = () => W && W.re ? html`<button class="wsr" data-a="wsr" aria-label="Ir al descanso">Descanso <b id="rt2">${raw(fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000))))}</b></button>` : '';
 A.wsr = () => {

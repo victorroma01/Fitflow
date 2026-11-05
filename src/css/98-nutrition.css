@@ -19,7 +19,7 @@
   background:color-mix(in srgb,var(--a2) 16%,transparent);
 }
 .ndt svg {
-  color:var(--a1);
+  color:var(--at);
 }
 .nmb {
   position:relative;

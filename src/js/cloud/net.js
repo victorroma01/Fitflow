@@ -36,8 +36,11 @@ export async function fetchJson(url, o = {}) {
     body = JSON.stringify(o.body);
   }
   let r;
+  let t;
+  /* el límite vale también para leer la respuesta: un servidor que se queda a medias no deja la petición esperando siempre */
   try {
     r = await fetch(url, { method: o.method || 'GET', headers, body, signal: ctl.signal, cache: 'no-store', credentials: 'omit' });
+    t = await r.text();
   }
   catch (e) {
     throw netError('NETWORK', 0, e && e.name == 'AbortError' ? 'sin respuesta a tiempo' : 'sin conexión');
@@ -47,7 +50,6 @@ export async function fetchJson(url, o = {}) {
   }
   let j = null;
   try {
-    const t = await r.text();
     j = t ? JSON.parse(t) : {};
   }
   catch (e) {

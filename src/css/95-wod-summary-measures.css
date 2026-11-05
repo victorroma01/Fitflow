@@ -24,6 +24,7 @@
   --mu:#b4b4c0;
   --ln:#2a2a31;
   --ib:#0b0b0d;
+  --at:var(--a1);
   position:fixed;
   inset:0;
   z-index:12;
@@ -295,14 +296,14 @@
   border-color:#34d39955;
 }
 .f2dc.dn {
-  color:var(--c);
+  color:var(--ctx);
   border-color:color-mix(in srgb,var(--c) 45%,transparent);
 }
 .f2prc {
   border-color:color-mix(in srgb,var(--a2) 55%,var(--ln));
 }
 .f2prc>b {
-  color:var(--a1);
+  color:var(--at);
 }
 .f2cs {
   display:grid;

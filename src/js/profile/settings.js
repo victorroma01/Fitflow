@@ -36,7 +36,7 @@ const SETTINGS_PAGES = {
   acento: () => ['Color de acento', accentSwatches()],
   inicio: () => ['Al abrir la app', startTabCard()],
   unidades: () => ['Unidades', unitsCard()],
-  sonido: () => ['Sonido y avisos', html`<label class="srk"><input type="checkbox" ${S.notif ? 'checked' : ''} data-c="nt"> Notificaciones activadas</label><label class="srk"><input type="checkbox" ${S.snd === 0 ? '' : 'checked'} data-c="snd"> Sonidos del descanso</label><button data-a="zsnd" style="width:100%;margin:8px 0 6px">Probar sonido</button>${alertSettings()}${badgeCard()}`],
+  sonido: () => ['Sonido y avisos', html`<label class="srk"><input type="checkbox" ${S.snd === 0 ? '' : 'checked'} data-c="snd"> Sonidos del descanso</label><button data-a="zsnd" style="width:100%;margin:8px 0 6px">Probar sonido</button>${alertSettings()}${badgeCard()}`],
   cuenta: () => ['Cuenta', accountPage()],
   clave: () => ['Cambiar contraseña', passwordPage()],
   privacidad: () => ['Privacidad', html`<div class="srt">${PRIVACY_TEXT.map(p => html`<p>${p}</p>`)}</div>`],

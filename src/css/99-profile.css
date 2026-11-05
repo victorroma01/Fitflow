@@ -62,7 +62,7 @@ details[open]>summary.pfs {
   letter-spacing:.08em;
   padding:4px 9px 3px;
   border-radius:999px;
-  color:var(--a1);
+  color:var(--at);
   border:1px solid color-mix(in srgb,var(--a1) 45%,transparent);
   background:color-mix(in srgb,var(--a2) 12%,transparent);
 }
@@ -114,7 +114,7 @@ html.gl .sr {
   background:color-mix(in srgb,var(--tx) 8%,transparent);
 }
 .sri.red,.srl.red {
-  color:var(--c);
+  color:var(--ctx);
 }
 .srl {
   flex:1 0 auto;

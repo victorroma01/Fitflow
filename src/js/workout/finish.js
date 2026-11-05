@@ -51,10 +51,8 @@ const saveHistory = () => {
     const l = a.filter(s => s.ok).map(s => s.k ? [s.r, s.w || 0, s.q || 0, s.t || 0, s.k] : [s.r, s.w || 0, s.q || 0, s.t || 0]);
     if (l.length) {
       const n = d.ex[i].n;
-      const h = S.hist[n] = S.hist[n] || [];
-      h.unshift({ d: dt, s: l });
-      if (h.length > 60)
-        h.length = 60;
+      /* todo el historial: va también a la nube, un documento por año (cloud/sync), y un año ocupa poco */
+      (S.hist[n] = S.hist[n] || []).unshift({ d: dt, s: l });
     }
   });
 };

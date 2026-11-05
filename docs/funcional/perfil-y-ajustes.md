@@ -25,7 +25,7 @@ Página propia, ordenada por secciones. Cada fila abre su página, con «←» p
 | --- | --- |
 | Cuenta | **Cuenta** (usuario, tipo de cuenta, sincronización y Cambiar contraseña) y **Sincronización** (su estado; al tocarla, sincroniza). |
 | Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico; reducir animaciones), **Color de acento** y **Al abrir la app** ([abajo](#apariencia)). |
-| Entreno | **Unidades de carga** (kg o lb) y **Sonido y avisos** (notificaciones, sonidos del descanso, vibración y, en iPhone, el [globo en el icono](experiencia.md#globo-en-el-icono-iphone)). |
+| Entreno | **Unidades de carga** (kg o lb) y **Sonido y avisos** (sonidos del descanso, vibración y, en iPhone, el [globo en el icono](experiencia.md#globo-en-el-icono-iphone)). |
 | Datos | **Copia de seguridad** y **Borrar todos los datos**. |
 | App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **Ver el recorrido** (el de la [primera vez](experiencia.md#recorrido-de-la-primera-vez)), **Diagnóstico** (versión, dispositivo, espacio y errores registrados) e **Informar de un fallo**. |
 | Información | **Privacidad** y **Aviso legal** (copyright, licencia, aviso de salud y origen de los datos de Open Food Facts). |

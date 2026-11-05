@@ -117,7 +117,8 @@
   border-radius:50%;
 }
 .mci .mti {
-  color:#ffffff88;
+  /* con la opacidad de .mti, blanco al 52 %: contraste de 4,5 o más sobre el degradado oscuro del menú */
+  color:#ffffffa6;
   font-size:11px;
   letter-spacing:.2em;
   text-transform:uppercase;

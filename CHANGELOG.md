@@ -65,9 +65,20 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   acumulan en el teléfono.
 - Administración avisa de cuántos fallos y sugerencias hay pendientes y deja contestarlos.
 - Ajustes: «Al abrir la app» (la pestaña con la que se abre) y «Reducir animaciones».
+- Tema claro más legible: más contraste en los textos de color (macros, estados, color de acento y el ✓ del nivel) y en el texto
+  secundario, y el diálogo de confirmación casi opaco con Cristal.
+- «Unir al anterior» (en el Overview, «Enlazar») y «Separar» funcionan igual en la semana y en el Overview: el bloque se parte por
+  donde separas, al unir un ejercicio se lleva a su pareja y, de cuatro seguidos en adelante, es un circuito.
 
 ### Correcciones
 - Al cambiar el descanso o el tempo durante el entreno, el objetivo de arriba no se actualizaba hasta salir.
+- El historial de cada ejercicio se quedaba en sus 60 últimas sesiones y lo anterior se borraba: ahora se guarda entero.
+- El Overview y el aviso de estancamiento describían la semana de descarga antigua («mitad de series»): ahora dicen lo que hace,
+  peso al 65 % y 2 repeticiones menos.
+- Al reanudar un entreno interrumpido, la pantalla seguía encendida aunque lo hubieras quitado en Ajustes o estuviera en pausa.
+- «Volver a entrar», cuando caduca la sesión, también hace esperar tras cinco contraseñas fallidas.
+- Fuera «Notificaciones activadas» de Ajustes → Sonido y avisos: no hacía nada.
+- La sincronización ya no se queda «en marcha» si el servidor deja una respuesta a medias.
 
 ### Interno
 - La numeración empieza de nuevo en la 1.0.0. Los móviles con la 1.24.0 la reciben igual: el service worker guarda el
@@ -141,3 +152,13 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   conexión; reglas de las preferencias nuevas en `tests/rules.test.mjs`. Cuatro pantallas más en `tests/shots.py` (47), que ahora
   entra con la sesión de prueba (desde las cuentas, M2, capturaba el inicio de sesión). Lista de comprobación para los móviles de
   verdad en `docs/tecnica/pruebas.md`.
+- Cierre (M8, T-04, T-21, T-22): revisión final del código. Fuera código muerto (la descarga por los artefactos de Claude en
+  `system/files`, `downloadAs` repetido en `extras/csv`, el resultado `'delivered'`, el segundo bloqueo de pantalla de
+  `workout/session` y la preferencia `notif`, también de las reglas); `cloud/net` mide el límite de tiempo también al leer la
+  respuesta; `workout/finish` guarda el historial entero; `workout/day: linkPrev`, una sola función para unir y separar bloques;
+  colores de texto por tema en `css/00-base` (`--at`, `--ctx`, `--ptx`, `--gtx`, `--okx`, `--wnx`, `--erx` y `--snx`) y el diálogo
+  del tema claro con Cristal al 84 % (`--pd`). Informe de issues en `docs/tecnica/issues.md`.
+- CI: acciones con Node.js 24 (`checkout@v6`, `setup-node@v6` sin caché automática de paquetes, `setup-python@v6` y
+  `setup-java@v5`).
+- Pruebas: `tests/walk.py` y `tests/shots.py`, también por HTTP; en `tests/session.py`, unir y separar superseries; en
+  `tests/cloud.py`, la espera al volver a entrar.

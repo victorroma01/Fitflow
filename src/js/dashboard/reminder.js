@@ -170,5 +170,5 @@ A.wrcal = async () => {
     saveState();
   }
   const r = await downloadFile('StrataFit-pesaje.ics', weighIcs(), 'text/calendar');
-  toast(r == 'saved' || r == 'delivered' ? 'Ábrelo para añadirlo a tu calendario' : r == 'declined' ? 'No se ha guardado' : 'No se ha podido crear el archivo');
+  toast(r == 'saved' ? 'Ábrelo para añadirlo a tu calendario' : r == 'declined' ? 'No se ha guardado' : 'No se ha podido crear el archivo');
 };

@@ -116,6 +116,14 @@ entrar en la consola: los flujos de GitHub Actions *Restablecer contraseña*, *A
 Actions (cuando están en `main`), y *Desplegar reglas* se lanza solo al fusionar un cambio de `firestore.rules`. Todos usan el secreto
 `FIREBASE_SERVICE_ACCOUNT`; nunca guardes la clave en el repositorio.
 
+**Orden al cambiar las reglas.** Al fusionar en `main`, *Desplegar reglas* y la publicación de la app corren a la vez, así que durante
+unos minutos puede haber app nueva con reglas viejas, o al revés. Lo que las reglas rechazan no se pierde (sigue en el móvil y la
+sincronización lo reintenta), pero mientras tanto esa cuenta no sincroniza nada. Por eso:
+
+- si la app nueva escribe un campo o un documento nuevo (una preferencia más, por ejemplo), primero se fusiona el cambio de
+  `firestore.rules` que lo admite, compatible con la app publicada, y después la app;
+- si deja de escribir uno, al revés: primero la app y, cuando esté publicada, las reglas que ya no lo admiten.
+
 ### Paso de la 1.24.0 a la 1.0.0
 
 La numeración empieza de nuevo en la 1.0.0. Un móvil con la 1.24.0 la recibe igual: su service worker guarda el documento nuevo en

@@ -31,7 +31,7 @@ A.pv = (i, b) => {
 const presetRow = i => {
   const act = S.cpi < 0 && S.prog == i;
   const pl = act ? S.plan : levelPlan(parseProgram(i), S.lv, i);
-  return html`<button class="mb pgc" data-a="pv" data-i="${i}"><span style="flex:1;min-width:0">${programRow(PROGRAM_NAMES[i], levelTag(S.lv))}<small>${raw(act ? '<b style="color:var(--a1)">Plan actual</b> · ' : '')}${perWeekText(pl)} · ${raw(pl.reduce((s, d) => s + d.ex.length, 0))} ejercicios</small></span>›</button>`;
+  return html`<button class="mb pgc" data-a="pv" data-i="${i}"><span style="flex:1;min-width:0">${programRow(PROGRAM_NAMES[i], levelTag(S.lv))}<small>${raw(act ? '<b style="color:var(--at)">Plan actual</b> · ' : '')}${perWeekText(pl)} · ${raw(pl.reduce((s, d) => s + d.ex.length, 0))} ejercicios</small></span>›</button>`;
 };
 /** Predefinidos según el sexo del perfil (F-05): arriba los preferentes y debajo el resto. Sin sexo elegido, se pregunta. */
 const presetList = () => {
@@ -41,7 +41,7 @@ const presetList = () => {
   const pf = PROGRAM_PREF[sx];
   return html`<div class="ph">Recomendados para ti</div>${pf.map(presetRow)}<div class="ph">Otros programas</div>${PROGRAM_NAMES.map((n, i) => pf.includes(i) ? '' : presetRow(i))}`;
 };
-A.pg = () => fullPage(html`${pgHead('Programas')}<button class="pr" data-a="cpn" style="width:100%;margin:0 0 6px;padding:15px;border-radius:16px;font-size:16px">+ Crear programa</button><div class="g2" style="margin:0 0 6px"><button data-a="pgi">Importar</button><button data-a="pgs0">Compartir plan</button></div>${raw(S.cp.length ? html`<div class="ph">Mis programas</div>${S.cp.map((p, k) => html`<button class="mb pgc" data-a="cpv" data-i="${k}"><span style="flex:1;min-width:0">${programRow(p.n, p.o && isLevel(p.o.niv) ? levelTag(p.o.niv) : '')}<small>${raw(S.cpi == k ? '<b style="color:var(--a1)">Plan actual</b> · ' : '')}${perWeekText(p.plan)} · ${raw(p.plan.reduce((s, d) => s + d.ex.length, 0))} ejercicios</small></span>›</button>`)}` : '')}${presetList()}`);
+A.pg = () => fullPage(html`${pgHead('Programas')}<button class="pr" data-a="cpn" style="width:100%;margin:0 0 6px;padding:15px;border-radius:16px;font-size:16px">+ Crear programa</button><div class="g2" style="margin:0 0 6px"><button data-a="pgi">Importar</button><button data-a="pgs0">Compartir plan</button></div>${raw(S.cp.length ? html`<div class="ph">Mis programas</div>${S.cp.map((p, k) => html`<button class="mb pgc" data-a="cpv" data-i="${k}"><span style="flex:1;min-width:0">${programRow(p.n, p.o && isLevel(p.o.niv) ? levelTag(p.o.niv) : '')}<small>${raw(S.cpi == k ? '<b style="color:var(--at)">Plan actual</b> · ' : '')}${perWeekText(p.plan)} · ${raw(p.plan.reduce((s, d) => s + d.ex.length, 0))} ejercicios</small></span>›</button>`)}` : '')}${presetList()}`);
 A.pgsx = (i, b) => {
   const v = b.dataset.v;
   if (v != 'M' && v != 'F')

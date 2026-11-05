@@ -5,7 +5,7 @@
    Tras cinco intentos fallidos, una espera que se dobla en cada fallo (de 5 s a 5 min), además del bloqueo de Firebase.
    Al entrar: si los datos del móvil son de otra cuenta se borran, se bajan los de la cuenta (cloud/sync) y la app se abre
    de nuevo con ellos.
-   Define: loginState, waitLeft, noteFail, clearFails, loginBusy, loginError, waitTimer, loginField, loginView, passwordView, loginSync, enterAccount, finishLogin  · acciones/registros: 7
+   Define: loginState, waitLeft, noteFail, BAD_LOGIN, clearFails, loginBusy, loginError, waitTimer, loginField, loginView, passwordView, loginSync, enterAccount, finishLogin, reloginBusy  · acciones/registros: 7
 */
 import { $, APPV } from '../core/util.js';
 import { Store } from '../core/store.js';
@@ -53,6 +53,8 @@ const noteFail = () => {
     logError('guardar intento fallido', e);
   }
 };
+/** Códigos de Authentication de un usuario o una contraseña que no valen: cuentan como intento fallido. */
+const BAD_LOGIN = ['INVALID_LOGIN_CREDENTIALS', 'INVALID_PASSWORD', 'EMAIL_NOT_FOUND'];
 const clearFails = () => {
   try {
     Store.del(Store.K.lgn);
@@ -180,7 +182,7 @@ A.lgo = async () => {
     s = up ? await signUp(u, p) : await signIn(u, p);
   }
   catch (e) {
-    if (['INVALID_LOGIN_CREDENTIALS', 'INVALID_PASSWORD', 'EMAIL_NOT_FOUND'].includes(e.code))
+    if (BAD_LOGIN.includes(e.code))
       noteFail();
     loginError(authMessage(e));
     return;
@@ -219,7 +221,11 @@ A.lgcp = async () => {
 A.lgpv = () => sheet(html`${pgHead('Privacidad')}<div class="srt">${PRIVACY_TEXT.map(p => html`<p>${p}</p>`)}</div><div style="height:30px"></div>`);
 /* sesión caducada (contraseña restablecida, otro dispositivo la cambió…): volver a entrar sin perder lo del móvil */
 A.lgre = () => sheet(html`<h3>Vuelve a entrar</h3><p class="mu" style="margin:0 0 10px">Tu sesión ha caducado, por ejemplo porque se cambió la contraseña. Lo que has hecho sigue en este móvil y se sube al entrar.</p><label for="lrp">Contraseña de ${account ? account.u : ''}</label><input id="lrp" type="password" autocomplete="current-password" maxlength="100" data-enter="lgrs"><p id="lre" class="lge" role="alert"></p><button class="pr" data-a="lgrs" style="width:100%;margin-top:6px">Entrar</button>`);
+/* volver a entrar: una petición a la vez y la misma espera tras cinco intentos fallidos que en el inicio de sesión */
+let reloginBusy = false;
 A.lgrs = async () => {
+  if (reloginBusy)
+    return;
   const p = ($('#lrp') || {}).value || '';
   const out = t => {
     const e = $('#lre');
@@ -230,9 +236,15 @@ A.lgrs = async () => {
     out(passProblem(p));
     return;
   }
+  if (waitLeft()) {
+    out('Demasiados intentos. Espera ' + Math.ceil(waitLeft() / 1e3) + ' s antes de volver a probar.');
+    return;
+  }
+  reloginBusy = true;
   out('Entrando…');
   try {
     const s = await signIn(account.u, p);
+    clearFails();
     if (s.uid !== account.uid) {
       out('Esa cuenta ya no es la de este móvil. Cierra la sesión en Ajustes y vuelve a entrar.');
       return;
@@ -243,8 +255,13 @@ A.lgrs = async () => {
       acctSave({ ...account, mc: 2 });
   }
   catch (e) {
+    if (BAD_LOGIN.includes(e.code))
+      noteFail();
     out(authMessage(e));
     return;
+  }
+  finally {
+    reloginBusy = false;
   }
   sheet();
   if (account.mc) {

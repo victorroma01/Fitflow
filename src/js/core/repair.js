@@ -167,6 +167,8 @@ const repairSettings = () => {
       delete S.acc;
     if (S.st0 != null && !(Number.isInteger(S.st0) && S.st0 >= 0 && S.st0 <= 3))
       delete S.st0;
+    /* «Notificaciones activadas» no hacía nada y ya no existe */
+    delete S.notif;
     if (S.bkd != null && !(+S.bkd > 0))
       delete S.bkd;
     Object.keys(S.hist).forEach(n => {

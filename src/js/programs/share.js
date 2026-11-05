@@ -118,10 +118,10 @@ A.shf = async () => {
   if (!shareState)
     return;
   const r = await downloadFile('programa-' + String(shareState.n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) + '.json', JSON.stringify({ ff: 'FFP1', n: shareState.n, plan: cleanPlan(shareState.plan) }));
-  toast(r == 'saved' || r == 'delivered' ? 'Archivo guardado' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
+  toast(r == 'saved' ? 'Archivo guardado' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
 };
 A.pgi = () => {
-  sheet(html`${pgHead('Importar programa', 'pg')}<p class="mu" style="margin:-6px 0 10px">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu" style="color:var(--c);display:none;margin:8px 0 0"></p><div class="g2" style="margin-top:10px"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="pgif"></label><button class="pr" data-a="pgio">Importar</button></div>`);
+  sheet(html`${pgHead('Importar programa', 'pg')}<p class="mu" style="margin:-6px 0 10px">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu" style="color:var(--ctx);display:none;margin:8px 0 0"></p><div class="g2" style="margin-top:10px"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="pgif"></label><button class="pr" data-a="pgio">Importar</button></div>`);
   sheetToTop();
 };
 const importProgram = t => {

@@ -39,8 +39,8 @@ La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V
 | M4 · Pantalla de entrenamiento | Iconos, desplegables cortos, peso sugerido, ventana de cada técnica, superseries encadenadas, barra inferior y reloj del WOD. Hecho en la rama. |
 | M5 · Perfil y seguimiento | Recordatorio de pesaje, análisis mensual en PDF, fallos y sugerencias con respuesta, nota de actualización y copia de seguridad única en la nube. Hecho en la rama. |
 | M6 · Experiencia y plataformas | Más colores y uno propio, recorrido de la primera vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android, accesos directos y globo en el icono, con pruebas en Android e iPhone. Hecho en la rama. |
-| M7 · Imágenes | Pospuesto. |
-| M8 · Cierre | Revisión final, informe de issues y publicación. |
+| M7 · Imágenes | Pospuesto por decisión del propietario, como el fondo del login (F-33, T-18). |
+| M8 · Cierre | Revisión final del código, pruebas, [informe de issues](docs/tecnica/issues.md) y documentación. Hecho en la rama; la publicación, a la espera de confirmación. |
 
 ## Qué hace
 

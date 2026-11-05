@@ -375,7 +375,7 @@ A.cpv0 = () => {
     return A.pg();
   const act = S.cpi == k;
   const pl = act ? S.plan : p.plan;
-  sheet(html`${pgHead(X(p.n), 'pg')}<p class="mu" style="margin:-6px 0 10px">${p.d || ''}${raw(act ? ' · <b style="color:var(--a1)">Plan actual</b>' : '')}</p>${raw(programDaysHtml(pl))}${raw(deloadChips(p.dl, 'p'))}<div class="g2" style="margin-top:12px"><button data-a="cpe">Ordenar días</button><button data-a="cpdl" style="color:var(--c)">Borrar</button></div><button data-a="cpsh" style="width:100%;margin-top:8px">Compartir programa</button><div style="height:84px"></div>${raw(act ? '' : '<button class="sb pr" data-a="cpac" style="padding:16px;font-size:16px;border-radius:16px">Usar este programa</button>')}`);
+  sheet(html`${pgHead(X(p.n), 'pg')}<p class="mu" style="margin:-6px 0 10px">${p.d || ''}${raw(act ? ' · <b style="color:var(--at)">Plan actual</b>' : '')}</p>${raw(programDaysHtml(pl))}${raw(deloadChips(p.dl, 'p'))}<div class="g2" style="margin-top:12px"><button data-a="cpe">Ordenar días</button><button data-a="cpdl" style="color:var(--ctx)">Borrar</button></div><button data-a="cpsh" style="width:100%;margin-top:8px">Compartir programa</button><div style="height:84px"></div>${raw(act ? '' : '<button class="sb pr" data-a="cpac" style="padding:16px;font-size:16px;border-radius:16px">Usar este programa</button>')}`);
   sheetToTop();
 };
 A.cpac = () => {

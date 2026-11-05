@@ -8,7 +8,7 @@ import { A } from '../core/registry.js';
 import { S, saveState, setW, W } from '../core/state.js';
 import { confirmDialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { requestSessionWakeLock } from './session.js';
+import { keepAwake } from './wake.js';
 import { html, raw } from '../core/html.js';
 export const WIP_KEY = Store.K.wip;
 export let pendingResume = null;
@@ -50,12 +50,8 @@ A.zres = () => {
   W.lb = 0;
   W.ri = null;
   saveState();
-  try {
-    requestSessionWakeLock();
-  }
-  catch (e) {
-    /* bloqueo de pantalla opcional */
-  }
+  /* pantalla encendida según el ajuste, como al empezar (workout/wake) */
+  keepAwake();
   R();
   scrollTo(0, 0);
 };
@@ -77,7 +73,7 @@ export const resumeBanner = () => {
   const t = pendingResume;
   const n = t.W.x.reduce((a, b) => a + b.length, 0);
   const o = t.W.x.reduce((a, b) => a + b.filter(x => x.ok).length, 0);
-  return html`<div class="cd" style="border-color:var(--a2)"><small style="color:var(--a1);font-weight:700;letter-spacing:.1em">ENTRENO EN CURSO</small><div style="font-size:19px;font-weight:700;margin:4px 0 2px">${t.d.n}</div><div class="mu" style="margin-bottom:12px">${raw(o)} de ${raw(n)} series completadas</div><div class="g2"><button data-a="zrq">Descartar</button><button class="pr" data-a="zres">Reanudar</button></div></div>`;
+  return html`<div class="cd" style="border-color:var(--a2)"><small style="color:var(--at);font-weight:700;letter-spacing:.1em">ENTRENO EN CURSO</small><div style="font-size:19px;font-weight:700;margin:4px 0 2px">${t.d.n}</div><div class="mu" style="margin-bottom:12px">${raw(o)} de ${raw(n)} series completadas</div><div class="g2"><button data-a="zrq">Descartar</button><button class="pr" data-a="zres">Reanudar</button></div></div>`;
 };
 export const dropResume = () => {
   pendingResume = null;

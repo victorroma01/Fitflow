@@ -25,9 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
+          package-manager-cache: false
           node-version: 22
       - name: firebase-admin
         run: npm install --no-save --no-audit --no-fund firebase-admin@13

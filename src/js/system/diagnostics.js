@@ -77,7 +77,7 @@ A.diagBad = async () => {
   if (!b)
     return;
   const r = await downloadFile('stratafit-datos-apartados-' + dayKey(new Date(b.t)) + '.json', b.raw);
-  if (r != 'saved' && r != 'delivered')
+  if (r != 'saved')
     toast('No se pudo descargar');
 };
 A.diagBadDel = () => confirmDialog('Eliminar datos apartados', 'Se borrará la copia de los datos que no se pudieron leer. No afecta a tus datos actuales.', 'diagBadDel2', 'Eliminar');

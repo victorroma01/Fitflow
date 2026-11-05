@@ -81,7 +81,7 @@ button.lnk {
   height:42px;
   border-radius:12px;
   background:color-mix(in srgb,var(--ac) 18%,transparent);
-  color:var(--ac);
+  color:var(--at);
 }
 .wrb small {
   display:block;
@@ -126,23 +126,24 @@ button.lnk {
   font-size:12px;
   font-weight:700;
   background:var(--ln);
-  color:var(--mu);
+  /* sobre var(--ln), el gris de --mu no llegaba al contraste de 4,5 */
+  color:color-mix(in srgb,var(--tx) 72%,transparent);
 }
 .rps.wait {
   background:color-mix(in srgb,#f59e0b 20%,transparent);
-  color:#f59e0b;
+  color:var(--wnx);
 }
 .rps.seen {
   background:color-mix(in srgb,#4da3ff 20%,transparent);
-  color:#4da3ff;
+  color:var(--snx);
 }
 .rps.ok {
   background:color-mix(in srgb,#2ecc71 20%,transparent);
-  color:#2ecc71;
+  color:var(--okx);
 }
 .rps.bad {
   background:color-mix(in srgb,#e5484d 20%,transparent);
-  color:#e5484d;
+  color:var(--erx);
 }
 .rptx {
   display:block;
@@ -252,10 +253,10 @@ button.lnk {
   text-overflow:ellipsis;
 }
 .ank small.up,.anr .up,b.ano {
-  color:#2ecc71;
+  color:var(--okx);
 }
 .ank small.dn,b.anx {
-  color:#f59e0b;
+  color:var(--wnx);
 }
 b.ane {
   color:var(--tx);

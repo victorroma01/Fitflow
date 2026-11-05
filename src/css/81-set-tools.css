@@ -54,7 +54,7 @@
   min-width:0;
 }
 .sgb b {
-  color:var(--a1);
+  color:var(--at);
 }
 .sgb .chip {
   margin:0;
@@ -130,7 +130,7 @@
   font-size:10px;
   font-weight:800;
   letter-spacing:.08em;
-  color:var(--a1);
+  color:var(--at);
   margin-left:4px;
 }
 .pgsum {
@@ -172,7 +172,7 @@
   display:inline-block;
 }
 .sl .arw.live>span {
-  color:var(--a1);
+  color:var(--at);
   animation:arwF 1.4s ease-in-out infinite;
 }
 .sl .arw.live>span:nth-child(2) {

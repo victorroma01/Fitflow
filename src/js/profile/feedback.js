@@ -1,6 +1,6 @@
 /* ═══ profile/feedback ═══
    Sonido, vibración y avisos de descanso.
-   Define: audioCtx, audioContext, beep, canVibrate, buzz, soundVolume, soundSequence, alertSettings  · acciones/registros: 9
+   Define: audioCtx, audioContext, beep, canVibrate, buzz, soundVolume, soundSequence, alertSettings  · acciones/registros: 8
 */
 import { A, C } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
@@ -105,7 +105,3 @@ A.zsnd1 = () => {
 };
 export const alertSettings = () => html`<label>Avisos de descanso</label><label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" style="width:auto" ${S.vib === 0 ? '' : 'checked'} data-c="vib"> Vibración al terminar el descanso</label>${raw(canVibrate() ? '' : '<small class="mu" style="display:block;margin:-2px 0 6px">Este dispositivo no permite vibrar desde la web (iPhone). El aviso será por sonido.</small>')}<small class="mu" style="display:block">Volumen del aviso</small>${segmented('vol', S.vol == null ? 1 : S.vol, [[0, 'Bajo'], [1, 'Medio'], [2, 'Alto']])}<small class="mu" style="display:block;margin-top:8px">Sonido</small>${segmented('snt', S.snt || 0, [[0, 'Clásico'], [1, 'Suave'], [2, 'Alarma']])}<small class="mu" style="display:block;margin-top:4px">Si no oyes nada, comprueba el interruptor de silencio del móvil.</small><label style="display:flex;gap:8px;align-items:center;margin:10px 0 6px"><input type="checkbox" style="width:auto" ${S.ar === 0 ? '' : 'checked'} data-c="ar"> Iniciar el descanso al marcar una serie</label><label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" style="width:auto" ${S.awk === 0 ? '' : 'checked'} data-c="awk"> Mantener la pantalla encendida en el entreno</label>`;
 /* — manejadores de esta función (registros A / C / U) — */
-C.nt = e => {
-  S.notif = e.checked ? 1 : 0;
-  saveState();
-};

@@ -6,6 +6,7 @@ Requiere:  pip install playwright pillow numpy  &&  playwright install chromium
 """
 import os,sys,json,hashlib
 from playwright.sync_api import sync_playwright
+from browser import app_url, context_opts
 HERE=os.path.dirname(os.path.abspath(__file__))
 def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
@@ -66,11 +67,13 @@ CFG={ # nombre: (w,h,scheme,gm,gl)
 }
 def run(file,out,cfgs):
     os.makedirs(out,exist_ok=True);res={}
+    # por HTTP, como el resto de pruebas (tests/browser.py): con file://, Chromium a veces recarga con el almacenamiento vacío
+    url=app_url(file)
     with sync_playwright() as p:
         b=p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
         for cn in cfgs:
             w,h,sch,gm,gl=CFG[cn]
-            c=b.new_context(viewport={'width':w,'height':h},device_scale_factor=2,color_scheme=sch,has_touch=True,is_mobile=True)
+            c=b.new_context(viewport={'width':w,'height':h},device_scale_factor=2,color_scheme=sch,has_touch=True,is_mobile=True,**context_opts(file))
             # con la sesión de prueba (tests/init.js): sin cuenta, la app solo enseña el inicio de sesión
             c.add_init_script(INIT)
             pg=c.new_page();errs=[]
@@ -78,7 +81,7 @@ def run(file,out,cfgs):
             for k,js in SCR.items():
                 # cada pantalla desde cero: sin el entreno en curso ni la pestaña que dejó la anterior (si no, lo que hay detrás de
                 # una hoja depende de si un guardado llegó a escribirse antes de cambiar de página)
-                pg.goto('file://'+file);pg.wait_for_timeout(250)
+                pg.goto(url);pg.wait_for_timeout(250)
                 pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(250)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
                 pg.evaluate(SEED.replace("S.gm=3;S.gl=1;S.theme='dark';","S.gm=%d;S.gl=%d;S.theme='%s';"%(gm,gl,sch)))

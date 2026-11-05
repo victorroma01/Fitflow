@@ -71,7 +71,7 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | Clave | Tipo | Qué es |
 |---|---|---|
 | `logs` | registro[] | Entrenos hechos: `{ id, d: 'AAAA-MM-DD', n, v: volumen kg, s: series, m: minutos, q?: esfuerzo, k?: 'c' cardio \| 'w' WOD, c?: datos de cardio, x?: resumen, nt?: nota }`. El `id` (lo pone `core/repair` a partir del contenido) identifica cada entreno al juntar los de dos dispositivos. |
-| `hist` | `{ ejercicio: [{ d, s: [[reps, kg, rpe, extra, técnica?]] }] }` | Historial por ejercicio, el más reciente primero. `extra`: 0 serie, 1 drop set, 2 rest-pause; la técnica, si no fue una serie normal. |
+| `hist` | `{ ejercicio: [{ d, s: [[reps, kg, rpe, extra, técnica?]] }] }` | Historial por ejercicio, el más reciente primero, completo (en la serie de prueba se quedaba en las 60 últimas sesiones). `extra`: 0 serie, 1 drop set, 2 rest-pause; la técnica, si no fue una serie normal. |
 | `last` | `{ ejercicio: kg }` | Último peso usado (para rellenar). |
 | `pr` | `{ ejercicio: { w, r, e } }` | Mejores marcas (peso, repeticiones, 1RM estimado). |
 | `pc` | número | Récords batidos en total (para logros). |
@@ -122,7 +122,6 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `ar` | 0 si el descanso no empieza solo al marcar una serie. |
 | `snd` / `snt` / `vol` / `vib` | Sonido activado, tipo de pitido, volumen y vibración. |
 | `awk` | 0 para no mantener la pantalla encendida durante el entreno. |
-| `notif` | Notificaciones activadas. |
 | `pf` | Perfil: solo la foto (`img`, JPEG, PNG o WebP en base64) y `pc`, cuándo se dio el consentimiento para subirla (sin él, la foto no sale del móvil). Nombre, email y teléfono ya no existen: se borran al arrancar y al restaurar una copia. |
 | `wdc` | Última configuración del temporizador WOD. |
 | `rg` | Rango de la gráfica de peso: 0 semanas, 1 meses, 2 años. |
