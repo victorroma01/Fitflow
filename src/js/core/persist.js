@@ -6,10 +6,9 @@
    leer y el orden de las claves de S se conserva.
    Cada guardado escribe solo las claves que han cambiado, y todos los saveState() de una misma acción se agrupan en
    uno solo al terminar la acción (queueMicrotask: siempre antes de que la página pueda recargarse o cerrarse).
-   Los datos de la 1.20 y anteriores (todo S en `ff`) se leen igual y pasan a partes en el primer guardado; si no hay
-   espacio para hacerlo, se sigue guardando entero, como antes, y se reintenta en el próximo arranque.
+   Cada parte que cambia se avisa a Store.remote (cloud/sync, que la sube a Firebase).
    Este módulo no conoce S: core/state le pasa el estado (saveState, flushState).
-   Define: STATE_PARTS, partKey, stateRecovered, savedFormat, savedText, queued, saveLocked, partsFailed, lastKey, splitState, readPart, loadSavedState, writeKeys, writeWhole, saveFailedAt, saveFailed, writeState, scheduleWrite, replaceSavedState, lockSaves, clearSavedState
+   Define: STATE_PARTS, partKey, stateRecovered, savedText, queued, saveLocked, lastKey, splitState, readPart, loadSavedState, writeKeys, saveFailedAt, saveFailed, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
 */
 import { Store } from './store.js';
 import { logError } from './errors.js';
@@ -21,16 +20,12 @@ export const partKey = k => Store.K.app + ':' + k;
 /** Al arrancar: 1 si el núcleo estaba dañado (se empezó de cero, conservando las partes legibles), 2 si solo lo estaba
   alguna parte. Lo dañado queda apartado en Store.K.bad y core/boot avisa. */
 export let stateRecovered = 0;
-/** Cómo está guardado S ahora: '' nada (o un núcleo dañado), 'whole' entero en `ff` (1.20 y anteriores), 'parts' por partes. */
-export let savedFormat = '';
 /** Texto escrito en cada clave del estado según la última lectura o escritura (null: la clave existe, contenido sin leer). */
 const savedText = new Map();
 /** Estado pendiente de escribir al terminar la acción (scheduleWrite), o null. */
 let queued = null;
 /** 1 tras restaurar una copia o borrarlo todo: nada de lo pendiente debe pisar lo escrito antes de recargar. */
 let saveLocked = 0;
-/** 1 si en esta sesión no hubo espacio para pasar a partes: se guarda entero, como la 1.20. */
-export let partsFailed = 0;
 /** Clave que se estaba escribiendo (para el registro de errores si falla). */
 let lastKey = '';
 /** El objeto `s` dividido en claves de Store: { clave: texto JSON }. El núcleo lleva la marca _parts. */
@@ -101,16 +96,13 @@ export const loadSavedState = () => {
     }
   }
   const salvage = !!bad[Store.K.app];
-  if (core && !core._parts) {
-    savedFormat = 'whole';
-    return core;
-  }
+  /* todo S en `ff`, sin partes: datos de la serie de prueba (1.20 y anteriores), que no se migran */
+  if (core && !core._parts)
+    return {};
   if (!core && !salvage)
     return {};
-  if (core) {
-    savedFormat = 'parts';
+  if (core)
     delete core._parts;
-  }
   else
     core = {};
   const keys = [...savedText.keys()];
@@ -177,25 +169,9 @@ const writeKeys = next => {
     savedText.set(core, next[core]);
   }
 };
-/** Guarda `s` entero en `ff`, como la 1.20. Antes borra las partes, que en este formato no se leen. Lanza el error de Store. */
-const writeWhole = s => {
-  for (const k of [...savedText.keys()])
-    if (k != Store.K.app) {
-      lastKey = k;
-      Store.del(k);
-      savedText.delete(k);
-    }
-  const t = JSON.stringify(s);
-  lastKey = Store.K.app;
-  if (savedText.get(Store.K.app) !== t) {
-    Store.set(Store.K.app, t);
-    savedText.set(Store.K.app, t);
-  }
-  savedFormat = 'whole';
-};
 let saveFailedAt = 0;
 /** Registra un fallo al guardar y avisa (como mucho una vez por minuto). */
-export const saveFailed = (k, e) => {
+const saveFailed = (k, e) => {
   logError('guardar ' + k, e);
   if (Date.now() - saveFailedAt < 6e4)
     return;
@@ -214,33 +190,12 @@ export const writeState = s => {
   queued = null;
   if (saveLocked)
     return true;
-  let next;
   try {
-    next = splitState(s);
-  }
-  catch (e) {
-    saveFailed(Store.K.app, e);
-    return false;
-  }
-  if (savedFormat != 'parts' && !partsFailed)
-    try {
-      writeKeys(next);
-      savedFormat = 'parts';
-      return true;
-    }
-    catch (e) {
-      partsFailed = 1;
-      logError('pasar a guardado por partes (' + lastKey + ')', e);
-    }
-  try {
-    if (savedFormat == 'parts')
-      writeKeys(next);
-    else
-      writeWhole(s);
+    writeKeys(splitState(s));
     return true;
   }
   catch (e) {
-    saveFailed(lastKey, e);
+    saveFailed(lastKey || Store.K.app, e);
     return false;
   }
 };
@@ -257,29 +212,21 @@ export const scheduleWrite = s => {
 /** Sustituye todo el estado guardado por `s` (restaurar una copia de seguridad). Si falla, lanza el error: quien llama
   deshace volviendo a escribir S (flushState de core/state). Si va bien, quien llama bloquea los guardados y recarga. */
 export const replaceSavedState = s => {
-  if (!partsFailed)
-    try {
-      writeKeys(splitState(s));
-      savedFormat = 'parts';
-      return;
-    }
-    catch (e) {
-      if (savedFormat == 'parts')
-        throw e;
-      partsFailed = 1;
-      logError('pasar a guardado por partes (' + lastKey + ')', e);
-    }
-  writeWhole(s);
+  writeKeys(splitState(s));
 };
 /** Bloquea los guardados hasta recargar la página. */
 export const lockSaves = () => {
   saveLocked = 1;
 };
-/** Borra el estado guardado (núcleo y partes) y bloquea los guardados hasta recargar. */
-export const clearSavedState = () => {
-  lockSaves();
+/** Borra el estado guardado (núcleo y partes), sin bloquear los guardados (al entrar con otra cuenta: cloud/session). */
+export const dropSavedState = () => {
   Store.del(Store.K.app);
   for (const k of Store.keys(partKey('')))
     Store.del(k);
   savedText.clear();
+};
+/** Borra el estado guardado y bloquea los guardados hasta recargar. */
+export const clearSavedState = () => {
+  lockSaves();
+  dropSavedState();
 };

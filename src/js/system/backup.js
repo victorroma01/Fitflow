@@ -1,8 +1,8 @@
 /* ═══ system/backup ═══
    Copias de seguridad, restauración y avisos.
-   Define: pendingRestore, backupAge, backupReminder, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, parseBackup, backupDate, askRestore, preRestore, restoreBackup, … (+5)  · acciones/registros: 8
+   Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, cleanProfile, parseBackup, backupDate, askRestore, preRestore, restoreBackup, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
 */
-import { $, APPV, dayKey, safeImage, X } from '../core/util.js';
+import { $, APPV, safeImage, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -13,25 +13,22 @@ import { confirmDialog, pgHead, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
 import { downloadFile } from './files.js';
+import { cloudBackupCard } from '../cloud/backup.js';
 import { fillSnapshots } from './snapshots.js';
-import { allPhotosFull, mergePhotos, photoCount } from '../extras/measures.js';
 import { html, raw } from '../core/html.js';
 export let pendingRestore = null;
 /** Cambia `pendingRestore` desde otros módulos (pruebas: core/debug). */
 export const setPendingRestore = v => {
   pendingRestore = v;
 };
-export const backupAge = () => {
+const backupAge = () => {
   if (!S.bkd)
-    return 'Aún no has guardado ninguna copia.';
+    return 'Aún no has guardado ningún archivo.';
   const d = Math.floor((Date.now() - S.bkd) / 864e5);
-  return 'Última copia: ' + (d <= 0 ? 'hoy' : d == 1 ? 'ayer' : 'hace ' + d + ' días') + '.';
+  return 'Último archivo: ' + (d <= 0 ? 'hoy' : d == 1 ? 'ayer' : 'hace ' + d + ' días') + '.';
 };
-export const backupReminder = () => {
-  if (S.logs.length < 3 || (S.bkd && Date.now() - S.bkd < 21 * 864e5))
-    return '';
-  return html`<div class="cd"><b>Haz una copia de seguridad</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Tus entrenos solo viven en este dispositivo. ${raw(S.bkd ? backupAge() : 'Aún no has guardado ninguna copia.')}</div><button data-a="zbk" style="width:100%">Copia de seguridad</button></div>`;
-};
+/** Nombre del archivo de copia (T-14): siempre el mismo, así cada copia sustituye a la anterior en el teléfono. */
+const BACKUP_FILE = 'StrataFit-copia.json';
 const BACKUP_FORMAT = 2;
 export const countOf = x => Array.isArray(x) ? x.length : (x && typeof x == 'object' ? Object.keys(x).length : 0);
 export const plural = (n, a, b) => n + ' ' + (n == 1 ? a : b);
@@ -63,16 +60,19 @@ export const buildBackup = () => {
 const BACKUP_ERRORS = { vacio: 'El archivo está vacío', prog: 'Eso es un código de programa, no una copia: impórtalo en Programas', grande: 'El archivo es demasiado grande para ser una copia de StrataFit', formato: 'El archivo no es una copia válida de StrataFit', plan: 'La copia está dañada: no tiene un programa de entrenamiento válido' };
 /** Perfil de una copia o de los datos guardados: textos como texto y la foto solo si es una imagen válida (safeImage).
     Devuelve cuántos campos se han quitado. */
+/** Deja en el perfil solo lo que la app guarda: la foto, si es una imagen válida, y cuándo se dio el consentimiento para
+  subirla (`pc`). El nombre, el email y el teléfono de la serie de prueba se borran sin contarlos como daño: la V1.0.0 no
+  guarda datos personales (F-35). Devuelve cuántos datos estaban dañados. */
 export const cleanProfile = pf => {
   if (!pf || typeof pf != 'object')
     return 0;
   let n = 0;
   for (const k of Object.keys(pf)) {
-    const ok = k == 'img' ? !!safeImage(pf[k]) : typeof pf[k] == 'string';
-    if (!ok) {
-      delete pf[k];
+    if (k == 'img' && safeImage(pf.img) || k == 'pc' && +pf.pc > 0)
+      continue;
+    if (k == 'img' || k == 'pc')
       n++;
-    }
+    delete pf[k];
   }
   return n;
 };
@@ -143,7 +143,7 @@ export const askRestore = txt => {
   }
   pendingRestore = r;
   const ds = r.meta && r.meta.at ? backupDate(r.meta.at, 1) : '';
-  confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}${r.meta && Array.isArray(r.meta.ph) && r.meta.ph.length ? html`<br>Incluye ${r.meta.ph.length} fotos de progreso (se añaden a las que ya tienes).` : ''}<br><br><b>Ahora tienes</b><br>${backupSummary(S)}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'bkok', 'Restaurar');
+  confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}<br><br><b>Ahora tienes</b><br>${backupSummary(S)}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'bkok', 'Restaurar');
 };
 const preRestore = () => {
   try {
@@ -260,8 +260,8 @@ A.bkf = async () => {
   const pv = S.bkd;
   S.bkd = Date.now();
   saveState();
-  const r = await downloadFile('stratafit-copia-' + dayKey(new Date) + '.json', await buildFullBackup());
-  if (r == 'saved' || r == 'delivered')
+  const r = await downloadFile(BACKUP_FILE, buildBackup());
+  if (r == 'saved')
     toast('Copia guardada');
   else {
     S.bkd = pv;
@@ -273,7 +273,7 @@ A.zbk = () => {
   const p = preRestore();
   /* desde Ajustes es una página más, con «←» de vuelta; desde Perfil o un aviso, una hoja */
   const fromSettings = !!$('#ajs');
-  sheet(html`${fromSettings ? pgHead('Copia de seguridad', 'zaj') : html`<h3>Copia de seguridad</h3>`}<p class="mu" style="margin:0 0 6px">Tus datos viven solo en este dispositivo. Guarda un archivo de vez en cuando: si cambias de móvil o borras los datos del navegador, podrás restaurarlo aquí y seguir por donde ibas.</p><p class="mu" style="font-size:12px;margin:0 0 12px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto (sin fotos)</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
+  sheet(html`${fromSettings ? pgHead('Copia de seguridad', 'zaj') : html`<h3>Copia de seguridad</h3>`}<p class="mu" style="margin:0 0 12px">Tus datos se guardan en este móvil y se sincronizan con tu cuenta. La copia de seguridad es una foto de tus datos en un momento, para volver a ella si algo se borra o se estropea.</p>${raw(cloudBackupCard())}<div class="cd cbk"><b>Archivo en el móvil</b><p class="mu">Siempre con el mismo nombre, ${BACKUP_FILE}: cada archivo nuevo sustituye al anterior y no se acumulan copias en el teléfono.</p><p class="mu" style="font-size:12px;margin:0 0 10px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
   fillSnapshots();
 };
 export const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;
@@ -296,37 +296,6 @@ function backupRowsFull(s) {
   const na = s.ach && typeof s.ach == 'object' ? Object.keys(s.ach).length : 0;
   if (na)
     r.push(plural(na, 'logro conseguido', 'logros conseguidos'));
-  if (s === S && photoCount)
-    r.push(plural(photoCount, 'foto de progreso', 'fotos de progreso') + ' (solo en la copia en archivo)');
-  if (s !== S && restoredPhotos)
-    r.push(plural(restoredPhotos, 'foto de progreso restaurada', 'fotos de progreso restauradas'));
   return r;
 }
-const buildFullBackup = async () => {
-  let ph = [];
-  try {
-    ph = await allPhotosFull();
-  }
-  catch (e) {
-    ph = [];
-  }
-  const base = buildBackup();
-  return ph.length ? base.replace('{"_sf":{', () => '{"_sf":{"ph":' + JSON.stringify(ph) + ',') : base;
-};
-let restoredPhotos = 0;
-A.bkok = async () => {
-  const r = pendingRestore;
-  restoredPhotos = 0;
-  try {
-    if (r && r.meta && Array.isArray(r.meta.ph) && r.meta.ph.length) {
-      const n = await mergePhotos(r.meta.ph);
-      restoredPhotos = n;
-      if (!n)
-        toast('No se pudieron restaurar las fotos');
-    }
-  }
-  catch (e) {
-    toast('No se pudieron restaurar las fotos');
-  }
-  restoreBackup();
-};
+A.bkok = () => restoreBackup();

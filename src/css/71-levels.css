@@ -104,11 +104,24 @@
 .lvi.on {
   background:var(--lb);
 }
+/* sobre el fondo del nivel elegido, el gris de --mu no llegaba al contraste de 4,5 */
+.lvi.on small {
+  color:color-mix(in srgb,var(--tx) 78%,transparent);
+}
 .lvi em {
   font-style:normal;
   color:var(--lc);
   font-weight:800;
   font-size:15px;
+}
+/* tema claro: el ✓ del nivel elegido, del color del nivel pero más oscuro, para que se lea sobre su fondo */
+@media(prefers-color-scheme:light) {
+  :root:not([data-theme="dark"]) .lvi em {
+    color:color-mix(in srgb,var(--lc) 50%,#000);
+  }
+}
+:root[data-theme="light"] .lvi em {
+  color:color-mix(in srgb,var(--lc) 50%,#000);
 }
 .lvs {
   display:grid;

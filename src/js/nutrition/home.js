@@ -1,6 +1,6 @@
 /* ═══ nutrition/home ═══
    Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones.
-   Define: itemMacros, sumMacros, macroBar, mealName, nutritionBase
+   Define: itemMacros, mealItems, sumMacros, macroBar, mealName, nutritionBase  · acciones/registros: 2
 */
 import { clampNum, dayKey, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
@@ -22,7 +22,8 @@ export const itemMacros = it => {
 export const mealItems = (m, i) => (m && Array.isArray(m[i]) ? m[i] : []).filter(it => it && typeof it.n == 'string');
 export const sumMacros = a => a.reduce((s, t) => s.map((v, i) => v + t[i]), [0, 0, 0, 0, 0, 0]);
 function macroBar(l, v, t, c) {
-  return html`<div><span style="color:var(${c})">${raw(l)}</span><div class="bar"><i style="width:${Math.min(100, v / t * 100 || 0)}%;background:var(${c})"></i></div><b>${roundInt(v)} / ${roundInt(t)} g</b></div>`;
+  /* el nombre, con el color del macro como texto (--ctx…: más oscuro en el tema claro); la barra, con el de siempre */
+  return html`<div><span style="color:var(${c}tx)">${raw(l)}</span><div class="bar"><i style="width:${Math.min(100, v / t * 100 || 0)}%;background:var(${c})"></i></div><b>${roundInt(v)} / ${roundInt(t)} g</b></div>`;
 }
 /** Nombre de la comida `i` de `n` comidas al día (Desayuno, Comida, Cena…). */
 export const mealName = (i, n) => (n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x => n == 3 ? [0, 2, 4].includes(x) : n == 4 ? [0, 2, 3, 4].includes(x) : n == 2 ? [0, 4].includes(x) : 1)[i]] : MEAL_NAMES[i]) || 'Comida ' + (i + 1);
@@ -49,7 +50,7 @@ export function nutritionBase(water) {
     h += html`<div class="cd"><div class="row"><b>${raw(nm)}</b><small>Objetivo ${roundInt(tg[0] * w[i])} kcal</small></div>${mealItems(m, i).map((it, j) => {
       const v = itemMacros(it);
       return html`<div class="it"><div>${it.n}<br><small>${roundInt(v[0])} kcal · C ${round1(v[1])} P ${round1(v[2])} G ${round1(v[3])}</small></div><input type="number" inputmode="decimal" value="${it.g}" data-c="ig" data-i="${i}" data-j="${j}" aria-label="${'Gramos de ' + it.n}"><button data-a="xi" data-i="${i}" data-j="${j}" aria-label="${'Quitar ' + it.n}" style="padding:2px 6px">✕</button></div>`;
-    })}<div class="mac" style="margin:8px 0"><b style="color:var(--c)">${roundInt(v0[1])} / ${roundInt(tg[1] * w[i])} C</b><b style="color:var(--p)">${roundInt(v0[2])} / ${roundInt(tg[2] * w[i])} P</b><b style="color:var(--g)">${roundInt(v0[3])} / ${roundInt(tg[3] * w[i])} G</b></div><div class="mlb"><button class="mlp mli" data-a="add" data-i="${i}" aria-label="${'Añadir alimento, ' + nm}">${icon('plus', 20)}</button><button class="mlp mli" data-a="sd" data-i="${i}" data-n="${nm}" aria-label="${'Guardar ' + nm + ' como plato'}">${icon('bkm', 18)}</button><button class="mlp" data-a="nfs" data-i="${i}" aria-label="${'Buscar alimento en internet, ' + nm}">${icon('srch', 17)}<span>Buscar</span></button><button class="mlp" data-a="nsc" data-i="${i}" aria-label="${'Escanear código de barras, ' + nm}">${icon('bar', 17)}<span>Scan</span></button></div></div>`;
+    })}<div class="mac" style="margin:8px 0"><b style="color:var(--ctx)">${roundInt(v0[1])} / ${roundInt(tg[1] * w[i])} C</b><b style="color:var(--ptx)">${roundInt(v0[2])} / ${roundInt(tg[2] * w[i])} P</b><b style="color:var(--gtx)">${roundInt(v0[3])} / ${roundInt(tg[3] * w[i])} G</b></div><div class="mlb"><button class="mlp mli" data-a="add" data-i="${i}" aria-label="${'Añadir alimento, ' + nm}">${icon('plus', 20)}</button><button class="mlp mli" data-a="sd" data-i="${i}" data-n="${nm}" aria-label="${'Guardar ' + nm + ' como plato'}">${icon('bkm', 18)}</button><button class="mlp" data-a="nfs" data-i="${i}" aria-label="${'Buscar alimento en internet, ' + nm}">${icon('srch', 17)}<span>Buscar</span></button><button class="mlp" data-a="nsc" data-i="${i}" aria-label="${'Escanear código de barras, ' + nm}">${icon('bar', 17)}<span>Scan</span></button></div></div>`;
   }
   return h;
 }

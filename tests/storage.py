@@ -1,5 +1,6 @@
-"""Prueba del guardado por partes (core/persist): formato, paso desde la 1.20, escribir solo lo que cambia, agrupar
-guardados, partes dañadas o que faltan, falta de espacio, restaurar y deshacer, borrar todo y la pantalla de error.
+"""Prueba del guardado por partes (core/persist): formato, datos de la serie de prueba (no se migran), escribir solo lo
+que cambia, agrupar guardados, partes dañadas o que faltan, falta de espacio, restaurar y deshacer, borrar todo (sin
+conexión) y la pantalla de error.
 
   python3 tests/storage.py dist/stratafit.html
 Requiere:  pip install playwright  &&  playwright install chromium
@@ -116,41 +117,15 @@ def main(path):
             check('el adaptador remoto recibe la parte cambiada', 'remoto ff:meals:2026-09' in ev('__w'), str(ev('__w')))
             ev("Store.remote=null;__T.unspy()")
 
-            # ── datos de la 1.20: todo el estado en 'ff' ──
-            legacy = ev("(()=>{const s=JSON.parse(JSON.stringify(S));s.meals['2024-02-29']={0:[{n:'Antiguo',g:50,b:[100,10,10,1,0,0]}]};return JSON.stringify(s)})()")
+            # ── datos de la serie de prueba (1.20 y anteriores: todo el estado en 'ff'): no se migran ──
+            legacy = ev("JSON.stringify(Object.assign({},S,{rest:61}))")
             ev("(s=>{localStorage.clear();localStorage.setItem('ff',s)})(%s)" % json.dumps(legacy))
-            pg.reload()
-            pg.wait_for_load_state('load')
-            booted(pg)
-            pg.clock.run_for(300)
-            ev(HELPERS)
-            check('lee los datos de la 1.20', ev('savedFormat') == 'whole' and ev('__T.can(S)') == ev('__T.can(%s)' % legacy))
-            pg.clock.run_for(1200)
-            check('y los pasa a partes al arrancar', ev('savedFormat') == 'parts' and ev("JSON.parse(localStorage.getItem('ff'))._parts") == 1 and ev("__T.keys('ff:meals:')")[0] == 'ff:meals:2024-02')
-            check('sin perder nada', ev('__T.can(__T.stored())') == ev('__T.can(%s)' % legacy))
             reload()
-            check('y al volver a abrir sigue todo', ev('__T.can(S)') == ev('__T.can(%s)' % legacy) and not ev('stateRecovered'))
-
-            # ── sin espacio para pasar a partes: sigue guardando entero, como la 1.20 ──
-            ev("(s=>{localStorage.clear();localStorage.setItem('ff',s)})(%s)" % json.dumps(legacy))
-            pg.reload()
-            pg.wait_for_load_state('load')
-            booted(pg)
-            pg.clock.run_for(300)
-            ev(HELPERS)
-            ev("window.__set1=Store.set;Store.set=(k,v)=>{if(k.startsWith('ff:')&&k>'ff:l'){const e=new Error('lleno');e.name='QuotaExceededError';throw e}return __set1(k,v)};0")
-            pg.clock.run_for(1200)
-            check('si no cabe, sigue guardado entero', ev('savedFormat') == 'whole' and ev('partsFailed') == 1 and ev("__T.keys('ff:')") == [], str(ev("__T.keys('ff:')")))
-            ev("S.rest=77;saveState()")
-            pg.clock.run_for(100)
-            check('y guarda los cambios sin avisar de error', ev("JSON.parse(localStorage.getItem('ff')).rest") == 77 and not ev("/No se ha podido guardar/.test(document.body.innerText)"))
-            check('lo registra para el diagnóstico', any(x['w'].startswith('pasar a guardado por partes') for x in ev('errorLog()')))
-            ev('A.diag()')
-            pg.clock.run_for(200)
-            check('el diagnóstico indica el formato', 'Guardado: entero (sin espacio para dividirlo)' in ev("document.querySelector('#diagt').value"))
-            ev("Store.set=__set1;sheet()")
+            check('el estado entero en «ff» (serie de prueba) no se lee: no se migra', ev('S.rest') != 61 and ev('S.logs.length') == 0 and not ev('stateRecovered'))
+            check('y se sustituye por el guardado por partes', ev("JSON.parse(localStorage.getItem('ff'))._parts") == 1)
+            ev(SEED)
+            ev(EXTRA)
             reload()
-            check('al volver a abrir lo reintenta', ev('savedFormat') == 'parts' and ev('S.rest') == 77 and ev("JSON.parse(localStorage.getItem('ff')).rest") == 77)
 
             # ── partes dañadas o que faltan ──
             nlogs = ev('S.logs.length')
@@ -170,7 +145,8 @@ def main(path):
 
             # ── restaurar una copia con un guardado pendiente en la misma acción ──
             ev("for(let i=0;i<5;i++)S.logs.push({d:'2026-10-0'+(i+1),n:'Día '+i,v:1000,s:10,m:40,q:7});S.hist={'Press banca':[{d:'2026-10-01',s:[[5,80,8,0]]}]};saveState()")
-            before = ev('__T.can(S)')
+            # (sin los id de los entrenos: el arranque se los pone a los que no tienen, core/repair)
+            before = ev('(()=>{const s=JSON.parse(JSON.stringify(S));s.logs.forEach(l=>delete l.id);return __T.can(s)})()')
             ev("(()=>{const s=JSON.parse(JSON.stringify(S));s.logs=s.logs.slice(0,2);s.meals={'2025-01-01':{0:[{n:'Copia',g:1,b:[1,1,1,1,0,0]}]}};s.rest=31;window.__bk=s})()")
             with pg.expect_navigation():
                 ev("S.rest=999;saveState();pendingRestore={s:__bk};restoreBackup()")
@@ -186,7 +162,7 @@ def main(path):
             booted(pg)
             pg.clock.run_for(1500)
             ev(HELPERS)
-            check('deshacer la restauración devuelve los datos anteriores', ev('S.rest') == 999 and ev('(()=>{const s=JSON.parse(JSON.stringify(S));s.rest=%s;return __T.can(s)})()' % json.dumps(json.loads(before)['rest'])) == before)
+            check('deshacer la restauración devuelve los datos anteriores', ev('S.rest') == 999 and ev('(()=>{const s=JSON.parse(JSON.stringify(S));s.rest=%s;s.logs.forEach(l=>delete l.id);return __T.can(s)})()' % json.dumps(json.loads(before)['rest'])) == before)
             ev("document.querySelector('#dg')&&(document.querySelector('#dg').innerHTML='')")
 
             # ── restaurar sin espacio: se deshace y se sigue guardando con normalidad ──
@@ -213,19 +189,15 @@ def main(path):
             ev(HELPERS)
             bad = json.loads(ev("JSON.parse(localStorage.getItem('ffbad')).raw"))
             check('«Restablecer» aparta el estado completo antes de borrarlo', len(bad.get('logs', [])) == n and 'Press banca' in bad.get('hist', {}))
-            check('y empieza de cero', ev("__T.keys('ff:')") == ['ff:logs'] and ev("localStorage.getItem('ff:logs')") == '[]' and ev('S.logs.length') == 0, str(ev("__T.keys('ff:')")))
+            check('y empieza de cero', ev("__T.keys('ff:')") in ([], ['ff:logs']) and ev("localStorage.getItem('ff:logs')") in (None, '[]') and ev('S.logs.length') == 0, str(ev("__T.keys('ff:')")))
 
-            # ── borrar todos los datos ──
+            # ── borrar todos los datos: también se borran de la cuenta, así que sin conexión no se borra nada (lo demás, en
+            #    tests/cloud.py) ──
             ev(SEED)
-            ev("localStorage.setItem('ffw',JSON.stringify({W:{x:[]},t:Date.now()}))")
-            with pg.expect_navigation():
-                ev("A.zrs()")
-            pg.wait_for_load_state('load')
-            booted(pg)
-            pg.clock.run_for(800)
-            ev(HELPERS)
-            left = ev("__T.keys('ff')")
-            check('«Borrar todo» borra el estado, sus partes y el entreno en curso', 'ffw' not in left and ev("__T.keys('ff:')") == ['ff:logs'] and ev('S.logs.length') == 0 and ev('Object.keys(S.meals).length') == 0 and not ev('S.hist'), str(left))
+            n = ev('S.logs.length')
+            ev("A.zrs()")
+            pg.clock.run_for(500)
+            check('«Borrar todo» sin conexión no borra nada y lo explica', ev('S.logs.length') == n and 'ff:logs' in ev("__T.keys('ff:')") and 'hace falta internet' in ev("document.body.innerText"))
             check('sin errores de JS', not errs, '; '.join(errs[:3]))
         except Exception:
             print('  FALLA excepción; últimos sucesos de la página:', ' | '.join(log[-14:]))

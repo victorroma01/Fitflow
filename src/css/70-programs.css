@@ -34,7 +34,7 @@
   place-items:center;
   flex:none;
   background:color-mix(in srgb,var(--a2) 18%,transparent);
-  color:var(--a1);
+  color:var(--at);
 }
 .cpw {
   width:100%;

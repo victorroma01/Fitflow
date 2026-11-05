@@ -1,6 +1,6 @@
 /* ═══ library/swap ═══
    Cambiar un ejercicio por otro (swap) y deshacer.
-   Define: swapExercise, swapState, swapCandidates, swapTiers, swapBody, swapScope  · acciones/registros: 6
+   Define: swapExercise, swapState, swapCandidates, swapTiers, swapBody, swapScope  · acciones/registros: 5
 */
 import { $ } from '../core/util.js';
 import { A, U } from '../core/registry.js';
@@ -120,10 +120,6 @@ A.zsw = i => {
 A.swsc = i => {
   swapState.all = i;
   $('#swh').innerHTML = swapScope();
-};
-A.sweq = (i, b) => {
-  swapState.eq = b.dataset.v;
-  $('#swb').innerHTML = swapBody();
 };
 U.sws = v => {
   swapState.q = v.toLowerCase();

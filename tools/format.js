@@ -67,7 +67,22 @@ function format(src, name) {
   out = lines.map((l, i) => shift.has(i) ? l.slice(Math.min(shift.get(i), indent(l))) : keep.has(i) ? l : to2(l)).join('\n');
   // plantillas etiquetadas sin espacio entre la etiqueta y la plantilla: html`…` (el impresor pone «html `…`»)
   out = out.replace(/\bhtml `/g, 'html`');
-  return out.replace(/\s+$/, '') + '\n';
+  return syncHeader(out.replace(/\s+$/, '') + '\n');
+}
+// cabecera del módulo: la línea «Define: …  · acciones/registros: N» se rehace siempre con lo que el módulo declara de
+// verdad (sus declaraciones de nivel superior, en orden) y cuántas acciones registra (A / C / U): así el índice de cada
+// módulo nunca se queda viejo, y con --check una cabecera desfasada falla como un archivo sin formatear
+function syncHeader(code) {
+  const sf = ts.createSourceFile('x.js', code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS), names = [];
+  let regs = 0;
+  for (const s of sf.statements) {
+    if (ts.isFunctionDeclaration(s) && s.name) names.push(s.name.text);
+    else if (ts.isVariableStatement(s)) s.declarationList.declarations.forEach(d => (function c(b) { if (ts.isIdentifier(b)) names.push(b.text); else if (b.elements) b.elements.forEach(e => e.name && c(e.name)); })(d.name));
+    else if (ts.isExpressionStatement(s) && ts.isBinaryExpression(s.expression) && s.expression.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+             ts.isPropertyAccessExpression(s.expression.left) && ts.isIdentifier(s.expression.left.expression) && ['A', 'C', 'U'].includes(s.expression.left.expression.text)) regs++;
+  }
+  const line = [names.length ? 'Define: ' + names.join(', ') : 'Define: —', regs ? 'acciones/registros: ' + regs : ''].filter(Boolean).join('  · ');
+  return code.replace(/^(\s*)Define:[^\n]*$/m, (m, sp) => sp + line);
 }
 // comentarios /* … */ de varias líneas: [primera línea, última línea] (el texto de las siguientes es libre). Se buscan con el
 // analizador, no con el escáner suelto: así un «/*» dentro de una plantilla (accept="image/*") no cuenta

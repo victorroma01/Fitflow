@@ -1,6 +1,6 @@
 /* ═══ nutrition/add ═══
    Añadir alimentos y comidas al día: lista por grupos, librería de platos, alimento nuevo y búsqueda en internet.
-   Define: allFoods, foldText, groupNames, groupOfFood, foodList, addSheetBase, addMealItem, addSheet, onlineSheet  · acciones/registros: 2
+   Define: allFoods, foldText, groupNames, groupOfFood, foodList, addSheetBase, addMealItem, addSheet, onlineSheet  · acciones/registros: 13
 */
 import { $, dayKey, round1, roundInt } from '../core/util.js';
 import { A, U } from '../core/registry.js';
@@ -13,15 +13,15 @@ import { itemMacros, sumMacros } from './home.js';
 import { habitsCard } from './templates.js';
 import { html, raw } from '../core/html.js';
 /* alimentos de la lista y los creados a mano (solo los que tienen nombre y sus valores: unos datos dañados no rompen la lista) */
-export const allFoods = () => FOODS_SRC.concat((S.cf || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b)));
+const allFoods = () => FOODS_SRC.concat((S.cf || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b)));
 /** Texto en minúsculas y sin tildes, para buscar. */
-export const foldText = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const foldText = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 /* grupos de la hoja «Añadir»: los de data/foods y, si hay, los alimentos creados a mano */
 const groupNames = () => FOOD_GROUPS.concat(S.cf.length ? ['Mis alimentos'] : []);
 const groupOfFood = f => f.g >= 0 ? f.g : FOOD_GROUPS.length;
 /** Lista de alimentos de la hoja «Añadir»: con texto en `q`, los que tienen todas sus palabras (sin tildes) y primero los que
     empiezan por la primera; sin texto, los del grupo elegido (o todos), por orden alfabético. */
-export function foodList(q) {
+function foodList(q) {
   const e = $('#rs');
   if (!e)
     return;

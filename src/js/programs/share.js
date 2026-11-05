@@ -7,13 +7,15 @@ import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
 import { EXERCISES, PROGRAM_NAMES } from '../data/library.js';
 import { DAY_PHOTOS } from '../data/photos.js';
+import { TECH_CODES } from '../data/techniques.js';
 import { S, saveState } from '../core/state.js';
 import { dialog, pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { progDraft, restDay } from './create.js';
 import { cleanText, copyText, downloadFile, fromBase64, toBase64 } from '../system/files.js';
 import { html } from '../core/html.js';
+/** Plan válido a partir de lo importado: una semana de 7 días o un ciclo de hasta 14 (workout/week), con lo que se conoce. */
 const cleanPlan = pl => {
-  if (!Array.isArray(pl) || !pl.length || pl.length > 7)
+  if (!Array.isArray(pl) || !pl.length || pl.length > 14)
     throw 0;
   const o = pl.map(d => {
     if (!d || typeof d.n != 'string' || !Array.isArray(d.ex) || d.ex.length > 24)
@@ -32,6 +34,8 @@ const cleanPlan = pl => {
           x.b = e.b;
         if (typeof e.t == 'string' && /^([0-9X]\/[0-9X]\/[0-9X]\/[0-9X]|Libre)$/.test(e.t))
           x.t = e.t;
+        if (TECH_CODES.has(e.tk))
+          x.tk = e.tk;
         return x;
       }) };
     if (d.cu && typeof d.img == 'string' && DAY_PHOTOS[d.img]) {
@@ -40,8 +44,10 @@ const cleanPlan = pl => {
     }
     return r;
   });
-  while (o.length < 7)
-    o.push(restDay());
+  /* un solo día no es un ciclo: se completa la semana con descansos */
+  if (o.length == 1)
+    while (o.length < 7)
+      o.push(restDay());
   return o;
 };
 const programCode = (n, plan) => 'FFP1:' + toBase64(JSON.stringify({ n: cleanText(n, 60), plan: cleanPlan(plan) }));
@@ -112,10 +118,10 @@ A.shf = async () => {
   if (!shareState)
     return;
   const r = await downloadFile('programa-' + String(shareState.n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) + '.json', JSON.stringify({ ff: 'FFP1', n: shareState.n, plan: cleanPlan(shareState.plan) }));
-  toast(r == 'saved' || r == 'delivered' ? 'Archivo guardado' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
+  toast(r == 'saved' ? 'Archivo guardado' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
 };
 A.pgi = () => {
-  sheet(html`${pgHead('Importar programa', 'pg')}<p class="mu" style="margin:-6px 0 10px">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu" style="color:var(--c);display:none;margin:8px 0 0"></p><div class="g2" style="margin-top:10px"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="pgif"></label><button class="pr" data-a="pgio">Importar</button></div>`);
+  sheet(html`${pgHead('Importar programa', 'pg')}<p class="mu" style="margin:-6px 0 10px">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu" style="color:var(--ctx);display:none;margin:8px 0 0"></p><div class="g2" style="margin-top:10px"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="pgif"></label><button class="pr" data-a="pgio">Importar</button></div>`);
   sheetToTop();
 };
 const importProgram = t => {

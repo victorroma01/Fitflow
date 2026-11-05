@@ -1,0 +1,337 @@
+/* ═══ css/76-followup ═══ Perfil, ajustes y seguimiento (M5): nota de actualización (F-28), recordatorio de pesaje (F-25), copia en la nube (F-30), fallos y sugerencias (F-27) y análisis mensual (F-26) */
+/* nota de actualización: la de la versión instalada y, debajo, «Cerrar» pequeño, gris y subrayado */
+.rnp .rnv {
+  display:block;
+  font-size:20px;
+  letter-spacing:-.01em;
+}
+.rnp .ups {
+  margin:14px 0 4px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:var(--mu);
+}
+.rnp ul {
+  margin:0;
+  padding:0 0 0 18px;
+}
+.rnp li {
+  margin:6px 0;
+  font-size:14px;
+  line-height:1.4;
+}
+.rnc {
+  text-align:center;
+}
+button.lnk {
+  min-height:44px;
+  padding:8px 14px;
+  border:0;
+  background:none;
+  color:var(--mu);
+  font-size:13px;
+  font-weight:500;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+/* recordatorio de pesaje (dashboard/reminder) */
+.wrc .srk {
+  margin:0;
+}
+.wrs {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:10px 0 4px;
+}
+.wrs .chip {
+  margin:0;
+}
+.wro {
+  margin-top:8px;
+}
+.wrt {
+  display:block;
+  margin:8px 0 0;
+  font-size:13px;
+  line-height:1.4;
+}
+.wrk {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  margin-top:10px;
+}
+.wrb {
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:12px;
+  margin-top:12px;
+  border-color:color-mix(in srgb,var(--ac) 45%,var(--ln));
+}
+.wrb .wri {
+  display:grid;
+  place-items:center;
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  background:color-mix(in srgb,var(--ac) 18%,transparent);
+  color:var(--at);
+}
+.wrb small {
+  display:block;
+  color:var(--mu);
+  font-size:12.5px;
+}
+.wrb button {
+  min-height:44px;
+}
+/* copia en la nube (cloud/backup) */
+.cbk p {
+  margin:6px 0 10px;
+  font-size:13px;
+  line-height:1.4;
+}
+.cbk .cbl {
+  font-size:13px;
+}
+/* fallos y sugerencias (system/report y account/reports) */
+.rpk {
+  display:flex;
+  gap:8px;
+  margin:4px 0 12px;
+}
+.rpk .chip {
+  flex:1;
+  margin:0;
+  padding:10px 12px;
+}
+.rpi .row {
+  gap:10px;
+  align-items:flex-start;
+}
+.rpkd {
+  font-weight:700;
+  font-size:14px;
+}
+.rps {
+  flex:none;
+  padding:3px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  background:var(--ln);
+  /* sobre var(--ln), el gris de --mu no llegaba al contraste de 4,5 */
+  color:color-mix(in srgb,var(--tx) 72%,transparent);
+}
+.rps.wait {
+  background:color-mix(in srgb,#f59e0b 20%,transparent);
+  color:var(--wnx);
+}
+.rps.seen {
+  background:color-mix(in srgb,#4da3ff 20%,transparent);
+  color:var(--snx);
+}
+.rps.ok {
+  background:color-mix(in srgb,#2ecc71 20%,transparent);
+  color:var(--okx);
+}
+.rps.bad {
+  background:color-mix(in srgb,#e5484d 20%,transparent);
+  color:var(--erx);
+}
+.rptx {
+  display:block;
+  margin:8px 0 0;
+  font-size:14px;
+  line-height:1.45;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.rptx.cl {
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  white-space:normal;
+}
+.rpr {
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:color-mix(in srgb,#2ecc71 10%,transparent);
+  border:1px solid color-mix(in srgb,#2ecc71 35%,transparent);
+}
+.rpr.nw {
+  border-color:#2ecc71;
+}
+.rpr p {
+  margin:4px 0 0;
+  font-size:14px;
+  line-height:1.45;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.adrf {
+  grid-template-columns:repeat(4,1fr);
+  margin-bottom:12px;
+}
+.adrf button {
+  padding-left:4px;
+  padding-right:4px;
+  font-size:12px;
+}
+.adr .adrh {
+  display:block;
+  width:100%;
+  padding:0;
+  border:0;
+  background:none;
+  text-align:left;
+}
+.adr .adrh .row {
+  gap:10px;
+}
+.adr.on .seg {
+  margin-bottom:10px;
+}
+.adr details {
+  margin:10px 0;
+}
+/* análisis mensual (profile/analysis) */
+.anm {
+  display:grid;
+  grid-template-columns:44px 1fr 44px;
+  align-items:center;
+  gap:8px;
+  margin:0 0 12px;
+  text-align:center;
+}
+.anm button {
+  min-height:44px;
+  padding:0;
+  font-size:22px;
+}
+.anm b {
+  display:block;
+  font-size:18px;
+}
+.anm small {
+  font-size:12.5px;
+}
+.ankg {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:12px;
+}
+.ank {
+  min-width:0;
+  padding:10px;
+  border-radius:14px;
+  background:var(--cd);
+  border:1px solid var(--ln);
+}
+.ank small {
+  display:block;
+  color:var(--mu);
+  font-size:11px;
+  line-height:1.3;
+}
+.ank b {
+  display:block;
+  margin:2px 0;
+  font-size:19px;
+  letter-spacing:-.01em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ank small.up,.anr .up,b.ano {
+  color:var(--okx);
+}
+.ank small.dn,b.anx {
+  color:var(--wnx);
+}
+b.ane {
+  color:var(--tx);
+}
+.ans p {
+  margin:8px 0;
+  font-size:14px;
+  line-height:1.45;
+}
+.ans .anh {
+  font-size:16px;
+}
+.anc {
+  display:block;
+  width:100%;
+  height:auto;
+  margin:6px 0;
+  color:var(--tx);
+}
+.anr {
+  margin-top:10px;
+}
+.anr>small {
+  display:block;
+  margin-bottom:4px;
+  color:var(--mu);
+  font-size:12px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.anr .row {
+  gap:10px;
+  padding:6px 0;
+  border-bottom:1px solid var(--ln);
+  font-size:14px;
+}
+.anr .row b {
+  text-align:right;
+  white-space:nowrap;
+}
+.ann>div {
+  padding:10px;
+  border-radius:12px;
+  background:var(--ib);
+}
+.ann small {
+  display:block;
+  font-size:11.5px;
+}
+.ann b {
+  display:block;
+  font-size:18px;
+}
+.anlg {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  color:var(--mu);
+  font-size:12px;
+}
+.anlg i {
+  display:inline-block;
+  width:10px;
+  height:10px;
+  margin-right:5px;
+  border-radius:3px;
+  vertical-align:-1px;
+}
+.anu {
+  margin:8px 0 0;
+  padding-left:18px;
+}
+.anu li {
+  margin:6px 0;
+  font-size:14px;
+  line-height:1.45;
+}

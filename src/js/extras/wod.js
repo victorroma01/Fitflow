@@ -1,6 +1,9 @@
 /* ═══ extras/wod ═══
-   Temporizadores de WOD (AMRAP, EMOM, Tabata, For time).
-   Define: WOD_MODES, WOD_DEFAULTS, WOD_INFO, wodConfig, wodTotal, wodSetup, wodState, wodName, wodSkeleton, wodTick, wodStart, wodClose, wodEnd  · acciones/registros: 13
+   Temporizadores de WOD (AMRAP, EMOM, Tabata, For time). La cuenta va en el centro de un reloj circular que se vacía con los
+   segundos que quedan del tramo, o se llena con los que pasan en el For time (F-22); la cuenta atrás de inicio se puede saltar
+   (F-23). Además (F-24): color por fase, lo que viene después y el tiempo total, aviso del último minuto del AMRAP, el anillo
+   animado en cada fotograma y la cuenta al día al volver a la app.
+   Define: WOD_MODES, WOD_DEFAULTS, WOD_INFO, wodConfig, wodTotal, wodSetup, wodState, wodName, wodSkeleton, wodNext, wodFill, RING, wodRing, wodFrame, wodTick, wodStart, wodClose, wodEnd  · acciones/registros: 14
 */
 import { clampInt, dayKey, fmtClock } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -117,7 +120,9 @@ function wodSkeleton() {
     h += '<input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" style="margin-top:12px"><div class="g2" style="width:100%;margin-top:12px"><button data-a="wdd">Descartar</button><button class="pr" data-a="wds">Guardar</button></div></div>';
   }
   else {
-    h += '<div class="f2p" id="f2p"></div><div class="f2t" id="f2t">0:00</div><div class="f2s" id="f2s"></div><div class="f2b"><i id="f2bar"></i></div><div class="f2sp"></div>';
+    h += '<div class="f2rg"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="f2rb" cx="60" cy="60" r="54"/><circle class="f2rp" id="f2rp" cx="60" cy="60" r="54"/></svg><div class="f2rc"><div class="f2p" id="f2p" aria-live="polite"></div><div class="f2t" id="f2t">0:00</div><div class="f2s" id="f2s"></div></div></div><div class="f2nx" id="f2nx"></div><div class="f2sp"></div>';
+    if (wodRun.ph == 'pre' && !wodRun.pa)
+      h += '<div style="text-align:center"><button class="f2sk" data-a="wdsk" id="f2sk">Saltar la cuenta atrás</button></div>';
     if (m == 'amrap')
       h += html`<button class="f2big" data-a="wdr" aria-label="Sumar una ronda"><small>Rondas</small><b id="f2rn">${raw(wodRun.r)}</b><small>Toca para sumar una</small></button><div style="text-align:center"><button data-a="wdu" class="f2sm">Restar una ronda</button></div>`;
     else if (m == 'ft')
@@ -125,6 +130,44 @@ function wodSkeleton() {
     h += html`<div class="g2 f2ct"><button data-a="wdp" id="f2pb">${wodRun.pa ? 'Seguir' : 'Pausa'}</button><button data-a="wdf">Terminar</button></div>`;
   }
   o.innerHTML = h;
+}
+/** Qué viene después del tramo actual y cuánto lleva el WOD, debajo del reloj. */
+const wodNext = s => {
+  const c = wodRun.c;
+  const T = wodTotal(c);
+  const tot = s.t != null && T ? 'Total ' + fmtClock(Math.floor(s.t)) + ' de ' + fmtClock(T) : '';
+  if (s.ph == 'pre')
+    return 'Después: ' + (c.m == 'tabata' ? 'trabajo ' + fmtClock(c.tw) : c.m == 'emom' ? 'ronda 1 de ' + c.en : c.m == 'amrap' ? 'AMRAP ' + c.a + ' min' : 'cronómetro');
+  if (c.m == 'tabata')
+    return (s.ph == 'work' ? (s.rd < s.tot && c.tr ? 'Después: descanso ' + fmtClock(c.tr) : s.rd < s.tot ? 'Después: ronda ' + (s.rd + 1) : 'Última ronda') : 'Después: trabajo ' + fmtClock(c.tw)) + ' · ' + tot;
+  if (c.m == 'emom')
+    return (s.rd < s.tot ? 'Después: ronda ' + (s.rd + 1) : 'Última ronda') + ' · ' + tot;
+  return '';
+};
+/** Fracción del reloj que se ve llena: en una cuenta atrás, lo que queda del tramo; en el For time, lo que va del límite o
+    del minuto en curso. */
+const wodFill = s => {
+  if (s.up != null)
+    return s.len ? Math.min(1, s.el / s.len) : (s.el % 60) / 60;
+  return s.len ? Math.max(0, Math.min(1, 1 - s.el / s.len)) : 0;
+};
+/* longitud del anillo (radio 54), la de su stroke-dasharray en la CSS: sin pathLength, que Safari no aplica a un círculo */
+const RING = 2 * Math.PI * 54;
+/** Pinta el anillo con el tiempo exacto de este momento (se llama en cada fotograma mientras corre). */
+const wodRing = () => {
+  const r = document.getElementById('f2rp');
+  if (!r || !wodRun || wodRun.done)
+    return;
+  const s = wodState();
+  if (!s.fin)
+    r.style.strokeDashoffset = (RING * (1 - wodFill(s))).toFixed(2);
+};
+function wodFrame() {
+  if (!wodRun || wodRun.done)
+    return;
+  if (!wodRun.pa)
+    wodRing();
+  wodFrame.id = requestAnimationFrame(wodFrame);
 }
 function wodTick() {
   if (!wodRun || wodRun.done)
@@ -145,12 +188,16 @@ function wodTick() {
     if (e && e.textContent !== v)
       e.textContent = v;
   };
+  const c = wodRun.c;
   set('f2t', s.up != null ? fmtClock(s.up) : fmtClock(s.rem));
-  set('f2p', s.ph == 'pre' ? 'Prepárate' : s.ph == 'rest' ? 'Descanso' : wodRun.c.m == 'ft' ? 'Cronómetro' : 'Trabajo');
-  set('f2s', s.rd ? 'Ronda ' + s.rd + ' de ' + s.tot : s.ph == 'pre' ? 'Empieza en ' + s.rem + ' s' : wodRun.c.m == 'ft' && wodRun.c.ct ? 'Límite ' + fmtClock(wodRun.c.ct * 60) : '');
-  const bar = document.getElementById('f2bar');
-  if (bar)
-    bar.style.width = (s.len ? Math.min(100, Math.max(0, s.el / s.len * 100)) : 0) + '%';
+  set('f2p', wodRun.pa ? 'En pausa' : s.ph == 'pre' ? 'Prepárate' : s.ph == 'rest' ? 'Descanso' : c.m == 'ft' ? 'Cronómetro' : 'Trabajo');
+  set('f2s', s.rd ? 'Ronda ' + s.rd + ' de ' + s.tot : s.ph == 'pre' ? 'Empieza en ' + s.rem + ' s' : c.m == 'ft' && c.ct ? 'Límite ' + fmtClock(c.ct * 60) : c.m == 'amrap' && s.rem <= 60 && s.len > 120 ? 'Último minuto' : '');
+  set('f2nx', wodNext(s));
+  /* el botón de saltar la cuenta atrás solo existe mientras dura */
+  const sk = document.getElementById('f2sk');
+  if (sk && s.ph != 'pre')
+    sk.remove();
+  wodRing();
   if (!wodRun.pa) {
     if (wodRun.sg !== s.id) {
       if (wodRun.sg !== '') {
@@ -184,10 +231,18 @@ function wodStart() {
   clearInterval(wodTick.iv);
   wodTick.iv = setInterval(wodTick, 200);
   wodTick();
+  /* un solo bucle de fotogramas aunque se empiece otro WOD sin que haya acabado el anterior */
+  cancelAnimationFrame(wodFrame.id);
+  wodFrame.id = requestAnimationFrame(wodFrame);
   beep(1);
   buzz([60]);
   keepAwake();
 }
+/* al volver a la app (tras bloquear el móvil, por ejemplo), la cuenta se pone al día enseguida */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && wodRun && !wodRun.done)
+    wodTick();
+});
 function wodClose() {
   clearInterval(wodTick.iv);
   setWodRun(null);
@@ -260,7 +315,17 @@ A.wdp = () => {
   const b = document.getElementById('f2pb');
   if (b)
     b.textContent = wodRun.pa ? 'Seguir' : 'Pausa';
+  wodTick();
   keepAwake();
+};
+/* saltar la cuenta atrás de inicio (F-23): empieza ya el primer tramo */
+A.wdsk = () => {
+  if (!wodRun || wodRun.done)
+    return;
+  const e = ((wodRun.pa || Date.now()) - wodRun.t0 - wodRun.pt) / 1000;
+  if (e < wodRun.c.pre)
+    wodRun.t0 -= (wodRun.c.pre - e) * 1000;
+  wodTick();
 };
 A.wdf = () => {
   if (!wodRun || wodRun.done)

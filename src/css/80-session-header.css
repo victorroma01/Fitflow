@@ -42,64 +42,7 @@
 .th.live {
   box-shadow:0 0 0 1.5px var(--a2),0 0 18px color-mix(in srgb,var(--a2) 40%,transparent);
 }
-.anm {
-  position:relative;
-  display:block;
-  width:64px;
-  height:64px;
-}
-.anm>span {
-  position:absolute;
-  inset:0;
-  display:grid;
-  place-items:center;
-}
-.anm .an0 use[stroke-width] {
-  fill:#fff;
-  stroke:rgba(255,255,255,.6);
-}
-.anm .an0 {
-  filter:drop-shadow(0 0 3px rgba(255,255,255,.35));
-}
-.anm.g .an0 {
-  filter:brightness(0) invert(1);
-}
-.anm .an1 {
-  -webkit-mask:linear-gradient(90deg,#000 0,#000 40%,transparent 60%) 100% 0/250% 100% no-repeat;
-  mask:linear-gradient(90deg,#000 0,#000 40%,transparent 60%) 100% 0/250% 100% no-repeat;
-  animation:anSw 2.6s ease-in-out infinite;
-}
-@keyframes anSw {
-  0% {
-    -webkit-mask-position:100% 0;
-    mask-position:100% 0;
-    opacity:1;
-  }
-  58% {
-    -webkit-mask-position:0 0;
-    mask-position:0 0;
-    opacity:1;
-  }
-  82% {
-    -webkit-mask-position:0 0;
-    mask-position:0 0;
-    opacity:1;
-  }
-  100% {
-    -webkit-mask-position:0 0;
-    mask-position:0 0;
-    opacity:0;
-  }
-}
 @media(prefers-reduced-motion:reduce) {
-  .anm .an1 {
-    animation:none;
-    -webkit-mask:none;
-    mask:none;
-  }
-  .anm .an0 {
-    display:none;
-  }
   .th.live {
     box-shadow:0 0 0 1.5px var(--a2);
   }

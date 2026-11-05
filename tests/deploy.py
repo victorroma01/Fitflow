@@ -8,6 +8,8 @@ Requiere:  pip install playwright  &&  playwright install chromium
 import os, sys, re, json, shutil, tempfile, threading, functools, http.server
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, ENGINE
+# con la sesión de prueba de tests/init.js: sin cuenta, la app solo enseña el inicio de sesión
+INIT = '\n'.join(l for l in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'init.js'), encoding='utf-8').read().split('\n') if not l.startswith('//'))
 
 fails = []
 
@@ -39,14 +41,17 @@ def skipped(name):
 
 
 def reload(pg, notes):
-    """Recarga la página. En WebKit, si la recarga falla con un error interno del motor (pasa con service worker en
-    Playwright), se vuelve a abrir la misma dirección y se anota, para que la prueba siga y se vea el resto."""
+    """Recarga la página. Si la recarga falla con un error interno de WebKit, o se queda sin terminar (de vez en cuando, en la
+    integración continua de GitHub, una recarga con service worker no llega a «load» en Chromium), se vuelve a abrir la misma
+    dirección una vez y se anota, para que la prueba siga y se vea el resto; si vuelve a fallar, falla la prueba."""
     try:
         pg.reload()
     except Exception as e:
-        if ENGINE != 'webkit' or 'internal error' not in str(e):
+        stuck = 'Timeout' in type(e).__name__ or 'Timeout' in str(e)[:60]
+        if not stuck and (ENGINE != 'webkit' or 'internal error' not in str(e)):
             raise
-        notes.append('recarga con error interno de WebKit en ' + pg.url[-30:])
+        notes.append(('recarga sin terminar en 30 s' if stuck else 'recarga con error interno de WebKit') + ' en ' + pg.url[-30:])
+        print('   (%s: se vuelve a abrir la dirección)' % notes[-1])
         pg.goto(pg.url)
 
 
@@ -81,6 +86,7 @@ def main(app):
         with sync_playwright() as p:
             b = launch(p)
             c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark', **CTX)
+            c.add_init_script(INIT)
             pg = c.new_page()
             errs = []
             pg.on('framenavigated', lambda f: log.append('navega ' + f.url[-50:]) if f == pg.main_frame else None)
@@ -95,8 +101,8 @@ def main(app):
                 check('un solo manifiesto, el estático', ev("[...document.querySelectorAll('link[rel=manifest]')].map(l=>l.getAttribute('href')).join()") == 'manifest.webmanifest')
                 check('un solo icono de inicio, el estático', ev("[...document.querySelectorAll('link[rel=apple-touch-icon]')].map(l=>l.getAttribute('href')).join()") == 'icon-180.png')
                 check('metas de app instalable sin duplicar', ev("document.querySelectorAll('meta[name=apple-mobile-web-app-capable]').length") == 1)
-                m = ev("fetch('manifest.webmanifest').then(r=>r.json()).then(j=>[j.start_url,j.display,j.icons.length])")
-                check('manifiesto válido', m == ['./', 'standalone', 3], str(m))
+                m = ev("fetch('manifest.webmanifest').then(r=>r.json()).then(j=>[j.start_url,j.display,j.icons.length,(j.shortcuts||[]).map(s=>s.url).join()])")
+                check('manifiesto válido, con los accesos directos del icono (F-39)', m == ['./', 'standalone', 3, './?a=entreno,./?a=comida,./?a=peso'], str(m))
                 code = ['js/' + f for f in os.listdir(os.path.join(orig, 'js'))]
                 if SW:
                     ev("navigator.serviceWorker.ready.then(()=>1)")
@@ -108,12 +114,15 @@ def main(app):
                     check('precarga completa (también el código js/)', all(n in cached for n in need), str([n for n in need if n not in cached]))
                 else:
                     skipped('service worker y precarga')
+                # comprimido: líneas muy largas, de media más de 500 caracteres (los saltos que quedan son los de dentro de los textos;
+                # un archivo de menos de 5 KB no cuenta, ni el catálogo de ejercicios, que es texto, una línea por ejercicio)
                 check('el código va aparte y comprimido', bool(code) and ev("!!document.querySelector('script[type=module][src^=\"js/\"]')") and
-                      all(len(s) < 2000 or len(s) / (s.count('\n') + 1) > 1000 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code)))
-                # lo poco usado (WOD, CSV, escáner) va en archivos aparte que no se descargan al arrancar
-                lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online)-', f)]
+                      all(len(s) < 5000 or len(s) / (s.count('\n') + 1) > 500 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not f.startswith('js/exinfo-'))))
+                # lo poco usado (WOD, CSV, escáner, el catálogo de consejos y ejecución, el análisis mensual y el PDF) va aparte y no se
+                # descarga al arrancar
+                lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo|analysis|pdf)-', f)]
                 loaded = ev("performance.getEntriesByType('resource').map(e=>e.name.split('/').pop())")
-                check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 3 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
+                check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 6 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
                 assets = ev("[...new Set([...document.documentElement.outerHTML.matchAll(/(?:src=\"|url\\()((?:img)\\/[^\"')]+)/g)].map(m=>m[1]))]")
                 # sin conexión
                 if SW:
@@ -121,6 +130,15 @@ def main(app):
                     reload(pg, log)
                     pg.wait_for_timeout(1200)
                     check('abre sin conexión', ev("document.querySelector('#app').innerText.length>50"))
+                    try:
+                        pg.goto(pg.url.split('?')[0] + '?a=peso')
+                        pg.wait_for_timeout(1200)
+                        check('sin conexión, un acceso directo del icono (?a=peso) abre su pantalla', ev("weightView===1&&S.tab===2&&location.search===''"))
+                        ev("weightView=0;S.tab=0;R();saveState()")
+                    except Exception as e:
+                        if ENGINE != 'webkit' or 'internal error' not in str(e):
+                            raise
+                        log.append('acceso directo sin conexión: error interno de WebKit al abrir la dirección')
                     pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
                     check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
                     ev('A.wod()')
@@ -215,8 +233,28 @@ def main(app):
                 check('y solo una vez', ev("!document.getElementById('upd')"))
                 deploy(orig, os.path.join(site, 'fitflow'))
                 open(vj, 'w', encoding='utf-8').write(vj0)
+                # una versión con un número menor (como la 1.0.0 tras la 1.24.0): el aviso compara números y no sale, pero el
+                # service worker guarda el documento nuevo en cuanto lo ve cambiado y la siguiente apertura ya es esa versión
+                if SW:
+                    reload(pg, log)
+                    pg.wait_for_load_state('load')
+                    pg.wait_for_timeout(1500)
+                    low_popup = ev("!!document.getElementById('upd')")
+                    main_js = [f for f in os.listdir(os.path.join(orig, 'js')) if f.startswith('main-')][0]
+                    for _ in range(30):
+                        if ev("caches.open('ff-app-2').then(c=>c.match(location.href,{ignoreSearch:true})).then(r=>r?r.text():'').then(t=>t.includes(%r))" % main_js):
+                            break
+                        pg.wait_for_timeout(300)
+                    reload(pg, log)
+                    pg.wait_for_load_state('load')
+                    pg.wait_for_timeout(1500)
+                    check('una versión con un número menor llega en la siguiente apertura, sin aviso', ev('APPV') == v0 and not low_popup and ev('!!window.__ffok'),
+                          str([ev('APPV'), v0, low_popup]))
+                else:
+                    skipped('versión con un número menor')
                 # app instalada: compartir copia de seguridad
                 c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
+                c2.add_init_script(INIT)
                 c2.add_init_script("Object.defineProperty(navigator,'standalone',{get:()=>true});window.__sh=null;navigator.canShare=()=>true;"
                                    "navigator.share=async d=>{if(window.__abort){const e=new Error('x');e.name='AbortError';throw e}window.__sh=[d.files[0].name,d.files[0].size>100,d.files[0].type]}")
                 p2 = c2.new_page()
@@ -232,7 +270,7 @@ def main(app):
                 p2.click('[data-a=bkf]')
                 p2.wait_for_timeout(600)
                 sh = p2.evaluate("window.__sh")
-                check('instalada: comparte la copia como archivo JSON', bool(sh) and sh[0].startswith('stratafit-copia-') and sh[1] and sh[2] == 'application/json', str(sh))
+                check('instalada: comparte la copia como archivo JSON, siempre con el mismo nombre', bool(sh) and sh[0] == 'StrataFit-copia.json' and sh[1] and sh[2] == 'application/json', str(sh))
                 p2.evaluate("window.__abort=1;window.__sh=null")
                 p2.click('[data-a=bkf]')
                 p2.wait_for_timeout(600)

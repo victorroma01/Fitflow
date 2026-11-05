@@ -1,181 +1,17 @@
 /* ═══ extras/measures ═══
-   Medidas corporales y fotos de progreso.
-   Define: MEASURES, PHOTO_ANGLES, measureState, photoCache, photoCount, photoDbPromise, openPhotoDb, photoDb, photoTx, measuresShown, loadPhotos, preparePhoto, photoFull, allPhotosFull, validPhoto, mergePhotos, … (+7)  · acciones/registros: 15
+   Medidas corporales (cintura, brazo, pecho…), con su gráfica y su historial. Las fotos de progreso se quitaron en la
+   V1.0.0 (sin datos personales: F-35).
+   Define: MEASURES, measureState, measureList, measureDelta, measureChart, measuresTab, measuresPage  · acciones/registros: 7
 */
-import { dayKey, fmtDateShort, newId, round1 } from '../core/util.js';
+import { dayKey, fmtDateShort, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
-import { logError } from '../core/errors.js';
-import { A, C } from '../core/registry.js';
+import { A } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
-import { icon } from '../core/icons.js';
 import { confirmDialog, fullPage, pgHead, sheet } from '../core/ui.js';
 import { checkAchievements } from './achievements.js';
 import { html, raw } from '../core/html.js';
 export const MEASURES = [['cu', 'Cuello'], ['ho', 'Hombros'], ['pe', 'Pecho'], ['br', 'Brazo'], ['ci', 'Cintura'], ['ca', 'Cadera'], ['mu', 'Muslo'], ['ge', 'Gemelo']];
-const PHOTO_ANGLES = { f: 'Frente', s: 'Lado', b: 'Espalda' };
-let measureState = { tab: 0, ang: 'f', k: 'ci', cmp: 0, sel: [] };
-let photoCache = [];
-export let photoCount = 0;
-let photoDbPromise = null;
-const openPhotoDb = () => new Promise((res, rej) => {
-  try {
-    if (!window.indexedDB)
-      return rej('no');
-    const r = indexedDB.open('ffph', 1);
-    r.onupgradeneeded = () => {
-      const db = r.result;
-      if (!db.objectStoreNames.contains('m'))
-        db.createObjectStore('m', { keyPath: 'id' });
-      if (!db.objectStoreNames.contains('f'))
-        db.createObjectStore('f', { keyPath: 'id' });
-    };
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error || 'err');
-    r.onblocked = () => rej('blk');
-  }
-  catch (e) {
-    rej(e);
-  }
-});
-const photoDb = () => photoDbPromise || (photoDbPromise = openPhotoDb().catch(e => {
-  photoDbPromise = null;
-  throw e;
-}));
-const photoTx = (st, mode, fn) => photoDb().then(db => new Promise((res, rej) => {
-  let tx;
-  try {
-    tx = db.transaction(st, mode);
-  }
-  catch (e) {
-    rej(e);
-    return;
-  }
-  let rq;
-  tx.oncomplete = () => res(rq && 'result' in rq ? rq.result : undefined);
-  tx.onerror = () => rej(tx.error || 'tx');
-  tx.onabort = () => rej(tx.error || 'abort');
-  try {
-    rq = fn(tx);
-  }
-  catch (e) {
-    try {
-      tx.abort();
-    }
-    catch (_) {
-      /* la transacción ya se cerró */
-    }
-    rej(e);
-  }
-}));
-const measuresShown = () => !!document.querySelector('#sh.full #f2ms');
-export const loadPhotos = () => photoTx('m', 'readonly', tx => tx.objectStore('m').getAll()).then(a => {
-  photoCache = (a || []).filter(x => x && x.id && typeof x.t == 'string').sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : (a.id < b.id ? 1 : -1));
-  photoCount = photoCache.length;
-  if (measuresShown() && measureState.tab == 1 && !measureState.view)
-    fullPage(measuresPage());
-}).catch(() => {
-});
-async function preparePhoto(f) {
-  let bm;
-  try {
-    bm = await createImageBitmap(f, { imageOrientation: 'from-image' });
-  }
-  catch (e) {
-    bm = await new Promise((res, rej) => {
-      const u = URL.createObjectURL(f);
-      const im = new Image();
-      im.onload = () => {
-        URL.revokeObjectURL(u);
-        res(im);
-      };
-      im.onerror = () => {
-        URL.revokeObjectURL(u);
-        rej('img');
-      };
-      im.src = u;
-    });
-  }
-  const W0 = bm.width || bm.naturalWidth;
-  const H0 = bm.height || bm.naturalHeight;
-  if (!W0 || !H0)
-    throw 'dim';
-  const enc = (mx, q) => {
-    const k = Math.min(1, mx / Math.max(W0, H0));
-    const w = Math.max(1, Math.round(W0 * k));
-    const h = Math.max(1, Math.round(H0 * k));
-    const c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    const g = c.getContext('2d');
-    g.fillStyle = '#000';
-    g.fillRect(0, 0, w, h);
-    g.drawImage(bm, 0, 0, w, h);
-    return c.toDataURL('image/jpeg', q);
-  };
-  const r = { u: enc(960, .72), t: enc(300, .65) };
-  if (bm.close)
-    bm.close();
-  return r;
-}
-C.f2ph = async (e) => {
-  const f = e.files && e.files[0];
-  e.value = '';
-  if (!f)
-    return;
-  if (photoCount >= 60) {
-    toast('Límite de 60 fotos: borra alguna antes');
-    return;
-  }
-  toast('Guardando foto…');
-  try {
-    const r = await preparePhoto(f);
-    const id = newId();
-    const d = dayKey(new Date);
-    const a = measureState.ang;
-    await photoTx(['m', 'f'], 'readwrite', tx => {
-      tx.objectStore('m').put({ id, d, a, t: r.t });
-      tx.objectStore('f').put({ id, u: r.u });
-    });
-    try {
-      navigator.storage && navigator.storage.persist && navigator.storage.persist();
-    }
-    catch (_) {
-      /* almacenamiento persistente opcional */
-    }
-    await loadPhotos();
-    checkAchievements();
-    if (measuresShown())
-      fullPage(measuresPage());
-    toast('Foto guardada');
-  }
-  catch (x) {
-    toast('No se pudo guardar la foto en este dispositivo');
-  }
-};
-const photoFull = id => photoTx('f', 'readonly', tx => tx.objectStore('f').get(id)).then(r => r && r.u);
-export const allPhotosFull = async () => {
-  const [m, f] = await Promise.all([photoTx('m', 'readonly', tx => tx.objectStore('m').getAll()), photoTx('f', 'readonly', tx => tx.objectStore('f').getAll())]);
-  const fm = {};
-  (f || []).forEach(x => {
-    if (x && x.id)
-      fm[x.id] = x.u;
-  });
-  return (m || []).filter(x => x && x.id && fm[x.id]).map(x => ({ id: x.id, d: x.d, a: x.a, t: x.t, u: fm[x.id] }));
-};
-const validPhoto = p => p && typeof p.id == 'string' && p.id.length <= 40 && /^[\w-]+$/.test(p.id) && /^\d{4}-\d{2}-\d{2}$/.test(p.d || '') && PHOTO_ANGLES[p.a] && typeof p.t == 'string' && typeof p.u == 'string' && p.t.length < 4e5 && p.u.length < 2.5e6 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p.t) && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p.u);
-export const mergePhotos = async (arr) => {
-  const L = (Array.isArray(arr) ? arr : []).filter(validPhoto).slice(0, 80);
-  if (!L.length)
-    return 0;
-  await photoTx(['m', 'f'], 'readwrite', tx => {
-    L.forEach(p => {
-      tx.objectStore('m').put({ id: p.id, d: p.d, a: p.a, t: p.t });
-      tx.objectStore('f').put({ id: p.id, u: p.u });
-    });
-  });
-  await loadPhotos();
-  return L.length;
-};
+let measureState = { k: 'ci', di: -1 };
 export function measureList() {
   return (Array.isArray(S.ms) ? S.ms : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object');
 }
@@ -222,42 +58,14 @@ function measuresTab() {
   h += html`<details class="cd"><summary>Historial (${L.length})</summary>${L.slice().reverse().map((m, i) => html`<div class="it exr" data-a="msdel" data-i="${L.length - 1 - i}" role="button" tabindex="0" style="cursor:pointer"><span><b>${raw(fmtDateShort(m.d, { day: 'numeric', month: 'long', year: 'numeric' }))}</b><br><small>${raw(MEASURES.filter(x => +m.v[x[0]] > 0).map(x => x[1] + ' ' + round1(+m.v[x[0]])).join(' · '))}</small></span></div>`)}<p class="mu" style="font-size:12px;margin:8px 0 0">Toca una medición para borrarla.</p></details>`;
   return h;
 }
-function photosTab() {
-  let h = html`<div class="seg" style="margin-top:12px">${Object.keys(PHOTO_ANGLES).map(k => html`<button class="${measureState.ang == k ? 'on' : ''}" data-a="pha" data-v="${k}">${raw(PHOTO_ANGLES[k])}</button>`)}</div><div class="g2" style="margin-top:10px"><label class="btnl pr" style="margin:0;font-weight:700">${icon('camera', 18)}&nbsp;Añadir foto<input type="file" accept="image/*" hidden data-c="f2ph"></label><button data-a="phcmp" class="${measureState.cmp ? 'on' : ''}" style="${measureState.cmp ? 'background:var(--a2);color:var(--ft);border-color:var(--a2)' : ''}">${measureState.cmp ? 'Cancelar' : 'Comparar'}</button></div><p class="mu" style="font-size:12px;margin:8px 2px">Las fotos se guardan solo en este dispositivo. Entran en la copia de seguridad en archivo, no en la copia como texto.</p>`;
-  if (measureState.cmp)
-    h += html`<div class="cd" style="margin:8px 0;padding:10px;text-align:center">${measureState.sel.length == 0 ? 'Elige la primera foto' : 'Elige la segunda foto'}</div>`;
-  if (!photoCache.length)
-    return html`${raw(h)}<p class="mu" style="margin:14px 2px;font-size:14px">Aún no hay fotos. Haz una cada pocas semanas con la misma luz, distancia y pose.</p>`;
-  h += html`<div class="f2gr">${photoCache.map((p, i) => html`<button class="f2th${measureState.sel.indexOf(p.id) >= 0 ? ' sl' : ''}" data-a="phv" data-i="${i}"><img src="${p.t}" alt="${PHOTO_ANGLES[p.a]} ${fmtDateShort(p.d)}" loading="lazy"><span>${raw(fmtDateShort(p.d))} · ${raw(PHOTO_ANGLES[p.a])}</span></button>`)}</div>`;
-  return h;
-}
 function measuresPage() {
-  measureState.view = 0;
-  return html`<div id="f2ms">${pgHead('Medidas y fotos')}<div class="seg" style="grid-template-columns:1fr 1fr"><button class="${measureState.tab == 0 ? 'on' : ''}" data-a="mstab" data-v="0">Medidas</button><button class="${measureState.tab == 1 ? 'on' : ''}" data-a="mstab" data-v="1">Fotos</button></div>${raw(measureState.tab == 0 ? measuresTab() : photosTab())}<div style="height:30px"></div></div>`;
+  return html`<div id="f2ms">${pgHead('Medidas')}${raw(measuresTab())}<div style="height:30px"></div></div>`;
 }
 A.f2ms = () => {
-  measureState.cmp = 0;
-  measureState.sel = [];
   fullPage(measuresPage());
-  loadPhotos();
-};
-A.mstab = (i, b) => {
-  measureState.tab = +b.dataset.v;
-  measureState.cmp = 0;
-  measureState.sel = [];
-  sheet(measuresPage());
 };
 A.msk = (i, b) => {
   measureState.k = b.dataset.v;
-  sheet(measuresPage());
-};
-A.pha = (i, b) => {
-  measureState.ang = b.dataset.v;
-  sheet(measuresPage());
-};
-A.phcmp = () => {
-  measureState.cmp = measureState.cmp ? 0 : 1;
-  measureState.sel = [];
   sheet(measuresPage());
 };
 A.msb = () => {
@@ -312,95 +120,3 @@ A.msdl = () => {
   measureState.di = -1;
   sheet(measuresPage());
 };
-A.phv = async (i, b) => {
-  const p = photoCache[i];
-  if (!p)
-    return;
-  if (measureState.cmp) {
-    const k = measureState.sel.indexOf(p.id);
-    if (k >= 0)
-      measureState.sel.splice(k, 1);
-    else
-      measureState.sel.push(p.id);
-    if (measureState.sel.length == 2) {
-      comparePhotos();
-      return;
-    }
-    sheet(measuresPage());
-    return;
-  }
-  measureState.view = 1;
-  sheet(html`<div id="f2ms">${pgHead('Foto', 'msb')}<div class="f2pv" id="f2pi"><div class="mu" style="padding:40px 0;text-align:center">Cargando…</div></div><div class="row" style="margin:10px 2px"><b>${raw(fmtDateShort(p.d, { day: 'numeric', month: 'long', year: 'numeric' }))}</b><small>${raw(PHOTO_ANGLES[p.a])}</small></div><div class="g2"><button data-a="phold" data-i="${i}">Comparar con la primera</button><button data-a="phdel" data-i="${i}" style="color:var(--c)">Borrar</button></div></div>`);
-  try {
-    const u = await photoFull(p.id);
-    const e = document.getElementById('f2pi');
-    if (e && u)
-      e.innerHTML = html`<img src="${u}" alt="${PHOTO_ANGLES[p.a]}">`;
-  }
-  catch (x) {
-    logError('ver foto de progreso', x);
-  }
-};
-A.phold = i => {
-  const p = photoCache[i];
-  if (!p)
-    return;
-  const same = photoCache.filter(x => x.a == p.a && x.id != p.id).sort((a, b) => a.d < b.d ? -1 : 1)[0];
-  if (!same) {
-    toast('No hay otra foto del mismo ángulo');
-    return;
-  }
-  measureState.sel = [same.id, p.id];
-  comparePhotos();
-};
-A.phdel = i => {
-  const p = photoCache[i];
-  if (!p)
-    return;
-  measureState.pi = p.id;
-  confirmDialog('¿Borrar esta foto?', fmtDateShort(p.d, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + PHOTO_ANGLES[p.a], 'phdl', 'Borrar');
-};
-A.phdl = async () => {
-  const id = measureState.pi;
-  measureState.pi = null;
-  if (!id)
-    return;
-  try {
-    await photoTx(['m', 'f'], 'readwrite', tx => {
-      tx.objectStore('m').delete(id);
-      tx.objectStore('f').delete(id);
-    });
-    await loadPhotos();
-  }
-  catch (e) {
-    toast('No se pudo borrar');
-  }
-  measureState.sel = [];
-  measureState.cmp = 0;
-  sheet(measuresPage());
-};
-async function comparePhotos() {
-  const ps = measureState.sel.map(id => photoCache.find(p => p.id == id)).filter(Boolean).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
-  if (ps.length < 2) {
-    measureState.sel = [];
-    sheet(measuresPage());
-    return;
-  }
-  measureState.view = 1;
-  const dd = Math.round((new Date(ps[1].d + 'T12:00:00') - new Date(ps[0].d + 'T12:00:00')) / 864e5);
-  sheet(html`<div id="f2ms">${pgHead('Antes y después', 'msb')}<div class="f2cm"><div><div class="f2pv" id="f2ca"><div class="mu" style="padding:30px 0;text-align:center">…</div></div><b>${raw(fmtDateShort(ps[0].d, { day: 'numeric', month: 'short', year: 'numeric' }))}</b><small>${raw(PHOTO_ANGLES[ps[0].a])}</small></div><div><div class="f2pv" id="f2cb"><div class="mu" style="padding:30px 0;text-align:center">…</div></div><b>${raw(fmtDateShort(ps[1].d, { day: 'numeric', month: 'short', year: 'numeric' }))}</b><small>${raw(PHOTO_ANGLES[ps[1].a])}</small></div></div><p class="mu" style="text-align:center;margin:12px 0">${raw(dd == 0 ? 'Mismo día' : dd + (dd == 1 ? ' día' : ' días') + ' entre las dos fotos')}</p></div>`);
-  measureState.cmp = 0;
-  measureState.sel = [];
-  try {
-    const [a, b] = await Promise.all([photoFull(ps[0].id), photoFull(ps[1].id)]);
-    const ea = document.getElementById('f2ca');
-    const eb = document.getElementById('f2cb');
-    if (ea && a)
-      ea.innerHTML = html`<img src="${a}" alt="">`;
-    if (eb && b)
-      eb.innerHTML = html`<img src="${b}" alt="">`;
-  }
-  catch (x) {
-    logError('comparar fotos', x);
-  }
-}

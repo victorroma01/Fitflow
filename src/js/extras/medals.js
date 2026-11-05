@@ -2,13 +2,13 @@
    Medallas de Logros, dibujadas en SVG: una distinta para cada logro. La forma y el color dicen la familia (entrenos,
    toneladas, rachas, récords, cardio, WOD, comidas, medidas, fotos, peso y copias), el metal del borde el nivel (bronce,
    plata, oro, platino y, para el último de entrenos, amatista) y el dibujo y la cifra del centro, el logro.
-   Define: METALS, FAMILIES, SHAPES, MOTIFS, MEDALS, medalSvg
+   Define: METALS, FAMILIES, ring, poly, burst, SHAPES, MOTIFS, MEDALS, medalN, medalSvg
 */
 import { html, raw } from '../core/html.js';
 /* metal del borde: [claro, medio, oscuro] */
 const METALS = { b: ['#ffd3a1', '#c47a3c', '#6e3b17'], s: ['#ffffff', '#c3cad6', '#6b7484'], g: ['#fff3b0', '#f2b81c', '#8f5a00'], p: ['#f2fcff', '#9fd6f0', '#3f7397'], l: ['#ffe0ff', '#c46bff', '#4b168f'] };
 /* familia: [color claro y oscuro del centro, forma] */
-const FAMILIES = { e: ['#a78bfa', '#3b1a8f', 'medal'], v: ['#fb7185', '#7f1230', 'hex'], s: ['#fdba74', '#9a3412', 'shield'], p: ['#4ade80', '#065f46', 'star'], c: ['#38bdf8', '#0c4a6e', 'medal'], w: ['#fcd34d', '#92400e', 'oct'], n: ['#a3e635', '#365314', 'leaf'], m: ['#f9a8d4', '#9d174d', 'medal'], f: ['#5eead4', '#115e59', 'medal'], b: ['#a5b4fc', '#312e81', 'medal'], k: ['#93c5fd', '#1e3a8a', 'shield'] };
+const FAMILIES = { e: ['#a78bfa', '#3b1a8f', 'medal'], v: ['#fb7185', '#7f1230', 'hex'], s: ['#fdba74', '#9a3412', 'shield'], p: ['#4ade80', '#065f46', 'star'], c: ['#38bdf8', '#0c4a6e', 'medal'], w: ['#fcd34d', '#92400e', 'oct'], n: ['#a3e635', '#365314', 'leaf'], m: ['#f9a8d4', '#9d174d', 'medal'], b: ['#a5b4fc', '#312e81', 'medal'], k: ['#93c5fd', '#1e3a8a', 'shield'] };
 /* forma: [borde, centro] (trazados en una caja de 64 × 64) */
 const ring = (r, cy) => 'M32 ' + (cy - r) + 'a' + r + ' ' + r + ' 0 1 1 0 ' + 2 * r + 'a' + r + ' ' + r + ' 0 1 1 0-' + 2 * r + 'z';
 const poly = (n, r, rot, cy) => 'M' + Array.from({ length: n }, (_, i) => {
@@ -39,13 +39,11 @@ const MOTIFS = {
   watch: '<circle cx="32" cy="30" r="10.5" fill="none" stroke="#fff" stroke-width="3.2"/><path d="M29 15.5h6M32 15.5v4M41.5 20.5l1.8-1.8" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M32 30v-6.2M32 30l4.2 2.6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>',
   apple: '<path d="M32 21.5c-2.4-2.6-11.5-3-11.5 6.5 0 7.6 5.3 13.5 8.4 13.5 1.8 0 2.1-1 3.1-1s1.3 1 3.1 1c3.1 0 8.4-5.9 8.4-13.5 0-9.5-9.1-9.1-11.5-6.5z"/><path d="M32 21c.2-3.5 2.2-5.8 5.6-6.6-.2 3.6-2.3 5.8-5.6 6.6z"/>',
   ruler: '<g transform="rotate(-38 32 28)"><rect x="14.5" y="22" width="35" height="12.5" rx="2.4"/><path d="M20 22v5.6M25 22v3.6M30 22v5.6M35 22v3.6M40 22v5.6M45 22v3.6" stroke="var(--md-f)" stroke-width="1.7"/></g>',
-  camera: '<path d="M18 22.5h6l2.6-4h10.8l2.6 4h6a2.5 2.5 0 0 1 2.5 2.5v13a2.5 2.5 0 0 1-2.5 2.5H18a2.5 2.5 0 0 1-2.5-2.5V25a2.5 2.5 0 0 1 2.5-2.5z"/><circle cx="32" cy="31" r="6.6" fill="var(--md-f)"/><circle cx="32" cy="31" r="3.6"/>',
-  frames: '<rect x="14.5" y="18.5" width="15" height="20" rx="2.5"/><rect x="34.5" y="18.5" width="15" height="20" rx="2.5"/><circle cx="22" cy="25.5" r="2.6" fill="var(--md-f)"/><path d="M17.5 36.5c.6-3.3 2.4-5 4.5-5s3.9 1.7 4.5 5z" fill="var(--md-f)"/><circle cx="42" cy="25.5" r="2.6" fill="var(--md-f)"/><path d="M36.5 36.5c.5-4 2.8-6 5.5-6s5 2 5.5 6z" fill="var(--md-f)"/>',
   scale: '<rect x="17" y="16.5" width="30" height="25" rx="6"/><path d="M24.5 26.5a7.5 7.5 0 0 1 15 0z" fill="var(--md-f)"/><path d="M32 26.3l2.6-4.1" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>',
   check: '<path d="M22.5 29.5l6.5 6.5 12.5-13" stroke="#fff" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
 };
 /* logro → [familia, metal, dibujo, cifra] */
-const MEDALS = { e1: ['e', 'b', 'dumbbell', '1'], e2: ['e', 's', 'dumbbell', '10'], e3: ['e', 'g', 'dumbbell', '50'], e4: ['e', 'p', 'dumbbell', '100'], e5: ['e', 'l', 'dumbbell', '250'], v1: ['v', 'b', 'kettle', '10 t'], v2: ['v', 's', 'kettle', '100 t'], v3: ['v', 'g', 'kettle', '500 t'], v4: ['v', 'p', 'kettle', '1000 t'], s1: ['s', 'b', 'flame', '4'], s2: ['s', 's', 'flame', '12'], s3: ['s', 'g', 'flame', '26'], p1: ['p', 'b', 'record', '1'], p2: ['p', 's', 'record', '10'], p3: ['p', 'g', 'record', '25'], c1: ['c', 'b', 'pulse', ''], c2: ['c', 's', 'shoe', '50 km'], c3: ['c', 'g', 'shoe', '200 km'], w1: ['w', 'b', 'watch', '1'], w2: ['w', 'g', 'watch', '10'], n1: ['n', 's', 'apple', '7'], n2: ['n', 'g', 'apple', '30'], m1: ['m', 's', 'ruler', ''], f1: ['f', 's', 'camera', ''], f2: ['f', 'g', 'frames', ''], b1: ['b', 's', 'scale', ''], k1: ['k', 'g', 'check', ''] };
+const MEDALS = { e1: ['e', 'b', 'dumbbell', '1'], e2: ['e', 's', 'dumbbell', '10'], e3: ['e', 'g', 'dumbbell', '50'], e4: ['e', 'p', 'dumbbell', '100'], e5: ['e', 'l', 'dumbbell', '250'], v1: ['v', 'b', 'kettle', '10 t'], v2: ['v', 's', 'kettle', '100 t'], v3: ['v', 'g', 'kettle', '500 t'], v4: ['v', 'p', 'kettle', '1000 t'], s1: ['s', 'b', 'flame', '4'], s2: ['s', 's', 'flame', '12'], s3: ['s', 'g', 'flame', '26'], p1: ['p', 'b', 'record', '1'], p2: ['p', 's', 'record', '10'], p3: ['p', 'g', 'record', '25'], c1: ['c', 'b', 'pulse', ''], c2: ['c', 's', 'shoe', '50 km'], c3: ['c', 'g', 'shoe', '200 km'], w1: ['w', 'b', 'watch', '1'], w2: ['w', 'g', 'watch', '10'], n1: ['n', 's', 'apple', '7'], n2: ['n', 'g', 'apple', '30'], m1: ['m', 's', 'ruler', ''], b1: ['b', 's', 'scale', ''], k1: ['k', 'g', 'check', ''] };
 let medalN = 0;
 /** Medalla del logro `id` (SVG de `size` px). Sin conseguir, la misma en gris (css/99-profile, .md.off). */
 export const medalSvg = (id, size, on) => {

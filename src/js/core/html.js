@@ -5,7 +5,7 @@
    marcado con raw(…) (textos con etiquetas hechos aquí…). Cada raw() es un sitio donde no se escapa: si recibe datos de fuera, hay que
    escaparlos antes con X.
    El resultado es un Html: se comporta como texto (se concatena, se asigna a innerHTML, se guarda en JSON).
-   Define: Html, raw, part, html
+   Define: raw, part, html
 */
 import { X } from './util.js';
 /** Texto que ya es HTML seguro (lo devuelve html`…` y raw()). */

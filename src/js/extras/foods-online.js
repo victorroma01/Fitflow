@@ -1,6 +1,6 @@
 /* ═══ extras/foods-online ═══
    Alimentos en línea (Open Food Facts) y escáner de códigos.
-   Define: onlineFoods, onlineTimer, fetchTimeout, offProduct, searchOnline, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, … (+7)  · acciones/registros: 6
+   Define: onlineFoods, onlineTimer, fetchTimeout, offProduct, searchOnline, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanMsg, stopScan, startScan, scanLoop, lookupBarcode  · acciones/registros: 5
 */
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';

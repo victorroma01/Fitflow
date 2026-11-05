@@ -1,0 +1,310 @@
+/* ═══ css/77-experience ═══ Experiencia (M6): color propio y vista previa (F-31), reducir animaciones, burbuja de las pestañas (F-38), deslizar para volver (F-37) y recorrido (F-36) */
+/* vista previa del color de acento (profile/appearance) */
+.acp {
+  margin:4px 0 14px;
+  padding:12px;
+  border-radius:20px;
+  background:var(--cd);
+  border:1px solid var(--ln);
+}
+.acph {
+  padding:12px;
+  border-radius:16px;
+  background:radial-gradient(120% 100% at 0 0,var(--a3),var(--cd) 72%);
+  border:1px solid color-mix(in srgb,var(--a2) 55%,transparent);
+}
+.acph small {
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:color-mix(in srgb,var(--a1) 55%,#fff);
+}
+.acph b {
+  display:block;
+  margin:2px 0 8px;
+  font-size:20px;
+}
+.acpr {
+  display:block;
+  height:6px;
+  border-radius:6px;
+  background:var(--ln);
+  overflow:hidden;
+}
+.acpr i {
+  display:block;
+  width:62%;
+  height:100%;
+  border-radius:6px;
+  background:var(--a2);
+}
+.acpk {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  margin-top:10px;
+}
+.acpk .chip {
+  margin:0;
+  padding:6px 12px;
+  font-size:13px;
+}
+.acpb {
+  padding:8px 16px;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  color:var(--ft);
+  font-size:14px;
+  font-weight:700;
+}
+.acpn {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  margin-top:10px;
+  padding:4px;
+  border-radius:18px;
+  background:var(--ib);
+  border:1px solid var(--ln);
+}
+.acpn span {
+  padding:7px 2px;
+  border-radius:14px;
+  font-size:11px;
+  text-align:center;
+  color:var(--mu);
+}
+.acpn span.on {
+  background:var(--a2);
+  color:var(--ft);
+  font-weight:700;
+}
+/* «Personalizado»: el círculo es el selector de color del sistema */
+.swc {
+  position:relative;
+  display:flex;
+  margin:0;
+  cursor:pointer;
+}
+.swc i {
+  position:relative;
+  overflow:hidden;
+}
+.swc i.swr {
+  background:conic-gradient(#ff5f6d,#ffc371,#c8ee62,#4fd6cf,#4da3ff,#b183ff,#ff8fc8,#ff5f6d);
+}
+.swc input {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  padding:0;
+  border:0;
+  opacity:0;
+  cursor:pointer;
+}
+.acn {
+  display:block;
+  margin-top:12px;
+  line-height:1.4;
+}
+/* reducir animaciones (Ajustes → Tema y estilo) */
+html.rm *,html.rm *::before,html.rm *::after {
+  animation:none!important;
+  transition:none!important;
+}
+/* barra de pestañas: la burbuja (core/tabbar) */
+nav {
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+nav,nav [data-a] {
+  touch-action:none;
+}
+nav button {
+  position:relative;
+  z-index:1;
+}
+.nbb {
+  position:absolute;
+  top:6px;
+  bottom:6px;
+  left:0;
+  width:var(--bw,0px);
+  transform:translateX(var(--bx,0px));
+  border-radius:20px;
+  background:var(--a2);
+  opacity:0;
+  pointer-events:none;
+}
+nav.nbon .nbb {
+  opacity:1;
+  transition:transform .34s cubic-bezier(.3,1.25,.5,1),width .34s ease;
+}
+nav.nbon button.on,html.gl nav.nbon button.on {
+  background:none;
+  box-shadow:none;
+}
+html.gl .nbb {
+  border-radius:26px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--a1) 62%,transparent),color-mix(in srgb,var(--a2) 86%,transparent));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 4px 14px color-mix(in srgb,var(--a2) 45%,transparent);
+}
+nav.drag .nbb {
+  transform:translateX(var(--bx,0px)) scale(1.07);
+  transition:transform .06s linear;
+}
+nav.drag button.on:not(.hv) {
+  color:inherit;
+}
+nav.drag button.hv {
+  color:var(--ft);
+}
+/* el paso del recorrido que enseña la barra deja usarla */
+nav.trlv {
+  z-index:19;
+}
+/* deslizar para volver (core/swipe): el gesto de lado es de la app; el vertical, del desplazamiento normal */
+#app,.sp,.msd {
+  touch-action:pan-y pinch-zoom;
+}
+/* recorrido (system/tour) */
+#tour {
+  position:fixed;
+  inset:0;
+  z-index:18;
+}
+.trw {
+  padding:6px 4px 4px;
+  text-align:center;
+}
+.trbg {
+  display:grid;
+  place-items:center;
+  width:60px;
+  height:60px;
+  margin:4px auto 12px;
+  border-radius:20px;
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  color:var(--ft);
+}
+.trw h3 {
+  margin:0 0 6px;
+  font-size:22px;
+}
+.trw p {
+  margin:0 0 16px;
+  font-size:14.5px;
+  line-height:1.45;
+}
+.trw button {
+  width:100%;
+  padding:15px;
+  border-radius:16px;
+  font-size:16px;
+}
+.trw button+button {
+  margin-top:10px;
+  padding:14px;
+}
+.trbk {
+  position:absolute;
+  inset:0;
+  touch-action:none;
+}
+.trsp {
+  position:fixed;
+  border-radius:22px;
+  box-shadow:0 0 0 2px var(--a1),0 0 0 9999px rgba(0,0,0,.66);
+  pointer-events:none;
+  transition:left .25s,top .25s,width .25s,height .25s;
+}
+.trtp {
+  position:fixed;
+  left:16px;
+  right:16px;
+  max-width:520px;
+  margin:0 auto;
+  padding:16px 16px 14px;
+  border-radius:20px;
+  background:var(--cd);
+  border:1px solid color-mix(in srgb,var(--tx) 14%,transparent);
+  box-shadow:0 18px 40px rgba(0,0,0,.5);
+  color:var(--tx);
+  animation:rsi .25s;
+}
+.trst {
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--at);
+}
+.trtp b {
+  display:block;
+  margin:4px 0 6px;
+  font-size:17px;
+}
+.trtp p {
+  margin:0 0 14px;
+  font-size:14px;
+  line-height:1.45;
+  color:var(--mu);
+}
+.trft {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.trdt {
+  display:flex;
+  flex:1;
+  align-items:center;
+  gap:5px;
+}
+.trdt i {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:color-mix(in srgb,var(--tx) 25%,transparent);
+}
+.trdt i.on {
+  width:18px;
+  border-radius:4px;
+  background:var(--a1);
+}
+.trtp button {
+  width:auto;
+  margin:0;
+}
+.trtp .trsk {
+  padding:10px 8px;
+  border:0;
+  background:none;
+  box-shadow:none;
+  color:var(--mu);
+  font-weight:600;
+}
+.trnx {
+  padding:10px 18px;
+  border-radius:12px;
+}
+.trar {
+  position:absolute;
+  top:-8px;
+  width:14px;
+  height:14px;
+  background:inherit;
+  border-left:1px solid color-mix(in srgb,var(--tx) 14%,transparent);
+  border-top:1px solid color-mix(in srgb,var(--tx) 14%,transparent);
+  transform:rotate(45deg);
+}
+.trtp.up .trar {
+  top:auto;
+  bottom:-8px;
+  transform:rotate(225deg);
+}

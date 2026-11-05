@@ -1,24 +1,26 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: sessionView, currentSet, scrollToCurrent, nextSet, sessionWakeLock, requestSessionWakeLock, setToggle, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, … (+1)  · acciones/registros: 13
+   Define: sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, blockHeader  · acciones/registros: 18
 */
 import { $, fmtDuration, fmtMinSec, round1, roundInt, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
 import { S, setOverviewMode, setW, W } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { sheet } from '../core/ui.js';
+import { dialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { exBadge, exPhotoUrl } from '../library/photo.js';
+import { exBadge } from '../library/photo.js';
 import { restorePlanBackup } from '../routines/builder.js';
-import { blockBadge, dayBlocks, exToolsHtml, inSuperset } from './day.js';
-import { restOf } from './rest.js';
+import { blockBadge, dayBlocks, exToolsHtml } from './day.js';
 import { targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from './targets.js';
-import { lastTimeLine, prefillSets, setText } from './progression.js';
+import { lastTimeLine, prefillSets, setText, suggestAfter } from './progression.js';
 import { usesBarbell } from './plates.js';
-import { isDeloadWeek } from './deload.js';
+import { deloadStrip, isDeloadWeek } from './deload.js';
+import { dropWeight, restAfterSet, withTechnique } from './technique.js';
+import { currentSet, setOrder } from './order.js';
+import { TECHNIQUES } from '../data/techniques.js';
 import { progressBody } from '../dashboard/progress.js';
-import { fromDisplayWeight, toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
+import { fromDisplayWeight, toDisplayWeight, weightUnit } from '../profile/units.js';
 import { buzz } from '../profile/feedback.js';
 import { exAnatomy } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
@@ -30,14 +32,13 @@ export function sessionView() {
   L.forEach((k, n) => k.x.forEach(i => lt[i] = [n, k.x[0] == i]));
   let n = 0;
   let o = 0;
-  let cur = null;
-  W.x.forEach((a, i) => a.forEach((s, j) => {
+  W.x.forEach(a => a.forEach(s => {
     n++;
     if (s.ok)
       o++;
-    else if (!cur)
-      cur = [i, j];
   }));
+  /* la serie que toca, en el orden del entreno (por rondas en las superseries: workout/order) */
+  const cur = currentSet();
   if (cur && W.lc !== cur[0]) {
     const pv = W.lc;
     W.lc = cur[0];
@@ -46,9 +47,9 @@ export function sessionView() {
     if (pv != null && pv !== cur[0] && W.x[pv] && W.x[pv].length && W.x[pv].every(s => s.ok))
       W.fd[pv] = 1;
   }
-  return html`<div class="wsk"><div class="hd"><b style="font-size:22px" id="tm">${raw(fmtDuration(t))}</b><span>Serie ${Math.min(o + 1, n)}/${n}</span><span class="mu" style="min-width:60px;text-align:right">${W.p ? 'En pausa' : restPill()}</span></div><div class="bar" style="height:5px;margin:10px 0"><i style="width:${o / n * 100}%;background:var(--a2)"></i></div>${raw(nextUpBar(d, cur))}</div>${d.ex.map((e, i) => html`<div class="xs${W.fd && W.fd[i] ? ' fd' : ''}${W.x[i].length && W.x[i].every(s => s.ok) ? ' dn' : ''}" id="ex${i}">${lt[i][1] ? blockHeader(L, lt[i][0], cur) : ''}${blockBadge(d.ex, i)}<div class="xh">${exThumb(e.n, i)}<div style="min-width:0"><b style="font-size:18px">${e.n}</b>${targetLine(e, i)}${lastTimeLine(e, i)}${e.o ? html`<div class="mu" style="font-size:12px">Cambiado desde: ${e.o} · <u data-a="zun" data-i="${i}" role="button" tabindex="0" style="cursor:pointer">Deshacer</u></div>` : ''}</div>${foldButton(i)}</div>${foldSummary(e, i)}${exToolsHtml(e, i)}<div style="margin:-2px 0 6px"><button class="chip" data-a="zhi" data-i="${i}">Historial</button><button class="chip" data-a="zsw" data-i="${i}">${icon('swp', 15)} Swap</button>${usesBarbell(e.n) ? html`<button class="chip" data-a="zpl" data-i="${i}">Discos</button>` : ''}</div><div class="thd"><span>Set</span><span></span><span>${raw(unitHead(e))}</span><span>${usesWeight(e) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${W.x[i].map((s, j) => {
+  return html`<div class="wsk"><div class="hd"><b style="font-size:22px" id="tm">${raw(fmtDuration(t))}</b><span>Serie ${Math.min(o + 1, n)}/${n}</span><span class="mu" style="min-width:60px;text-align:right">${W.p ? 'En pausa' : restPill()}</span></div><div class="bar" style="height:5px;margin:10px 0"><i style="width:${o / n * 100}%;background:var(--a2)"></i></div>${raw(nextUpBar(d, cur))}</div>${raw(W.dl ? deloadStrip() : '')}${d.ex.map((e, i) => html`<div class="xs${W.fd && W.fd[i] ? ' fd' : ''}${W.x[i].length && W.x[i].every(s => s.ok) ? ' dn' : ''}" id="ex${i}">${lt[i][1] ? blockHeader(L, lt[i][0], cur) : ''}${blockBadge(d.ex, i)}<div class="xh">${exThumb(e.n, i)}<div style="min-width:0"><b style="font-size:18px">${e.n}</b>${targetLine(e, i)}${lastTimeLine(e, i)}${e.o ? html`<div class="mu" style="font-size:12px">Cambiado desde: ${e.o} · <u data-a="zun" data-i="${i}" role="button" tabindex="0" style="cursor:pointer">Deshacer</u></div>` : ''}</div>${foldButton(i)}</div>${foldSummary(e, i)}${exToolsHtml(e, i)}<div style="margin:-2px 0 6px"><button class="chip" data-a="zhi" data-i="${i}">Historial</button><button class="chip" data-a="zsw" data-i="${i}">${icon('swp', 15)} Swap</button>${usesBarbell(e.n) ? html`<button class="chip ic" data-a="zpl" data-i="${i}" aria-label="${'Discos, ' + e.n}">${icon('plate', 18)}</button>` : ''}</div><div class="thd"><span>Set</span><span></span><span>${raw(unitHead(e))}</span><span>${usesWeight(e) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${W.x[i].map((s, j) => {
     const c = cur && cur[0] == i && cur[1] == j;
-    return html`<div class="r2${c ? ' cur' : ''}"><span>${raw(s.t == 1 ? 'D' : j + 1)}</span><span class="wk2">WRK</span><input type="number" inputmode="decimal" data-c="sr" data-i="${i}" data-j="${j}" value="${s.r}" aria-label="${unitName(e) + ', ' + setName(j, s, e)}">${raw(!usesWeight(e) ? '<span class="mu" style="text-align:center">–</span>' : html`<input type="number" inputmode="decimal" data-c="sw" data-i="${i}" data-j="${j}" value="${s.w ? toDisplayWeight(s.w) : ''}" placeholder="${weightUnit()}" aria-label="${'Peso, ' + setName(j, s, e)}">`)}<span style="font-size:13px">${raw(fmtMinSec(inSuperset(i) ? 10 : restOf(e)))}</span><button class="ck ${s.ok ? 'on' : ''}" data-a="ck" data-i="${i}" data-j="${j}" aria-label="${'Hecha, ' + setName(j, s, e)}" aria-pressed="${s.ok ? 'true' : 'false'}">✓</button></div>${W.re && W.ri && W.ri[0] == i && W.ri[1] == j ? html`<div class="rr"><button data-a="rt" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000))))}</b><br><small data-a="rt" data-i="0" role="button" tabindex="0" style="cursor:pointer;text-decoration:underline">Saltar</small></span><button data-a="rt" data-i="15">+15s</button></div>` : ''}${rpeRow(i, j, s)}`;
+    return html`<div class="r2${c ? ' cur' : ''}"><span>${raw(setNo(W.x[i], j))}</span>${raw((k => html`<button class="wk2${k != 'WRK' ? ' tq' : ''}" data-a="tqi" data-v="${k}" aria-label="${'Técnica: ' + TECHNIQUES[k][0]}">${k}</button>`)(s.k && TECHNIQUES[s.k] ? s.k : 'WRK'))}<input type="number" inputmode="decimal" data-c="sr" data-i="${i}" data-j="${j}" value="${s.r}"${raw(W.dl && !s.ok ? ' class="dlv"' : '')} aria-label="${unitName(e) + ', ' + setName(j, s, e)}">${raw(!usesWeight(e) ? '<span class="mu" style="text-align:center">–</span>' : html`<input type="number" inputmode="decimal" data-c="sw" data-i="${i}" data-j="${j}" value="${s.w ? toDisplayWeight(s.w) : ''}" placeholder="${weightUnit()}"${raw(s.ws && !s.ok ? (W.dl ? ' class="dlv"' : ' class="sug"') : '')} aria-label="${'Peso' + (s.ws && !s.ok ? ' sugerido' : '') + ', ' + setName(j, s, e)}">`)}<span style="font-size:13px">${raw((r => r ? fmtMinSec(r) : '–')(restAfterSet(i, j)))}</span><button class="ck ${s.ok ? 'on' : ''}" data-a="ck" data-i="${i}" data-j="${j}" aria-label="${'Hecha, ' + setName(j, s, e)}" aria-pressed="${s.ok ? 'true' : 'false'}">✓</button></div>${W.re && W.ri && W.ri[0] == i && W.ri[1] == j ? html`<div class="rr"><button data-a="rt" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000))))}</b><br><small data-a="rt" data-i="0" role="button" tabindex="0" style="cursor:pointer;text-decoration:underline">Saltar</small></span><button data-a="rt" data-i="15">+15s</button></div>` : ''}${rpeRow(i, j, s)}`;
   })}<div class="g2" style="margin-top:8px"><button data-a="sl" data-i="${i}">− Serie</button><button data-a="sa" data-i="${i}">+ Serie</button></div></div>`)}<div class="g2" style="margin:16px 0 84px"><button data-a="zdis" style="background:#d4d4da;color:#111;border:0;padding:15px;border-radius:16px;font-size:15px">Salir y descartar</button><button data-a="end" style="background:#fff;color:#111;border:0;padding:15px;border-radius:16px;font-size:16px;font-weight:700">Log out</button></div><div class="pb"><button data-a="zpv" aria-label="Serie anterior">${icon('prv', 26)}</button><button data-a="zps" aria-label="${W.p ? 'Reanudar' : 'Pausar'}">${icon(W.p ? 'ply' : 'pau', 30)}</button><button data-a="znx" aria-label="Siguiente serie">${icon('nxt', 26)}</button></div>`;
 }
 A.zhi = i => {
@@ -72,16 +73,6 @@ A.zps = () => {
     W.p = Date.now();
   R();
 };
-const currentSet = () => {
-  let r = null;
-  W.x.some((a, i) => a.some((s, j) => {
-    if (!s.ok) {
-      r = [i, j];
-      return 1;
-    }
-  }));
-  return r;
-};
 const scrollToCurrent = () => {
   const e = $('.r2.cur');
   e && e.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -98,22 +89,38 @@ const nextSet = () => {
   W.lb = 0;
   W.ri = [i, j];
   W.c = i;
-  W.re = Date.now() + (inSuperset(i) ? 10 : restOf(S.plan[S.sel].ex[i])) * 1000;
-  if (!currentSet()) {
+  W.x[i][j].ws = 0;
+  const rs = restAfterSet(i, j);
+  W.re = rs ? Date.now() + rs * 1000 : 0;
+  const nx = currentSet();
+  if (!nx) {
     W.re = 0;
     R();
     A.end();
     return;
   }
   R();
-  scrollToCurrent();
+  /* si toca otro ejercicio (superserie, o el siguiente), se pasa a él al acabar el descanso: restEnded */
+  if (!W.re || nx[0] == i)
+    scrollToCurrent();
+};
+/** Al acabar o saltar el descanso: si la serie que toca es la que sigue en el orden y es de otro ejercicio, se va a ella
+    (F-12). Si se marcó una serie saltándose otras, no se vuelve atrás a la que quedó pendiente. */
+export const restEnded = () => {
+  const c = W && W.ri && currentSet();
+  if (!c || c[0] == W.ri[0])
+    return;
+  const o = setOrder();
+  const at = p => o.findIndex(x => x[0] == p[0] && x[1] == p[1]);
+  if (at(c) > at(W.ri))
+    scrollToCurrent();
 };
 A.zpv = () => {
   let r = null;
-  W.x.forEach((a, i) => a.forEach((s, j) => {
-    if (s.ok)
+  setOrder().forEach(([i, j]) => {
+    if (W.x[i][j].ok)
       r = [i, j];
-  }));
+  });
   if (!r)
     return;
   W.x[r[0]][r[1]].ok = 0;
@@ -122,20 +129,6 @@ A.zpv = () => {
   W.c = r[0];
   R();
   scrollToCurrent();
-};
-let sessionWakeLock = null;
-export const requestSessionWakeLock = async () => {
-  try {
-    if (navigator.wakeLock && W && !sessionWakeLock) {
-      sessionWakeLock = await navigator.wakeLock.request('screen');
-      sessionWakeLock.addEventListener('release', () => {
-        sessionWakeLock = null;
-      });
-    }
-  }
-  catch (e) {
-    /* bloqueo de pantalla opcional: no todos los navegadores lo permiten */
-  }
 };
 A.zdc = () => {
   sheet();
@@ -147,13 +140,19 @@ A.zdc = () => {
 const setToggle = (i, b) => {
   const s = W.x[i][+b.dataset.j];
   s.ok = !s.ok;
+  if (s.ok)
+    s.ws = 0;
   W.lb = 0;
   W.ri = [i, +b.dataset.j];
-  W.re = s.ok ? Date.now() + (a => a[i + 1] && a[i].b && a[i + 1].b == a[i].b ? 10 : restOf(a[i]))(S.plan[S.sel].ex) * 1000 : 0;
+  const rs = s.ok ? restAfterSet(i, +b.dataset.j) : 0;
+  W.re = rs ? Date.now() + rs * 1000 : 0;
   R();
 };
 /** Cómo se llama una fila de series para los lectores de pantalla: «serie 2, Press banca» (o «drop set, …»). */
-const setName = (j, s, e) => (s.t == 1 ? 'drop set' : 'serie ' + (j + 1)) + ', ' + e.n;
+const setName = (j, s, e) => (s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : 'serie ' + (j + 1) + (s.k && TECHNIQUES[s.k] ? ', ' + TECHNIQUES[s.k][0].toLowerCase() : '')) + ', ' + e.n;
+/** Número que se ve a la izquierda de la fila: el de la serie (sin contar las filas extra), D en el drop set y + en el bloque
+    de rest-pause. */
+const setNo = (a, j) => a[j].t == 1 ? 'D' : a[j].t == 2 ? '+' : a.slice(0, j + 1).filter(x => !x.t).length;
 const foldButton = i => html`<button class="fdb" data-a="zfd" data-i="${i}" aria-label="Plegar o desplegar ejercicio">${icon('chev', 20)}</button>`;
 const foldSummary = (e, i) => {
   const a = W.x[i] || [];
@@ -169,19 +168,6 @@ A.zfd = (i, b) => {
     W.fd[k] = 1;
   R();
 };
-A.zfa = () => {
-  const d = S.plan[S.sel];
-  const c = currentSet();
-  const f = W.fd || {};
-  const rest = d.ex.map((e, i) => i).filter(i => !c || i != c[0]);
-  const all = rest.length && rest.every(i => f[i]);
-  W.fd = {};
-  if (!all)
-    rest.forEach(i => {
-      W.fd[i] = 1;
-    });
-  R();
-};
 const anLiveOn = i => {
   try {
     const c = currentSet();
@@ -194,11 +180,9 @@ const anLiveOn = i => {
 const exThumb = (n, i) => {
   const on = anLiveOn(i);
   const s = exAnatomy(n, 64);
-  const at = exPhotoUrl(n) ? ' data-a="exv" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Ver foto de ' + X(n) + '"' : '';
-  if (!on)
-    return html`<div class="th"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
-  const an = s.indexOf('stroke-width="\.7"') >= 0 || s.indexOf('stroke-width=".7"') >= 0;
-  return html`<div class="th live"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
+  /* al tocar la imagen, cómo se hace el ejercicio (F-14: library/howto) */
+  const at = ' data-a="exh" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Cómo se hace: ' + X(n) + '"';
+  return html`<div class="th${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
 };
 const restPill = () => W && W.re ? html`<button class="wsr" data-a="wsr" aria-label="Ir al descanso">Descanso <b id="rt2">${raw(fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000))))}</b></button>` : '';
 A.wsr = () => {
@@ -221,29 +205,36 @@ A.ck = (i, b) => {
   if (S.ar === 0 && W && W.re && W.x[i][+b.dataset.j].ok) {
     W.re = 0;
     R();
+    restEnded();
   }
 };
 A.znx = () => {
   W.lb = 0;
   nextSet();
+  /* sin descanso automático, se pasa enseguida a la serie que toca */
   if (S.ar === 0 && W && W.re) {
     W.re = 0;
     R();
+    restEnded();
   }
 };
 A.go = () => {
   setOverviewMode(0);
   const d = S.plan[S.sel];
   setW({ t0: Date.now(), re: 0, o: {}, x: d.ex.map(e => Array.from({ length: e.s }, () => ({ r: 10, w: S.last[e.n] || '', ok: 0 }))) });
+  /* semana de descarga (F-18): mismas series con el 65 % del peso, 2 repeticiones menos y sin técnicas de intensidad */
+  if (isDeloadWeek(S.wk))
+    W.dl = 1;
   R();
   scrollTo(0, 0);
-  W.x.forEach((a, i) => prefillSets(d.ex[i], a));
+  W.x.forEach((a, i) => {
+    prefillSets(d.ex[i], a);
+    if (!W.dl) {
+      withTechnique(d.ex[i], a);
+      prefillSets(d.ex[i], a);
+    }
+  });
   R();
-  if (W && isDeloadWeek(S.wk)) {
-    W.dl = 1;
-    W.x = W.x.map(a => a.slice(0, Math.max(1, Math.ceil(a.length / 2))));
-    R();
-  }
 };
 const rpeRow = (i, j, s) => {
   if (!W || W.p || !s.ok || !W.ri || W.ri[0] != i || W.ri[1] != j)
@@ -270,8 +261,7 @@ A.drp = (i, b) => {
   const w = +s.w || 0;
   if (!(w > 0))
     return;
-  const nw = usesLb() ? fromDisplayWeight(Math.max(5, Math.round(toDisplayWeight(w) * .8 / 5) * 5)) : Math.max(1, Math.round(w * .8 * 2) / 2);
-  a.splice(j + 1, 0, { r: s.r, w: nw, ok: 0, t: 1 });
+  a.splice(j + 1, 0, { r: s.r, w: dropWeight(w), ws: 1, ok: 0, t: 1, k: 'DS' });
   W.re = 0;
   W.ri = null;
   R();
@@ -313,9 +303,18 @@ const blockArrowLive = (L, n, cur) => {
 };
 const blockHeader = (L, n, cur) => html`<div class="sl">SERIE ${raw(String.fromCharCode(65 + n))} <span class="arw${blockArrowLive(L, n, cur) ? ' live' : ''}" aria-hidden="true"><span>›</span><span>›</span><span>›</span></span></div>`;
 /* — manejadores de esta función (registros A / C / U) — */
+/* etiqueta de técnica de una serie (F-11): qué técnica es, cómo se ejecuta y qué hace la app con ella */
+A.tqi = (i, b) => {
+  const t = TECHNIQUES[b.dataset.v];
+  if (t)
+    dialog(html`${t[0]} <span class="mu">· ${b.dataset.v}</span>`, html`${t[1]}${raw(t[2] ? html`<br><br><b>En el entreno:</b> ${t[2]}` : '')}`, [['Entendido', 'zno', 'pr']]);
+};
 A.sa = i => {
   const a = W.x[i];
-  a.push({ ...a[a.length - 1], ok: 0 });
+  /* una serie más como la última normal (sin copiar el drop set ni el rest-pause, ni su técnica si es solo de la última) */
+  const m = a.filter(x => !x.t).pop() || a[a.length - 1];
+  const k = m.k && !['DS', 'RP', 'PAR'].includes(m.k) ? m.k : '';
+  a.push(k ? { r: m.r, w: m.w, ws: 1, ok: 0, k } : { r: m.r, w: m.w, ws: 1, ok: 0 });
   R();
 };
 A.sl = i => {
@@ -326,6 +325,15 @@ A.rt = i => {
   W.re = i ? W.re + i * 1e3 : 0;
   W.lb = 0;
   R();
+  if (!i)
+    restEnded();
 };
 C.sr = (e, i, j) => W.x[i][j].r = +e.value;
-C.sw = (e, i, j) => W.x[i][j].w = fromDisplayWeight(+e.value);
+/* el peso escrito pasa como sugerido a las series siguientes (F-10) */
+C.sw = (e, i, j) => {
+  const a = W.x[i];
+  a[j].w = fromDisplayWeight(+e.value);
+  a[j].ws = 0;
+  suggestAfter(S.plan[S.sel].ex[i], a, j);
+  R();
+};

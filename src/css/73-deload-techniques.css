@@ -1,0 +1,277 @@
+/* ═══ css/73-deload-techniques ═══ Semana de descarga en naranja (F-18), técnicas de intensidad (F-02) y rotación de ejercicios (F-06) */
+/* naranja de la descarga: más claro sobre fondo oscuro y más oscuro sobre claro, para que se lea en los dos temas */
+:root {
+  --do1:#ffb072;
+  --do2:#ffc59a;
+  --do3:#ffa25c;
+}
+@media(prefers-color-scheme:light) {
+  :root:not([data-theme="dark"]) {
+    --do1:#c2540a;
+    --do2:#b4500f;
+    --do3:#d9650f;
+  }
+}
+:root[data-theme="light"] {
+  --do1:#c2540a;
+  --do2:#b4500f;
+  --do3:#d9650f;
+}
+:root[data-theme="dark"] {
+  --do1:#ffb072;
+  --do2:#ffc59a;
+  --do3:#ffa25c;
+}
+.wk b.wkdl {
+  color:var(--do3);
+}
+.dl2 {
+  position:relative;
+  border-radius:22px;
+  padding:16px;
+  margin:12px 0 14px;
+  background:linear-gradient(135deg,rgba(255,138,48,.32),rgba(255,138,48,.10) 70%);
+  border:1px solid rgba(255,154,77,.7);
+  box-shadow:0 10px 30px rgba(255,120,30,.16);
+  color:var(--tx);
+}
+.dl2.dlc2 {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 10px 10px 12px;
+  margin:12px 0;
+  border-radius:18px;
+}
+.dlb {
+  flex:1;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0;
+  margin:0;
+  border:0!important;
+  background:none!important;
+  box-shadow:none!important;
+  text-align:left;
+  color:inherit;
+}
+.dlb b {
+  font-size:16px;
+  color:var(--do1);
+}
+.dli {
+  flex:none;
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,138,48,.25);
+  color:var(--do3);
+}
+button.dlo {
+  width:100%;
+  background:rgba(255,138,48,.10)!important;
+  border:1px solid rgba(255,154,77,.7)!important;
+  color:var(--do2)!important;
+  font-weight:700;
+  box-shadow:none!important;
+}
+button.dlo.dls {
+  width:auto;
+  padding:8px 14px;
+  border-radius:12px;
+  font-size:14px;
+  margin:0;
+}
+button.dlp,#dg .pr.dlp {
+  background:linear-gradient(180deg,#ff9a4d,#f2711c)!important;
+  color:#1a0d02!important;
+  border:0!important;
+  font-weight:800;
+  box-shadow:none!important;
+}
+/* hoja de inicio de la semana de descarga */
+.dlw2 {
+  text-align:center;
+  padding:6px 4px 4px;
+}
+.dlw2 .dlbig {
+  width:60px;
+  height:60px;
+  border-radius:20px;
+  margin:4px auto 12px;
+}
+.dlw2 h3 {
+  margin:0 0 6px;
+  font-size:22px;
+}
+.dlw2 p {
+  margin:0 0 14px;
+  font-size:14.5px;
+  line-height:1.45;
+}
+.dlt {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin:0 0 12px;
+}
+.dlt span {
+  font-size:12.5px;
+  font-weight:700;
+  color:var(--do2);
+  background:rgba(255,138,48,.16);
+  border:1px solid rgba(255,154,77,.5);
+  border-radius:999px;
+  padding:5px 10px;
+}
+.dlw2 .dlp {
+  width:100%;
+  padding:15px;
+  border-radius:16px;
+  font-size:16px;
+  margin-top:4px;
+}
+.dlw2 .dlo {
+  margin-top:10px;
+  padding:14px;
+  border-radius:16px;
+}
+/* en el entreno: franja, sugerencia y valores de la descarga */
+.dlstrip {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:10px 0 6px;
+  padding:9px 12px;
+  border-radius:14px;
+  background:rgba(255,138,48,.16);
+  border:1px solid rgba(255,154,77,.55);
+  color:var(--do2);
+  font-size:13px;
+  font-weight:700;
+}
+.sgb.dlsg {
+  background:rgba(255,138,48,.16)!important;
+  border:1px solid rgba(255,154,77,.55)!important;
+}
+.sgb.dlsg b {
+  color:var(--do3)!important;
+}
+.r2 input.dlv {
+  color:var(--do2)!important;
+}
+/* programas propios: cada cuántas semanas hay descarga (F-20) */
+.dln {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:12px 2px 0;
+  font-size:15px;
+}
+.dln input {
+  width:76px;
+  text-align:center;
+}
+.dlh {
+  font-size:12px;
+  margin:8px 2px 0;
+}
+/* técnica de la serie (F-02): la abreviatura en lugar de WRK */
+.r2 .wk2.tq {
+  color:#fff;
+  background:linear-gradient(180deg,#a875ff,#7c4ddb);
+  border-color:transparent;
+}
+/* técnica de cada ejercicio en la vista del programa */
+.tqa {
+  display:inline-block;
+  margin-right:5px;
+  padding:1px 6px;
+  border-radius:6px;
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:.03em;
+  color:#fff;
+  background:#7c4ddb;
+  vertical-align:1px;
+}
+/* leyenda de técnicas y ciclo en la vista del programa */
+.tql div {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 12px;
+  margin-top:8px;
+  font-size:13px;
+}
+.cyn {
+  margin:-4px 2px 8px;
+  font-size:13px;
+}
+/* «Volver a generar» con su icono (F-07) */
+.chip.rgb {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+/* Programas: pregunta del sexo para ordenar los predefinidos (F-05) */
+.pgsx p {
+  margin:6px 0 12px;
+  font-size:14px;
+}
+/* rotación de ejercicios: propuesta en Workout y cambios (F-06) */
+.rtc .mu {
+  margin:4px 0 12px;
+  font-size:13px;
+}
+.rtd .mu {
+  margin-top:4px;
+  font-size:13px;
+}
+/* consejo del ejercicio (Tips) y su ejecución al tocar la imagen (F-13, F-14) */
+.tip {
+  font-size:13.5px;
+  line-height:1.45;
+  margin:0 2px 8px;
+}
+.exhw {
+  position:relative;
+  cursor:pointer;
+}
+.hwh {
+  position:absolute;
+  right:10px;
+  bottom:10px;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  color:#fff;
+  background:rgba(0,0,0,.55);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+}
+.hwh2 {
+  margin:-2px 2px 6px;
+  font-size:12px;
+}
+.anb[data-a] {
+  cursor:pointer;
+}
+.hwa {
+  display:grid;
+  place-items:center;
+  padding:8px 0 4px;
+}
+.hwt {
+  margin:12px 0 4px;
+}
+.hwp {
+  margin:6px 2px 12px;
+  font-size:15px;
+  line-height:1.55;
+}

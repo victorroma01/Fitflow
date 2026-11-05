@@ -1,6 +1,6 @@
 /* ═══ extras/csv ═══
    Exportación a CSV.
-   Define: csvCell, csvBody, CSV_EXPORTS, downloadAs  · acciones/registros: 2
+   Define: csvCell, csvBody, CSV_EXPORTS  · acciones/registros: 2
 */
 import { dayKey, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -9,7 +9,7 @@ import { S } from '../core/state.js';
 import { icon } from '../core/icons.js';
 import { fullPage, pgHead } from '../core/ui.js';
 import { itemMacros, mealName } from '../nutrition/home.js';
-import { isStandalone } from '../system/files.js';
+import { downloadFile } from '../system/files.js';
 import { cardioLabel, cardioLogs, cardioPace } from './cardio.js';
 import { measureList, MEASURES } from './measures.js';
 import { html, raw } from '../core/html.js';
@@ -24,11 +24,12 @@ const csvCell = v => {
 const csvBody = rows => '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
 const CSV_EXPORTS = {
   ent: { t: 'Entrenos', s: 'Fecha, tipo, series, volumen, minutos y esfuerzo', f: 'entrenos', n: () => (S.logs || []).length, b: () => [['Fecha', 'Tipo', 'Entreno', 'Series', 'Volumen (kg)', 'Minutos', 'RPE medio', 'Detalle']].concat((S.logs || []).filter(l => l && typeof l.d == 'string').slice().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0).map(l => [l.d, l.k == 'c' ? 'Cardio' : l.k == 'w' ? 'WOD' : 'Fuerza', l.n, +l.s || 0, +l.v || 0, +l.m || 0, +l.q || '', (l.x || '') + (l.nt ? ' · ' + l.nt : '')])) },
-  ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso y esfuerzo', f: 'series', n: () => Object.keys(S.hist || {}).length, b: () => {
-      const r = [['Fecha', 'Ejercicio', 'Serie', 'Repeticiones', 'Peso (kg)', 'RPE']];
+  ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso, esfuerzo y técnica', f: 'series', n: () => Object.keys(S.hist || {}).length, b: () => {
+      const r = [['Fecha', 'Ejercicio', 'Serie', 'Repeticiones', 'Peso (kg)', 'RPE', 'Técnica']];
       Object.keys(S.hist || {}).sort().forEach(n => {
         (Array.isArray(S.hist[n]) ? S.hist[n] : []).slice().reverse().forEach(x => {
-          (x && Array.isArray(x.s) ? x.s : []).forEach((q, i) => r.push([x.d, n, i + 1, +q[0] || 0, +q[1] || 0, +q[2] || '']));
+          /* técnica de la serie (data/techniques): la guardada o, en las filas extra antiguas, DS (1) y RP (2) */
+          (x && Array.isArray(x.s) ? x.s : []).forEach((q, i) => r.push([x.d, n, i + 1, +q[0] || 0, +q[1] || 0, +q[2] || '', typeof q[4] == 'string' ? q[4] : q[3] == 1 ? 'DS' : q[3] == 2 ? 'RP' : 'WRK']));
         });
       });
       return r;
@@ -54,52 +55,6 @@ const CSV_EXPORTS = {
     } },
   car: { t: 'Cardio', s: 'Sesiones con distancia, tiempo y ritmo', f: 'cardio', n: () => cardioLogs().length, b: () => [['Fecha', 'Tipo', 'Distancia (km)', 'Tiempo (min)', 'Ritmo o velocidad']].concat(cardioLogs().map(l => [l.d, cardioLabel(l.c.t), +l.c.km || '', round1((+l.c.sec || 0) / 60), cardioPace(l.c.t, +l.c.km, +l.c.sec)])) }
 };
-const downloadAs = async (name, data, mime) => {
-  let d = null;
-  try {
-    d = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
-  }
-  catch (e) {
-    d = null;
-  }
-  if (d) {
-    try {
-      const r = await d.save({ filename: name, data });
-      return r && r.status ? r.status : 'saved';
-    }
-    catch (e) {
-      return e && e.code == 'declined' ? 'declined' : 'fail';
-    }
-  }
-  if (isStandalone() && navigator.canShare && typeof File != 'undefined') {
-    try {
-      const f = new File([data], name, { type: mime });
-      if (navigator.canShare({ files: [f] })) {
-        await navigator.share({ files: [f] });
-        return 'saved';
-      }
-    }
-    catch (e) {
-      if (e && e.name == 'AbortError')
-        return 'declined';
-    }
-  }
-  try {
-    const b = new Blob([data], { type: mime });
-    const u = URL.createObjectURL(b);
-    const a = document.createElement('a');
-    a.href = u;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(u), 4000);
-    return 'saved';
-  }
-  catch (e) {
-    return 'fail';
-  }
-};
 A.f2ex = () => fullPage(html`${pgHead('Exportar datos')}<p class="mu" style="margin:-6px 2px 10px;font-size:14px">Archivos CSV para abrir en Excel, Numbers o Google Sheets. Los pesos van en kg. Separador «;» y decimales con coma, listos para Excel en español.</p>${Object.keys(CSV_EXPORTS).map(k => {
   const c = CSV_EXPORTS[k];
   const n = c.n();
@@ -117,6 +72,6 @@ A.f2exd = async (i, b) => {
     toast('No se pudo preparar el archivo');
     return;
   }
-  const r = await downloadAs('stratafit-' + c.f + '-' + dayKey(new Date) + '.csv', txt, 'text/csv;charset=utf-8');
-  toast(r == 'saved' || r == 'delivered' ? 'Archivo listo' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
+  const r = await downloadFile('stratafit-' + c.f + '-' + dayKey(new Date) + '.csv', txt, 'text/csv;charset=utf-8');
+  toast(r == 'saved' ? 'Archivo listo' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
 };

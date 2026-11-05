@@ -1,6 +1,6 @@
 /* ═══ workout/finish ═══
    Fin del entreno: récords, historial, registro del día e instantánea.
-   Define: newRecords, logWorkout, saveHistory, bestOf, saveRecords, lastSummary, workoutSnapshot  · acciones/registros: 3
+   Define: newRecords, logWorkout, saveHistory, bestOf, saveRecords, lastSummary, setLastSummary, workoutSnapshot  · acciones/registros: 3
 */
 import { dayKey, est1RM, roundInt } from '../core/util.js';
 import { logError } from '../core/errors.js';
@@ -27,7 +27,7 @@ const logWorkout = () => {
   }));
   if (n) {
     S.logs.push({ d: dayKey(new Date), n: d.n, v, s: n, m: roundInt((Date.now() - W.t0) / 6e4), q: avgEffort(), dl: W.dl ? 1 : 0 });
-    S.done[S.wk + '-' + S.sel] = 1;
+    S.done[S.wk + '-' + S.sl] = 1;
   }
   setW(null);
   saveState();
@@ -47,13 +47,12 @@ const saveHistory = () => {
       newRecords.push(n);
   });
   W.x.forEach((a, i) => {
-    const l = a.filter(s => s.ok).map(s => [s.r, s.w || 0, s.q || 0, s.t || 0]);
+    /* cada serie: repeticiones, peso, RPE, fila extra (1 drop set, 2 rest-pause) y técnica si no es una serie normal */
+    const l = a.filter(s => s.ok).map(s => s.k ? [s.r, s.w || 0, s.q || 0, s.t || 0, s.k] : [s.r, s.w || 0, s.q || 0, s.t || 0]);
     if (l.length) {
       const n = d.ex[i].n;
-      const h = S.hist[n] = S.hist[n] || [];
-      h.unshift({ d: dt, s: l });
-      if (h.length > 60)
-        h.length = 60;
+      /* todo el historial: va también a la nube, un documento por año (cloud/sync), y un año ocupa poco */
+      (S.hist[n] = S.hist[n] || []).unshift({ d: dt, s: l });
     }
   });
 };
@@ -137,7 +136,7 @@ A.zend = () => {
   const n0 = S.logs.length;
   saveRecords();
   const one = S.pbk;
-  const k = S.wk + '-' + S.sel;
+  const k = S.wk + '-' + S.sl;
   const had = S.done[k];
   const n1 = S.logs.length;
   sheet();

@@ -8,9 +8,9 @@
 import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { partsFailed, savedFormat, stateRecovered } from './persist.js';
+import { stateRecovered } from './persist.js';
 import { A, C, U } from './registry.js';
-import { groupOf } from '../data/library.js';
+import { groupOf, parseProgram } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
 import { addState, flushState, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
@@ -18,7 +18,10 @@ import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
 import { exAll, exSearchText } from '../library/model.js';
 import { libBody, libState } from '../library/browse.js';
-import { clone } from '../programs/create.js';
+import { clone, progDraft } from '../programs/create.js';
+import { levelPlan } from '../programs/levels.js';
+import { isDeloadWeek } from '../workout/deload.js';
+import { planIndex } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { updatesOn } from '../system/updates.js';
@@ -28,17 +31,27 @@ import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { dayInfo } from '../nutrition/templates.js';
 import { tdee } from '../nutrition/diet.js';
+import { account } from '../cloud/session.js';
+import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
+import { refreshReports } from '../system/report.js';
+import { accentNow, customAccent } from '../profile/appearance.js';
+import { backTarget } from './back.js';
+import { tourCheck } from '../system/tour.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
   A: [() => A],
+  accentNow: [() => accentNow],
+  account: [() => account],
   ACHIEVEMENTS: [() => ACHIEVEMENTS],
   addState: [() => addState],
   APPV: [() => APPV],
+  backTarget: [() => backTarget],
   buildBackup: [() => buildBackup],
   C: [() => C],
   clearErrorLog: [() => clearErrorLog],
   clone: [() => clone],
   confirmDialog: [() => confirmDialog],
+  customAccent: [() => customAccent],
   dayInfo: [() => dayInfo],
   dayKey: [() => dayKey],
   dialog: [() => dialog],
@@ -53,18 +66,23 @@ const DEBUG_NAMES = {
   FOODS_SRC: [() => FOODS_SRC],
   groupOf: [() => groupOf],
   icon: [() => icon],
+  isDeloadWeek: [() => isDeloadWeek],
+  levelPlan: [() => levelPlan],
   libBody: [() => libBody],
   libState: [() => libState],
   logError: [() => logError],
   medalSvg: [() => medalSvg],
   nutriDayOffset: [() => nutriDayOffset],
-  partsFailed: [() => partsFailed],
   parseBackup: [() => parseBackup],
+  parseProgram: [() => parseProgram],
+  pendingDocs: [() => pendingDocs],
   pendingRestore: [() => pendingRestore, setPendingRestore],
+  planIndex: [() => planIndex],
+  progDraft: [() => progDraft],
   R: [() => R],
+  refreshReports: [() => refreshReports],
   restoreBackup: [() => restoreBackup],
   S: [() => S],
-  savedFormat: [() => savedFormat],
   saveState: [() => saveState],
   sheet: [() => sheet],
   showSummary: [() => showSummary],
@@ -72,8 +90,11 @@ const DEBUG_NAMES = {
   snapTx: [() => snapTx],
   stateRecovered: [() => stateRecovered],
   Store: [() => Store],
+  syncNow: [() => syncNow],
+  syncState: [() => syncState],
   takeSnapshot: [() => takeSnapshot],
   tdee: [() => tdee],
+  tourCheck: [() => tourCheck],
   U: [() => U],
   updatesOn: [() => updatesOn],
   W: [() => W, setW],

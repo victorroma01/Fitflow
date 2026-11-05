@@ -1,17 +1,18 @@
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, unitName, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, … (+8)  · acciones/registros: 1
+   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
 */
 import { fmtMinSec } from '../core/util.js';
 import { C } from '../core/registry.js';
 import { groupOf } from '../data/library.js';
-import { S, saveState } from '../core/state.js';
+import { S, saveState, W } from '../core/state.js';
 import { R } from '../core/render.js';
 import { exAll } from '../library/model.js';
 import { inSuperset } from './day.js';
-import { COMPOUND_RE, restOf } from './rest.js';
+import { blockEnd, COMPOUND_RE, restAt } from './rest.js';
 import { warmupHtml } from './warmup.js';
 import { html, raw } from '../core/html.js';
+import { isCycle } from './week.js';
 const repClass = n => /sentadilla|press banca|peso muerto|press militar|remo con barra|dominadas|fondos|hip thrust|prensa/i.test(n) ? 8 : /curl|extensi|elevaciones|aperturas|pájaros|gemelo|patada|abducci|face pull|crunch|encogimientos|muñeca/i.test(n) ? 12 : 10;
 export const unitFromName = n => {
   const m = String(n).match(/(\d+(?:[.,]\d+)?)\s*(km|m)\b/i);
@@ -112,7 +113,7 @@ export const dayMinutes = d => {
     const r = targetRange(e);
     const v = (r[0] + r[1]) / 2;
     const w = U ? (U == 'm' ? (v <= 100 ? 45 : v / 3) : U == 's' ? v : U == 'min' ? v * 60 : v * 3) : v * 3 + 12;
-    t += e.s * (w + (inSuperset(i) ? 10 : restOf(e)));
+    t += e.s * (w + restAt(d, i));
   });
   return Math.max(5, Math.round(t / 300) * 5);
 };
@@ -125,18 +126,39 @@ const weeklySets = pl => {
     const g = x ? groupOf(x) : 'Otros';
     o[g] = (o[g] || 0) + e.s;
   }));
-  return Object.entries(o).sort((a, b) => b[1] - a[1]);
+  /* en un ciclo de otra longitud que la semana (workout/week), la media por semana */
+  const f = pl.length ? 7 / pl.length : 1;
+  return Object.entries(o).map(([g, n]) => [g, Math.round(n * f)]).sort((a, b) => b[1] - a[1]);
 };
-export const weeklySetsCard = pl => html`<div class="cd" style="margin:8px 0"><b>Series directas por semana</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${weeklySets(pl).map(o => html`<span style="padding:4px 10px;border-radius:12px;background:rgba(128,128,128,.18);font-size:12px">${o[0]} · ${raw(o[1])}</span>`)}</div></div>`;
+export const weeklySetsCard = pl => html`<div class="cd" style="margin:8px 0"><b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${weeklySets(pl).map(o => html`<span style="padding:4px 10px;border-radius:12px;background:rgba(128,128,128,.18);font-size:12px">${o[0]} · ${raw(o[1])}</span>`)}</div></div>`;
 export const usesWeight = e => !unitOf(e) || /Sled|Farmers|Sandbag|Carry|chaleco|con peso|con balón|arrastre|Lunges/i.test(e.n);
+/** Repeticiones de cada serie de una pirámide: del tope del rango al mínimo (12, 10, 8, 6 con un rango de 6-12). */
+export const pyramidReps = (rg, n) => Array.from({ length: n }, (_, j) => n < 2 ? rg[1] : Math.round(rg[1] - (rg[1] - rg[0]) * j / (n - 1)));
+const TECH_TAIL = { DS: ' + drop set', RP: ' + rest-pause', PAR: ' + parciales' };
+/** Series y objetivo de un ejercicio del plan con su técnica (F-02): «4 × 12/10/8/6 reps + drop set», «12-15 reps + 3 mini
+    series de 3-5», «4 × 5-8 reps en bloques de 2-3»… */
+export const planLine = e => {
+  const [a, f] = (unitOf(e) ? '' : e.tk || '').split('+');
+  if (a == 'PIR')
+    return e.s + ' × ' + pyramidReps(targetRange(e), e.s).join('/') + ' reps' + (TECH_TAIL[f] || '');
+  if (a == 'MYO' && e.s > 1)
+    return targetText(e) + ' + ' + (e.s - 1) + ' mini series de 3-5';
+  if (a == 'CL')
+    return e.s + ' × ' + targetText(e) + ' en bloques de 2-3';
+  return e.s + ' × ' + targetText(e) + (TECH_TAIL[a] || '');
+};
 export const targetLine = (e, i) => {
   const U = unitOf(e);
+  const dl = !!(W && W.dl);
   const p = [];
   if (e.s > 1)
-    p.push('Descanso ' + fmtMinSec(inSuperset(i) ? 10 : restOf(e)));
+    p.push(inSuperset(i) ? '10 s al siguiente' : (blockEnd(S.plan[S.sel], i) ? 'Descanso de la ronda ' : 'Descanso ') + fmtMinSec(restAt(S.plan[S.sel], i)));
   if (!U)
     p.push('Tempo ' + tempoOf(e));
-  return html`<div class="mu">Objetivo: ${raw(e.s)} × ${raw(targetText(e))}${raw(U ? '' : ' · RIR ' + rirOf(e))}</div>${p.length ? html`<div class="mu">${raw(p.join(' · '))}</div>` : ''}${raw(warmupHtml(e, i))}`;
+  /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */
+  const [a, b] = targetRange(e).map(x => Math.max(1, x - 2));
+  const ob = dl && !U ? e.s + ' × ' + (a == b ? a : a + '-' + b) + ' reps · RIR 3-4' : planLine(e) + (U ? '' : ' · RIR ' + rirOf(e));
+  return html`<div class="mu">Objetivo: ${ob}</div>${p.length ? html`<div class="mu">${raw(p.join(' · '))}</div>` : ''}${raw(warmupHtml(e, i))}`;
 };
 const RANGE_OPTIONS = ['3-5', '5-8', '6-10', '8-10', '8-12', '10-12', '10-15', '12-15', '15-20'];
 export const rangeSelect = (e, i) => {

@@ -1,4 +1,9 @@
 /* ═══ css/00-base ═══ Variables de tema, reinicio y tipografía base */
+/* --at: texto del color de acento, que se lea sobre el fondo (el tono claro en el tema oscuro y el oscuro en el claro).
+   Igual los colores de los macros (--c hidratos, también para borrar; --p proteínas; --g grasas) y de los estados (--okx
+   bien, --wnx aviso, --erx mal, --snx visto) cuando son texto: --ctx, --ptx, --gtx…, más oscuros en el tema claro, con un
+   contraste de 4,5 o más (WCAG AA) sobre el fondo, sobre las tarjetas (también las de Cristal) y sobre su etiqueta tintada.
+   --mu, el gris del texto secundario, también lo cumple sobre las tarjetas de Cristal del tema claro */
 :root {
   --bg:#0b0b0d;
   --cd:#17171b;
@@ -10,6 +15,14 @@
   --p:#5b7bea;
   --g:#f0b244;
   --ib:#0b0b0d;
+  --at:var(--a1);
+  --ctx:var(--c);
+  --ptx:var(--p);
+  --gtx:var(--g);
+  --okx:#2ecc71;
+  --wnx:#f59e0b;
+  --erx:#e5484d;
+  --snx:#4da3ff;
   box-sizing:border-box;
   padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
   color-scheme:dark;
@@ -19,9 +32,17 @@
     --bg:#f3f3f7;
     --cd:#fff;
     --tx:#17171b;
-    --mu:#6b6b76;
+    --mu:#62626c;
     --ln:#e0e0e6;
     --ib:#f3f3f7;
+    --at:var(--a3);
+    --ctx:#a13a55;
+    --ptx:#3f56a6;
+    --gtx:#765720;
+    --okx:#146236;
+    --wnx:#7a4e08;
+    --erx:#922a2e;
+    --snx:#1a5294;
     color-scheme:light;
   }
 }
@@ -29,9 +50,17 @@
   --bg:#f3f3f7;
   --cd:#fff;
   --tx:#17171b;
-  --mu:#6b6b76;
+  --mu:#62626c;
   --ln:#e0e0e6;
   --ib:#f3f3f7;
+  --at:var(--a3);
+  --ctx:#a13a55;
+  --ptx:#3f56a6;
+  --gtx:#765720;
+  --okx:#146236;
+  --wnx:#7a4e08;
+  --erx:#922a2e;
+  --snx:#1a5294;
   color-scheme:light;
 }
 :root[data-theme="dark"] {
@@ -41,6 +70,14 @@
   --mu:#8b8b96;
   --ln:#2a2a31;
   --ib:#0b0b0d;
+  --at:var(--a1);
+  --ctx:var(--c);
+  --ptx:var(--p);
+  --gtx:var(--g);
+  --okx:#2ecc71;
+  --wnx:#f59e0b;
+  --erx:#e5484d;
+  --snx:#4da3ff;
   color-scheme:dark;
 }
 * {

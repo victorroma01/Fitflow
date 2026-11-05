@@ -1,0 +1,46 @@
+# Cambiar el rol de una cuenta de StrataFit (Actions → Asignar rol → Run workflow): admin o usuario.
+# El rol va en el token de la sesión (custom claim), así que la app no lo puede cambiar, y las reglas de Firestore lo exigen.
+# Tiene efecto la próxima vez que la persona abra la app. Código: tools/admin/rol.mjs.
+name: Asignar rol
+
+on:
+  workflow_dispatch:
+    inputs:
+      usuario:
+        description: Usuario de la cuenta
+        required: true
+        type: string
+      rol:
+        description: Rol
+        required: true
+        type: choice
+        options:
+          - usuario
+          - admin
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-firebase
+  cancel-in-progress: false
+
+jobs:
+  rol:
+    name: ${{ inputs.usuario }} → ${{ inputs.rol }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          package-manager-cache: false
+          node-version: 22
+      - name: firebase-admin
+        run: npm install --no-save --no-audit --no-fund firebase-admin@13
+      - name: Asignar
+        env:
+          USUARIO: ${{ inputs.usuario }}
+          ROL: ${{ inputs.rol }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tools/admin/rol.mjs "$USUARIO" "$ROL"

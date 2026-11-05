@@ -1,0 +1,37 @@
+# Comprobar que Firebase está bien configurado, sin cambiar nada (Actions → Comprobar Firebase → Run workflow): el secreto
+# FIREBASE_SERVICE_ACCOUNT, Authentication, la base de datos de Firestore y su ubicación, y las reglas. El resultado sale en
+# el resumen del flujo. Se lanza también cuando cambia su código. Código: tools/admin/comprobar.mjs.
+name: Comprobar Firebase
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, desarrollo-1.0.0]
+    paths:
+      - tools/admin/**
+      - .github/workflows/firebase-comprobar.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-firebase
+  cancel-in-progress: false
+
+jobs:
+  comprobar:
+    name: Configuración de Firebase
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          package-manager-cache: false
+          node-version: 22
+      - name: firebase-admin
+        run: npm install --no-save --no-audit --no-fund firebase-admin@13
+      - name: Comprobar
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tools/admin/comprobar.mjs

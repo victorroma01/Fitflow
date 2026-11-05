@@ -83,24 +83,31 @@ def main(path, shots=None):
         check('un ejercicio sin foto no lleva cabecera de foto', ev("!document.querySelector('#sh .exph')"))
         ev("A.cl()")
 
-        # entreno: miniatura tocable con insignia y ficha rápida
+        # entreno: toda miniatura se toca y abre cómo se hace el ejercicio (F-14), con la foto si la hay y la ficha
         d = ev("S.plan.findIndex(d=>d.ex.some(e=>EX_PHOTO_KEY[e.n]))")
         check('el programa por defecto contiene ejercicios con foto', d >= 0, str(d))
-        ev("S.tab=0;S.sel=%d;R()" % max(d, 0))
+        ev("S.tab=0;S.sl=%d;S.sel=%d;R()" % (max(d, 0), max(d, 0)))
         ev("A.go()")
         pg.clock.run_for(400)
         check('empieza el entreno', ev('!!W'))
-        n = ev("document.querySelectorAll('.xs .th[data-a=exv]').length")
-        check('hay miniaturas tocables en el entreno', n > 0, str(n))
-        check('las miniaturas sin foto no son tocables', ev("[...document.querySelectorAll('.xs')].every(x=>{const e=S.plan[S.sel].ex[+x.id.slice(2)];const t=x.querySelector('.th');return !t||(!!t.dataset.a)==!!EX_PHOTO_KEY[e.n]})"))
+        check('todas las miniaturas del entreno se pueden tocar', ev("[...document.querySelectorAll('.xs .th')].every(t=>t.dataset.a=='exh')"))
+        sel = "document.querySelector('.xs .th[data-a=exh][data-n=\"'+S.plan[S.sel].ex.find(e=>EX_PHOTO_KEY[e.n]).n+'\"]')"
         if shots:
-            ev("document.querySelector('.xs .th[data-a=exv]').scrollIntoView({block:'center'})")
+            ev(sel + ".scrollIntoView({block:'center'})")
             pg.clock.run_for(300)
             pg.screenshot(path=os.path.join(shots, 'entreno.png'))
-        ev("document.querySelector('.xs .th[data-a=exv]').click()")
+        ev(sel + ".click()")
         pg.clock.run_for(300)
-        check('al tocar se abre la ficha con foto', ev("!!document.querySelector('#sh .exph img.f')"))
-        check('en el entreno la ficha no ofrece «+ Al día» ni variantes', ev("!document.querySelector('#sh [data-a=lad]')"))
+        for _ in range(20):
+            if ev("!!document.querySelector('#sh .hwp')"):
+                break
+            pg.wait_for_timeout(100)
+        check('al tocar se abre cómo se hace, con la foto', ev("!!document.querySelector('#sh .exph img.f') && document.querySelector('#sh .hwp').innerText.length > 80"))
+        if shots:
+            pg.screenshot(path=os.path.join(shots, 'entreno_como.png'))
+        ev("document.querySelector('#sh [data-a=exv]').click()")
+        pg.clock.run_for(300)
+        check('desde ahí se abre la ficha, sin «+ Al día» ni variantes', ev("!!document.querySelector('#sh .exph img.f') && !document.querySelector('#sh [data-a=lad]')"))
         check('el entreno sigue en marcha', ev('!!W'))
         if shots:
             pg.screenshot(path=os.path.join(shots, 'entreno_ficha.png'))

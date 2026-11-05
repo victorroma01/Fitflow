@@ -25,5 +25,46 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Entreno de hoy",
+      "short_name": "Entreno",
+      "description": "Abre el entreno que toca hoy",
+      "url": "./?a=entreno",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Nutrición de hoy",
+      "short_name": "Nutrición",
+      "description": "Abre las comidas de hoy",
+      "url": "./?a=comida",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Registrar el peso",
+      "short_name": "Peso",
+      "description": "Abre Evolución del peso",
+      "url": "./?a=peso",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

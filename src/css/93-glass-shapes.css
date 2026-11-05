@@ -19,9 +19,6 @@ html.gl nav {
 html.gl nav button {
   border-radius:28px;
 }
-html.gl .rb {
-  border-radius:20px;
-}
 html.gl .sp {
   border-radius:28px 28px 0 0;
 }
@@ -39,9 +36,6 @@ html.gl .dy {
 }
 html.gl input,html.gl select,html.gl textarea {
   border-radius:17px;
-}
-html.gl .rb {
-  border-radius:25px;
 }
 html.gl .sp {
   border-radius:34px 34px 0 0;
@@ -78,12 +72,6 @@ html.gl .tg {
 }
 html.gl .dgc {
   border-radius:30px;
-}
-html.gl .mst {
-  border-radius:0 0 32px 32px;
-}
-html.gl .mrow button {
-  border-radius:22px;
 }
 html.gl .mi {
   border-radius:20px;

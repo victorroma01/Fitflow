@@ -4,14 +4,14 @@
 
 # StrataFit
 
-**Entrenamiento y nutrición en una sola app, pensada para el iPhone y para funcionar sin conexión.**
+**Entrenamiento y nutrición en una sola app, que se instala desde el navegador del móvil y funciona sin conexión.**
 
 [![Pruebas](https://github.com/victorroma01/Fitflow/actions/workflows/pruebas.yml/badge.svg)](https://github.com/victorroma01/Fitflow/actions/workflows/pruebas.yml)
-![Plataforma](https://img.shields.io/badge/plataforma-iPhone%20%C2%B7%20web%20instalable-111111)
+![Plataforma](https://img.shields.io/badge/plataforma-iPhone%20%C2%B7%20Android%20%C2%B7%20web%20instalable-111111)
 ![Sin conexión](https://img.shields.io/badge/funciona-sin%20conexi%C3%B3n-14804a)
 ![Licencia](https://img.shields.io/badge/licencia-uso%20personal-7a45ee)
 
-[Abrir la app](https://victorroma01.github.io/Fitflow/) · [Novedades](CHANGELOG.md) · [Qué guarda](docs/STATE.md) · [Licencia](LICENSE)
+[Abrir la app](https://victorroma01.github.io/Fitflow/) · [Novedades](CHANGELOG.md) · [Documentación funcional](docs/funcional/README.md) · [Documentación técnica](docs/tecnica/README.md) · [Licencia](LICENSE)
 
 </div>
 
@@ -25,237 +25,70 @@
 
 ---
 
-## Contenido
+## Estado
 
-- [Qué hace](#qué-hace)
-- [Instalarla en el iPhone](#instalarla-en-el-iphone)
-- [Tus datos](#tus-datos)
-- [Actualizaciones](#actualizaciones)
-- [Cómo está hecha](#cómo-está-hecha)
-- [Estructura del repositorio](#estructura-del-repositorio)
-- [Desarrollo](#desarrollo)
-- [Pruebas y calidad](#pruebas-y-calidad)
-- [Publicar una versión](#publicar-una-versión)
-- [Siguientes pasos](#siguientes-pasos)
-- [Licencia](#licencia)
+La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V1.0.0** está en desarrollo en la rama
+`desarrollo-1.0.0`, por milestones que se siguen en GitHub:
+
+| Milestone | Contenido |
+| --- | --- |
+| M0 · Análisis y validación | Dudas, diseño del servidor y simulaciones. Hecho. |
+| M1 · Base técnica | Limpieza del código, versión 1.0.0 y documentación. Hecho. |
+| M2 · Cuentas y Firebase | Usuario y contraseña, roles, datos en la nube y seguridad. Hecho en la rama. |
+| M3 · Programas | Técnicas de intensidad, programas nuevos y por género, rotación, semana de descarga y consejo y ejecución de cada ejercicio. Hecho en la rama. |
+| M4 · Pantalla de entrenamiento | Iconos, desplegables cortos, peso sugerido, ventana de cada técnica, superseries encadenadas, barra inferior y reloj del WOD. Hecho en la rama. |
+| M5 · Perfil y seguimiento | Recordatorio de pesaje, análisis mensual en PDF, fallos y sugerencias con respuesta, nota de actualización y copia de seguridad única en la nube. Hecho en la rama. |
+| M6 · Experiencia y plataformas | Más colores y uno propio, recorrido de la primera vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android, accesos directos y globo en el icono, con pruebas en Android e iPhone. Hecho en la rama. |
+| M7 · Imágenes | Pospuesto por decisión del propietario, como el fondo del login (F-33, T-18). |
+| M8 · Cierre | Revisión final del código, pruebas, [informe de issues](docs/tecnica/issues.md) y documentación. Hecho en la rama; la publicación, a la espera de confirmación. |
 
 ## Qué hace
 
 | Área | Funciones |
-|---|---|
-| **Workout** | Programas listos (Bro Split, Push Pull Legs, Torso / Pierna, Híbrido, Hyrox / CrossFit…) en tres niveles; programas propios, guiados o con tus workouts, y compartidos por código; «Mis workouts» con superseries y triseries. |
-| **Entreno en curso** | Cronómetro, series con repeticiones, peso y esfuerzo (RPE); descanso por ejercicio con avisos sonoros; tempo, calentamiento, progresión sugerida, calculadora de discos, semana de descarga y cambio de ejercicio sin perder el historial. |
-| **Librería** | Más de 550 ejercicios con mapa muscular, fotos y filtros por grupo y equipo. La búsqueda ignora tildes y entiende nombres habituales. |
-| **Nutrición** | Comidas del día con macros, «Mi nutrición» (kcal y macros según tu gasto energético o a mano), agua, día de entreno o de descanso según tu rutina con sus plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras. |
-| **Dashboard** | Progreso por ejercicio, récords, calendario, peso corporal con IMC, medidas y fotos de progreso, cardio, temporizador WOD (AMRAP, EMOM, Tabata, For time), logros y exportación a CSV. |
-| **Perfil** | Datos personales y biométricos, logros con medallas; Ajustes: kg o lb, tema claro u oscuro, colores de acento y estilo Cristal, sonido, copias de seguridad, actualizaciones, diagnóstico e informe de fallos. |
+| --- | --- |
+| **Workout** | Programas listos en tres niveles (entre ellos Push Pull Leg y Full Body en ciclo y Glúteo y pierna), recomendados según el sexo; programas propios (guiados o con tus workouts) y compartidos por código; 10 técnicas de intensidad; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida y discos; semana de descarga y rotación de ejercicios; librería de más de 550 ejercicios, cada uno con su consejo y su ejecución; WOD y cardio. |
+| **Nutrición** | Comidas del día con macros, día de entreno o de descanso según tu rutina, «Mi nutrición» (objetivos según tu gasto o a mano), agua, plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras. |
+| **Dashboard** | Entrenos, volumen, rachas, récords, progreso por ejercicio, calendario y peso corporal. |
+| **Perfil** | Plan, medidas, logros con medallas, exportación a CSV, datos biométricos y Ajustes (cuenta, apariencia con color propio, unidades, sonido, copia de seguridad, actualizaciones, diagnóstico e informe de fallos). |
+| **En el móvil** | Recorrido de la primera vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android y accesos directos del icono. |
+| **Cuenta** | Usuario y contraseña, sin datos personales; datos en la nube (Firebase) para usar varios móviles, también sin conexión; roles de administrador y usuario. |
 
-## Instalarla en el iPhone
+Todo, pantalla a pantalla, en la [documentación funcional](docs/funcional/README.md).
 
-1. Abre [la app](https://victorroma01.github.io/Fitflow/) en **Safari**.
-2. Toca **Compartir** → **Añadir a pantalla de inicio**.
-3. Ábrela desde el icono: funciona a pantalla completa y sin conexión, también en un gimnasio sin cobertura.
+## Instalarla
 
-## Tus datos
+- **iPhone**: abre [la app](https://victorroma01.github.io/Fitflow/) en Safari → **Compartir** → **Añadir a pantalla de inicio**.
+- **Android**: ábrela en Chrome → **Instalar app**.
 
-- **Se quedan en tu móvil.** No hay cuentas ni servidor: todo se guarda en el propio dispositivo (almacenamiento del navegador e IndexedDB
-  para las fotos). Nada sale del teléfono salvo que tú exportes una copia o copies el informe de diagnóstico.
-- **Copia de seguridad en archivo** (Perfil → Ajustes → Copia de seguridad): guárdala de vez en cuando. Es lo único que te protege si cambias de
-  móvil o borras los datos del navegador.
-- **Copias automáticas**: cada día se guarda una copia en el móvil (las 7 últimas), útil para deshacer un error propio.
-- **Protección ante fallos**: si el móvil no tiene espacio para guardar, la app avisa; si los datos se dañan, se apartan antes de empezar
-  de cero para poder recuperarlos desde Ajustes → Diagnóstico.
-- **Informar de un fallo** (Ajustes): eliges el tipo de fallo y lo explicas; se abre ya escrito como incidencia en GitHub o lo
-  compartes por mensaje o correo. Los datos técnicos (versión, navegador y últimos errores) solo van si dejas marcada la casilla.
-- **Solo su propio código**: una política de seguridad (CSP) impide que la página ejecute código que no sea el de la app y que se
-  conecte a otro sitio que no sea el suyo y Open Food Facts.
+Desde el icono se abre a pantalla completa y funciona sin conexión. Se actualiza sola: cuando hay versión nueva, aparece un aviso con sus
+novedades.
 
-El detalle de todo lo que se guarda está en [`docs/STATE.md`](docs/STATE.md).
+## Documentación
 
-## Actualizaciones
-
-<img src="docs/img/aviso.jpg" width="200" align="right" alt="Aviso de versión nueva">
-
-La app instalada comprueba sola si hay una versión nueva cada vez que se abre, y también desde **Ajustes → Actualizaciones**.
-Cuando la hay, aparece una tarjeta con la versión y sus novedades; **Actualizar** la descarga y vuelve a abrir la app con ella.
-Durante un entreno no se interrumpe: el aviso espera a que termines.
-
-Las novedades salen del [historial de cambios](CHANGELOG.md), que es también la referencia de qué cambió en cada versión.
-
-<br clear="right">
-
-## Cómo está hecha
-
-StrataFit es una **aplicación web instalable (PWA)** escrita en JavaScript sin frameworks ni dependencias en tiempo de ejecución. El código
-son módulos ES pequeños dentro de `src/`; `build.py` los compila con [esbuild](https://esbuild.github.io/) (unidos y comprimidos) en la
-app que se publica. Lo poco usado (temporizador WOD, exportar a CSV, escáner de códigos) va en archivos aparte que se descargan la
-primera vez que se abren.
-
-```mermaid
-flowchart LR
-  subgraph fuente["src/ · código fuente"]
-    JS["js/ · módulos ES<br/>(entrada: main.js)"]
-    CSS["css/ · 19 trozos"]
-    IMG["img/ · portadas y<br/>fotos de ejercicio"]
-  end
-  CL["CHANGELOG.md<br/>(novedades de cada versión)"]
-  B(["build.py + esbuild"])
-  JS --> B
-  CSS --> B
-  IMG --> B
-  CL --> B
-  B --> APP["dist/app/ · se publica<br/>index.html · js/ · sw.js · version.json · img/"]
-  B --> ONE["dist/stratafit.html<br/>archivo único, todo incrustado"]
-  APP --> PAGES["GitHub Pages"]
-  PAGES --> PHONE["iPhone<br/>(service worker: abre al instante y sin conexión)"]
-```
-
-**Principios del código**
-
-- **Estado único `S`**, guardado con `saveState()`; el entreno en curso es `W` y `R()` pinta la pantalla. Se guarda por partes
-  (`core/persist`): solo se escribe lo que cambia y todos los guardados de una acción se agrupan en uno.
-- **Eventos delegados**: el HTML lleva `data-a`, `data-c` o `data-u` y un único listener llama al manejador `A.nombre`, `C.nombre` o `U.nombre`,
-  escrito junto a la función que lo usa.
-- **HTML seguro por defecto**: las pantallas se escriben con plantillas ``html`…${valor}…` `` (`core/html`), que escapan cada valor
-  insertado. Lo que ya es HTML de la app va tal cual (otra plantilla o una lista de ellas); cualquier otra excepción se marca con
-  `raw(…)`, así que todo lo que no se escapa está a la vista.
-- **Pintar sin rehacer**: `R()` compara la pantalla nueva con la que hay y cambia solo lo distinto (`core/morph`): se conservan el foco, lo
-  escrito y el desplazamiento, y el resultado es el mismo HTML que pintando de cero.
-- **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
-  exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
-- **Persistencia solo a través de `Store`** (`core/store`). Ninguna otra parte toca `localStorage`: ahí se enchufaría un servidor
-  ([`docs/BACKEND.md`](docs/BACKEND.md)).
-- **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
-  `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
-- **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Diagnóstico; un `catch` vacío solo se permite con un
-  comentario que explique por qué el fallo es esperable.
-- **Arranque explícito**: todo lo que se ejecuta al cargar (migraciones, reanudar un entreno, primer render) vive en `core/boot`, en orden.
-  El resto de módulos solo define.
-
-**Convenciones**
-
-- Nombres descriptivos en inglés y camelCase (`toast`, `saveState`, `confirmDialog`, `exRowHtml`); constantes de datos en mayúsculas
-  (`EXERCISES`, `PROGRAMS`). Se mantienen las letras del núcleo: `S`, `W`, `R`, `A`/`C`/`U`, `X` (escapar HTML), `$` e `IC`.
-- Las claves de `S` y de las acciones (`S.cx`, `data-a="zov"`) son cortas por historia: las de `S` están en los datos de cada usuario y no
-  se cambian sin una migración.
-- Cada módulo empieza con una cabecera `/* ═══ área/nombre ═══ … Define: … */`.
-- Formato automático: una instrucción por línea y sangría de 2 espacios (`npm run format`).
-
-## Estructura del repositorio
-
-```
-├── src/
-│   ├── index.html          plantilla: cabecera, pantalla de error de arranque y marcadores @@CSS@@ / @@JS@@
-│   ├── js/
-│   │   ├── main.js         punto de entrada: importa los módulos en orden de carga
-│   │   ├── core/           util, html (plantillas), toast, morph, store, errors, persist (guardado), registry, state,
-│   │   │                   icons, ui, events, render, lazy (carga diferida), debug (acceso para pruebas), boot
-│   │   ├── data/           ejercicios, alimentos, fotos (media), novedades (release), anatomía, plantillas, niveles
-│   │   ├── library/        modelo de ejercicios, fotos, filtros, librería, cambio de ejercicio, selector
-│   │   ├── routines/       «Mis workouts»
-│   │   ├── workout/        pestaña Workout y entreno en curso (series, descansos, progresión, discos, descarga…)
-│   │   ├── programs/       crear programa, niveles, gestor, compartir por código
-│   │   ├── nutrition/      resumen, dieta, agua, añadir alimentos, plantillas
-│   │   ├── dashboard/      tarjetas, registro y calendario, progreso, peso corporal
-│   │   ├── profile/        Perfil, página de Ajustes, apariencia, unidades, sonido y vibración
-│   │   ├── system/         archivos, copias de seguridad y automáticas, diagnóstico, actualizaciones, informe de fallos
-│   │   └── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros y medallas, CSV, anatomía
-│   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
-│   └── img/                day/ (portadas, order.txt) y ex/ (fotos de ejercicio, map.txt)
-├── static/                 sw.js (plantilla), manifiesto e iconos
-├── tools/                  check.js · format.js · format_css.js · same.js · rename.js · pages.py
-├── tests/                  pruebas (ver más abajo) y run.sh / compare.sh
-├── docs/                   STATE.md · BACKEND.md · img/ (capturas)
-├── .github/workflows/      pruebas automáticas
-├── build.py · package.json · CHANGELOG.md · LICENSE
-```
+| Documentación funcional | Documentación técnica |
+| --- | --- |
+| [Entrenamiento](docs/funcional/entrenamiento.md) | [Arquitectura y convenciones](docs/tecnica/README.md) |
+| [Nutrición](docs/funcional/nutricion.md) | [Mapa de módulos](docs/tecnica/modulos.md) |
+| [Dashboard](docs/funcional/dashboard.md) | [Estado y datos](docs/tecnica/estado.md) |
+| [Perfil y Ajustes](docs/funcional/perfil-y-ajustes.md) | [Servidor: Firebase](docs/tecnica/backend.md) |
+| [Cuenta](docs/funcional/cuenta.md) | [Desarrollo](docs/tecnica/desarrollo.md) |
+| [En el móvil](docs/funcional/experiencia.md) | [Pruebas](docs/tecnica/pruebas.md) |
+| [Datos y privacidad](docs/funcional/datos-y-privacidad.md) | |
 
 ## Desarrollo
 
-**Requisitos:** Python 3.10+, Node 18+ y, para las pruebas, Playwright.
+StrataFit es una aplicación web instalable (PWA) en JavaScript, sin frameworks ni dependencias en tiempo de ejecución: módulos ES en
+`src/` que `build.py` compila con esbuild. Las cuentas y los datos en la nube van con Firebase (Authentication y Firestore), por su
+API REST.
 
 ```bash
-npm install                                   # esbuild (compilar), typescript y acorn (comprobaciones y formato)
-pip install -r tests/requirements.txt
-python -m playwright install chromium webkit
+npm install && pip install -r tests/requirements.txt && python -m playwright install chromium webkit
+python3 build.py          # compila dist/app/ (se publica) y dist/stratafit.html (archivo único)
+npm run format            # formato, cabeceras de los módulos y mapa de módulos
+bash tests/run.sh         # reglas (también código muerto) y todas las pruebas, en Chrome; SF_BROWSER=webkit para Safari
 ```
 
-**Comandos**
-
-| Comando | Qué hace |
-|---|---|
-| `python3 build.py` | Compila `dist/app/` y `dist/stratafit.html`. |
-| `python3 build.py --check` | Además pasa las reglas de `tools/check.js`. |
-| `npm run format` | Formatea JS y CSS (`tools/format.js`, `tools/format_css.js`). |
-| `bash tests/run.sh` | Formato, reglas y todas las pruebas. |
-| `bash tests/compare.sh vieja.html nueva.html` | Compara comportamiento e imagen de dos versiones. |
-| `node tools/rename.js mapa.txt` | Renombra globales (líneas «viejo nuevo») entendiendo ámbitos. |
-| `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. |
-| `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo si GitHub Pages volviera a publicar desde la rama). |
-
-**Añadir una función**
-
-1. Crea `src/js/<área>/<nombre>.js` con su cabecera, sus `import` y sus `export const` / `export function`; los manejadores
-   (`A.miAccion = …`) van en el mismo archivo. El HTML, con plantillas ``html`…` ``.
-2. Impórtalo en `src/js/main.js` antes de `core/boot.js`. Si es algo poco usado, en lugar de eso cárgalo desde `core/lazy`.
-3. Si guarda datos nuevos, documenta la clave en `docs/STATE.md`, dale valor por defecto en `core/boot` y decide si entra en la copia.
-4. `npm run format` y `bash tests/run.sh`.
-
-**Fotos**
-
-- Portadas de día: `src/img/day/<clave>.jpg` y su orden en `src/img/day/order.txt`.
-- Fotos de ejercicio: `src/img/ex/<clave>.webp` (sin textos, unos 480 px de ancho) y su línea en `src/img/ex/map.txt`:
-  `clave | ejercicios que la usan | otros nombres para buscarlo`.
-
-`build.py` las convierte en el módulo `data/media`: en el paquete son archivos que el service worker guarda para usar sin conexión;
-en el archivo único van incrustadas.
-
-## Pruebas y calidad
-
-| Prueba | Qué comprueba |
-|---|---|
-| `tools/check.js` | Importaciones (lo usado de otro módulo, importado; nada sin usar), orden real de ejecución al cargar, identificadores sin declarar, nombres y manejadores duplicados, acciones sin manejador y botones sin nombre accesible. |
-| `tests/smoke.py` | Arranque, pestañas, entreno completo, comidas, hojas, actualizaciones y persistencia, en las dos variantes. |
-| `tests/photos.py` | Fotos de ejercicio: enlaces, búsqueda, ficha y entreno. |
-| `tests/security.py` | Nombres, foto de perfil y datos con HTML malicioso en 39 pantallas, también desde una copia manipulada: no debe ejecutarse nada, ni siquiera sin la CSP; y con la CSP, que lo inyectado no se ejecuta ni conecta con otros sitios. Las demás pruebas avisan si la CSP bloquea algo de la app. |
-| `tests/a11y.py` | Accesibilidad en 39 pantallas: botones con nombre, campos con etiqueta, lo que se toca anunciado como botón y, en el entreno (a 390 y 320 px), zona táctil de 44 × 44 px medida tocando. |
-| `tests/safety.py` | Registro de errores, datos dañados, aviso al no poder guardar, copias automáticas y pantalla de error de arranque. |
-| `tests/storage.py` | Guardado por partes: formato, paso desde la 1.20, escribir solo lo que cambia, partes dañadas, falta de espacio, restaurar y borrar. |
-| `tests/features.py` | Funciones de la 1.24: tipo de día según la rutina, ayudas, botones de cada comida, objetivos a mano que no se pisan, alimentos por grupos, Perfil y Ajustes, medallas e informe de fallos. |
-| `tests/render.py` | Pintar con cambios mínimos: cada pantalla queda igual que pintada de cero y se conservan foco, texto escrito y desplazamiento. |
-| `tests/deploy.py` | Paquete servido por HTTP: service worker, sin conexión, código y fotos en caché, carga diferida, aviso de versión nueva (publicando de verdad otra versión) y novedades. |
-| `tests/walk.py` | Paseo aleatorio diferencial: la misma secuencia de toques en dos versiones; compara pantalla, datos y sonidos paso a paso. |
-| `tests/shots.py` | 39 pantallas × 6 configuraciones (temas, cristal, tamaños de iPhone), comparadas píxel a píxel. |
-
-Las pruebas usan Chrome (Chromium) por defecto; con `SF_BROWSER=webkit` se pasan en el motor de Safari, sirviendo la app por HTTP como
-GitHub Pages (`tests/browser.py`).
-
-GitHub Actions ejecuta `tests/run.sh` en Chrome y en Safari en cada cambio de `main` y en cada solicitud de fusión, y además compara la
-solicitud con la versión anterior (paseo aleatorio y capturas). La comparación es informativa salvo con la etiqueta **`refactor`**, que
-exige que no cambie nada.
-
-## Publicar una versión
-
-1. Sube la versión en `src/js/core/util.js` (`APPV`) siguiendo el [versionado semántico](https://semver.org/lang/es/).
-2. Escribe su entrada en `CHANGELOG.md` (Novedades, Mejoras, Correcciones en frases cortas para el usuario; Interno para desarrollo).
-   La compilación se detiene si falta.
-3. `npm run format` y `bash tests/run.sh`.
-4. Abre una solicitud de fusión y, cuando las pruebas estén en verde, fusiónala. Al llegar a `main`, GitHub Actions vuelve a probar en
-   Chrome y Safari, crea la etiqueta `vX.Y.Z` con sus notas y publica la app; la app instalada enseña el aviso con las novedades.
-
-GitHub Pages publica desde GitHub Actions (*Settings → Pages → Source*: **GitHub Actions**), así que el repositorio no guarda
-ninguna copia compilada: lo publicado siempre sale del código de `main`. Si algún día se vuelve a *Deploy from a branch*, lo publicado
-sería la raíz del repositorio: `python3 tools/pages.py copiar` pone ahí `dist/app/`, y GitHub Actions falla si falta o no coincide
-con la app compilada.
-
-## Siguientes pasos
-
-Ideas abiertas, sin decidir:
-
-- **Servidor con cuentas y copia en la nube**, para usarla en varios dispositivos sin perder datos. El diseño está en
-  [`docs/BACKEND.md`](docs/BACKEND.md) y la capa `Store` ya está preparada.
-- **App en la App Store y Google Play** empaquetando esta misma web (por ejemplo con Capacitor), con notificaciones fiables y Apple Salud.
-- **Alojamiento propio** (Cloudflare Pages o Netlify) si el tráfico supera lo razonable para GitHub Pages.
+Cómo añadir una función, las reglas de calidad y cómo se publica una versión, en [Desarrollo](docs/tecnica/desarrollo.md).
 
 ## Licencia
 

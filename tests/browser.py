@@ -1,14 +1,14 @@
 """Navegador y dirección de la app para las pruebas.
 
 Motor: variable de entorno SF_BROWSER = chromium (por defecto) | webkit (el motor de Safari, el del iPhone) | firefox.
-Dirección: el archivo único, con Chromium, se abre como archivo (file://); el paquete (dist/app, con sw.js al lado) siempre
-se sirve por HTTP desde su carpeta, como en GitHub Pages (sus módulos ES no cargan desde file://), y con los demás motores,
-o con SF_HTTP=1, también el archivo único (WebKit no guarda datos de páginas abiertas como archivo).
+Dirección: todo se sirve por HTTP desde su carpeta, como en GitHub Pages: el paquete (dist/app, con sw.js al lado), porque
+sus módulos ES no cargan desde file://, y también el archivo único (con file://, WebKit no guarda datos, y Chromium a veces
+abre la página recargada con el almacenamiento vacío). SF_HTTP=0 abre el archivo único como archivo, con Chromium.
 """
 import os, threading, functools, http.server
 
 ENGINE = os.environ.get('SF_BROWSER', 'chromium')
-HTTP = os.environ.get('SF_HTTP') == '1' or ENGINE != 'chromium'
+HTTP = os.environ.get('SF_HTTP', '1') != '0' or ENGINE != 'chromium'
 
 
 def launch(p, sound=False):

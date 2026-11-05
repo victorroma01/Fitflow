@@ -10,7 +10,7 @@ import { S, saveState } from '../core/state.js';
 import { fullPage, pgHead } from '../core/ui.js';
 import { weekStats } from '../dashboard/home.js';
 import { cardioLogs } from './cardio.js';
-import { measureList, photoCount } from './measures.js';
+import { measureList } from './measures.js';
 import { medalSvg } from './medals.js';
 import { html, raw } from '../core/html.js';
 function achStats() {
@@ -28,7 +28,7 @@ function achStats() {
       const m = S.meals[k];
       return m && typeof m == 'object' && Object.values(m).some(a => Array.isArray(a) && a.length);
     }).length,
-    ms: measureList().length, ph: photoCount, wl: Array.isArray(S.wl) ? S.wl.length : 0, bk: S.bkd ? 1 : 0 };
+    ms: measureList().length, wl: Array.isArray(S.wl) ? S.wl.length : 0, bk: S.bkd || S.cb ? 1 : 0 };
 }
 export const ACHIEVEMENTS = [
   ['e1', 'Primer paso', 'Registra tu primer entreno', 'n', 1], ['e2', 'Constancia', '10 entrenos registrados', 'n', 10], ['e3', 'En forma', '50 entrenos registrados', 'n', 50], ['e4', 'Centenario', '100 entrenos registrados', 'n', 100], ['e5', 'Leyenda', '250 entrenos registrados', 'n', 250],
@@ -38,7 +38,7 @@ export const ACHIEVEMENTS = [
   ['c1', 'A moverse', 'Registra una sesión de cardio', 'cs', 1], ['c2', '50 kilómetros', '50 km de cardio en total', 'km', 50], ['c3', '200 kilómetros', '200 km de cardio en total', 'km', 200],
   ['w1', 'Primer WOD', 'Termina un WOD con el temporizador', 'wod', 1], ['w2', 'Veterano del WOD', '10 WOD registrados', 'wod', 10],
   ['n1', 'Diario de comidas', 'Anota comidas durante 7 días', 'nd', 7], ['n2', 'Un mes de registro', 'Anota comidas durante 30 días', 'nd', 30],
-  ['m1', 'Primera medición', 'Guarda tus medidas corporales', 'ms', 1], ['f1', 'Primera foto', 'Guarda una foto de progreso', 'ph', 1], ['f2', 'Antes y después', 'Ten al menos 2 fotos de progreso', 'ph', 2],
+  ['m1', 'Primera medición', 'Guarda tus medidas corporales', 'ms', 1],
   ['b1', 'Peso al día', '10 registros de peso corporal', 'wl', 10], ['k1', 'Datos a salvo', 'Guarda una copia de seguridad', 'bk', 1]
 ];
 export function checkAchievements() {

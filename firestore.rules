@@ -1,0 +1,131 @@
+rules_version = '2';
+// StrataFit · reglas de seguridad de Firestore (T-12). Diseño en docs/tecnica/backend.md.
+// · Cada cuenta lee y escribe solo lo suyo (users/{uid} y lo que cuelga de él), con la forma y el tamaño que usa la app
+//   (cloud/sync): nada de campos de más, ni documentos con otros nombres, ni de más de 1 MB.
+// · El admin (custom claim role: 'admin', que solo se pone desde GitHub Actions: tools/admin) lee además los perfiles de
+//   todas las cuentas y las contraseñas temporales (adminInbox), y borra estas al entregarlas. Nunca ve los entrenos, las
+//   comidas, las medidas ni la foto de nadie.
+// · Solo valen cuentas con correo técnico (usuario@stratafit.app): una cuenta creada a mano con otro correo no entra en nada.
+// · La copia de seguridad (users/{uid}/backup: meta y trozos c0…c23) es solo de su dueño, como el resto de sus datos.
+// · Fallos y sugerencias (reports/{uid}-{ms}): cada cuenta crea los suyos, pendientes y con su usuario, y lee solo los suyos;
+//   el admin los lee todos y solo cambia el estado (pendiente, vista, arreglada) y la respuesta.
+// · Lo que no está aquí está denegado.
+// Se prueban con el emulador de Firebase (tests/rules.test.mjs) y se despliegan desde GitHub Actions al fusionar en main.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function techUser() {
+      return request.auth != null && request.auth.token.email is string
+        && request.auth.token.email.matches('^[a-z0-9._-]{3,20}@stratafit[.]app$');
+    }
+    function isOwner(uid) {
+      return techUser() && request.auth.uid == uid;
+    }
+    function isAdmin() {
+      return techUser() && request.auth.token.get('role', '') == 'admin';
+    }
+    // preferencias (cloud/sync, PREF_KEYS): tema, color (acx: el propio, #rrggbb), Cristal, animaciones, unidades, sonido y
+    // vibración, pestaña al abrir la app y si ya se vio el recorrido
+    function validPrefs(p) {
+      return p is map && p.keys().hasOnly(['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'st0', 'tour'])
+        && (!('acx' in p) || p.acx is string && p.acx.matches('^#[0-9a-fA-F]{6}$'))
+        && (!('st0' in p) || p.st0 is int && p.st0 >= 0 && p.st0 <= 3)
+        && (!('tour' in p) || p.tour in [0, 1]) && (!('rm' in p) || p.rm in [0, 1]);
+    }
+    function validProfile(d) {
+      return (!('sx' in d) || d.sx in ['M', 'F', '']) && (!('pr' in d) || validPrefs(d.pr))
+        && (!('m' in d) || d.m is int) && (!('ca' in d) || d.ca is int) && (!('mc' in d) || d.mc is bool);
+    }
+    // una parte del estado: su contenido en texto JSON (j), cuándo y desde qué dispositivo se escribió, y su versión
+    function validPart(d, max) {
+      return d.keys().hasOnly(['j', 'm', 'r', 'v', 'd']) && d.j is string && d.j.size() <= max && d.m is int
+        && d.r is string && d.r.size() <= 24 && d.v is int && d.d is string && d.d.size() <= 24;
+    }
+    // el índice: la versión de cada parte
+    function validIndex(d) {
+      return d.keys().hasOnly(['p', 'm', 'd']) && d.p is map && d.p.size() <= 2000 && d.m is int && d.d is string && d.d.size() <= 24;
+    }
+    function writesPart(uid, max) {
+      return isOwner(uid) && (request.method == 'delete' || validPart(request.resource.data, max));
+    }
+    // copia de seguridad: cuándo, versión, trozos (1-24), si va comprimida, tamaño, huella, entrenos y días de comidas
+    function validBackupMeta(d) {
+      return d.keys().hasOnly(['at', 'v', 'n', 'z', 'sz', 'h', 'lg', 'md']) && d.at is int && d.v is string && d.v.size() <= 20
+        && d.n is int && d.n >= 1 && d.n <= 24 && d.z is bool && d.sz is int && d.h is string && d.h.size() <= 24
+        && d.lg is int && d.md is int;
+    }
+    function validBackupChunk(d) {
+      return d.keys().hasOnly(['j', 'i']) && d.j is string && d.j.size() <= 300000 && d.i is int;
+    }
+    // un aviso nuevo: de quien lo crea (uid y usuario de su correo técnico), fallo o sugerencia, pendiente y sin respuesta
+    function validReport(d) {
+      return d.keys().hasOnly(['uid', 'u', 'k', 'a', 't', 'dx', 'v', 'ca', 'st', 'm'])
+        && d.uid == request.auth.uid && d.u is string && d.u.lower() + '@stratafit.app' == request.auth.token.email
+        && d.k in ['f', 's'] && d.a is string && d.a.size() <= 60 && d.t is string && d.t.size() >= 10 && d.t.size() <= 1500
+        && d.dx is string && d.dx.size() <= 1500 && d.v is string && d.v.size() <= 20 && d.ca is int && d.st == 'p' && d.m is int;
+    }
+    // lo que cambia el admin: estado, respuesta (y cuándo) y cuándo cambió el estado
+    function validReview(d) {
+      return d.st in ['p', 'v', 'a'] && (!('rp' in d) || d.rp is string && d.rp.size() <= 1500)
+        && (!('ra' in d) || d.ra is int) && (!('sa' in d) || d.sa is int) && d.m is int;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      // al registrarse: el usuario tiene que ser el del correo técnico de la cuenta
+      allow create: if isOwner(uid) && request.resource.data.keys().hasOnly(['u', 'sx', 'pr', 'ca', 'm'])
+        && request.resource.data.u is string && request.resource.data.u.lower() + '@stratafit.app' == request.auth.token.email
+        && validProfile(request.resource.data);
+      // después: sexo y preferencias; «debe cambiar la contraseña» (mc) solo se puede quitar (lo pone GitHub Actions)
+      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sx', 'pr', 'm', 'mc'])
+        && validProfile(request.resource.data)
+        && (!('mc' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.mc == false);
+      allow delete: if false;
+
+      match /data/{doc} {
+        allow read: if isOwner(uid);
+        allow write: if isOwner(uid) && (request.method == 'delete'
+          || doc == 'index' && validIndex(request.resource.data)
+          || doc == 'core' && validPart(request.resource.data, 1000000));
+      }
+      match /logs/{year} {
+        allow read: if isOwner(uid);
+        allow write: if year.matches('^([0-9]{4}|otros)$') && writesPart(uid, 1000000);
+      }
+      match /hist/{year} {
+        allow read: if isOwner(uid);
+        allow write: if year.matches('^([0-9]{4}|otros)$') && writesPart(uid, 1000000);
+      }
+      match /meals/{month} {
+        allow read: if isOwner(uid);
+        allow write: if month.matches('^([0-9]{4}-[0-9]{2}|otros)$') && writesPart(uid, 1000000);
+      }
+      // la foto de perfil, solo con consentimiento (lo pide la app) y de 150 KB como mucho
+      match /private/{doc} {
+        allow read: if isOwner(uid);
+        allow write: if doc == 'avatar' && writesPart(uid, 150000);
+      }
+      // la copia de seguridad en la nube (cloud/backup): una por cuenta, que se sustituye entera en cada copia
+      match /backup/{doc} {
+        allow read: if isOwner(uid);
+        allow write: if isOwner(uid) && (request.method == 'delete'
+          || doc == 'meta' && validBackupMeta(request.resource.data)
+          || doc.matches('^c([0-9]|1[0-9]|2[0-3])$') && validBackupChunk(request.resource.data));
+      }
+    }
+
+    // contraseñas temporales: las crea GitHub Actions (con la cuenta de servicio, que no pasa por estas reglas)
+    match /adminInbox/{id} {
+      allow read, delete: if isAdmin();
+    }
+
+    // fallos y sugerencias (F-27): el id es el uid de quien lo envía y el momento (ms), así nadie crea uno en nombre de otro
+    match /reports/{id} {
+      allow get: if techUser() && (resource == null || isAdmin() || resource.data.uid == request.auth.uid);
+      allow list: if isAdmin();
+      allow create: if techUser() && id == request.auth.uid + '-' + string(request.resource.data.ca) && validReport(request.resource.data);
+      allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['st', 'rp', 'ra', 'sa', 'm'])
+        && validReview(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}

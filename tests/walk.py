@@ -7,12 +7,13 @@ Requiere:  pip install playwright  &&  playwright install chromium
 """
 import os,sys,json,random,hashlib,datetime
 from playwright.sync_api import sync_playwright
+from browser import app_url, context_opts
 HERE=os.path.dirname(os.path.abspath(__file__))
 def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
     return chr(10).join(l for l in t.split(chr(10)) if not l.startswith('//'))
-COMPAT=_rd('compat.js');SEED=COMPAT+_rd('seed.js');EXTRA=COMPAT+_rd('extra.js');INIT=_rd('init.js')
-SKIP={'rst','zrs','zrd','bkf','f2exd','f2sh','f2sc','f2ln','f2bk','pha','phv','f2os','upr','zbc','shg','shf','pgio','pgi','nsc','nfq','rps','rpc'}  # borrar todo, descargas, cámara, red, recargas, enlaces fuera
+SEED=_rd('seed.js');EXTRA=_rd('extra.js');INIT=_rd('init.js')
+SKIP={'rst','zrs','zrd','bkf','f2exd','f2sh','f2sc','f2ln','f2bk','f2os','upr','zbc','shg','shf','pgio','pgi','nsc','nfq','rps','rpc','sout','soutx','lgo','lgcp','lgre','lgrs','acpw','snc','avok','adc','adxx'}  # borrar todo, descargas, cámara, red, recargas, enlaces fuera, cuenta
 CAND="""()=>{const out=[];const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!='hidden'&&!e.disabled};
  document.querySelectorAll('[data-a],[data-c],[data-u]').forEach(e=>{if(!vis(e))return;
   const a=e.getAttribute('data-a'),c=e.getAttribute('data-c'),u=e.getAttribute('data-u');
@@ -43,15 +44,17 @@ def trace(file,seed,steps):
     res={'seed':seed,'steps':[],'errs':[]}
     with sync_playwright() as p:
         b=p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
-        c=b.new_context(viewport={'width':390,'height':844},device_scale_factor=1,has_touch=True,is_mobile=True,color_scheme='dark' if seed%2==0 else 'light')
+        # por HTTP, como el resto de pruebas (tests/browser.py): con file://, Chromium a veces recarga con el almacenamiento vacío
+        url=app_url(file);base=url.rsplit('/',1)[0]+'/'
+        c=b.new_context(viewport={'width':390,'height':844},device_scale_factor=1,has_touch=True,is_mobile=True,color_scheme='dark' if seed%2==0 else 'light',**context_opts(file))
         c.add_init_script(INIT)
         pg=c.new_page()
         pg.on('pageerror',lambda e:res['errs'].append('PAGEERR '+str(e)[:200]))
         pg.on('dialog',lambda d:d.accept())
-        pg.route('**/*',lambda r:r.continue_() if r.request.url.startswith('file:') else r.abort())
+        pg.route('**/*',lambda r:r.continue_() if r.request.url.startswith(base) else r.abort())
         pg.clock.install(time=datetime.datetime(2026,10,29,12,0,0))
         pg.clock.pause_at(datetime.datetime(2026,10,29,12,0,1))
-        pg.goto('file://'+file);pg.wait_for_timeout(200)
+        pg.goto(url);pg.wait_for_timeout(200)
         scen=seed%4
         if scen!=2:
             pg.evaluate(SEED.replace("S.gm=3;S.gl=1;S.theme='dark';","S.gm=%d;S.gl=1;S.theme='%s';"%(3 if scen in(0,1) else 0,'dark' if seed%2==0 else 'light')))

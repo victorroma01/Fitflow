@@ -21,7 +21,7 @@ const progressExercises = () => Object.keys(S.hist || {}).filter(n => {
 const progressSeries = (n, m) => {
   const h = ((S.hist || {})[n] || []).slice().reverse();
   return h.map(x => {
-    const ss = x.s.filter(y => y[3] != 1 && +y[1] > 0);
+    const ss = x.s.filter(y => !y[3] && +y[1] > 0);
     let v = 0;
     if (m == 'v')
       v = x.s.reduce((a, y) => a + (+y[0] || 0) * (+y[1] || 0), 0);
@@ -141,7 +141,7 @@ const recordEvents = () => {
   Object.keys(S.hist || {}).forEach(n => {
     let b = 0;
     S.hist[n].slice().reverse().forEach(x => {
-      const ss = x.s.filter(y => y[3] != 1 && +y[1] > 0);
+      const ss = x.s.filter(y => !y[3] && +y[1] > 0);
       if (!ss.length)
         return;
       const top = ss.reduce((a, y) => est1RM(+y[1], +y[0]) > est1RM(+a[1], +a[0]) ? y : a);

@@ -1,6 +1,6 @@
 /* ═══ system/updates ═══
    Actualización de la app: service worker, uso sin conexión, Ajustes → Actualizaciones y aviso de versión nueva con sus novedades.
-   Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, updateFound, releaseNotesHtml, updatePopupHtml, showPopup, showUpdatePopup, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
+   Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
 import { APPV, FFDEP, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -111,6 +111,14 @@ const releaseNotesHtml = (info, current) => {
   const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
   const notes = shown.map(v => (shown.length > 1 ? html`<p class="upv">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).slice(0, 8).map(i => html`<li>${i}</li>`)}</ul>`).join('')).join('');
   return notes || '<ul><li>Mejoras y correcciones.</li></ul>';
+};
+/** Ajustes → «Ver nota de actualización» (F-28): la nota de la versión instalada, solo la última, con todos sus cambios y,
+    debajo, un «Cerrar» pequeño que vuelve a Ajustes. */
+export const releaseNotePage = () => {
+  const r = RELEASE;
+  const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const body = (r.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
+  return html`<div class="cd rnp"><b class="rnv">Versión ${r.version || APPV}</b>${d ? html`<small class="mu">${d}</small>` : ''}${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}</div><div class="rnc"><button class="lnk" data-a="zaj">Cerrar</button></div>`;
 };
 /** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
 const updatePopupHtml = (info, mode) => {

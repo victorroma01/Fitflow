@@ -10,10 +10,11 @@ import { itemMacros, sumMacros } from '../nutrition/home.js';
 import { calendarPage } from './history.js';
 import { progressCard, recordsTimeline } from './progress.js';
 import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
-import { backupReminder } from '../system/backup.js';
+import { weighBanner } from './reminder.js';
 import { stagnationCard } from '../extras/stagnation.js';
 import { cardioCard } from '../extras/cardio.js';
 import { html, raw } from '../core/html.js';
+import { sessionsPerWeek, trainingDays } from '../workout/week.js';
 function dashboardBase() {
   const lg = S.logs;
   const now = new Date();
@@ -21,7 +22,7 @@ function dashboardBase() {
   const vol = lg.reduce((s, l) => s + l.v, 0);
   const last = lg.filter(l => !l.k).slice(-8);
   const mx = Math.max(1, ...last.map(l => l.v));
-  return html`<div class="hd"><h1>Dashboard</h1><button data-a="zwv" aria-label="Evolución del peso" style="padding:8px 12px">${icon('dash', 24)}</button></div><div class="g2" style="margin-top:12px"><div class="cd"><b style="font-size:26px">${lg.length}</b><br><small>Entrenos totales</small></div><div class="cd"><b style="font-size:26px">${raw(wkc)}</b><br><small>Últimos 7 días</small></div><div class="cd"><b style="font-size:26px">${raw(volumeText(vol))}</b><br><small>Volumen total</small></div><div class="cd"><b style="font-size:26px">${roundInt(sumMacros((S.meals[dayKey(now)] && Object.values(S.meals[dayKey(now)]).flat() || []).map(itemMacros))[0])}</b><br><small>kcal hoy</small></div></div><div class="cd"><b>Volumen por sesión</b><div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:8px">${raw(last.length ? last.map(l => html`<div style="flex:1;background:var(--ac);border-radius:4px;height:${Math.max(6, l.v / mx * 100)}%"></div>`).join('') : '<small>Completa un entreno para ver tu progreso.</small>')}</div></div><div class="cd">${calendarPage()}</div>`;
+  return html`<div class="hd"><h1>Dashboard</h1><button data-a="zwv" aria-label="Evolución del peso" style="padding:8px 12px">${icon('dash', 24)}</button></div>${raw(weighBanner())}<div class="g2" style="margin-top:12px"><div class="cd"><b style="font-size:26px">${lg.length}</b><br><small>Entrenos totales</small></div><div class="cd"><b style="font-size:26px">${raw(wkc)}</b><br><small>Últimos 7 días</small></div><div class="cd"><b style="font-size:26px">${raw(volumeText(vol))}</b><br><small>Volumen total</small></div><div class="cd"><b style="font-size:26px">${roundInt(sumMacros((S.meals[dayKey(now)] && Object.values(S.meals[dayKey(now)]).flat() || []).map(itemMacros))[0])}</b><br><small>kcal hoy</small></div></div><div class="cd"><b>Volumen por sesión</b><div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:8px">${raw(last.length ? last.map(l => html`<div style="flex:1;background:var(--ac);border-radius:4px;height:${Math.max(6, l.v / mx * 100)}%"></div>`).join('') : '<small>Completa un entreno para ver tu progreso.</small>')}</div></div><div class="cd">${calendarPage()}</div>`;
 }
 const recordsCard = () => {
   const ks = new Set(Object.keys(S.pr || {}).concat(Object.keys(S.hist || {})));
@@ -48,8 +49,10 @@ export const weekStats = () => {
     cnt[k] = (cnt[k] || 0) + 1;
     day[l.d] = 1;
   });
-  const g = Math.max(1, (S.plan || []).filter(d => d.ex.length).length);
-  const t = g >= 4 ? g - 1 : g;
+  /* meta de esta semana: sus entrenos del plan; para la racha, los de la semana con menos (en un ciclo cambian: workout/week) */
+  const g = Math.max(1, trainingDays(S.wk, S.plan || []).length);
+  const lo = Math.max(1, sessionsPerWeek(S.plan || [])[0]);
+  const t = lo >= 4 ? lo - 1 : lo;
   const at = k => new Date(m0.getFullYear(), m0.getMonth(), m0.getDate() - 7 * k);
   const wk = k => cnt[dayKey(at(k))] || 0;
   let st = wk(0) >= t ? 1 : 0;
@@ -85,5 +88,5 @@ const weekCard = () => {
 export function dashboardTab() {
   const h = dashboardBase() + recordsCard();
   const m = '<div class="cd"><b>Volumen por sesión</b>';
-  return (h.indexOf(m) >= 0 ? h.replace(m, weekCard() + m) : h + weekCard()) + stagnationCard() + cardioCard() + progressCard() + recordsTimeline() + backupReminder();
+  return (h.indexOf(m) >= 0 ? h.replace(m, weekCard() + m) : h + weekCard()) + stagnationCard() + cardioCard() + progressCard() + recordsTimeline();
 }

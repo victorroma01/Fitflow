@@ -1,4 +1,4 @@
-/* ═══ css/99-profile ═══ Perfil 1.24: foto y nombre, desplegables con icono, pie con nombre y versión; página de Ajustes con filas */
+/* ═══ css/99-profile ═══ Perfil: foto y nombre, desplegables con icono, pie con nombre y versión; página de Ajustes con filas */
 .pfh {
   display:grid;
   justify-items:center;
@@ -62,7 +62,7 @@ details[open]>summary.pfs {
   letter-spacing:.08em;
   padding:4px 9px 3px;
   border-radius:999px;
-  color:var(--a1);
+  color:var(--at);
   border:1px solid color-mix(in srgb,var(--a1) 45%,transparent);
   background:color-mix(in srgb,var(--a2) 12%,transparent);
 }
@@ -114,7 +114,7 @@ html.gl .sr {
   background:color-mix(in srgb,var(--tx) 8%,transparent);
 }
 .sri.red,.srl.red {
-  color:var(--c);
+  color:var(--ctx);
 }
 .srl {
   flex:1 0 auto;
@@ -184,7 +184,7 @@ html.gl .sr {
   gap:6px;
   margin-top:14px;
 }
-/* Informar de un fallo */
+/* Informar de un fallo (system/report) */
 .rpt {
   display:flex;
   flex-wrap:wrap;
@@ -203,16 +203,6 @@ html.gl .sr {
   word-break:break-word;
   font:11.5px/1.45 ui-monospace,Menlo,monospace;
   color:var(--mu);
-}
-.rpb {
-  display:grid;
-  grid-template-columns:1fr 1.4fr;
-  gap:10px;
-}
-.rpb button {
-  padding:15px;
-  border-radius:16px;
-  font-size:16px;
 }
 #rpx {
   font:inherit;

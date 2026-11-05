@@ -241,7 +241,7 @@ def run_esbuild(args, stdin=None):
     return r.stdout
 
 
-def stage(generated, deploy):
+def stage(generated, deploy, emu=False):
     """Copia src/js a una carpeta temporal con los moldes generados (data/media, data/release) y, en el paquete, FFDEP = 1."""
     # siempre la misma carpeta: esbuild tiene en cuenta las rutas al calcular los nombres de los archivos, y así salen iguales
     st = os.path.join(DIST, '.stage')
@@ -255,6 +255,14 @@ def stage(generated, deploy):
         if not head or len(re.findall(r'^export const ' + name + r'\s*=', t, re.M)) != 1:
             die('%s debe tener su cabecera y una sola línea «export const %s = …»' % (m, name))
         write(p, head.group(0) + code + '\n')
+    if emu:
+        p = os.path.join(st, 'cloud', 'config.js')
+        t = read(p)
+        for a, b in EMU_CONFIG.items():
+            if t.count(a) != 1:
+                die('cloud/config.js debe tener una vez: ' + a)
+            t = t.replace(a, b)
+        write(p, t)
     if deploy:
         p = os.path.join(st, 'core', 'util.js')
         t, n = re.subn(r'^export const FFDEP = 0;', 'export const FFDEP = 1;', read(p), flags=re.M)
@@ -324,10 +332,22 @@ HEAD_TAGS = '''<link rel="manifest" href="manifest.webmanifest">
 
 # Política de seguridad del contenido (CSP), en una etiqueta <meta> (GitHub Pages no deja poner cabeceras): solo se ejecuta
 # el código de la app (sus archivos de la propia web y los <script> de la plantilla, reconocidos por su huella sha256); nada
-# de atributos on…=, eval ni código de otros sitios. Las conexiones van solo a la propia web y a Open Food Facts, y las
+# de atributos on…=, eval ni código de otros sitios. Las conexiones van solo a la propia web, a Firebase (Authentication y
+# Firestore: cloud/config) y a Open Food Facts, y las
 # imágenes solo pueden ser propias, data: o blob: (así un dato inyectado tampoco puede sacar información con una imagen
 # de otro sitio). frame-ancestors, sandbox y report-uri no valen en <meta>: no se ponen.
-CSP_CONNECT = 'https://world.openfoodfacts.org https://search.openfoodfacts.org'
+CSP_CONNECT = ('https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com '
+               'https://world.openfoodfacts.org https://search.openfoodfacts.org')
+# --emulador: el archivo único habla con el emulador de Firebase de este ordenador (pruebas: tests/cloud.py), con un proyecto
+# «demo-» que no existe en la nube. Solo cambian las direcciones de cloud/config y la CSP.
+EMU_AUTH, EMU_FIRESTORE = 'http://127.0.0.1:9099', 'http://127.0.0.1:8080'
+EMU_CONFIG = {
+    "export const FIREBASE = { apiKey: 'AIzaSyC_KSQkQPwNjw7dDMRZ9ALzpZ3ikTUw4P4', projectId: 'stratafit-960ec' };":
+        "export const FIREBASE = { apiKey: 'emulador', projectId: 'demo-stratafit' };",
+    "export const AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/';": "export const AUTH_URL = '" + EMU_AUTH + "/identitytoolkit.googleapis.com/v1/';",
+    "export const TOKEN_URL = 'https://securetoken.googleapis.com/v1/token';": "export const TOKEN_URL = '" + EMU_AUTH + "/securetoken.googleapis.com/v1/token';",
+    "export const FIRESTORE_URL = 'https://firestore.googleapis.com/v1/';": "export const FIRESTORE_URL = '" + EMU_FIRESTORE + "/v1/';",
+}
 
 
 def template_scripts(tpl):
@@ -338,23 +358,23 @@ def template_scripts(tpl):
     return s
 
 
-def csp_meta(scripts, files):
+def csp_meta(scripts, files, emu=False):
     """<meta> con la CSP: la huella de cada <script> en línea (`scripts`, su texto exacto) y, con `files`, el código de la web."""
     if any('\r' in s or '\0' in s for s in scripts):
         # el navegador los cambia al leer la página (\r\n → \n): la huella ya no coincidiría y el <script> no se ejecutaría
         die('\\r o \\0 dentro de un <script>')
     sha = ["'sha256-%s'" % base64.b64encode(hashlib.sha256(s.encode('utf-8')).digest()).decode() for s in scripts]
     pol = ["default-src 'self'", ' '.join(['script-src'] + (["'self'"] if files else []) + sha), "style-src 'self' 'unsafe-inline'",
-           "img-src 'self' data: blob:", "media-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self' " + CSP_CONNECT,
+           "img-src 'self' data: blob:", "media-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self' " + CSP_CONNECT + (' %s %s' % (EMU_AUTH, EMU_FIRESTORE) if emu else ''),
            # el archivo único no trae manifiesto: system/updates genera uno en un blob: (el paquete usa el estático)
            "worker-src 'self'", "manifest-src 'self'" + ('' if files else ' blob:'), "object-src 'none'", "base-uri 'none'", "form-action 'none'"]
     return '<meta http-equiv="Content-Security-Policy" content="%s">' % '; '.join(pol)
 
 
-def page(tpl, css, js):
+def page(tpl, css, js, emu=False):
     """Archivo único: todo en línea, con la CSP que admite justo sus dos <script> (el de arranque y el código)."""
     sc = ['\n' + js if s == '\n@@JS@@' else s for s in template_scripts(tpl)]
-    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, False), 1)
+    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, False, emu), 1)
     # replace con texto literal: el código puede contener barras invertidas
     return h.replace('@@CSS@@', css).replace('@@JS@@', js)
 
@@ -409,6 +429,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--check', action='store_true', help='comprobaciones estáticas adicionales (tools/check.js, necesita node + typescript)')
     ap.add_argument('--only', choices=['app', 'single'])
+    ap.add_argument('--emulador', action='store_true', help='solo el archivo único, en dist/emu/, conectado al emulador de Firebase (pruebas)')
     ap.add_argument('--version', action='store_true', help='escribe la versión de la app y termina')
     ap.add_argument('--notes', action='store_true', help='escribe las notas de la versión (CHANGELOG.md) y termina')
     a = ap.parse_args()
@@ -427,6 +448,16 @@ def main():
     os.makedirs(DIST, exist_ok=True)
     ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
     rel_js = release_js(release_for(entries, ver))
+    if a.emulador:
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False, emu=True)
+        try:
+            js = bundle_single(st)
+        finally:
+            shutil.rmtree(st, ignore_errors=True)
+        os.makedirs(os.path.join(DIST, 'emu'), exist_ok=True)
+        write(os.path.join(DIST, 'emu', 'stratafit.html'), page(tpl, css, js, emu=True))
+        print('  dist/emu/stratafit.html  (archivo único con el emulador de Firebase: %s y %s)' % (EMU_AUTH, EMU_FIRESTORE))
+        return
     if a.only != 'app':
         st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False)
         try:

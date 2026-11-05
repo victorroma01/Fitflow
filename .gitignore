@@ -2,3 +2,11 @@ dist/
 __pycache__/
 node_modules/
 *.pyc
+# registros del emulador de Firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+# la clave de la cuenta de servicio de Firebase solo vive como secreto de GitHub (FIREBASE_SERVICE_ACCOUNT): nunca en el repositorio
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json

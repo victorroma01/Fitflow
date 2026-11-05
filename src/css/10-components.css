@@ -115,23 +115,6 @@ nav span {
   border-color:#2f6bff;
   color:#fff;
 }
-.rb {
-  position:sticky;
-  bottom:14px;
-  background:var(--ac);
-  color:#fff;
-  border-radius:14px;
-  padding:10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  z-index:4;
-}
-.rb button {
-  background:#0003;
-  color:#fff;
-  border:0;
-}
 .bk {
   position:fixed;
   inset:0;
