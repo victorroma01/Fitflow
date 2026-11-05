@@ -41,14 +41,17 @@ def skipped(name):
 
 
 def reload(pg, notes):
-    """Recarga la página. En WebKit, si la recarga falla con un error interno del motor (pasa con service worker en
-    Playwright), se vuelve a abrir la misma dirección y se anota, para que la prueba siga y se vea el resto."""
+    """Recarga la página. Si la recarga falla con un error interno de WebKit, o se queda sin terminar (de vez en cuando, en la
+    integración continua de GitHub, una recarga con service worker no llega a «load» en Chromium), se vuelve a abrir la misma
+    dirección una vez y se anota, para que la prueba siga y se vea el resto; si vuelve a fallar, falla la prueba."""
     try:
         pg.reload()
     except Exception as e:
-        if ENGINE != 'webkit' or 'internal error' not in str(e):
+        stuck = 'Timeout' in type(e).__name__ or 'Timeout' in str(e)[:60]
+        if not stuck and (ENGINE != 'webkit' or 'internal error' not in str(e)):
             raise
-        notes.append('recarga con error interno de WebKit en ' + pg.url[-30:])
+        notes.append(('recarga sin terminar en 30 s' if stuck else 'recarga con error interno de WebKit') + ' en ' + pg.url[-30:])
+        print('   (%s: se vuelve a abrir la dirección)' % notes[-1])
         pg.goto(pg.url)
 
 
