@@ -1,8 +1,9 @@
 # Informe de issues · V1.0.0
 
 Revisión final del código (T-04) y pruebas (T-21) de la rama `desarrollo-1.0.0`, en el cierre de la versión (M8, T-22). Recoge todas
-las issues encontradas, de cualquier tipo: las que ya se han corregido en M8 y las que quedan abiertas. Las abiertas se crearán como
-issues en GitHub, con su prioridad como etiqueta, cuando el propietario lo confirme.
+las issues encontradas, de cualquier tipo: las que ya se han corregido en M8 y las que quedan abiertas. Las abiertas están en
+GitHub como issues [#7 a #21](https://github.com/victorroma01/Fitflow/issues) (I-01 es la #7, I-02 la #8, y así hasta I-15, la
+#21), con su prioridad (High, Medium, Low) y su tipo como etiquetas; las de la publicación (I-01, I-02 e I-07), en el milestone M8.
 
 ## Resumen
 
