@@ -4,19 +4,20 @@ Revisión final del código (T-04) y pruebas (T-21) de la rama `desarrollo-1.0.0
 las issues encontradas, de cualquier tipo: las que ya se han corregido en M8 y las que quedan abiertas. Las abiertas están en
 GitHub como issues [#7 a #21](https://github.com/victorroma01/Fitflow/issues) (I-01 es la #7, I-02 la #8, y así hasta I-15, la
 #21), con su prioridad (High, Medium, Low) y su tipo como etiquetas; las de la publicación (I-01, I-02 e I-07), en el milestone M8.
+I-16 y C15 salieron al publicar; I-16 aún no está en GitHub.
 
 ## Resumen
 
 | Prioridad | Abiertas | Corregidas en M8 | Total |
 | --- | --- | --- | --- |
 | Critical | 0 | 0 | 0 |
-| High | 2 | 1 | 3 |
+| High | 2 | 2 | 4 |
 | Medium | 3 | 4 | 7 |
-| Low | 10 | 9 | 19 |
-| **Total** | **15** | **14** | **29** |
+| Low | 11 | 9 | 20 |
+| **Total** | **16** | **15** | **31** |
 
 No hay ninguna issue crítica. Las dos abiertas de prioridad alta son comprobaciones de la publicación, no fallos del código.
-Coste de las abiertas: **40 PF** y unas **75 horas**; lo corregido en M8 suma 38 PF y unas 10,5 horas.
+Coste de las abiertas: **40 PF** y unas **75 horas**; lo corregido en M8 suma 38 PF y unas 11,5 horas.
 
 ## Cómo se clasifica
 
@@ -48,7 +49,8 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 
 ## Orden recomendado de corrección
 
-1. **I-02** y **I-01**: las comprobaciones de la publicación y las pruebas en los móviles de verdad. Con la publicación.
+1. **I-02**, **I-16** e **I-01**: las comprobaciones de la publicación, el permiso de los índices y las pruebas en los móviles de
+   verdad. Con la publicación.
 2. **I-07**: las acciones de GitHub Pages, que solo se pueden probar al publicar. En la misma fusión.
 3. **I-05**: proteger el alta de cuentas, antes de dar la app a más gente.
 4. **I-03**: notificaciones programadas del pesaje, el único requisito que se cumple de otra forma.
@@ -76,7 +78,8 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 | I-13 | Low | Pruebas | `tests/deploy.py`: alguna recarga no termina (mitigado) | 0 | 2 |
 | I-14 | Low | Seguridad | La política de seguridad (CSP) permite estilos en línea | 0 | 16 |
 | I-15 | Low | Aspecto | Los accesos directos del icono usan el mismo icono que la app | 0 | 1 |
-| | | | **Total** | **40** | **75** |
+| I-16 | Low | Mantenimiento | La cuenta de servicio no puede cambiar los índices de Firestore | 0 | 0,25 |
+| | | | **Total** | **40** | **75,25** |
 
 ### I-01 · Pruebas en un iPhone y un Android de verdad (T-06)
 
@@ -236,10 +239,22 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Corrección**: un icono propio para cada uno (pesa, plato, báscula), de 96 × 96.
 - **Coste**: 0 PF · 1 hora.
 
+### I-16 · La cuenta de servicio no puede cambiar los índices de Firestore
+
+- **Prioridad**: Low · **Tipo**: mantenimiento · **Dónde**: Google Cloud (IAM) y `tools/admin/reglas.mjs`.
+- **Qué pasa**: al publicar, *Desplegar reglas* puso las reglas, pero no pudo quitar los índices de los campos de texto grandes
+  (`fieldOverrides` de `firestore.indexes.json`): la cuenta de servicio no tiene permiso para cambiar índices (403). El flujo lo avisa
+  y sigue.
+- **Impacto**: ninguno en el uso: Firestore solo indexa el principio de un texto largo. Los índices ocupan algo más de lo necesario.
+- **Corrección**: en Google Cloud → IAM, dar a la cuenta de servicio de Firebase el rol *Cloud Datastore Index Admin* y volver a
+  lanzar *Desplegar reglas* (Actions → Run workflow).
+- **Coste**: 0 PF · 15 minutos.
+
 ## Corregidas en M8
 
 | Id | Prioridad | Tipo | Issue | Corrección | PF | Horas |
 | --- | --- | --- | --- | --- | --- | --- |
+| C15 | High | Procedimiento | Al publicar, *Desplegar reglas* falló: firebase-tools comprueba antes qué APIs tiene activas el proyecto, y la cuenta de servicio no tiene permiso para eso (403). Las reglas de Firestore no eran las del repositorio. | `tools/admin/reglas.mjs`: las reglas, con la API de reglas de Firebase (firebase-admin); desplegadas el 5 de noviembre. | 0 | 1 |
 | C3 | High | Datos | El historial de cada ejercicio se quedaba en sus 60 últimas sesiones (unos 5 meses a tres por semana) y lo anterior se borraba, también de la nube. | Se guarda entero. | 6 | 0,5 |
 | C4 | Medium | Accesibilidad | Tema claro: el texto del color de acento tenía un contraste de 1,2 a 3,9 (Amarillo 1,4; Lima 1,3). | `--at`: el tono claro en el tema oscuro y el oscuro en el claro (7,2 a 14,9). | 0 | 2 |
 | C7 | Medium | Contenido | El Overview y el aviso de estancamiento describían la descarga antigua («mitad de series»). | Peso al 65 % y 2 repeticiones menos, como el resto de la app. | 0 | 0,25 |
@@ -254,7 +269,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 | C12 | Low | Seguridad | «Volver a entrar» no hacía esperar tras cinco contraseñas fallidas y admitía dos peticiones a la vez. | La misma espera que al entrar y una petición a la vez (`tests/cloud.py`). | 3 | 0,5 |
 | C13 | Low | Mantenimiento | CI con acciones de Node.js 20, ya obsoleto. | `checkout@v6`, `setup-node@v6` (sin caché automática), `setup-python@v6` y `setup-java@v5`. | 0 | 0,5 |
 | C14 | Low | Accesibilidad | El diálogo de confirmación y el menú no se anunciaban como ventana. | `role="dialog"`, `aria-modal` y su título. | 0 | 0,25 |
-| | | | | **Total** | **38** | **10,5** |
+| | | | | **Total** | **38** | **11,5** |
 
 Coste de lo corregido: C1, EI cambiada «Sincronizar» (alta, 6); C3, EI cambiada «Terminar el entreno» (alta, 6); C5, EI cambiada
 «Ajustes de sonido y avisos» (baja, 3) + ILF cambiada «Perfil y preferencias» (baja, 7); C6, EI cambiada «Reanudar el entreno» (baja,
