@@ -70,8 +70,9 @@ el que usan la mayoría de las pruebas.
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Ajustes → Diagnóstico; un `catch` vacío solo se
   permite con un comentario que explique por qué el fallo es esperable.
 - **Arranque explícito**: todo lo que se ejecuta al cargar (comprobar los datos con `core/repair`, reanudar un entreno, primer render y
-  empezar a sincronizar) vive en `core/boot`, en orden. El resto de módulos solo define (salvo `cloud/session`, que antes de leer el
-  estado borra los datos de otra cuenta).
+  empezar a sincronizar) vive en `core/boot`, en orden. El resto de módulos solo define y registra sus manejadores y escuchas
+  (eventos, gestos de `core/tabbar` y `core/swipe`, historial de `core/back`), salvo `cloud/session`, que antes de leer el estado
+  borra los datos de otra cuenta.
 - **Sin código muerto**: `tools/check.js` falla si algo declarado, exportado, registrado o dibujado no se usa, incluido el CSS
   ([reglas](desarrollo.md#reglas-de-calidad)).
 
@@ -93,7 +94,8 @@ el que usan la mayoría de las pruebas.
 │   ├── index.html          plantilla: cabecera, pantalla de error de arranque y marcadores @@CSS@@ / @@JS@@
 │   ├── js/
 │   │   ├── main.js         punto de entrada: importa los módulos en orden de carga
-│   │   ├── core/           utilidades, plantillas, estado, guardado, pintado, eventos, avisos, hojas, ayudas «?» y arranque
+│   │   ├── core/           utilidades, plantillas, estado, guardado, pintado, eventos, avisos, hojas, ayudas «?», barra de
+│   │   │                   pestañas, gestos (deslizar para volver), «atrás» y arranque
 │   │   ├── data/           ejercicios, programas, alimentos, fotos (media), novedades (release), anatomía y niveles
 │   │   ├── library/        modelo de ejercicios, fotos, filtros, librería, cambio de ejercicio y selector
 │   │   ├── routines/       workouts personalizados
@@ -102,7 +104,8 @@ el que usan la mayoría de las pruebas.
 │   │   ├── nutrition/      resumen, dieta, Mi nutrición, agua, añadir alimentos y plantillas
 │   │   ├── dashboard/      tarjetas, registro y calendario, progreso y peso corporal
 │   │   ├── profile/        Perfil, página de Ajustes, apariencia, unidades, sonido y vibración
-│   │   ├── system/         archivos, copias de seguridad, diagnóstico, actualizaciones e informe de fallos
+│   │   ├── system/         archivos, copias de seguridad, diagnóstico, actualizaciones, informe de fallos, PDF, recorrido de la
+│   │   │                   primera vez e integración con el móvil (accesos directos y globo del icono)
 │   │   ├── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros, medallas, CSV y anatomía
 │   │   ├── cloud/          Firebase por REST: configuración, peticiones, sesión, cuentas, Firestore, fusión y sincronización
 │   │   └── account/        inicio de sesión y registro, la cuenta en Ajustes y Administración

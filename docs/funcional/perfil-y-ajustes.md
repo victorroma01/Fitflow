@@ -24,13 +24,28 @@ Página propia, ordenada por secciones. Cada fila abre su página, con «←» p
 | Sección | Filas |
 | --- | --- |
 | Cuenta | **Cuenta** (usuario, tipo de cuenta, sincronización y Cambiar contraseña) y **Sincronización** (su estado; al tocarla, sincroniza). |
-| Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico) y **Color de acento**. |
-| Entreno | **Unidades de carga** (kg o lb) y **Sonido y avisos** (notificaciones, sonidos del descanso y vibración). |
+| Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico; reducir animaciones), **Color de acento** y **Al abrir la app** ([abajo](#apariencia)). |
+| Entreno | **Unidades de carga** (kg o lb) y **Sonido y avisos** (notificaciones, sonidos del descanso, vibración y, en iPhone, el [globo en el icono](experiencia.md#globo-en-el-icono-iphone)). |
 | Datos | **Copia de seguridad** y **Borrar todos los datos**. |
-| App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **Diagnóstico** (versión, dispositivo, espacio y errores registrados) e **Informar de un fallo**. |
+| App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **Ver el recorrido** (el de la [primera vez](experiencia.md#recorrido-de-la-primera-vez)), **Diagnóstico** (versión, dispositivo, espacio y errores registrados) e **Informar de un fallo**. |
 | Información | **Privacidad** y **Aviso legal** (copyright, licencia, aviso de salud y origen de los datos de Open Food Facts). |
 
 Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesión)).
+
+### Apariencia
+
+- **Color de acento**: el de los botones, la burbuja de las pestañas, las gráficas y los detalles de toda la app. Hay 11 de serie
+  (Morado, Azul eléctrico, Azul oscuro, Verde oscuro, Amarillo, Rojo, Naranja, Rosa, Turquesa, Lima y Grafito) y **Personalizado**,
+  que abre el selector de colores del móvil para elegir cualquiera. Con un color propio, la app calcula sus tonos (más claro y más
+  oscuro) y el color del texto encima, blanco o casi negro, para que todo se lea bien con el tema oscuro y con el claro; si el color
+  es muy oscuro o muy claro, lo ajusta un poco. Arriba, una **vista previa** enseña cómo quedan la cabecera de un día, un botón, los
+  chips, una barra y la barra de pestañas.
+- **Tema y estilo**: tema claro, oscuro o automático (el del móvil); estilo Cristal (con tres intensidades) o Clásico; y **Reducir
+  animaciones**, para que las páginas y ventanas aparezcan sin deslizarse (si el móvil tiene «Reducir movimiento», la app ya lo hace).
+- **Al abrir la app**: la pestaña con la que se abre StrataFit: la última que usaste (lo de siempre) o una fija (Workout, Nutrición,
+  Dashboard o Perfil).
+
+El tema, el color, el estilo, las animaciones y la pestaña al abrir van con tu cuenta: salen igual en tus otros móviles.
 
 **Borrar todos los datos** borra tus programas, entrenos, comidas, medidas y peso del móvil y de tu cuenta, y la copia de seguridad
 de la nube (tu usuario se queda).

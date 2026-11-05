@@ -77,6 +77,14 @@ test('perfil: sexo y preferencias, sí; cambiar el usuario o ponerse «debe camb
   assert.ok(denied(await set('users/' + ana.uid, { u: 'Otra', m: Date.now() }, ana.t, { mask: ['u', 'm'] })), 'usuario');
   assert.ok(denied(await set('users/' + ana.uid, { sx: 'X', m: Date.now() }, ana.t, { mask: ['sx', 'm'] })), 'sexo desconocido');
   assert.ok(denied(await set('users/' + ana.uid, { pr: { email: 'a@b.c' }, m: Date.now() }, ana.t, { mask: ['pr', 'm'] })), 'preferencia desconocida');
+  // M6: color propio, reducir animaciones, pestaña al abrir y recorrido visto (cloud/sync, PREF_KEYS)
+  const pr = p => set('users/' + ana.uid, { pr: p, m: Date.now() }, ana.t, { mask: ['pr', 'm'] });
+  assert.ok(allowed(await pr({ theme: 'dark', acc: -1, acx: '#ff2d55', rm: 1, st0: 2, tour: 1 })), 'las preferencias nuevas');
+  assert.ok(denied(await pr({ acx: 'rojo' })), 'color propio que no es #rrggbb');
+  assert.ok(denied(await pr({ acx: '#ff2d55' + 'x'.repeat(500) })), 'color propio con texto de más');
+  assert.ok(denied(await pr({ st0: 7 })), 'pestaña que no existe');
+  assert.ok(denied(await pr({ tour: 'sí' })), 'recorrido visto con otro valor');
+  assert.ok(denied(await pr({ rm: 5 })), 'reducir animaciones con otro valor');
   assert.ok(denied(await set('users/' + ana.uid, { ro: 'admin', m: Date.now() }, ana.t, { mask: ['ro', 'm'] })), 'rol');
   assert.ok(denied(await set('users/' + ana.uid, { mc: true, m: Date.now() }, ana.t, { mask: ['mc', 'm'] })), 'mc a true');
   assert.ok(allowed(await ownerSet('users/' + ana.uid, { u: 'Ana_1', sx: 'M', pr: { theme: 'light' }, ca: 1, m: 2, mc: true })), 'GitHub Actions pone mc');

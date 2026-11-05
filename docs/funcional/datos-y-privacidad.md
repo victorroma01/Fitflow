@@ -8,9 +8,9 @@
   funciona sin conexión) y, cuando hay internet, en tu cuenta en la nube: Firebase, de Google. Los datos de la app están en sus
   servidores de Madrid; el usuario y la contraseña (cifrada) los guarda Firebase Authentication.
 - **Solo tu cuenta los lee.** Las reglas del servidor no dejan que otra cuenta lea ni escriba los tuyos.
-- **El administrador** ve de cada cuenta el usuario, el sexo, la fecha de alta y las preferencias (tema, color, unidades y sonido);
-  nunca tus entrenos, tus comidas, tus medidas, tu foto ni tu copia de seguridad. Sí ve los fallos y sugerencias que le envías:
-  tu usuario, el texto y, si los adjuntas, los datos técnicos.
+- **El administrador** ve de cada cuenta el usuario, el sexo, la fecha de alta y las preferencias de la app (aspecto, unidades, sonido
+  y si ya viste el recorrido); nunca tus entrenos, tus comidas, tus medidas, tu foto ni tu copia de seguridad. Sí ve los fallos y
+  sugerencias que le envías: tu usuario, el texto y, si los adjuntas, los datos técnicos.
 - **La copia de seguridad en la nube** es una sola por cuenta (cada copia sustituye a la anterior) y, como el resto de tus datos,
   solo la lee tu cuenta.
 - **La foto de perfil** solo se sube si das tu consentimiento, y solo la ves tú. «Quitar foto» la borra del móvil y de la cuenta.

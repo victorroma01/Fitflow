@@ -38,7 +38,7 @@ La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V
 | M3 · Programas | Técnicas de intensidad, programas nuevos y por género, rotación, semana de descarga y consejo y ejecución de cada ejercicio. Hecho en la rama. |
 | M4 · Pantalla de entrenamiento | Iconos, desplegables cortos, peso sugerido, ventana de cada técnica, superseries encadenadas, barra inferior y reloj del WOD. Hecho en la rama. |
 | M5 · Perfil y seguimiento | Recordatorio de pesaje, análisis mensual en PDF, fallos y sugerencias con respuesta, nota de actualización y copia de seguridad única en la nube. Hecho en la rama. |
-| M6 · Experiencia y plataformas | Personalización, tour de la primera vez, gestos y pruebas en Android e iPhone. |
+| M6 · Experiencia y plataformas | Más colores y uno propio, recorrido de la primera vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android, accesos directos y globo en el icono, con pruebas en Android e iPhone. Hecho en la rama. |
 | M7 · Imágenes | Pospuesto. |
 | M8 · Cierre | Revisión final, informe de issues y publicación. |
 
@@ -49,7 +49,8 @@ La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V
 | **Workout** | Programas listos en tres niveles (entre ellos Push Pull Leg y Full Body en ciclo y Glúteo y pierna), recomendados según el sexo; programas propios (guiados o con tus workouts) y compartidos por código; 10 técnicas de intensidad; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida y discos; semana de descarga y rotación de ejercicios; librería de más de 550 ejercicios, cada uno con su consejo y su ejecución; WOD y cardio. |
 | **Nutrición** | Comidas del día con macros, día de entreno o de descanso según tu rutina, «Mi nutrición» (objetivos según tu gasto o a mano), agua, plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras. |
 | **Dashboard** | Entrenos, volumen, rachas, récords, progreso por ejercicio, calendario y peso corporal. |
-| **Perfil** | Plan, medidas, logros con medallas, exportación a CSV, datos biométricos y Ajustes (cuenta, apariencia, unidades, sonido, copia de seguridad, actualizaciones, diagnóstico e informe de fallos). |
+| **Perfil** | Plan, medidas, logros con medallas, exportación a CSV, datos biométricos y Ajustes (cuenta, apariencia con color propio, unidades, sonido, copia de seguridad, actualizaciones, diagnóstico e informe de fallos). |
+| **En el móvil** | Recorrido de la primera vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android y accesos directos del icono. |
 | **Cuenta** | Usuario y contraseña, sin datos personales; datos en la nube (Firebase) para usar varios móviles, también sin conexión; roles de administrador y usuario. |
 
 Todo, pantalla a pantalla, en la [documentación funcional](docs/funcional/README.md).
@@ -71,7 +72,8 @@ novedades.
 | [Dashboard](docs/funcional/dashboard.md) | [Estado y datos](docs/tecnica/estado.md) |
 | [Perfil y Ajustes](docs/funcional/perfil-y-ajustes.md) | [Servidor: Firebase](docs/tecnica/backend.md) |
 | [Cuenta](docs/funcional/cuenta.md) | [Desarrollo](docs/tecnica/desarrollo.md) |
-| [Datos y privacidad](docs/funcional/datos-y-privacidad.md) | [Pruebas](docs/tecnica/pruebas.md) |
+| [En el móvil](docs/funcional/experiencia.md) | [Pruebas](docs/tecnica/pruebas.md) |
+| [Datos y privacidad](docs/funcional/datos-y-privacidad.md) | |
 
 ## Desarrollo
 

@@ -52,7 +52,7 @@ const weighNext = () => {
   return base ? addStep(base, r) : '';
 };
 /** ¿Toca pesarse hoy (y no se ha dejado para mañana)? */
-const weighDue = () => {
+export const weighDue = () => {
   const n = weighNext();
   const today = dayKey(new Date());
   return !!n && n <= today && !(S.wr.sn && S.wr.sn > today);

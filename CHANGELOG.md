@@ -39,6 +39,15 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   visto o contestado, con la respuesta.
 - Ajustes → Ver nota de actualización: los cambios de la versión que tienes instalada.
 - Copia de seguridad en la nube: una sola, que se hace sola cada semana y puedes restaurar cuando quieras.
+- Más colores: 11 de serie (nuevos Rosa, Turquesa, Lima y Grafito) y uno propio, el que quieras, con vista previa; la app ajusta
+  sus tonos para que todo se lea bien.
+- Recorrido de la primera vez: 5 pasos por lo principal de la app, que puedes omitir. No vuelve a salir, tampoco en otro móvil, y
+  está en Ajustes → Ver el recorrido.
+- Desliza el dedo de izquierda a derecha para volver atrás en las páginas de dentro.
+- Mantén pulsada la burbuja de la barra de pestañas y arrástrala hasta otra pestaña.
+- En Android, el botón o gesto atrás cierra lo que tengas abierto en vez de salir de la app, y al mantener pulsado el icono salen
+  accesos directos a Entreno, Nutrición y Peso.
+- En iPhone, el icono de la app puede enseñar lo que tienes pendiente (el pesaje de hoy y las respuestas nuevas).
 
 ### Mejoras
 - Más privacidad: la app ya no guarda nombre, email, teléfono ni fotos de progreso (ni sus dos logros).
@@ -55,6 +64,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - El archivo de copia de seguridad se llama siempre igual (StrataFit-copia.json): cada copia sustituye a la anterior y no se
   acumulan en el teléfono.
 - Administración avisa de cuántos fallos y sugerencias hay pendientes y deja contestarlos.
+- Ajustes: «Al abrir la app» (la pestaña con la que se abre) y «Reducir animaciones».
 
 ### Correcciones
 - Al cambiar el descanso o el tempo durante el entreno, el objetivo de arriba no se actualizaba hasta salir.
@@ -118,3 +128,15 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Pruebas: `tests/followup.py` (recordatorio, análisis y PDF, nota de actualización, copia con nombre fijo y datos dañados) y, en
   `tests/cloud.py`, los avisos con el admin y la copia en la nube. Cuatro pantallas más en `tests/shots.py` (43): peso con el
   recordatorio, análisis, fallos y sugerencias, y nota de actualización.
+- Experiencia y plataformas (M6): `core/tabbar` (barra de pestañas con la burbuja, su arrastre con eventos de puntero y la pestaña
+  al abrir), `core/back` (qué cierra «atrás» y, mientras hay algo que cerrar, una entrada de más en el historial para el botón
+  atrás del sistema), `core/swipe` (deslizar para volver; el gesto vertical sigue siendo del navegador con `touch-action: pan-y`),
+  `system/tour` (recorrido), `system/phone` (accesos directos con `?a=` y globo con la API de insignias) y, en
+  `profile/appearance`, el color propio (`customAccent`: tonos en HSL y texto por contraste WCAG) y reducir animaciones
+  (`html.rm`). Preferencias nuevas en el perfil (`acx`, `rm`, `st0`, `tour`), comprobadas en `core/repair` y en las reglas. CSS
+  nuevo: `77-experience`.
+- Pruebas: `tests/experience.py` con gestos táctiles en Chrome y en Safari (personalización, burbuja, deslizar para volver,
+  «atrás», recorrido, accesos directos, globo y descargas con la app instalada, T-06); en `tests/cloud.py`, el recorrido de una
+  cuenta nueva y en el otro móvil, y el color propio; en `tests/deploy.py`, los accesos directos del manifiesto, también sin
+  conexión; reglas de las preferencias nuevas en `tests/rules.test.mjs`. Cuatro pantallas más en `tests/shots.py` (47). Lista de
+  comprobación para los móviles de verdad en `docs/tecnica/pruebas.md`.

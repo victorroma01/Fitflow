@@ -22,7 +22,7 @@ import { GOAL_LABELS } from '../nutrition/diet.js';
 import { sessionsPerWeek } from '../workout/week.js';
 import { MEASURES } from '../extras/measures.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
-import { ACCENTS } from './appearance.js';
+import { accentNow } from './appearance.js';
 import { analysisFrom } from './home.js';
 import { downloadFile } from '../system/files.js';
 import { loadPdf } from '../core/lazy.js';
@@ -281,7 +281,7 @@ const analysisPdf = async (ym) => {
   const t = m.t;
   const w = m.w;
   const n = m.nu;
-  const ac = (ACCENTS[S.acc >= 0 && S.acc < ACCENTS.length ? S.acc : 0] || ACCENTS[0])[2];
+  const ac = accentNow()[2];
   const INK = [24, 24, 28];
   const MU = [118, 118, 128];
   const LN = [226, 226, 232];

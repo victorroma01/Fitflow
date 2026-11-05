@@ -110,8 +110,13 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | Clave | Qué es |
 |---|---|
 | `theme` | `''` automático, `'dark'` o `'light'`. |
-| `acc` | Color de acento (índice en `ACCENTS`). |
+| `acc` | Color de acento: índice en `ACCENTS` (11 de serie), o `-1` con un color propio. |
+| `acx` | El color propio, `'#rrggbb'` (con `acc: -1`); sus tonos y el color del texto encima se calculan (`customAccent`). |
 | `gm` / `gl` / `gk` | Estilo Cristal: nivel 0–3, activado, último nivel elegido. |
+| `rm` | 1 para reducir animaciones (`html.rm`). |
+| `st0` | Pestaña al abrir la app (0–3); sin ella, la última que se usó (`core/tabbar`). |
+| `tour` | 1 si ya se vio (o se omitió) el recorrido de la primera vez (`system/tour`). |
+| `bdg` | 1 con el globo en el icono de la app (`system/phone`). Es de este móvil: no se sincroniza. |
 | `un` | `'kg'` o `'lb'`. |
 | `rest` | Descanso por defecto (s). |
 | `ar` | 0 si el descanso no empieza solo al marcar una serie. |

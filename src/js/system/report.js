@@ -132,7 +132,7 @@ export const refreshReports = async (force) => {
 };
 afterSync.push(flushReports, () => refreshReports(0));
 /** Respuestas que aún no se han visto. */
-const reportsUnseen = () => (S.rp || []).filter(x => x.rp && !x.sn).length;
+export const reportsUnseen = () => (S.rp || []).filter(x => x.rp && !x.sn).length;
 /** Línea de la fila de Perfil. */
 export const reportsLine = () => {
   const L = S.rp || [];

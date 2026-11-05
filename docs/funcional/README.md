@@ -14,8 +14,9 @@ cuatro pestañas en la barra inferior:
 | **Dashboard** | El progreso: entrenos, volumen, rachas, calendario, récords y peso corporal. | [Dashboard](dashboard.md) |
 | **Perfil** | La foto, el plan, las medidas, los logros, los datos biométricos, los Ajustes y, para el administrador, Administración. | [Perfil y Ajustes](perfil-y-ajustes.md) |
 
-Además: [la cuenta](cuenta.md) (entrar, varios móviles, contraseña, cerrar sesión y Administración) y [qué datos guarda la app y
-cómo los protege](datos-y-privacidad.md).
+Además: [la cuenta](cuenta.md) (entrar, varios móviles, contraseña, cerrar sesión y Administración), [el manejo en el
+móvil](experiencia.md) (el recorrido de la primera vez, la burbuja de las pestañas, deslizar para volver, «atrás» en Android y los
+accesos directos) y [qué datos guarda la app y cómo los protege](datos-y-privacidad.md).
 
 ## Instalarla
 
@@ -41,7 +42,9 @@ La V1.0.0 está en desarrollo, por milestones (M1 a M8) que se siguen en GitHub.
 usuario y contraseña, los datos en la nube con Firebase y los roles de administrador y usuario (M2), y los programas nuevos (M3):
 Push Pull Leg y Full Body en ciclo, Glúteo y pierna, programas recomendados según el sexo, 10 técnicas de intensidad, semana de
 descarga en naranja que se puede omitir, rotación de ejercicios y un consejo y una explicación de ejecución propios de cada
-ejercicio; la pantalla de entrenamiento renovada, con peso sugerido, superseries por rondas y el reloj circular del WOD (M4); y el
+ejercicio; la pantalla de entrenamiento renovada, con peso sugerido, superseries por rondas y el reloj circular del WOD (M4); el
 seguimiento (M5): recordatorio de pesaje, análisis mensual descargable en PDF, fallos y sugerencias con respuesta, nota de
-actualización y copia de seguridad única en la nube. Faltan la personalización, el tour de la primera vez, los gestos y las pruebas
-en Android e iPhone (M6). Esta documentación se completa a medida que cada parte llega a la app.
+actualización y copia de seguridad única en la nube; y la experiencia de uso (M6): más colores y uno propio, el recorrido de la primera
+vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android, accesos directos y globo en el icono, probados
+en Android e iPhone. Falta la revisión final (M8); las imágenes (M7) quedan para más adelante. Esta documentación se completa a medida
+que cada parte llega a la app.

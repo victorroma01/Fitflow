@@ -1,4 +1,4 @@
-"""Prueba de accesibilidad: abre las 43 pantallas de tests/shots.py y comprueba que
+"""Prueba de accesibilidad: abre las 47 pantallas de tests/shots.py y comprueba que
   · cada botón tiene un nombre que se pueda leer (texto, aria-label o title; un símbolo suelto como ☰, ‹ o ✕ no vale),
   · cada campo (input, select, textarea) tiene una etiqueta asociada (aria-label, title, aria-labelledby o <label>),
   · lo que se toca sin ser un botón (un div con data-a) se anuncia como botón (role="button") y se puede enfocar,

@@ -23,9 +23,13 @@ service cloud.firestore {
     function isAdmin() {
       return techUser() && request.auth.token.get('role', '') == 'admin';
     }
-    // preferencias del perfil: tema, color, estilo Cristal, unidades, sonido y avisos
+    // preferencias (cloud/sync, PREF_KEYS): tema, color (acx: el propio, #rrggbb), Cristal, animaciones, unidades, sonido y
+    // avisos, pestaña al abrir la app y si ya se vio el recorrido
     function validPrefs(p) {
-      return p is map && p.keys().hasOnly(['theme', 'acc', 'gm', 'gl', 'gk', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'notif']);
+      return p is map && p.keys().hasOnly(['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'notif', 'st0', 'tour'])
+        && (!('acx' in p) || p.acx is string && p.acx.matches('^#[0-9a-fA-F]{6}$'))
+        && (!('st0' in p) || p.st0 is int && p.st0 >= 0 && p.st0 <= 3)
+        && (!('tour' in p) || p.tour in [0, 1]) && (!('rm' in p) || p.rm in [0, 1]);
     }
     function validProfile(d) {
       return (!('sx' in d) || d.sx in ['M', 'F', '']) && (!('pr' in d) || validPrefs(d.pr))

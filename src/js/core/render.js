@@ -16,11 +16,12 @@ import { nutritionTab } from '../nutrition/water.js';
 import { dashboardTab } from '../dashboard/home.js';
 import { weightPage } from '../dashboard/weight.js';
 import { profileTab } from '../profile/home.js';
-import { glSync } from '../profile/appearance.js';
+import { lookSync } from '../profile/appearance.js';
 import { updatePopupSync } from '../system/updates.js';
 import { settingsSync } from '../profile/settings.js';
 import { account } from '../cloud/session.js';
 import { loginSync } from '../account/login.js';
+import { tabbarSync } from './tabbar.js';
 let lastTab = -1;
 /** Pantalla pintada en el último R() (pestaña, entreno, overview o peso). */
 let lastScreen = '';
@@ -31,7 +32,7 @@ export function R() {
     loginSync();
     return;
   }
-  glSync();
+  lookSync();
   deloadWeekSync();
   resumeSync();
   const od = [...document.querySelectorAll('#app details')].map(d => d.open);
@@ -48,6 +49,7 @@ export function R() {
   lastTab = S.tab;
   document.querySelectorAll('nav button').forEach((b, i) => b.classList.toggle('on', i == S.tab));
   $('nav').style.display = W || overviewMode ? 'none' : 'flex';
+  tabbarSync();
   saveSession();
   updatePopupSync();
   /* si hay una página de Ajustes abierta, que refleje el cambio (tema, color, unidades…) */

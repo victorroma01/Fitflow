@@ -22,6 +22,9 @@ IC.ply = '<path d="M7 5l12 7-12 7z"/>';
 IC.swp = '<path d="M8 20V4M4 8l4-4 4 4M16 4v16M12 16l4 4 4-4"/>';
 IC.chev = '<path d="M6 9l6 6 6-6"/>';
 IC.chk = '<path d="M5 12.5l4.5 4.5L19 7.5"/>';
+/* Ajustes: «Al abrir la app» (core/tabbar) y «Ver el recorrido» (system/tour) */
+IC.home = '<path d="M4 10.5L12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/>';
+IC.tour = '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>';
 IC.x = '<path d="M6 6l12 12M18 6L6 18"/>';
 IC.timer = '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>';
 IC.pulse = '<path d="M3 12h4l2-6 4 12 2-6h6"/>';

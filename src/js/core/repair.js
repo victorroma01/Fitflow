@@ -16,6 +16,7 @@ import { hashOf } from '../cloud/merge.js';
 import { syncSel } from '../workout/week.js';
 import { WEIGH_UNITS } from '../dashboard/reminder.js';
 import { REPORT_MAX } from '../system/report.js';
+import { ACCENTS, HEX } from '../profile/appearance.js';
 /* forma básica: plan, pestaña, semana, listas y objetos; objetivos de nutrición válidos y perfil sin datos personales */
 const repairShape = () => {
   try {
@@ -153,10 +154,19 @@ const repairSettings = () => {
       if (S[k] != null && ![0, 1, 2].includes(S[k]))
         delete S[k];
     });
-    ['vib', 'ar', 'awk'].forEach(k => {
+    ['vib', 'ar', 'awk', 'rm', 'tour', 'bdg'].forEach(k => {
       if (S[k] != null && S[k] !== 0 && S[k] !== 1)
         delete S[k];
     });
+    /* apariencia (profile/appearance): tema conocido; color de serie o, con -1, uno propio #rrggbb; pestaña al abrir (core/tabbar) */
+    if (!['', 'dark', 'light'].includes(S.theme))
+      S.theme = '';
+    if (S.acx != null && !(typeof S.acx == 'string' && HEX.test(S.acx)))
+      delete S.acx;
+    if (S.acc != null && !(Number.isInteger(S.acc) && S.acc >= (S.acx ? -1 : 0) && S.acc < ACCENTS.length))
+      delete S.acc;
+    if (S.st0 != null && !(Number.isInteger(S.st0) && S.st0 >= 0 && S.st0 <= 3))
+      delete S.st0;
     if (S.bkd != null && !(+S.bkd > 0))
       delete S.bkd;
     Object.keys(S.hist).forEach(n => {

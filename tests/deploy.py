@@ -98,8 +98,8 @@ def main(app):
                 check('un solo manifiesto, el estático', ev("[...document.querySelectorAll('link[rel=manifest]')].map(l=>l.getAttribute('href')).join()") == 'manifest.webmanifest')
                 check('un solo icono de inicio, el estático', ev("[...document.querySelectorAll('link[rel=apple-touch-icon]')].map(l=>l.getAttribute('href')).join()") == 'icon-180.png')
                 check('metas de app instalable sin duplicar', ev("document.querySelectorAll('meta[name=apple-mobile-web-app-capable]').length") == 1)
-                m = ev("fetch('manifest.webmanifest').then(r=>r.json()).then(j=>[j.start_url,j.display,j.icons.length])")
-                check('manifiesto válido', m == ['./', 'standalone', 3], str(m))
+                m = ev("fetch('manifest.webmanifest').then(r=>r.json()).then(j=>[j.start_url,j.display,j.icons.length,(j.shortcuts||[]).map(s=>s.url).join()])")
+                check('manifiesto válido, con los accesos directos del icono (F-39)', m == ['./', 'standalone', 3, './?a=entreno,./?a=comida,./?a=peso'], str(m))
                 code = ['js/' + f for f in os.listdir(os.path.join(orig, 'js'))]
                 if SW:
                     ev("navigator.serviceWorker.ready.then(()=>1)")
@@ -126,6 +126,15 @@ def main(app):
                     reload(pg, log)
                     pg.wait_for_timeout(1200)
                     check('abre sin conexión', ev("document.querySelector('#app').innerText.length>50"))
+                    try:
+                        pg.goto(pg.url.split('?')[0] + '?a=peso')
+                        pg.wait_for_timeout(1200)
+                        check('sin conexión, un acceso directo del icono (?a=peso) abre su pantalla', ev("weightView===1&&S.tab===2&&location.search===''"))
+                        ev("weightView=0;S.tab=0;R();saveState()")
+                    except Exception as e:
+                        if ENGINE != 'webkit' or 'internal error' not in str(e):
+                            raise
+                        log.append('acceso directo sin conexión: error interno de WebKit al abrir la dirección')
                     pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
                     check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
                     ev('A.wod()')

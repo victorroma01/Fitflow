@@ -29,12 +29,13 @@ import { idToken } from './auth.js';
 import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.js';
 import { hashMap, hashOf, KINDS, merge3, sameHashes } from './merge.js';
 import { afterSync } from './hooks.js';
-/** Preferencias de la cuenta (van en el perfil, users/{uid}): tema, color, estilo Cristal, unidades, sonido y avisos. */
-const PREF_KEYS = ['theme', 'acc', 'gm', 'gl', 'gk', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'notif'];
+/** Preferencias de la cuenta (van en el perfil, users/{uid}): tema, color (y el propio), estilo Cristal, animaciones, unidades,
+  sonido y avisos, la pestaña al abrir la app y si ya se vio el recorrido (system/tour). Las mismas que deja firestore.rules. */
+const PREF_KEYS = ['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'notif', 'st0', 'tour'];
 /** Claves de S que no van en data/core: lo que es de este dispositivo (pestaña, día elegido, rango de la gráfica, día del plan
-  apartado durante un workout, fecha de la última copia en archivo, aviso descartado), lo que va en su propio documento y las
-  preferencias. */
-const LOCAL_ONLY = new Set(['tab', 'sel', 'sl', 'rg', 'pbk', 'bkd', 'nbk', 'pf', 'logs', 'hist', 'meals', ...PREF_KEYS]);
+  apartado durante un workout, fecha de la última copia en archivo, aviso descartado, globo del icono: system/phone), lo que va
+  en su propio documento y las preferencias. */
+const LOCAL_ONLY = new Set(['tab', 'sel', 'sl', 'rg', 'pbk', 'bkd', 'nbk', 'bdg', 'pf', 'logs', 'hist', 'meals', ...PREF_KEYS]);
 const newMeta = fresh => ({ dev: newId(), base: {}, lt: {}, pt: 0, fresh: fresh ? 1 : 0, last: 0 });
 /** { dev: id del dispositivo, base: { documento: { r: versión, h: huellas } }, lt: último cambio local de cada tipo (ms), pt: de
   las preferencias, fresh: 1 tras entrar (en un conflicto gana la nube), last: última sincronización completa (ms) } */

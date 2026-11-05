@@ -34,18 +34,24 @@ import { tdee } from '../nutrition/diet.js';
 import { account } from '../cloud/session.js';
 import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
 import { refreshReports } from '../system/report.js';
+import { accentNow, customAccent } from '../profile/appearance.js';
+import { backTarget } from './back.js';
+import { tourCheck } from '../system/tour.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
   A: [() => A],
+  accentNow: [() => accentNow],
   account: [() => account],
   ACHIEVEMENTS: [() => ACHIEVEMENTS],
   addState: [() => addState],
   APPV: [() => APPV],
+  backTarget: [() => backTarget],
   buildBackup: [() => buildBackup],
   C: [() => C],
   clearErrorLog: [() => clearErrorLog],
   clone: [() => clone],
   confirmDialog: [() => confirmDialog],
+  customAccent: [() => customAccent],
   dayInfo: [() => dayInfo],
   dayKey: [() => dayKey],
   dialog: [() => dialog],
@@ -88,6 +94,7 @@ const DEBUG_NAMES = {
   syncState: [() => syncState],
   takeSnapshot: [() => takeSnapshot],
   tdee: [() => tdee],
+  tourCheck: [() => tourCheck],
   U: [() => U],
   updatesOn: [() => updatesOn],
   W: [() => W, setW],

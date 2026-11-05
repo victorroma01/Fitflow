@@ -161,6 +161,14 @@ def main(path):
         check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.pfn').textContent)") == 'Ana_1')
         check('el correo técnico no aparece en la app', '@stratafit.app' not in p1.content())
 
+        # ── recorrido de la primera vez (F-36): sale en la cuenta nueva; visto en un móvil, no vuelve a salir en otro ──
+        wait(p1, "!!document.querySelector('#tour.trs')", 30000)
+        check('cuenta nueva: tras la primera sincronización sale el recorrido, con «Empezar el recorrido» y «Omitir»', p1.evaluate("[...document.querySelectorAll('#tour button')].map(b=>b.textContent).join('|')") == 'Empezar el recorrido|Omitir')
+        p1.click('#tour [data-a=trx]')
+        check('«Omitir» lo da por visto', p1.evaluate("!document.getElementById('tour') && S.tour") == 1)
+        sync(p1)
+        check('y queda en las preferencias del perfil de la cuenta', (fb.data('users/' + uid) or {}).get('pr', {}).get('tour') == 1, str((fb.data('users/' + uid) or {}).get('pr')))
+
         # ── datos en el móvil 1 → la nube ──
         p1.evaluate("S.logs.push({d:'%s',n:'Pecho',v:4000,s:16,m:55,q:7});S.meals['%s']={0:[%s]};saveState()" % (today, today, json.dumps(arroz)))
         st = sync(p1)
@@ -171,6 +179,8 @@ def main(path):
         # ── móvil 2: la misma cuenta baja los datos ──
         c2, p2 = device()
         login(p2, 'ana_1', 'contraseña-1')
+        p2.wait_for_timeout(6000)
+        check('en otro móvil de la misma cuenta, el recorrido ya no sale', p2.evaluate("!document.getElementById('tour') && S.tour") == 1)
         check('en otro móvil, al entrar, bajan los entrenos y las comidas', p2.evaluate("S.logs.length") == 1 and p2.evaluate("JSON.stringify(S.meals['%s'][0])" % today) == json.dumps([arroz], separators=(',', ':')))
         check('y el usuario sale como se registró, aunque se entre en minúsculas', p2.evaluate('account.u') == 'Ana_1')
 
@@ -191,14 +201,14 @@ def main(path):
         check('sin nada pendiente en ninguno', p1.evaluate('pendingDocs()') == 0 and p2.evaluate('pendingDocs()') == 0)
 
         # ── preferencias: van en el perfil y pasan al otro móvil al abrir la app ──
-        p2.evaluate("S.theme='light';S.acc=2;saveState()")
+        p2.evaluate("S.theme='light';S.acc=-1;S.acx='#ff2d55';S.rm=1;saveState()")
         sync(p2)
         pr = (fb.data('users/' + uid) or {}).get('pr', {})
-        check('las preferencias van en el perfil', pr.get('theme') == 'light' and pr.get('acc') == 2, str(pr))
+        check('las preferencias van en el perfil (también el color propio y reducir animaciones)', pr.get('theme') == 'light' and pr.get('acc') == -1 and pr.get('acx') == '#ff2d55' and pr.get('rm') == 1, str(pr))
         p1.reload()
         wait(p1, 'window.__ffok')
         sync(p1)
-        check('y el otro móvil las aplica', p1.evaluate("S.theme") == 'light' and p1.evaluate("document.documentElement.dataset.theme") == 'light')
+        check('y el otro móvil las aplica', p1.evaluate("S.theme") == 'light' and p1.evaluate("document.documentElement.dataset.theme") == 'light' and p1.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--a2').trim()") == '#ff2d55' and p1.evaluate("document.documentElement.classList.contains('rm')"))
 
         # ── borrar en un móvil y sin tocar en el otro ──
         p2.evaluate("S.logs=S.logs.filter(l=>l.n!='Espalda');saveState()")
@@ -253,6 +263,8 @@ def main(path):
         # ── el admin: Administración, cuentas y contraseña temporal ──
         c4, p4 = device()
         login(p4, 'VictorAdmin_', 'admin-clave-1', new=True)
+        wait(p4, "!!document.querySelector('#tour.trs')", 30000)
+        p4.click('#tour [data-a=trx]')
         check('una cuenta nueva no es admin: sin Administración', p4.evaluate("(S.tab=3,R(),!document.querySelector('[data-a=adm]'))"))
         fb.set_role('VictorAdmin_', 'admin')
         p4.reload()

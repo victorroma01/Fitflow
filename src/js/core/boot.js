@@ -8,7 +8,6 @@ import { Store } from './store.js';
 import { logError } from './errors.js';
 import { stateRecovered } from './persist.js';
 import { applyTheme, S, saveState, W } from './state.js';
-import { icon } from './icons.js';
 import { dialog } from './ui.js';
 import { R } from './render.js';
 import { restorePlanBackup } from '../routines/builder.js';
@@ -24,6 +23,9 @@ import { takeSnapshot } from '../system/snapshots.js';
 import { showWhatsNew, whatsNewDue } from '../system/updates.js';
 import { checkAchievements } from '../extras/achievements.js';
 import { html, raw } from './html.js';
+import { applyStartTab, buildTabbar } from './tabbar.js';
+import { launchAction } from '../system/phone.js';
+import { tourCheck } from '../system/tour.js';
 import { repairState } from './repair.js';
 import { signedIn } from '../cloud/session.js';
 import { startSync } from '../cloud/sync.js';
@@ -138,7 +140,10 @@ catch (e) {
 }
 if (signedIn())
   setTimeout(checkAchievements, 2500);
-$('nav').innerHTML = ['workout', 'nutri', 'dash', 'user'].map((n, i) => html`<button data-a="tab" data-i="${i}"><span style="display:block;line-height:0;padding-bottom:4px">${icon(n, 28)}</span>${raw(['Workout', 'Nutrición', 'Dashboard', 'Perfil'][i])}</button>`).join('');
+buildTabbar();
+/* la pestaña elegida para abrir la app (Ajustes) y, si se abrió desde un acceso directo del icono, su pantalla */
+applyStartTab();
+launchAction();
 R();
 window.__ffok = 1;
 /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
@@ -155,6 +160,8 @@ if (signedIn()) {
   /* «Día de pesarse» (F-25), tras las novedades: si estas salen, el aviso espera a la próxima vez que se vuelva a la app */
   setTimeout(checkWeighIn, 1600);
   startSync();
+  /* recorrido de la primera vez (F-36): cuando la app esté libre y tras la primera sincronización */
+  setTimeout(tourCheck, 2500);
 }
 /* pide al navegador que no borre los datos de la app instalada cuando falte espacio (sin efecto si no lo admite) */
 if (isStandalone() && navigator.storage && navigator.storage.persist)

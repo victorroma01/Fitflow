@@ -50,7 +50,7 @@ en el campo `j` (Firestore no admite listas dentro de listas, y el historial las
 
 | Documento | Qué guarda | Lee | Escribe |
 | --- | --- | --- | --- |
-| `users/{uid}` | `u` usuario, `sx` sexo, `pr` preferencias (tema, color, Cristal, unidades, sonido y avisos), `ca` alta, `m` último cambio y `mc` si debe cambiar la contraseña | Su dueño y el admin | Su dueño crea `u` (el de su correo técnico) y cambia `sx`, `pr` y `m`; `mc` solo lo puede quitar |
+| `users/{uid}` | `u` usuario, `sx` sexo, `pr` preferencias (tema, color y color propio, Cristal, animaciones, unidades, sonido y avisos, pestaña al abrir y si ya se vio el recorrido), `ca` alta, `m` último cambio y `mc` si debe cambiar la contraseña | Su dueño y el admin | Su dueño crea `u` (el de su correo técnico) y cambia `sx`, `pr` y `m`; `mc` solo lo puede quitar |
 | `users/{uid}/data/index` | `p`: la versión de cada parte (`{ "core": "…", "logs:2026": "…" }`) | Su dueño | Su dueño |
 | `users/{uid}/data/core` | El núcleo de `S` sin lo que es del dispositivo, ni lo que tiene su propio documento, ni las preferencias | Su dueño | Su dueño |
 | `users/{uid}/logs/{año}` | Entrenos de ese año (cada uno con su `id`) | Su dueño | Su dueño |
@@ -97,8 +97,9 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
 - **Reglas** (`firestore.rules`): cada cuenta lee y escribe solo lo suyo, con la forma y el tamaño que usa la app (sin campos de más,
   sin documentos con otros nombres, 1 MB por parte, 150 KB la foto, 24 trozos de 300.000 caracteres la copia); el admin lee además
   los perfiles, `adminInbox` y los fallos y sugerencias, nunca los datos ni la copia de nadie; un aviso solo lo crea su dueño (id con
-  su uid, su usuario, pendiente y sin respuesta) y el admin solo le cambia el estado y la respuesta; solo valen cuentas con correo
-  técnico; lo demás está denegado.
+  su uid, su usuario, pendiente y sin respuesta) y el admin solo le cambia el estado y la respuesta; en el perfil, solo las
+  preferencias que conoce la app (el color propio como `#rrggbb`, la pestaña al abrir de 0 a 3, el recorrido y las animaciones 0 o 1);
+  solo valen cuentas con correo técnico; lo demás está denegado.
 - **Pruebas**: `tests/rules.test.mjs` las comprueba con el emulador en cada cambio (CI, «Reglas y nube»), junto con la app entera
   contra el emulador (`tests/cloud.py`). Se despliegan desde GitHub Actions al fusionar en `main` («Desplegar reglas»).
 - La clave de administrador (cuenta de servicio) solo existe como secreto de GitHub, `FIREBASE_SERVICE_ACCOUNT`: nunca en el código,
