@@ -138,5 +138,6 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Pruebas: `tests/experience.py` con gestos táctiles en Chrome y en Safari (personalización, burbuja, deslizar para volver,
   «atrás», recorrido, accesos directos, globo y descargas con la app instalada, T-06); en `tests/cloud.py`, el recorrido de una
   cuenta nueva y en el otro móvil, y el color propio; en `tests/deploy.py`, los accesos directos del manifiesto, también sin
-  conexión; reglas de las preferencias nuevas en `tests/rules.test.mjs`. Cuatro pantallas más en `tests/shots.py` (47). Lista de
-  comprobación para los móviles de verdad en `docs/tecnica/pruebas.md`.
+  conexión; reglas de las preferencias nuevas en `tests/rules.test.mjs`. Cuatro pantallas más en `tests/shots.py` (47), que ahora
+  entra con la sesión de prueba (desde las cuentas, M2, capturaba el inicio de sesión). Lista de comprobación para los móviles de
+  verdad en `docs/tecnica/pruebas.md`.

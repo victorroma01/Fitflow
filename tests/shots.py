@@ -10,7 +10,7 @@ HERE=os.path.dirname(os.path.abspath(__file__))
 def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
     return chr(10).join(l for l in t.split(chr(10)) if not l.startswith('//'))
-SEED=_rd('seed.js');EXTRA=_rd('extra.js')
+SEED=_rd('seed.js');EXTRA=_rd('extra.js');INIT=_rd('init.js')
 # pantallas: nombre -> js (se ejecuta tras cargar y sembrar). Solo se usan las que existen en la app (A.x)
 SCR={
  'workout':"S.tab=0;R()",
@@ -71,6 +71,8 @@ def run(file,out,cfgs):
         for cn in cfgs:
             w,h,sch,gm,gl=CFG[cn]
             c=b.new_context(viewport={'width':w,'height':h},device_scale_factor=2,color_scheme=sch,has_touch=True,is_mobile=True)
+            # con la sesión de prueba (tests/init.js): sin cuenta, la app solo enseña el inicio de sesión
+            c.add_init_script(INIT)
             pg=c.new_page();errs=[]
             pg.on('pageerror',lambda e:errs.append('PAGEERR '+str(e)))
             for k,js in SCR.items():
