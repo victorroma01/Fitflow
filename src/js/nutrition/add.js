@@ -1,19 +1,45 @@
 /* ═══ nutrition/add ═══
    Añadir alimentos y comidas al día: lista por grupos, librería de platos, alimento nuevo y búsqueda en internet.
-   Define: allFoods, foldText, groupNames, groupOfFood, foodList, addSheetBase, addMealItem, addSheet, onlineSheet  · acciones/registros: 13
+   «Mis alimentos» (S.cf): los creados a mano y, desde la V1.0.1 (F-44), los buscados o escaneados en Open Food Facts, que se
+   guardan solos al añadirlos a una comida (sin repetirse) con su Nutri-Score (F-43). Cualquiera se puede borrar.
+   Define: ownFoods, allFoods, NUTRI_SCORE, nutriScore, nutriScoreBadge, nutriScoreRow, saveOwnFood, foldText, groupNames, groupOfFood, foodList, addSheetBase, addMealItem, addSheet, onlineSheet, ownFoodDel  · acciones/registros: 15
 */
-import { $, dayKey, round1, roundInt } from '../core/util.js';
+import { $, dayKey, round1, roundInt, X } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { sheet } from '../core/ui.js';
+import { confirmDialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { itemMacros, sumMacros } from './home.js';
 import { habitsCard } from './templates.js';
 import { html, raw } from '../core/html.js';
-/* alimentos de la lista y los creados a mano (solo los que tienen nombre y sus valores: unos datos dañados no rompen la lista) */
-const allFoods = () => FOODS_SRC.concat((S.cf || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b)));
+/* alimentos de la lista y los propios (solo los que tienen nombre y sus valores: unos datos dañados no rompen la lista) */
+const ownFoods = () => (S.cf || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b));
+const allFoods = () => FOODS_SRC.concat(ownFoods());
+/* Nutri-Score (F-43): la letra de la A a la E que da Open Food Facts → la clase de su color (css/98-nutrition) */
+const NUTRI_SCORE = { a: 'ns-a', b: 'ns-b', c: 'ns-c', d: 'ns-d', e: 'ns-e' };
+/** La letra del Nutri-Score ('a'…'e') si v lo es; si no, ''. */
+export const nutriScore = v => typeof v == 'string' && Object.prototype.hasOwnProperty.call(NUTRI_SCORE, v) ? v : '';
+/** La letra del Nutri-Score, pequeña (en las listas), o '' si no la hay. */
+export const nutriScoreBadge = v => nutriScore(v) ? html`<i class="nsb ${NUTRI_SCORE[v]}" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">${v.toUpperCase()}</i>` : '';
+/** El Nutri-Score con sus cinco letras y la del alimento destacada, o '' si no lo tiene. */
+const nutriScoreRow = v => nutriScore(v) ? html`<div class="nsr" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}"><span>Nutri-Score</span>${Object.keys(NUTRI_SCORE).map(x => html`<i class="${NUTRI_SCORE[x]}${x == v ? ' on' : ''}">${x.toUpperCase()}</i>`)}</div>` : '';
+/* Guarda en «Mis alimentos» un alimento de Open Food Facts (F-44): sin repetirlo (mismo código de barras o mismo nombre); si
+   ya estaba, se pone al día con lo último que dio Open Food Facts */
+const saveOwnFood = f => {
+  const o = { n: f.n, b: f.b.slice() };
+  if (nutriScore(f.ns))
+    o.ns = f.ns;
+  if (f.ean)
+    o.ean = f.ean;
+  S.cf = S.cf || [];
+  const i = S.cf.findIndex(x => x && (o.ean && x.ean == o.ean || x.n == o.n));
+  if (i >= 0)
+    S.cf[i] = { ...S.cf[i], ...o };
+  else
+    S.cf.push(o);
+};
 /** Texto en minúsculas y sin tildes, para buscar. */
 const foldText = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 /* grupos de la hoja «Añadir»: los de data/foods y, si hay, los alimentos creados a mano */
@@ -43,14 +69,15 @@ function foodList(q) {
     b.classList.toggle('on', !ws.length && +b.dataset.i == cat);
     b.disabled = !!ws.length;
   });
-  e.innerHTML = L.slice(0, ws.length ? 80 : 1000).map(o => html`<div class="it" style="grid-template-columns:1fr auto" data-a="pk" data-i="${o.i}" role="button" tabindex="0"><span>${o.f.n}</span><small>${o.f.b[0]} kcal/100 g</small></div>`).join('') + (ws.length && !L.length ? html`<p class="mu" style="font-size:13px;margin:10px 2px">No está en la lista. Búscalo en internet o créalo en «Nuevo».</p><button data-a="nfq" style="width:100%">${icon('srch', 16)} Buscar «${raw0.slice(0, 40)}» en internet</button>` : '');
+  const own = FOODS_SRC.length;
+  e.innerHTML = L.slice(0, ws.length ? 80 : 1000).map(o => html`<div class="it${o.i >= own ? ' itc' : ''}" data-a="pk" data-i="${o.i}" role="button" tabindex="0"><span>${o.f.n}${raw(nutriScoreBadge(o.f.ns))}</span><small>${o.f.b[0]} kcal/100 g</small>${o.i >= own ? html`<button class="cfx" data-a="cfx" data-i="${o.i - own}" aria-label="${'Borrar ' + o.f.n + ' de Mis alimentos'}">✕</button>` : ''}</div>`).join('') + (ws.length && !L.length ? html`<p class="mu" style="font-size:13px;margin:10px 2px">No está en la lista. Búscalo en internet o créalo en «Nuevo».</p><button data-a="nfq" style="width:100%">${icon('srch', 16)} Buscar «${raw0.slice(0, 40)}» en internet</button>` : '');
 }
 function addSheetBase() {
   const a = addState;
   let h = html`<div style="margin-bottom:8px">${['Alimentos', 'Librería', 'Nuevo'].map((x, i) => html`<button class="chip ${a.tab == i ? 'on' : ''}" data-a="at" data-i="${i}">${raw(x)}</button>`)}</div>`;
   if (a.pick) {
     const f = a.pick;
-    return html`${raw(h)}<h3>${f.n}</h3><label for="gr">Gramos</label><input id="gr" type="number" value="100" data-u="gr"><p id="pv" class="mu"></p><button class="pr" data-a="fa" style="width:100%">Añadir</button>`;
+    return html`${raw(h)}<h3>${f.n}</h3>${raw(nutriScoreRow(f.ns))}<label for="gr">Gramos</label><input id="gr" type="number" value="100" data-u="gr"><p id="pv" class="mu"></p><button class="pr" data-a="fa" style="width:100%">Añadir</button>`;
   }
   if (a.tab == 0)
     return h + habitsCard(a.m) + html`<input placeholder="Buscar alimento" aria-label="Buscar alimento" data-u="fs"><div class="fgc" role="group" aria-label="Grupos de alimentos">${[-1].concat(groupNames().map((x, i) => i)).map(i => html`<button class="chip${(a.cat >= 0 ? a.cat : -1) == i ? ' on' : ''}" data-a="fgr" data-i="${i}">${i < 0 ? 'Todos' : groupNames()[i]}</button>`)}</div><div id="rs"></div>`;
@@ -79,6 +106,9 @@ A.fa = () => {
   const f = addState && addState.pick;
   const e = $('#gr');
   const g = e ? (+e.value || 100) : 100;
+  /* lo buscado o escaneado en Open Food Facts pasa a «Mis alimentos» (F-44) */
+  if (f && f.off)
+    saveOwnFood(f);
   addMealItem();
   if (f && f.n && f.n != '__proto__' && Array.isArray(f.b)) {
     S.fq = S.fq || {};
@@ -139,6 +169,26 @@ A.nf = () => {
   addState.tab = 0;
   sheet(addSheet());
   foodList('');
+};
+/* «✕» de un alimento propio: se borra de «Mis alimentos», tras confirmarlo (lo ya comido no cambia) */
+let ownFoodDel = -1;
+A.cfx = i => {
+  const f = ownFoods()[i];
+  if (!f)
+    return;
+  ownFoodDel = i;
+  confirmDialog('¿Borrar de Mis alimentos?', '«' + X(f.n) + '» deja de salir en la lista. Lo que ya anotaste en tus comidas no cambia.', 'cfxx', 'Borrar');
+};
+A.cfxx = () => {
+  const f = ownFoods()[ownFoodDel];
+  ownFoodDel = -1;
+  if (!f)
+    return;
+  S.cf = S.cf.filter(x => x !== f);
+  saveState();
+  if (addState && addState.cat >= groupNames().length)
+    addState.cat = -1;
+  foodList(String(($('input[data-u="fs"]') || {}).value || ''));
 };
 A.xi = (i, b) => {
   S.meals[dayKey(new Date(Date.now() + nutriDayOffset * 864e5))][i].splice(+b.dataset.j, 1);

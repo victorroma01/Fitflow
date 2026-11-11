@@ -2,9 +2,10 @@
    Perfil → Administración, solo para la cuenta con rol de admin (F-34; las reglas de Firestore lo vuelven a exigir):
    - Contraseñas temporales: las que crea el flujo «Restablecer contraseña» de GitHub Actions (tools/admin), durante 24 h,
      para dárselas al usuario que la olvidó. Al entregarla se borra.
-   - Cuentas: usuario, sexo y fecha de alta de cada cuenta (nunca sus entrenos, comidas, medidas ni foto).
+   - Cuentas: usuario, sexo, sistema del último móvil y fecha de alta de cada cuenta (nunca sus entrenos, comidas, medidas ni
+     foto), y cuántas usan iPhone, Android u otro sistema (T-28; las que aún no han abierto la V1.0.1, «sin dato»).
    - Arriba, el enlace a Fallos y sugerencias (account/reports), con cuántos hay pendientes.
-   Define: adminState, adminDate, adminView, loadAdmin  · acciones/registros: 5
+   Define: adminState, adminDate, OS_NAMES, osName, osCounts, adminView, loadAdmin  · acciones/registros: 5
 */
 import { $ } from '../core/util.js';
 import { logError } from '../core/errors.js';
@@ -16,6 +17,15 @@ import { html, raw } from '../core/html.js';
 /* st: 'load' | 'ok' | 'err'; inbox: contraseñas temporales vigentes; users: cuentas; show: id de la contraseña visible */
 let adminState = { st: 'load', inbox: [], users: [], err: '', show: '', del: '', rp: -1 };
 const adminDate = t => +t > 0 ? new Date(+t).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+/** Sistemas del móvil (perfil, os) → su nombre; en el orden del recuento. */
+const OS_NAMES = { ios: 'iPhone', android: 'Android', otro: 'Otro' };
+const osName = v => OS_NAMES[v] || '';
+/* recuento de las cuentas por sistema: «3 iPhone · 1 Android · 2 sin dato» (solo lo que hay) */
+const osCounts = users => {
+  const n = { ios: 0, android: 0, otro: 0, no: 0 };
+  users.forEach(d => n[OS_NAMES[d.data.os] ? d.data.os : 'no']++);
+  return html`<div class="cd aos" aria-label="Cuentas por sistema del móvil">${Object.keys(OS_NAMES).map(k => html`<div><b>${raw(n[k])}</b><small>${raw(OS_NAMES[k])}</small></div>`)}<div><b>${raw(n.no)}</b><small>Sin dato</small></div></div>`;
+};
 const adminView = () => {
   const s = adminState;
   const head = html`${pgHead('Administración')}<div id="adm"></div>`;
@@ -30,7 +40,7 @@ const adminView = () => {
   }).join('') : html`<p class="mu" style="margin:6px 2px 14px;font-size:14px">No hay ninguna. Para crear una: en GitHub, Actions → «Restablecer contraseña» → Run workflow, con el usuario. Aparece aquí durante 24 horas.</p>`;
   const us = s.users.slice().sort((a, b) => String(a.data.u || '').localeCompare(String(b.data.u || ''), 'es'));
   const rp = linkRow('bug', 'Fallos y sugerencias', s.rp < 0 ? 'Avisos de los usuarios' : s.rp ? s.rp + (s.rp == 1 ? ' pendiente' : ' pendientes') : 'Ninguno pendiente', 'adr');
-  return html`${raw(head)}${raw(rp)}<div class="ph">Contraseñas temporales</div>${raw(pw)}<div class="ph">Cuentas (${us.length})</div><div class="cd acl">${us.map(d => html`<div class="it" style="grid-template-columns:1fr auto auto;gap:10px"><b style="overflow-wrap:anywhere">${String(d.data.u || '—')}</b><small>${d.data.sx == 'M' ? 'Hombre' : d.data.sx == 'F' ? 'Mujer' : '—'}</small><small>${adminDate(d.data.ca)}</small></div>`)}</div><div style="height:40px"></div>`;
+  return html`${raw(head)}${raw(rp)}<div class="ph">Contraseñas temporales</div>${raw(pw)}<div class="ph">Cuentas (${us.length})</div>${raw(osCounts(us))}<div class="cd acl">${us.map(d => html`<div class="it" style="grid-template-columns:1fr auto auto auto;gap:10px"><b style="overflow-wrap:anywhere">${String(d.data.u || '—')}</b><small>${d.data.sx == 'M' ? 'Hombre' : d.data.sx == 'F' ? 'Mujer' : '—'}</small><small>${osName(d.data.os) || '—'}</small><small>${adminDate(d.data.ca)}</small></div>`)}</div><div style="height:40px"></div>`;
 };
 const loadAdmin = async () => {
   try {
@@ -47,7 +57,9 @@ const loadAdmin = async () => {
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.adm = () => {
-  adminState = { st: 'load', inbox: [], users: [], err: '', show: '', del: '', rp: -1 };
+  /* con los datos ya cargados (al volver de Fallos y sugerencias, o al abrirla otra vez), se enseñan mientras se piden de nuevo:
+     sin la pantalla vacía de «Cargando…» (I-20). Las contraseñas vuelven a salir ocultas */
+  adminState = adminState.st == 'ok' ? { ...adminState, show: '', del: '' } : { st: 'load', inbox: [], users: [], err: '', show: '', del: '', rp: -1 };
   fullPage(adminView());
   loadAdmin();
 };

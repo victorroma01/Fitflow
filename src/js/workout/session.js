@@ -1,6 +1,6 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, blockHeader  · acciones/registros: 18
+   Define: sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 18
 */
 import { $, fmtDuration, fmtMinSec, round1, roundInt, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -16,13 +16,14 @@ import { targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from '
 import { lastTimeLine, prefillSets, setText, suggestAfter } from './progression.js';
 import { usesBarbell } from './plates.js';
 import { deloadStrip, isDeloadWeek } from './deload.js';
-import { dropWeight, restAfterSet, withTechnique } from './technique.js';
+import { dropWeight, restAfterSet, setLabel, setTechnique, withTechnique } from './technique.js';
 import { currentSet, setOrder } from './order.js';
 import { TECHNIQUES } from '../data/techniques.js';
 import { progressBody } from '../dashboard/progress.js';
 import { fromDisplayWeight, toDisplayWeight, weightUnit } from '../profile/units.js';
 import { buzz } from '../profile/feedback.js';
 import { exAnatomy } from '../extras/anatomy.js';
+import { rpeOn } from './rpe.js';
 import { html, raw } from '../core/html.js';
 export function sessionView() {
   const d = S.plan[S.sel];
@@ -47,9 +48,9 @@ export function sessionView() {
     if (pv != null && pv !== cur[0] && W.x[pv] && W.x[pv].length && W.x[pv].every(s => s.ok))
       W.fd[pv] = 1;
   }
-  return html`<div class="wsk"><div class="hd"><b style="font-size:22px" id="tm">${raw(fmtDuration(t))}</b><span>Serie ${Math.min(o + 1, n)}/${n}</span><span class="mu" style="min-width:60px;text-align:right">${W.p ? 'En pausa' : restPill()}</span></div><div class="bar" style="height:5px;margin:10px 0"><i style="width:${o / n * 100}%;background:var(--a2)"></i></div>${raw(nextUpBar(d, cur))}</div>${raw(W.dl ? deloadStrip() : '')}${d.ex.map((e, i) => html`<div class="xs${W.fd && W.fd[i] ? ' fd' : ''}${W.x[i].length && W.x[i].every(s => s.ok) ? ' dn' : ''}" id="ex${i}">${lt[i][1] ? blockHeader(L, lt[i][0], cur) : ''}${blockBadge(d.ex, i)}<div class="xh">${exThumb(e.n, i)}<div style="min-width:0"><b style="font-size:18px">${e.n}</b>${targetLine(e, i)}${lastTimeLine(e, i)}${e.o ? html`<div class="mu" style="font-size:12px">Cambiado desde: ${e.o} · <u data-a="zun" data-i="${i}" role="button" tabindex="0" style="cursor:pointer">Deshacer</u></div>` : ''}</div>${foldButton(i)}</div>${foldSummary(e, i)}${exToolsHtml(e, i)}<div style="margin:-2px 0 6px"><button class="chip" data-a="zhi" data-i="${i}">Historial</button><button class="chip" data-a="zsw" data-i="${i}">${icon('swp', 15)} Swap</button>${usesBarbell(e.n) ? html`<button class="chip ic" data-a="zpl" data-i="${i}" aria-label="${'Discos, ' + e.n}">${icon('plate', 18)}</button>` : ''}</div><div class="thd"><span>Set</span><span></span><span>${raw(unitHead(e))}</span><span>${usesWeight(e) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${W.x[i].map((s, j) => {
+  return html`<div class="wsk"><div class="hd"><b style="font-size:22px" id="tm">${raw(fmtDuration(t))}</b><span>Serie ${Math.min(o + 1, n)}/${n}</span><span class="mu" style="min-width:60px;text-align:right">${W.p ? 'En pausa' : restPill()}</span></div><div class="bar" style="height:5px;margin:10px 0"><i style="width:${o / n * 100}%;background:var(--a2)"></i></div>${raw(nextUpBar(d, cur))}</div>${raw(W.dl ? deloadStrip() : '')}${d.ex.map((e, i) => html`<div class="xs${W.fd && W.fd[i] ? ' fd' : ''}${W.x[i].length && W.x[i].every(s => s.ok) ? ' dn' : ''}" id="ex${i}">${lt[i][1] ? blockHeader(L, lt[i][0], cur) : ''}${blockBadge(d.ex, i)}<div class="xh">${exThumb(e.n, i)}<div style="min-width:0"><b style="font-size:18px">${e.n}</b>${targetLine(e, i)}${lastTimeLine(e, i)}${e.o ? html`<div class="mu" style="font-size:12px">Cambiado desde: ${e.o} · <u data-a="zun" data-i="${i}" role="button" tabindex="0" style="cursor:pointer">Deshacer</u></div>` : ''}</div>${foldButton(i)}</div>${foldSummary(e, i)}${exToolsHtml(e, i)}<div class="xtl"><button class="chip" data-a="zhi" data-i="${i}">Historial</button><button class="chip" data-a="zsw" data-i="${i}">${icon('swp', 15)} Swap</button>${usesBarbell(e.n) ? html`<button class="chip ic" data-a="zpl" data-i="${i}" aria-label="${'Discos, ' + e.n}">${icon('plate', 18)}</button>` : ''}</div><div class="thd"><span>Set</span><span></span><span>${raw(unitHead(e))}</span><span>${usesWeight(e) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${W.x[i].map((s, j) => {
     const c = cur && cur[0] == i && cur[1] == j;
-    return html`<div class="r2${c ? ' cur' : ''}"><span>${raw(setNo(W.x[i], j))}</span>${raw((k => html`<button class="wk2${k != 'WRK' ? ' tq' : ''}" data-a="tqi" data-v="${k}" aria-label="${'Técnica: ' + TECHNIQUES[k][0]}">${k}</button>`)(s.k && TECHNIQUES[s.k] ? s.k : 'WRK'))}<input type="number" inputmode="decimal" data-c="sr" data-i="${i}" data-j="${j}" value="${s.r}"${raw(W.dl && !s.ok ? ' class="dlv"' : '')} aria-label="${unitName(e) + ', ' + setName(j, s, e)}">${raw(!usesWeight(e) ? '<span class="mu" style="text-align:center">–</span>' : html`<input type="number" inputmode="decimal" data-c="sw" data-i="${i}" data-j="${j}" value="${s.w ? toDisplayWeight(s.w) : ''}" placeholder="${weightUnit()}"${raw(s.ws && !s.ok ? (W.dl ? ' class="dlv"' : ' class="sug"') : '')} aria-label="${'Peso' + (s.ws && !s.ok ? ' sugerido' : '') + ', ' + setName(j, s, e)}">`)}<span style="font-size:13px">${raw((r => r ? fmtMinSec(r) : '–')(restAfterSet(i, j)))}</span><button class="ck ${s.ok ? 'on' : ''}" data-a="ck" data-i="${i}" data-j="${j}" aria-label="${'Hecha, ' + setName(j, s, e)}" aria-pressed="${s.ok ? 'true' : 'false'}">✓</button></div>${W.re && W.ri && W.ri[0] == i && W.ri[1] == j ? html`<div class="rr"><button data-a="rt" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000))))}</b><br><small data-a="rt" data-i="0" role="button" tabindex="0" style="cursor:pointer;text-decoration:underline">Saltar</small></span><button data-a="rt" data-i="15">+15s</button></div>` : ''}${rpeRow(i, j, s)}`;
+    return html`<div class="r2${c ? ' cur' : ''}"><span>${raw(setNo(W.x[i], j))}</span>${raw(setLabelButton(s))}<input type="number" inputmode="decimal" data-c="sr" data-i="${i}" data-j="${j}" value="${s.r}"${raw(W.dl && !s.ok ? ' class="dlv"' : '')} aria-label="${unitName(e) + ', ' + setName(j, s, e)}">${raw(!usesWeight(e) ? '<span class="mu" style="text-align:center">–</span>' : html`<input type="number" inputmode="decimal" data-c="sw" data-i="${i}" data-j="${j}" value="${s.w ? toDisplayWeight(s.w) : ''}" placeholder="${weightUnit()}"${raw(s.ws && !s.ok ? (W.dl ? ' class="dlv"' : ' class="sug"') : '')} aria-label="${'Peso' + (s.ws && !s.ok ? ' sugerido' : '') + ', ' + setName(j, s, e)}">`)}<span style="font-size:13px">${raw((r => r ? fmtMinSec(r) : '–')(restAfterSet(i, j)))}</span><button class="ck ${s.ok ? 'on' : ''}" data-a="ck" data-i="${i}" data-j="${j}" aria-label="${'Hecha, ' + setName(j, s, e)}" aria-pressed="${s.ok ? 'true' : 'false'}">✓</button></div>${W.re && W.ri && W.ri[0] == i && W.ri[1] == j ? html`<div class="rr"><button data-a="rt" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000))))}</b><br><small data-a="rt" data-i="0" role="button" tabindex="0" style="cursor:pointer;text-decoration:underline">Saltar</small></span><button data-a="rt" data-i="15">+15s</button></div>` : ''}${rpeRow(i, j, s)}`;
   })}<div class="g2" style="margin-top:8px"><button data-a="sl" data-i="${i}">− Serie</button><button data-a="sa" data-i="${i}">+ Serie</button></div></div>`)}<div class="g2" style="margin:16px 0 84px"><button data-a="zdis" style="background:#d4d4da;color:#111;border:0;padding:15px;border-radius:16px;font-size:15px">Salir y descartar</button><button data-a="end" style="background:#fff;color:#111;border:0;padding:15px;border-radius:16px;font-size:16px;font-weight:700">Log out</button></div><div class="pb"><button data-a="zpv" aria-label="Serie anterior">${icon('prv', 26)}</button><button data-a="zps" aria-label="${W.p ? 'Reanudar' : 'Pausar'}">${icon(W.p ? 'ply' : 'pau', 30)}</button><button data-a="znx" aria-label="Siguiente serie">${icon('nxt', 26)}</button></div>`;
 }
 A.zhi = i => {
@@ -149,7 +150,7 @@ const setToggle = (i, b) => {
   R();
 };
 /** Cómo se llama una fila de series para los lectores de pantalla: «serie 2, Press banca» (o «drop set, …»). */
-const setName = (j, s, e) => (s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : 'serie ' + (j + 1) + (s.k && TECHNIQUES[s.k] ? ', ' + TECHNIQUES[s.k][0].toLowerCase() : '')) + ', ' + e.n;
+const setName = (j, s, e) => (s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : 'serie ' + (j + 1) + (k => k == 'WRK' ? '' : ', ' + TECHNIQUES[k][0].toLowerCase())(setTechnique(s))) + ', ' + e.n;
 /** Número que se ve a la izquierda de la fila: el de la serie (sin contar las filas extra), D en el drop set y + en el bloque
     de rest-pause. */
 const setNo = (a, j) => a[j].t == 1 ? 'D' : a[j].t == 2 ? '+' : a.slice(0, j + 1).filter(x => !x.t).length;
@@ -201,6 +202,13 @@ A.ck = (i, b) => {
     const bw = Math.max(0, ...h.flatMap(x => x.s.map(y => y[1])));
     if (s.w > 0 && bw > 0 && s.w > bw)
       toast('Nuevo récord en ' + e.n + ': ' + toDisplayWeight(s.w) + ' ' + weightUnit());
+    /* era la última que faltaba: en vez del descanso, la ventana de guardar el entreno, como con «Siguiente serie» (I-28) */
+    if (W.x.every(a => a.every(x => x.ok))) {
+      W.re = 0;
+      R();
+      A.end();
+      return;
+    }
   }
   if (S.ar === 0 && W && W.re && W.x[i][+b.dataset.j].ok) {
     W.re = 0;
@@ -242,7 +250,10 @@ const rpeRow = (i, j, s) => {
   const e = S.plan[S.sel].ex[i];
   if (!e || unitOf(e))
     return '';
-  return html`<div class="rpe"><span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<button class="chip${s.q == v ? ' on' : ''}" data-a="rpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}${usesWeight(e) && (+s.w || 0) > 0 ? html`<button class="chip" data-a="drp" data-i="${i}" data-j="${j}">+ Drop set</button>` : ''}</div>`;
+  /* el esfuerzo, solo si se activó en Ajustes avanzados (F-42); «+ Drop set», siempre que haya peso */
+  const rpe = rpeOn() ? html`<span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<button class="chip${s.q == v ? ' on' : ''}" data-a="rpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}` : '';
+  const drop = usesWeight(e) && (+s.w || 0) > 0 ? html`<button class="chip" data-a="drp" data-i="${i}" data-j="${j}">+ Drop set</button>` : '';
+  return rpe || drop ? html`<div class="rpe">${raw(rpe)}${raw(drop)}</div>` : '';
 };
 A.rpe = (i, b) => {
   const s = W.x[i] && W.x[i][+b.dataset.j];
@@ -301,13 +312,19 @@ const blockArrowLive = (L, n, cur) => {
     return false;
   }
 };
+/* la etiqueta de una serie (WKT, DS, RP, CL…), que al tocarla explica su técnica (F-11); en color, si no es una serie normal */
+const setLabelButton = s => {
+  const k = setTechnique(s);
+  return html`<button class="wk2${k != 'WRK' ? ' tq' : ''}" data-a="tqi" data-v="${k}" aria-label="${'Técnica: ' + TECHNIQUES[k][0]}">${setLabel(s)}</button>`;
+};
 const blockHeader = (L, n, cur) => html`<div class="sl">SERIE ${raw(String.fromCharCode(65 + n))} <span class="arw${blockArrowLive(L, n, cur) ? ' live' : ''}" aria-hidden="true"><span>›</span><span>›</span><span>›</span></span></div>`;
 /* — manejadores de esta función (registros A / C / U) — */
 /* etiqueta de técnica de una serie (F-11): qué técnica es, cómo se ejecuta y qué hace la app con ella */
 A.tqi = (i, b) => {
   const t = TECHNIQUES[b.dataset.v];
+  /* tras el nombre, la etiqueta que se ha tocado (WKT en una serie de pirámide) */
   if (t)
-    dialog(html`${t[0]} <span class="mu">· ${b.dataset.v}</span>`, html`${t[1]}${raw(t[2] ? html`<br><br><b>En el entreno:</b> ${t[2]}` : '')}`, [['Entendido', 'zno', 'pr']]);
+    dialog(html`${t[0]} <span class="mu">· ${(b.textContent || '').trim() || b.dataset.v}</span>`, html`${t[1]}${raw(t[2] ? html`<br><br><b>En el entreno:</b> ${t[2]}` : '')}`, [['Entendido', 'zno', 'pr']]);
 };
 A.sa = i => {
   const a = W.x[i];

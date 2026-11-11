@@ -10,6 +10,55 @@ aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en fr
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.1] — 2026-11-11
+
+### Novedades
+- Bienvenida al crear una cuenta: gracias por probar la app, aviso de que está en fase de pruebas y tus datos (sexo, edad,
+  altura, peso, actividad y objetivo), con los que la app calcula tus calorías y te recomienda programas.
+- Las cuentas nuevas empiezan sin programa: Workout te invita a elegir uno con «Seleccionar programa».
+- Logo nuevo, también en el icono de la app; y cada acceso directo del icono tiene el suyo.
+- Al completar un día pasas al siguiente. Si toca descanso, la app se queda en él hasta que lo marques como completado.
+- Nutri-Score de los alimentos que buscas o escaneas.
+- Lo que buscas o escaneas se guarda en «Mis alimentos», y cualquier alimento propio se puede borrar.
+- Ajustes avanzados: el esfuerzo de cada serie (RPE) es opcional y viene desactivado. Al activarlo, una ventana te explica cómo
+  funciona.
+- Administración: cuántas cuentas usan iPhone y cuántas Android.
+
+### Mejoras
+- El color de partida es el azul del logo; si ya elegiste uno, lo conservas.
+- Las series de trabajo se llaman WKT; en un drop set o un rest-pause, solo la fila de debajo lleva DS o RP.
+- Al marcar con su casilla la última serie que faltaba sale «¿Guardar el entreno?».
+- Los botones de cada ejercicio (Tips, Notas, Tempo, Descanso, Historial, Swap y Discos), con la misma altura y alineados.
+- La barra de pestañas va más fluida al deslizar el dedo por ella.
+- Elegir un color propio ya no frena la app.
+- «Press inclinado en máquina» en lugar del convergente en Bro Split y Push Pull Leg.
+- Aviso legal: uso gratuito durante la fase de pruebas, con riesgo de perder datos.
+- Diagnóstico dice cuánto tarda en pintarse cada pantalla.
+- Al volver a Administración se ve lo ya cargado mientras se actualiza.
+
+### Correcciones
+- En el iPhone, deslizar para volver ya no deja la pantalla en negro, tampoco en un entreno.
+- El sonido vuelve al quitar el silencio del móvil, sin tener que salir de la app.
+- La búsqueda de alimentos y el escáner de códigos ya no fallan a ratos: prueban otro servicio y lo reintentan, y dicen
+  claramente si no hay conexión, si el servicio está saturado o si no hay resultados.
+
+### Interno
+- Atrás en iPhone (I-20): sin la entrada de más del historial (`core/back`, `core/platform`); mientras algo sigue al dedo, sin
+  desenfoque de fondo; rastro de páginas en `core/ui` para ver debajo la página a la que se vuelve.
+- Sonido (I-21): el `AudioContext` se reanuda antes de cada aviso, también desde «interrupted», y se suspende al acabar.
+- Alimentos en línea (I-22): primero search-a-licious y `cgi/search.pl` de respaldo, reintento, caché de búsquedas y errores con
+  nombre; `tests/foods.py` con Open Food Facts simulado. Escáner: cada apertura de la cámara y cada búsqueda por código llevan su
+  número (`scanTry`), y lo que llega tarde se apaga o se ignora.
+- Barra de pestañas (I-19): medidas guardadas, burbuja sin transición al arrastrar y pintado de la pestaña tras el siguiente
+  fotograma. Color propio (I-18): vista previa por fotograma y un solo guardado.
+- `system/welcome`, `core/brand`, `workout/rpe` y `tools/marca.py` (logo e iconos desde `src/img/brand`); claves nuevas `np`, `nw`,
+  `mv` (cambios de datos de una versión a otra, `core/repair`), `rpe`, y `ns` y `ean` en `cf` y `bc`.
+- Perfil de Firestore: campo `os` (T-28), en una escritura aparte; `firestore.rules` lo admite. *Desplegar reglas* ya no toca los
+  índices (I-16) y sale `firestore.indexes.json`.
+- Cada móvil anota la versión con la que empezó (`ffinst`): si es anterior a la 1.0.1, su icono es el de antes del logo nuevo.
+- GitHub Actions prueba las ramas `desarrollo-*`. Publicar en Pages con `upload-pages-artifact@v5` y `deploy-pages@v5`, con
+  Node.js 24 (I-07); las pruebas ya corren en Ubuntu 26.04.
+
 ## [1.0.0] — 2026-11-04
 
 ### Novedades

@@ -98,11 +98,14 @@ def main(app):
                 ev = pg.evaluate
                 check('arranca', ev('!!window.__ffok'))
                 check('modo paquete (FFDEP=1)', ev('FFDEP===1&&updatesOn===1'))
+                check('anota la versión con la que empieza el móvil', ev("localStorage.getItem('ffinst')") == ev('APPV'), str(ev("localStorage.getItem('ffinst')")))
                 check('un solo manifiesto, el estático', ev("[...document.querySelectorAll('link[rel=manifest]')].map(l=>l.getAttribute('href')).join()") == 'manifest.webmanifest')
                 check('un solo icono de inicio, el estático', ev("[...document.querySelectorAll('link[rel=apple-touch-icon]')].map(l=>l.getAttribute('href')).join()") == 'icon-180.png')
                 check('metas de app instalable sin duplicar', ev("document.querySelectorAll('meta[name=apple-mobile-web-app-capable]').length") == 1)
                 m = ev("fetch('manifest.webmanifest').then(r=>r.json()).then(j=>[j.start_url,j.display,j.icons.length,(j.shortcuts||[]).map(s=>s.url).join()])")
                 check('manifiesto válido, con los accesos directos del icono (F-39)', m == ['./', 'standalone', 3, './?a=entreno,./?a=comida,./?a=peso'], str(m))
+                ic = ev("""fetch('manifest.webmanifest').then(r=>r.json()).then(j=>Promise.all([...j.icons.map(i=>i.src+':'+(i.purpose||'any')),...j.shortcuts.map(s=>s.icons[0].src)].map(u=>fetch(u.split(':')[0]).then(r=>[u,r.ok,r.headers.get('content-type')]))))""")
+                check('iconos del logo nuevo: el de la app, el adaptable de Android y uno propio para cada acceso directo (F-40, I-15)', [x[0] for x in ic] == ['icon-192.png:any', 'icon-512.png:any', 'icon-512-maskable.png:maskable', 'atajo-entreno.png', 'atajo-comida.png', 'atajo-peso.png'] and all(x[1] and 'png' in (x[2] or '') for x in ic), str(ic))
                 code = ['js/' + f for f in os.listdir(os.path.join(orig, 'js'))]
                 if SW:
                     ev("navigator.serviceWorker.ready.then(()=>1)")
@@ -218,10 +221,11 @@ def main(app):
                 pg.wait_for_timeout(200)
                 check('el aviso se puede cerrar', ev("!document.getElementById('upd')"))
                 # tras actualizar desde una versión antigua (sin haber visto el aviso): novedades una sola vez
-                ev("localStorage.setItem('ffver','1.0.0');localStorage.removeItem('ffseen')")
+                ev("localStorage.setItem('ffver','1.0.0');localStorage.removeItem('ffseen');localStorage.removeItem('ffinst')")
                 reload(pg, log)
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(1500)
+                check('un móvil que ya tenía la app guarda la versión que tenía (la de su icono)', ev("localStorage.getItem('ffinst')") == '1.0.0', str(ev("localStorage.getItem('ffinst')")))
                 news = ev("(()=>{const k=document.querySelector('#upd.news .updk');return k?{title:k.querySelector('h3').textContent,btn:k.querySelector('.upb').innerText}:null})()")
                 check('tras actualizar enseña las novedades de la versión', bool(news) and news['title'].startswith('Versión ') and news['btn'] == 'ENTENDIDO', str(news))
                 if news:

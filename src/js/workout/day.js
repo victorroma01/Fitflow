@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, workoutTab  · acciones/registros: 13
+   Define: planEx, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
 */
 import { A, C } from '../core/registry.js';
 import { PROGRAM_NAMES } from '../data/library.js';
@@ -14,7 +14,7 @@ import { dayMinutes, rangeSelect, tempoOf, unitOf } from './targets.js';
 import { deloadCard, isDeloadWeek } from './deload.js';
 import { coverStyle } from './images.js';
 import { exTip, withExInfo } from '../library/howto.js';
-import { planIndex, syncSel, trainingDays } from './week.js';
+import { advanceDay, planIndex, syncSel, trainingDays } from './week.js';
 import { levelPill } from '../programs/levels.js';
 import { rotationCard } from '../programs/rotation.js';
 import { isFreshInstall, restoreBanner } from '../system/backup.js';
@@ -121,7 +121,15 @@ const withWeekBar = h => {
   return h.replace('</button></div><div class="cd hero"', html`</button></div><div style="margin:0 2px 10px"><div class="row"><small>Esta semana</small><small><b>${raw(dn)} de ${raw(tr.length)} entrenos</b></small></div><div class="bar" style="height:5px"><i style="width:${tr.length ? dn / tr.length * 100 : 0}%;background:var(--a2)"></i></div></div><div class="cd hero"`);
 };
 const woExtra = () => linkRow('timer', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time', 'wod') + linkRow('pulse', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal', 'cardio');
+/* Sin programa elegido (una cuenta nueva; I-24): detrás, un día de ejemplo difuminado, que no se puede tocar ni lo leen los
+   lectores de pantalla; delante, la tarjeta para elegir uno. Debajo, lo que se puede usar sin programa. */
+const noProgramView = () => {
+  const demo = html`<div class="dys">${[0, 1, 2, 3, 4, 5, 6].map(j => html`<button class="dy${j ? '' : ' on'}" tabindex="-1">DÍA<br>${raw(j == 2 || j == 6 ? '☾' : j + 1)}</button>`)}</div><div class="cd hero" style="${coverStyle('Pecho')}"><h2>Pecho</h2><div class="st"><div><b>6</b><small>Ejercicios</small></div><div><b>22</b><small>Series</small></div><div><b>75</b><small>Minutos</small></div></div><div class="g2"><button tabindex="-1">Overview</button><button class="pr" tabindex="-1">Empezar día 1</button></div></div>`;
+  return html`<div class="hd"><div><h1>Workout</h1></div><button data-a="menu" aria-label="Menú" style="font-size:26px;padding:6px 14px">☰</button></div><div class="npw"><div class="npd" aria-hidden="true" inert>${raw(demo)}</div><div class="cd npc"><b>Elige tu programa</b><p class="mu">Aún no tienes un programa de entrenamiento. Elige uno de los predefinidos, con los recomendados para ti arriba, o crea el tuyo.</p><button class="pr" data-a="pg">Seleccionar programa</button></div></div>${raw(woShortcuts())}${raw(woExtra())}`;
+};
 export function workoutTab() {
+  if (S.np && !W && !overviewMode)
+    return resumeBanner() + (isFreshInstall() ? restoreBanner() : '') + noProgramView();
   let h = workoutDayBase();
   if (!weekView) {
     h += woShortcuts();
@@ -152,8 +160,10 @@ A.vw = () => {
   setWeekView(!weekView);
   R();
 };
+/* «Completar descanso»: el día queda completado y se pasa al siguiente (F-41) */
 A.rd = () => {
   S.done[S.wk + '-' + S.sl] = 1;
+  advanceDay();
   saveState();
   R();
 };

@@ -31,9 +31,12 @@ service cloud.firestore {
         && (!('st0' in p) || p.st0 is int && p.st0 >= 0 && p.st0 <= 3)
         && (!('tour' in p) || p.tour in [0, 1]) && (!('rm' in p) || p.rm in [0, 1]);
     }
+    // el perfil: sexo, preferencias, cuándo cambió y se creó, «debe cambiar la contraseña» y el sistema del último móvil que
+    // abrió la app (os, T-28: solo para contar en Administración cuántos usan iPhone y cuántos Android)
     function validProfile(d) {
       return (!('sx' in d) || d.sx in ['M', 'F', '']) && (!('pr' in d) || validPrefs(d.pr))
-        && (!('m' in d) || d.m is int) && (!('ca' in d) || d.ca is int) && (!('mc' in d) || d.mc is bool);
+        && (!('m' in d) || d.m is int) && (!('ca' in d) || d.ca is int) && (!('mc' in d) || d.mc is bool)
+        && (!('os' in d) || d.os in ['ios', 'android', 'otro']);
     }
     // una parte del estado: su contenido en texto JSON (j), cuándo y desde qué dispositivo se escribió, y su versión
     function validPart(d, max) {
@@ -75,8 +78,9 @@ service cloud.firestore {
       allow create: if isOwner(uid) && request.resource.data.keys().hasOnly(['u', 'sx', 'pr', 'ca', 'm'])
         && request.resource.data.u is string && request.resource.data.u.lower() + '@stratafit.app' == request.auth.token.email
         && validProfile(request.resource.data);
-      // después: sexo y preferencias; «debe cambiar la contraseña» (mc) solo se puede quitar (lo pone GitHub Actions)
-      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sx', 'pr', 'm', 'mc'])
+      // después: sexo, preferencias y sistema del móvil; «debe cambiar la contraseña» (mc) solo se puede quitar (lo pone GitHub
+      // Actions)
+      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sx', 'pr', 'm', 'mc', 'os'])
         && validProfile(request.resource.data)
         && (!('mc' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.mc == false);
       allow delete: if false;

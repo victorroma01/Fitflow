@@ -1,6 +1,6 @@
 /* ═══ system/updates ═══
    Actualización de la app: service worker, uso sin conexión, Ajustes → Actualizaciones y aviso de versión nueva con sus novedades.
-   Define: ICON_SVG, swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
+   Define: swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
 import { APPV, FFDEP, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -10,8 +10,8 @@ import { A } from '../core/registry.js';
 import { RELEASE } from '../data/release.js';
 import { S, W } from '../core/state.js';
 import { isStandalone } from './files.js';
+import { BRAND_LOGOS } from '../data/photos.js';
 import { html, raw } from '../core/html.js';
-const ICON_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1024 1024\"><defs> <radialGradient id=\"b1\" cx=\"22%\" cy=\"18%\" r=\"62%\"><stop offset=\"0\" stop-color=\"#8b55ff\"/><stop offset=\"1\" stop-color=\"#8b55ff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b2\" cx=\"88%\" cy=\"28%\" r=\"60%\"><stop offset=\"0\" stop-color=\"#3f7bff\"/><stop offset=\"1\" stop-color=\"#3f7bff\" stop-opacity=\"0\"/></radialGradient> <radialGradient id=\"b3\" cx=\"62%\" cy=\"98%\" r=\"68%\"><stop offset=\"0\" stop-color=\"#f0507f\"/><stop offset=\"1\" stop-color=\"#f0507f\" stop-opacity=\"0\"/></radialGradient> <linearGradient id=\"gs\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".30\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".06\"/></linearGradient> <linearGradient id=\"ge\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".85\"/><stop offset=\".5\" stop-color=\"#fff\" stop-opacity=\".1\"/><stop offset=\"1\" stop-color=\"#fff\" stop-opacity=\".35\"/></linearGradient> <linearGradient id=\"wh\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#ffffff\"/><stop offset=\"1\" stop-color=\"#ddd0ff\"/></linearGradient><filter id=\"sh\" x=\"-30%\" y=\"-30%\" width=\"160%\" height=\"170%\"><feDropShadow dx=\"0\" dy=\"22\" stdDeviation=\"26\" flood-color=\"#1a0a55\" flood-opacity=\".45\"/></filter> <filter id=\"sh2\" x=\"-20%\" y=\"-30%\" width=\"140%\" height=\"180%\"><feDropShadow dx=\"0\" dy=\"12\" stdDeviation=\"12\" flood-color=\"#2a1180\" flood-opacity=\".55\"/></filter></defs> <rect width=\"1024\" height=\"1024\" fill=\"#140f3a\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b1)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b2)\"/><rect width=\"1024\" height=\"1024\" fill=\"url(#b3)\" opacity=\".9\"/> <g filter=\"url(#sh)\"><circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"url(#gs)\"/></g> <circle cx=\"512\" cy=\"512\" r=\"318\" fill=\"none\" stroke=\"url(#ge)\" stroke-width=\"5\"/> <g filter=\"url(#sh2)\"><rect x=\"362.0\" y=\"498.0\" width=\"300.0\" height=\"28.0\" rx=\"14.0\" fill=\"url(#wh)\"/><rect x=\"343.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"643.0\" y=\"405.0\" width=\"38.0\" height=\"214.0\" rx=\"19.0\" fill=\"url(#wh)\"/><rect x=\"295.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/><rect x=\"695.0\" y=\"442.0\" width=\"34.0\" height=\"140.0\" rx=\"17.0\" fill=\"url(#wh)\"/></g></svg>";
 let swState = 0;
 (function () {
   try {
@@ -42,7 +42,8 @@ let swState = 0;
           /* icono generado opcional (solo archivo único) */
         }
       };
-      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ICON_SVG);
+      /* el icono de la app (pantalla de inicio): el logo del tema claro (F-40), que en el archivo único va incrustado */
+      im.src = BRAND_LOGOS.claro;
     }
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(() => {
@@ -180,6 +181,14 @@ export const whatsNewDue = () => {
   }
   /* hasta la 1.19.0 no se guardaba la versión: si ya había datos, es una actualización */
   const updated = prev ? prev != APPV : (S.logs.length > 0 || (S.cp || []).length > 0 || (S.cr || []).length > 0);
+  /* la versión con la que empezó este móvil, una sola vez: la que ya tenía (o '0', si era anterior a la 1.19.0) o esta, si es nuevo */
+  try {
+    if (!Store.get(Store.K.inst))
+      Store.set(Store.K.inst, prev || (updated ? '0' : APPV));
+  }
+  catch (e) {
+    logError('versión de partida', e);
+  }
   return updated && seen != APPV && RELEASE.sections.length > 0;
 };
 /** 1 si las novedades esperan a que termine el entreno en curso. */

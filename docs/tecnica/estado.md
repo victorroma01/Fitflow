@@ -24,6 +24,7 @@ historial por año, las comidas por mes, las preferencias en el perfil y la foto
 | `ffbad` (`bad`) | Copia de un estado que no se pudo leer al arrancar, apartada antes de empezar de cero. |
 | `ffver` (`ver`) | Última versión de la app abierta en este dispositivo (para enseñar las novedades tras actualizar). |
 | `ffseen` (`seen`) | Versión cuyas novedades ya se enseñaron, para no repetirlas. |
+| `ffinst` (`inst`) | Versión con la que empezó la app en este dispositivo (V1.0.1); si ya tenía otra, esa, y `0` si era anterior a la 1.19.0. Sirve para saber si el icono de la pantalla de inicio es el de antes del logo nuevo. |
 | `ffacct` (`acct`) | Sesión de la cuenta: `{ uid, u: usuario, it: token de sesión, rt: token de renovación, exp, x: 1 si caducó, mc: 1 o 2 si hay que cambiar una contraseña temporal }` (`cloud/session`). No se sincroniza. |
 | `ffown` (`own`) | uid de la cuenta cuyos datos hay en el móvil. Si entra otra, se borran antes de leer el estado. |
 | `ffsync` (`sync`) | Sincronización (`cloud/sync`): `{ dev: id del dispositivo, base: { parte: { r: versión, h: huellas de cada elemento } }, lt: último cambio local por tipo, pt: de las preferencias, fresh: 1 tras entrar, last: última sincronización }`. |
@@ -40,13 +41,15 @@ progreso de la serie de prueba se borra al arrancar.
 |---|---|---|
 | `tab` | número | Pestaña abierta: 0 Workout, 1 Nutrición, 2 Dashboard, 3 Perfil. |
 | `prog` | número | Programa predefinido activo (índice en `PROGRAMS`). |
+| `np` | 1 | Sin programa elegido todavía (una cuenta nueva, I-24): el plan es una semana de descanso y Workout pide «Seleccionar programa». Lo pone el registro (`markNewAccount`) y lo quita elegir un programa (predefinido, propio o importado). |
+| `nw` | 1 | Bienvenida por ver (una cuenta nueva, I-23: `system/welcome`). Se quita al guardar los datos biométricos. |
 | `cpi` | número | Programa propio activo (índice en `cp`); `-1` si el activo es uno predefinido. |
 | `lv` | `'ini'` \| `'int'` \| `'ava'` | Nivel del programa (principiante, intermedio, avanzado). |
 | `plan` | día[] | Los días del plan: `[{ n: nombre, ex: [ejercicio del plan] }]`; un día sin ejercicios es descanso. Con 7 días es la semana; con otra longitud es un ciclo que sigue de una semana a otra (Push Pull Leg de 10 días, Full Body de 6: `workout/week`). |
 | `wk` | número | Semana en curso (empieza en 1). |
 | `sl` | 0-6 | Día elegido de la semana. No se sincroniza (`LOCAL_ONLY`). |
 | `sel` | número | Día del plan que le toca a `sl` en la semana `wk` (índice en `plan`; `syncSel`). |
-| `done` | `{ 'semana-díaDeLaSemana': true }` | Días completados (el día es el de la semana, 0-6). |
+| `done` | `{ 'semana-díaDeLaSemana': true }` | Días completados (el día es el de la semana, 0-6). Al completar uno se elige el siguiente sin completar (`advanceDay`, F-41). |
 | `pbk` | `{ sel, day }` \| null | Día original guardado al lanzar un workout propio sobre el plan (se restaura al terminar). |
 | `dl` / `dq` | `{ semana: 1 \| 0 }` | Semanas de descarga activadas (1) u omitidas (0) a mano / en las que se dijo «Ahora no» a la sugerencia por esfuerzo (`workout/deload`). |
 | `dls` | número | Última semana de descarga cuya hoja de inicio ya salió. |
@@ -58,8 +61,10 @@ ronda, y si no tiene, 2:30), tk?: técnica de intensidad (`DS`, `RP`, `SS`, `CL`
 `PIR+DS`, `PIR+PAR`: `data/techniques`), o?: nombre original si se cambió (swap), img?/cu?: portada propia }`. En los programas
 predefinidos, `ta` es la técnica del nivel avanzado; `programs/levels` la aplica y la quita, y no llega a guardarse.
 
-**Serie del entreno en curso** (`W.x[ejercicio][serie]`): `{ r: reps, w: kg, ok, q?: esfuerzo, k?: técnica de la serie, t?: 1 fila
-del drop set, 2 bloque del rest-pause, ws?: 1 si el peso es sugerido (del historial o de la serie anterior) y aún no registrado }`.
+**Serie del entreno en curso** (`W.x[ejercicio][serie]`): `{ r: reps, w: kg, ok, q?: esfuerzo (RPE, solo con `rpe`), k?: técnica de
+la serie, t?: 1 fila del drop set, 2 bloque del rest-pause, ws?: 1 si el peso es sugerido (del historial o de la serie anterior) y aún
+no registrado }`. La etiqueta que se ve (`setLabel`) no se guarda: WKT en las series de trabajo, DS o RP en la fila extra y la
+abreviatura en el resto de técnicas; la serie principal de un drop set sigue llevando `k: 'DS'`.
 `W.dl = 1` en la semana de descarga. `W.ri` es la serie que empezó el descanso en curso y `W.re`, cuándo acaba. El orden en que se
 hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se guarda.
 
@@ -98,12 +103,12 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `nu` | `{ k, c, p, f, n, dt?, man? }` | Objetivo: kcal (800–8000), % hidratos/proteína/grasa, número de comidas (2–8), tipo de dieta; `man: 1` si las kcal y los macros están puestos a mano (no se recalculan solos). `core/boot` los deja válidos (`cleanGoals`). |
 | `bio` | `{ age, h, w, sex, act, goal }` | Datos biométricos (edad, altura cm, peso kg, sexo `'M'` \| `'F'`, actividad, objetivo) para el gasto energético. El sexo ordena también los programas (`PROGRAM_PREF`) y va al perfil de Firebase (`sx`). |
 | `meals` | `{ 'AAAA-MM-DD': { comida: [{ n, g, b: [kcal, hc, prot, grasa, fibra, sal por 100 g] }] } }` | Comidas del día. |
-| `cf` | `[{ n, b }]` | Alimentos creados por el usuario. |
+| `cf` | `[{ n, b, ns?, ean? }]` | «Mis alimentos»: los creados a mano y los buscados o escaneados en Open Food Facts al añadirlos a una comida (F-44), con su Nutri-Score (`ns`, `'a'`…`'e'`, F-43) y su código de barras. Se pueden borrar. |
 | `lib` | `[{ n, it }]` | Platos guardados (librería de comidas). |
 | `tp` | `{ 't' \| 'r': { comida: [...] } }` | Plantillas de día de entreno / descanso. El tipo de cada día ya no se guarda: sale de la rutina (la semana de entreno va de lunes a domingo y sigue el ciclo del plan) y de los entrenos registrados (`nutrition/templates`, `dayInfo`); hasta la 1.23 se elegía a mano en `dt`, que se borra al arrancar. |
 | `fq` | `{ alimento: { c, t, b } }` | Alimentos frecuentes (hábitos). |
 | `wt` | `{ fecha: ml }` | Agua. |
-| `bc` | `{ código: { n, b, t } }` | Caché de códigos de barras consultados. |
+| `bc` | `{ código: { n, b, t, ns? } }` | Caché de códigos de barras consultados (200 como mucho), con su Nutri-Score. |
 
 ### Ajustes
 
@@ -116,6 +121,8 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `rm` | 1 para reducir animaciones (`html.rm`). |
 | `st0` | Pestaña al abrir la app (0–3); sin ella, la última que se usó (`core/tabbar`). |
 | `tour` | 1 si ya se vio (o se omitió) el recorrido de la primera vez (`system/tour`). |
+| `rpe` | 1 si se registra el esfuerzo de cada serie (RPE; Ajustes avanzados, F-42). Sin él, desactivado. Va con el núcleo, no con las preferencias del perfil. |
+| `mv` | Cambios de los datos de una versión a otra ya hechos en la cuenta (`core/repair`, `MIGRATIONS`): 1, el de la V1.0.1 (F-45). |
 | `bdg` | 1 con el globo en el icono de la app (`system/phone`). Es de este móvil: no se sincroniza. |
 | `un` | `'kg'` o `'lb'`. |
 | `rest` | Descanso por defecto (s). |

@@ -106,8 +106,8 @@ function summaryImage(o) {
       c.height = H_;
       const g = c.getContext('2d');
       const st = getComputedStyle(document.documentElement);
-      const a1 = st.getPropertyValue('--a1').trim() || '#b183ff';
-      const a2 = st.getPropertyValue('--a2').trim() || '#7a45ee';
+      const a1 = st.getPropertyValue('--a1').trim() || '#4da3ff';
+      const a2 = st.getPropertyValue('--a2').trim() || '#1565ff';
       const FNT = 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
       let bg = g.createLinearGradient(0, 0, 0, H_);
       bg.addColorStop(0, '#0e0d14');

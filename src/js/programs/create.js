@@ -361,7 +361,7 @@ A.cps = () => {
   progDraft.k = S.cp.length - 1;
   saveState();
   A.pg();
-  dialog('Programa creado', '«' + X(nme) + '» ya está en Mis programas. ¿Quieres empezar con él ahora? Se reiniciará el progreso de la semana.', [['Más tarde', 'zno', ''], ['Usar ahora', 'cpa', 'pr']]);
+  dialog('Programa creado', '«' + X(nme) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.np ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'zno', ''], ['Usar ahora', 'cpa', 'pr']]);
 };
 A.cpv = (i, b) => {
   const k = b && b.dataset ? +b.dataset.i : +i;
@@ -382,7 +382,10 @@ A.cpac = () => {
   const p = S.cp[progDraft.k];
   if (!p)
     return;
-  confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(p.n) + '» y se reiniciará el progreso de la semana.', 'cpa', 'Cambiar');
+  if (S.np)
+    confirmDialog('¿Empezar con este programa?', 'Empezarás con «' + X(p.n) + '». Puedes cambiarlo cuando quieras.', 'cpa', 'Empezar');
+  else
+    confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(p.n) + '» y se reiniciará el progreso de la semana.', 'cpa', 'Cambiar');
 };
 A.cpa = () => {
   const p = S.cp[progDraft.k];
@@ -395,6 +398,7 @@ A.cpa = () => {
   syncCustomProgram();
   S.cpi = progDraft.k;
   S.plan = clone(p.plan);
+  delete S.np;
   if (p.o && isLevel(p.o.niv))
     S.lv = p.o.niv;
   dropResume();

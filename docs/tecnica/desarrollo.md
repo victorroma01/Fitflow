@@ -91,9 +91,10 @@ como un archivo sin formatear.
 
 - Cada cambio va en su rama y llega a `main` con una solicitud de fusión; GitHub Actions pasa las pruebas en Chrome y en Safari y
   compara con la versión anterior.
-- La V1.0.0 se desarrolla en la rama `desarrollo-1.0.0`, que GitHub prueba en cada subida. No se fusiona ni se publica hasta que el
-  propietario lo confirme (M8).
-- Los avances se siguen con los milestones M0 a M8 de GitHub.
+- Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` (la V1.0.2, en `desarrollo-1.0.2`), que GitHub prueba en cada subida
+  (las ramas `desarrollo-*`). No se fusiona ni se publica hasta que el propietario lo confirme.
+- Los avances se siguen con los milestones de GitHub: los de la V1.0.0 (M0 a M8), «V1.0.1 · Correcciones y mejoras», «V1.0.2 ·
+  Código y técnica», «App móvil» e «Ideas futuras».
 
 ### Publicar una versión
 
@@ -123,6 +124,25 @@ sincronización lo reintenta), pero mientras tanto esa cuenta no sincroniza nada
 - si la app nueva escribe un campo o un documento nuevo (una preferencia más, por ejemplo), primero se fusiona el cambio de
   `firestore.rules` que lo admite, compatible con la app publicada, y después la app;
 - si deja de escribir uno, al revés: primero la app y, cuando esté publicada, las reglas que ya no lo admiten.
+
+Un campo nuevo que no sea imprescindible se puede escribir aparte, sin que su rechazo pare la sincronización: es lo que hace el
+sistema del móvil del perfil (`os`, V1.0.1: `syncDeviceOS` en `cloud/sync`). Así da igual qué llegue antes; las reglas que lo
+admiten se despliegan solas al fusionar.
+
+### Cambios de datos de una versión a otra
+
+Si una versión cambia algo de lo ya guardado (por ejemplo, un ejercicio de un programa que también está en el plan en marcha de
+cada cuenta), el cambio va en `MIGRATIONS` de `core/repair`: una función por cambio, que se hace una sola vez por cuenta (`S.mv`
+guarda cuántos se han hecho) al arrancar o tras sincronizar. Va al final de la lista, no puede depender de que otro haya ido bien y
+lo que haga tiene que dejar el estado válido.
+
+### Logo e iconos
+
+El logo y todos los iconos salen de dos fuentes, `src/img/brand/fuente-claro.png` y `fuente-oscuro.png` (cuadradas, sin esquinas
+redondeadas ni sombra). `python3 tools/marca.py` genera el icono de la app (el claro) y su versión adaptable de Android, el de la
+pestaña del navegador con el tema oscuro, los iconos de los accesos directos (con los iconos de la app, en blanco sobre el azul del
+logo) y el logo dentro de la app (`src/img/brand/logo-*.webp`, que `build.py` mete en `data/media` y usa `core/brand`). Con un logo
+nuevo, se cambian las dos fuentes y se lanza de nuevo.
 
 ### Paso de la 1.24.0 a la 1.0.0
 

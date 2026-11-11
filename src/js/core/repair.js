@@ -2,10 +2,10 @@
    Deja el estado S válido: tipos, rangos y valores conocidos, sin datos personales y con un id en cada entreno. Lo usan el
    arranque (core/boot) y la sincronización, tras juntar lo que llega de Firebase (cloud/sync): unos datos dañados o
    manipulados nunca llegan a las pantallas. Se puede llamar las veces que haga falta (lo ya válido no cambia).
-   Define: repairShape, repairPrograms, repairLevels, repairTraining, repairSettings, repairRecords, repairFollowUp, logIds, repairState
+   Define: repairShape, repairPrograms, repairLevels, repairTraining, repairSettings, repairRecords, repairFollowUp, logIds, MIGRATIONS, migrateData, repairState
 */
 import { logError } from './errors.js';
-import { parseProgram, PROGRAMS } from '../data/library.js';
+import { parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { TECH_CODES, TECHNIQUES } from '../data/techniques.js';
 import { S } from './state.js';
 import { generateProgram } from '../programs/create.js';
@@ -24,6 +24,11 @@ const repairShape = () => {
     const O_ = x => x && typeof x == 'object' && !A_(x);
     if (!(S.prog >= 0 && S.prog < PROGRAMS.length))
       S.prog = 0;
+    /* sin programa elegido (I-24) y bienvenida por ver (I-23): 1 o nada */
+    ['np', 'nw'].forEach(k => {
+      if (S[k] !== 1)
+        delete S[k];
+    });
     if (!A_(S.plan) || !S.plan.length || !S.plan.every(d => d && typeof d.n == 'string' && A_(d.ex) && d.ex.every(e => e && typeof e.n == 'string' && +e.s > 0)))
       S.plan = parseProgram(S.prog);
     if (!(S.sel >= 0 && S.sel < S.plan.length))
@@ -41,6 +46,15 @@ const repairShape = () => {
         S[k] = [];
     });
     S.logs = S.logs.filter(l => O_(l));
+    /* alimentos propios (F-43, F-44): el Nutri-Score, una letra de la a a la e; el código de barras, solo cifras */
+    S.cf.forEach(f => {
+      if (!O_(f))
+        return;
+      if (f.ns != null && !['a', 'b', 'c', 'd', 'e'].includes(f.ns))
+        delete f.ns;
+      if (f.ean != null && !(typeof f.ean == 'string' && /^\d{8,14}$/.test(f.ean)))
+        delete f.ean;
+    });
     ['done', 'last', 'meals', 'hist', 'pr', 'notes', 'bio', 'pf', 'nu'].forEach(k => {
       if (S[k] != null && !O_(S[k]))
         delete S[k];
@@ -254,6 +268,32 @@ export const logIds = () => {
     used.add(l.id);
   }
 };
+/* Cambios de los datos guardados de una versión a otra, una sola vez por cuenta: S.mv es el número del último hecho. Cada uno
+   recibe el estado ya reparado y no puede fallar en cadena (si uno falla, se apunta y se sigue). */
+const MIGRATIONS = [
+  /* 1 · V1.0.1 (F-45): en Bro Split y Push Pull Leg, «Press pecho máquina convergente» pasa a ser «Press inclinado en máquina»,
+     también en el plan en marcha de quien los usa, salvo donde se cambió a mano (Swap). El historial de cada uno queda con su
+     nombre y el convergente sigue en la librería */
+  () => {
+    if (S.cpi >= 0 || ![PROGRAM_NAMES.indexOf('Bro Split'), PROGRAM_NAMES.indexOf('Push Pull Leg')].includes(S.prog))
+      return;
+    S.plan.forEach(d => d.ex.forEach(e => {
+      if (e.n == 'Press pecho máquina convergente' && !e.o)
+        e.n = 'Press inclinado en máquina';
+    }));
+  }
+];
+const migrateData = () => {
+  const done = Number.isInteger(S.mv) && S.mv >= 0 ? S.mv : 0;
+  for (let i = done; i < MIGRATIONS.length; i++)
+    try {
+      MIGRATIONS[i]();
+    }
+    catch (e) {
+      logError('cambio de datos ' + (i + 1), e);
+    }
+  S.mv = MIGRATIONS.length;
+};
 export const repairState = () => {
   repairShape();
   repairPrograms();
@@ -263,4 +303,5 @@ export const repairState = () => {
   repairRecords();
   repairFollowUp();
   logIds();
+  migrateData();
 };

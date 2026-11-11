@@ -12,9 +12,10 @@
    listas dentro de listas, y el historial las tiene.
    Lo de cada documento en la última sincronización se recuerda por huellas (clave `sync` de Store), no por copias: así se sabe
    qué cambió en cada lado sin duplicar los datos en el móvil.
-   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, pull, push, syncRound, syncNow, syncSoon, retryLater, adapter, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, push, syncRound, syncNow, syncSoon, retryLater, adapter, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
+import { deviceOS } from '../core/platform.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
 import { partKey } from '../core/persist.js';
@@ -258,6 +259,22 @@ const syncProfile = async () => {
   /* el usuario tal como se registró (con sus mayúsculas), aunque se entre escribiéndolo de otra forma */
   if (rd && typeof rd.u == 'string' && rd.u != account.u && rd.u.toLowerCase() == account.u.toLowerCase())
     acctSave({ ...account, u: rd.u });
+  await syncDeviceOS(rd);
+};
+/* El sistema del último móvil que abrió la app (T-28), solo para contar en Administración cuántos usan iPhone y cuántos
+   Android. Va en una escritura aparte: si las reglas aún no lo admiten (una app publicada antes que ellas), solo falla esto y
+   se reintenta en la siguiente sincronización, sin parar el resto ni llenar el registro de errores. */
+const syncDeviceOS = async (rd) => {
+  const os = deviceOS();
+  if (rd && rd.os === os)
+    return;
+  try {
+    await commitWrites([setWrite(profilePath(), { os }, null, ['os'])]);
+  }
+  catch (e) {
+    if (e.code != 'PERMISSION_DENIED')
+      logError('perfil: sistema del móvil', e);
+  }
 };
 /* paso 2: bajar y juntar lo que cambió en la nube. 'wait' si hay un entreno en curso (se deja para cuando acabe) */
 const pull = async (idx) => {

@@ -5,7 +5,7 @@
      empieza donde acabó la 1, y así hasta que el ciclo vuelve a cuadrar con la semana.
    S.sl es el día elegido de la semana (0-6) y S.sel, el día del plan que le toca: el resto de la app usa S.plan[S.sel].
    Lo marcado como hecho va por semana y día de la semana (S.done['semana-día']).
-   Define: planIndex, isCycle, WEEK, trainingDays, gcd, sessionsPerWeek, perWeekText, syncSel, monday, weekOffset
+   Define: planIndex, isCycle, WEEK, trainingDays, gcd, sessionsPerWeek, perWeekText, syncSel, advanceDay, monday, weekOffset
 */
 import { S } from '../core/state.js';
 /** Índice en `pl` del día `j` (0-6) de la semana `wk`. */
@@ -40,6 +40,22 @@ export const syncSel = () => {
   if (!(S.sl >= 0 && S.sl < 7))
     S.sl = 0;
   S.sel = planIndex(S.sl);
+};
+/** Tras completar el día elegido (con un entreno guardado o con «Completar descanso»; F-41): pasa al siguiente que esté sin
+    completar y, tras el último de la semana, a la semana siguiente. Un día de descanso no se salta: la app se queda en él hasta
+    que se marque como completado. */
+export const advanceDay = () => {
+  for (let n = 0; n < 14; n++) {
+    if (S.sl >= 6) {
+      S.wk++;
+      S.sl = 0;
+    }
+    else
+      S.sl++;
+    if (!S.done[S.wk + '-' + S.sl])
+      break;
+  }
+  syncSel();
 };
 const monday = d => {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());

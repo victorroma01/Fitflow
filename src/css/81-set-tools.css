@@ -210,3 +210,76 @@
   margin:0 0 8px;
   line-height:1.35;
 }
+/* explicación del RPE (workout/rpe, F-42): la escala dibujada y una serie de ejemplo */
+.rpx {
+  max-height:86vh;
+  overflow:auto;
+}
+.rpx h3 {
+  margin:0 0 8px;
+}
+.rpx h4 {
+  margin:14px 0 4px;
+  font-size:15px;
+}
+.rpx p {
+  margin:0 0 10px;
+  font-size:14px;
+  line-height:1.45;
+  color:var(--mu);
+}
+.rpxs {
+  display:block;
+  width:100%;
+  height:auto;
+  margin:4px 0 6px;
+  color:var(--tx);
+}
+.rpxl {
+  margin:0 0 6px;
+  padding:0;
+  list-style:none;
+  font-size:13.5px;
+  line-height:1.6;
+}
+.rpxl b {
+  display:inline-block;
+  width:26px;
+}
+.rpxe {
+  margin:4px 0 12px;
+  padding:10px;
+  border:1px solid var(--ln);
+  border-radius:16px;
+}
+.rpxr {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:6px;
+  font-size:14px;
+}
+.rpxr span {
+  flex:1;
+  color:var(--mu);
+}
+.rpxr .ck {
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  font-style:normal;
+}
+.rpxe .chip {
+  font-style:normal;
+}
+.rpxe small {
+  display:block;
+  margin-top:6px;
+  font-size:12.5px;
+  color:var(--mu);
+}
+.rpx .g2 {
+  margin-top:14px;
+}

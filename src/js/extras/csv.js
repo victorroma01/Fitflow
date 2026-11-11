@@ -12,6 +12,7 @@ import { itemMacros, mealName } from '../nutrition/home.js';
 import { downloadFile } from '../system/files.js';
 import { cardioLabel, cardioLogs, cardioPace } from './cardio.js';
 import { measureList, MEASURES } from './measures.js';
+import { setLabel } from '../workout/technique.js';
 import { html, raw } from '../core/html.js';
 const csvCell = v => {
   if (v == null)
@@ -28,8 +29,8 @@ const CSV_EXPORTS = {
       const r = [['Fecha', 'Ejercicio', 'Serie', 'Repeticiones', 'Peso (kg)', 'RPE', 'Técnica']];
       Object.keys(S.hist || {}).sort().forEach(n => {
         (Array.isArray(S.hist[n]) ? S.hist[n] : []).slice().reverse().forEach(x => {
-          /* técnica de la serie (data/techniques): la guardada o, en las filas extra antiguas, DS (1) y RP (2) */
-          (x && Array.isArray(x.s) ? x.s : []).forEach((q, i) => r.push([x.d, n, i + 1, +q[0] || 0, +q[1] || 0, +q[2] || '', typeof q[4] == 'string' ? q[4] : q[3] == 1 ? 'DS' : q[3] == 2 ? 'RP' : 'WRK']));
+          /* la técnica de la serie, con la etiqueta del entreno (workout/technique): WKT, DS, RP, CL… */
+          (x && Array.isArray(x.s) ? x.s : []).forEach((q, i) => r.push([x.d, n, i + 1, +q[0] || 0, +q[1] || 0, +q[2] || '', setLabel({ k: typeof q[4] == 'string' ? q[4] : '', t: +q[3] || 0 })]));
         });
       });
       return r;

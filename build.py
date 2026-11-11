@@ -103,6 +103,9 @@ def list_lines(p):
     return [l.split('#')[0].strip() for l in read(p).splitlines() if l.split('#')[0].strip()]
 
 
+BRAND_LOGOS = ('claro', 'oscuro')
+
+
 def media():
     """Lee src/img: portadas de día (order.txt) y fotos de ejercicio (map.txt). Devuelve la lista de fotos y los enlaces."""
     files, day, ex, ex_for, ex_alias = [], [], [], {}, {}
@@ -130,6 +133,12 @@ def media():
             ex_for[nm] = key
             if alts:
                 ex_alias[nm] = ' '.join(alts)
+    # el logo dentro de la app (core/brand): claro y oscuro. Las fuentes (fuente-*.png) no se publican: son de tools/marca.py
+    for k in BRAND_LOGOS:
+        p = os.path.join(IMG, 'brand', 'logo-%s.webp' % k)
+        if not os.path.isfile(p):
+            die('falta el logo %s (python3 tools/marca.py)' % p)
+        files.append(('img/brand/logo-%s.webp' % k, p))
     used = {os.path.basename(p) for _, p in files}
     for sub, ext in (('day', '.jpg'), ('ex', '.webp')):
         for f in sorted(os.listdir(os.path.join(IMG, sub))):
@@ -151,6 +160,7 @@ def media_js(m, inline):
         'ex': {k: url('img/ex/%s.webp' % k, src['img/ex/%s.webp' % k]) for k in m['ex']},
         'exFor': m['exFor'],
         'exAlias': m['exAlias'],
+        'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
     }
     return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 
@@ -319,6 +329,7 @@ def app_version(js):
 
 HEAD_TAGS = '''<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-dark-192.png" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/png" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">

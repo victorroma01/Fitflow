@@ -6,7 +6,7 @@ name: Comprobar Firebase
 on:
   workflow_dispatch:
   push:
-    branches: [main, desarrollo-1.0.0]
+    branches: [main, 'desarrollo-*']
     paths:
       - tools/admin/**
       - .github/workflows/firebase-comprobar.yml

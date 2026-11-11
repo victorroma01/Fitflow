@@ -27,30 +27,27 @@
 
 ## Estado
 
-La versión publicada es la **1.24.0**, la última de la serie de prueba. La **V1.0.0** está en desarrollo en la rama
-`desarrollo-1.0.0`, por milestones que se siguen en GitHub:
+La versión publicada es la **V1.0.1**. La **V1.0.2** se desarrolla en la rama `desarrollo-1.0.2` y se publica solo con la
+confirmación del propietario. Los requisitos de cada versión se siguen en GitHub, por milestones:
 
 | Milestone | Contenido |
 | --- | --- |
-| M0 · Análisis y validación | Dudas, diseño del servidor y simulaciones. Hecho. |
-| M1 · Base técnica | Limpieza del código, versión 1.0.0 y documentación. Hecho. |
-| M2 · Cuentas y Firebase | Usuario y contraseña, roles, datos en la nube y seguridad. Hecho en la rama. |
-| M3 · Programas | Técnicas de intensidad, programas nuevos y por género, rotación, semana de descarga y consejo y ejecución de cada ejercicio. Hecho en la rama. |
-| M4 · Pantalla de entrenamiento | Iconos, desplegables cortos, peso sugerido, ventana de cada técnica, superseries encadenadas, barra inferior y reloj del WOD. Hecho en la rama. |
-| M5 · Perfil y seguimiento | Recordatorio de pesaje, análisis mensual en PDF, fallos y sugerencias con respuesta, nota de actualización y copia de seguridad única en la nube. Hecho en la rama. |
-| M6 · Experiencia y plataformas | Más colores y uno propio, recorrido de la primera vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android, accesos directos y globo en el icono, con pruebas en Android e iPhone. Hecho en la rama. |
+| M0 a M6 · V1.0.0 | Análisis, base técnica, cuentas y Firebase, programas, pantalla de entrenamiento, seguimiento y experiencia. Publicado y cerrado. |
 | M7 · Imágenes | Pospuesto por decisión del propietario, como el fondo del login (F-33, T-18). |
-| M8 · Cierre | Revisión final del código, pruebas, [informe de issues](docs/tecnica/issues.md) y documentación. Hecho en la rama; la publicación, a la espera de confirmación. |
+| M8 · Cierre | Publicación de la V1.0.0 ([informe de issues](docs/tecnica/issues.md)); queda la prueba en un Android de verdad. |
+| **V1.0.1 · Correcciones y mejoras** | Lo encontrado al probar la V1.0.0 en el iPhone y las mejoras pedidas: bienvenida y datos de una cuenta nueva, empezar sin programa, logo nuevo, paso al día siguiente, RPE opcional, Nutri-Score, «Mis alimentos», recuento de iPhone y Android. Publicado. |
+| V1.0.2 · Código y técnica | Código más claro y atómico y las issues técnicas pendientes (almacenamiento, App Check, accesibilidad, rendimiento…). |
+| App móvil · Ideas futuras | Lo que necesita una app de tienda (vibración en iPhone, recordatorio directo al calendario y notificaciones) y las interfaces de entrenador y nutricionista. Sin fecha. |
 
 ## Qué hace
 
 | Área | Funciones |
 | --- | --- |
-| **Workout** | Programas listos en tres niveles (entre ellos Push Pull Leg y Full Body en ciclo y Glúteo y pierna), recomendados según el sexo; programas propios (guiados o con tus workouts) y compartidos por código; 10 técnicas de intensidad; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida y discos; semana de descarga y rotación de ejercicios; librería de más de 550 ejercicios, cada uno con su consejo y su ejecución; WOD y cardio. |
-| **Nutrición** | Comidas del día con macros, día de entreno o de descanso según tu rutina, «Mi nutrición» (objetivos según tu gasto o a mano), agua, plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras. |
+| **Workout** | Programas listos en tres niveles (entre ellos Push Pull Leg y Full Body en ciclo y Glúteo y pierna), recomendados según el sexo; programas propios (guiados o con tus workouts) y compartidos por código; 10 técnicas de intensidad; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida, discos y RPE opcional; paso solo al día siguiente; semana de descarga y rotación de ejercicios; librería de más de 550 ejercicios, cada uno con su consejo y su ejecución; WOD y cardio. |
+| **Nutrición** | Comidas del día con macros, día de entreno o de descanso según tu rutina, «Mi nutrición» (objetivos según tu gasto o a mano), agua, plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras, con Nutri-Score; «Mis alimentos» con lo buscado o escaneado. |
 | **Dashboard** | Entrenos, volumen, rachas, récords, progreso por ejercicio, calendario y peso corporal. |
 | **Perfil** | Plan, medidas, logros con medallas, exportación a CSV, datos biométricos y Ajustes (cuenta, apariencia con color propio, unidades, sonido, copia de seguridad, actualizaciones, diagnóstico e informe de fallos). |
-| **En el móvil** | Recorrido de la primera vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android y accesos directos del icono. |
+| **En el móvil** | Bienvenida y datos de una cuenta nueva, recorrido de la primera vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android y accesos directos del icono, cada uno con su icono; logo para tema claro y oscuro. |
 | **Cuenta** | Usuario y contraseña, sin datos personales; datos en la nube (Firebase) para usar varios móviles, también sin conexión; roles de administrador y usuario. |
 
 Todo, pantalla a pantalla, en la [documentación funcional](docs/funcional/README.md).
@@ -94,7 +91,8 @@ Cómo añadir una función, las reglas de calidad y cómo se publica una versió
 
 © 2026 V. M. Rodriguez Mazuelas. Todos los derechos reservados.
 
-Uso personal y gratuito de la app tal como se ofrece en su dirección oficial; no se permite copiar, modificar, redistribuir ni explotar
-comercialmente el código, los textos, los diseños ni las imágenes sin autorización. Condiciones completas en [`LICENSE`](LICENSE).
+Uso personal y gratuito durante la fase de pruebas, tal como se ofrece en su dirección oficial. Durante la fase de pruebas existe
+el riesgo de pérdida total o parcial de datos. No se permite copiar, modificar, redistribuir ni explotar comercialmente el código,
+los textos, los diseños ni las imágenes sin autorización. Condiciones completas en [`LICENSE`](LICENSE).
 
 Los consejos de entrenamiento y nutrición son orientativos y no sustituyen el consejo de un profesional sanitario.

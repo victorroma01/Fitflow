@@ -19,13 +19,13 @@ button:active {
   box-shadow:0 8px 24px #0002;
 }
 .pr {
-  background:linear-gradient(135deg,#b183ff,#7a45ee);
+  background:linear-gradient(135deg,var(--a1),var(--a2));
   color:#fff;
-  box-shadow:0 6px 18px #7a45ee55;
+  box-shadow:0 6px 18px color-mix(in srgb,var(--a2) 33%,transparent);
 }
 .hero {
-  background:radial-gradient(120% 100% at 0 0,#4b2a90,var(--cd) 72%);
-  border-color:#3b2a6b;
+  background:radial-gradient(120% 100% at 0 0,var(--a3),var(--cd) 72%);
+  border-color:color-mix(in srgb,var(--a3) 70%,var(--ln));
   color:#f4f4f6;
 }
 .hero small {
@@ -58,8 +58,8 @@ button:active {
   border-radius:14px;
 }
 .dy.on {
-  background:linear-gradient(135deg,#b183ff,#7a45ee);
-  box-shadow:0 4px 14px #7a45ee66;
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  box-shadow:0 4px 14px color-mix(in srgb,var(--a2) 40%,transparent);
 }
 nav {
   backdrop-filter:blur(16px);
@@ -78,7 +78,7 @@ input,select,textarea {
 input:focus,select:focus,textarea:focus {
   outline:0;
   border-color:var(--ac);
-  box-shadow:0 0 0 3px #9b5cf633;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--a2) 20%,transparent);
 }
 .r input {
   text-align:center;
@@ -140,10 +140,11 @@ details[open]>summary::after {
 .mb {
   border-radius:16px;
 }
+/* el color de acento de partida (Azul eléctrico, profile/appearance); la app pone el elegido al arrancar */
 :root {
-  --a1:#b183ff;
-  --a2:#7a45ee;
-  --a3:#4b2a90;
+  --a1:#4da3ff;
+  --a2:#1565ff;
+  --a3:#0b3a9c;
   --ft:#fff;
 }
 .pr {

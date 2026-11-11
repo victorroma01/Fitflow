@@ -1,6 +1,9 @@
 /* ═══ core/ui ═══
    Hojas inferiores (sheet, fullPage), diálogos (dialog, confirmDialog), menú lateral y componentes base.
-   Define: sheetBarFix, sheet, confirmDialog, dialog, onSheetClose, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 6
+   Las páginas (fullPage) llevan un rastro: al pasar de una a una subpágina suya, la de antes se guarda tal como estaba. Con
+   eso, al volver queda en el punto en que se dejó y, mientras la subpágina se desliza con el dedo, debajo se ve la página a la
+   que se vuelve y no la pestaña (showPageBelow, para core/swipe; I-20).
+   Define: sheetBarFix, pageTrail, pageKey, backLink, swapPage, showPageBelow, sheet, confirmDialog, dialog, onSheetClose, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 6
 */
 import { $ } from './util.js';
 import { logError } from './errors.js';
@@ -22,16 +25,76 @@ function sheetBarFix() {
     logError('barra de la hoja', e);
   }
 }
+/* rastro de páginas: las que quedan «debajo» de la subpágina abierta, de la más antigua a la más nueva.
+   { key: clave de la página, back: a dónde lleva su «←», y: desplazamiento, nodes: su contenido (DocumentFragment) } */
+const pageTrail = [];
+/* la clave de una página es su título (el de pgHead); '' si no lo lleva */
+const pageKey = h => (/<h1 class="pgt">(.*?)<\/h1>/.exec(h) || [])[1] || '';
+/* a dónde lleva el «←» de la página p (acción y dato), o '' si la cierra o no lo tiene: con '' es una página de primer nivel */
+const backLink = p => {
+  const b = p.querySelector('[aria-label="Volver"]');
+  return b && b.dataset.a != 'cl' ? b.dataset.a + ':' + (b.dataset.i || '') : '';
+};
+/* Cambia el contenido de la página abierta por h y pone al día el rastro. Devuelve true si con eso se vuelve a la página de
+   antes, que queda en el punto en que se dejó. */
+const swapPage = (p, h) => {
+  const key = pageKey(h);
+  p.classList.remove('still');
+  /* la misma página, pintada de nuevo */
+  if (key == p.dataset.pg) {
+    p.innerHTML = h;
+    sheetBarFix();
+    return false;
+  }
+  const from = { key: p.dataset.pg, back: backLink(p), y: p.scrollTop, nodes: document.createDocumentFragment() };
+  from.nodes.append(...p.childNodes);
+  p.innerHTML = h;
+  p.dataset.pg = key;
+  sheetBarFix();
+  const top = pageTrail[pageTrail.length - 1];
+  if (top && top.key == key) {
+    pageTrail.pop();
+    p.scrollTop = top.y;
+    return true;
+  }
+  const back = backLink(p);
+  if (!back)
+    pageTrail.length = 0;
+  /* con el mismo «←» que la de antes es otra página del mismo nivel, no una subpágina suya */
+  else if (back != from.back)
+    pageTrail.push(from);
+  return false;
+};
+/** Mientras una subpágina se desliza con el dedo: pone debajo la página a la que se vuelve, tal como se dejó, y devuelve la
+    función que la quita. null si lo abierto no es una subpágina (debajo se ve la pestaña). */
+export const showPageBelow = () => {
+  const s = $('#sh');
+  const p = s.querySelector('.sp');
+  const top = pageTrail[pageTrail.length - 1];
+  if (!top || !p || s.className != 'full' || !backLink(p))
+    return null;
+  const u = document.createElement('div');
+  u.className = 'sp spu';
+  u.inert = true;
+  u.setAttribute('aria-hidden', 'true');
+  u.append(top.nodes);
+  s.append(u);
+  u.scrollTop = top.y;
+  return () => {
+    top.nodes.append(...u.childNodes);
+    u.remove();
+  };
+};
 export const sheet = h => {
   const s = $('#sh');
   const p = s.querySelector('.sp');
   if (h && p && s.className == 'full') {
-    p.innerHTML = h;
-    sheetBarFix();
+    swapPage(p, h);
     return;
   }
+  pageTrail.length = 0;
   s.className = '';
-  s.innerHTML = h ? html`<div class="bk" data-a="cl"></div><div class="sp">${raw(h)}</div>` : '';
+  s.innerHTML = h ? html`<div class="bk" data-a="cl"></div><div class="sp" data-pg="${pageKey(h)}">${raw(h)}</div>` : '';
   sheetBarFix();
 };
 export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'zno', ''], [l, a, 'pr']]);
@@ -62,10 +125,17 @@ export const sheetToTop = () => {
   if (p)
     p.scrollTop = 0;
 };
+/** Abre h a pantalla completa, o lo pone en la página ya abierta: arriba del todo, salvo al volver a la página de antes. */
 export const fullPage = h => {
+  const s = $('#sh');
+  const p = s.querySelector('.sp');
+  if (p && s.className == 'full') {
+    if (!swapPage(p, h))
+      p.scrollTop = 0;
+    return;
+  }
   sheet(h);
-  $('#sh').className = 'full';
-  sheetToTop();
+  s.className = 'full';
 };
 export const pgHead = (t, back) => html`<div class="row"><button data-a="${back || 'cl'}" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 class="pgt">${raw(t)}</h1>`;
 A.menu = () => {

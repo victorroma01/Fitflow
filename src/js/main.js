@@ -3,6 +3,7 @@
    build.py lo compila con esbuild en un solo archivo (archivo único) o en el paquete con carga diferida.
 */
 import './core/util.js';
+import './core/platform.js';
 import './core/html.js';
 import './core/toast.js';
 import './core/morph.js';
@@ -26,6 +27,7 @@ import './data/techniques.js';
 import './data/rotation.js';
 import './core/state.js';
 import './core/icons.js';
+import './core/brand.js';
 import './core/ui.js';
 import './core/help.js';
 import './core/events.js';
@@ -45,6 +47,7 @@ import './workout/week.js';
 import './workout/technique.js';
 import './workout/order.js';
 import './workout/day.js';
+import './workout/rpe.js';
 import './workout/session.js';
 import './workout/finish.js';
 import './workout/resume.js';
@@ -85,6 +88,7 @@ import './system/diagnostics.js';
 import './system/report.js';
 import './system/updates.js';
 import './system/phone.js';
+import './system/welcome.js';
 import './system/tour.js';
 import './extras/anatomy.js';
 import './extras/summary.js';

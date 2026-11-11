@@ -133,6 +133,17 @@ def main(path):
             if wait_app:
                 wait(pg, "window.__ffok && !document.getElementById('lgw') && document.querySelector('nav').style.display!='none'", 20000)
 
+        def new_account_bio(pg, sex):
+            """Bienvenida de una cuenta nueva: «Siguiente», los seis datos y «Guardar y continuar»."""
+            pg.click('#wlc [data-a=wln]')
+            pg.click('#wlc [data-a=wlsx][data-v=%s]' % sex)
+            for k, v in (('age', '31'), ('h', '168'), ('w', '62')):
+                pg.fill('#wl_' + k, v)
+            pg.select_option('#wl_act', '1')
+            pg.select_option('#wl_goal', '1')
+            pg.click('#wlc [data-a=wlok]')
+            wait(pg, "!document.getElementById('wlc') && !!document.querySelector('#tour .trst')")
+
         def sync(pg):
             pg.evaluate('syncNow()')
             return pg.evaluate('syncState().st')
@@ -145,6 +156,7 @@ def main(path):
         # ── un móvil sin cuenta: solo el inicio de sesión ──
         c1, p1 = device()
         check('sin sesión, solo el inicio de sesión (sin la barra de pestañas)', p1.evaluate("!!document.getElementById('lgw') && document.querySelector('nav').style.display=='none'"))
+        check('el inicio de sesión lleva el logo (F-40)', p1.evaluate("(i=>!!i&&i.alt=='StrataFit'&&i.complete&&i.naturalWidth==288)(document.querySelector('#lgw img.brl'))"))
         check('sin datos personales en el registro: solo usuario y contraseña', p1.evaluate("(A.lgm(0,{dataset:{v:'up'}}),[...document.querySelectorAll('#lgw input')].map(i=>i.id).join())") == 'lgu,lgp,lgp2')
         p1.fill('#lgu', 'Ana_1'); p1.fill('#lgp', 'contraseña-1'); p1.fill('#lgp2', 'otra-cosa')
         p1.click('[data-a=lgo]')
@@ -156,18 +168,26 @@ def main(path):
         login(p1, 'Ana_1', 'contraseña-1', new=True)
         uid = fb.uid_of('Ana_1')
         prof = fb.data('users/' + uid) or {}
-        check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm'}, str(prof))
+        check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm', 'os'}, str(prof))
         check('y se suben el índice y el núcleo', fb.data('users/%s/data/index' % uid) is not None and fb.part('users/%s/data/core' % uid) is not None)
         check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.pfn').textContent)") == 'Ana_1')
         check('el correo técnico no aparece en la app', '@stratafit.app' not in p1.content())
 
-        # ── recorrido de la primera vez (F-36): sale en la cuenta nueva; visto en un móvil, no vuelve a salir en otro ──
-        wait(p1, "!!document.querySelector('#tour.trs')", 30000)
-        check('cuenta nueva: tras la primera sincronización sale el recorrido, con «Empezar el recorrido» y «Omitir»', p1.evaluate("[...document.querySelectorAll('#tour button')].map(b=>b.textContent).join('|')") == 'Empezar el recorrido|Omitir')
+        # ── cuenta nueva (I-23, I-24): sin programa y, tras la primera sincronización, la bienvenida con sus datos; después, el
+        #    recorrido de la primera vez (F-36). Visto en un móvil, no vuelve a salir en otro ──
+        check('la cuenta nueva empieza sin programa: «Seleccionar programa»', p1.evaluate("S.np===1 && S.plan.every(d=>!d.ex.length) && (S.tab=0,R(),!!document.querySelector('#app .npc'))"))
+        wait(p1, "!!document.getElementById('wlc')", 30000)
+        check('cuenta nueva: tras la primera sincronización sale la bienvenida', 'Gracias por instalar la app' in p1.inner_text('#wlc') and p1.evaluate("!document.getElementById('tour')"))
+        new_account_bio(p1, 'F')
+        check('con los datos guardados, el recorrido empieza por su primer paso', p1.evaluate("document.querySelector('#tour .trst').textContent") == 'Paso 1 de 5' and p1.evaluate('S.nw') is None)
         p1.click('#tour [data-a=trx]')
         check('«Omitir» lo da por visto', p1.evaluate("!document.getElementById('tour') && S.tour") == 1)
         sync(p1)
-        check('y queda en las preferencias del perfil de la cuenta', (fb.data('users/' + uid) or {}).get('pr', {}).get('tour') == 1, str((fb.data('users/' + uid) or {}).get('pr')))
+        prof = fb.data('users/' + uid) or {}
+        core = fb.part('users/%s/data/core' % uid) or {}
+        check('y queda en las preferencias del perfil de la cuenta, con el sexo elegido', prof.get('pr', {}).get('tour') == 1 and prof.get('sx') == 'F', str(prof))
+        check('el perfil guarda el sistema del móvil, a efectos estadísticos (T-28; en estas pruebas, ni iPhone ni Android: «otro»)', prof.get('os') == 'otro', str(prof))
+        check('en la nube, ya sin la bienvenida pendiente y aún sin programa', 'nw' not in core and core.get('np') == 1 and core.get('bio', {}).get('h') == '168', str({k: core.get(k) for k in ('nw', 'np', 'bio')}))
 
         # ── datos en el móvil 1 → la nube ──
         p1.evaluate("S.logs.push({d:'%s',n:'Pecho',v:4000,s:16,m:55,q:7});S.meals['%s']={0:[%s]};saveState()" % (today, today, json.dumps(arroz)))
@@ -263,7 +283,8 @@ def main(path):
         # ── el admin: Administración, cuentas y contraseña temporal ──
         c4, p4 = device()
         login(p4, 'VictorAdmin_', 'admin-clave-1', new=True)
-        wait(p4, "!!document.querySelector('#tour.trs')", 30000)
+        wait(p4, "!!document.getElementById('wlc')", 30000)
+        new_account_bio(p4, 'M')
         p4.click('#tour [data-a=trx]')
         check('una cuenta nueva no es admin: sin Administración', p4.evaluate("(S.tab=3,R(),!document.querySelector('[data-a=adm]'))"))
         fb.set_role('VictorAdmin_', 'admin')
@@ -273,11 +294,16 @@ def main(path):
         p4.evaluate('S.tab=3;R()')
         check('con el rol de admin (desde GitHub), Perfil enseña Administración', p4.evaluate("!!document.querySelector('[data-a=adm]')"))
         temp = fb.reset_password('Ana_1')
-        fb.put('users/uintruso', {'u': {'stringValue': '<img src=x onerror=alert(1)>'}, 'sx': {'stringValue': 'M'}})
+        fb.put('users/uintruso', {'u': {'stringValue': '<img src=x onerror=alert(1)>'}, 'sx': {'stringValue': 'M'}, 'os': {'stringValue': 'ios'}})
+        fb.put('users/uviejo', {'u': {'stringValue': 'Viejo_1'}, 'sx': {'stringValue': 'F'}})
         p4.evaluate('A.adm()')
         wait(p4, "document.querySelector('#sh') && !document.querySelector('#sh').innerText.includes('Cargando')", 15000)
         txt = p4.inner_text('#sh')
         check('Administración lista las cuentas', 'Ana_1' in txt and 'VictorAdmin_' in txt, txt[:300])
+        os_n = p4.evaluate("[...document.querySelectorAll('#sh .aos > div')].map(d=>d.querySelector('small').textContent+':'+d.querySelector('b').textContent)")
+        check('y cuántas usan iPhone, Android u otro sistema; las que aún no abrieron la 1.0.1, «sin dato» (T-28)', os_n == ['iPhone:1', 'Android:0', 'Otro:2', 'Sin dato:1'], str(os_n))
+        row = p4.evaluate("[...document.querySelectorAll('#sh .acl .it')].map(r=>r.innerText.replace(/\\s+/g,' ')).find(t=>t.startsWith('Ana_1'))")
+        check('con el sistema de cada cuenta en su fila', row and 'Otro' in row, str(row))
         check('un usuario con código se ve como texto (nada se ejecuta)', p4.evaluate("!document.querySelector('#sh img') && document.querySelector('#sh').innerText.includes('<img src=x')"))
         check('la contraseña temporal sale oculta hasta pulsar «Ver»', temp not in txt and 'Ana_1' in txt)
         p4.click('#sh [data-a=adv]')
@@ -332,7 +358,7 @@ def main(path):
         rid = p2.evaluate('S.rp[0].id')
         rdoc = fb.data('reports/' + rid) or {}
         check('el aviso llega a la nube: pendiente, con el usuario y el id de la cuenta', rdoc.get('st') == 'p' and rdoc.get('u') == 'Ana_1' and rdoc.get('uid') == uid and rid.startswith(uid + '-') and rdoc.get('k') == 'f' and rdoc.get('a') == 'Algo se ve mal', str(rdoc))
-        check('con los datos técnicos (versión y navegador; nada personal)', 'StrataFit 1.0.0' in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@stratafit.app' not in json.dumps(rdoc))
+        check('con los datos técnicos (versión y navegador; nada personal)', ('StrataFit ' + p2.evaluate('APPV')) in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@stratafit.app' not in json.dumps(rdoc))
         fb.set_offline(c2, True)
         p2.evaluate("A.rpo();document.querySelector('[data-a=rpk][data-v=s]').click()")
         p2.evaluate("document.getElementById('rpx').value='Poder exportar el análisis también en Excel';A.rps()")
@@ -344,7 +370,9 @@ def main(path):
         sid = p2.evaluate('S.rp[0].id')
         check('al volver la red se envía sola, una vez', (fb.data('reports/' + sid) or {}).get('k') == 's' and sync(p2) == 'ok')
         p4.evaluate('A.adm()')
-        wait(p4, "document.querySelector('#sh') && !document.querySelector('#sh').innerText.includes('Cargando')", 15000)
+        txt = p4.inner_text('#sh')
+        check('al abrir Administración otra vez se ve lo ya cargado mientras se actualiza, sin la pantalla de «Cargando…» (I-20)', 'Cargando' not in txt and 'Ana_1' in txt and p4.evaluate("!document.querySelector('#sh .adk')||!/[A-Za-z0-9]/.test(document.querySelector('#sh .adk').textContent)"), txt[:200])
+        wait(p4, "(document.querySelector('#sh [data-a=adr]')||{innerText:''}).innerText.includes('2 pendientes')", 15000)
         check('Administración dice cuántos hay pendientes', '2 pendientes' in p4.inner_text('#sh [data-a=adr]'), p4.inner_text('#sh')[:200])
         p4.evaluate('A.adr()')
         wait(p4, "!!document.querySelector('#sh .adrf')", 15000)

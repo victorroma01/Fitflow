@@ -1,7 +1,7 @@
 # Pruebas y publicación de StrataFit.
-#  · En cada solicitud de fusión y en cada cambio en main o en la rama de desarrollo de la V1.0.0 (desarrollo-1.0.0): compilar
+#  · En cada solicitud de fusión y en cada cambio en main o en una rama de desarrollo (desarrollo-1.0.2, desarrollo-…): compilar
 #    y probar en Chrome (Chromium) y en Safari (WebKit), y las reglas de Firestore y la nube con el emulador de Firebase. En
-#    esa rama no se etiqueta ni se publica nada.
+#    las ramas de desarrollo no se etiqueta ni se publica nada.
 #  · En las solicitudes de fusión, además: comparar con la versión anterior (informativo, salvo con la etiqueta «refactor»).
 #  · Siempre: decir desde dónde publica GitHub Pages y, si publica desde la rama, comprobar que la copia de la raíz es la app
 #    compilada de este código (tools/pages.py).
@@ -11,7 +11,7 @@ name: Pruebas
 
 on:
   push:
-    branches: [main, desarrollo-1.0.0]
+    branches: [main, 'desarrollo-*']
   pull_request:
 
 jobs:
@@ -168,7 +168,7 @@ jobs:
           npm install --no-audit --no-fund
           python3 build.py --only app
       - name: Paquete para GitHub Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist/app
       - name: ¿GitHub Pages publica desde aquí?
@@ -208,4 +208,4 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

@@ -10,9 +10,9 @@ import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
 import { stateRecovered } from './persist.js';
 import { A, C, U } from './registry.js';
-import { groupOf, parseProgram } from '../data/library.js';
+import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
-import { addState, flushState, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
+import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
@@ -21,7 +21,7 @@ import { libBody, libState } from '../library/browse.js';
 import { clone, progDraft } from '../programs/create.js';
 import { levelPlan } from '../programs/levels.js';
 import { isDeloadWeek } from '../workout/deload.js';
-import { planIndex } from '../workout/week.js';
+import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { updatesOn } from '../system/updates.js';
@@ -36,6 +36,7 @@ import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
 import { refreshReports } from '../system/report.js';
 import { accentNow, customAccent } from '../profile/appearance.js';
 import { backTarget } from './back.js';
+import { deviceOS } from './platform.js';
 import { tourCheck } from '../system/tour.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
@@ -44,6 +45,7 @@ const DEBUG_NAMES = {
   account: [() => account],
   ACHIEVEMENTS: [() => ACHIEVEMENTS],
   addState: [() => addState],
+  applyTheme: [() => applyTheme],
   APPV: [() => APPV],
   backTarget: [() => backTarget],
   buildBackup: [() => buildBackup],
@@ -54,6 +56,7 @@ const DEBUG_NAMES = {
   customAccent: [() => customAccent],
   dayInfo: [() => dayInfo],
   dayKey: [() => dayKey],
+  deviceOS: [() => deviceOS],
   dialog: [() => dialog],
   errorLog: [() => errorLog],
   EX_PHOTO_KEY: [() => EX_PHOTO_KEY],
@@ -71,10 +74,13 @@ const DEBUG_NAMES = {
   libBody: [() => libBody],
   libState: [() => libState],
   logError: [() => logError],
+  markNewAccount: [() => markNewAccount],
   medalSvg: [() => medalSvg],
   nutriDayOffset: [() => nutriDayOffset],
   parseBackup: [() => parseBackup],
   parseProgram: [() => parseProgram],
+  PROGRAM_NAMES: [() => PROGRAM_NAMES],
+  PROGRAMS: [() => PROGRAMS],
   pendingDocs: [() => pendingDocs],
   pendingRestore: [() => pendingRestore, setPendingRestore],
   planIndex: [() => planIndex],
@@ -90,6 +96,7 @@ const DEBUG_NAMES = {
   snapTx: [() => snapTx],
   stateRecovered: [() => stateRecovered],
   Store: [() => Store],
+  syncSel: [() => syncSel],
   syncNow: [() => syncNow],
   syncState: [() => syncState],
   takeSnapshot: [() => takeSnapshot],
