@@ -39,22 +39,24 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 ### Correcciones
 - En el iPhone, deslizar para volver ya no deja la pantalla en negro, tampoco en un entreno.
 - El sonido vuelve al quitar el silencio del móvil, sin tener que salir de la app.
-- La búsqueda de alimentos ya no falla a ratos: prueba otro buscador y lo reintenta, y dice claramente si no hay conexión, si el
-  servicio está saturado o si no hay resultados.
+- La búsqueda de alimentos y el escáner de códigos ya no fallan a ratos: prueban otro servicio y lo reintentan, y dicen
+  claramente si no hay conexión, si el servicio está saturado o si no hay resultados.
 
 ### Interno
 - Atrás en iPhone (I-20): sin la entrada de más del historial (`core/back`, `core/platform`); mientras algo sigue al dedo, sin
   desenfoque de fondo; rastro de páginas en `core/ui` para ver debajo la página a la que se vuelve.
 - Sonido (I-21): el `AudioContext` se reanuda antes de cada aviso, también desde «interrupted», y se suspende al acabar.
 - Alimentos en línea (I-22): primero search-a-licious y `cgi/search.pl` de respaldo, reintento, caché de búsquedas y errores con
-  nombre; `tests/foods.py` con Open Food Facts simulado.
+  nombre; `tests/foods.py` con Open Food Facts simulado. Escáner: cada apertura de la cámara y cada búsqueda por código llevan su
+  número (`scanTry`), y lo que llega tarde se apaga o se ignora.
 - Barra de pestañas (I-19): medidas guardadas, burbuja sin transición al arrastrar y pintado de la pestaña tras el siguiente
   fotograma. Color propio (I-18): vista previa por fotograma y un solo guardado.
 - `system/welcome`, `core/brand`, `workout/rpe` y `tools/marca.py` (logo e iconos desde `src/img/brand`); claves nuevas `np`, `nw`,
   `mv` (cambios de datos de una versión a otra, `core/repair`), `rpe`, y `ns` y `ean` en `cf` y `bc`.
 - Perfil de Firestore: campo `os` (T-28), en una escritura aparte; `firestore.rules` lo admite. *Desplegar reglas* ya no toca los
   índices (I-16) y sale `firestore.indexes.json`.
-- GitHub Actions prueba las ramas `desarrollo-*`.
+- GitHub Actions prueba las ramas `desarrollo-*`. Publicar en Pages con `upload-pages-artifact@v5` y `deploy-pages@v5`, con
+  Node.js 24 (I-07); las pruebas ya corren en Ubuntu 26.04.
 
 ## [1.0.0] — 2026-11-04
 

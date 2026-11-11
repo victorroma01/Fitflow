@@ -168,7 +168,7 @@ jobs:
           npm install --no-audit --no-fund
           python3 build.py --only app
       - name: Paquete para GitHub Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist/app
       - name: ¿GitHub Pages publica desde aquí?
@@ -208,4 +208,4 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

@@ -9,6 +9,14 @@ El logo de StrataFit tiene dos versiones, para el tema claro y para el oscuro. D
 ves; el inicio de sesión, que siempre es oscuro, lleva el oscuro. El icono de la pantalla de inicio es el del tema claro: el móvil lo
 fija al instalar la app y no cambia con el tema.
 
+Con la app ya instalada antes de la V1.0.1, el icono nuevo llega así:
+
+- **Android**: Chrome lo cambia solo, a veces al cabo de unos días.
+- **iPhone**: se queda el de antes hasta quitar la app de la pantalla de inicio y volver a añadirla desde Safari (Compartir →
+  Añadir a pantalla de inicio). Antes, comprueba en Ajustes → Cuenta que todo está sincronizado: al quitarla, el iPhone puede
+  borrar lo guardado en el móvil. Al volver a entrar con tu usuario, tus datos vuelven de la nube; los ajustes que son solo de ese
+  móvil (como el globo del icono) se eligen otra vez.
+
 ## La primera vez
 
 Al crear una cuenta (desde la V1.0.1), lo primero, cuando la app termina de cargar:
