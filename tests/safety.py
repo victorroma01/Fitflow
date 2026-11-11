@@ -84,6 +84,7 @@ def main(path):
             pg.clock.run_for(200)
             t = ev("document.querySelector('#diagt').value")
             check('el informe incluye versión, navegador y errores', ('StrataFit ' + ev('APPV')) in t and 'Navegador:' in t and 'e39' in t, t[:200])
+            check('y lo que tarda en pintarse cada pantalla, para comparar en el móvil un color de serie con uno propio (I-18)', 'Tiempo de pintado: media de' in t and 'en las últimas' in t, [l for l in t.split('\n') if 'pintado' in l])
             ev("document.querySelector('[data-a=diagClear]').click()")
             pg.clock.run_for(200)
             check('«Borrar errores» vacía el registro', ev('errorLog().length') == 0)
