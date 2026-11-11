@@ -12,7 +12,7 @@
    listas dentro de listas, y el historial las tiene.
    Lo de cada documento en la última sincronización se recuerda por huellas (clave `sync` de Store), no por copias: así se sabe
    qué cambió en cada lado sin duplicar los datos en el móvil.
-   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, push, syncRound, syncNow, syncSoon, retryLater, adapter, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, pruneIndex, push, syncRound, syncNow, syncSoon, retryLater, adapter, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
@@ -297,11 +297,15 @@ const pull = async (idx) => {
   /* desde aquí, sin esperas: lo local no puede cambiar mientras se junta */
   const local = localDocs();
   let touched = 0;
+  /* documentos que el índice nombra pero ya no existen (un borrado de la nube que se quedó a medias: I-11) */
+  const missing = [];
   for (const id of changed) {
     const kind = KINDS[id.split(':')[0]];
     const d = rv[id] ? got[docPath(id)] : null;
-    if (rv[id] && !d)
+    if (rv[id] && !d) {
+      missing.push(id);
       continue;
+    }
     let val = {};
     if (d) {
       try {
@@ -330,8 +334,29 @@ const pull = async (idx) => {
   }
   if (touched)
     afterApply();
+  if (missing.length)
+    await pruneIndex(idx, missing);
   saveMeta();
   return true;
+};
+/* quita del índice los documentos que ya no existen, para no volver a pedirlos en cada sincronización (I-11). Lo de este móvil
+   no se toca: si tenía algo de esos documentos, se vuelve a subir (paso 3), como si nunca se hubieran borrado. Si el índice
+   cambió entretanto, se deja para la próxima vez */
+const pruneIndex = async (idx, missing) => {
+  const p = { ...idx.data.p };
+  missing.forEach(id => {
+    delete p[id];
+    delete meta.base[id];
+  });
+  try {
+    const res = await commitWrites([setWrite(indexPath(), { p, m: Date.now(), d: meta.dev }, { updateTime: idx.ut })]);
+    idx.data.p = p;
+    idx.ut = res[0];
+  }
+  catch (e) {
+    if (e.code != 'FAILED_PRECONDITION' && e.code != 'ABORTED')
+      logError('sincronizar: limpiar el índice', e);
+  }
 };
 /* paso 3: subir lo cambiado en el móvil, con el índice, todo o nada. false si el índice cambió entretanto */
 const push = async (idx) => {

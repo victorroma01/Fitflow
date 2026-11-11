@@ -237,6 +237,21 @@ def main(path):
         sync(p1)
         check('un entreno borrado en un móvil se borra en el otro', sorted(p1.evaluate('S.logs.map(l=>l.n)')) == ['Pecho', 'Pierna'])
 
+        # ── el índice nombra un documento que ya no existe (un borrado de la nube a medias: I-11) ──
+        # el móvil 1 cambia las comidas (el índice sube de versión) y, antes de que el móvil 2 las baje, el documento desaparece
+        mpath = 'users/%s/meals/2026-11' % uid
+        p1.evaluate("S.water=Object.assign(S.water||{},{'%s':500});S.meals['%s'][1].push(%s);saveState()" % (today, today, json.dumps(pollo)))
+        sync(p1)
+        fb.docs.pop(mpath)
+        del fb.calls[:]
+        sync(p2)
+        idx = (fb.data('users/%s/data/index' % uid) or {}).get('p', {})
+        check('al sincronizar, el índice deja de nombrar lo que ya no existe y lo del móvil se vuelve a subir, sin perder nada (I-11)', 'meals:2026-11' in idx and fb.part(mpath) is not None and p2.evaluate("S.meals['%s'][0].length" % today) == 2, str([sorted(idx), fb.part(mpath) is not None]))
+        del fb.calls[:]
+        sync(p2)
+        check('y la siguiente sincronización ya no pide documentos de más', not any(c[1] == ':batchGet' for c in fb.calls), str(fb.calls[:6]))
+        sync(p1)
+
         # ── espera creciente tras cinco fallos ──
         c3, p3 = device()
         for _ in range(5):
