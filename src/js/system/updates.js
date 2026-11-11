@@ -181,6 +181,14 @@ export const whatsNewDue = () => {
   }
   /* hasta la 1.19.0 no se guardaba la versión: si ya había datos, es una actualización */
   const updated = prev ? prev != APPV : (S.logs.length > 0 || (S.cp || []).length > 0 || (S.cr || []).length > 0);
+  /* la versión con la que empezó este móvil, una sola vez: la que ya tenía (o '0', si era anterior a la 1.19.0) o esta, si es nuevo */
+  try {
+    if (!Store.get(Store.K.inst))
+      Store.set(Store.K.inst, prev || (updated ? '0' : APPV));
+  }
+  catch (e) {
+    logError('versión de partida', e);
+  }
   return updated && seen != APPV && RELEASE.sections.length > 0;
 };
 /** 1 si las novedades esperan a que termine el entreno en curso. */

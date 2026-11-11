@@ -55,6 +55,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   `mv` (cambios de datos de una versión a otra, `core/repair`), `rpe`, y `ns` y `ean` en `cf` y `bc`.
 - Perfil de Firestore: campo `os` (T-28), en una escritura aparte; `firestore.rules` lo admite. *Desplegar reglas* ya no toca los
   índices (I-16) y sale `firestore.indexes.json`.
+- Cada móvil anota la versión con la que empezó (`ffinst`): si es anterior a la 1.0.1, su icono es el de antes del logo nuevo.
 - GitHub Actions prueba las ramas `desarrollo-*`. Publicar en Pages con `upload-pages-artifact@v5` y `deploy-pages@v5`, con
   Node.js 24 (I-07); las pruebas ya corren en Ubuntu 26.04.
 
