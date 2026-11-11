@@ -103,7 +103,7 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
   preferencias que conoce la app (el color propio como `#rrggbb`, la pestaña al abrir de 0 a 3, el recorrido y las animaciones 0 o 1);
   solo valen cuentas con correo técnico; lo demás está denegado.
 - **Pruebas**: `tests/rules.test.mjs` las comprueba con el emulador en cada cambio (CI, «Reglas y nube»), junto con la app entera
-  contra el emulador (`tests/cloud.py`). Se despliegan desde GitHub Actions al fusionar en `main` («Desplegar reglas»).
+  contra el emulador (`tests/cloud.py`). Se despliegan desde GitHub Actions al fusionar en `main` («Desplegar reglas»), antes de publicar la app.
 - La clave de administrador (cuenta de servicio) solo existe como secreto de GitHub, `FIREBASE_SERVICE_ACCOUNT`: nunca en el código,
   en el registro ni en el chat. `.gitignore` excluye cualquier archivo de clave.
 - La CSP (`build.py`) abre solo `identitytoolkit`, `securetoken` y `firestore.googleapis.com`, además de Open Food Facts.
@@ -120,7 +120,7 @@ Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run wor
 | --- | --- | --- |
 | Restablecer contraseña | `admin-contrasena.yml` | Se escribe el usuario. Le pone una contraseña temporal, cierra sus sesiones y marca `mc` en su perfil; la contraseña solo se guarda en `adminInbox`, que el admin ve en Perfil → Administración durante 24 h. No aparece en el registro, que es público. |
 | Asignar rol | `admin-rol.yml` | Usuario y rol (admin o usuario). Vale la próxima vez que esa persona abra la app. |
-| Desplegar reglas | `firebase-reglas.yml` | Reglas de Firestore (`tools/admin/reglas.mjs`, con la API de reglas de Firebase; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Se lanza solo al fusionar en `main` un cambio de las reglas o del flujo. |
+| Desplegar reglas | `firebase-reglas.yml` | Reglas de Firestore (`tools/admin/reglas.mjs`, con la API de reglas de Firebase; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Al publicar, `pruebas.yml` lo llama tras las pruebas si cambian las reglas o el flujo, y la app no se publica hasta que termina bien (T-24). También a mano, desde `main`. |
 | Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuentas y acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
 
 Los flujos manuales solo aparecen en Actions cuando están en `main`.
