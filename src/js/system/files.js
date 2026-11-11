@@ -66,7 +66,7 @@ export const copyText = async (t, el) => {
     return false;
   }
 };
-A.zbc = () => {
+A.backupCopyText = () => {
   const e = $('#bk');
   try {
     navigator.clipboard.writeText(e.value);

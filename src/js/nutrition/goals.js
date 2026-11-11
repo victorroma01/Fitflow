@@ -39,7 +39,7 @@ function myNutritionPage() {
   const diff = t ? roundInt(n.k - t.td) : null;
   const mac = (l, pc, g, c) => html`<div class="mnq"><small style="color:var(${raw(c)})">${icon('tgt', 13)}${pc} %</small><b>${roundInt(g)}</b><small>${raw(l)}</small></div>`;
   const sel = (c, label, list, cur) => html`<select data-c="${c}" aria-label="${label}">${list.map((x, i) => html`<option value="${i}"${i == cur ? ' selected' : ''}>${x}</option>`)}</select>`;
-  return html`<div id="mny"><div class="row"><button data-a="cl" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div><div class="mnr"><div class="mnk">${ringSvg(n)}<div class="mnc"><b>${roundInt(n.k)}</b><small>kcal</small></div></div><div class="mnx">${mac('Hidratos', n.c, tg[1], '--ctx')}${mac('Proteínas', n.p, tg[2], '--ptx')}${mac('Grasas', n.f, tg[3], '--gtx')}</div></div><div class="mnl"><label class="mnw"><span>Peso</span><span class="mnv"><input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="mnw" value="${S.bio.w || ''}" placeholder="—" aria-label="Peso en kg"> kg</span></label><div class="mnw"><span>Objetivo</span><span class="mnv" aria-hidden="true"><b>${raw(DIET_TYPES[di][0])}</b>${raw(diff == null ? '' : html`<i class="mnd">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`)}${icon('chr', 16)}</span>${sel('mnd', 'Objetivo: tipo de dieta', DIET_TYPES.map(d => d[0]), di)}</div><div class="mnw"><span>Actividad</span><span class="mnv" aria-hidden="true"><b>${raw(ACTIVITY_LEVELS[act][0])}</b>${icon('chr', 16)}</span>${sel('mna', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1]), act)}</div><div class="mnw"><span>Comidas al día</span><span class="mnv" aria-hidden="true"><b>${n.n}</b>${icon('chr', 16)}</span>${sel('mnn', 'Comidas al día', [2, 3, 4, 5, 6, 7, 8].map(String), n.n - 2)}</div></div><p class="mu mnp">${raw(t ? DIET_TYPES[di][4] + '. Gasto diario estimado: ' + roundInt(t.td) + ' kcal (metabolismo basal ' + roundInt(t.bm) + ' kcal).' : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.')}</p><div style="height:120px"></div><div class="sb mnb"><button data-a="nmm">Ajustar a mano</button><button class="pr" data-a="nmr">Recalcular con mis datos</button></div></div>`;
+  return html`<div id="mny"><div class="row"><button data-a="closeSheet" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div><div class="mnr"><div class="mnk">${ringSvg(n)}<div class="mnc"><b>${roundInt(n.k)}</b><small>kcal</small></div></div><div class="mnx">${mac('Hidratos', n.c, tg[1], '--ctx')}${mac('Proteínas', n.p, tg[2], '--ptx')}${mac('Grasas', n.f, tg[3], '--gtx')}</div></div><div class="mnl"><label class="mnw"><span>Peso</span><span class="mnv"><input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="goalsWeight" value="${S.bio.w || ''}" placeholder="—" aria-label="Peso en kg"> kg</span></label><div class="mnw"><span>Objetivo</span><span class="mnv" aria-hidden="true"><b>${raw(DIET_TYPES[di][0])}</b>${raw(diff == null ? '' : html`<i class="mnd">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`)}${icon('chr', 16)}</span>${sel('goalsDiet', 'Objetivo: tipo de dieta', DIET_TYPES.map(d => d[0]), di)}</div><div class="mnw"><span>Actividad</span><span class="mnv" aria-hidden="true"><b>${raw(ACTIVITY_LEVELS[act][0])}</b>${icon('chr', 16)}</span>${sel('goalsActivity', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1]), act)}</div><div class="mnw"><span>Comidas al día</span><span class="mnv" aria-hidden="true"><b>${n.n}</b>${icon('chr', 16)}</span>${sel('goalsMeals', 'Comidas al día', [2, 3, 4, 5, 6, 7, 8].map(String), n.n - 2)}</div></div><p class="mu mnp">${raw(t ? DIET_TYPES[di][4] + '. Gasto diario estimado: ' + roundInt(t.td) + ' kcal (metabolismo basal ' + roundInt(t.bm) + ' kcal).' : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.')}</p><div style="height:120px"></div><div class="sb mnb"><button data-a="openManualGoals">Ajustar a mano</button><button class="pr" data-a="goalsRecalculate">Recalcular con mis datos</button></div></div>`;
 }
 /** Vuelve a pintar la página abierta («Mi nutrición» o «Ajustar a mano») y la pestaña de detrás. */
 const refreshGoals = () => {
@@ -50,18 +50,18 @@ const refreshGoals = () => {
 /* ajustar a mano: kcal y porcentajes; la vista previa dice los gramos y si los porcentajes suman 100 */
 const manualPage = () => {
   const n = S.nu;
-  const f = (id, l, v, mn, mx) => html`<div><label for="${id}">${raw(l)}</label><input id="${id}" type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${v}" data-u="mnp"></div>`;
-  return html`<div id="mnm">${pgHead('Ajustar a mano', 'nmy')}<p class="mu" style="margin:-6px 0 12px">Elige tus kcal y el reparto de macros. Mientras estén a mano, cambiar tu peso o tu actividad no los cambia; para volver a tu plan, pulsa «Recalcular con mis datos».</p>${f('mnk', 'Kcal diarias', n.k, 800, 8000)}<div class="g2" style="grid-template-columns:repeat(3,1fr)">${f('mnc0', '% Hidratos', n.c, 0, 100)}${f('mnp0', '% Proteínas', n.p, 0, 100)}${f('mnf0', '% Grasas', n.f, 0, 100)}</div><p id="mnv" class="mu" style="margin:12px 2px"></p><div style="height:90px"></div><div class="sb"><button class="pr" data-a="nms" style="width:100%;padding:14px">Guardar</button></div></div>`;
+  const f = (id, l, v, mn, mx) => html`<div><label for="${id}">${raw(l)}</label><input id="${id}" type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${v}" data-u="manualGoalsPreview"></div>`;
+  return html`<div id="mnm">${pgHead('Ajustar a mano', 'openMyNutrition')}<p class="mu" style="margin:-6px 0 12px">Elige tus kcal y el reparto de macros. Mientras estén a mano, cambiar tu peso o tu actividad no los cambia; para volver a tu plan, pulsa «Recalcular con mis datos».</p>${f('mnk', 'Kcal diarias', n.k, 800, 8000)}<div class="g2" style="grid-template-columns:repeat(3,1fr)">${f('mnc0', '% Hidratos', n.c, 0, 100)}${f('mnp0', '% Proteínas', n.p, 0, 100)}${f('mnf0', '% Grasas', n.f, 0, 100)}</div><p id="mnv" class="mu" style="margin:12px 2px"></p><div style="height:90px"></div><div class="sb"><button class="pr" data-a="manualGoalsSave" style="width:100%;padding:14px">Guardar</button></div></div>`;
 };
 /** Valores del formulario «Ajustar a mano»: [kcal, % hidratos, % proteínas, % grasas] (NaN si no son válidos). */
 const manualValues = () => [['mnk', 800, 8000], ['mnc0', 0, 100], ['mnp0', 0, 100], ['mnf0', 0, 100]].map(x => clampInt(($('#' + x[0]) || {}).value, x[1], x[2], NaN));
 /* — manejadores de esta función (registros A / C / U) — */
-A.nmy = () => fullPage(myNutritionPage());
-A.nmm = () => {
+A.openMyNutrition = () => fullPage(myNutritionPage());
+A.openManualGoals = () => {
   fullPage(manualPage());
-  U.mnp();
+  U.manualGoalsPreview();
 };
-U.mnp = () => {
+U.manualGoalsPreview = () => {
   const e = $('#mnv');
   if (!e)
     return;
@@ -73,10 +73,10 @@ U.mnp = () => {
   const s = c + p + f;
   e.textContent = s != 100 ? 'Los porcentajes suman ' + s + ' %: tienen que sumar 100.' : 'Hidratos ' + roundInt(k * c / 400) + ' g · proteínas ' + roundInt(k * p / 400) + ' g · grasas ' + roundInt(k * f / 900) + ' g al día.';
 };
-A.nms = () => {
+A.manualGoalsSave = () => {
   const [k, c, p, f] = manualValues();
   if ([k, c, p, f].some(isNaN) || c + p + f != 100) {
-    U.mnp();
+    U.manualGoalsPreview();
     toast('Revisa los valores: kcal entre 800 y 8000 y porcentajes que sumen 100');
     return;
   }
@@ -86,7 +86,7 @@ A.nms = () => {
   R();
   toast('Objetivos guardados a mano');
 };
-A.nmr = () => {
+A.goalsRecalculate = () => {
   if (!tdee()) {
     toast('Completa edad, altura y peso en Perfil para calcularlos');
     return;
@@ -96,7 +96,7 @@ A.nmr = () => {
   refreshGoals();
   toast('Objetivos recalculados con tus datos');
 };
-C.mnw = e => {
+C.goalsWeight = e => {
   const w = clampNum(String(e.value).replace(',', '.'), 30, 300, NaN);
   if (isNaN(w)) {
     toast('Peso entre 30 y 300 kg');
@@ -108,19 +108,19 @@ C.mnw = e => {
   refreshGoals();
 };
 /* elegir el objetivo es elegir un plan: se recalcula aunque los objetivos estuvieran a mano */
-C.mnd = e => {
+C.goalsDiet = e => {
   S.nu.dt = clampInt(e.value, 0, DIET_TYPES.length - 1, 3);
   applyDiet(true);
   saveState();
   refreshGoals();
 };
-C.mna = e => {
+C.goalsActivity = e => {
   S.bio.act = clampInt(e.value, 0, ACTIVITY_LEVELS.length - 1, 1);
   applyDiet();
   saveState();
   refreshGoals();
 };
-C.mnn = e => {
+C.goalsMeals = e => {
   S.nu.n = clampInt(+e.value + 2, 2, 8, 3);
   saveState();
   refreshGoals();

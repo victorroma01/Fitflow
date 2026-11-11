@@ -62,15 +62,15 @@ def main(path, shots=None):
             check('buscar «%s» encuentra «%s»' % (q, want), ok)
 
         # librería: insignia en la lista y foto en la ficha
-        ev("A.lib()")
+        ev("A.openLibrary()")
         pg.clock.run_for(300)
-        ev("document.querySelector('[data-u=ls]').value='remo mancuerna';U.ls('remo mancuerna')")
+        ev("document.querySelector('[data-u=librarySearch]').value='remo mancuerna';U.librarySearch('remo mancuerna')")
         pg.clock.run_for(200)
         check('la fila con foto lleva insignia', ev("!!document.querySelector('#lr .exth .phi')"))
         if shots:
             pg.screenshot(path=os.path.join(shots, 'lista.png'))
         i = ev("exAll().findIndex(e=>e.n=='Remo mancuerna')")
-        ev("A.exd(%d)" % i)
+        ev("A.exerciseDetail(%d)" % i)
         pg.clock.run_for(300)
         ok = ev("(()=>{const f=document.querySelector('#sh .exph img.f');return !!f&&f.complete&&f.naturalWidth>100})()")
         check('la ficha de Remo mancuerna muestra la foto', ok)
@@ -78,20 +78,20 @@ def main(path, shots=None):
         if shots:
             pg.screenshot(path=os.path.join(shots, 'ficha.png'))
         i = ev("exAll().findIndex(e=>e.n=='Press banca')")
-        ev("A.exd(%d)" % i)
+        ev("A.exerciseDetail(%d)" % i)
         pg.clock.run_for(300)
         check('un ejercicio sin foto no lleva cabecera de foto', ev("!document.querySelector('#sh .exph')"))
-        ev("A.cl()")
+        ev("A.closeSheet()")
 
         # entreno: toda miniatura se toca y abre cómo se hace el ejercicio (F-14), con la foto si la hay y la ficha
         d = ev("S.plan.findIndex(d=>d.ex.some(e=>EX_PHOTO_KEY[e.n]))")
         check('el programa por defecto contiene ejercicios con foto', d >= 0, str(d))
         ev("S.tab=0;S.sl=%d;S.sel=%d;R()" % (max(d, 0), max(d, 0)))
-        ev("A.go()")
+        ev("A.startWorkout()")
         pg.clock.run_for(400)
         check('empieza el entreno', ev('!!W'))
-        check('todas las miniaturas del entreno se pueden tocar', ev("[...document.querySelectorAll('.xs .th')].every(t=>t.dataset.a=='exh')"))
-        sel = "document.querySelector('.xs .th[data-a=exh][data-n=\"'+S.plan[S.sel].ex.find(e=>EX_PHOTO_KEY[e.n]).n+'\"]')"
+        check('todas las miniaturas del entreno se pueden tocar', ev("[...document.querySelectorAll('.xs .th')].every(t=>t.dataset.a=='exerciseHowTo')"))
+        sel = "document.querySelector('.xs .th[data-a=exerciseHowTo][data-n=\"'+S.plan[S.sel].ex.find(e=>EX_PHOTO_KEY[e.n]).n+'\"]')"
         if shots:
             ev(sel + ".scrollIntoView({block:'center'})")
             pg.clock.run_for(300)
@@ -105,13 +105,13 @@ def main(path, shots=None):
         check('al tocar se abre cómo se hace, con la foto', ev("!!document.querySelector('#sh .exph img.f') && document.querySelector('#sh .hwp').innerText.length > 80"))
         if shots:
             pg.screenshot(path=os.path.join(shots, 'entreno_como.png'))
-        ev("document.querySelector('#sh [data-a=exv]').click()")
+        ev("document.querySelector('#sh [data-a=exerciseDetailByName]').click()")
         pg.clock.run_for(300)
-        check('desde ahí se abre la ficha, sin «+ Al día» ni variantes', ev("!!document.querySelector('#sh .exph img.f') && !document.querySelector('#sh [data-a=lad]')"))
+        check('desde ahí se abre la ficha, sin «+ Al día» ni variantes', ev("!!document.querySelector('#sh .exph img.f') && !document.querySelector('#sh [data-a=libraryAddToDay]')"))
         check('el entreno sigue en marcha', ev('!!W'))
         if shots:
             pg.screenshot(path=os.path.join(shots, 'entreno_ficha.png'))
-        ev("A.cl()")
+        ev("A.closeSheet()")
         pg.clock.run_for(200)
         check('se cierra la ficha', ev("!document.querySelector('#sh .exph')"))
 

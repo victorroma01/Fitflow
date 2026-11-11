@@ -120,7 +120,7 @@ try {
     const o = JSON.parse(q);
     setTimeout(() => {
       try {
-        dialog(o.u ? 'Datos recuperados' : 'Copia restaurada', html`<div style="display:grid;gap:6px;text-align:left">${(o.s || []).map(x => html`<div>· ${x}</div>`)}</div>${o.f ? html`<div style="margin-top:10px">Se descartaron ${raw(plural(o.f, 'elemento dañado', 'elementos dañados'))} de la copia.</div>` : ''}`, [['Entendido', 'zno', 'pr']]);
+        dialog(o.u ? 'Datos recuperados' : 'Copia restaurada', html`<div style="display:grid;gap:6px;text-align:left">${(o.s || []).map(x => html`<div>· ${x}</div>`)}</div>${o.f ? html`<div style="margin-top:10px">Se descartaron ${raw(plural(o.f, 'elemento dañado', 'elementos dañados'))} de la copia.</div>` : ''}`, [['Entendido', 'doNothing', 'pr']]);
       }
       catch (e) {
         logError('arranque: aviso de restauración', e);
@@ -148,9 +148,9 @@ R();
 window.__ffok = 1;
 /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
 if (stateRecovered == 1)
-  setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
+  setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.', [['Entendido', 'doNothing', 'pr']]), 600);
 else if (stateRecovered == 2)
-  setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.', [['Entendido', 'zno', 'pr']]), 600);
+  setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.', [['Entendido', 'doNothing', 'pr']]), 600);
 /* lo arreglado al arrancar se guarda (solo se escribe lo que cambió: core/persist) */
 setTimeout(saveState, 1000);
 if (signedIn()) {

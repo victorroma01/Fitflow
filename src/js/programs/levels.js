@@ -159,13 +159,13 @@ export const levelPill = () => {
   if (!levelsActive())
     return '';
   const v = isLevel(S.lv) ? S.lv : 'int';
-  return html`<div class="lvw" style="${levelVars(v)}"><button class="lvp" data-a="lvo" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="lvx"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi${k == v ? ' on' : ''}" data-a="lvs" data-v="${k}" role="menuitem" style="${levelVars(k)}">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
+  return html`<div class="lvw" style="${levelVars(v)}"><button class="lvp" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="levelMenuClose"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem" style="${levelVars(k)}">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
 };
-A.lvo = () => {
+A.levelMenuToggle = () => {
   levelMenuOpen = !levelMenuOpen;
   R();
 };
-A.lvx = () => {
+A.levelMenuClose = () => {
   levelMenuOpen = false;
   R();
 };
@@ -206,7 +206,7 @@ const applyLevel = v => {
     R();
   }
 };
-A.lvs = (i, b) => {
+A.levelChoose = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   levelMenuOpen = false;
   if (!isLevel(v) || v == S.lv) {
@@ -224,21 +224,21 @@ A.lvs = (i, b) => {
   const zr = !!pendingResume;
   if (ed || dn || zr) {
     R();
-    confirmDialog('Cambiar a nivel ' + LEVEL_NAMES[v].toLowerCase(), 'Se reorganizarán los días del programa para el nivel ' + LEVEL_NAMES[v].toLowerCase() + '.' + (ed ? ' Perderás los cambios que hayas hecho a mano en los días.' : '') + (dn ? ' Se reiniciará el progreso de esta semana.' : '') + (zr ? ' Se descartará el entreno pausado.' : ''), 'lvc', 'Cambiar');
+    confirmDialog('Cambiar a nivel ' + LEVEL_NAMES[v].toLowerCase(), 'Se reorganizarán los días del programa para el nivel ' + LEVEL_NAMES[v].toLowerCase() + '.' + (ed ? ' Perderás los cambios que hayas hecho a mano en los días.' : '') + (dn ? ' Se reiniciará el progreso de esta semana.' : '') + (zr ? ' Se descartará el entreno pausado.' : ''), 'levelConfirm', 'Cambiar');
   }
   else
     applyLevel(v);
 };
-A.lvc = () => {
+A.levelConfirm = () => {
   if (isLevel(pendingLevel))
     applyLevel(pendingLevel);
 };
-export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${k == previewLevel ? 'on' : ''}" data-a="pvl" data-v="${k}" style="${levelVars(k)}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
-A.pvl = (i, b) => {
+export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${k == previewLevel ? 'on' : ''}" data-a="previewChooseLevel" data-v="${k}" style="${levelVars(k)}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
+A.previewChooseLevel = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   if (isLevel(v))
     previewLevel = v;
-  A.pv(previewProgram);
+  A.openProgramPreview(previewProgram);
 };
 export const levelTag = v => html`<span class="lvt">${levelDot(v)}${raw(LEVEL_NAMES[v])}</span>`;
 export const programRow = (n, tag) => html`<span class="pgr"><b style="font-size:17px">${n}</b>${raw(tag)}</span>`;

@@ -33,7 +33,7 @@ const pageKey = h => (/<h1 class="pgt">(.*?)<\/h1>/.exec(h) || [])[1] || '';
 /* a dónde lleva el «←» de la página p (acción y dato), o '' si la cierra o no lo tiene: con '' es una página de primer nivel */
 const backLink = p => {
   const b = p.querySelector('[aria-label="Volver"]');
-  return b && b.dataset.a != 'cl' ? b.dataset.a + ':' + (b.dataset.i || '') : '';
+  return b && b.dataset.a != 'closeSheet' ? b.dataset.a + ':' + (b.dataset.i || '') : '';
 };
 /* Cambia el contenido de la página abierta por h y pone al día el rastro. Devuelve true si con eso se vuelve a la página de
    antes, que queda en el punto en que se dejó. */
@@ -94,29 +94,29 @@ export const sheet = h => {
   }
   pageTrail.length = 0;
   s.className = '';
-  s.innerHTML = h ? html`<div class="bk" data-a="cl"></div><div class="sp" data-pg="${pageKey(h)}">${raw(h)}</div>` : '';
+  s.innerHTML = h ? html`<div class="bk" data-a="closeSheet"></div><div class="sp" data-pg="${pageKey(h)}">${raw(h)}</div>` : '';
   sheetBarFix();
 };
-export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'zno', ''], [l, a, 'pr']]);
+export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'pr']]);
 document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt"></div>');
 export function dialog(t, p, b) {
   /* para los lectores de pantalla, una ventana que tapa la app (aria-modal) con su título */
-  $('#dg').innerHTML = html`<div class="dgb"><div class="dgc" role="dialog" aria-modal="true" aria-labelledby="dgt"><h3 id="dgt" style="margin:0 0 6px">${raw(t)}</h3><p class="mu" style="margin:0 0 16px;font-size:14px">${raw(p)}</p><div class="g2" style="grid-template-columns:repeat(${b.length},1fr)">${b.map(x => html`<button class="${x[2]}" data-a="dga" data-v="${x[1]}">${raw(x[0])}</button>`)}</div></div></div>`;
+  $('#dg').innerHTML = html`<div class="dgb"><div class="dgc" role="dialog" aria-modal="true" aria-labelledby="dgt"><h3 id="dgt" style="margin:0 0 6px">${raw(t)}</h3><p class="mu" style="margin:0 0 16px;font-size:14px">${raw(p)}</p><div class="g2" style="grid-template-columns:repeat(${b.length},1fr)">${b.map(x => html`<button class="${x[2]}" data-a="dialogAnswer" data-v="${x[1]}">${raw(x[0])}</button>`)}</div></div></div>`;
 }
-A.dga = (i, b) => {
+A.dialogAnswer = (i, b) => {
   $('#dg').innerHTML = '';
   const f = A[b.dataset.v];
   f && f(0, b);
 };
-A.zno = () => {
+A.doNothing = () => {
 };
-A.mnx = (i, b) => {
+A.menuItem = (i, b) => {
   $('#mn').innerHTML = '';
   A[b.dataset.v]();
 };
 /** Tareas al cerrar la hoja con «Cerrar» (p. ej. apagar la cámara del escáner): los módulos que lo necesitan se apuntan aquí. */
 export const onSheetClose = [];
-A.cl = () => {
+A.closeSheet = () => {
   onSheetClose.forEach(f => f());
   sheet();
 };
@@ -137,11 +137,11 @@ export const fullPage = h => {
   sheet(h);
   s.className = 'full';
 };
-export const pgHead = (t, back) => html`<div class="row"><button data-a="${back || 'cl'}" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 class="pgt">${raw(t)}</h1>`;
-A.menu = () => {
-  $('#mn').innerHTML = html`<div class="mbk" data-a="mnc"></div><div class="msd" role="dialog" aria-modal="true" aria-label="Menú"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="mnc" aria-label="Cerrar">${icon('x', 22)}</button><div class="mti">Menú</div>${[['pg', 'prog', 'Programas'], ['cl2', 'cal', 'Calendario'], ['lg', 'log', 'Registros'], ['rtv', 'swp', 'Rotar ejercicios'], ['rw', 'reset', 'Reiniciar semana']].map((x, i) => html`<button class="mi" style="--d:${70 + i * 60}ms" data-a="mnx" data-v="${x[0]}"><span>${raw(x[2])}</span>${icon(x[1], 22)}</button>`)}</div></div>`;
+export const pgHead = (t, back) => html`<div class="row"><button data-a="${back || 'closeSheet'}" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 class="pgt">${raw(t)}</h1>`;
+A.openMenu = () => {
+  $('#mn').innerHTML = html`<div class="mbk" data-a="closeMenu"></div><div class="msd" role="dialog" aria-modal="true" aria-label="Menú"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="closeMenu" aria-label="Cerrar">${icon('x', 22)}</button><div class="mti">Menú</div>${[['openPrograms', 'prog', 'Programas'], ['openCalendar', 'cal', 'Calendario'], ['openLogs', 'log', 'Registros'], ['rotationShow', 'swp', 'Rotar ejercicios'], ['resetWeek', 'reset', 'Reiniciar semana']].map((x, i) => html`<button class="mi" style="--d:${70 + i * 60}ms" data-a="menuItem" data-v="${x[0]}"><span>${raw(x[2])}</span>${icon(x[1], 22)}</button>`)}</div></div>`;
 };
-A.mnc = () => {
+A.closeMenu = () => {
   const s = $('.msd');
   if (!s) {
     $('#mn').innerHTML = '';

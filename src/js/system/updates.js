@@ -119,12 +119,12 @@ export const releaseNotePage = () => {
   const r = RELEASE;
   const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const body = (r.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
-  return html`<div class="cd rnp"><b class="rnv">Versión ${r.version || APPV}</b>${d ? html`<small class="mu">${d}</small>` : ''}${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}</div><div class="rnc"><button class="lnk" data-a="zaj">Cerrar</button></div>`;
+  return html`<div class="cd rnp"><b class="rnv">Versión ${r.version || APPV}</b>${d ? html`<small class="mu">${d}</small>` : ''}${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}</div><div class="rnc"><button class="lnk" data-a="openSettings">Cerrar</button></div>`;
 };
 /** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
 const updatePopupHtml = (info, mode) => {
   const v = info && info.version ? info.version : '';
-  return html`<div class="updb" data-a="updLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt"><button class="updx" data-a="updLater" aria-label="Cerrar">×</button><small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small><h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3><div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div><button class="upb" data-a="${mode == 'news' ? 'updLater' : 'updApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button></div>`;
+  return html`<div class="updb" data-a="updateLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt"><button class="updx" data-a="updateLater" aria-label="Cerrar">×</button><small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small><h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3><div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div><button class="upb" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button></div>`;
 };
 const showPopup = (info, mode) => {
   const old = document.getElementById('upd');
@@ -212,7 +212,7 @@ export const showWhatsNew = () => {
 };
 /* — manejadores de esta función (registros A / C / U) — */
 /** Actualizar: descarga ya la versión nueva (el service worker la guarda) y vuelve a abrir la app con ella. */
-A.updApply = async (i, b) => {
+A.updateApply = async (i, b) => {
   if (b) {
     b.disabled = true;
     b.textContent = 'Actualizando…';
@@ -230,14 +230,14 @@ A.updApply = async (i, b) => {
     /* recargar puede no estar permitido en algunas vistas */
   }
 };
-A.updLater = () => {
+A.updateLater = () => {
   updateReady = 0;
   const d = document.getElementById('upd');
   if (d)
     d.remove();
 };
 /** Ajustes → Actualizaciones: comprueba si hay versión nueva. */
-A.updChk = async (i, b) => {
+A.updateCheck = async (i, b) => {
   if (!updatesOn) {
     toast('Las actualizaciones se comprueban en la app instalada');
     return;

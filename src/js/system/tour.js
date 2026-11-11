@@ -20,7 +20,7 @@ import { welcomeShow } from './welcome.js';
 import { html, raw } from '../core/html.js';
 /** Pasos: pestaña (-1: la que esté), qué se ilumina (alt: algo más pequeño si no cabe con la tarjeta, en un móvil pequeño),
   título y texto (rest: el texto si hoy es día de descanso; np: si aún no hay programa, I-24). */
-const TOUR_STEPS = [{ tab: 0, el: () => $('#app .npc') || $('#app .cd.hero'), t: 'Tu entreno de hoy', p: 'Aquí está el día que toca. Pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.', rest: 'Hoy toca descansar. Los días de entreno, aquí está el que toca: pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.', np: 'Primero, elige tu programa con «Seleccionar programa». Después, aquí verás el día que toca: pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.' }, { tab: -1, el: () => $('nav'), t: 'Cambia de pestaña', p: 'Toca una pestaña, o mantén pulsada la burbuja y arrástrala hasta otra.', live: 1 }, { tab: 1, el: () => ($('#app .mlb') || { closest: () => null }).closest('.cd'), alt: () => $('#app .mlb'), t: 'Anota lo que comes', p: '«+» añade un alimento, «Buscar» lo busca en internet y «Scan» lee el código de barras. La app sabe sola si hoy entrenas o descansas.' }, { tab: 2, el: () => $('#app .wkc'), t: 'Mira tu progreso', p: 'Tus entrenos, el volumen y las rachas, semana a semana.' }, { tab: 3, el: () => $('#app [data-a=f2lg]'), t: 'Tu perfil', p: 'Logros, medidas y ajustes. En las páginas de dentro, desliza hacia la derecha para volver.' }];
+const TOUR_STEPS = [{ tab: 0, el: () => $('#app .npc') || $('#app .cd.hero'), t: 'Tu entreno de hoy', p: 'Aquí está el día que toca. Pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.', rest: 'Hoy toca descansar. Los días de entreno, aquí está el que toca: pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.', np: 'Primero, elige tu programa con «Seleccionar programa». Después, aquí verás el día que toca: pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.' }, { tab: -1, el: () => $('nav'), t: 'Cambia de pestaña', p: 'Toca una pestaña, o mantén pulsada la burbuja y arrástrala hasta otra.', live: 1 }, { tab: 1, el: () => ($('#app .mlb') || { closest: () => null }).closest('.cd'), alt: () => $('#app .mlb'), t: 'Anota lo que comes', p: '«+» añade un alimento, «Buscar» lo busca en internet y «Scan» lee el código de barras. La app sabe sola si hoy entrenas o descansas.' }, { tab: 2, el: () => $('#app .wkc'), t: 'Mira tu progreso', p: 'Tus entrenos, el volumen y las rachas, semana a semana.' }, { tab: 3, el: () => $('#app [data-a=openAchievements]'), t: 'Tu perfil', p: 'Logros, medidas y ajustes. En las páginas de dentro, desliza hacia la derecha para volver.' }];
 /* recorrido abierto: { i: -1 la bienvenida, 0-4 los pasos, 5 «¡Listo!»; again: visto desde Ajustes; from: pestaña de antes } */
 let tour = null;
 /* intentos de sacarlo al arrancar, esperando a que la app esté libre (uno por segundo) */
@@ -44,22 +44,22 @@ const tourShow = () => {
   $('nav').classList.toggle('trlv', i >= 0 && i < n && !!TOUR_STEPS[i].live);
   if (i < 0) {
     r.className = 'trs';
-    r.innerHTML = tourSheet('workout', 'Te damos la bienvenida a StrataFit', '¿Te enseñamos lo principal? Son 5 pasos y menos de un minuto.', '<button class="pr" data-a="trs">Empezar el recorrido</button><button data-a="trx">Omitir</button>');
+    r.innerHTML = tourSheet('workout', 'Te damos la bienvenida a StrataFit', '¿Te enseñamos lo principal? Son 5 pasos y menos de un minuto.', '<button class="pr" data-a="tourStart">Empezar el recorrido</button><button data-a="tourSkip">Omitir</button>');
   }
   else if (i >= n) {
     r.className = 'trs';
-    r.innerHTML = tourSheet('chk', '¡Listo!', tour.again ? 'Ya conoces lo principal. Puedes volver a verlo cuando quieras en Ajustes.' : 'Ya conoces lo principal. Este recorrido no vuelve a salir; si quieres verlo otra vez, está en Ajustes.', S.np ? '<button class="pr" data-a="trd">Seleccionar programa</button>' : '<button class="pr" data-a="trd">Empezar a entrenar</button>');
+    r.innerHTML = tourSheet('chk', '¡Listo!', tour.again ? 'Ya conoces lo principal. Puedes volver a verlo cuando quieras en Ajustes.' : 'Ya conoces lo principal. Este recorrido no vuelve a salir; si quieres verlo otra vez, está en Ajustes.', S.np ? '<button class="pr" data-a="tourDone">Seleccionar programa</button>' : '<button class="pr" data-a="tourDone">Empezar a entrenar</button>');
   }
   else {
     const st = TOUR_STEPS[i];
     if (st.tab >= 0 && S.tab != st.tab) {
-      A.tab(st.tab);
+      A.selectTab(st.tab);
       /* al momento (la página se desplaza suave, y el foco se mide enseguida) */
       scrollTo({ top: 0, behavior: 'instant' });
     }
-    const tx = st.np && $('#app .npc') ? st.np : st.rest && $('#app .cd.hero [data-a=rd]') ? st.rest : st.p;
+    const tx = st.np && $('#app .npc') ? st.np : st.rest && $('#app .cd.hero [data-a=completeRestDay]') ? st.rest : st.p;
     r.className = 'trp';
-    r.innerHTML = html`<div class="trbk"></div><div class="trsp"></div><div class="trtp" role="dialog" aria-modal="true" aria-labelledby="trh"><i class="trar"></i><div class="trst">Paso ${i + 1} de ${n}</div><b id="trh">${st.t}</b><p>${tx}</p><div class="trft"><div class="trdt">${TOUR_STEPS.map((x, k) => html`<i class="${k == i ? 'on' : ''}"></i>`)}</div><button class="trsk" data-a="trx">Omitir</button><button class="pr trnx" data-a="trn">${i == n - 1 ? 'Terminar' : 'Siguiente'}</button></div></div>`;
+    r.innerHTML = html`<div class="trbk"></div><div class="trsp"></div><div class="trtp" role="dialog" aria-modal="true" aria-labelledby="trh"><i class="trar"></i><div class="trst">Paso ${i + 1} de ${n}</div><b id="trh">${st.t}</b><p>${tx}</p><div class="trft"><div class="trdt">${TOUR_STEPS.map((x, k) => html`<i class="${k == i ? 'on' : ''}"></i>`)}</div><button class="trsk" data-a="tourSkip">Omitir</button><button class="pr trnx" data-a="tourNext">${i == n - 1 ? 'Terminar' : 'Siguiente'}</button></div></div>`;
     tourPlace();
     /* por si algo de la página termina de colocarse después (una imagen) */
     setTimeout(tourPlace, 350);
@@ -111,7 +111,7 @@ const tourEnd = tab => {
   if (r)
     r.remove();
   if (tab >= 0 && S.tab != tab)
-    A.tab(tab);
+    A.selectTab(tab);
 };
 /* ¿está la app ocupada? (otra ventana, el entreno, el inicio de sesión, la primera sincronización por hacer…) */
 const tourBusy = () => {
@@ -141,7 +141,7 @@ export const tourCheck = () => {
   setOverviewMode(0);
   if (S.nw) {
     if (S.tab)
-      A.tab(0);
+      A.selectTab(0);
     welcomeShow(tourAfterWelcome);
     return;
   }
@@ -153,7 +153,7 @@ window.addEventListener('resize', tourPlace);
 window.addEventListener('scroll', tourPlace, { passive: true });
 /* — manejadores de esta función (registros A / C / U) — */
 /* «Empezar el recorrido» */
-A.trs = () => {
+A.tourStart = () => {
   if (!tour)
     return;
   S.tour = 1;
@@ -161,16 +161,16 @@ A.trs = () => {
   tour.i = 0;
   tourShow();
 };
-A.trn = () => {
+A.tourNext = () => {
   if (!tour)
     return;
   tour.i++;
   if (tour.i >= TOUR_STEPS.length && S.tab)
-    A.tab(0);
+    A.selectTab(0);
   tourShow();
 };
 /* «Omitir» (también «atrás» del sistema): se da por visto y se vuelve a donde se estaba */
-A.trx = () => {
+A.tourSkip = () => {
   if (!tour)
     return;
   if (!tour.again) {
@@ -180,13 +180,13 @@ A.trx = () => {
   tourEnd(tour.i >= 0 && tour.i < TOUR_STEPS.length ? tour.from : -1);
 };
 /* «Empezar a entrenar» o, sin programa todavía, «Seleccionar programa»: a Programas */
-A.trd = () => {
+A.tourDone = () => {
   tourEnd(0);
   if (S.np)
-    A.pg();
+    A.openPrograms();
 };
 /* Ajustes → Ver el recorrido: directo al primer paso */
-A.trgo = () => {
+A.tourReplay = () => {
   sheet();
   setWeightView(0);
   setOverviewMode(0);

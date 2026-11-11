@@ -143,7 +143,7 @@ export const askRestore = txt => {
   }
   pendingRestore = r;
   const ds = r.meta && r.meta.at ? backupDate(r.meta.at, 1) : '';
-  confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}<br><br><b>Ahora tienes</b><br>${backupSummary(S)}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'bkok', 'Restaurar');
+  confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}<br><br><b>Ahora tienes</b><br>${backupSummary(S)}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'backupRestoreConfirmed', 'Restaurar');
 };
 const preRestore = () => {
   try {
@@ -202,13 +202,13 @@ export const restoreBackup = () => {
   lockSaves();
   location.reload();
 };
-A.bkun = () => {
+A.backupUndoAsk = () => {
   const p = preRestore();
   if (!p)
     return;
-  confirmDialog('¿Deshacer la última restauración?', 'Volverás a los datos que tenías antes (' + X(backupSummary(p.s)) + '). Lo que tienes ahora se guardará por si cambias de idea.', 'bkun2', 'Deshacer');
+  confirmDialog('¿Deshacer la última restauración?', 'Volverás a los datos que tenías antes (' + X(backupSummary(p.s)) + '). Lo que tienes ahora se guardará por si cambias de idea.', 'backupUndo', 'Deshacer');
 };
-A.bkun2 = () => {
+A.backupUndo = () => {
   const p = preRestore();
   if (!p)
     return;
@@ -237,7 +237,7 @@ A.bkun2 = () => {
   lockSaves();
   location.reload();
 };
-C.bkim = e => {
+C.backupImportFile = e => {
   const f = e.files && e.files[0];
   if (!f)
     return;
@@ -252,11 +252,11 @@ C.bkim = e => {
   r.readAsText(f);
   e.value = '';
 };
-A.zbr = () => {
+A.backupRestoreText = () => {
   const e = $('#bk');
   askRestore(e ? e.value : '');
 };
-A.bkf = async () => {
+A.backupDownload = async () => {
   const pv = S.bkd;
   S.bkd = Date.now();
   saveState();
@@ -269,20 +269,20 @@ A.bkf = async () => {
     toast(r == 'declined' ? 'No se guardó la copia' : 'No se pudo guardar el archivo. Usa la opción de texto.');
   }
 };
-A.zbk = () => {
+A.openBackup = () => {
   const p = preRestore();
   /* desde Ajustes es una página más, con «←» de vuelta; desde Perfil o un aviso, una hoja */
   const fromSettings = !!$('#ajs');
-  sheet(html`${fromSettings ? pgHead('Copia de seguridad', 'zaj') : html`<h3>Copia de seguridad</h3>`}<p class="mu" style="margin:0 0 12px">Tus datos se guardan en este móvil y se sincronizan con tu cuenta. La copia de seguridad es una foto de tus datos en un momento, para volver a ella si algo se borra o se estropea.</p>${raw(cloudBackupCard())}<div class="cd cbk"><b>Archivo en el móvil</b><p class="mu">Siempre con el mismo nombre, ${BACKUP_FILE}: cada archivo nuevo sustituye al anterior y no se acumulan copias en el teléfono.</p><p class="mu" style="font-size:12px;margin:0 0 10px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="bkf">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="bkim"></label></div></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="zbc">Copiar</button><button class="pr" data-a="zbr">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="bkun" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
+  sheet(html`${fromSettings ? pgHead('Copia de seguridad', 'openSettings') : html`<h3>Copia de seguridad</h3>`}<p class="mu" style="margin:0 0 12px">Tus datos se guardan en este móvil y se sincronizan con tu cuenta. La copia de seguridad es una foto de tus datos en un momento, para volver a ella si algo se borra o se estropea.</p>${raw(cloudBackupCard())}<div class="cd cbk"><b>Archivo en el móvil</b><p class="mu">Siempre con el mismo nombre, ${BACKUP_FILE}: cada archivo nuevo sustituye al anterior y no se acumulan copias en el teléfono.</p><p class="mu" style="font-size:12px;margin:0 0 10px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="backupDownload">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="backupImportFile"></label></div></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="backupCopyText">Copiar</button><button class="pr" data-a="backupRestoreText">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="backupUndoAsk" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
   fillSnapshots();
 };
 export const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;
-A.bknx = () => {
+A.backupReminderOff = () => {
   S.nbk = 1;
   saveState();
   R();
 };
-export const restoreBanner = () => '<div class="cd" style="margin:0 0 12px"><b>¿Ya usabas StrataFit?</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="zbk">Importar copia</button><button data-a="bknx">Ahora no</button></div></div>';
+export const restoreBanner = () => '<div class="cd" style="margin:0 0 12px"><b>¿Ya usabas StrataFit?</b><div class="mu" style="font-size:13px;margin:4px 0 10px">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="openBackup">Importar copia</button><button data-a="backupReminderOff">Ahora no</button></div></div>';
 function backupRowsFull(s) {
   const L = (Array.isArray(s.logs) ? s.logs : []).filter(l => l && typeof l == 'object');
   const cd = L.filter(l => l.k == 'c').length;
@@ -298,4 +298,4 @@ function backupRowsFull(s) {
     r.push(plural(na, 'logro conseguido', 'logros conseguidos'));
   return r;
 }
-A.bkok = () => restoreBackup();
+A.backupRestoreConfirmed = () => restoreBackup();

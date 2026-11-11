@@ -37,7 +37,7 @@ const swapExercise = (i, b) => {
   sheet();
   R();
 };
-A.zun = i => {
+A.swapUndo = i => {
   const e = S.plan[S.sel].ex[i];
   const o = e.o;
   const c = e.n;
@@ -106,26 +106,26 @@ export const swapBody = () => {
   T.forEach(t => {
     if (!t[1].length)
       return;
-    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr" data-a="zsd" data-i="${swapState.i}" data-n="${e.n}" style="cursor:pointer"><span class="exc">${exCellHtml(e)}</span><small class="mu">Elegir ›</small></div>`)}`;
+    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}" style="cursor:pointer"><span class="exc">${exCellHtml(e)}</span><small class="mu">Elegir ›</small></div>`)}`;
   });
   return h || '<p class="mu">No hay alternativas con esos filtros.</p>';
 };
-const swapScope = () => ['Este día', 'Todo el programa'].map((x, i) => html`<button class="chip${!!swapState.all == !!i ? ' on' : ''}" data-a="swsc" data-i="${i}">${raw(x)}</button>`).join('');
-A.zsw = i => {
+const swapScope = () => ['Este día', 'Todo el programa'].map((x, i) => html`<button class="chip${!!swapState.all == !!i ? ' on' : ''}" data-a="swapScopeChoose" data-i="${i}">${raw(x)}</button>`).join('');
+A.openSwap = i => {
   swapState = { i, q: '', eq: [], all: 0 };
   filterOpen.sw = 0;
   const e = S.plan[S.sel].ex[i];
-  sheet(html`<h3>Swap</h3><p class="mu" style="margin:-4px 0 8px">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p><div id="swh">${raw(swapScope())}</div><input placeholder="Buscar alternativa" aria-label="Buscar alternativa" data-u="sws" style="margin-top:8px"><div id="swb">${raw(swapBody())}</div>`);
+  sheet(html`<h3>Swap</h3><p class="mu" style="margin:-4px 0 8px">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p><div id="swh">${raw(swapScope())}</div><input placeholder="Buscar alternativa" aria-label="Buscar alternativa" data-u="swapSearch" style="margin-top:8px"><div id="swb">${raw(swapBody())}</div>`);
 };
-A.swsc = i => {
+A.swapScopeChoose = i => {
   swapState.all = i;
   $('#swh').innerHTML = swapScope();
 };
-U.sws = v => {
+U.swapSearch = v => {
   swapState.q = v.toLowerCase();
   $('#swb').innerHTML = swapBody();
 };
-A.zsd = (i, b) => {
+A.swapDo = (i, b) => {
   const nn = b.dataset.n;
   b.dataset.v = swapState.all ? '1' : '0';
   swapExercise(i, b);

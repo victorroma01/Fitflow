@@ -59,7 +59,7 @@ let sheetTimer = 0;
 const deloadSheet = () => {
   const n = deloadEvery();
   const sch = !(S.dl && S.dl[S.wk] === 1) && n > 1 && S.wk % n == 0;
-  return html`<div class="dlw2"><div class="dli dlbig">${icon('dlw', 30)}</div><h3>Empieza tu semana de descarga</h3><p class="mu">${raw(sch ? 'Es la semana ' + n + ' de tu ciclo. ' : '')}Esta semana entrenas más suave para recuperarte y seguir progresando.</p><div class="dlt"><span>Peso al 65 %</span><span>2 repeticiones menos</span><span>Mismas series</span></div><button class="dlp" data-a="dlok">Entendido</button><button class="dlo" data-a="dlx">Omitir esta descarga</button></div>`;
+  return html`<div class="dlw2"><div class="dli dlbig">${icon('dlw', 30)}</div><h3>Empieza tu semana de descarga</h3><p class="mu">${raw(sch ? 'Es la semana ' + n + ' de tu ciclo. ' : '')}Esta semana entrenas más suave para recuperarte y seguir progresando.</p><div class="dlt"><span>Peso al 65 %</span><span>2 repeticiones menos</span><span>Mismas series</span></div><button class="dlp" data-a="deloadSeen">Entendido</button><button class="dlo" data-a="deloadSkipAsk">Omitir esta descarga</button></div>`;
 };
 /** Tarjeta naranja de Workout: en la semana de descarga, compacta y con «Omitir»; si no, la sugerencia por esfuerzo alto. */
 export const deloadCard = () => {
@@ -75,10 +75,10 @@ export const deloadCard = () => {
           sheet(deloadSheet());
         }
       }, 400);
-    return html`<div class="dl2 dlc2"><button class="dlb" data-a="dli" aria-label="Semana de descarga: qué cambia"><span class="dli">${icon('dlw', 18)}</span><b>Semana de descarga</b></button><button class="dlo dls" data-a="dlx">Omitir</button></div>`;
+    return html`<div class="dl2 dlc2"><button class="dlb" data-a="deloadInfo" aria-label="Semana de descarga: qué cambia"><span class="dli">${icon('dlw', 18)}</span><b>Semana de descarga</b></button><button class="dlo dls" data-a="deloadSkipAsk">Omitir</button></div>`;
   }
   if (S.wk > 1 && deloadSuggested() && !(S.dq && S.dq[S.wk]))
-    return '<div class="cd dlc"><b>Esfuerzo muy alto</b><div class="mu" style="font-size:13px;margin-top:4px">Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.</div><div class="g2" style="margin-top:10px"><button data-a="dlno">Ahora no</button><button class="pr" data-a="dlon">Activar descarga</button></div></div>';
+    return '<div class="cd dlc"><b>Esfuerzo muy alto</b><div class="mu" style="font-size:13px;margin-top:4px">Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.</div><div class="g2" style="margin-top:10px"><button data-a="deloadNotNow">Ahora no</button><button class="pr" data-a="deloadOn">Activar descarga</button></div></div>';
   return '';
 };
 /** Franja del entreno en la semana de descarga. */
@@ -87,39 +87,39 @@ export const deloadStrip = () => html`<div class="dlstrip">${icon('dlw', 16)}<sp
     el nivel); `k`: a quién se aplica ('d' el programa que se está creando, 'p' el que se está viendo: programs/create). */
 export const deloadChips = (v, k) => {
   const ot = v != null && v > 0 && ![4, 5, 6].includes(+v);
-  const ch = (x, l) => html`<button class="chip${(x == 'o' ? ot : v != null && +v == +x && !ot) ? ' on' : ''}" data-a="dlch" data-k="${k}" data-v="${x}">${l}</button>`;
-  return html`<div class="ph">Semana de descarga</div><div class="cps">${raw(ch(4, 'Cada 4 semanas') + ch(5, 'Cada 5') + ch(6, 'Cada 6') + ch('o', 'Otra') + ch(0, 'Nunca'))}</div>${ot ? html`<div class="dln"><span>Cada</span><input type="number" inputmode="numeric" min="2" max="16" data-c="dlnw" data-k="${k}" value="${raw(v)}" aria-label="Semanas entre descargas"><span>semanas</span></div>` : ''}<p class="mu dlh">Esa semana bajan el peso y las repeticiones, con las mismas series. Si no eliges nada: cada 6 semanas en principiante, 5 en intermedio y 4 en avanzado.</p>`;
+  const ch = (x, l) => html`<button class="chip${(x == 'o' ? ot : v != null && +v == +x && !ot) ? ' on' : ''}" data-a="deloadEveryChoose" data-k="${k}" data-v="${x}">${l}</button>`;
+  return html`<div class="ph">Semana de descarga</div><div class="cps">${raw(ch(4, 'Cada 4 semanas') + ch(5, 'Cada 5') + ch(6, 'Cada 6') + ch('o', 'Otra') + ch(0, 'Nunca'))}</div>${ot ? html`<div class="dln"><span>Cada</span><input type="number" inputmode="numeric" min="2" max="16" data-c="deloadEveryWeeks" data-k="${k}" value="${raw(v)}" aria-label="Semanas entre descargas"><span>semanas</span></div>` : ''}<p class="mu dlh">Esa semana bajan el peso y las repeticiones, con las mismas series. Si no eliges nada: cada 6 semanas en principiante, 5 en intermedio y 4 en avanzado.</p>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.dlon = () => {
+A.deloadOn = () => {
   S.dl = S.dl || {};
   S.dl[S.wk] = 1;
   saveState();
   R();
 };
-A.dlno = () => {
+A.deloadNotNow = () => {
   S.dq = S.dq || {};
   S.dq[S.wk] = 1;
   saveState();
   R();
 };
-A.dlon2 = () => {
-  A.dlon();
+A.deloadOnFromSheet = () => {
+  A.deloadOn();
   sheet();
   toast('Semana de descarga activada');
 };
-A.dli = () => sheet(deloadSheet());
-A.dlok = () => {
+A.deloadInfo = () => sheet(deloadSheet());
+A.deloadSeen = () => {
   S.dls = S.wk;
   saveState();
   sheet();
 };
 /* omitir la descarga (F-19): esta semana, normal; la siguiente llega cuando vuelva a tocar */
-A.dlx = () => {
+A.deloadSkipAsk = () => {
   const n = nextDeload(S.wk);
-  dialog('¿Omitir la semana de descarga?', 'Esta semana entrenarás con tu peso y tus repeticiones normales.' + (n ? ' La próxima descarga llegará en la semana ' + n + '.' : ''), [['Cancelar', 'zno', ''], ['Omitir', 'dlxx', 'pr dlp']]);
+  dialog('¿Omitir la semana de descarga?', 'Esta semana entrenarás con tu peso y tus repeticiones normales.' + (n ? ' La próxima descarga llegará en la semana ' + n + '.' : ''), [['Cancelar', 'doNothing', ''], ['Omitir', 'deloadSkip', 'pr dlp']]);
 };
-A.dlxx = () => {
+A.deloadSkip = () => {
   S.dl = S.dl || {};
   S.dl[S.wk] = 0;
   S.dls = S.wk;

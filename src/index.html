@@ -26,6 +26,6 @@ var last='';window.addEventListener('error',function(e){var m=(e.message||'Error
 var late=function(){if(!window.__ffok)fail((last?last+'\n\n':'')+'La aplicación no terminó de arrancar (tiempo agotado).')};
 document.addEventListener('DOMContentLoaded',function(){setTimeout(late,7000)});setTimeout(late,30000)})();
 </script>
-<nav><button data-a="tab" data-i="0"><span></span>Workout</button><button data-a="tab" data-i="1"><span></span>Nutrición</button><button data-a="tab" data-i="2"><span></span>Dashboard</button><button data-a="tab" data-i="3"><span></span>Perfil</button></nav>
+<nav><button data-a="selectTab" data-i="0"><span></span>Workout</button><button data-a="selectTab" data-i="1"><span></span>Nutrición</button><button data-a="selectTab" data-i="2"><span></span>Dashboard</button><button data-a="selectTab" data-i="3"><span></span>Perfil</button></nav>
 <script>
 @@JS@@</script></body></html>

@@ -1,7 +1,7 @@
 /* ═══ profile/appearance ═══
    Apariencia (F-31): tema, color de acento (los de serie o uno elegido a mano, con sus tonos y el color del texto calculados para
    que se lea bien), estilo Cristal y reducir animaciones. lookSync deja en <html> las clases del estilo en cada R().
-   Define: ACCENTS, DEFAULT_ACCENT, HEX, hexRgb, rgbHex, rgbHsl, hslRgb, luminance, customAccentLast, customAccent, accentNow, setAccentVars, accentApplied, applyAccent, accentPreview, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, motionCard, lookSync, ACCENT_SETTLE_MS, accentPick, accentFrame, accentTimer, previewAccent, commitAccent, pickAccent  · acciones/registros: 8
+   Define: ACCENTS, DEFAULT_ACCENT, HEX, hexRgb, rgbHex, rgbHsl, hslRgb, luminance, customAccentLast, customAccent, accentNow, setAccentVars, accentApplied, applyAccent, accentPreview, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, motionCard, lookSync, ACCENT_SETTLE_MS, accentPick, accentFrame, accentTimer, previewAccent, commitAccent, pickAccent  · acciones/registros: 7
 */
 import { $ } from '../core/util.js';
 import { logError } from '../core/errors.js';
@@ -84,9 +84,9 @@ export const accentSwatches = () => {
   const sw = a => 'background:linear-gradient(135deg,' + a[1] + ',' + a[2] + ');color:' + a[4];
   /* sin color propio todavía, el círculo de «Personalizado» lleva todos los colores */
   const cs = own ? sw(customAccent(S.acx)) : '';
-  return html`${accentPreview()}<div class="swg">${ACCENTS.map((a, i) => html`<button class="swb${cur == i ? ' on' : ''}" data-a="zac" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}"><i style="${sw(a)}">${cur == i ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`)}<label class="swb swc${cur == -1 ? ' on' : ''}"><i class="${own ? '' : 'swr'}" style="${cs}">${cur == -1 ? '✓' : ''}<input type="color" value="${own ? S.acx.toLowerCase() : ACCENTS[cur][2]}" data-c="acx" data-u="acxl" aria-label="Elegir un color propio"></i><small>Personalizado</small></label></div><small class="mu acn">Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.</small>`;
+  return html`${accentPreview()}<div class="swg">${ACCENTS.map((a, i) => html`<button class="swb${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}"><i style="${sw(a)}">${cur == i ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`)}<label class="swb swc${cur == -1 ? ' on' : ''}"><i class="${own ? '' : 'swr'}" style="${cs}">${cur == -1 ? '✓' : ''}<input type="color" value="${own ? S.acx.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive" aria-label="Elegir un color propio"></i><small>Personalizado</small></label></div><small class="mu acn">Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.</small>`;
 };
-export const themeSegment = () => html`<div class="seg">${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`<button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="zth" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
+export const themeSegment = () => html`<div class="seg">${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`<button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="themeChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
 export const glassMode = () => {
   const m = S.gm;
   return (m === 0 || m === 1 || m === 2 || m === 3) ? m : (S.gl === 0 ? 0 : 2);
@@ -96,10 +96,10 @@ const GLASS_INFO = { 3: 'Más transparencia, desenfoque y brillo. Es el más vis
 export const glassCard = () => {
   const m = glassMode();
   const g = m > 0;
-  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glk" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glk" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="gl" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><small class="mu" style="display:block;margin-top:4px">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu" style="display:block;margin-top:4px">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
+  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><small class="mu" style="display:block;margin-top:4px">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu" style="display:block;margin-top:4px">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
 };
 /** «Reducir animaciones» (S.rm): sin deslizamientos ni fundidos al abrir páginas y ventanas. */
-export const motionCard = () => html`<label>Animaciones</label><label class="srk"><input type="checkbox" data-c="rm"${S.rm ? ' checked' : ''}> Reducir animaciones</label><small class="mu" style="display:block;margin-top:-4px">Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.</small>`;
+export const motionCard = () => html`<label>Animaciones</label><label class="srk"><input type="checkbox" data-c="reduceMotion"${S.rm ? ' checked' : ''}> Reducir animaciones</label><small class="mu" style="display:block;margin-top:-4px">Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.</small>`;
 /** Tras cada R(): las clases de <html> del estilo Cristal (gl, data-gm) y de reducir animaciones (rm), como diga S. */
 export const lookSync = () => {
   try {
@@ -163,7 +163,7 @@ const pickAccent = v => {
   accentTimer = setTimeout(commitAccent, ACCENT_SETTLE_MS);
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.zac = i => {
+A.accentChoose = i => {
   /* un color de serie deja sin efecto el propio que aún no se había aplicado */
   accentPick = '';
   clearTimeout(accentTimer);
@@ -172,15 +172,15 @@ A.zac = i => {
   saveState();
   R();
 };
-U.acxl = pickAccent;
-C.acx = e => pickAccent(e.value);
-A.zth = (i, b) => {
+U.accentLive = pickAccent;
+C.accentCustom = e => pickAccent(e.value);
+A.themeChoose = (i, b) => {
   S.theme = b.dataset.v;
   applyTheme();
   saveState();
   R();
 };
-A.glk = (i, b) => {
+A.glassToggle = (i, b) => {
   const v = +b.dataset.v;
   const m = glassMode();
   if (v) {
@@ -195,7 +195,7 @@ A.glk = (i, b) => {
   saveState();
   R();
 };
-A.gl = (i, b) => {
+A.glassLevel = (i, b) => {
   const v = +b.dataset.v;
   S.gm = (v >= 1 && v <= 3) ? v : 2;
   S.gk = S.gm;
@@ -203,13 +203,8 @@ A.gl = (i, b) => {
   saveState();
   R();
 };
-C.rm = e => {
+C.reduceMotion = e => {
   S.rm = e.checked ? 1 : 0;
   saveState();
   R();
-};
-C.tm = e => {
-  S.theme = e.value;
-  applyTheme();
-  saveState();
 };

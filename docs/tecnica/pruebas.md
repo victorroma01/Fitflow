@@ -39,6 +39,9 @@ Firebase de prueba en memoria (`tests/fakefb.py`) y, en GitHub, con el emulador 
 | `tests/shots.py` | 47 pantallas × 6 configuraciones (temas, cristal, tamaños de iPhone), píxel a píxel. |
 
 Sirve para demostrar que un cambio interno (una limpieza, un cambio de estructura) no altera nada de lo que se ve ni de lo que se guarda.
+Si la versión vieja tiene otros nombres de acciones (de antes de la V1.0.2), un quinto argumento con el mapa de nombres
+([`tests/nombres-1.0.2.txt`](../../tests/nombres-1.0.2.txt)) hace que `tests/walk.py` traduzca los suyos a los nuevos para tocar lo
+mismo y comparar la misma pantalla, y que `tests/shots.py` abra las pantallas de la vieja con sus nombres.
 
 ## En GitHub
 

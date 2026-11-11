@@ -57,8 +57,8 @@ const saveHistory = () => {
     }
   });
 };
-A.end = () => confirmDialog('¿Guardar el entreno?', 'Se registrarán las series completadas en tu historial.', 'zend', 'Guardar y salir');
-A.zdis = () => confirmDialog('¿Salir sin guardar?', 'Se perderán las series de este entreno.', 'zdc', 'Salir y descartar');
+A.finishAsk = () => confirmDialog('¿Guardar el entreno?', 'Se registrarán las series completadas en tu historial.', 'finishSave', 'Guardar y salir');
+A.discardAsk = () => confirmDialog('¿Salir sin guardar?', 'Se perderán las series de este entreno.', 'discardWorkout', 'Salir y descartar');
 export const bestOf = n => {
   let b = (S.pr || {})[n] || null;
   ((S.hist || {})[n] || []).forEach(x => x.s.forEach(q => {
@@ -132,7 +132,7 @@ const workoutSnapshot = () => {
   }
   return sn;
 };
-A.zend = () => {
+A.finishSave = () => {
   lastSummary = workoutSnapshot();
   const n0 = S.logs.length;
   saveRecords();

@@ -82,7 +82,7 @@ const progressChart = (pts, m, sel, inter) => {
       s += html`<circle cx="${cx}" cy="${cy}" r="9" fill="var(--a2)" opacity=".18"/>`;
     s += html`<circle cx="${cx}" cy="${cy}" r="${i == sel ? 5 : 3.6}" fill="${p.pr ? 'var(--a2)' : 'var(--cd)'}" stroke="${p.pr ? 'var(--cd)' : 'var(--a2)'}" stroke-width="2"/>`;
     if (inter)
-      s += html`<circle cx="${cx}" cy="${cy}" r="15" fill="transparent" data-a="pgp" data-i="${i}" style="cursor:pointer"/>`;
+      s += html`<circle cx="${cx}" cy="${cy}" r="15" fill="transparent" data-a="progressPeriod" data-i="${i}" style="cursor:pointer"/>`;
   });
   return html`${raw(s)}</svg>`;
 };
@@ -98,7 +98,7 @@ export const progressBody = (stat) => {
   const ML = { e: '1RM estimado', w: 'Peso máximo', v: 'Volumen' };
   let h = '';
   if (!stat) {
-    h += html`<select data-c="pgn" aria-label="Ejercicio" style="margin:10px 0 8px">${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}</select>${raw(segmented('pgm', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"'))}`;
+    h += html`<select data-c="progressExercise" aria-label="Ejercicio" style="margin:10px 0 8px">${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}</select>${raw(segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"'))}`;
   }
   if (!pts.length)
     return html`${raw(h)}<p class="mu" style="margin:10px 0 0">Este ejercicio no tiene pesos registrados.</p>`;
@@ -120,16 +120,16 @@ const refreshProgress = () => {
   if (e)
     e.innerHTML = progressBody();
 };
-A.pgp = i => {
+A.progressPeriod = i => {
   progressState.p = +i;
   refreshProgress();
 };
-A.pgm = (i, b) => {
+A.progressMetric = (i, b) => {
   progressState.m = ['e', 'w', 'v'].includes(b.dataset.v) ? b.dataset.v : 'e';
   progressState.p = -1;
   refreshProgress();
 };
-C.pgn = e => {
+C.progressExercise = e => {
   const L = progressExercises();
   progressState.n = L[+e.value] || progressState.n;
   progressState.p = -1;

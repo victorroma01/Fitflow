@@ -30,9 +30,9 @@ export const warmupHtml = (e, i) => {
   st.push([rd(wl * .5), 8], [rd(wl * .7), 5], [rd(wl * .85), 2]);
   st = st.filter((x, k) => !k || x[0] != st[k - 1][0]);
   W.wu = W.wu || {};
-  return html`<div class="wup"><span>Calentamiento</span>${st.map((x, k) => html`<button class="chip${W.wu[i + '_' + k] ? ' on' : ''}" data-a="wuk" data-i="${i}" data-k="${k}">${x[1]} × ${x[0]} ${weightUnit()}</button>`)}</div>`;
+  return html`<div class="wup"><span>Calentamiento</span>${st.map((x, k) => html`<button class="chip${W.wu[i + '_' + k] ? ' on' : ''}" data-a="toggleWarmupSet" data-i="${i}" data-k="${k}">${x[1]} × ${x[0]} ${weightUnit()}</button>`)}</div>`;
 };
-A.wuk = (i, b) => {
+A.toggleWarmupSet = (i, b) => {
   W.wu = W.wu || {};
   const k = i + '_' + b.dataset.k;
   if (W.wu[k])

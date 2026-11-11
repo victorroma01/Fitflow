@@ -92,7 +92,7 @@ const paintSoon = () => {
     R();
   }, 0));
 };
-A.tab = (i, b) => {
+A.selectTab = (i, b) => {
   setLevelMenuOpen(false);
   S.tab = i;
   setWeekView(0);

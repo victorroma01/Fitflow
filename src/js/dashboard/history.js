@@ -20,7 +20,7 @@ export function calendarPage() {
     c += '<i></i>';
   for (let i = 1; i <= n; i++)
     c += html`<i class="${ds.has(dayKey(new Date(d.getFullYear(), d.getMonth(), i))) ? 'on' : ''}">${i}</i>`;
-  return html`<div class="row"><button data-a="cm" data-i="-1" aria-label="Mes anterior">‹</button><b>${raw(d.toLocaleDateString('es', { month: 'long', year: 'numeric' }))}</b><button data-a="cm" data-i="1" aria-label="Mes siguiente">›</button></div><div class="cal" style="margin-top:8px">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
+  return html`<div class="row"><button data-a="calendarMonth" data-i="-1" aria-label="Mes anterior">‹</button><b>${raw(d.toLocaleDateString('es', { month: 'long', year: 'numeric' }))}</b><button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente">›</button></div><div class="cal" style="margin-top:8px">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
 const logsPage = () => {
   const L = S.logs.map((l, i) => ({ l, i })).reverse();
@@ -37,19 +37,19 @@ const logsPage = () => {
       last = m;
       h += html`<div class="ph">${m}</div>`;
     }
-    h += html`<div class="it exr" data-a="lgx" data-i="${o.i}" role="button" tabindex="0" style="cursor:pointer"><span><b>${o.l.n}</b><br><small>${raw(d.toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' }))}${raw(logText(o.l))}</small></span><b>${raw(logRight(o.l))}</b></div>`;
+    h += html`<div class="it exr" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0" style="cursor:pointer"><span><b>${o.l.n}</b><br><small>${raw(d.toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' }))}${raw(logText(o.l))}</small></span><b>${raw(logRight(o.l))}</b></div>`;
   });
   return html`${raw(h)}<p class="mu" style="font-size:12px;margin-top:14px">Toca un registro para borrarlo.</p>`;
 };
-A.lg = () => fullPage(logsPage());
-A.lgx = i => {
+A.openLogs = () => fullPage(logsPage());
+A.logDeleteAsk = i => {
   logIndex = i;
   const l = S.logs[i];
   if (l)
-    confirmDialog('¿Borrar este registro?', l.n + ' · ' + l.d, 'lgd', 'Borrar');
+    confirmDialog('¿Borrar este registro?', l.n + ' · ' + l.d, 'logDelete', 'Borrar');
 };
 let logIndex = -1;
-A.lgd = () => {
+A.logDelete = () => {
   if (S.logs[logIndex]) {
     S.logs.splice(logIndex, 1);
     saveState();
@@ -58,7 +58,7 @@ A.lgd = () => {
   sheet(logsPage());
   R();
 };
-A.cl2 = () => fullPage(html`${pgHead('Calendario')}<div class="cd" id="cl">${calendarPage()}</div><p class="mu" style="font-size:13px">Los días marcados son los que registraste un entreno.</p>`);
+A.openCalendar = () => fullPage(html`${pgHead('Calendario')}<div class="cd" id="cl">${calendarPage()}</div><p class="mu" style="font-size:13px">Los días marcados son los que registraste un entreno.</p>`);
 function logText(l) {
   return l.k == 'c' && l.x ? ' · ' + X(l.x) : l.k == 'w' && l.x ? ' · ' + X(l.x) + (l.nt ? ' · ' + X(l.nt) : '') : ' · ' + l.s + ' series · ' + l.m + ' min';
 }
@@ -66,7 +66,7 @@ function logRight(l) {
   return l.k == 'c' ? (l.c && +l.c.km > 0 ? round1(+l.c.km) + ' km' : l.m + ' min') : l.k == 'w' ? 'WOD' : roundInt(toDisplayWeight(l.v)) + ' ' + weightUnit();
 }
 /* — manejadores de esta función (registros A / C / U) — */
-A.cm = i => {
+A.calendarMonth = i => {
   setCalMonthOffset(calMonthOffset + i);
   const el = $('#cl');
   /* página Calendario: solo se repinta el mes; en la tarjeta del Dashboard se repinta la pestaña */

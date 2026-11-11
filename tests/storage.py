@@ -157,7 +157,7 @@ def main(path):
             check('restaurar no lo pisa un guardado pendiente', ev('S.rest') == 31 and ev('S.logs.length') == 2, str((ev('S.rest'), ev('S.logs.length'))))
             check('y deja solo los meses de la copia', ev("__T.keys('ff:meals:')") == ['ff:meals:2025-01'], str(ev("__T.keys('ff:meals:')")))
             with pg.expect_navigation():
-                ev('A.bkun2()')
+                ev('A.backupUndo()')
             pg.wait_for_load_state('load')
             booted(pg)
             pg.clock.run_for(1500)
@@ -195,7 +195,7 @@ def main(path):
             #    tests/cloud.py) ──
             ev(SEED)
             n = ev('S.logs.length')
-            ev("A.zrs()")
+            ev("A.resetAllConfirmed()")
             pg.clock.run_for(500)
             check('«Borrar todo» sin conexión no borra nada y lo explica', ev('S.logs.length') == n and 'ff:logs' in ev("__T.keys('ff:')") and 'hace falta internet' in ev("document.body.innerText"))
             check('sin errores de JS', not errs, '; '.join(errs[:3]))

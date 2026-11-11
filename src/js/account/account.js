@@ -18,22 +18,22 @@ import { html, raw } from '../core/html.js';
 export const syncShort = () => account && (account.x || syncState().st == 'dead') ? 'Vuelve a entrar' : { run: 'Sincronizando…', off: 'Sin conexión', wait: 'Tras el entreno', err: 'Reintentando' }[syncState().st] || 'Al día';
 const infoRow = (l, v) => html`<div class="it" style="grid-template-columns:auto 1fr;gap:12px"><span>${raw(l)}</span><b style="text-align:right;overflow-wrap:anywhere">${v}</b></div>`;
 /** Página «Cuenta» de Ajustes. */
-export const accountPage = () => html`<div class="cd acl">${raw(infoRow('Usuario', acctName()))}${raw(infoRow('Tipo de cuenta', isAdmin() ? 'Administrador' : 'Usuario'))}${raw(infoRow('Sincronización', syncLine()))}</div>${account && account.x ? html`<button class="pr" data-a="lgre" style="width:100%;margin:4px 0 8px">Volver a entrar</button>` : html`<button data-a="snc" style="width:100%;margin:4px 0 8px">Sincronizar ahora</button>`}<button data-a="ajp" data-v="clave" style="width:100%">Cambiar contraseña</button><p class="mu" style="font-size:13px;margin:14px 2px">Tus datos se guardan en este móvil y en tu cuenta. Sin conexión todo sigue funcionando: lo que hagas se sube solo al volver la red.</p>`;
+export const accountPage = () => html`<div class="cd acl">${raw(infoRow('Usuario', acctName()))}${raw(infoRow('Tipo de cuenta', isAdmin() ? 'Administrador' : 'Usuario'))}${raw(infoRow('Sincronización', syncLine()))}</div>${account && account.x ? html`<button class="pr" data-a="reloginShow" style="width:100%;margin:4px 0 8px">Volver a entrar</button>` : html`<button data-a="accountSyncNow" style="width:100%;margin:4px 0 8px">Sincronizar ahora</button>`}<button data-a="openSettingsPage" data-v="clave" style="width:100%">Cambiar contraseña</button><p class="mu" style="font-size:13px;margin:14px 2px">Tus datos se guardan en este móvil y en tu cuenta. Sin conexión todo sigue funcionando: lo que hagas se sube solo al volver la red.</p>`;
 /* el último aviso de «Cambiar contraseña» (la página se vuelve a pintar con cada R(): así no se pierde) */
 let pwMsg = '';
 /** Página «Cambiar contraseña». */
-export const passwordPage = () => html`<label for="acp0">Contraseña actual</label><input id="acp0" type="password" autocomplete="current-password" maxlength="100"><label for="acp1">Contraseña nueva</label><input id="acp1" type="password" autocomplete="new-password" maxlength="100"><label for="acp2">Repite la nueva</label><input id="acp2" type="password" autocomplete="new-password" maxlength="100" data-enter="acpw"><p id="ace" class="lge" role="alert">${pwMsg}</p><button class="pr" data-a="acpw" style="width:100%;margin-top:8px">Cambiar contraseña</button><p class="mu" style="font-size:13px;margin:12px 2px">De 8 caracteres o más. Al cambiarla se cierra la sesión en tus otros móviles: allí tendrás que volver a entrar.</p>`;
+export const passwordPage = () => html`<label for="acp0">Contraseña actual</label><input id="acp0" type="password" autocomplete="current-password" maxlength="100"><label for="acp1">Contraseña nueva</label><input id="acp1" type="password" autocomplete="new-password" maxlength="100"><label for="acp2">Repite la nueva</label><input id="acp2" type="password" autocomplete="new-password" maxlength="100" data-enter="accountChangePassword"><p id="ace" class="lge" role="alert">${pwMsg}</p><button class="pr" data-a="accountChangePassword" style="width:100%;margin-top:8px">Cambiar contraseña</button><p class="mu" style="font-size:13px;margin:12px 2px">De 8 caracteres o más. Al cambiarla se cierra la sesión en tus otros móviles: allí tendrás que volver a entrar.</p>`;
 /* — manejadores de esta función (registros A / C / U) — */
-A.snc = async () => {
+A.accountSyncNow = async () => {
   if (account && account.x) {
-    A.lgre();
+    A.reloginShow();
     return;
   }
   toast('Sincronizando…');
   await syncNow();
   toast(syncState().st == 'ok' ? 'Todo al día' : 'No se pudo: ' + syncLine());
 };
-A.acpw = async () => {
+A.accountChangePassword = async () => {
   const v = id => ($('#' + id) || {}).value || '';
   const out = t => {
     pwMsg = t;
@@ -63,9 +63,9 @@ A.acpw = async () => {
   }
   pwMsg = '';
   toast('Contraseña cambiada');
-  A.zaj();
+  A.openSettings();
 };
-A.sout = async () => {
+A.signOut = async () => {
   if (account && !account.x && pendingDocs()) {
     toast('Subiendo tus cambios…');
     await syncNow();
@@ -73,9 +73,9 @@ A.sout = async () => {
   const n = pendingDocs();
   const t = n ? 'Hay cambios sin subir' : '¿Cerrar sesión?';
   const p = n ? 'No se han podido subir a tu cuenta (' + plural(n, 'parte', 'partes') + ')' + (account && account.x ? ' porque la sesión ha caducado: vuelve a entrar primero' : ': prueba con conexión') + '. Si cierras la sesión ahora, se perderán.' : 'Tus datos están en tu cuenta. Se borran de este móvil hasta que vuelvas a entrar.';
-  confirmDialog(t, p, 'soutx', n ? 'Cerrar igualmente' : 'Cerrar sesión');
+  confirmDialog(t, p, 'signOutConfirmed', n ? 'Cerrar igualmente' : 'Cerrar sesión');
 };
-A.soutx = () => {
+A.signOutConfirmed = () => {
   stopSync();
   lockSaves();
   wipeAccountData();

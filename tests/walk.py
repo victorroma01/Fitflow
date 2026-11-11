@@ -1,7 +1,9 @@
 """Paseo aleatorio diferencial: ejecuta la misma secuencia de acciones (semilla) sobre dos compilaciones y compara,
 paso a paso, el DOM, el estado guardado y los pitidos. Sirve para demostrar que un refactor no cambia el comportamiento.
 
-  python3 tests/walk.py run REFERENCIA.html CANDIDATA.html 0,1,2,3 150
+  python3 tests/walk.py run REFERENCIA.html CANDIDATA.html 0,1,2,3 150 [mapa.txt]
+  Con mapa.txt (líneas «registro viejo nuevo», registro A, C o U), la referencia es de antes de renombrar acciones: sus nombres
+  se traducen a los nuevos para elegir lo mismo y comparar el mismo DOM.
   python3 tests/walk.py trace ARCHIVO.html SEMILLA PASOS salida.json ; python3 tests/walk.py cmp a.json b.json
 Requiere:  pip install playwright  &&  playwright install chromium
 """
@@ -13,7 +15,7 @@ def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
     return chr(10).join(l for l in t.split(chr(10)) if not l.startswith('//'))
 SEED=_rd('seed.js');EXTRA=_rd('extra.js');INIT=_rd('init.js')
-SKIP={'rst','zrs','zrd','bkf','f2exd','f2sh','f2sc','f2ln','f2bk','f2os','upr','zbc','shg','shf','pgio','pgi','nsc','nfq','rps','rpc','sout','soutx','lgo','lgcp','lgre','lgrs','acpw','snc','avok','adc','adxx'}  # borrar todo, descargas, cámara, red, recargas, enlaces fuera, cuenta
+SKIP={'resetAllAsk','resetAllConfirmed','resumeDiscard','backupDownload','csvDownload','summaryShare','openScanner','scannerLookupTyped','scannerClose','searchFoodOnline','backupCopyText','shareCopyCode','shareDownload','importCode','openImport','openMealScanner','searchListOnline','reportSend','signOut','signOutConfirmed','loginSubmit','loginCreatePassword','reloginShow','reloginSubmit','accountChangePassword','accountSyncNow','photoConsentOk','adminCopyPassword','adminDelete'}  # borrar todo, descargas, cámara, red, recargas, enlaces fuera, cuenta
 CAND="""()=>{const out=[];const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!='hidden'&&!e.disabled};
  document.querySelectorAll('[data-a],[data-c],[data-u]').forEach(e=>{if(!vis(e))return;
   const a=e.getAttribute('data-a'),c=e.getAttribute('data-c'),u=e.getAttribute('data-u');
@@ -30,7 +32,9 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
  else if(e.type=='range'){e.value=String(val)}
  else e.value=txt;
  e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}"""
-SIG="""()=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
+SIG="""(ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
+ if(ren){for(const [at,r] of [['data-a','A'],['data-enter','A'],['data-c','C'],['data-u','U']])b.querySelectorAll('['+at+']').forEach(e=>{const v=e.getAttribute(at);if(ren[r][v])e.setAttribute(at,ren[r][v])});
+  b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])})}
  const h=b.innerHTML;let ls='';try{const g=k=>localStorage.getItem(k);let c=JSON.parse(g('ff')||'null');
   if(c&&c._parts){delete c._parts;const ks=[],m={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('ff:'))ks.push(k)}
    ks.sort().forEach(k=>{const v=JSON.parse(g(k));if(k.startsWith('ff:meals:'))Object.assign(m,v);else if(c[k.slice(3)]===k)c[k.slice(3)]=v});if(c.meals==='ff:meals')c.meals=m}
@@ -39,7 +43,18 @@ SIG="""()=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,can
  const f=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x>>>0};
  return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps}}"""
 WORDS=['a','Prueba','12','Pollo','Press','x y','0','99','Arroz','Mi plan']
-def trace(file,seed,steps):
+def load_map(path):
+    """{'A': {viejo: nuevo}, 'C': …, 'U': …} de un mapa «registro viejo nuevo»."""
+    m={'A':{},'C':{},'U':{}}
+    for l in open(path,encoding='utf-8'):
+        l=l.strip()
+        if l and not l.startswith('#'):
+            r,o,n=l.split();m[r][o]=n
+    return m
+def trace(file,seed,steps,ren=None):
+    reg={'a':'A','c':'C','u':'U'}
+    fwd=lambda k,v:ren[reg[k]].get(v,v) if ren else v                           # nombre de esta compilación → nuevo
+    back=lambda k,v:{n:o for o,n in ren[reg[k]].items()}.get(v,v) if ren else v  # nuevo → el de esta compilación
     rng=random.Random(seed*7919+13)
     res={'seed':seed,'steps':[],'errs':[]}
     with sync_playwright() as p:
@@ -62,10 +77,12 @@ def trace(file,seed,steps):
             pg.evaluate("location.reload()");pg.wait_for_timeout(200)
         pg.clock.run_for(500)
         if scen==1:
-            pg.evaluate("A.go&&A.go()");pg.clock.run_for(300)
-        res['steps'].append(['init',pg.evaluate(SIG)])
+            go=back('a','startWorkout');pg.evaluate("A.%s&&A.%s()"%(go,go));pg.clock.run_for(300)
+        res['steps'].append(['init',pg.evaluate(SIG,ren)])
         for st in range(steps):
-            cs=pg.evaluate(CAND)
+            cs=[[x[0],fwd(x[0],x[1])]+x[2:] for x in pg.evaluate(CAND)]
+            if ren:  # los botones de las ventanas y del menú llevan en data-v la acción que lanzan
+                cs=[x[:6]+[fwd('a',x[6])]+x[7:] if x[1] in ('dialogAnswer','menuItem') else x for x in cs]
             cs=[x for x in cs if x[1] not in SKIP]
             if not cs:
                 pg.evaluate("S.tab=(S.tab+1)%4;R()") if False else None
@@ -76,7 +93,7 @@ def trace(file,seed,steps):
                 same=[y for y in cs if y[0]==x[0] and y[1]==x[1]]
                 idx=same.index(x)
                 val=rng.random();txt=WORDS[rng.randrange(len(WORDS))]
-                r=pg.evaluate(CLICK,[x[0],x[1],idx,val,txt])
+                r=pg.evaluate(CLICK,[x[0],back(x[0],x[1]),idx,val,txt])
                 act=[x[0],x[1],x[4],x[5],x[6],r]
             adv=rng.choice([0,50,400,1500,6000,31000]);
             try:pg.clock.run_for(adv)
@@ -86,9 +103,9 @@ def trace(file,seed,steps):
                 if not pg.evaluate("(()=>{const e=document.querySelector('#snapl');return !!e&&/Cargando/.test(e.textContent)})()"):break
                 pg.wait_for_timeout(25)
             try:
-                sg=pg.evaluate(SIG)
+                sg=pg.evaluate(SIG,ren)
             except Exception as e:
-                res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=pg.evaluate(SIG)
+                res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=pg.evaluate(SIG,ren)
             res['steps'].append([act,sg,adv])
         b.close()
     return res
@@ -109,11 +126,12 @@ if __name__=='__main__':
     elif cmd=='cmp':
         a=json.load(open(sys.argv[2]));b=json.load(open(sys.argv[3]));print(sys.argv[2].split('/')[-1],compare(a,b))
     elif cmd=='run':
-        # run FILE_A FILE_B seeds steps  → traza ambos y compara
+        # run FILE_A FILE_B seeds steps [mapa]  → traza ambos y compara (el mapa traduce los nombres de FILE_A)
         fa,fb,sd,ns=sys.argv[2],sys.argv[3],sys.argv[4].split(','),int(sys.argv[5])
+        ren=load_map(sys.argv[6]) if len(sys.argv)>6 else None
         bad=0
         for s in sd:
-            a=trace(fa,int(s),ns);b=trace(fb,int(s),ns)
+            a=trace(fa,int(s),ns,ren);b=trace(fb,int(s),ns)
             r=compare(a,b);print('seed',s,r if r[0]!='OK' else r,'errsA',len(a['errs']),'errsB',len(b['errs']))
             if r[0]!='OK':bad+=1
         sys.exit(1 if bad else 0)

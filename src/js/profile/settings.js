@@ -37,7 +37,7 @@ const SETTINGS_PAGES = {
   acento: () => ['Color de acento', accentSwatches()],
   inicio: () => ['Al abrir la app', startTabCard()],
   unidades: () => ['Unidades', unitsCard()],
-  sonido: () => ['Sonido y avisos', html`<label class="srk"><input type="checkbox" ${S.snd === 0 ? '' : 'checked'} data-c="snd"> Sonidos del descanso</label><button data-a="zsnd" style="width:100%;margin:8px 0 6px">Probar sonido</button>${alertSettings()}${badgeCard()}`],
+  sonido: () => ['Sonido y avisos', html`<label class="srk"><input type="checkbox" ${S.snd === 0 ? '' : 'checked'} data-c="soundToggle"> Sonidos del descanso</label><button data-a="soundTest" style="width:100%;margin:8px 0 6px">Probar sonido</button>${alertSettings()}${badgeCard()}`],
   cuenta: () => ['Cuenta', accountPage()],
   clave: () => ['Cambiar contraseña', passwordPage()],
   privacidad: () => ['Privacidad', html`<div class="srt">${PRIVACY_TEXT.map(p => html`<p>${p}</p>`)}</div>`],
@@ -50,13 +50,13 @@ function settingsMain() {
   const ac = accentNow();
   const ne = errorLog().length;
   const sec = (t, rows) => html`<div class="ph">${raw(t)}</div><div class="cd srg">${rows}</div>`;
-  return html`<div id="ajs">${pgHead('Ajustes')}${sec('Cuenta', [settingsRow('user', 'Cuenta', acctName(), 'ajp', { v: 'cuenta' }), settingsRow('cloud', 'Sincronización', syncShort(), 'snc', { act: 1 })])}${sec('Apariencia', [settingsRow('pal', 'Tema y estilo', th + ' · ' + (glassMode() > 0 ? 'Cristal' : 'Clásico'), 'ajp', { v: 'tema' }), settingsRow('drop', 'Color de acento', html`<i class="srd" style="background:linear-gradient(135deg,${raw(ac[1])},${raw(ac[2])})"></i>${raw(ac[0])}`, 'ajp', { v: 'acento' }), settingsRow('home', 'Al abrir la app', startTabName(), 'ajp', { v: 'inicio' })])}${sec('Entreno', [settingsRow('kgw', 'Unidades de carga', usesLb() ? 'Libras (lb)' : 'Kilos (kg)', 'ajp', { v: 'unidades' }), settingsRow('snd', 'Sonido y avisos', S.snd === 0 ? 'Sin sonido' : 'Con sonido', 'ajp', { v: 'sonido' })])}${sec('Datos', [settingsRow('bkp', 'Copia de seguridad', S.cb && +S.cb.at > 0 ? ago(+S.cb.at) : +S.bkd > 0 ? ago(+S.bkd) : 'Nunca', 'zbk'), settingsRow('del', 'Borrar todos los datos', '', 'rst', { red: 1, act: 1 })])}${sec('App', [settingsRow('upd', 'Actualizaciones', 'V' + APPV, 'updChk', { act: 1 }), settingsRow('news', 'Ver nota de actualización', '', 'ajp', { v: 'nota' }), settingsRow('tour', 'Ver el recorrido', '', 'trgo', { act: 1 }), settingsRow('pulse', 'Diagnóstico', ne ? ne + (ne == 1 ? ' error' : ' errores') : '', 'diag'), settingsRow('bug', 'Informar de un fallo', '', 'rpo')])}${offlineNote()}${sec('Ajustes avanzados', [settingsRow('gear', 'Esfuerzo (RPE)', rpeOn() ? 'Activado' : 'Desactivado', 'ajp', { v: 'avanzado' })])}${sec('Información', [settingsRow('shd', 'Privacidad', '', 'ajp', { v: 'privacidad' }), settingsRow('doc', 'Aviso legal', '', 'ajp', { v: 'legal' })])}<div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'sout', { red: 1, act: 1 })}</div><div style="height:40px"></div></div>`;
+  return html`<div id="ajs">${pgHead('Ajustes')}${sec('Cuenta', [settingsRow('user', 'Cuenta', acctName(), 'openSettingsPage', { v: 'cuenta' }), settingsRow('cloud', 'Sincronización', syncShort(), 'accountSyncNow', { act: 1 })])}${sec('Apariencia', [settingsRow('pal', 'Tema y estilo', th + ' · ' + (glassMode() > 0 ? 'Cristal' : 'Clásico'), 'openSettingsPage', { v: 'tema' }), settingsRow('drop', 'Color de acento', html`<i class="srd" style="background:linear-gradient(135deg,${raw(ac[1])},${raw(ac[2])})"></i>${raw(ac[0])}`, 'openSettingsPage', { v: 'acento' }), settingsRow('home', 'Al abrir la app', startTabName(), 'openSettingsPage', { v: 'inicio' })])}${sec('Entreno', [settingsRow('kgw', 'Unidades de carga', usesLb() ? 'Libras (lb)' : 'Kilos (kg)', 'openSettingsPage', { v: 'unidades' }), settingsRow('snd', 'Sonido y avisos', S.snd === 0 ? 'Sin sonido' : 'Con sonido', 'openSettingsPage', { v: 'sonido' })])}${sec('Datos', [settingsRow('bkp', 'Copia de seguridad', S.cb && +S.cb.at > 0 ? ago(+S.cb.at) : +S.bkd > 0 ? ago(+S.bkd) : 'Nunca', 'openBackup'), settingsRow('del', 'Borrar todos los datos', '', 'resetAllAsk', { red: 1, act: 1 })])}${sec('App', [settingsRow('upd', 'Actualizaciones', 'V' + APPV, 'updateCheck', { act: 1 }), settingsRow('news', 'Ver nota de actualización', '', 'openSettingsPage', { v: 'nota' }), settingsRow('tour', 'Ver el recorrido', '', 'tourReplay', { act: 1 }), settingsRow('pulse', 'Diagnóstico', ne ? ne + (ne == 1 ? ' error' : ' errores') : '', 'openDiagnostics'), settingsRow('bug', 'Informar de un fallo', '', 'openReport')])}${offlineNote()}${sec('Ajustes avanzados', [settingsRow('gear', 'Esfuerzo (RPE)', rpeOn() ? 'Activado' : 'Desactivado', 'openSettingsPage', { v: 'avanzado' })])}${sec('Información', [settingsRow('shd', 'Privacidad', '', 'openSettingsPage', { v: 'privacidad' }), settingsRow('doc', 'Aviso legal', '', 'openSettingsPage', { v: 'legal' })])}<div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div><div style="height:40px"></div></div>`;
 }
 const settingsPage = k => {
   if (!k || !Object.prototype.hasOwnProperty.call(SETTINGS_PAGES, k))
     return settingsMain();
   const [t, body] = SETTINGS_PAGES[k]();
-  return html`<div id="ajs">${pgHead(t, k == 'clave' ? 'ajc' : 'zaj')}${body}<div style="height:40px"></div></div>`;
+  return html`<div id="ajs">${pgHead(t, k == 'clave' ? 'settingsBackToAccount' : 'openSettings')}${body}<div style="height:40px"></div></div>`;
 };
 /** Tras un R(): si una página de Ajustes sigue abierta, la pinta de nuevo cambiando solo lo distinto (core/morph). */
 export const settingsSync = () => {
@@ -70,16 +70,16 @@ export const settingsSync = () => {
   morph(p, settingsPage(settingsSub));
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.zaj = () => {
+A.openSettings = () => {
   settingsSub = '';
   fullPage(settingsPage(''));
 };
 /* «←» de Cambiar contraseña: vuelve a Cuenta */
-A.ajc = () => {
+A.settingsBackToAccount = () => {
   settingsSub = 'cuenta';
   fullPage(settingsPage(settingsSub));
 };
-A.ajp = (i, b) => {
+A.openSettingsPage = (i, b) => {
   settingsSub = b.dataset.v;
   fullPage(settingsPage(settingsSub));
 };

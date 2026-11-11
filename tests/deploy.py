@@ -144,13 +144,13 @@ def main(app):
                         log.append('acceso directo sin conexión: error interno de WebKit al abrir la dirección')
                     pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
                     check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
-                    ev('A.wod()')
+                    ev('A.openWod()')
                     pg.wait_for_timeout(300)
                     check('sin conexión también abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
                     c.set_offline(False)
                 else:
                     skipped('sin conexión')
-                    ev('A.wod()')
+                    ev('A.openWod()')
                     pg.wait_for_timeout(300)
                     check('abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
                 reload(pg, log)
@@ -161,11 +161,11 @@ def main(app):
                 vj0 = open(vj, encoding='utf-8').read()
                 check('version.json publicado con la versión de la app', json.loads(vj0)['version'] == ev('APPV'))
                 # Perfil → Ajustes → Actualizaciones, sin versión nueva
-                ev("S.tab=3;R();A.zaj()")
-                pg.click('#sh [data-a=updChk]')
+                ev("S.tab=3;R();A.openSettings()")
+                pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones: «Tienes la última versión»', ev("/Tienes la última versión/.test(document.body.innerText)"))
-                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updChk] .srv').textContent") == 'V' + ev('APPV'))
+                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updateCheck] .srv').textContent") == 'V' + ev('APPV'))
 
                 def publish(ver, items, code=True):
                     if code:
@@ -180,8 +180,8 @@ def main(app):
                     reload(pg, log)
                     pg.wait_for_load_state('load')
                 else:
-                    ev("A.zaj()")
-                    pg.click('#sh [data-a=updChk]')  # sin service worker, el aviso llega desde Ajustes → Actualizaciones
+                    ev("A.openSettings()")
+                    pg.click('#sh [data-a=updateCheck]')  # sin service worker, el aviso llega desde Ajustes → Actualizaciones
                 try:
                     pg.wait_for_selector('#upd.update .updk', timeout=10000)
                 except Exception:
@@ -213,8 +213,8 @@ def main(app):
                     c.set_offline(False)
                 # Ajustes → Actualizaciones cuando hay una versión nueva en el servidor
                 publish('9.9.10', ['Otra mejora'], code=False)
-                ev("S.tab=3;R();A.zaj()")
-                pg.click('#sh [data-a=updChk]')
+                ev("S.tab=3;R();A.openSettings()")
+                pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones encuentra la versión nueva', ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión 9.9.10')
                 pg.click('#upd .updx')
@@ -266,23 +266,23 @@ def main(app):
                 p2.on('pageerror', lambda e: e2.append(str(e)[:200]))
                 p2.goto(url)
                 p2.wait_for_timeout(800)
-                p2.evaluate("S.tab=3;saveState();R();A.zaj()")
+                p2.evaluate("S.tab=3;saveState();R();A.openSettings()")
                 p2.wait_for_timeout(200)
                 check('instalada: sin aviso de «Añadir a pantalla de inicio»', p2.evaluate("!/Añadir a pantalla de inicio/.test(document.body.innerText)"))
-                p2.evaluate("A.zbk()")
+                p2.evaluate("A.openBackup()")
                 p2.wait_for_timeout(200)
-                p2.click('[data-a=bkf]')
+                p2.click('[data-a=backupDownload]')
                 p2.wait_for_timeout(600)
                 sh = p2.evaluate("window.__sh")
                 check('instalada: comparte la copia como archivo JSON, siempre con el mismo nombre', bool(sh) and sh[0] == 'StrataFit-copia.json' and sh[1] and sh[2] == 'application/json', str(sh))
                 p2.evaluate("window.__abort=1;window.__sh=null")
-                p2.click('[data-a=bkf]')
+                p2.click('[data-a=backupDownload]')
                 p2.wait_for_timeout(600)
                 check('instalada: cancelar compartir lo indica', p2.evaluate("/No se guardó la copia/.test(document.body.innerText)"))
                 p3 = c.new_page()
                 p3.goto(url)
                 p3.wait_for_timeout(600)
-                p3.evaluate("S.tab=3;saveState();R();A.zaj()")
+                p3.evaluate("S.tab=3;saveState();R();A.openSettings()")
                 check('en el navegador: aviso de «Añadir a pantalla de inicio» en Ajustes', p3.evaluate("/Añadir a pantalla de inicio/.test(document.body.innerText)"))
                 check('sin errores de JS', not errs and not e2, str((errs + e2)[:3]))
             except Exception:

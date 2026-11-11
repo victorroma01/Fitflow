@@ -44,34 +44,34 @@ function measureChart(k) {
 function measuresTab() {
   const L = measureList();
   const has = MEASURES.filter(x => measureDelta(x[0]));
-  let h = '<button class="pr" data-a="msnew" style="width:100%;margin-top:12px">Nueva medición</button>';
+  let h = '<button class="pr" data-a="measureNew" style="width:100%;margin-top:12px">Nueva medición</button>';
   if (!L.length)
     return html`${raw(h)}<p class="mu" style="margin:14px 2px;font-size:14px">Mide con una cinta métrica, siempre en el mismo punto y a la misma hora. Cada pocas semanas basta para ver cómo cambia tu cuerpo, aunque el peso no se mueva.</p>`;
   if (!has.some(x => x[0] == measureState.k))
     measureState.k = has[0][0];
-  h += html`<div style="margin-top:10px">${has.map(x => html`<button class="chip ${measureState.k == x[0] ? 'on' : ''}" data-a="msk" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><div class="cd" style="margin-top:8px">${measureChart(measureState.k)}</div>`;
+  h += html`<div style="margin-top:10px">${has.map(x => html`<button class="chip ${measureState.k == x[0] ? 'on' : ''}" data-a="measureChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><div class="cd" style="margin-top:8px">${measureChart(measureState.k)}</div>`;
   h += html`<div class="cd"><div class="row"><b>Última medición</b><small>${raw(fmtDateShort(L[L.length - 1].d, { day: 'numeric', month: 'long' }))}</small></div>${has.map(x => {
     const t = measureDelta(x[0]);
     const df = t.p != null ? Math.round((t.v - t.p) * 10) / 10 : null;
     return html`<div class="it" style="grid-template-columns:1fr auto auto;gap:12px"><span>${raw(x[1])}</span><b>${round1(t.v)} cm</b><small style="min-width:52px;text-align:right">${raw(df == null ? '' : df == 0 ? 'igual' : (df > 0 ? '+' : '−') + Math.abs(df))}</small></div>`;
   })}</div>`;
-  h += html`<details class="cd"><summary>Historial (${L.length})</summary>${L.slice().reverse().map((m, i) => html`<div class="it exr" data-a="msdel" data-i="${L.length - 1 - i}" role="button" tabindex="0" style="cursor:pointer"><span><b>${raw(fmtDateShort(m.d, { day: 'numeric', month: 'long', year: 'numeric' }))}</b><br><small>${raw(MEASURES.filter(x => +m.v[x[0]] > 0).map(x => x[1] + ' ' + round1(+m.v[x[0]])).join(' · '))}</small></span></div>`)}<p class="mu" style="font-size:12px;margin:8px 0 0">Toca una medición para borrarla.</p></details>`;
+  h += html`<details class="cd"><summary>Historial (${L.length})</summary>${L.slice().reverse().map((m, i) => html`<div class="it exr" data-a="measureDeleteAsk" data-i="${L.length - 1 - i}" role="button" tabindex="0" style="cursor:pointer"><span><b>${raw(fmtDateShort(m.d, { day: 'numeric', month: 'long', year: 'numeric' }))}</b><br><small>${raw(MEASURES.filter(x => +m.v[x[0]] > 0).map(x => x[1] + ' ' + round1(+m.v[x[0]])).join(' · '))}</small></span></div>`)}<p class="mu" style="font-size:12px;margin:8px 0 0">Toca una medición para borrarla.</p></details>`;
   return h;
 }
 function measuresPage() {
   return html`<div id="f2ms">${pgHead('Medidas')}${raw(measuresTab())}<div style="height:30px"></div></div>`;
 }
-A.f2ms = () => {
+A.openMeasures = () => {
   fullPage(measuresPage());
 };
-A.msk = (i, b) => {
+A.measureChoose = (i, b) => {
   measureState.k = b.dataset.v;
   sheet(measuresPage());
 };
-A.msb = () => {
+A.measuresBack = () => {
   sheet(measuresPage());
 };
-A.msnew = () => {
+A.measureNew = () => {
   const td = dayKey(new Date);
   const last = {};
   MEASURES.forEach(x => {
@@ -79,9 +79,9 @@ A.msnew = () => {
     if (t)
       last[x[0]] = t.v;
   });
-  sheet(html`<div id="f2ms">${pgHead('Nueva medición', 'msb')}<label for="f2md">Fecha</label><input id="f2md" type="date" value="${td}" max="${td}"><p class="mu" style="font-size:13px;margin:10px 2px 0">Rellena solo lo que midas. Valores en centímetros.</p><div class="g2">${MEASURES.map(x => html`<div><label for="f2m_${x[0]}">${raw(x[1])} (cm)</label><input id="f2m_${x[0]}" type="number" inputmode="decimal" step="0.1" min="10" max="300" placeholder="${last[x[0]] ? round1(last[x[0]]) : ''}"></div>`)}</div><div style="height:90px"></div><div class="sb"><button class="pr" data-a="mssv" style="width:100%;padding:14px">Guardar medición</button></div></div>`);
+  sheet(html`<div id="f2ms">${pgHead('Nueva medición', 'measuresBack')}<label for="f2md">Fecha</label><input id="f2md" type="date" value="${td}" max="${td}"><p class="mu" style="font-size:13px;margin:10px 2px 0">Rellena solo lo que midas. Valores en centímetros.</p><div class="g2">${MEASURES.map(x => html`<div><label for="f2m_${x[0]}">${raw(x[1])} (cm)</label><input id="f2m_${x[0]}" type="number" inputmode="decimal" step="0.1" min="10" max="300" placeholder="${last[x[0]] ? round1(last[x[0]]) : ''}"></div>`)}</div><div style="height:90px"></div><div class="sb"><button class="pr" data-a="measureSave" style="width:100%;padding:14px">Guardar medición</button></div></div>`);
 };
-A.mssv = () => {
+A.measureSave = () => {
   const g = id => document.getElementById(id);
   const d0 = (g('f2md') || {}).value;
   const d = /^\d{4}-\d{2}-\d{2}$/.test(d0 || '') && d0 <= dayKey(new Date) ? d0 : dayKey(new Date);
@@ -104,14 +104,14 @@ A.mssv = () => {
   toast('Medición guardada');
   sheet(measuresPage());
 };
-A.msdel = i => {
+A.measureDeleteAsk = i => {
   const m = measureList()[i];
   if (!m)
     return;
   measureState.di = i;
-  confirmDialog('¿Borrar esta medición?', fmtDateShort(m.d, { day: 'numeric', month: 'long', year: 'numeric' }), 'msdl', 'Borrar');
+  confirmDialog('¿Borrar esta medición?', fmtDateShort(m.d, { day: 'numeric', month: 'long', year: 'numeric' }), 'measureDelete', 'Borrar');
 };
-A.msdl = () => {
+A.measureDelete = () => {
   const m = measureList()[measureState.di];
   if (m) {
     S.ms = measureList().filter(x => x !== m);

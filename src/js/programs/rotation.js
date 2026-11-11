@@ -61,7 +61,7 @@ const rotationDue = () => {
   return !W && S.wk - from >= (ROTATE_EVERY[S.lv] || 5) && S.rq != S.wk && !isDeloadWeek(S.wk) && rotationChanges().length > 0;
 };
 /** Tarjeta de Workout que propone la rotación cuando toca. */
-export const rotationCard = () => rotationDue() ? html`<div class="cd rtc"><b>Toca rotar los ejercicios</b><div class="mu">Llevas ${raw(S.wk - (S.rw > 0 && S.rw <= S.wk ? S.rw : 1))} semanas con los mismos accesorios. Cambiarlos por otra variante del mismo movimiento sigue estimulando el músculo; los básicos se quedan para que veas tu progreso.</div><div class="g2"><button data-a="rtno">Ahora no</button><button class="pr" data-a="rtv">Ver cambios</button></div></div>` : '';
+export const rotationCard = () => rotationDue() ? html`<div class="cd rtc"><b>Toca rotar los ejercicios</b><div class="mu">Llevas ${raw(S.wk - (S.rw > 0 && S.rw <= S.wk ? S.rw : 1))} semanas con los mismos accesorios. Cambiarlos por otra variante del mismo movimiento sigue estimulando el músculo; los básicos se quedan para que veas tu progreso.</div><div class="g2"><button data-a="rotationNotNow">Ahora no</button><button class="pr" data-a="rotationShow">Ver cambios</button></div></div>` : '';
 /** Hoja con lo que cambia al rotar y el botón para hacerlo. */
 const rotationSheet = () => {
   const ch = rotationChanges();
@@ -69,17 +69,17 @@ const rotationSheet = () => {
     return html`<h3>Rotar ejercicios</h3><p class="mu">Este plan no tiene ejercicios con otra variante para rotar.</p>`;
   const by = {};
   ch.forEach(c => (by[c.d] = by[c.d] || []).push(c));
-  return html`<h3>Rotar ejercicios</h3><p class="mu" style="margin:0 0 10px">${raw(ch.length)} ${ch.length == 1 ? 'accesorio cambia' : 'accesorios cambian'} por otra variante del mismo movimiento, con las mismas series, repeticiones y descanso.</p>${Object.keys(by).map(d => html`<div class="cd rtd"><b>${S.plan[d].n}</b>${by[d].map(c => html`<div class="mu">${S.plan[d].ex[c.i].n} → <b>${c.n}</b></div>`)}</div>`)}<div class="g2" style="margin-top:12px"><button data-a="rtno">Ahora no</button><button class="pr" data-a="rtok">Rotar</button></div>`;
+  return html`<h3>Rotar ejercicios</h3><p class="mu" style="margin:0 0 10px">${raw(ch.length)} ${ch.length == 1 ? 'accesorio cambia' : 'accesorios cambian'} por otra variante del mismo movimiento, con las mismas series, repeticiones y descanso.</p>${Object.keys(by).map(d => html`<div class="cd rtd"><b>${S.plan[d].n}</b>${by[d].map(c => html`<div class="mu">${S.plan[d].ex[c.i].n} → <b>${c.n}</b></div>`)}</div>`)}<div class="g2" style="margin-top:12px"><button data-a="rotationNotNow">Ahora no</button><button class="pr" data-a="rotationApply">Rotar</button></div>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.rtv = () => sheet(rotationSheet());
-A.rtno = () => {
+A.rotationShow = () => sheet(rotationSheet());
+A.rotationNotNow = () => {
   S.rq = S.wk;
   saveState();
   sheet();
   R();
 };
-A.rtok = () => {
+A.rotationApply = () => {
   if (W) {
     toast('Termina o descarta el entreno en curso');
     return;

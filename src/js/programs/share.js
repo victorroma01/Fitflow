@@ -72,14 +72,14 @@ const ensureExercises = pl => {
 let shareState = null;
 const sharePage = () => {
   const code = programCode(shareState.n, shareState.plan);
-  return html`${pgHead('Compartir programa', shareState.back || 'pg')}<p class="mu" style="margin:-6px 0 10px">«${shareState.n}». Envía este código por mensaje o correo; quien lo reciba lo pega en Programas, Importar.</p><textarea id="shc" aria-label="Código del programa" rows="6" readonly>${code}</textarea><div class="g2" style="margin-top:10px"><button class="pr" data-a="shg">${navigator.share ? 'Compartir' : 'Copiar código'}</button><button data-a="shf">Guardar archivo</button></div>`;
+  return html`${pgHead('Compartir programa', shareState.back || 'openPrograms')}<p class="mu" style="margin:-6px 0 10px">«${shareState.n}». Envía este código por mensaje o correo; quien lo reciba lo pega en Programas, Importar.</p><textarea id="shc" aria-label="Código del programa" rows="6" readonly>${code}</textarea><div class="g2" style="margin-top:10px"><button class="pr" data-a="shareCopyCode">${navigator.share ? 'Compartir' : 'Copiar código'}</button><button data-a="shareDownload">Guardar archivo</button></div>`;
 };
-A.cpsh = () => {
+A.ownProgramShare = () => {
   const p = S.cp[progDraft.k];
   if (!p)
     return;
   try {
-    shareState = { n: p.n, plan: S.cpi == progDraft.k ? S.plan : p.plan, back: 'cpv0' };
+    shareState = { n: p.n, plan: S.cpi == progDraft.k ? S.plan : p.plan, back: 'ownProgramShow' };
     sheet(sharePage());
     sheetToTop();
   }
@@ -87,13 +87,13 @@ A.cpsh = () => {
     toast('No se pudo preparar el programa');
   }
 };
-A.pgs0 = () => {
+A.sharePlan = () => {
   if (S.np) {
     toast('Aún no tienes un programa que compartir');
     return;
   }
   try {
-    shareState = { n: S.cpi >= 0 && S.cp[S.cpi] ? S.cp[S.cpi].n : PROGRAM_NAMES[S.prog], plan: S.plan, back: 'pg' };
+    shareState = { n: S.cpi >= 0 && S.cp[S.cpi] ? S.cp[S.cpi].n : PROGRAM_NAMES[S.prog], plan: S.plan, back: 'openPrograms' };
     sheet(sharePage());
     sheetToTop();
   }
@@ -101,7 +101,7 @@ A.pgs0 = () => {
     toast('No se pudo preparar el programa');
   }
 };
-A.shg = async () => {
+A.shareCopyCode = async () => {
   const el = $('#shc');
   if (!el || !shareState)
     return;
@@ -118,14 +118,14 @@ A.shg = async () => {
   }
   toast(await copyText(code, el) ? 'Código copiado' : 'Selecciona el texto y cópialo');
 };
-A.shf = async () => {
+A.shareDownload = async () => {
   if (!shareState)
     return;
   const r = await downloadFile('programa-' + String(shareState.n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) + '.json', JSON.stringify({ ff: 'FFP1', n: shareState.n, plan: cleanPlan(shareState.plan) }));
   toast(r == 'saved' ? 'Archivo guardado' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
 };
-A.pgi = () => {
-  sheet(html`${pgHead('Importar programa', 'pg')}<p class="mu" style="margin:-6px 0 10px">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu" style="color:var(--ctx);display:none;margin:8px 0 0"></p><div class="g2" style="margin-top:10px"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="pgif"></label><button class="pr" data-a="pgio">Importar</button></div>`);
+A.openImport = () => {
+  sheet(html`${pgHead('Importar programa', 'openPrograms')}<p class="mu" style="margin:-6px 0 10px">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu" style="color:var(--ctx);display:none;margin:8px 0 0"></p><div class="g2" style="margin-top:10px"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="importFile"></label><button class="pr" data-a="importCode">Importar</button></div>`);
   sheetToTop();
 };
 const importProgram = t => {
@@ -137,8 +137,8 @@ const importProgram = t => {
     S.cp.push({ n: nm, plan, t: Date.now(), src: 'import', d: 'Programa importado' });
     progDraft.k = S.cp.length - 1;
     saveState();
-    A.pg();
-    dialog('Programa importado', '«' + X(nm) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.np ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'zno', ''], ['Usar ahora', 'cpa', 'pr']]);
+    A.openPrograms();
+    dialog('Programa importado', '«' + X(nm) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.np ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
   }
   catch (x) {
     const e = $('#ipe');
@@ -148,11 +148,11 @@ const importProgram = t => {
     }
   }
 };
-A.pgio = () => {
+A.importCode = () => {
   const e = $('#ipc');
   importProgram(e ? e.value : '');
 };
-C.pgif = e => {
+C.importFile = e => {
   const f = e.files && e.files[0];
   if (!f)
     return;

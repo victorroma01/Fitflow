@@ -29,7 +29,7 @@ const paceLabel = t => t == 'bike' || t == 'ell' || t == 'oth' ? 'Velocidad medi
 function cardioSheet() {
   const t = cardioState.t;
   const td = dayKey(new Date);
-  return html`<h3>Registrar cardio</h3><div>${CARDIO_TYPES.map(x => html`<button class="chip ${t == x[0] ? 'on' : ''}" data-a="cdt" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><label for="f2cdd">Fecha</label><input id="f2cdd" type="date" value="${td}" max="${td}"><div class="g2"><div><label for="f2cdk">Distancia (km, opcional)</label><input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cdp"></div><div><label>Tiempo (min y s)</label><div class="g2" style="gap:6px"><input id="f2cdm" aria-label="Minutos" type="number" inputmode="numeric" min="0" max="999" placeholder="min" data-u="cdp"><input id="f2cds" aria-label="Segundos" type="number" inputmode="numeric" min="0" max="59" placeholder="s" data-u="cdp"></div></div></div><div class="cd" style="margin:12px 0 0;text-align:center"><small id="f2cdl" class="mu">${paceLabel(t)}</small><br><b id="f2cdr" style="font-size:22px">—</b></div><button class="pr" data-a="cdsv" style="width:100%;margin-top:12px">Guardar</button>`;
+  return html`<h3>Registrar cardio</h3><div>${CARDIO_TYPES.map(x => html`<button class="chip ${t == x[0] ? 'on' : ''}" data-a="cardioType" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><label for="f2cdd">Fecha</label><input id="f2cdd" type="date" value="${td}" max="${td}"><div class="g2"><div><label for="f2cdk">Distancia (km, opcional)</label><input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cardioPaceUpdate"></div><div><label>Tiempo (min y s)</label><div class="g2" style="gap:6px"><input id="f2cdm" aria-label="Minutos" type="number" inputmode="numeric" min="0" max="999" placeholder="min" data-u="cardioPaceUpdate"><input id="f2cds" aria-label="Segundos" type="number" inputmode="numeric" min="0" max="59" placeholder="s" data-u="cardioPaceUpdate"></div></div></div><div class="cd" style="margin:12px 0 0;text-align:center"><small id="f2cdl" class="mu">${paceLabel(t)}</small><br><b id="f2cdr" style="font-size:22px">—</b></div><button class="pr" data-a="cardioSave" style="width:100%;margin-top:12px">Guardar</button>`;
 }
 function readCardio() {
   const g = id => document.getElementById(id);
@@ -38,17 +38,17 @@ function readCardio() {
   const sc = clampInt(g('f2cds') && g('f2cds').value, 0, 59, 0);
   return { km: Math.round(km * 100) / 100, sec: mn * 60 + sc, d: (g('f2cdd') || {}).value || dayKey(new Date) };
 }
-U.cdp = () => {
+U.cardioPaceUpdate = () => {
   const r = readCardio();
   const e = document.getElementById('f2cdr');
   if (e)
     e.textContent = cardioPace(cardioState.t, r.km, r.sec) || '—';
 };
-A.cardio = () => {
+A.openCardio = () => {
   cardioState = { t: cardioState.t || 'run' };
   sheet(cardioSheet());
 };
-A.cdt = (i, b) => {
+A.cardioType = (i, b) => {
   const r = readCardio();
   cardioState.t = b.dataset.v;
   sheet(cardioSheet());
@@ -61,9 +61,9 @@ A.cdt = (i, b) => {
   }
   if (r.d)
     g('f2cdd').value = r.d;
-  U.cdp();
+  U.cardioPaceUpdate();
 };
-A.cdsv = () => {
+A.cardioSave = () => {
   const r = readCardio();
   if (r.sec < 60) {
     toast('Indica al menos 1 minuto');

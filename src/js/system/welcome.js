@@ -30,13 +30,13 @@ const welcomeRoot = () => {
   return r;
 };
 /* paso 1: la bienvenida */
-const welcomeView = () => html`<div class="bk"></div><div class="sp" role="dialog" aria-modal="true" aria-labelledby="wlh"><div class="trw">${brandLogo('wlg')}<h3 id="wlh">Te damos la bienvenida a StrataFit</h3><p class="mu">Gracias por instalar la app y por apoyar su desarrollo.</p><p class="mu">StrataFit está en fase de pruebas, así que puede haber errores. Si encuentras alguno, cuéntanoslo en Ajustes → Informar de un fallo: nos ayuda mucho a mejorarla.</p><p class="mu wlw">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p><button class="pr" data-a="wln">Siguiente</button></div></div>`;
+const welcomeView = () => html`<div class="bk"></div><div class="sp" role="dialog" aria-modal="true" aria-labelledby="wlh"><div class="trw">${brandLogo('wlg')}<h3 id="wlh">Te damos la bienvenida a StrataFit</h3><p class="mu">Gracias por instalar la app y por apoyar su desarrollo.</p><p class="mu">StrataFit está en fase de pruebas, así que puede haber errores. Si encuentras alguno, cuéntanoslo en Ajustes → Informar de un fallo: nos ayuda mucho a mejorarla.</p><p class="mu wlw">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p><button class="pr" data-a="welcomeNext">Siguiente</button></div></div>`;
 /* paso 2: los datos biométricos (con lo ya guardado, si lo hay) */
 const bioFormView = () => {
   const b = S.bio || {};
   const sx = welcome.sex;
   const sel = (k, l, list) => html`<label for="wl_${k}">${l}</label><select id="wl_${k}" data-i="${k}"><option value=""${b[k] == null || b[k] === '' ? ' selected' : ''} disabled>Elige…</option>${list.map((t, i) => html`<option value="${i}"${b[k] !== '' && b[k] != null && +b[k] == i ? ' selected' : ''}>${raw(t)}</option>`)}</select>`;
-  return html`<div class="bk"></div><div class="sp wlb" role="dialog" aria-modal="true" aria-labelledby="wlh"><h3 id="wlh">Tus datos</h3><p class="mu">Antes de empezar, la app necesita unos datos básicos. Con ellos calcula tus calorías y tus macros de cada día y te recomienda los programas que mejor encajan contigo. Puedes cambiarlos cuando quieras en Perfil.</p><label>Sexo</label><div class="seg s2" role="radiogroup" aria-label="Sexo">${[['M', 'Hombre'], ['F', 'Mujer']].map(x => html`<button class="${sx == x[0] ? 'on' : ''}" data-a="wlsx" data-v="${x[0]}" role="radio" aria-checked="${sx == x[0] ? 'true' : 'false'}">${raw(x[1])}</button>`)}</div><div class="wln3">${BIO_NUMBERS.map(([k, l, u]) => html`<div><label for="wl_${k}">${l}</label><input id="wl_${k}" data-i="${k}" type="number" inputmode="${k == 'w' ? 'decimal' : 'numeric'}" placeholder="${u}" value="${b[k] || ''}"></div>`)}</div>${raw(sel('act', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1])))}${raw(sel('goal', 'Objetivo físico', GOAL_LABELS))}<p id="wle" class="wle" role="alert"></p><button class="pr" data-a="wlok">Guardar y continuar</button></div>`;
+  return html`<div class="bk"></div><div class="sp wlb" role="dialog" aria-modal="true" aria-labelledby="wlh"><h3 id="wlh">Tus datos</h3><p class="mu">Antes de empezar, la app necesita unos datos básicos. Con ellos calcula tus calorías y tus macros de cada día y te recomienda los programas que mejor encajan contigo. Puedes cambiarlos cuando quieras en Perfil.</p><label>Sexo</label><div class="seg s2" role="radiogroup" aria-label="Sexo">${[['M', 'Hombre'], ['F', 'Mujer']].map(x => html`<button class="${sx == x[0] ? 'on' : ''}" data-a="welcomeSex" data-v="${x[0]}" role="radio" aria-checked="${sx == x[0] ? 'true' : 'false'}">${raw(x[1])}</button>`)}</div><div class="wln3">${BIO_NUMBERS.map(([k, l, u]) => html`<div><label for="wl_${k}">${l}</label><input id="wl_${k}" data-i="${k}" type="number" inputmode="${k == 'w' ? 'decimal' : 'numeric'}" placeholder="${u}" value="${b[k] || ''}"></div>`)}</div>${raw(sel('act', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1])))}${raw(sel('goal', 'Objetivo físico', GOAL_LABELS))}<p id="wle" class="wle" role="alert"></p><button class="pr" data-a="welcomeSave">Guardar y continuar</button></div>`;
 };
 const welcomeRender = () => {
   const r = welcomeRoot();
@@ -74,25 +74,25 @@ export const welcomeShow = done => {
 };
 /* — manejadores de esta función (registros A / C / U) — */
 /* «Siguiente»: a los datos */
-A.wln = () => {
+A.welcomeNext = () => {
   if (!welcome)
     return;
   welcome.step = 2;
   welcomeRender();
 };
 /* el sexo, sin pintar de nuevo el formulario (lo escrito se queda) */
-A.wlsx = (i, b) => {
+A.welcomeSex = (i, b) => {
   if (!welcome)
     return;
   welcome.sex = b.dataset.v;
-  document.querySelectorAll('#wlc [data-a=wlsx]').forEach(e => {
+  document.querySelectorAll('#wlc [data-a=welcomeSex]').forEach(e => {
     const on = e == b;
     e.classList.toggle('on', on);
     e.setAttribute('aria-checked', on ? 'true' : 'false');
   });
 };
 /* «Guardar y continuar»: con todos los datos bien, se guardan, se calculan los objetivos de nutrición y se cierra */
-A.wlok = () => {
+A.welcomeSave = () => {
   if (!welcome)
     return;
   const f = readBioForm();

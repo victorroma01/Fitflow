@@ -165,9 +165,9 @@ export const rangeSelect = (e, i) => {
   if (unitOf(e))
     return '';
   const c = targetRange(e).join('-');
-  return html`<select data-c="rg" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" style="width:auto;padding:5px 10px;font-size:13px">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
+  return html`<select data-c="setRepRange" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" style="width:auto;padding:5px 10px;font-size:13px">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
 };
-C.rg = (e, i) => {
+C.setRepRange = (e, i) => {
   const x = S.plan[S.sel].ex[i];
   if (!x)
     return;

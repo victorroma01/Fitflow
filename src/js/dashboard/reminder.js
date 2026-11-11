@@ -62,18 +62,18 @@ export const weighBanner = () => {
   if (!weighDue())
     return '';
   const l = lastWeighIn();
-  return html`<div class="cd wrb" role="status"><span class="wri">${icon('scale', 26)}</span><span><b>Día de pesarse</b><small>${l ? 'Último pesaje: ' + fmtDateShort(l) + ' · ' : ''}cada ${weighEvery(S.wr)}</small></span><button class="pr" data-a="wrgo">Registrar</button></div>`;
+  return html`<div class="cd wrb" role="status"><span class="wri">${icon('scale', 26)}</span><span><b>Día de pesarse</b><small>${l ? 'Último pesaje: ' + fmtDateShort(l) + ' · ' : ''}cada ${weighEvery(S.wr)}</small></span><button class="pr" data-a="weighReminderGo">Registrar</button></div>`;
 };
 /** Tarjeta del recordatorio en Evolución del peso, debajo de «Registrar peso». */
 export const reminderCard = () => {
   const r = S.wr;
   if (!r)
-    return html`<div class="cd wrc"><label class="srk"><input type="checkbox" data-c="wron"> Recordatorio de pesaje</label><p class="mu wrt">Te avisamos cuando toque pesarte: cada 2 semanas, 4 semanas, un mes, 5 semanas o cada lo que elijas.</p></div>`;
+    return html`<div class="cd wrc"><label class="srk"><input type="checkbox" data-c="weighReminderToggle"> Recordatorio de pesaje</label><p class="mu wrt">Te avisamos cuando toque pesarte: cada 2 semanas, 4 semanas, un mes, 5 semanas o cada lo que elijas.</p></div>`;
   const cur = weighCustom ? -1 : WEIGH_STEPS.findIndex(x => x[0] == r.n && x[1] == r.u);
   const nx = weighNext();
   const u = WEIGH_UNITS[r.u];
-  const other = cur < 0 ? html`<div class="g2 wro"><input type="number" inputmode="numeric" min="1" max="${u[2]}" value="${r.n}" data-c="wrn" aria-label="Cada cuántos"><select data-c="wru" aria-label="Unidad">${Object.keys(WEIGH_UNITS).map(k => html`<option value="${k}"${k == r.u ? ' selected' : ''}>${WEIGH_UNITS[k][1]}</option>`)}</select></div>` : '';
-  return html`<div class="cd wrc"><label class="srk"><input type="checkbox" data-c="wron" checked> Recordatorio de pesaje</label><div class="wrs" role="radiogroup" aria-label="Cada cuánto">${WEIGH_STEPS.map((x, i) => html`<button class="chip${i == cur ? ' on' : ''}" data-a="wriv" data-i="${i}" role="radio" aria-checked="${i == cur ? 'true' : 'false'}">${x[2]}</button>`)}<button class="chip${cur < 0 ? ' on' : ''}" data-a="wriv" data-i="-1" role="radio" aria-checked="${cur < 0 ? 'true' : 'false'}">Otro</button></div>${raw(other)}<p class="wrt">${nx ? html`Próximo aviso: <b>${fmtDateShort(nx, { weekday: 'long', day: 'numeric', month: 'long' })}</b>` : ''} · cada ${weighEvery(r)}</p><button data-a="wrcal" class="wrk">${icon('cal', 18)} Añadir al calendario del móvil</button><small class="mu wrt">Así te avisa también con la app cerrada. Si cambias el intervalo, vuelve a añadirlo.</small></div>`;
+  const other = cur < 0 ? html`<div class="g2 wro"><input type="number" inputmode="numeric" min="1" max="${u[2]}" value="${r.n}" data-c="weighReminderEvery" aria-label="Cada cuántos"><select data-c="weighReminderUnit" aria-label="Unidad">${Object.keys(WEIGH_UNITS).map(k => html`<option value="${k}"${k == r.u ? ' selected' : ''}>${WEIGH_UNITS[k][1]}</option>`)}</select></div>` : '';
+  return html`<div class="cd wrc"><label class="srk"><input type="checkbox" data-c="weighReminderToggle" checked> Recordatorio de pesaje</label><div class="wrs" role="radiogroup" aria-label="Cada cuánto">${WEIGH_STEPS.map((x, i) => html`<button class="chip${i == cur ? ' on' : ''}" data-a="weighReminderInterval" data-i="${i}" role="radio" aria-checked="${i == cur ? 'true' : 'false'}">${x[2]}</button>`)}<button class="chip${cur < 0 ? ' on' : ''}" data-a="weighReminderInterval" data-i="-1" role="radio" aria-checked="${cur < 0 ? 'true' : 'false'}">Otro</button></div>${raw(other)}<p class="wrt">${nx ? html`Próximo aviso: <b>${fmtDateShort(nx, { weekday: 'long', day: 'numeric', month: 'long' })}</b>` : ''} · cada ${weighEvery(r)}</p><button data-a="weighReminderCalendar" class="wrk">${icon('cal', 18)} Añadir al calendario del móvil</button><small class="mu wrt">Así te avisa también con la app cerrada. Si cambias el intervalo, vuelve a añadirlo.</small></div>`;
 };
 /** Al abrir la app o volver a ella: si toca pesarse, lo dice una vez al día, nunca en mitad de un entreno ni encima de otra
     ventana (la tarjeta del Dashboard sigue ahí). */
@@ -86,7 +86,7 @@ export const checkWeighIn = () => {
   S.wr.sh = today;
   saveState();
   const l = lastWeighIn();
-  dialog('Día de pesarse', html`Toca pesarse: ${l ? 'tu último pesaje fue el ' + fmtDateShort(l, { day: 'numeric', month: 'long' }) : 'aún no has registrado tu peso'}. Pésate a la misma hora, mejor por la mañana y en ayunas, para comparar bien.`, [['Mañana', 'wrlt', ''], ['Registrar peso', 'wrgo', 'pr']]);
+  dialog('Día de pesarse', html`Toca pesarse: ${l ? 'tu último pesaje fue el ' + fmtDateShort(l, { day: 'numeric', month: 'long' }) : 'aún no has registrado tu peso'}. Pésate a la misma hora, mejor por la mañana y en ayunas, para comparar bien.`, [['Mañana', 'weighReminderLater', ''], ['Registrar peso', 'weighReminderGo', 'pr']]);
 };
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState == 'visible')
@@ -104,7 +104,7 @@ const weighIcs = () => {
   return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StrataFit//Recordatorio de pesaje//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT', 'UID:stratafit-pesaje-' + r.c, 'DTSTAMP:' + now, 'DTSTART:' + d + 'T090000', 'DURATION:PT10M', 'RRULE:FREQ=' + rule + ';INTERVAL=' + r.n, 'SUMMARY:' + icsText('Día de pesarse'), 'DESCRIPTION:' + icsText('Toca pesarse: registra tu peso en StrataFit.'), 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText('Día de pesarse'), 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR', ''].join('\r\n');
 };
 /* — manejadores de esta función (registros A / C / U) — */
-C.wron = e => {
+C.weighReminderToggle = e => {
   weighCustom = 0;
   if (e.checked)
     S.wr = { n: 2, u: 'w', t: Date.now() };
@@ -114,7 +114,7 @@ C.wron = e => {
   R();
   toast(e.checked ? 'Te avisaremos cada 2 semanas' : 'Recordatorio de pesaje desactivado');
 };
-A.wriv = i => {
+A.weighReminderInterval = i => {
   if (!S.wr)
     return;
   const x = WEIGH_STEPS[i];
@@ -126,7 +126,7 @@ A.wriv = i => {
   saveState();
   R();
 };
-C.wrn = e => {
+C.weighReminderEvery = e => {
   if (!S.wr)
     return;
   /* fuera del rango, al tope más cercano (500 días son 90) */
@@ -134,7 +134,7 @@ C.wrn = e => {
   saveState();
   R();
 };
-C.wru = e => {
+C.weighReminderUnit = e => {
   if (!S.wr || !Object.prototype.hasOwnProperty.call(WEIGH_UNITS, e.value))
     return;
   S.wr.u = e.value;
@@ -143,7 +143,7 @@ C.wru = e => {
   R();
 };
 /* «Mañana»: ni el aviso ni la tarjeta hasta mañana */
-A.wrlt = () => {
+A.weighReminderLater = () => {
   if (!S.wr)
     return;
   const t = new Date();
@@ -153,16 +153,16 @@ A.wrlt = () => {
   R();
 };
 /* a Evolución del peso, con el campo del peso listo */
-A.wrgo = () => {
+A.weighReminderGo = () => {
   sheet();
   setWeightView(1);
-  A.tab(2);
+  A.selectTab(2);
   setTimeout(() => {
     const e = $('#wv');
     e && e.focus();
   }, 60);
 };
-A.wrcal = async () => {
+A.weighReminderCalendar = async () => {
   if (!S.wr)
     return;
   if (!S.wr.c) {

@@ -27,8 +27,8 @@ const wodTotal = c => c.m == 'amrap' ? c.a * 60 : c.m == 'emom' ? c.en * c.ei : 
 const wodSetup = () => {
   const c = wodConfig();
   const m = c.m;
-  const num = (l, k, mn, mx) => html`<div><label>${raw(l)}</label><input type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${c[k]}" data-c="wdv" data-k="${k}" aria-label="${l}"></div>`;
-  const sel = (l, k, o) => html`<div><label>${raw(l)}</label><select data-c="wdv" data-k="${k}" aria-label="${l}">${o.map(x => html`<option value="${x[0]}"${c[k] == x[0] ? ' selected' : ''}>${raw(x[1])}</option>`)}</select></div>`;
+  const num = (l, k, mn, mx) => html`<div><label>${raw(l)}</label><input type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${c[k]}" data-c="wodValue" data-k="${k}" aria-label="${l}"></div>`;
+  const sel = (l, k, o) => html`<div><label>${raw(l)}</label><select data-c="wodValue" data-k="${k}" aria-label="${l}">${o.map(x => html`<option value="${x[0]}"${c[k] == x[0] ? ' selected' : ''}>${raw(x[1])}</option>`)}</select></div>`;
   let f = '';
   if (m == 'amrap')
     f = num('Duración (min)', 'a', 1, 180);
@@ -39,15 +39,15 @@ const wodSetup = () => {
   else
     f = num('Tiempo límite (min, 0 = sin límite)', 'ct', 0, 180);
   const t = wodTotal(c);
-  return html`${pgHead('Temporizador WOD')}<div class="seg" style="grid-template-columns:repeat(4,1fr)">${WOD_MODES.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="wdm" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><p class="mu" style="font-size:13px;margin:10px 2px 4px">${raw(WOD_INFO[m])}</p>${raw(f)}<div class="g2" style="margin-top:2px">${raw(sel('Cuenta atrás inicial', 'pre', [[0, 'Sin cuenta atrás'], [5, '5 s'], [10, '10 s'], [15, '15 s'], [30, '30 s']]))}<div><label>Duración total</label><div class="cd" style="margin:0;padding:10px;text-align:center"><b id="f2tt">${raw(t ? fmtClock(t) : 'Sin límite')}</b></div></div></div><p class="mu" style="font-size:12px;margin:12px 2px 0">Suena un aviso en los últimos 3 segundos de cada tramo y al empezar el siguiente. La pantalla se mantiene encendida. Si bloqueas el móvil, el tiempo sigue corriendo pero el sonido solo se oye con la app abierta.</p><div style="height:90px"></div><div class="sb"><button class="pr" data-a="wdgo" style="width:100%;padding:14px">Empezar</button></div>`;
+  return html`${pgHead('Temporizador WOD')}<div class="seg" style="grid-template-columns:repeat(4,1fr)">${WOD_MODES.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="wodMode" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><p class="mu" style="font-size:13px;margin:10px 2px 4px">${raw(WOD_INFO[m])}</p>${raw(f)}<div class="g2" style="margin-top:2px">${raw(sel('Cuenta atrás inicial', 'pre', [[0, 'Sin cuenta atrás'], [5, '5 s'], [10, '10 s'], [15, '15 s'], [30, '30 s']]))}<div><label>Duración total</label><div class="cd" style="margin:0;padding:10px;text-align:center"><b id="f2tt">${raw(t ? fmtClock(t) : 'Sin límite')}</b></div></div></div><p class="mu" style="font-size:12px;margin:12px 2px 0">Suena un aviso en los últimos 3 segundos de cada tramo y al empezar el siguiente. La pantalla se mantiene encendida. Si bloqueas el móvil, el tiempo sigue corriendo pero el sonido solo se oye con la app abierta.</p><div style="height:90px"></div><div class="sb"><button class="pr" data-a="wodGo" style="width:100%;padding:14px">Empezar</button></div>`;
 };
-A.wod = () => fullPage(wodSetup());
-A.wdm = (i, b) => {
+A.openWod = () => fullPage(wodSetup());
+A.wodMode = (i, b) => {
   S.wdc = Object.assign(wodConfig(), { m: b.dataset.v });
   saveState();
   sheet(wodSetup());
 };
-C.wdv = e => {
+C.wodValue = e => {
   const k = e.dataset.k;
   if (!(k in WOD_DEFAULTS))
     return;
@@ -107,7 +107,7 @@ function wodSkeleton() {
   const m = c.m;
   o.dataset.ph = wodRun.done ? 'done' : wodRun.ph || 'pre';
   o.classList.toggle('pz', !!wodRun.pa);
-  let h = html`<div class="f2hd"><button data-a="wdx" aria-label="Cerrar" class="f2cl">${icon('x', 22)}</button><b>${wodName(c)}</b><span></span></div>`;
+  let h = html`<div class="f2hd"><button data-a="wodExit" aria-label="Cerrar" class="f2cl">${icon('x', 22)}</button><b>${wodName(c)}</b><span></span></div>`;
   if (wodRun.done) {
     const f = wodRun.fin;
     h += '<div class="f2dn"><small>Terminado</small>';
@@ -117,17 +117,17 @@ function wodSkeleton() {
       h += html`<b class="f2rs">${raw(fmtClock(Math.round(f.t)))}</b><small>${raw(f.cap ? 'Tiempo límite alcanzado' : wodRun.r ? wodRun.r + (wodRun.r == 1 ? ' vuelta' : ' vueltas') : '')}</small>`;
     else
       h += html`<b class="f2rs">${raw(f.rd || '')}${f.rd ? (f.rd == 1 ? ' ronda' : ' rondas') : ''}</b><small>${f.early ? 'Terminado antes de tiempo' : 'Completado'} · ${raw(fmtClock(Math.round(f.t)))}</small>`;
-    h += '<input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" style="margin-top:12px"><div class="g2" style="width:100%;margin-top:12px"><button data-a="wdd">Descartar</button><button class="pr" data-a="wds">Guardar</button></div></div>';
+    h += '<input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" style="margin-top:12px"><div class="g2" style="width:100%;margin-top:12px"><button data-a="wodDiscard">Descartar</button><button class="pr" data-a="wodSave">Guardar</button></div></div>';
   }
   else {
     h += '<div class="f2rg"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="f2rb" cx="60" cy="60" r="54"/><circle class="f2rp" id="f2rp" cx="60" cy="60" r="54"/></svg><div class="f2rc"><div class="f2p" id="f2p" aria-live="polite"></div><div class="f2t" id="f2t">0:00</div><div class="f2s" id="f2s"></div></div></div><div class="f2nx" id="f2nx"></div><div class="f2sp"></div>';
     if (wodRun.ph == 'pre' && !wodRun.pa)
-      h += '<div style="text-align:center"><button class="f2sk" data-a="wdsk" id="f2sk">Saltar la cuenta atrás</button></div>';
+      h += '<div style="text-align:center"><button class="f2sk" data-a="wodSkipCountdown" id="f2sk">Saltar la cuenta atrás</button></div>';
     if (m == 'amrap')
-      h += html`<button class="f2big" data-a="wdr" aria-label="Sumar una ronda"><small>Rondas</small><b id="f2rn">${raw(wodRun.r)}</b><small>Toca para sumar una</small></button><div style="text-align:center"><button data-a="wdu" class="f2sm">Restar una ronda</button></div>`;
+      h += html`<button class="f2big" data-a="wodRound" aria-label="Sumar una ronda"><small>Rondas</small><b id="f2rn">${raw(wodRun.r)}</b><small>Toca para sumar una</small></button><div style="text-align:center"><button data-a="wodRoundUndo" class="f2sm">Restar una ronda</button></div>`;
     else if (m == 'ft')
-      h += html`<button class="f2big" data-a="wdr" aria-label="Marcar vuelta"><small>Vueltas</small><b id="f2rn">${raw(wodRun.r)}</b><small id="f2lp">${raw(wodRun.laps.length ? 'Última: ' + fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0)) : 'Toca para marcar una vuelta')}</small></button>`;
-    h += html`<div class="g2 f2ct"><button data-a="wdp" id="f2pb">${wodRun.pa ? 'Seguir' : 'Pausa'}</button><button data-a="wdf">Terminar</button></div>`;
+      h += html`<button class="f2big" data-a="wodRound" aria-label="Marcar vuelta"><small>Vueltas</small><b id="f2rn">${raw(wodRun.r)}</b><small id="f2lp">${raw(wodRun.laps.length ? 'Última: ' + fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0)) : 'Toca para marcar una vuelta')}</small></button>`;
+    h += html`<div class="g2 f2ct"><button data-a="wodPause" id="f2pb">${wodRun.pa ? 'Seguir' : 'Pausa'}</button><button data-a="wodFinish">Terminar</button></div>`;
   }
   o.innerHTML = h;
 }
@@ -273,8 +273,8 @@ function wodEnd(s, early) {
   wodSkeleton();
   keepAwake();
 }
-A.wdgo = () => wodStart();
-A.wdr = () => {
+A.wodGo = () => wodStart();
+A.wodRound = () => {
   if (!wodRun || wodRun.done || wodRun.pa)
     return;
   const s = wodState();
@@ -292,7 +292,7 @@ A.wdr = () => {
     n.textContent = wodRun.r;
   buzz(25);
 };
-A.wdu = () => {
+A.wodRoundUndo = () => {
   if (!wodRun || wodRun.done || !wodRun.r)
     return;
   wodRun.r--;
@@ -300,7 +300,7 @@ A.wdu = () => {
   if (n)
     n.textContent = wodRun.r;
 };
-A.wdp = () => {
+A.wodPause = () => {
   if (!wodRun || wodRun.done)
     return;
   if (wodRun.pa) {
@@ -319,7 +319,7 @@ A.wdp = () => {
   keepAwake();
 };
 /* saltar la cuenta atrás de inicio (F-23): empieza ya el primer tramo */
-A.wdsk = () => {
+A.wodSkipCountdown = () => {
   if (!wodRun || wodRun.done)
     return;
   const e = ((wodRun.pa || Date.now()) - wodRun.t0 - wodRun.pt) / 1000;
@@ -327,7 +327,7 @@ A.wdsk = () => {
     wodRun.t0 -= (wodRun.c.pre - e) * 1000;
   wodTick();
 };
-A.wdf = () => {
+A.wodFinish = () => {
   if (!wodRun || wodRun.done)
     return;
   const s = wodState();
@@ -343,9 +343,9 @@ A.wdf = () => {
     wodEnd({ t: s.el }, 0);
     return;
   }
-  confirmDialog('¿Terminar antes de tiempo?', 'Podrás guardar lo que llevas hecho.', 'wdf2', 'Terminar');
+  confirmDialog('¿Terminar antes de tiempo?', 'Podrás guardar lo que llevas hecho.', 'wodFinishConfirmed', 'Terminar');
 };
-A.wdf2 = () => {
+A.wodFinishConfirmed = () => {
   if (!wodRun || wodRun.done)
     return;
   const s = wodState();
@@ -355,17 +355,17 @@ A.wdf2 = () => {
   }
   wodEnd(s, 1);
 };
-A.wdx = () => {
+A.wodExit = () => {
   if (!wodRun)
     return;
   if (wodRun.done || wodRun.ph == 'pre' && !wodRun.r)
     wodClose();
   else
-    confirmDialog('¿Salir del temporizador?', 'Se perderá lo que llevas.', 'wdq', 'Salir');
+    confirmDialog('¿Salir del temporizador?', 'Se perderá lo que llevas.', 'wodQuitConfirmed', 'Salir');
 };
-A.wdq = () => wodClose();
-A.wdd = () => wodClose();
-A.wds = () => {
+A.wodQuitConfirmed = () => wodClose();
+A.wodDiscard = () => wodClose();
+A.wodSave = () => {
   if (!wodRun || !wodRun.done)
     return;
   const c = wodRun.c;

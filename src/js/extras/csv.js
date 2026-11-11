@@ -56,12 +56,12 @@ const CSV_EXPORTS = {
     } },
   car: { t: 'Cardio', s: 'Sesiones con distancia, tiempo y ritmo', f: 'cardio', n: () => cardioLogs().length, b: () => [['Fecha', 'Tipo', 'Distancia (km)', 'Tiempo (min)', 'Ritmo o velocidad']].concat(cardioLogs().map(l => [l.d, cardioLabel(l.c.t), +l.c.km || '', round1((+l.c.sec || 0) / 60), cardioPace(l.c.t, +l.c.km, +l.c.sec)])) }
 };
-A.f2ex = () => fullPage(html`${pgHead('Exportar datos')}<p class="mu" style="margin:-6px 2px 10px;font-size:14px">Archivos CSV para abrir en Excel, Numbers o Google Sheets. Los pesos van en kg. Separador «;» y decimales con coma, listos para Excel en español.</p>${Object.keys(CSV_EXPORTS).map(k => {
+A.openCsvExport = () => fullPage(html`${pgHead('Exportar datos')}<p class="mu" style="margin:-6px 2px 10px;font-size:14px">Archivos CSV para abrir en Excel, Numbers o Google Sheets. Los pesos van en kg. Separador «;» y decimales con coma, listos para Excel en español.</p>${Object.keys(CSV_EXPORTS).map(k => {
   const c = CSV_EXPORTS[k];
   const n = c.n();
-  return html`<div class="cd" style="display:flex;gap:12px;align-items:center;justify-content:space-between"><span style="min-width:0"><b>${raw(c.t)}</b><br><small>${raw(c.s)}</small></span><button data-a="f2exd" data-v="${k}" style="flex:none;white-space:nowrap${n ? '' : ';opacity:.45'}"${n ? '' : ' disabled'}>${icon('dwn', 16)} ${n ? 'CSV' : 'Vacío'}</button></div>`;
-})}<p class="mu" style="font-size:12px;margin:12px 2px">Para guardar todo y poder restaurarlo en StrataFit usa la copia de seguridad, no el CSV.</p><button data-a="zbk" style="width:100%">Copia de seguridad</button><div style="height:30px"></div>`);
-A.f2exd = async (i, b) => {
+  return html`<div class="cd" style="display:flex;gap:12px;align-items:center;justify-content:space-between"><span style="min-width:0"><b>${raw(c.t)}</b><br><small>${raw(c.s)}</small></span><button data-a="csvDownload" data-v="${k}" style="flex:none;white-space:nowrap${n ? '' : ';opacity:.45'}"${n ? '' : ' disabled'}>${icon('dwn', 16)} ${n ? 'CSV' : 'Vacío'}</button></div>`;
+})}<p class="mu" style="font-size:12px;margin:12px 2px">Para guardar todo y poder restaurarlo en StrataFit usa la copia de seguridad, no el CSV.</p><button data-a="openBackup" style="width:100%">Copia de seguridad</button><div style="height:30px"></div>`);
+A.csvDownload = async (i, b) => {
   const c = CSV_EXPORTS[b.dataset.v];
   if (!c)
     return;

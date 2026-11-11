@@ -68,7 +68,7 @@ def main(path):
             else:
                 check('igual que de cero: %s (pintada sobre las demás)' % name, True)
         # entreno en curso, pintado sobre Workout
-        ev("weightView=0;S.tab=0;R();A.go()")
+        ev("weightView=0;S.tab=0;R();A.startWorkout()")
         pg.clock.run_for(300)
         ev(FRESH % '0')
         ev("S.tab=0;W&&(window.__w=W);W=null;R();W=window.__w;R()")

@@ -78,7 +78,7 @@ const loginError = t => {
 };
 /* mientras hay que esperar, el botón cuenta los segundos */
 let waitTimer = 0;
-const loginField = (id, label, o) => html`<label for="${id}">${label}</label>${raw(o.pw ? html`<div class="lgpw"><input id="${id}" type="${loginState.eye ? 'text' : 'password'}" autocomplete="${o.ac}" maxlength="100" data-enter="${o.go}"><button type="button" class="lgey" data-a="lgey" aria-label="${loginState.eye ? 'Ocultar la contraseña' : 'Ver la contraseña'}">${icon(loginState.eye ? 'eyeoff' : 'eye', 20)}</button></div>` : html`<input id="${id}" autocomplete="${o.ac}" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="20" data-enter="${o.go}">`)}`;
+const loginField = (id, label, o) => html`<label for="${id}">${label}</label>${raw(o.pw ? html`<div class="lgpw"><input id="${id}" type="${loginState.eye ? 'text' : 'password'}" autocomplete="${o.ac}" maxlength="100" data-enter="${o.go}"><button type="button" class="lgey" data-a="loginToggleEye" aria-label="${loginState.eye ? 'Ocultar la contraseña' : 'Ver la contraseña'}">${icon(loginState.eye ? 'eyeoff' : 'eye', 20)}</button></div>` : html`<input id="${id}" autocomplete="${o.ac}" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="20" data-enter="${o.go}">`)}`;
 /** Pantalla de inicio de sesión o de registro. */
 const loginView = () => {
   if (account && account.mc)
@@ -86,10 +86,10 @@ const loginView = () => {
   const up = loginState.m == 'up';
   const w = waitLeft();
   const lbl = loginState.busy || (w ? 'Espera ' + Math.ceil(w / 1e3) + ' s' : up ? 'Crear cuenta' : 'Entrar');
-  return html`<div id="lgw" class="lgw"><div class="lgbr">${brandLogo('lgl', 1)}</div><p class="lgs">Entrenamiento y nutrición</p><div class="cd lgc"><div class="seg s2" role="tablist" aria-label="Entrar o crear cuenta"><button class="${up ? '' : 'on'}" data-a="lgm" data-v="in" role="tab" aria-selected="${up ? 'false' : 'true'}">Entrar</button><button class="${up ? 'on' : ''}" data-a="lgm" data-v="up" role="tab" aria-selected="${up ? 'true' : 'false'}">Crear cuenta</button></div>${raw(loginField('lgu', 'Usuario', { ac: 'username', go: 'lgo' }))}${raw(loginField('lgp', 'Contraseña', { pw: 1, ac: up ? 'new-password' : 'current-password', go: 'lgo' }))}${up ? html`<label for="lgp2">Repite la contraseña</label><input id="lgp2" type="${loginState.eye ? 'text' : 'password'}" autocomplete="new-password" maxlength="100" data-enter="lgo"><p class="mu lgh">Usuario de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo. Contraseña de 8 caracteres o más.</p>` : ''}<p id="lge" class="lge" role="alert">${loginState.err}</p><button class="pr lgb" data-a="lgo"${raw(loginState.busy || w ? ' disabled' : '')}>${lbl}</button></div><p class="mu lgn">${up ? 'Tus entrenos, comidas y medidas se guardan en tu cuenta para no perderlos y usarlos en varios móviles. No se guarda ningún dato personal: ni nombre, ni correo, ni teléfono.' : '¿Has olvidado la contraseña? Pídele al administrador una temporal.'}</p><button class="lgl" data-a="lgpv">Privacidad</button><div class="lgv">V${APPV}</div></div>`;
+  return html`<div id="lgw" class="lgw"><div class="lgbr">${brandLogo('lgl', 1)}</div><p class="lgs">Entrenamiento y nutrición</p><div class="cd lgc"><div class="seg s2" role="tablist" aria-label="Entrar o crear cuenta"><button class="${up ? '' : 'on'}" data-a="loginMode" data-v="in" role="tab" aria-selected="${up ? 'false' : 'true'}">Entrar</button><button class="${up ? 'on' : ''}" data-a="loginMode" data-v="up" role="tab" aria-selected="${up ? 'true' : 'false'}">Crear cuenta</button></div>${raw(loginField('lgu', 'Usuario', { ac: 'username', go: 'loginSubmit' }))}${raw(loginField('lgp', 'Contraseña', { pw: 1, ac: up ? 'new-password' : 'current-password', go: 'loginSubmit' }))}${up ? html`<label for="lgp2">Repite la contraseña</label><input id="lgp2" type="${loginState.eye ? 'text' : 'password'}" autocomplete="new-password" maxlength="100" data-enter="loginSubmit"><p class="mu lgh">Usuario de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo. Contraseña de 8 caracteres o más.</p>` : ''}<p id="lge" class="lge" role="alert">${loginState.err}</p><button class="pr lgb" data-a="loginSubmit"${raw(loginState.busy || w ? ' disabled' : '')}>${lbl}</button></div><p class="mu lgn">${up ? 'Tus entrenos, comidas y medidas se guardan en tu cuenta para no perderlos y usarlos en varios móviles. No se guarda ningún dato personal: ni nombre, ni correo, ni teléfono.' : '¿Has olvidado la contraseña? Pídele al administrador una temporal.'}</p><button class="lgl" data-a="loginPrivacy">Privacidad</button><div class="lgv">V${APPV}</div></div>`;
 };
 /** Cambio obligatorio de una contraseña temporal (account.mc: 1 al entrar, 2 al volver a entrar con la sesión caducada). */
-const passwordView = () => html`<div id="lgw" class="lgw"><div class="lgbr">${brandLogo('lgl', 1)}</div><div class="cd lgc"><h2 class="lgt">Elige una contraseña nueva</h2><p class="mu" style="margin:0 0 6px">Has entrado con una contraseña temporal. Para seguir, elige una nueva que solo sepas tú.</p>${raw(loginField('lgp', 'Contraseña nueva', { pw: 1, ac: 'new-password', go: 'lgcp' }))}<label for="lgp2">Repite la contraseña</label><input id="lgp2" type="${loginState.eye ? 'text' : 'password'}" autocomplete="new-password" maxlength="100" data-enter="lgcp"><p id="lge" class="lge" role="alert">${loginState.err}</p><button class="pr lgb" data-a="lgcp"${raw(loginState.busy ? ' disabled' : '')}>${loginState.busy || 'Guardar y entrar'}</button></div><div class="lgv">V${APPV}</div></div>`;
+const passwordView = () => html`<div id="lgw" class="lgw"><div class="lgbr">${brandLogo('lgl', 1)}</div><div class="cd lgc"><h2 class="lgt">Elige una contraseña nueva</h2><p class="mu" style="margin:0 0 6px">Has entrado con una contraseña temporal. Para seguir, elige una nueva que solo sepas tú.</p>${raw(loginField('lgp', 'Contraseña nueva', { pw: 1, ac: 'new-password', go: 'loginCreatePassword' }))}<label for="lgp2">Repite la contraseña</label><input id="lgp2" type="${loginState.eye ? 'text' : 'password'}" autocomplete="new-password" maxlength="100" data-enter="loginCreatePassword"><p id="lge" class="lge" role="alert">${loginState.err}</p><button class="pr lgb" data-a="loginCreatePassword"${raw(loginState.busy ? ' disabled' : '')}>${loginState.busy || 'Guardar y entrar'}</button></div><div class="lgv">V${APPV}</div></div>`;
 /** Pinta el inicio de sesión en #app (desde core/render, en lugar de la app). Si ya estaba, cambia solo lo distinto y
   conserva lo escrito. */
 export const loginSync = () => {
@@ -156,15 +156,15 @@ const finishLogin = async () => {
   location.reload();
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.lgm = (i, b) => {
+A.loginMode = (i, b) => {
   loginState = { m: b.dataset.v == 'up' ? 'up' : 'in', busy: '', err: '', eye: loginState.eye };
   loginSync();
 };
-A.lgey = () => {
+A.loginToggleEye = () => {
   loginState.eye = loginState.eye ? 0 : 1;
   loginSync();
 };
-A.lgo = async () => {
+A.loginSubmit = async () => {
   if (loginState.busy)
     return;
   const v = id => ($('#' + id) || {}).value || '';
@@ -194,7 +194,7 @@ A.lgo = async () => {
   clearFails();
   await enterAccount(s, up);
 };
-A.lgcp = async () => {
+A.loginCreatePassword = async () => {
   if (loginState.busy)
     return;
   const p = ($('#lgp') || {}).value || '';
@@ -212,7 +212,7 @@ A.lgcp = async () => {
     loginError(authMessage(e));
     return;
   }
-  /* mc 2: se volvió a entrar en un móvil que ya tiene los datos de la cuenta (A.lgrs): se sigue sin bajarlos de nuevo */
+  /* mc 2: se volvió a entrar en un móvil que ya tiene los datos de la cuenta (A.reloginSubmit): se sigue sin bajarlos de nuevo */
   const again = account.mc == 2;
   acctSave({ ...account, mc: 0 });
   if (!again) {
@@ -222,12 +222,12 @@ A.lgcp = async () => {
   loginState = { m: 'in', busy: '', err: '', eye: 0 };
   location.reload();
 };
-A.lgpv = () => sheet(html`${pgHead('Privacidad')}<div class="srt">${PRIVACY_TEXT.map(p => html`<p>${p}</p>`)}</div><div style="height:30px"></div>`);
+A.loginPrivacy = () => sheet(html`${pgHead('Privacidad')}<div class="srt">${PRIVACY_TEXT.map(p => html`<p>${p}</p>`)}</div><div style="height:30px"></div>`);
 /* sesión caducada (contraseña restablecida, otro dispositivo la cambió…): volver a entrar sin perder lo del móvil */
-A.lgre = () => sheet(html`<h3>Vuelve a entrar</h3><p class="mu" style="margin:0 0 10px">Tu sesión ha caducado, por ejemplo porque se cambió la contraseña. Lo que has hecho sigue en este móvil y se sube al entrar.</p><label for="lrp">Contraseña de ${account ? account.u : ''}</label><input id="lrp" type="password" autocomplete="current-password" maxlength="100" data-enter="lgrs"><p id="lre" class="lge" role="alert"></p><button class="pr" data-a="lgrs" style="width:100%;margin-top:6px">Entrar</button>`);
+A.reloginShow = () => sheet(html`<h3>Vuelve a entrar</h3><p class="mu" style="margin:0 0 10px">Tu sesión ha caducado, por ejemplo porque se cambió la contraseña. Lo que has hecho sigue en este móvil y se sube al entrar.</p><label for="lrp">Contraseña de ${account ? account.u : ''}</label><input id="lrp" type="password" autocomplete="current-password" maxlength="100" data-enter="reloginSubmit"><p id="lre" class="lge" role="alert"></p><button class="pr" data-a="reloginSubmit" style="width:100%;margin-top:6px">Entrar</button>`);
 /* volver a entrar: una petición a la vez y la misma espera tras cinco intentos fallidos que en el inicio de sesión */
 let reloginBusy = false;
-A.lgrs = async () => {
+A.reloginSubmit = async () => {
   if (reloginBusy)
     return;
   const p = ($('#lrp') || {}).value || '';

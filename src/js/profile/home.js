@@ -29,11 +29,11 @@ function profileHead() {
   const p = S.pf;
   const img = safeImage(p.img);
   const pic = html`${img ? html`<img src="${img}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">` : ''}${img ? '' : icon('camera', 36)}`;
-  /* sin consentimiento, la foto abre antes el aviso (A.avc); con él, el selector de fotos */
-  const av = +p.pc > 0 ? html`<label class="av" style="cursor:pointer;font-size:0" aria-label="Foto de perfil">${raw(pic)}<input type="file" accept="image/*" data-c="ph" hidden id="avf"></label>` : html`<button class="av" data-a="avc" style="font-size:0;padding:0" aria-label="Foto de perfil">${raw(pic)}</button><input type="file" accept="image/*" data-c="ph" hidden id="avf">`;
-  return html`<div class="hd"><h1>Perfil</h1></div><div class="cd pfh">${raw(av)}<b class="pfn">${acctName()}</b>${isAdmin() ? html`<small class="pfa">Administrador</small>` : ''}${img ? html`<button class="pfq" data-a="avdel">Quitar foto</button>` : ''}</div>`;
+  /* sin consentimiento, la foto abre antes el aviso (A.photoConsentAsk); con él, el selector de fotos */
+  const av = +p.pc > 0 ? html`<label class="av" style="cursor:pointer;font-size:0" aria-label="Foto de perfil">${raw(pic)}<input type="file" accept="image/*" data-c="photoFile" hidden id="avf"></label>` : html`<button class="av" data-a="photoConsentAsk" style="font-size:0;padding:0" aria-label="Foto de perfil">${raw(pic)}</button><input type="file" accept="image/*" data-c="photoFile" hidden id="avf">`;
+  return html`<div class="hd"><h1>Perfil</h1></div><div class="cd pfh">${raw(av)}<b class="pfn">${acctName()}</b>${isAdmin() ? html`<small class="pfa">Administrador</small>` : ''}${img ? html`<button class="pfq" data-a="photoDeleteAsk">Quitar foto</button>` : ''}</div>`;
 }
-A.zrs = async () => {
+A.resetAllConfirmed = async () => {
   /* primero en la nube: si no, la próxima sincronización los volvería a bajar */
   if (signedIn())
     try {
@@ -49,20 +49,20 @@ A.zrs = async () => {
   Store.del(WIP_KEY);
   location.reload();
 };
-A.rst = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta, y también la copia de seguridad de la nube. Tu usuario se mantiene. No se puede deshacer.', 'zrs', 'Borrar todo');
+A.resetAllAsk = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta, y también la copia de seguridad de la nube. Tu usuario se mantiene. No se puede deshacer.', 'resetAllConfirmed', 'Borrar todo');
 function bioCard() {
   const b = S.bio;
   const t = tdee();
-  const f = (l, k, u) => html`<label>${raw(l)}</label><input type="number" inputmode="decimal" data-c="bio" data-i="${k}" value="${b[k] || ''}" placeholder="${u}" aria-label="${l}">`;
-  return html`<details class="cd">${pfSummary('bio', 'Datos biométricos', 'Edad, altura, peso, actividad y objetivo')}<label>Sexo</label><select data-c="bio" data-i="sex" aria-label="Sexo">${raw(b.sex == 'M' || b.sex == 'F' ? '' : '<option value="" selected disabled>Sin indicar</option>')}<option value="M"${b.sex == 'M' ? ' selected' : ''}>Hombre</option><option value="F"${b.sex == 'F' ? ' selected' : ''}>Mujer</option></select>${raw(f('Edad', 'age', 'años'))}${raw(f('Altura', 'h', 'cm'))}${raw(f('Peso', 'w', 'kg'))}<label>Actividad diaria</label><select data-c="bio" data-i="act" aria-label="Actividad diaria">${ACTIVITY_LEVELS.map((a, i) => html`<option value="${i}"${(b.act == null ? 1 : b.act) == i ? ' selected' : ''}>${raw(a[0])} · ${raw(a[1])}</option>`)}</select><label>Objetivo físico</label><select data-c="bio" data-i="goal" aria-label="Objetivo físico">${GOAL_LABELS.map((g, i) => html`<option value="${i}"${(b.goal == null ? 1 : b.goal) == i ? ' selected' : ''}>${raw(g)}</option>`)}</select>${raw(t ? html`<p><b>Metabolismo basal: ${roundInt(t.bm)} kcal</b><br><small>Gasto diario estimado: ${roundInt(t.td)} kcal (fórmula Mifflin-St Jeor)</small></p>` : '<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>')}</details>`;
+  const f = (l, k, u) => html`<label>${raw(l)}</label><input type="number" inputmode="decimal" data-c="bioField" data-i="${k}" value="${b[k] || ''}" placeholder="${u}" aria-label="${l}">`;
+  return html`<details class="cd">${pfSummary('bio', 'Datos biométricos', 'Edad, altura, peso, actividad y objetivo')}<label>Sexo</label><select data-c="bioField" data-i="sex" aria-label="Sexo">${raw(b.sex == 'M' || b.sex == 'F' ? '' : '<option value="" selected disabled>Sin indicar</option>')}<option value="M"${b.sex == 'M' ? ' selected' : ''}>Hombre</option><option value="F"${b.sex == 'F' ? ' selected' : ''}>Mujer</option></select>${raw(f('Edad', 'age', 'años'))}${raw(f('Altura', 'h', 'cm'))}${raw(f('Peso', 'w', 'kg'))}<label>Actividad diaria</label><select data-c="bioField" data-i="act" aria-label="Actividad diaria">${ACTIVITY_LEVELS.map((a, i) => html`<option value="${i}"${(b.act == null ? 1 : b.act) == i ? ' selected' : ''}>${raw(a[0])} · ${raw(a[1])}</option>`)}</select><label>Objetivo físico</label><select data-c="bioField" data-i="goal" aria-label="Objetivo físico">${GOAL_LABELS.map((g, i) => html`<option value="${i}"${(b.goal == null ? 1 : b.goal) == i ? ' selected' : ''}>${raw(g)}</option>`)}</select>${raw(t ? html`<p><b>Metabolismo basal: ${roundInt(t.bm)} kcal</b><br><small>Gasto diario estimado: ${roundInt(t.td)} kcal (fórmula Mifflin-St Jeor)</small></p>` : '<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>')}</details>`;
 }
 const planCard = () => {
   /* sin programa elegido (cuenta nueva; I-24) */
   if (S.np)
-    return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', 'Aún sin programa')}<p class="mu" style="margin:10px 0 0;font-size:14px">Elige uno de los predefinidos o crea el tuyo.</p><button class="pr" data-a="pg" style="width:100%;margin-top:12px">Seleccionar programa</button></details>`;
+    return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', 'Aún sin programa')}<p class="mu" style="margin:10px 0 0;font-size:14px">Elige uno de los predefinidos o crea el tuyo.</p><button class="pr" data-a="openPrograms" style="width:100%;margin-top:12px">Seleccionar programa</button></details>`;
   const p = currentCustomProgram();
   const nm = p ? p.n : PROGRAM_NAMES[S.prog];
-  return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}<div style="margin-top:10px">${programRow(nm, levelsActive() ? levelTag(S.lv) : '')}</div><button data-a="pg" style="width:100%;margin-top:12px">Cambiar programa o nivel</button></details>`;
+  return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}<div style="margin-top:10px">${programRow(nm, levelsActive() ? levelTag(S.lv) : '')}</div><button data-a="openPrograms" style="width:100%;margin-top:12px">Cambiar programa o nivel</button></details>`;
 };
 /** Primer día con datos (entrenos, comidas, peso o medidas), o '' si aún no hay ninguno. */
 const firstUseDay = () => {
@@ -93,10 +93,10 @@ const analysisLine = () => {
 export function profileTab() {
   const a = S.ach || {};
   const nd = ACHIEVEMENTS.filter(x => a[x[0]]).length;
-  return html`${profileHead()}${planCard()}${linkRow('ruler', 'Medidas', 'Cintura, brazo, pecho… y cómo cambian', 'f2ms')}${linkRow('trf', 'Logros', nd + ' de ' + ACHIEVEMENTS.length + ' conseguidos', 'f2lg')}${linkRow('bar', 'Ver análisis mensual', analysisLine(), 'ana')}${linkRow('dwn', 'Exportar datos (CSV)', 'Entrenos, series, peso, medidas, comidas y cardio', 'f2ex')}${bioCard()}${linkRow('bug', 'Fallos y sugerencias', reportsLine(), 'rpl')}${isAdmin() ? linkRow('adm', 'Administración', 'Fallos y sugerencias, contraseñas temporales y cuentas', 'adm') : ''}${linkRow('gear', 'Ajustes', 'Cuenta, apariencia, unidades, sonido, copias y más', 'zaj')}<div class="brand" aria-label="${'StrataFit, versión ' + APPV}"><span class="bw">STRATAFIT</span><span class="bv">V${APPV}</span></div>`;
+  return html`${profileHead()}${planCard()}${linkRow('ruler', 'Medidas', 'Cintura, brazo, pecho… y cómo cambian', 'openMeasures')}${linkRow('trf', 'Logros', nd + ' de ' + ACHIEVEMENTS.length + ' conseguidos', 'openAchievements')}${linkRow('bar', 'Ver análisis mensual', analysisLine(), 'openAnalysis')}${linkRow('dwn', 'Exportar datos (CSV)', 'Entrenos, series, peso, medidas, comidas y cardio', 'openCsvExport')}${bioCard()}${linkRow('bug', 'Fallos y sugerencias', reportsLine(), 'openMyReports')}${isAdmin() ? linkRow('adm', 'Administración', 'Fallos y sugerencias, contraseñas temporales y cuentas', 'openAdmin') : ''}${linkRow('gear', 'Ajustes', 'Cuenta, apariencia, unidades, sonido, copias y más', 'openSettings')}<div class="brand" aria-label="${'StrataFit, versión ' + APPV}"><span class="bw">STRATAFIT</span><span class="bv">V${APPV}</span></div>`;
 }
 /* — manejadores de esta función (registros A / C / U) — */
-C.bio = e => {
+C.bioField = e => {
   const k = e.dataset.i;
   S.bio[k] = e.value;
   if (k == 'goal')
@@ -106,7 +106,7 @@ C.bio = e => {
   saveState();
   R();
 };
-C.ph = e => {
+C.photoFile = e => {
   const f = e.files[0];
   if (!f)
     return;
@@ -134,15 +134,15 @@ C.ph = e => {
   r.readAsDataURL(f);
 };
 /* consentimiento antes de la primera foto: se sube a la cuenta (cloud/sync, documento private/avatar) */
-A.avc = () => dialog('Foto de perfil', 'La foto se guarda en tu cuenta, en la nube (Firebase), para verla en tus otros móviles. Solo la ves tú y puedes quitarla cuando quieras.', [['Cancelar', 'zno', ''], ['Aceptar y elegir', 'avok', 'pr']]);
-A.avok = () => {
+A.photoConsentAsk = () => dialog('Foto de perfil', 'La foto se guarda en tu cuenta, en la nube (Firebase), para verla en tus otros móviles. Solo la ves tú y puedes quitarla cuando quieras.', [['Cancelar', 'doNothing', ''], ['Aceptar y elegir', 'photoConsentOk', 'pr']]);
+A.photoConsentOk = () => {
   S.pf.pc = Date.now();
   saveState();
   const f = document.getElementById('avf');
   f && f.click();
 };
-A.avdel = () => confirmDialog('¿Quitar la foto?', 'Se borra de este móvil y de tu cuenta.', 'avdl', 'Quitar');
-A.avdl = () => {
+A.photoDeleteAsk = () => confirmDialog('¿Quitar la foto?', 'Se borra de este móvil y de tu cuenta.', 'photoDelete', 'Quitar');
+A.photoDelete = () => {
   delete S.pf.img;
   delete S.pf.pc;
   saveState();

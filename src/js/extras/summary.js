@@ -81,7 +81,7 @@ export function showSummary() {
       h += html`<details class="cd"${o.pr.length ? '' : ' open'}><summary>Resumen por ejercicio</summary>${o.ex.slice(0, 14).map(e => html`<div class="it" style="grid-template-columns:1fr auto"><span>${e.n}<br><small>${raw(e.k)}${e.k == 1 ? ' serie' : ' series'}</small></span><small>${raw(e.b && !e.u ? toDisplayWeight(e.b[1]) + ' ' + weightUnit() + ' × ' + e.b[0] : '')}</small></div>`)}</details>`;
     if (o.st >= 2)
       h += html`<p class="mu" style="font-size:13px;margin:6px 2px">Llevas ${o.st} semanas seguidas cumpliendo tu objetivo.</p>`;
-    h += html`<div class="g2" style="margin-top:12px"><button data-a="f2sh">${icon('shr', 18)} Compartir</button><button class="pr" data-a="cl">Listo</button></div>`;
+    h += html`<div class="g2" style="margin-top:12px"><button data-a="summaryShare">${icon('shr', 18)} Compartir</button><button class="pr" data-a="closeSheet">Listo</button></div>`;
     sheet(h);
     summaryImage(o).then(b => {
       if (lastSummary)
@@ -93,7 +93,7 @@ export function showSummary() {
   catch (e) {
     const l = S.logs[S.logs.length - 1];
     if (l)
-      dialog('Entreno guardado', l.s + ' series · ' + l.m + ' min', [['Listo', 'zno', 'pr']]);
+      dialog('Entreno guardado', l.s + ' series · ' + l.m + ' min', [['Listo', 'doNothing', 'pr']]);
   }
 }
 function summaryImage(o) {
@@ -222,7 +222,7 @@ function summaryImage(o) {
     }
   });
 }
-A.f2sh = async () => {
+A.summaryShare = async () => {
   try {
     let b = lastSummary && lastSummary.blob;
     if (!b) {

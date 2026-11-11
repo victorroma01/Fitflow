@@ -32,14 +32,14 @@ const adminView = () => {
   if (s.st == 'load')
     return html`${raw(head)}<p class="mu" style="margin:14px 2px">Cargando…</p>`;
   if (s.st == 'err')
-    return html`${raw(head)}<p class="mu" style="margin:14px 2px">No se ha podido cargar (${s.err}). Comprueba la conexión.</p><button data-a="adm" style="width:100%">Reintentar</button>`;
+    return html`${raw(head)}<p class="mu" style="margin:14px 2px">No se ha podido cargar (${s.err}). Comprueba la conexión.</p><button data-a="openAdmin" style="width:100%">Reintentar</button>`;
   const pw = s.inbox.length ? s.inbox.map(d => {
     const h = Math.max(1, Math.round((+d.data.exp - Date.now()) / 36e5));
     const on = s.show == d.id;
-    return html`<div class="cd adp"><div class="row"><b>${String(d.data.u || '')}</b><small>caduca en ${h} h</small></div><div class="adk" aria-live="polite">${on ? String(d.data.p || '') : '••••••••••••'}</div><div class="g3"><button data-a="adv" data-v="${d.id}">${on ? 'Ocultar' : 'Ver'}</button><button data-a="adc" data-v="${d.id}">Copiar</button><button data-a="adx" data-v="${d.id}">Entregada</button></div></div>`;
+    return html`<div class="cd adp"><div class="row"><b>${String(d.data.u || '')}</b><small>caduca en ${h} h</small></div><div class="adk" aria-live="polite">${on ? String(d.data.p || '') : '••••••••••••'}</div><div class="g3"><button data-a="adminToggleSection" data-v="${d.id}">${on ? 'Ocultar' : 'Ver'}</button><button data-a="adminCopyPassword" data-v="${d.id}">Copiar</button><button data-a="adminDeleteAsk" data-v="${d.id}">Entregada</button></div></div>`;
   }).join('') : html`<p class="mu" style="margin:6px 2px 14px;font-size:14px">No hay ninguna. Para crear una: en GitHub, Actions → «Restablecer contraseña» → Run workflow, con el usuario. Aparece aquí durante 24 horas.</p>`;
   const us = s.users.slice().sort((a, b) => String(a.data.u || '').localeCompare(String(b.data.u || ''), 'es'));
-  const rp = linkRow('bug', 'Fallos y sugerencias', s.rp < 0 ? 'Avisos de los usuarios' : s.rp ? s.rp + (s.rp == 1 ? ' pendiente' : ' pendientes') : 'Ninguno pendiente', 'adr');
+  const rp = linkRow('bug', 'Fallos y sugerencias', s.rp < 0 ? 'Avisos de los usuarios' : s.rp ? s.rp + (s.rp == 1 ? ' pendiente' : ' pendientes') : 'Ninguno pendiente', 'openReports');
   return html`${raw(head)}${raw(rp)}<div class="ph">Contraseñas temporales</div>${raw(pw)}<div class="ph">Cuentas (${us.length})</div>${raw(osCounts(us))}<div class="cd acl">${us.map(d => html`<div class="it" style="grid-template-columns:1fr auto auto auto;gap:10px"><b style="overflow-wrap:anywhere">${String(d.data.u || '—')}</b><small>${d.data.sx == 'M' ? 'Hombre' : d.data.sx == 'F' ? 'Mujer' : '—'}</small><small>${osName(d.data.os) || '—'}</small><small>${adminDate(d.data.ca)}</small></div>`)}</div><div style="height:40px"></div>`;
 };
 const loadAdmin = async () => {
@@ -56,18 +56,18 @@ const loadAdmin = async () => {
     sheet(adminView());
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.adm = () => {
+A.openAdmin = () => {
   /* con los datos ya cargados (al volver de Fallos y sugerencias, o al abrirla otra vez), se enseñan mientras se piden de nuevo:
      sin la pantalla vacía de «Cargando…» (I-20). Las contraseñas vuelven a salir ocultas */
   adminState = adminState.st == 'ok' ? { ...adminState, show: '', del: '' } : { st: 'load', inbox: [], users: [], err: '', show: '', del: '', rp: -1 };
   fullPage(adminView());
   loadAdmin();
 };
-A.adv = (i, b) => {
+A.adminToggleSection = (i, b) => {
   adminState.show = adminState.show == b.dataset.v ? '' : b.dataset.v;
   sheet(adminView());
 };
-A.adc = async (i, b) => {
+A.adminCopyPassword = async (i, b) => {
   const d = adminState.inbox.find(x => x.id == b.dataset.v);
   if (!d)
     return;
@@ -81,11 +81,11 @@ A.adc = async (i, b) => {
     toast('No se pudo copiar: cópiala a mano');
   }
 };
-A.adx = (i, b) => {
+A.adminDeleteAsk = (i, b) => {
   adminState.del = b.dataset.v;
-  confirmDialog('¿Ya la has entregado?', 'Se borra de aquí. El usuario tendrá que cambiarla al entrar.', 'adxx', 'Borrar');
+  confirmDialog('¿Ya la has entregado?', 'Se borra de aquí. El usuario tendrá que cambiarla al entrar.', 'adminDelete', 'Borrar');
 };
-A.adxx = async () => {
+A.adminDelete = async () => {
   const id = adminState.del;
   adminState.del = '';
   try {

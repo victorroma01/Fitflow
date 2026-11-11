@@ -145,7 +145,7 @@ const suggestionBox = (e, i, P) => {
     return '';
   const u = weightUnit();
   const dif = W.x[i].some(s => !s.ok && !s.t) && P && W.x[i].some(s => !s.ok && !s.t && Math.abs((+s.w || 0) - (W.dl ? deloadWeight(P.nw) : P.nw)) > 1e-6);
-  const ap = dif ? html`<button class="chip" data-a="sgap" data-i="${i}">Aplicar</button>` : '';
+  const ap = dif ? html`<button class="chip" data-a="applySuggestion" data-i="${i}">Aplicar</button>` : '';
   /* semana de descarga: lo de esta semana y, entre paréntesis, lo normal */
   if (W.dl) {
     if (!P || unitOf(e))
@@ -171,7 +171,7 @@ const suggestionBox = (e, i, P) => {
     t = 'pirámide: sube el peso en cada serie' + (W.x[i].some(s => !s.t && +s.w > 0) ? '' : ' (empieza con uno que te permita 12 repeticiones)');
   return html`<div class="sgb"><span><b>Sugerido</b> · ${raw(t)}</span>${/^PIR/.test(e.tk || '') ? '' : ap}</div>`;
 };
-A.sgap = i => {
+A.applySuggestion = i => {
   const e = S.plan[S.sel].ex[i];
   if (!e || !W.x[i])
     return;
