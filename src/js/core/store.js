@@ -17,6 +17,7 @@ import { logError } from './errors.js';
    seen → versión cuyas novedades ya se enseñaron (para no repetirlas)
    inst → versión con la que empezó la app en este dispositivo; si ya tenía una anterior a la 1.0.1, esa (para saber si el icono
           de la pantalla de inicio es el de antes del logo nuevo)
+   icon → 1 cuando ya se vio el aviso del icono nuevo del iPhone (system/iconnotice)
    acct → sesión de la cuenta en este dispositivo: usuario, uid y tokens de Firebase (cloud/session; no se sincroniza)
    own  → uid de la cuenta cuyos datos hay en el móvil (si entra otra cuenta, se borran antes: cloud/session)
    sync → estado de la sincronización con Firebase: versión de cada documento y huellas de lo último sincronizado
@@ -24,7 +25,7 @@ import { logError } from './errors.js';
    lgn  → intentos fallidos de entrar, para la espera creciente (account/login)
    Las copias automáticas viven en IndexedDB (base "ffsnap"; ver system/snapshots). */
 export const Store = {
-  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn' },
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn' },
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…) */
   get(k) {

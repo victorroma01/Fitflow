@@ -81,7 +81,7 @@ let updateCheckedAt = 0;
 /** Versión publicada que se está anunciando (contenido de version.json) o null si no se pudo leer. */
 let updateInfo = null;
 /** ¿La versión a es posterior a b? Compara número a número: 1.10.0 es posterior a 1.9.3. */
-const isNewerVersion = (a, b) => {
+export const isNewerVersion = (a, b) => {
   const x = String(a || '').split('.').map(Number);
   const y = String(b || '').split('.').map(Number);
   for (let i = 0; i < 3; i++)

@@ -16,6 +16,11 @@ Con la app ya instalada antes de la V1.0.1, el icono nuevo llega así:
   Añadir a pantalla de inicio). Antes, comprueba en Ajustes → Cuenta que todo está sincronizado: al quitarla, el iPhone puede
   borrar lo guardado en el móvil. Al volver a entrar con tu usuario, tus datos vuelven de la nube; los ajustes que son solo de ese
   móvil (como el globo del icono) se eligen otra vez.
+- **Desde la V1.0.2 la app lo avisa** en un iPhone que la tenía instalada desde antes de la V1.0.1: una ventana con el icono nuevo
+  y estos pasos, con el estado de la sincronización y **Sincronizar ahora** si queda algo por subir. **Más tarde** la deja para la
+  próxima vez que abras la app y **Entendido** la da por vista; mientras el icono sea el de antes, se puede volver a ver en
+  Ajustes → App → **El icono nuevo**. No sale durante un entreno ni encima de otra ventana, ni en Android, ni en un iPhone que
+  instaló la app con la V1.0.1 o después.
 
 ## La primera vez
 

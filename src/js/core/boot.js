@@ -26,6 +26,7 @@ import { html, raw } from './html.js';
 import { applyStartTab, buildTabbar } from './tabbar.js';
 import { launchAction } from '../system/phone.js';
 import { tourCheck } from '../system/tour.js';
+import { iconNoticeCheck } from '../system/iconnotice.js';
 import { repairState } from './repair.js';
 import { signedIn } from '../cloud/session.js';
 import { startSync } from '../cloud/sync.js';
@@ -162,6 +163,8 @@ if (signedIn()) {
   startSync();
   /* recorrido de la primera vez (F-36): cuando la app esté libre y tras la primera sincronización */
   setTimeout(tourCheck, 2500);
+  /* el aviso del icono nuevo en un iPhone que aún tiene el de antes (F-48), también cuando la app esté libre */
+  setTimeout(iconNoticeCheck, 3000);
 }
 /* pide al navegador que no borre los datos de la app instalada cuando falte espacio (sin efecto si no lo admite) */
 if (isStandalone() && navigator.storage && navigator.storage.persist)

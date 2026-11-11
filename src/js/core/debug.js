@@ -39,6 +39,7 @@ import { accentNow, customAccent } from '../profile/appearance.js';
 import { backTarget } from './back.js';
 import { deviceOS } from './platform.js';
 import { tourCheck } from '../system/tour.js';
+import { iconNoticeApplies, iconNoticeCheck } from '../system/iconnotice.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
   A: [() => A],
@@ -111,7 +112,9 @@ const DEBUG_NAMES = {
   stateFromStored: [() => stateFromStored],
   stateToStored: [() => stateToStored],
   workoutFromStored: [() => workoutFromStored],
-  workoutToStored: [() => workoutToStored]
+  workoutToStored: [() => workoutToStored],
+  iconNoticeApplies: [() => iconNoticeApplies],
+  iconNoticeCheck: [() => iconNoticeCheck]
 };
 for (const k in DEBUG_NAMES)
   Object.defineProperty(window, k, { get: DEBUG_NAMES[k][0], set: DEBUG_NAMES[k][1], configurable: true });

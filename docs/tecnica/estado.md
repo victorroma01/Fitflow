@@ -28,6 +28,7 @@ historial por año, las comidas por mes, las preferencias en el perfil y la foto
 | `ffbad` (`bad`) | Copia de un estado que no se pudo leer al arrancar, apartada antes de empezar de cero. |
 | `ffver` (`ver`) | Última versión de la app abierta en este dispositivo (para enseñar las novedades tras actualizar). |
 | `ffseen` (`seen`) | Versión cuyas novedades ya se enseñaron, para no repetirlas. |
+| `fficon` (`icon`) | 1 cuando ya se dio por visto el aviso del icono nuevo en el iPhone (`system/iconnotice`, F-48). |
 | `ffinst` (`inst`) | Versión con la que empezó la app en este dispositivo (V1.0.1); si ya tenía otra, esa, y `0` si era anterior a la 1.19.0. Sirve para saber si el icono de la pantalla de inicio es el de antes del logo nuevo. |
 | `ffacct` (`acct`) | Sesión de la cuenta: `{ uid, u: usuario, it: token de sesión, rt: token de renovación, exp, x: 1 si caducó, mc: 1 o 2 si hay que cambiar una contraseña temporal }` (`cloud/session`). No se sincroniza. |
 | `ffown` (`own`) | uid de la cuenta cuyos datos hay en el móvil. Si entra otra, se borran antes de leer el estado. |

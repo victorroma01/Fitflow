@@ -115,3 +115,42 @@
   height:84px;
   margin:4px auto 14px;
 }
+/* el aviso del icono nuevo en el iPhone (F-48, system/iconnotice): el icono, los pasos numerados y el estado de la sincronización */
+.icnw img.icn {
+  width:72px;
+  height:72px;
+  margin:4px auto 12px;
+  border-radius:22%;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+}
+.icnw h3 {
+  text-align:center;
+  margin:0 0 6px;
+}
+.icns {
+  margin:12px 0 16px;
+  padding-left:22px;
+  display:grid;
+  gap:12px;
+  font-size:14px;
+  line-height:1.45;
+}
+.icns li::marker {
+  color:var(--at);
+  font-weight:800;
+}
+.icst {
+  display:block;
+  margin-top:4px;
+  font-size:13px;
+}
+.icst.ok {
+  color:var(--okx);
+}
+.icst.bad {
+  color:var(--wnx);
+}
+.icns button {
+  margin-top:8px;
+  width:100%;
+}
