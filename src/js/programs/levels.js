@@ -124,24 +124,24 @@ export const levelPlan = (pl, lv, id) => {
   return L.map(k => k === -1 ? { n: 'Descanso', ex: [] } : typeof k == 'string' ? parseDays(LEVEL_EXTRA_DAYS[k])[0] : tx[k]);
 };
 const planSignature = pl => JSON.stringify(pl.map(d => [d.n, d.ex.map(e => [e.n, e.s, e.rg || 0, e.u || 0, e.r || 0, e.b || 0, e.tk || 0])]));
-export const currentCustomProgram = () => S.cpi >= 0 ? S.cp[S.cpi] : null;
-export const levelsActive = () => !S.np && (S.cpi < 0 || !!(currentCustomProgram() && currentCustomProgram().o));
+export const currentCustomProgram = () => S.ownProgramIndex >= 0 ? S.ownPrograms[S.ownProgramIndex] : null;
+export const levelsActive = () => !S.noProgram && (S.ownProgramIndex < 0 || !!(currentCustomProgram() && currentCustomProgram().o));
 const levelGenerate = (v) => {
   const p = currentCustomProgram();
   if (p)
     return p.o ? generateProgram({ ...p.o, niv: v, vr: p.o.vr || 0 }) : null;
-  return levelPlan(parseProgram(S.prog), v, S.prog);
+  return levelPlan(parseProgram(S.program), v, S.program);
 };
 const planEdited = () => {
   try {
-    const g = levelGenerate(S.lv);
+    const g = levelGenerate(S.level);
     return !g || planSignature(g) != planSignature(S.plan);
   }
   catch (e) {
     return true;
   }
 };
-const weekStarted = () => Object.keys(S.done || {}).some(k => k.indexOf(S.wk + '-') == 0 && S.done[k]);
+const weekStarted = () => Object.keys(S.doneDays || {}).some(k => k.indexOf(S.week + '-') == 0 && S.doneDays[k]);
 export const levelDot = v => html`<i class="lvd" style="--lc:${LEVEL_COLORS[v]};--ld:${LEVEL_COLORS[v]}38"></i>`;
 const levelVars = v => '--lc:' + LEVEL_COLORS[v] + ';--lb:' + LEVEL_COLORS[v] + '24;--lr:' + LEVEL_COLORS[v] + '6b';
 let levelMenuOpen = false;
@@ -158,7 +158,7 @@ let pendingLevel = null;
 export const levelPill = () => {
   if (!levelsActive())
     return '';
-  const v = isLevel(S.lv) ? S.lv : 'int';
+  const v = isLevel(S.level) ? S.level : 'int';
   return html`<div class="lvw" style="${levelVars(v)}"><button class="lvp" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="levelMenuClose"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem" style="${levelVars(k)}">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
 };
 A.levelMenuToggle = () => {
@@ -183,18 +183,18 @@ const applyLevel = v => {
       S.plan = clone(np);
     }
     else {
-      np = levelPlan(parseProgram(S.prog), v, S.prog);
+      np = levelPlan(parseProgram(S.program), v, S.program);
       S.plan = np;
     }
     dropResume();
-    S.lv = v;
+    S.level = v;
     /* plan nuevo: la próxima rotación (programs/rotation) cuenta desde esta semana */
-    S.rw = S.wk;
-    S.sl = 0;
-    S.sel = 0;
-    Object.keys(S.done || {}).forEach(k => {
-      if (k.indexOf(S.wk + '-') == 0)
-        delete S.done[k];
+    S.rotationWeek = S.week;
+    S.selectedWeekday = 0;
+    S.selectedDay = 0;
+    Object.keys(S.doneDays || {}).forEach(k => {
+      if (k.indexOf(S.week + '-') == 0)
+        delete S.doneDays[k];
     });
     saveState();
     sheet();
@@ -209,7 +209,7 @@ const applyLevel = v => {
 A.levelChoose = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   levelMenuOpen = false;
-  if (!isLevel(v) || v == S.lv) {
+  if (!isLevel(v) || v == S.level) {
     R();
     return;
   }

@@ -175,19 +175,20 @@ def main(path):
 
         # ── cuenta nueva (I-23, I-24): sin programa y, tras la primera sincronización, la bienvenida con sus datos; después, el
         #    recorrido de la primera vez (F-36). Visto en un móvil, no vuelve a salir en otro ──
-        check('la cuenta nueva empieza sin programa: «Seleccionar programa»', p1.evaluate("S.np===1 && S.plan.every(d=>!d.ex.length) && (S.tab=0,R(),!!document.querySelector('#app .npc'))"))
+        check('la cuenta nueva empieza sin programa: «Seleccionar programa»', p1.evaluate("S.noProgram===1 && S.plan.every(d=>!d.ex.length) && (S.tab=0,R(),!!document.querySelector('#app .npc'))"))
         wait(p1, "!!document.getElementById('wlc')", 30000)
         check('cuenta nueva: tras la primera sincronización sale la bienvenida', 'Gracias por instalar la app' in p1.inner_text('#wlc') and p1.evaluate("!document.getElementById('tour')"))
         new_account_bio(p1, 'F')
-        check('con los datos guardados, el recorrido empieza por su primer paso', p1.evaluate("document.querySelector('#tour .trst').textContent") == 'Paso 1 de 5' and p1.evaluate('S.nw') is None)
+        check('con los datos guardados, el recorrido empieza por su primer paso', p1.evaluate("document.querySelector('#tour .trst').textContent") == 'Paso 1 de 5' and p1.evaluate('S.welcomePending') is None)
         p1.click('#tour [data-a=tourSkip]')
-        check('«Omitir» lo da por visto', p1.evaluate("!document.getElementById('tour') && S.tour") == 1)
+        check('«Omitir» lo da por visto', p1.evaluate("!document.getElementById('tour') && S.tourSeen") == 1)
         sync(p1)
         prof = fb.data('users/' + uid) or {}
         core = fb.part('users/%s/data/core' % uid) or {}
         check('y queda en las preferencias del perfil de la cuenta, con el sexo elegido', prof.get('pr', {}).get('tour') == 1 and prof.get('sx') == 'F', str(prof))
         check('el perfil guarda el sistema del móvil, a efectos estadísticos (T-28; en estas pruebas, ni iPhone ni Android: «otro»)', prof.get('os') == 'otro', str(prof))
         check('en la nube, ya sin la bienvenida pendiente y aún sin programa', 'nw' not in core and core.get('np') == 1 and core.get('bio', {}).get('h') == '168', str({k: core.get(k) for k in ('nw', 'np', 'bio')}))
+        check('en la nube, con las claves guardadas de siempre (core/schema), no con los nombres del programa', 'wk' in core and 'plan' in core and not any(k in core for k in ('week', 'noProgram', 'biometrics')) and 'theme' in (prof.get('pr') or {}) and 'accent' not in (prof.get('pr') or {}), str(sorted(core))[:200])
 
         # ── datos en el móvil 1 → la nube ──
         p1.evaluate("S.logs.push({d:'%s',n:'Pecho',v:4000,s:16,m:55,q:7});S.meals['%s']={0:[%s]};saveState()" % (today, today, json.dumps(arroz)))
@@ -200,7 +201,7 @@ def main(path):
         c2, p2 = device()
         login(p2, 'ana_1', 'contraseña-1')
         p2.wait_for_timeout(6000)
-        check('en otro móvil de la misma cuenta, el recorrido ya no sale', p2.evaluate("!document.getElementById('tour') && S.tour") == 1)
+        check('en otro móvil de la misma cuenta, el recorrido ya no sale', p2.evaluate("!document.getElementById('tour') && S.tourSeen") == 1)
         check('en otro móvil, al entrar, bajan los entrenos y las comidas', p2.evaluate("S.logs.length") == 1 and p2.evaluate("JSON.stringify(S.meals['%s'][0])" % today) == json.dumps([arroz], separators=(',', ':')))
         check('y el usuario sale como se registró, aunque se entre en minúsculas', p2.evaluate('account.u') == 'Ana_1')
 
@@ -221,7 +222,7 @@ def main(path):
         check('sin nada pendiente en ninguno', p1.evaluate('pendingDocs()') == 0 and p2.evaluate('pendingDocs()') == 0)
 
         # ── preferencias: van en el perfil y pasan al otro móvil al abrir la app ──
-        p2.evaluate("S.theme='light';S.acc=-1;S.acx='#ff2d55';S.rm=1;saveState()")
+        p2.evaluate("S.theme='light';S.accent=-1;S.accentColor='#ff2d55';S.reduceMotion=1;saveState()")
         sync(p2)
         pr = (fb.data('users/' + uid) or {}).get('pr', {})
         check('las preferencias van en el perfil (también el color propio y reducir animaciones)', pr.get('theme') == 'light' and pr.get('acc') == -1 and pr.get('acx') == '#ff2d55' and pr.get('rm') == 1, str(pr))
@@ -253,7 +254,7 @@ def main(path):
         with p1.expect_file_chooser() as fc:
             p1.click('#dg [data-v=photoConsentOk]')
         fc.value.set_files(files=[{'name': 'yo.jpg', 'mimeType': 'image/jpeg', 'buffer': jpeg}])
-        wait(p1, "S.pf.img && S.pf.pc > 0", 10000)
+        wait(p1, "S.profile.img && S.profile.pc > 0", 10000)
         sync(p1)
         av = fb.part('users/%s/private/avatar' % uid) or {}
         check('con consentimiento, la foto se sube a su documento privado', str(av.get('img', '')).startswith('data:image/jpeg') and av.get('pc'))
@@ -264,7 +265,7 @@ def main(path):
 
         # ── cerrar sesión ──
         fb.set_offline(c1, True)
-        p1.evaluate("S.wl=[{d:'%s',w:80}];saveState()" % today)
+        p1.evaluate("S.weightLog=[{d:'%s',w:80}];saveState()" % today)
         p1.evaluate('A.signOut()')
         wait(p1, "!!document.querySelector('#dg h3')", 30000)
         check('cerrar sesión con cambios sin subir lo avisa', 'sin subir' in p1.inner_text('#dg'))
@@ -354,20 +355,20 @@ def main(path):
         sync(p2)
         p2.evaluate("A.openReport();document.querySelector('[data-a=reportChooseKind][data-v=f]').click()")
         p2.evaluate("A.reportChooseArea(2);document.getElementById('rpx').value='La gráfica de peso no se ve <b>bien</b> en modo claro';A.reportSend()")
-        wait(p2, "S.rp && S.rp[0] && S.rp[0].s==1", 15000)
-        rid = p2.evaluate('S.rp[0].id')
+        wait(p2, "S.reports && S.reports[0] && S.reports[0].s==1", 15000)
+        rid = p2.evaluate('S.reports[0].id')
         rdoc = fb.data('reports/' + rid) or {}
         check('el aviso llega a la nube: pendiente, con el usuario y el id de la cuenta', rdoc.get('st') == 'p' and rdoc.get('u') == 'Ana_1' and rdoc.get('uid') == uid and rid.startswith(uid + '-') and rdoc.get('k') == 'f' and rdoc.get('a') == 'Algo se ve mal', str(rdoc))
         check('con los datos técnicos (versión y navegador; nada personal)', ('StrataFit ' + p2.evaluate('APPV')) in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@stratafit.app' not in json.dumps(rdoc))
         fb.set_offline(c2, True)
         p2.evaluate("A.openReport();document.querySelector('[data-a=reportChooseKind][data-v=s]').click()")
         p2.evaluate("document.getElementById('rpx').value='Poder exportar el análisis también en Excel';A.reportSend()")
-        wait(p2, "S.rp.length==2", 10000)
-        check('sin conexión, la sugerencia queda en el móvil para enviarla después', p2.evaluate('S.rp[0].s') == 0 and 'sin enviar' in p2.evaluate("(S.tab=3,sheet(),R(),document.querySelector('[data-a=openMyReports]').innerText)"))
+        wait(p2, "S.reports.length==2", 10000)
+        check('sin conexión, la sugerencia queda en el móvil para enviarla después', p2.evaluate('S.reports[0].s') == 0 and 'sin enviar' in p2.evaluate("(S.tab=3,sheet(),R(),document.querySelector('[data-a=openMyReports]').innerText)"))
         fb.set_offline(c2, False)
         sync(p2)
-        wait(p2, "S.rp[0].s==1", 15000)
-        sid = p2.evaluate('S.rp[0].id')
+        wait(p2, "S.reports[0].s==1", 15000)
+        sid = p2.evaluate('S.reports[0].id')
         check('al volver la red se envía sola, una vez', (fb.data('reports/' + sid) or {}).get('k') == 's' and sync(p2) == 'ok')
         p4.evaluate('A.openAdmin()')
         txt = p4.inner_text('#sh')
@@ -382,7 +383,7 @@ def main(path):
         wait(p4, "!document.querySelector('#sh [data-a=reportsSetState][disabled]')", 15000)
         check('al abrir uno pendiente pasa a «vista»', (fb.data('reports/' + rid) or {}).get('st') == 'v')
         p2.evaluate('refreshReports(1)')
-        wait(p2, "S.rp.find(x=>x.id==%s).st=='v'" % json.dumps(rid), 15000)
+        wait(p2, "S.reports.find(x=>x.id==%s).st=='v'" % json.dumps(rid), 15000)
         check('y el usuario lo ve como «Vista»', 'Vista' in p2.evaluate("(A.openMyReports(),document.querySelector('#rpl').innerText)"))
         p2.evaluate('sheet()')
         p4.fill('#adrt', 'Gracias: queda arreglado en la próxima versión.')
@@ -393,7 +394,7 @@ def main(path):
         rdoc = fb.data('reports/' + rid) or {}
         check('el admin contesta y lo marca como arreglado', rdoc.get('st') == 'a' and rdoc.get('rp', '').startswith('Gracias') and rdoc.get('ra'), str(rdoc))
         p2.evaluate('refreshReports(1)')
-        wait(p2, "!!S.rp.find(x=>x.id==%s).rp" % json.dumps(rid), 15000)
+        wait(p2, "!!S.reports.find(x=>x.id==%s).rp" % json.dumps(rid), 15000)
         check('el usuario ve en Perfil que tiene una respuesta nueva', '1 respuesta nueva' in p2.evaluate("(S.tab=3,R(),document.querySelector('[data-a=openMyReports]').innerText)"))
         p2.evaluate('A.openMyReports()')
         txt = p2.inner_text('#rpl')
@@ -403,12 +404,12 @@ def main(path):
 
         # ── copia de seguridad en la nube (M5, F-30): una sola, que se sustituye ──
         # con datos y sin copia, la primera ya se hizo sola tras sincronizar
-        wait(p2, "!!S.cb", 20000)
+        wait(p2, "!!S.cloudBackup", 20000)
         check('la primera copia se hace sola al sincronizar', (fb.data('users/%s/backup/meta' % uid) or {}).get('n', 0) >= 1)
-        cb0 = p2.evaluate('S.cb.at')
+        cb0 = p2.evaluate('S.cloudBackup.at')
         p2.evaluate('sheet();A.openBackup()')
         p2.evaluate("document.querySelector('#sh [data-a=cloudBackupSave]').click()")
-        wait(p2, "S.cb.at>%d" % cb0, 20000)
+        wait(p2, "S.cloudBackup.at>%d" % cb0, 20000)
         meta = fb.data('users/%s/backup/meta' % uid) or {}
         check('«Guardar ahora» sube la copia: meta y trozos', meta.get('n', 0) >= 1 and fb.data('users/%s/backup/c0' % uid) is not None and meta.get('lg') == p2.evaluate('S.logs.length'), str({k: v for k, v in meta.items() if k != 'h'}))
         check('comprimida (gzip) y con su huella', meta.get('z') is True and len(meta.get('h', '')) > 4)
@@ -417,15 +418,15 @@ def main(path):
         check('restaurar la copia de la nube pide confirmar, con su fecha y lo que tiene', 'Restaurar esta copia' in p2.inner_text('#dg') and 'entreno' in p2.inner_text('#dg'))
         p2.evaluate("document.querySelector('#dg [data-v=doNothing]').click()")
         at0 = meta.get('at', 0)
-        p2.evaluate("S.cb.at=Date.now()-8*864e5;saveState()")
+        p2.evaluate("S.cloudBackup.at=Date.now()-8*864e5;saveState()")
         p2.reload()
         wait(p2, 'window.__ffok')
         sync(p2)
-        wait(p2, "S.cb && Date.now()-S.cb.at<6e4", 20000)
+        wait(p2, "S.cloudBackup && Date.now()-S.cloudBackup.at<6e4", 20000)
         check('pasada una semana, la copia se hace sola tras sincronizar (y sustituye a la anterior)', (fb.data('users/%s/backup/meta' % uid) or {}).get('at', 0) > at0)
         big = {'at': {'integerValue': '1790000000000'}, 'v': {'stringValue': '1.0.0'}, 'n': {'integerValue': '1'}, 'z': {'booleanValue': False}, 'sz': {'integerValue': '2'}, 'h': {'stringValue': 'x'}, 'lg': {'integerValue': '40'}, 'md': {'integerValue': '30'}}
         fb.put('users/%s/backup/meta' % uid, big)
-        p2.evaluate("S.cb.at=Date.now()-8*864e5;saveState()")
+        p2.evaluate("S.cloudBackup.at=Date.now()-8*864e5;saveState()")
         p2.reload()
         wait(p2, 'window.__ffok')
         sync(p2)

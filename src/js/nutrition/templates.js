@@ -20,7 +20,7 @@ const planDayOf = k => {
   const t = new Date(k + 'T12:00:00');
   const i = (t.getDay() + 6) % 7;
   const pl = S.plan || [];
-  return { i, d: pl.length ? pl[planIndex(i, S.wk + weekOffset(t), pl)] || null : null };
+  return { i, d: pl.length ? pl[planIndex(i, S.week + weekOffset(t), pl)] || null : null };
 };
 /** Tipo de día ('t' entreno, 'r' descanso) y por qué, sin elegirlo a mano:
     · con un entreno registrado ese día, entreno (aunque la rutina dijera descanso);
@@ -45,7 +45,7 @@ HELP.tpa = 'Rellena las comidas vacías de este día con tu plantilla del mismo 
 HELP.tps = 'Guarda las comidas de este día como plantilla de su tipo (entreno o descanso). Otro día del mismo tipo las repites con un toque en «Aplicar plantilla».';
 export const templateCard = k => {
   const { t, why } = dayInfo(k);
-  const tp = (S.tp || {})[t];
+  const tp = (S.mealTemplates || {})[t];
   const nm = t == 't' ? 'entreno' : 'descanso';
   const has = tp && Object.keys(tp).some(i => Array.isArray(tp[i]) && tp[i].length);
   let kc = '';
@@ -59,7 +59,7 @@ A.templateSave = () => {
   const m = S.meals[k] || {};
   const o = {};
   let n = 0;
-  for (let i = 0; i < S.nu.n; i++) {
+  for (let i = 0; i < S.nutritionGoals.n; i++) {
     const l = mealItems(m, i).map(x => ({ ...x }));
     if (l.length) {
       o[i] = l;
@@ -70,8 +70,8 @@ A.templateSave = () => {
     toast('Añade alimentos al día antes de guardarlo');
     return;
   }
-  S.tp = S.tp || {};
-  S.tp[t] = o;
+  S.mealTemplates = S.mealTemplates || {};
+  S.mealTemplates[t] = o;
   saveState();
   R();
   toast('Plantilla de ' + (t == 't' ? 'entreno' : 'descanso') + ' guardada');
@@ -79,14 +79,14 @@ A.templateSave = () => {
 A.templateApply = () => {
   const k = nutriDayKey();
   const t = dayType(k);
-  const tp = (S.tp || {})[t];
+  const tp = (S.mealTemplates || {})[t];
   if (!tp) {
     toast('No hay plantilla guardada para este tipo de día');
     return;
   }
   const m = (S.meals[k] = S.meals[k] || {});
   let n = 0;
-  for (let i = 0; i < S.nu.n; i++) {
+  for (let i = 0; i < S.nutritionGoals.n; i++) {
     if (!mealItems(m, i).length && Array.isArray(tp[i]) && tp[i].length) {
       m[i] = tp[i].filter(x => x && typeof x.n == 'string').map(x => ({ ...x }));
       n++;
@@ -100,10 +100,10 @@ A.templateApply = () => {
   R();
   toast('Plantilla aplicada a ' + n + (n == 1 ? ' comida' : ' comidas'));
 };
-/* gramos de un habitual: los guardados (S.fq, que puede venir de una copia antigua o tocada) solo si son un número válido */
+/* gramos de un habitual: los guardados (S.frequentFoods, que puede venir de una copia antigua o tocada) solo si son un número válido */
 const habitGrams = f => Math.min(5000, Math.max(0, Math.round(+(f && f.g) || 0))) || 100;
 export const habitsCard = m => {
-  const l = Object.keys(S.fq || {}).map(n => [n, S.fq[n]]).filter(x => x[1] && x[1].c > 0 && Array.isArray(x[1].b)).sort((a, b) => b[1].c - a[1].c || (b[1].t || 0) - (a[1].t || 0)).slice(0, 8);
+  const l = Object.keys(S.frequentFoods || {}).map(n => [n, S.frequentFoods[n]]).filter(x => x[1] && x[1].c > 0 && Array.isArray(x[1].b)).sort((a, b) => b[1].c - a[1].c || (b[1].t || 0) - (a[1].t || 0)).slice(0, 8);
   const yk = dayKey(new Date(Date.now() + (nutriDayOffset - 1) * 864e5));
   const ys = (S.meals[yk] || {})[m] || [];
   if (!l.length && !ys.length)
@@ -112,7 +112,7 @@ export const habitsCard = m => {
 };
 A.frequentAdd = (i, b) => {
   const n = b.dataset.n;
-  const f = (S.fq || {})[n];
+  const f = (S.frequentFoods || {})[n];
   if (!f || !addState || !Array.isArray(f.b))
     return;
   const k = nutriDayKey();
@@ -150,13 +150,13 @@ A.saveDish = () => {
   const it = ((S.meals[k] || {})[addState.m] || []).map(x => ({ ...x }));
   const n = $('#pn').value.trim() || 'Plato';
   if (it.length) {
-    S.lib = S.lib.filter(p => p.n != n).concat({ n, it });
+    S.savedDishes = S.savedDishes.filter(p => p.n != n).concat({ n, it });
     saveState();
   }
   sheet();
 };
 A.libraryDishDelete = i => {
-  S.lib.splice(i, 1);
+  S.savedDishes.splice(i, 1);
   saveState();
   sheet(addSheet());
 };

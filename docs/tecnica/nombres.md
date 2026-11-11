@@ -1,9 +1,17 @@
 # Nombres de la V1.0.2
 
-En la V1.0.2 (I-17) las acciones dejaron de tener nombres de dos a cinco letras (`A.ck`, `A.zaj`) y pasaron a decir lo que hacen
-(`A.toggleSetDone`, `A.openSettings`). Esta tabla sirve para leer código, issues o commits anteriores. El cambio no alteró nada de
-lo que hace la app: `bash tests/compare.sh` con el mapa [`tests/nombres-1.0.2.txt`](../../tests/nombres-1.0.2.txt) como quinto argumento
-recorre la V1.0.1 y la nueva paso a paso, con los nombres traducidos, y no encuentra ninguna diferencia.
+En la V1.0.2 (I-17) el código dejó de usar nombres de dos a cinco letras y pasó a usar nombres que dicen lo que hacen o lo que
+guardan. Esta página sirve para leer código, issues o commits anteriores.
+
+- **Acciones** (`A.ck` → `A.toggleSetDone`, `A.zaj` → `A.openSettings`): la tabla de abajo.
+- **Claves del estado** (`S.sel` → `S.selectedDay`, `W.re` → `W.restEndsAt`): en el programa se usan los nombres nuevos, pero los
+  datos se siguen guardando con las claves cortas, así que no se migró nada. `core/schema` traduce de unas a otras, y en
+  [Estado y datos](estado.md) cada clave guardada lleva al lado su nombre en el programa.
+
+El cambio no alteró nada de lo que hace la app: `bash tests/compare.sh` con el mapa
+[`tests/nombres-1.0.2.txt`](../../tests/nombres-1.0.2.txt) como quinto argumento recorre la V1.0.1 y la nueva paso a paso, con los
+nombres traducidos, y no encuentra ninguna diferencia, salvo que el entreno a medias guardado ya no lleva `c`, un dato que se
+escribía y nunca se leía.
 
 - **A**: acciones (`data-a`, al tocar). **C**: cambios (`data-c`, al cambiar un campo). **U**: entradas (`data-u`, al escribir).
 - Se nombran con un verbo en inglés: `open…` abre una pantalla u hoja, `…Ask` pregunta antes y su pareja sin `Ask` lo hace,

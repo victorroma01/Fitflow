@@ -15,7 +15,7 @@ import { prefillSets } from '../workout/progression.js';
 import { html, raw } from '../core/html.js';
 const swapExercise = (i, b) => {
   const nn = b.dataset.n;
-  const d = S.plan[S.sel].ex;
+  const d = S.plan[S.selectedDay].ex;
   const old = d[i].n;
   const ch = e => {
     e.o = e.o || e.n;
@@ -28,17 +28,17 @@ const swapExercise = (i, b) => {
     }));
   else
     ch(d[i]);
-  if (W && W.x[i])
-    W.x[i].forEach(s => {
+  if (W && W.sets[i])
+    W.sets[i].forEach(s => {
       if (!s.ok)
-        s.w = S.last[nn] || '';
+        s.w = S.lastWeights[nn] || '';
     });
   saveState();
   sheet();
   R();
 };
 A.swapUndo = i => {
-  const e = S.plan[S.sel].ex[i];
+  const e = S.plan[S.selectedDay].ex[i];
   const o = e.o;
   const c = e.n;
   if (!o)
@@ -60,17 +60,17 @@ A.swapUndo = i => {
       }
     }
   }));
-  W.x[i].forEach(s => {
+  W.sets[i].forEach(s => {
     if (!s.ok)
-      s.w = S.last[o] || '';
+      s.w = S.lastWeights[o] || '';
   });
-  prefillSets(S.plan[S.sel].ex[i], W.x[i]);
+  prefillSets(S.plan[S.selectedDay].ex[i], W.sets[i]);
   saveState();
   R();
 };
 export let swapState = { i: 0, q: '', eq: [], all: 0 };
 const swapCandidates = c => {
-  const inDay = new Set(S.plan[S.sel].ex.map(x => x.n));
+  const inDay = new Set(S.plan[S.selectedDay].ex.map(x => x.n));
   const q = swapState.q.trim();
   return exAll().filter(e => e.n != c.n && !inDay.has(e.n) && (!q || exSearchText(e).includes(q)));
 };
@@ -96,7 +96,7 @@ const swapTiers = (c, l) => {
   return [['Mismo enfoque', so(t0)], ['Mismo grupo muscular', so(t1).concat(so(t2))], ['Músculos relacionados', so(t3).slice(0, swapState.q ? 40 : 10)]];
 };
 export const swapBody = () => {
-  const cur = S.plan[S.sel].ex[swapState.i];
+  const cur = S.plan[S.selectedDay].ex[swapState.i];
   const c = exAll().find(x => x.n == cur.n) || { n: cur.n, p: [], s: [] };
   const cand = swapCandidates(c);
   const eqs = equipIn(cand);
@@ -114,7 +114,7 @@ const swapScope = () => ['Este día', 'Todo el programa'].map((x, i) => html`<bu
 A.openSwap = i => {
   swapState = { i, q: '', eq: [], all: 0 };
   filterOpen.sw = 0;
-  const e = S.plan[S.sel].ex[i];
+  const e = S.plan[S.selectedDay].ex[i];
   sheet(html`<h3>Swap</h3><p class="mu" style="margin:-4px 0 8px">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p><div id="swh">${raw(swapScope())}</div><input placeholder="Buscar alternativa" aria-label="Buscar alternativa" data-u="swapSearch" style="margin-top:8px"><div id="swb">${raw(swapBody())}</div>`);
 };
 A.swapScopeChoose = i => {
@@ -130,7 +130,7 @@ A.swapDo = (i, b) => {
   b.dataset.v = swapState.all ? '1' : '0';
   swapExercise(i, b);
   fixUnits(nn);
-  if (W && W.x[i])
-    prefillSets(S.plan[S.sel].ex[i], W.x[i]);
+  if (W && W.sets[i])
+    prefillSets(S.plan[S.selectedDay].ex[i], W.sets[i]);
   R();
 };

@@ -30,16 +30,16 @@ def check(name, cond, info=''):
 # comidas de octubre cerca del objetivo (2200 kcal), medidas y un logro
 SEED = """(()=>{
  const pad=n=>String(n).padStart(2,'0');
- S.logs=[];S.hist={};S.meals={};S.wt={};
+ S.logs=[];S.exerciseHistory={};S.meals={};S.water={};
  for(const m of [9,10])for(let d=1;d<=(m==9?30:31);d++){const k='2026-'+pad(m)+'-'+pad(d);const t=new Date(k+'T12:00:00');const wd=t.getDay();const oct=m==10;
   if([1,2,4,5].includes(wd)&&!(oct&&wd==5&&d>20))S.logs.push({d:k,n:'Fuerza',v:oct?5200:4800,s:18,m:60,q:oct?8:7});
   if(oct&&wd==6)S.logs.push({d:k,n:'Cardio · Correr',v:0,s:0,m:30,q:0,k:'c',c:{t:'run',km:5,sec:1800}});
   if(oct&&wd==0&&d<15)S.logs.push({d:k,n:'WOD · AMRAP 12 min',v:0,s:0,m:15,q:0,k:'w',x:'5 rondas'});
-  if([1,4].includes(wd)){(S.hist['Press banca']=S.hist['Press banca']||[]).unshift({d:k,s:[[5,oct?(d>15?85:82.5):80,8,0]]});(S.hist['Sentadilla']=S.hist['Sentadilla']||[]).unshift({d:k,s:[[6,100,8,0]]})}
-  if(oct&&d<=28&&d%7!=3){const kc=2200+((d*137)%600)-300;S.meals[k]={0:[{n:'Avena',g:100,b:[370,60,13,7,10,0]}],1:[{n:'Pollo y arroz',g:Math.round((kc-370)/1.6),b:[160,18,14,3,1,0]}]};S.wt[k]=2000}}
- S.wl=[{d:'2026-09-01',w:81.4},{d:'2026-09-29',w:80.6},{d:'2026-10-06',w:80.3},{d:'2026-10-20',w:79.7},{d:'2026-10-27',w:79.4}];
- S.ms=[{d:'2026-09-02',v:{ci:85}},{d:'2026-10-28',v:{ci:83}}];S.ach={n1:'2026-10-08'};
- S.nu={k:2200,c:45,p:30,f:25,n:3};S.bio={age:34,h:178,w:79.4,sex:'M',act:2,goal:0};saveState()})()"""
+  if([1,4].includes(wd)){(S.exerciseHistory['Press banca']=S.exerciseHistory['Press banca']||[]).unshift({d:k,s:[[5,oct?(d>15?85:82.5):80,8,0]]});(S.exerciseHistory['Sentadilla']=S.exerciseHistory['Sentadilla']||[]).unshift({d:k,s:[[6,100,8,0]]})}
+  if(oct&&d<=28&&d%7!=3){const kc=2200+((d*137)%600)-300;S.meals[k]={0:[{n:'Avena',g:100,b:[370,60,13,7,10,0]}],1:[{n:'Pollo y arroz',g:Math.round((kc-370)/1.6),b:[160,18,14,3,1,0]}]};S.water[k]=2000}}
+ S.weightLog=[{d:'2026-09-01',w:81.4},{d:'2026-09-29',w:80.6},{d:'2026-10-06',w:80.3},{d:'2026-10-20',w:79.7},{d:'2026-10-27',w:79.4}];
+ S.measures=[{d:'2026-09-02',v:{ci:85}},{d:'2026-10-28',v:{ci:83}}];S.achievements={n1:'2026-10-08'};
+ S.nutritionGoals={k:2200,c:45,p:30,f:25,n:3};S.biometrics={age:34,h:178,w:79.4,sex:'M',act:2,goal:0};saveState()})()"""
 
 
 def main(path):
@@ -71,12 +71,12 @@ def main(path):
             return d.suggested_filename, open(f, 'rb').read()
 
         print('Recordatorio de pesaje (F-25, T-13)')
-        ev("delete S.wr;S.wl=[{d:'2026-11-02',w:80}];S.tab=2;R();A.openWeight()")
+        ev("delete S.weighReminder;S.weightLog=[{d:'2026-11-02',w:80}];S.tab=2;R();A.openWeight()")
         run()
         check('en Evolución del peso, debajo de «Registrar peso», se activa el recordatorio', ev("!!document.querySelector('.wrc [data-c=weighReminderToggle]')") and ev("(a=>a.compareDocumentPosition(document.querySelector('.wrc'))&4)(document.querySelector('[data-a=weightAdd]'))") > 0)
         ev("(e=>{e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}))})(document.querySelector('[data-c=weighReminderToggle]'))")
         run()
-        check('por defecto, cada 2 semanas desde hoy', ev("S.wr.n==2&&S.wr.u=='w'") and '18 de noviembre' in txt('.wrc .wrt'), txt('.wrc .wrt'))
+        check('por defecto, cada 2 semanas desde hoy', ev("S.weighReminder.n==2&&S.weighReminder.u=='w'") and '18 de noviembre' in txt('.wrc .wrt'), txt('.wrc .wrt'))
         steps = ev("[...document.querySelectorAll('.wrs [data-a=weighReminderInterval]')].map(b=>b.innerText)")
         check('intervalos: 2 semanas, 4 semanas, un mes, 5 semanas u otro', steps == ['2 semanas', '4 semanas', '1 mes', '5 semanas', 'Otro'], str(steps))
         ev("document.querySelector('[data-a=weighReminderInterval][data-i=\"2\"]').click()")
@@ -88,18 +88,18 @@ def main(path):
         run()
         ev("(e=>{e.value='10';e.dispatchEvent(new Event('change',{bubbles:true}))})(document.querySelector('[data-c=weighReminderEvery]'))")
         run()
-        check('«Otro»: cada cuántos días, semanas o meses', ev("S.wr.n==10&&S.wr.u=='d'") and '14 de noviembre' in txt('.wrc .wrt'), txt('.wrc .wrt'))
+        check('«Otro»: cada cuántos días, semanas o meses', ev("S.weighReminder.n==10&&S.weighReminder.u=='d'") and '14 de noviembre' in txt('.wrc .wrt'), txt('.wrc .wrt'))
         ev("(e=>{e.value='500';e.dispatchEvent(new Event('change',{bubbles:true}))})(document.querySelector('[data-c=weighReminderEvery]'))")
         run()
-        check('con un tope razonable (90 días)', ev("S.wr.n") == 90)
+        check('con un tope razonable (90 días)', ev("S.weighReminder.n") == 90)
         ev("document.querySelector('[data-a=weighReminderInterval][data-i=\"0\"]').click()")
         run()
         name, data = download("document.querySelector('[data-a=weighReminderCalendar]').click()")
         ics = data.decode('utf-8')
         check('«Añadir al calendario» crea un evento que se repite con su aviso (.ics)', name == 'StrataFit-pesaje.ics' and 'RRULE:FREQ=WEEKLY;INTERVAL=2' in ics and 'BEGIN:VALARM' in ics and 'DTSTART:20261118T090000' in ics and 'SUMMARY:Día de pesarse' in ics, name + ' ' + ics[:200])
-        check('con líneas de calendario de verdad (CRLF) y siempre el mismo id', '\r\n' in ics and ev("S.wr.c") and ('UID:stratafit-pesaje-' + ev("S.wr.c")) in ics)
+        check('con líneas de calendario de verdad (CRLF) y siempre el mismo id', '\r\n' in ics and ev("S.weighReminder.c") and ('UID:stratafit-pesaje-' + ev("S.weighReminder.c")) in ics)
         # toca: último pesaje hace tres semanas
-        ev("S.wr={n:2,u:'w',t:Date.parse('2026-10-01T12:00:00')};S.wl=[{d:'2026-10-14',w:79.6}];saveState();A.weightBack();S.tab=0;R()")
+        ev("S.weighReminder={n:2,u:'w',t:Date.parse('2026-10-01T12:00:00')};S.weightLog=[{d:'2026-10-14',w:79.6}];saveState();A.weightBack();S.tab=0;R()")
         run()
         ev("document.dispatchEvent(new Event('visibilitychange'))")
         run(1500)
@@ -108,7 +108,7 @@ def main(path):
         run()
         ev("document.dispatchEvent(new Event('visibilitychange'))")
         run(1500)
-        check('«Mañana»: hoy no vuelve a salir', not txt('#dg').strip() and ev("S.wr.sn") == '2026-11-05')
+        check('«Mañana»: hoy no vuelve a salir', not txt('#dg').strip() and ev("S.weighReminder.sn") == '2026-11-05')
         ev("S.tab=2;R()")
         run()
         check('ni la tarjeta del Dashboard', not ev("!!document.querySelector('.wrb')"))
@@ -133,7 +133,7 @@ def main(path):
         check('al registrar el peso, el ciclo empieza de nuevo', not ev("!!document.querySelector('.wrb')") and '19 de noviembre' in (ev("(A.openWeight(),document.querySelector('.wrc .wrt').innerText)") or ''))
 
         print('Análisis mensual (F-26, T-15)')
-        ev("S.logs=[{d:'2026-10-20',n:'Fuerza',v:4000,s:16,m:55,q:7}];S.meals={};S.wl=[];S.ms=[];S.tab=3;R()")
+        ev("S.logs=[{d:'2026-10-20',n:'Fuerza',v:4000,s:16,m:55,q:7}];S.meals={};S.weightLog=[];S.measures=[];S.tab=3;R()")
         run()
         check('en Perfil, «Ver análisis mensual»', ev("!!document.querySelector('#app [data-a=openAnalysis]')"))
         check('antes del primer mes de uso dice desde cuándo estará', 'Disponible desde el 19 de noviembre' in txt('#app [data-a=openAnalysis]'), txt('#app [data-a=openAnalysis]'))
@@ -210,10 +210,10 @@ def main(path):
         ev("A.closeSheet()")
 
         print('Datos dañados')
-        ev("S.wr={n:99,u:'x',t:-1};S.cb={at:'ayer'};S.rp=[{id:'a',k:'z',t:'x'},{id:'prueba-1793782800000',k:'s',a:'',t:'Una sugerencia válida',ca:1793782800000,s:1,st:'p'},5];saveState()")
+        ev("S.weighReminder={n:99,u:'x',t:-1};S.cloudBackup={at:'ayer'};S.reports=[{id:'a',k:'z',t:'x'},{id:'prueba-1793782800000',k:'s',a:'',t:'Una sugerencia válida',ca:1793782800000,s:1,st:'p'},5];saveState()")
         pg.reload()
         pg.clock.run_for(1500)
-        check('recordatorio, copia y avisos dañados se arreglan al abrir', ev("S.wr===undefined && S.cb===undefined && S.rp.length==1 && S.rp[0].t=='Una sugerencia válida'"), str(ev("[S.wr,S.cb,S.rp]")))
+        check('recordatorio, copia y avisos dañados se arreglan al abrir', ev("S.weighReminder===undefined && S.cloudBackup===undefined && S.reports.length==1 && S.reports[0].t=='Una sugerencia válida'"), str(ev("[S.weighReminder,S.cloudBackup,S.reports]")))
 
         errs = [e for e in errs if 'favicon' not in e]
         check('sin errores de JS', not errs, str(errs[:3]))

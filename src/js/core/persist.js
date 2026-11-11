@@ -7,10 +7,12 @@
    Cada guardado escribe solo las claves que han cambiado, y todos los saveState() de una misma acción se agrupan en
    uno solo al terminar la acción (queueMicrotask: siempre antes de que la página pueda recargarse o cerrarse).
    Cada parte que cambia se avisa a Store.remote (cloud/sync, que la sube a Firebase).
-   Este módulo no conoce S: core/state le pasa el estado (saveState, flushState).
+   Este módulo no conoce S: core/state le pasa el estado (saveState, flushState). Se guarda con las claves cortas de siempre y
+   se lee con los nombres del programa (core/schema).
    Define: STATE_PARTS, partKey, stateRecovered, savedText, queued, saveLocked, lastKey, splitState, readPart, loadSavedState, writeKeys, saveFailedAt, saveFailed, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
 */
 import { Store } from './store.js';
+import { stateFromStored, stateToStored } from './schema.js';
 import { logError } from './errors.js';
 import { toast } from './toast.js';
 /** Colecciones de S que se guardan en su propia clave (las comidas, además, una clave por mes). */
@@ -28,7 +30,8 @@ let queued = null;
 let saveLocked = 0;
 /** Clave que se estaba escribiendo (para el registro de errores si falla). */
 let lastKey = '';
-/** El objeto `s` dividido en claves de Store: { clave: texto JSON }. El núcleo lleva la marca _parts. */
+/** El estado `s`, ya con las claves guardadas, dividido en claves de Store: { clave: texto JSON }. El núcleo lleva la
+  marca _parts. */
 const splitState = s => {
   const out = {};
   const core = {};
@@ -67,7 +70,7 @@ const readPart = (k, raw) => {
   }
   return undefined;
 };
-/** Estado guardado ({} si no hay nada). Si el núcleo está dañado, se aparta en Store.K.bad y se empieza de cero
+/** Estado guardado, con los nombres del programa ({} si no hay nada). Si el núcleo está dañado, se aparta en Store.K.bad y se empieza de cero
   conservando las partes que se puedan leer; si lo está una parte, se aparta esa parte y se deja vacía. */
 export const loadSavedState = () => {
   let raw;
@@ -145,7 +148,7 @@ export const loadSavedState = () => {
       logError('apartar estado dañado', x);
     }
   }
-  return core;
+  return stateFromStored(core);
 };
 /** Deja guardado exactamente `next`: escribe las claves que cambian, borra las partes que sobran y escribe el núcleo al
   final (si algo falla a medias, el núcleo anterior sigue apuntando a partes completas). Lanza el error de Store. */
@@ -191,7 +194,7 @@ export const writeState = s => {
   if (saveLocked)
     return true;
   try {
-    writeKeys(splitState(s));
+    writeKeys(splitState(stateToStored(s)));
     return true;
   }
   catch (e) {
@@ -209,7 +212,7 @@ export const scheduleWrite = s => {
         writeState(queued);
     });
 };
-/** Sustituye todo el estado guardado por `s` (restaurar una copia de seguridad). Si falla, lanza el error: quien llama
+/** Sustituye todo el estado guardado por `s`, con las claves guardadas (restaurar una copia de seguridad). Si falla, lanza el error: quien llama
   deshace volviendo a escribir S (flushState de core/state). Si va bien, quien llama bloquea los guardados y recarga. */
 export const replaceSavedState = s => {
   writeKeys(splitState(s));

@@ -15,53 +15,53 @@ import { advanceDay } from './week.js';
 import { showSummary } from '../extras/summary.js';
 export let newRecords = [];
 const logWorkout = () => {
-  const d = S.plan[S.sel];
+  const d = S.plan[S.selectedDay];
   let v = 0;
   let n = 0;
-  W.x.forEach((a, i) => a.forEach(s => {
+  W.sets.forEach((a, i) => a.forEach(s => {
     if (s.ok) {
       n++;
       v += unitOf(d.ex[i]) ? 0 : s.r * s.w;
       if (s.w)
-        S.last[d.ex[i].n] = s.w;
+        S.lastWeights[d.ex[i].n] = s.w;
     }
   }));
   if (n) {
-    S.logs.push({ d: dayKey(new Date), n: d.n, v, s: n, m: roundInt((Date.now() - W.t0) / 6e4), q: avgEffort(), dl: W.dl ? 1 : 0 });
-    S.done[S.wk + '-' + S.sl] = 1;
+    S.logs.push({ d: dayKey(new Date), n: d.n, v, s: n, m: roundInt((Date.now() - W.startedAt) / 6e4), q: avgEffort(), dl: W.deload ? 1 : 0 });
+    S.doneDays[S.week + '-' + S.selectedWeekday] = 1;
   }
   setW(null);
   saveState();
   R();
 };
 const saveHistory = () => {
-  const d = S.plan[S.sel];
+  const d = S.plan[S.selectedDay];
   const dt = dayKey(new Date);
-  S.hist = S.hist || {};
+  S.exerciseHistory = S.exerciseHistory || {};
   newRecords = [];
-  W.x.forEach((a, i) => {
+  W.sets.forEach((a, i) => {
     const n = d.ex[i].n;
-    const h = S.hist[n] || [];
+    const h = S.exerciseHistory[n] || [];
     const pb = Math.max(0, ...h.flatMap(x => x.s.map(y => +y[1] || 0)));
     const m = Math.max(0, ...a.filter(q => q.ok).map(q => +q.w || 0));
     if (pb > 0 && m > pb)
       newRecords.push(n);
   });
-  W.x.forEach((a, i) => {
+  W.sets.forEach((a, i) => {
     /* cada serie: repeticiones, peso, RPE, fila extra (1 drop set, 2 rest-pause) y técnica si no es una serie normal */
     const l = a.filter(s => s.ok).map(s => s.k ? [s.r, s.w || 0, s.q || 0, s.t || 0, s.k] : [s.r, s.w || 0, s.q || 0, s.t || 0]);
     if (l.length) {
       const n = d.ex[i].n;
       /* todo el historial: va también a la nube, un documento por año (cloud/sync), y un año ocupa poco */
-      (S.hist[n] = S.hist[n] || []).unshift({ d: dt, s: l });
+      (S.exerciseHistory[n] = S.exerciseHistory[n] || []).unshift({ d: dt, s: l });
     }
   });
 };
 A.finishAsk = () => confirmDialog('¿Guardar el entreno?', 'Se registrarán las series completadas en tu historial.', 'finishSave', 'Guardar y salir');
 A.discardAsk = () => confirmDialog('¿Salir sin guardar?', 'Se perderán las series de este entreno.', 'discardWorkout', 'Salir y descartar');
 export const bestOf = n => {
-  let b = (S.pr || {})[n] || null;
-  ((S.hist || {})[n] || []).forEach(x => x.s.forEach(q => {
+  let b = (S.records || {})[n] || null;
+  ((S.exerciseHistory || {})[n] || []).forEach(x => x.s.forEach(q => {
     const r = +q[0];
     const w = +q[1];
     if (w > 0 && (!b || est1RM(w, r) > b.e + 1e-6))
@@ -72,17 +72,17 @@ export const bestOf = n => {
 const saveRecords = () => {
   try {
     if (W) {
-      const d = S.plan[S.sel];
-      S.pr = S.pr || {};
-      W.x.forEach((a, i) => {
+      const d = S.plan[S.selectedDay];
+      S.records = S.records || {};
+      W.sets.forEach((a, i) => {
         const n = d.ex[i].n;
         a.forEach(s => {
           const w = +s.w || 0;
           if (s.ok && w > 0 && !unitOf(d.ex[i])) {
             const e = est1RM(w, +s.r);
-            const c = S.pr[n];
+            const c = S.records[n];
             if (!c || e > c.e)
-              S.pr[n] = { w, r: +s.r, e, d: dayKey(new Date) };
+              S.records[n] = { w, r: +s.r, e, d: dayKey(new Date) };
           }
         });
       });
@@ -101,10 +101,10 @@ const workoutSnapshot = () => {
   let sn = null;
   try {
     if (W) {
-      const d = S.plan[S.sel];
+      const d = S.plan[S.selectedDay];
       sn = { n: d.n, dt: dayKey(new Date), ex: d.ex.map((e, i) => {
-          const a = (W.x[i] || []).filter(s => s.ok);
-          const h = (S.hist || {})[e.n] || [];
+          const a = (W.sets[i] || []).filter(s => s.ok);
+          const h = (S.exerciseHistory || {})[e.n] || [];
           let pw = 0;
           let pe = 0;
           h.forEach(x => (x && Array.isArray(x.s) ? x.s : []).forEach(q => {
@@ -136,17 +136,17 @@ A.finishSave = () => {
   lastSummary = workoutSnapshot();
   const n0 = S.logs.length;
   saveRecords();
-  const one = S.pbk;
-  const k = S.wk + '-' + S.sl;
-  const had = S.done[k];
+  const one = S.planBackup;
+  const k = S.week + '-' + S.selectedWeekday;
+  const had = S.doneDays[k];
   const n1 = S.logs.length;
   sheet();
   saveHistory();
   logWorkout();
   if (one && !had)
-    delete S.done[k];
+    delete S.doneDays[k];
   /* el día del plan queda completado: se pasa al siguiente (F-41). Un workout propio lanzado sobre el día no lo completa */
-  if (S.done[k] && !one)
+  if (S.doneDays[k] && !one)
     advanceDay();
   if (S.logs.length > n1)
     setTimeout(showSummary, 50);
@@ -155,7 +155,7 @@ A.finishSave = () => {
   R();
   if (S.logs.length > n0) {
     try {
-      S.pc = (S.pc || 0) + (Array.isArray(newRecords) ? newRecords.length : 0);
+      S.recordCount = (S.recordCount || 0) + (Array.isArray(newRecords) ? newRecords.length : 0);
     }
     catch (e) {
       logError('contar récords', e);

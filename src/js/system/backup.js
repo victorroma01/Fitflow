@@ -2,6 +2,7 @@
    Copias de seguridad, restauración y avisos.
    Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, cleanProfile, parseBackup, backupDate, askRestore, preRestore, restoreBackup, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
 */
+import { stateToStored } from '../core/schema.js';
 import { $, APPV, safeImage, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
@@ -22,9 +23,9 @@ export const setPendingRestore = v => {
   pendingRestore = v;
 };
 const backupAge = () => {
-  if (!S.bkd)
+  if (!S.lastBackupDate)
     return 'Aún no has guardado ningún archivo.';
-  const d = Math.floor((Date.now() - S.bkd) / 864e5);
+  const d = Math.floor((Date.now() - S.lastBackupDate) / 864e5);
   return 'Último archivo: ' + (d <= 0 ? 'hoy' : d == 1 ? 'ayer' : 'hace ' + d + ' días') + '.';
 };
 /** Nombre del archivo de copia (T-14): siempre el mismo, así cada copia sustituye a la anterior en el teléfono. */
@@ -53,9 +54,11 @@ const backupRows = (s, wip) => {
   return r;
 };
 const backupSummary = s => [plural(countOf(s.logs), 'entreno', 'entrenos'), plural(countOf(s.cr), 'rutina', 'rutinas'), plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos'), 'comidas de ' + plural(countOf(s.meals), 'día', 'días')].join(' · ');
+/** La copia: S con las claves guardadas (core/schema), como en el móvil y en la nube, más su descripción en _sf. */
 export const buildBackup = () => {
   const wip = wipSession();
-  return JSON.stringify(Object.assign({ _sf: { app: 'StrataFit', fmt: BACKUP_FORMAT, ver: APPV, at: new Date().toISOString(), wip: wip || undefined, sum: backupRows(S, wip) } }, S));
+  const s = stateToStored(S);
+  return JSON.stringify(Object.assign({ _sf: { app: 'StrataFit', fmt: BACKUP_FORMAT, ver: APPV, at: new Date().toISOString(), wip: wip || undefined, sum: backupRows(s, wip) } }, s));
 };
 const BACKUP_ERRORS = { vacio: 'El archivo está vacío', prog: 'Eso es un código de programa, no una copia: impórtalo en Programas', grande: 'El archivo es demasiado grande para ser una copia de StrataFit', formato: 'El archivo no es una copia válida de StrataFit', plan: 'La copia está dañada: no tiene un programa de entrenamiento válido' };
 /** Perfil de una copia o de los datos guardados: textos como texto y la foto solo si es una imagen válida (safeImage).
@@ -143,7 +146,7 @@ export const askRestore = txt => {
   }
   pendingRestore = r;
   const ds = r.meta && r.meta.at ? backupDate(r.meta.at, 1) : '';
-  confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}<br><br><b>Ahora tienes</b><br>${backupSummary(S)}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'backupRestoreConfirmed', 'Restaurar');
+  confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}<br><br><b>Ahora tienes</b><br>${backupSummary(stateToStored(S))}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'backupRestoreConfirmed', 'Restaurar');
 };
 const preRestore = () => {
   try {
@@ -163,7 +166,7 @@ export const restoreBackup = () => {
   pendingRestore = null;
   let pre;
   try {
-    pre = JSON.stringify({ t: Date.now(), v: APPV, s: S, w: Store.get(WIP_KEY) });
+    pre = JSON.stringify({ t: Date.now(), v: APPV, s: stateToStored(S), w: Store.get(WIP_KEY) });
     Store.set(Store.K.pre, pre);
   }
   catch (e) {
@@ -213,7 +216,7 @@ A.backupUndo = () => {
   if (!p)
     return;
   try {
-    Store.set(Store.K.pre, JSON.stringify({ t: Date.now(), v: APPV, s: S, w: Store.get(WIP_KEY) }));
+    Store.set(Store.K.pre, JSON.stringify({ t: Date.now(), v: APPV, s: stateToStored(S), w: Store.get(WIP_KEY) }));
   }
   catch (e) {
     toast('No hay espacio para deshacer');
@@ -257,14 +260,14 @@ A.backupRestoreText = () => {
   askRestore(e ? e.value : '');
 };
 A.backupDownload = async () => {
-  const pv = S.bkd;
-  S.bkd = Date.now();
+  const pv = S.lastBackupDate;
+  S.lastBackupDate = Date.now();
   saveState();
   const r = await downloadFile(BACKUP_FILE, buildBackup());
   if (r == 'saved')
     toast('Copia guardada');
   else {
-    S.bkd = pv;
+    S.lastBackupDate = pv;
     saveState();
     toast(r == 'declined' ? 'No se guardó la copia' : 'No se pudo guardar el archivo. Usa la opción de texto.');
   }
@@ -276,9 +279,9 @@ A.openBackup = () => {
   sheet(html`${fromSettings ? pgHead('Copia de seguridad', 'openSettings') : html`<h3>Copia de seguridad</h3>`}<p class="mu" style="margin:0 0 12px">Tus datos se guardan en este móvil y se sincronizan con tu cuenta. La copia de seguridad es una foto de tus datos en un momento, para volver a ella si algo se borra o se estropea.</p>${raw(cloudBackupCard())}<div class="cd cbk"><b>Archivo en el móvil</b><p class="mu">Siempre con el mismo nombre, ${BACKUP_FILE}: cada archivo nuevo sustituye al anterior y no se acumulan copias en el teléfono.</p><p class="mu" style="font-size:12px;margin:0 0 10px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="backupDownload">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="backupImportFile"></label></div></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="backupCopyText">Copiar</button><button class="pr" data-a="backupRestoreText">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="backupUndoAsk" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
   fillSnapshots();
 };
-export const isFreshInstall = () => !S.nbk && !S.logs.length && !S.bkd && !(S.cp || []).length && !(S.cr || []).length && !countOf(S.meals) && !(S.wl || []).length;
+export const isFreshInstall = () => !S.backupNoticeOff && !S.logs.length && !S.lastBackupDate && !(S.ownPrograms || []).length && !(S.routines || []).length && !countOf(S.meals) && !(S.weightLog || []).length;
 A.backupReminderOff = () => {
-  S.nbk = 1;
+  S.backupNoticeOff = 1;
   saveState();
   R();
 };

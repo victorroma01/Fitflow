@@ -86,12 +86,12 @@ def main(path, shots=None):
         # entreno: toda miniatura se toca y abre cómo se hace el ejercicio (F-14), con la foto si la hay y la ficha
         d = ev("S.plan.findIndex(d=>d.ex.some(e=>EX_PHOTO_KEY[e.n]))")
         check('el programa por defecto contiene ejercicios con foto', d >= 0, str(d))
-        ev("S.tab=0;S.sl=%d;S.sel=%d;R()" % (max(d, 0), max(d, 0)))
+        ev("S.tab=0;S.selectedWeekday=%d;S.selectedDay=%d;R()" % (max(d, 0), max(d, 0)))
         ev("A.startWorkout()")
         pg.clock.run_for(400)
         check('empieza el entreno', ev('!!W'))
         check('todas las miniaturas del entreno se pueden tocar', ev("[...document.querySelectorAll('.xs .th')].every(t=>t.dataset.a=='exerciseHowTo')"))
-        sel = "document.querySelector('.xs .th[data-a=exerciseHowTo][data-n=\"'+S.plan[S.sel].ex.find(e=>EX_PHOTO_KEY[e.n]).n+'\"]')"
+        sel = "document.querySelector('.xs .th[data-a=exerciseHowTo][data-n=\"'+S.plan[S.selectedDay].ex.find(e=>EX_PHOTO_KEY[e.n]).n+'\"]')"
         if shots:
             ev(sel + ".scrollIntoView({block:'center'})")
             pg.clock.run_for(300)

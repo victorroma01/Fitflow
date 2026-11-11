@@ -70,7 +70,7 @@ export const tempoOf = e => {
     return '3/0/1/0';
   return '2/0/2/0';
 };
-export const lastHistory = e => ((S.hist || {})[e.n] || [])[0];
+export const lastHistory = e => ((S.exerciseHistory || {})[e.n] || [])[0];
 export const weightStep = e => /Sentadilla|Peso muerto|Prensa|Hip thrust|Hack/i.test(e.n) ? 5 : 2.5;
 export const roundHalf = x => Math.round(x * 2) / 2;
 export const fixUnits = nn => {
@@ -149,10 +149,10 @@ export const planLine = e => {
 };
 export const targetLine = (e, i) => {
   const U = unitOf(e);
-  const dl = !!(W && W.dl);
+  const dl = !!(W && W.deload);
   const p = [];
   if (e.s > 1)
-    p.push(inSuperset(i) ? '10 s al siguiente' : (blockEnd(S.plan[S.sel], i) ? 'Descanso de la ronda ' : 'Descanso ') + fmtMinSec(restAt(S.plan[S.sel], i)));
+    p.push(inSuperset(i) ? '10 s al siguiente' : (blockEnd(S.plan[S.selectedDay], i) ? 'Descanso de la ronda ' : 'Descanso ') + fmtMinSec(restAt(S.plan[S.selectedDay], i)));
   if (!U)
     p.push('Tempo ' + tempoOf(e));
   /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */
@@ -168,7 +168,7 @@ export const rangeSelect = (e, i) => {
   return html`<select data-c="setRepRange" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" style="width:auto;padding:5px 10px;font-size:13px">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
 };
 C.setRepRange = (e, i) => {
-  const x = S.plan[S.sel].ex[i];
+  const x = S.plan[S.selectedDay].ex[i];
   if (!x)
     return;
   const r = e.value.split('-').map(Number);

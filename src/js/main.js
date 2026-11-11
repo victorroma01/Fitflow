@@ -9,6 +9,7 @@ import './core/toast.js';
 import './core/morph.js';
 import './core/store.js';
 import './core/errors.js';
+import './core/schema.js';
 import './core/persist.js';
 import './cloud/config.js';
 import './cloud/net.js';

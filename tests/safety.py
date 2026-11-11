@@ -92,7 +92,7 @@ def main(path):
 
             # no se puede guardar (almacenamiento lleno)
             ev("window.__set=Store.set;Store.set=(k,v)=>{if(k==Store.K.app||k.startsWith(Store.K.app+':')){const e=new Error('lleno');e.name='QuotaExceededError';throw e}return window.__set(k,v)};0")
-            ev('S.rest+=5;saveState()')
+            ev('S.defaultRest+=5;saveState()')
             pg.clock.run_for(100)
             check('si no puede guardar, avisa', ev("/No se ha podido guardar/.test(document.body.innerText)"))
             check('y lo registra', any(x['w'] == 'guardar ff' and 'QuotaExceededError' in x['m'] for x in ev('errorLog()')))

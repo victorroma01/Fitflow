@@ -16,21 +16,21 @@ import { prefillSets } from '../workout/progression.js';
 import { html, raw } from '../core/html.js';
 /** Añade un ejercicio al día seleccionado. Si hay un entreno en curso, añade también sus series (si no, la sesión no podría pintarlo). */
 const addToDay = n => {
-  const d = S.plan[S.sel];
+  const d = S.plan[S.selectedDay];
   const ex = newPlanEx(n);
   d.ex.push(ex);
   if (d.n == 'Descanso')
     d.n = 'Entreno';
   if (W) {
-    const sets = Array.from({ length: ex.s }, () => ({ r: 10, w: S.last[n] || '', ok: 0 }));
+    const sets = Array.from({ length: ex.s }, () => ({ r: 10, w: S.lastWeights[n] || '', ok: 0 }));
     prefillSets(ex, sets);
-    W.x.push(sets);
+    W.sets.push(sets);
     saveSession();
   }
   saveState();
 };
 A.libraryAddToDay = (i, b) => {
-  addToDay(EXERCISES.concat(S.cx)[i].n);
+  addToDay(EXERCISES.concat(S.customExercises)[i].n);
   R();
   b.textContent = '✓ Añadido';
 };
@@ -66,7 +66,7 @@ U.pickerSearch = v => {
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.pickerAdd = i => {
-  addToDay(EXERCISES.concat(S.cx)[i].n);
+  addToDay(EXERCISES.concat(S.customExercises)[i].n);
   sheet();
   R();
 };
@@ -74,7 +74,7 @@ A.newExerciseSave = () => {
   const n = $('#xn').value.trim();
   if (!n)
     return;
-  S.cx.push({ n, c: categoryOf(pickState.g), g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
+  S.customExercises.push({ n, c: categoryOf(pickState.g), g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
   addToDay(n);
   sheet();
   R();

@@ -10,11 +10,11 @@ import { applyTheme, S, saveState } from '../core/state.js';
 import { R } from '../core/render.js';
 import { html, raw } from '../core/html.js';
 /** Colores de serie: [nombre, claro (a1), principal (a2), oscuro (a3), texto sobre el principal (ft)]. El orden no cambia
-  (S.acc es la posición); los nuevos van al final. */
+  (S.accent es la posición); los nuevos van al final. */
 export const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#6e5300', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#e8590c', '#702a05', '#fff'], ['Rosa', '#ff8fc8', '#d6337f', '#6b1440', '#fff'], ['Turquesa', '#4fd6cf', '#0d8a85', '#064a47', '#fff'], ['Lima', '#c8ee62', '#8cc61b', '#3f5c06', '#142000'], ['Grafito', '#b9bdc9', '#5b6170', '#2a2e37', '#fff']];
 /** El color con el que empieza la app, mientras no se elija otro: Azul eléctrico, el del logo (F-40; hasta la V1.0.0, Morado). */
 const DEFAULT_ACCENT = 1;
-/** Un color #rrggbb (el de «Personalizado», S.acx). */
+/** Un color #rrggbb (el de «Personalizado», S.accentColor). */
 export const HEX = /^#[0-9a-f]{6}$/i;
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const rgbHex = c => '#' + c.map(v => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, '0')).join('');
@@ -57,8 +57,8 @@ export const customAccent = hex => {
   customAccentLast = [hex, tones];
   return tones;
 };
-/** El color de acento en uso: [nombre, a1, a2, a3, ft]. S.acc es la posición en ACCENTS, o -1 con un color propio en S.acx. */
-export const accentNow = () => S.acc == -1 && HEX.test(S.acx || '') ? customAccent(S.acx) : ACCENTS[S.acc >= 0 && S.acc < ACCENTS.length ? S.acc : DEFAULT_ACCENT];
+/** El color de acento en uso: [nombre, a1, a2, a3, ft]. S.accent es la posición en ACCENTS, o -1 con un color propio en S.accentColor. */
+export const accentNow = () => S.accent == -1 && HEX.test(S.accentColor || '') ? customAccent(S.accentColor) : ACCENTS[S.accent >= 0 && S.accent < ACCENTS.length ? S.accent : DEFAULT_ACCENT];
 /* las variables de color de los tonos a ([nombre, a1, a2, a3, ft]) en el elemento el: en <html>, el color de toda la app */
 const setAccentVars = (el, a) => {
   el.style.setProperty('--a1', a[1]);
@@ -79,17 +79,17 @@ export function applyAccent() {
 /* lo principal que cambia con el color: cabecera de un día, botón, chip, barra de progreso y la burbuja de las pestañas */
 const accentPreview = () => html`<div class="acp" aria-hidden="true"><div class="acph"><small>Vista previa</small><b>Pecho</b><span class="acpr"><i></i></span><span class="acpk"><span class="acpb">Empezar</span><span class="chip on">Hoy</span><span class="chip">Mañana</span></span></div><div class="acpn"><span class="on">Workout</span><span>Nutrición</span><span>Dashboard</span><span>Perfil</span></div></div>`;
 export const accentSwatches = () => {
-  const own = HEX.test(S.acx || '');
-  const cur = S.acc == -1 && own ? -1 : S.acc >= 0 && S.acc < ACCENTS.length ? S.acc : DEFAULT_ACCENT;
+  const own = HEX.test(S.accentColor || '');
+  const cur = S.accent == -1 && own ? -1 : S.accent >= 0 && S.accent < ACCENTS.length ? S.accent : DEFAULT_ACCENT;
   const sw = a => 'background:linear-gradient(135deg,' + a[1] + ',' + a[2] + ');color:' + a[4];
   /* sin color propio todavía, el círculo de «Personalizado» lleva todos los colores */
-  const cs = own ? sw(customAccent(S.acx)) : '';
-  return html`${accentPreview()}<div class="swg">${ACCENTS.map((a, i) => html`<button class="swb${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}"><i style="${sw(a)}">${cur == i ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`)}<label class="swb swc${cur == -1 ? ' on' : ''}"><i class="${own ? '' : 'swr'}" style="${cs}">${cur == -1 ? '✓' : ''}<input type="color" value="${own ? S.acx.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive" aria-label="Elegir un color propio"></i><small>Personalizado</small></label></div><small class="mu acn">Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.</small>`;
+  const cs = own ? sw(customAccent(S.accentColor)) : '';
+  return html`${accentPreview()}<div class="swg">${ACCENTS.map((a, i) => html`<button class="swb${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}"><i style="${sw(a)}">${cur == i ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`)}<label class="swb swc${cur == -1 ? ' on' : ''}"><i class="${own ? '' : 'swr'}" style="${cs}">${cur == -1 ? '✓' : ''}<input type="color" value="${own ? S.accentColor.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive" aria-label="Elegir un color propio"></i><small>Personalizado</small></label></div><small class="mu acn">Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.</small>`;
 };
 export const themeSegment = () => html`<div class="seg">${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`<button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="themeChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
 export const glassMode = () => {
-  const m = S.gm;
-  return (m === 0 || m === 1 || m === 2 || m === 3) ? m : (S.gl === 0 ? 0 : 2);
+  const m = S.glassLevel;
+  return (m === 0 || m === 1 || m === 2 || m === 3) ? m : (S.glassOn === 0 ? 0 : 2);
 };
 const GLASS_LEVELS = [['3', 'Máximo'], ['2', 'Medio'], ['1', 'Mínimo']];
 const GLASS_INFO = { 3: 'Más transparencia, desenfoque y brillo. Es el más vistoso y el que más batería usa.', 2: 'Equilibrado: se nota el cristal sin perder legibilidad.', 1: 'Cristal discreto: casi opaco, con brillos suaves. Muy ligero.' };
@@ -98,8 +98,8 @@ export const glassCard = () => {
   const g = m > 0;
   return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><small class="mu" style="display:block;margin-top:4px">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu" style="display:block;margin-top:4px">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
 };
-/** «Reducir animaciones» (S.rm): sin deslizamientos ni fundidos al abrir páginas y ventanas. */
-export const motionCard = () => html`<label>Animaciones</label><label class="srk"><input type="checkbox" data-c="reduceMotion"${S.rm ? ' checked' : ''}> Reducir animaciones</label><small class="mu" style="display:block;margin-top:-4px">Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.</small>`;
+/** «Reducir animaciones» (S.reduceMotion): sin deslizamientos ni fundidos al abrir páginas y ventanas. */
+export const motionCard = () => html`<label>Animaciones</label><label class="srk"><input type="checkbox" data-c="reduceMotion"${S.reduceMotion ? ' checked' : ''}> Reducir animaciones</label><small class="mu" style="display:block;margin-top:-4px">Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.</small>`;
 /** Tras cada R(): las clases de <html> del estilo Cristal (gl, data-gm) y de reducir animaciones (rm), como diga S. */
 export const lookSync = () => {
   try {
@@ -113,8 +113,8 @@ export const lookSync = () => {
     }
     else if (d.hasAttribute('data-gm'))
       d.removeAttribute('data-gm');
-    if (d.classList.contains('rm') !== !!S.rm)
-      d.classList.toggle('rm', !!S.rm);
+    if (d.classList.contains('rm') !== !!S.reduceMotion)
+      d.classList.toggle('rm', !!S.reduceMotion);
   }
   catch (e) {
     logError('estilo cristal', e);
@@ -146,8 +146,8 @@ const commitAccent = () => {
   accentTimer = 0;
   if (!accentPick)
     return;
-  S.acc = -1;
-  S.acx = accentPick;
+  S.accent = -1;
+  S.accentColor = accentPick;
   accentPick = '';
   applyAccent();
   saveState();
@@ -167,7 +167,7 @@ A.accentChoose = i => {
   /* un color de serie deja sin efecto el propio que aún no se había aplicado */
   accentPick = '';
   clearTimeout(accentTimer);
-  S.acc = i;
+  S.accent = i;
   applyAccent();
   saveState();
   R();
@@ -184,27 +184,27 @@ A.glassToggle = (i, b) => {
   const v = +b.dataset.v;
   const m = glassMode();
   if (v) {
-    S.gm = (S.gk >= 1 && S.gk <= 3) ? S.gk : 2;
+    S.glassLevel = (S.glassLastLevel >= 1 && S.glassLastLevel <= 3) ? S.glassLastLevel : 2;
   }
   else {
     if (m > 0)
-      S.gk = m;
-    S.gm = 0;
+      S.glassLastLevel = m;
+    S.glassLevel = 0;
   }
-  S.gl = S.gm ? 1 : 0;
+  S.glassOn = S.glassLevel ? 1 : 0;
   saveState();
   R();
 };
 A.glassLevel = (i, b) => {
   const v = +b.dataset.v;
-  S.gm = (v >= 1 && v <= 3) ? v : 2;
-  S.gk = S.gm;
-  S.gl = 1;
+  S.glassLevel = (v >= 1 && v <= 3) ? v : 2;
+  S.glassLastLevel = S.glassLevel;
+  S.glassOn = 1;
   saveState();
   R();
 };
 C.reduceMotion = e => {
-  S.rm = e.checked ? 1 : 0;
+  S.reduceMotion = e.checked ? 1 : 0;
   saveState();
   R();
 };

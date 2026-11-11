@@ -10,11 +10,11 @@ import { exBadge } from './photo.js';
 import { exAnatomy } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 export const groupOfName = n => {
-  const e = EXERCISES.concat(S.cx).find(x => x.n == n);
+  const e = EXERCISES.concat(S.customExercises).find(x => x.n == n);
   return e ? groupOf(e) : 'Propio';
 };
 export const overlapCount = (a, b) => a.filter(x => b.includes(x)).length;
-export const exAll = () => EXERCISES.concat(S.cx);
+export const exAll = () => EXERCISES.concat(S.customExercises);
 export const exOrder = e => e.k == null ? 9999 : e.k;
 export const exMuscles = (e, k) => (e[k] || []).map(c => MUSCLES[c]).filter(Boolean);
 export const exSearchText = e => {

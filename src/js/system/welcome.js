@@ -1,5 +1,5 @@
 /* ═══ system/welcome ═══
-   Bienvenida de una cuenta nueva (I-23). La primera vez que se abre la app tras registrarse (S.nw, que pone account/login), y
+   Bienvenida de una cuenta nueva (I-23). La primera vez que se abre la app tras registrarse (S.welcomePending, que pone account/login), y
    antes que nada:
    1. una ventana da las gracias por instalar la app y apoyar su desarrollo y avisa de la fase de pruebas: puede haber errores,
       que se agradece contar en Ajustes → Informar de un fallo, y se pueden perder datos. «Siguiente» lleva a
@@ -16,7 +16,7 @@ import { brandLogo } from '../core/brand.js';
 import { R } from '../core/render.js';
 import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS } from '../nutrition/diet.js';
 import { html, raw } from '../core/html.js';
-/** Los datos con número: [clave en S.bio, rótulo, unidad, mínimo, máximo]. */
+/** Los datos con número: [clave en S.biometrics, rótulo, unidad, mínimo, máximo]. */
 const BIO_NUMBERS = [['age', 'Edad', 'años', 14, 99], ['h', 'Altura', 'cm', 120, 230], ['w', 'Peso', 'kg', 30, 300]];
 /* la bienvenida abierta: { step: 1 la bienvenida | 2 los datos, sex: el elegido, done: lo que se hace al acabar } */
 let welcome = null;
@@ -33,7 +33,7 @@ const welcomeRoot = () => {
 const welcomeView = () => html`<div class="bk"></div><div class="sp" role="dialog" aria-modal="true" aria-labelledby="wlh"><div class="trw">${brandLogo('wlg')}<h3 id="wlh">Te damos la bienvenida a StrataFit</h3><p class="mu">Gracias por instalar la app y por apoyar su desarrollo.</p><p class="mu">StrataFit está en fase de pruebas, así que puede haber errores. Si encuentras alguno, cuéntanoslo en Ajustes → Informar de un fallo: nos ayuda mucho a mejorarla.</p><p class="mu wlw">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p><button class="pr" data-a="welcomeNext">Siguiente</button></div></div>`;
 /* paso 2: los datos biométricos (con lo ya guardado, si lo hay) */
 const bioFormView = () => {
-  const b = S.bio || {};
+  const b = S.biometrics || {};
   const sx = welcome.sex;
   const sel = (k, l, list) => html`<label for="wl_${k}">${l}</label><select id="wl_${k}" data-i="${k}"><option value=""${b[k] == null || b[k] === '' ? ' selected' : ''} disabled>Elige…</option>${list.map((t, i) => html`<option value="${i}"${b[k] !== '' && b[k] != null && +b[k] == i ? ' selected' : ''}>${raw(t)}</option>`)}</select>`;
   return html`<div class="bk"></div><div class="sp wlb" role="dialog" aria-modal="true" aria-labelledby="wlh"><h3 id="wlh">Tus datos</h3><p class="mu">Antes de empezar, la app necesita unos datos básicos. Con ellos calcula tus calorías y tus macros de cada día y te recomienda los programas que mejor encajan contigo. Puedes cambiarlos cuando quieras en Perfil.</p><label>Sexo</label><div class="seg s2" role="radiogroup" aria-label="Sexo">${[['M', 'Hombre'], ['F', 'Mujer']].map(x => html`<button class="${sx == x[0] ? 'on' : ''}" data-a="welcomeSex" data-v="${x[0]}" role="radio" aria-checked="${sx == x[0] ? 'true' : 'false'}">${raw(x[1])}</button>`)}</div><div class="wln3">${BIO_NUMBERS.map(([k, l, u]) => html`<div><label for="wl_${k}">${l}</label><input id="wl_${k}" data-i="${k}" type="number" inputmode="${k == 'w' ? 'decimal' : 'numeric'}" placeholder="${u}" value="${b[k] || ''}"></div>`)}</div>${raw(sel('act', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1])))}${raw(sel('goal', 'Objetivo físico', GOAL_LABELS))}<p id="wle" class="wle" role="alert"></p><button class="pr" data-a="welcomeSave">Guardar y continuar</button></div>`;
@@ -66,9 +66,9 @@ const bioProblem = f => {
     return ['wl_goal', 'Elige tu objetivo físico.'];
   return null;
 };
-/** Abre la bienvenida (system/tour, si S.nw). done: lo que se hace al guardar los datos. */
+/** Abre la bienvenida (system/tour, si S.welcomePending). done: lo que se hace al guardar los datos. */
 export const welcomeShow = done => {
-  const sx = S.bio && S.bio.sex;
+  const sx = S.biometrics && S.biometrics.sex;
   welcome = { step: 1, sex: sx == 'M' || sx == 'F' ? sx : '', done };
   welcomeRender();
 };
@@ -107,10 +107,10 @@ A.welcomeSave = () => {
     $('#wle').textContent = bad[1];
     return;
   }
-  S.bio = { ...(S.bio || {}), sex: f.sex, age: f.age, h: f.h, w: f.w, act: f.act, goal: f.goal };
-  S.nu.dt = GOAL_DIET[+f.goal];
+  S.biometrics = { ...(S.biometrics || {}), sex: f.sex, age: f.age, h: f.h, w: f.w, act: f.act, goal: f.goal };
+  S.nutritionGoals.dt = GOAL_DIET[+f.goal];
   applyDiet(true);
-  delete S.nw;
+  delete S.welcomePending;
   saveState();
   const done = welcome.done;
   welcome = null;

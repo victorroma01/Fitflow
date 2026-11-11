@@ -1,5 +1,6 @@
 /* ═══ workout/resume ═══
-   Reanudar un entreno interrumpido (estado en curso guardado).
+   Reanudar un entreno interrumpido (estado en curso guardado). Se guarda con las claves cortas de siempre (core/schema):
+   { W, d: el día, sel, sl, wk, pb: si era un workout propio sobre el plan, t: cuándo }, y pendingResume lo tiene tal cual.
    Define: WIP_KEY, pendingResume, setPendingResume, saveSession, resumeSync, resumeBanner, dropResume  · acciones/registros: 3
 */
 import { Store } from '../core/store.js';
@@ -10,6 +11,7 @@ import { confirmDialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { keepAwake } from './wake.js';
 import { html, raw } from '../core/html.js';
+import { workoutFromStored, workoutToStored } from '../core/schema.js';
 export const WIP_KEY = Store.K.wip;
 export let pendingResume = null;
 /** Cambia `pendingResume` desde otros módulos (un módulo no puede asignar una variable importada). */
@@ -19,7 +21,7 @@ export const setPendingResume = v => {
 export const saveSession = () => {
   try {
     if (W)
-      Store.set(WIP_KEY, JSON.stringify({ W, d: S.plan[S.sel], sel: S.sel, sl: S.sl, wk: S.wk, pb: !!S.pbk, t: Date.now() }));
+      Store.set(WIP_KEY, JSON.stringify({ W: workoutToStored(W), d: S.plan[S.selectedDay], sel: S.selectedDay, sl: S.selectedWeekday, wk: S.week, pb: !!S.planBackup, t: Date.now() }));
     else if (!pendingResume)
       Store.del(WIP_KEY);
   }
@@ -36,19 +38,19 @@ A.resumeWorkout = () => {
   pendingResume = null;
   if (!z)
     return;
-  S.sel = z.sel;
-  S.sl = z.sl >= 0 && z.sl < 7 ? z.sl : z.sel % 7;
-  S.wk = z.wk;
+  S.selectedDay = z.sel;
+  S.selectedWeekday = z.sl >= 0 && z.sl < 7 ? z.sl : z.sel % 7;
+  S.week = z.wk;
   if (z.pb) {
-    S.pbk = { sel: z.sel, day: S.plan[z.sel] };
+    S.planBackup = { sel: z.sel, day: S.plan[z.sel] };
     S.plan[z.sel] = z.d;
   }
-  setW(z.W);
-  W.t0 += Date.now() - z.t;
-  W.re = 0;
-  W.p = 0;
-  W.lb = 0;
-  W.ri = null;
+  setW(workoutFromStored(z.W));
+  W.startedAt += Date.now() - z.t;
+  W.restEndsAt = 0;
+  W.pausedAt = 0;
+  W.lastBeep = 0;
+  W.restAfter = null;
   saveState();
   /* pantalla encendida según el ajuste, como al empezar (workout/wake) */
   keepAwake();

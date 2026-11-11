@@ -5,16 +5,16 @@
 import { loadSavedState, scheduleWrite, writeState } from './persist.js';
 import { parseProgram } from '../data/library.js';
 /** Estado de una cuenta nueva. */
-const freshState = () => ({ tab: 0, prog: 0, plan: parseProgram(0), wk: 1, sel: 0, sl: 0, done: {}, logs: [], last: {}, rest: 120, theme: '', pf: {}, nu: { k: 1942, c: 50, p: 20, f: 30, n: 3 }, meals: {}, lib: [], cf: [], cx: [] });
+const freshState = () => ({ tab: 0, program: 0, plan: parseProgram(0), week: 1, selectedDay: 0, selectedWeekday: 0, doneDays: {}, logs: [], lastWeights: {}, defaultRest: 120, theme: '', profile: {}, nutritionGoals: { k: 1942, c: 50, p: 20, f: 30, n: 3 }, meals: {}, savedDishes: [], myFoods: [], customExercises: [] });
 export const S = Object.assign(freshState(), loadSavedState());
 /** Una cuenta recién creada (account/login): sin programa elegido (np, I-24: la semana, toda de descanso) y con la
     bienvenida por ver (nw, I-23: system/welcome). Las cuentas que ya existían no tienen ninguna de las dos. */
 export const markNewAccount = () => {
-  S.np = 1;
-  S.nw = 1;
+  S.noProgram = 1;
+  S.welcomePending = 1;
   S.plan = Array.from({ length: 7 }, () => ({ n: 'Descanso', ex: [] }));
-  S.sel = 0;
-  S.sl = 0;
+  S.selectedDay = 0;
+  S.selectedWeekday = 0;
 };
 /** Vuelve S al estado de una cuenta nueva, sin cambiar el objeto (al entrar con otra cuenta: account/login). */
 export const resetState = () => {

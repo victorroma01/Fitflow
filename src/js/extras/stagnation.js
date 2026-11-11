@@ -12,12 +12,12 @@ import { toDisplayWeight, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
 function stagnation() {
   const out = [];
-  if (typeof isDeloadWeek == 'function' && isDeloadWeek(S.wk))
+  if (typeof isDeloadWeek == 'function' && isDeloadWeek(S.week))
     return out;
-  const h = S.hist || {};
+  const h = S.exerciseHistory || {};
   const inPlan = new Set((S.plan || []).flatMap(d => (d.ex || []).map(e => e.n)));
   const now = Date.now();
-  const hide = S.stz || {};
+  const hide = S.stagnationDismissed || {};
   Object.keys(h).forEach(n => {
     if (!inPlan.has(n))
       return;
@@ -80,8 +80,8 @@ A.stagnationInfo = i => {
 A.stagnationDismiss = i => {
   const x = stagnation()[i];
   if (x) {
-    S.stz = S.stz || {};
-    S.stz[x.n] = Date.now();
+    S.stagnationDismissed = S.stagnationDismissed || {};
+    S.stagnationDismissed[x.n] = Date.now();
     saveState();
   }
   sheet();

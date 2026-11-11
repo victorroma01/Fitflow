@@ -30,10 +30,12 @@ import { idToken } from './auth.js';
 import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.js';
 import { hashMap, hashOf, KINDS, merge3, sameHashes } from './merge.js';
 import { afterSync } from './hooks.js';
+import { stateName, stateToStored } from '../core/schema.js';
 /** Preferencias de la cuenta (van en el perfil, users/{uid}): tema, color (y el propio), estilo Cristal, animaciones, unidades,
-  sonido y vibración, la pestaña al abrir la app y si ya se vio el recorrido (system/tour). Las mismas que deja firestore.rules. */
+  sonido y vibración, la pestaña al abrir la app y si ya se vio el recorrido (system/tour). Las mismas que deja firestore.rules,
+  con las claves guardadas (core/schema). */
 const PREF_KEYS = ['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'st0', 'tour'];
-/** Claves de S que no van en data/core: lo que es de este dispositivo (pestaña, día elegido, rango de la gráfica, día del plan
+/** Claves guardadas de S que no van en data/core: lo que es de este dispositivo (pestaña, día elegido, rango de la gráfica, día del plan
   apartado durante un workout, fecha de la última copia en archivo, aviso descartado, globo del icono: system/phone), lo que va
   en su propio documento y las preferencias. */
 const LOCAL_ONLY = new Set(['tab', 'sel', 'sl', 'rg', 'pbk', 'bkd', 'nbk', 'bdg', 'pf', 'logs', 'hist', 'meals', ...PREF_KEYS]);
@@ -111,30 +113,34 @@ const profilePath = () => 'users/' + account.uid;
 /** Preferencias y sexo de este móvil, como van en el perfil. */
 const prefsLocal = () => {
   const o = {};
-  for (const k of PREF_KEYS)
-    if (S[k] !== undefined && S[k] !== null)
-      o[k] = S[k];
-  o.sx = S.bio && (S.bio.sex == 'M' || S.bio.sex == 'F') ? S.bio.sex : '';
+  for (const k of PREF_KEYS) {
+    const v = S[stateName(k)];
+    if (v !== undefined && v !== null)
+      o[k] = v;
+  }
+  o.sx = S.biometrics && (S.biometrics.sex == 'M' || S.biometrics.sex == 'F') ? S.biometrics.sex : '';
   return o;
 };
+/** Lo que va en data/core: S con las claves guardadas, sin lo de LOCAL_ONLY. */
 const coreOf = () => {
+  const s = stateToStored(S);
   const o = {};
-  for (const k of Object.keys(S))
-    if (!LOCAL_ONLY.has(k) && S[k] !== undefined)
-      o[k] = S[k];
+  for (const k of Object.keys(s))
+    if (!LOCAL_ONLY.has(k) && s[k] !== undefined)
+      o[k] = s[k];
   return o;
 };
 /** Contenido local de cada documento: { id: valor }. */
 const localDocs = () => {
   logIds();
   const out = { core: coreOf() };
-  if (S.pf && +S.pf.pc > 0 && S.pf.img)
-    out.avatar = { img: S.pf.img, pc: S.pf.pc };
+  if (S.profile && +S.profile.pc > 0 && S.profile.img)
+    out.avatar = { img: S.profile.img, pc: S.profile.pc };
   for (const l of S.logs || []) {
     const id = 'logs:' + yearOf(l.d);
     (out[id] = out[id] || []).push(l);
   }
-  const hist = S.hist || {};
+  const hist = S.exerciseHistory || {};
   for (const ex of Object.keys(hist))
     for (const e of Array.isArray(hist[ex]) ? hist[ex] : []) {
       const id = 'hist:' + yearOf(e.d);
@@ -157,34 +163,34 @@ const okType = (id, v) => {
 const applyDoc = (id, v) => {
   const [k, x] = id.split(':');
   if (k == 'core') {
-    for (const key of Object.keys(S))
+    for (const key of Object.keys(stateToStored(S)))
       if (!LOCAL_ONLY.has(key) && !(key in v))
-        delete S[key];
+        delete S[stateName(key)];
     for (const key of Object.keys(v))
       if (!LOCAL_ONLY.has(key))
-        S[key] = v[key];
+        S[stateName(key)] = v[key];
   }
   else if (k == 'avatar') {
     if (typeof v.img == 'string' && v.img) {
-      S.pf.img = v.img;
-      S.pf.pc = +v.pc || Date.now();
+      S.profile.img = v.img;
+      S.profile.pc = +v.pc || Date.now();
     }
     else {
-      delete S.pf.img;
-      delete S.pf.pc;
+      delete S.profile.img;
+      delete S.profile.pc;
     }
   }
   else if (k == 'logs')
     S.logs = S.logs.filter(l => yearOf(l.d) != x).concat(v).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
   else if (k == 'hist') {
-    S.hist = S.hist || {};
-    for (const ex of Object.keys(S.hist)) {
-      S.hist[ex] = S.hist[ex].filter(e => yearOf(e.d) != x);
-      if (!S.hist[ex].length && !v[ex])
-        delete S.hist[ex];
+    S.exerciseHistory = S.exerciseHistory || {};
+    for (const ex of Object.keys(S.exerciseHistory)) {
+      S.exerciseHistory[ex] = S.exerciseHistory[ex].filter(e => yearOf(e.d) != x);
+      if (!S.exerciseHistory[ex].length && !v[ex])
+        delete S.exerciseHistory[ex];
     }
     for (const ex of Object.keys(v))
-      S.hist[ex] = (S.hist[ex] || []).concat(v[ex]).sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0);
+      S.exerciseHistory[ex] = (S.exerciseHistory[ex] || []).concat(v[ex]).sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0);
   }
   else if (k == 'meals') {
     S.meals = S.meals || {};
@@ -218,11 +224,11 @@ const afterApply = () => {
 const applyPrefs = p => {
   for (const k of PREF_KEYS)
     if (k in p)
-      S[k] = p[k];
+      S[stateName(k)] = p[k];
     else
-      delete S[k];
+      delete S[stateName(k)];
   if (p.sx == 'M' || p.sx == 'F')
-    S.bio.sex = p.sx;
+    S.biometrics.sex = p.sx;
 };
 /* paso 1: el perfil. Si no existe (cuenta recién creada), se crea con el usuario; las preferencias se juntan como el núcleo */
 const syncProfile = async () => {

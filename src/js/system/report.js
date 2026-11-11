@@ -6,7 +6,7 @@
    Cada usuario ve los suyos en Perfil → Fallos y sugerencias, con su estado (pendiente, vista o contestada) y la respuesta.
    Sin conexión, el aviso se guarda en el móvil y se envía solo tras la siguiente sincronización (cloud/sync: afterSync); su id
    va puesto desde el principio, así nunca llega dos veces.
-   Estado: S.rp = [{ id, k: 'f' | 's', a: área del fallo, t: texto, dx: datos técnicos (hasta enviarlo), ca: cuándo, s: 1 si
+   Estado: S.reports = [{ id, k: 'f' | 's', a: área del fallo, t: texto, dx: datos técnicos (hasta enviarlo), ca: cuándo, s: 1 si
    ya se envió, st: 'p' | 'v' | 'a', rp: respuesta, ra: cuándo se contestó, sn: 1 si la respuesta ya se vio }], los más nuevos
    primero (los 30 últimos).
    Define: REPORT_KINDS, REPORT_AREAS, REPORT_MAX, REPORT_KEEP, REFRESH_EVERY, reportKind, reportArea, reportBack, refreshedAt, reportTech, reportPage, reportStatus, reportDoc, sendReport, flushReports, refreshReports, reportsUnseen, reportsLine, reportListPage, reportListSync  · acciones/registros: 7
@@ -69,7 +69,7 @@ const sendReport = async (x) => {
 };
 /* tras sincronizar: se envía lo que quedó sin conexión */
 const flushReports = async () => {
-  const L = (S.rp || []).filter(x => !x.s);
+  const L = (S.reports || []).filter(x => !x.s);
   if (!L.length || !account)
     return;
   let n = 0;
@@ -90,7 +90,7 @@ const flushReports = async () => {
 };
 /** Pregunta a la nube cómo van los avisos enviados que no están cerrados (arreglados y contestados). */
 export const refreshReports = async (force) => {
-  const L = (S.rp || []).filter(x => x.s && !(x.st == 'a' && x.rp));
+  const L = (S.reports || []).filter(x => x.s && !(x.st == 'a' && x.rp));
   if (!L.length || !account || !force && Date.now() - refreshedAt < REFRESH_EVERY)
     return;
   refreshedAt = Date.now();
@@ -132,10 +132,10 @@ export const refreshReports = async (force) => {
 };
 afterSync.push(flushReports, () => refreshReports(0));
 /** Respuestas que aún no se han visto. */
-export const reportsUnseen = () => (S.rp || []).filter(x => x.rp && !x.sn).length;
+export const reportsUnseen = () => (S.reports || []).filter(x => x.rp && !x.sn).length;
 /** Línea de la fila de Perfil. */
 export const reportsLine = () => {
-  const L = S.rp || [];
+  const L = S.reports || [];
   const nw = reportsUnseen();
   const off = L.filter(x => !x.s).length;
   const open = L.filter(x => x.s && !x.rp).length;
@@ -143,7 +143,7 @@ export const reportsLine = () => {
 };
 /** Perfil → Fallos y sugerencias: los avisos propios con su estado y la respuesta. */
 const reportListPage = () => {
-  const L = S.rp || [];
+  const L = S.reports || [];
   const items = L.map(x => {
     const [sl, sc] = reportStatus(x);
     const kd = (REPORT_KINDS.find(k => k[0] == x.k) || REPORT_KINDS[0])[1];
@@ -157,7 +157,7 @@ const reportListSync = () => {
     return;
   sheet(reportListPage());
   if (reportsUnseen()) {
-    (S.rp || []).forEach(x => {
+    (S.reports || []).forEach(x => {
       if (x.rp)
         x.sn = 1;
     });
@@ -217,7 +217,7 @@ A.reportSend = async () => {
   const it = { id: account.uid + '-' + ca, k: reportKind, a: reportKind == 'f' && reportArea >= 0 ? REPORT_AREAS[reportArea] : '', t, ca, s: 0 };
   if (d && d.checked)
     it.dx = reportTech();
-  S.rp = [it].concat(S.rp || []).slice(0, REPORT_KEEP);
+  S.reports = [it].concat(S.reports || []).slice(0, REPORT_KEEP);
   saveState();
   try {
     await sendReport(it);

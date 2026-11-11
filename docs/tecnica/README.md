@@ -7,7 +7,7 @@ ver la [documentación funcional](../funcional/README.md).
 | --- | --- |
 | [Este archivo](#cómo-está-hecha) | Arquitectura, principios del código, convenciones y estructura del repositorio. |
 | [Mapa de módulos](modulos.md) | Qué hace cada módulo de `src/js`, qué declara y cuántas acciones registra. Se genera solo. |
-| [Nombres de la V1.0.2](nombres.md) | Los nombres de antes y de ahora de las acciones, para leer código, issues o commits anteriores. |
+| [Nombres de la V1.0.2](nombres.md) | Los nombres de antes y de ahora de las acciones y de las claves del estado, para leer código, issues o commits anteriores. |
 | [Estado y datos](estado.md) | Diccionario de datos: cada clave de `S` y del almacenamiento, y qué entra en la copia de seguridad. |
 | [Servidor: Firebase](backend.md) | El servidor: cuentas, roles, documentos de Firestore, sincronización sin conexión, reglas de seguridad y administración desde GitHub. |
 | [Desarrollo](desarrollo.md) | Requisitos, comandos, cómo añadir una función, reglas de calidad y cómo se publica una versión. |
@@ -84,7 +84,9 @@ el que usan la mayoría de las pruebas.
   (`EXERCISES`, `PROGRAMS`). Se mantienen las letras del núcleo: `S`, `W`, `R`, `A`/`C`/`U`, `X` (escapar HTML), `$` e `IC`.
 - Las acciones (`A`, `C` y `U`) llevan un verbo que dice lo que hacen: `A.openSettings`, `A.toggleSetDone`, `C.setReps`
   ([nombres anteriores a la V1.0.2](nombres.md)).
-- Las claves de `S` (`S.cx`) son cortas por historia: están en los datos de cada usuario y no se cambian sin una migración.
+- Las claves de `S` y `W` también dicen lo que guardan (`S.customExercises`, `W.restEndsAt`), pero se guardan con las claves cortas
+  de siempre (`cx`, `re`), que están en los datos de cada usuario: `core/schema` traduce al leer y al guardar, y una clave guardada
+  no se cambia sin una migración ([Estado y datos](estado.md)).
 - Cada módulo empieza con una cabecera `/* ═══ área/nombre ═══ qué hace … Define: … */`. La línea «Define:» la mantiene el
   formateador, y de las cabeceras sale el [mapa de módulos](modulos.md).
 - Formato automático: una instrucción por línea y sangría de 2 espacios (`npm run format`).

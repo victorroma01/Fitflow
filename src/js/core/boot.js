@@ -39,20 +39,20 @@ if (typeof MutationObserver != 'undefined')
       s.className = '';
   }).observe($('#sh'), { childList: true });
 setInterval(() => {
-  if (!W || W.p)
+  if (!W || W.pausedAt)
     return;
   const m = $('#tm');
   if (m) {
-    const tx = fmtDuration(roundInt((Date.now() - W.t0) / 1e3));
+    const tx = fmtDuration(roundInt((Date.now() - W.startedAt) / 1e3));
     if (m.textContent !== tx)
       m.textContent = tx;
   }
-  if (W.re) {
-    const l = Math.ceil((W.re - Date.now()) / 1e3);
+  if (W.restEndsAt) {
+    const l = Math.ceil((W.restEndsAt - Date.now()) / 1e3);
     if (l <= 0) {
-      const late = Date.now() - W.re > 4000;
-      W.re = 0;
-      W.lb = 0;
+      const late = Date.now() - W.restEndsAt > 4000;
+      W.restEndsAt = 0;
+      W.lastBeep = 0;
       if (!late) {
         buzz([180, 70, 180]);
         beep(1);
@@ -61,8 +61,8 @@ setInterval(() => {
       restEnded();
     }
     else {
-      if (l <= 3 && W.lb !== l) {
-        W.lb = l;
+      if (l <= 3 && W.lastBeep !== l) {
+        W.lastBeep = l;
         beep(0);
       }
       const r = $('#rt');
@@ -103,11 +103,11 @@ catch (e) {
   }
 })();
 setInterval(() => {
-  if (!W || W.p || !W.re)
+  if (!W || W.pausedAt || !W.restEndsAt)
     return;
   const r = $('#rt2');
   if (r) {
-    const tx = fmtMinSec(Math.max(0, Math.ceil((W.re - Date.now()) / 1000)));
+    const tx = fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000)));
     if (r.textContent !== tx)
       r.textContent = tx;
   }

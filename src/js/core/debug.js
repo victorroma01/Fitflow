@@ -9,6 +9,7 @@ import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
 import { stateRecovered } from './persist.js';
+import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
@@ -105,7 +106,12 @@ const DEBUG_NAMES = {
   U: [() => U],
   updatesOn: [() => updatesOn],
   W: [() => W, setW],
-  weightView: [() => weightView, setWeightView]
+  weightView: [() => weightView, setWeightView],
+  SCHEMA_TABLES: [() => SCHEMA_TABLES],
+  stateFromStored: [() => stateFromStored],
+  stateToStored: [() => stateToStored],
+  workoutFromStored: [() => workoutFromStored],
+  workoutToStored: [() => workoutToStored]
 };
 for (const k in DEBUG_NAMES)
   Object.defineProperty(window, k, { get: DEBUG_NAMES[k][0], set: DEBUG_NAMES[k][1], configurable: true });

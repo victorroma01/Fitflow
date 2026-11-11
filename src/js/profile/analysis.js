@@ -95,7 +95,7 @@ const bestE1 = E => {
 const exerciseStats = (a, b) => {
   const rec = [];
   const vol = [];
-  for (const [n, h] of Object.entries(S.hist || {})) {
+  for (const [n, h] of Object.entries(S.exerciseHistory || {})) {
     if (!Array.isArray(h))
       continue;
     const inM = h.filter(e => e && typeof e.d == 'string' && e.d >= a && e.d <= b);
@@ -112,14 +112,14 @@ const exerciseStats = (a, b) => {
   return { rec: rec.sort((x, y) => y.g - x.g), vol: vol.sort((x, y) => y.v - x.v).slice(0, 3) };
 };
 const weightStats = (a, b) => {
-  const W = (S.wl || []).filter(p => p && typeof p.d == 'string' && +p.w > 0).sort((x, y) => x.d < y.d ? -1 : 1);
+  const W = (S.weightLog || []).filter(p => p && typeof p.d == 'string' && +p.w > 0).sort((x, y) => x.d < y.d ? -1 : 1);
   const inM = W.filter(p => p.d >= a && p.d <= b);
   const before = W.filter(p => p.d < a).pop() || null;
   if (!inM.length)
     return { pts: [], before, d: null, tr: '' };
   const ref = before || inM[0];
   const d = inM[inM.length - 1].w - ref.w;
-  const g = +S.bio.goal;
+  const g = +S.biometrics.goal;
   const goal = g >= 0 && g < GOAL_LABELS.length ? g : -1;
   const tr = Math.abs(d) < .3 ? 'estable' : d > 0 ? 'sube' : 'baja';
   return { pts: inM, before, d, tr, goal, ok: goal >= 0 ? KIND_OK[goal] == tr : null, last: inM[inM.length - 1].w };
@@ -130,8 +130,8 @@ const dayKcal = k => {
   return [v[0], v[2]];
 };
 const nutritionStats = (a, b) => {
-  const tk = +S.nu.k || 0;
-  const tp = tk * (+S.nu.p || 0) / 400;
+  const tk = +S.nutritionGoals.k || 0;
+  const tp = tk * (+S.nutritionGoals.p || 0) / 400;
   const days = [];
   let ok = 0;
   let sk = 0;
@@ -151,7 +151,7 @@ const nutritionStats = (a, b) => {
         ok++;
     }
     days.push(on ? kc : 0);
-    const w = S.wt && +S.wt[k];
+    const w = S.water && +S.water[k];
     if (w > 0) {
       wat += w;
       wd++;
@@ -164,7 +164,7 @@ const nutritionStats = (a, b) => {
   return { tk, tp, days, logged, ok, ak, ap, adh, verdict, side: !logged || !tk ? '' : ak > tk * 1.1 ? 'te pasas' : ak < tk * .9 ? 'te quedas corto' : '', water: wd ? wat / wd : 0 };
 };
 const otherStats = (a, b) => {
-  const L = (Array.isArray(S.ms) ? S.ms : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object').sort((x, y) => x.d < y.d ? -1 : 1);
+  const L = (Array.isArray(S.measures) ? S.measures : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object').sort((x, y) => x.d < y.d ? -1 : 1);
   const ms = [];
   for (const [k, name] of MEASURES) {
     const inM = L.filter(m => m.d >= a && m.d <= b && +m.v[k] > 0);
@@ -175,7 +175,7 @@ const otherStats = (a, b) => {
     if (Math.abs(d) >= .2)
       ms.push([name, d]);
   }
-  const ach = Object.entries(S.ach || {}).filter(([, d]) => typeof d == 'string' && d >= a && d <= b).map(([id]) => (ACHIEVEMENTS.find(x => x[0] == id) || [])[1]).filter(Boolean);
+  const ach = Object.entries(S.achievements || {}).filter(([, d]) => typeof d == 'string' && d >= a && d <= b).map(([id]) => (ACHIEVEMENTS.find(x => x[0] == id) || [])[1]).filter(Boolean);
   return { ms, ach };
 };
 /** Todo lo del mes `ym`, con el anterior para comparar. */

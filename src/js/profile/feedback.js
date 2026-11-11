@@ -96,7 +96,7 @@ const playTones = (c, tones) => {
 /* con cada toque: el primero desbloquea el sonido; después, solo si el último aviso no pudo sonar (a los dos avisos perdidos,
    con un contexto nuevo: el viejo no responde) */
 const audioUnlock = () => {
-  if (S.snd === 0 || audioWaking)
+  if (S.sound === 0 || audioWaking)
     return;
   try {
     if (audioCtx && audioFails >= 2) {
@@ -122,7 +122,7 @@ const audioUnlock = () => {
 ['touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, audioUnlock, { capture: true, passive: true }));
 /** Aviso sonoro: f = 0, el corto (cuenta atrás, toque); 1, el de fin (del descanso, del temporizador). */
 export const beep = f => {
-  if (S.snd === 0)
+  if (S.sound === 0)
     return;
   try {
     const c = audioContext();
@@ -147,7 +147,7 @@ export const beep = f => {
   }
 };
 C.soundToggle = e => {
-  S.snd = e.checked ? 1 : 0;
+  S.sound = e.checked ? 1 : 0;
   saveState();
 };
 A.soundTest = () => {
@@ -156,7 +156,7 @@ A.soundTest = () => {
 };
 const canVibrate = () => typeof navigator != 'undefined' && typeof navigator.vibrate == 'function';
 export const buzz = p => {
-  if (S.vib === 0)
+  if (S.vibration === 0)
     return;
   try {
     navigator.vibrate && navigator.vibrate(p);
@@ -165,33 +165,33 @@ export const buzz = p => {
     /* vibración opcional (iPhone no la permite en web) */
   }
 };
-const soundVolume = () => [.45, 1, 1.8][S.vol == null ? 1 : S.vol] || 1;
+const soundVolume = () => [.45, 1, 1.8][S.volume == null ? 1 : S.volume] || 1;
 const soundSequence = f => {
-  const t = S.snt || 0;
+  const t = S.soundTone || 0;
   return t == 1 ? (f ? [[659, 0, .2], [880, .22, .5]] : [[523, 0, .14]]) : t == 2 ? (f ? [[1175, 0, .14], [1175, .2, .14], [1568, .4, .4]] : [[1047, 0, .1]]) : (f ? [[1319, 0, .18], [1976, .2, .45]] : [[784, 0, .12]]);
 };
 C.vibrationToggle = e => {
-  S.vib = e.checked ? 1 : 0;
+  S.vibration = e.checked ? 1 : 0;
   saveState();
   if (e.checked)
     buzz([60, 40, 60]);
 };
 C.autoRestToggle = e => {
-  S.ar = e.checked ? 1 : 0;
+  S.autoRest = e.checked ? 1 : 0;
   saveState();
 };
 C.keepAwakeToggle = e => {
-  S.awk = e.checked ? 1 : 0;
+  S.keepAwake = e.checked ? 1 : 0;
   saveState();
 };
 A.soundChooseVolume = (i, b) => {
-  S.vol = +b.dataset.v;
+  S.volume = +b.dataset.v;
   saveState();
   R();
   A.soundPreview();
 };
 A.soundChooseTone = (i, b) => {
-  S.snt = +b.dataset.v;
+  S.soundTone = +b.dataset.v;
   saveState();
   R();
   A.soundPreview();
@@ -200,5 +200,5 @@ A.soundPreview = () => {
   beep(0);
   setTimeout(() => beep(1), 420);
 };
-export const alertSettings = () => html`<label>Avisos de descanso</label><label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" style="width:auto" ${S.vib === 0 ? '' : 'checked'} data-c="vibrationToggle"> Vibración al terminar el descanso</label>${raw(canVibrate() ? '' : '<small class="mu" style="display:block;margin:-2px 0 6px">Este dispositivo no permite vibrar desde la web (iPhone). El aviso será por sonido.</small>')}<small class="mu" style="display:block">Volumen del aviso</small>${segmented('soundChooseVolume', S.vol == null ? 1 : S.vol, [[0, 'Bajo'], [1, 'Medio'], [2, 'Alto']])}<small class="mu" style="display:block;margin-top:8px">Sonido</small>${segmented('soundChooseTone', S.snt || 0, [[0, 'Clásico'], [1, 'Suave'], [2, 'Alarma']])}<small class="mu" style="display:block;margin-top:4px">Si no oyes nada, comprueba el interruptor de silencio del móvil.</small><label style="display:flex;gap:8px;align-items:center;margin:10px 0 6px"><input type="checkbox" style="width:auto" ${S.ar === 0 ? '' : 'checked'} data-c="autoRestToggle"> Iniciar el descanso al marcar una serie</label><label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" style="width:auto" ${S.awk === 0 ? '' : 'checked'} data-c="keepAwakeToggle"> Mantener la pantalla encendida en el entreno</label>`;
+export const alertSettings = () => html`<label>Avisos de descanso</label><label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" style="width:auto" ${S.vibration === 0 ? '' : 'checked'} data-c="vibrationToggle"> Vibración al terminar el descanso</label>${raw(canVibrate() ? '' : '<small class="mu" style="display:block;margin:-2px 0 6px">Este dispositivo no permite vibrar desde la web (iPhone). El aviso será por sonido.</small>')}<small class="mu" style="display:block">Volumen del aviso</small>${segmented('soundChooseVolume', S.volume == null ? 1 : S.volume, [[0, 'Bajo'], [1, 'Medio'], [2, 'Alto']])}<small class="mu" style="display:block;margin-top:8px">Sonido</small>${segmented('soundChooseTone', S.soundTone || 0, [[0, 'Clásico'], [1, 'Suave'], [2, 'Alarma']])}<small class="mu" style="display:block;margin-top:4px">Si no oyes nada, comprueba el interruptor de silencio del móvil.</small><label style="display:flex;gap:8px;align-items:center;margin:10px 0 6px"><input type="checkbox" style="width:auto" ${S.autoRest === 0 ? '' : 'checked'} data-c="autoRestToggle"> Iniciar el descanso al marcar una serie</label><label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" style="width:auto" ${S.keepAwake === 0 ? '' : 'checked'} data-c="keepAwakeToggle"> Mantener la pantalla encendida en el entreno</label>`;
 /* — manejadores de esta función (registros A / C / U) — */

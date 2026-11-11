@@ -74,7 +74,7 @@ A.backupCopyText = () => {
   catch (x) {
     e.select();
   }
-  S.bkd = Date.now();
+  S.lastBackupDate = Date.now();
   saveState();
   toast('Texto copiado');
 };

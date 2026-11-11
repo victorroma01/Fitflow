@@ -1,6 +1,6 @@
 /* ═══ nutrition/add ═══
    Añadir alimentos y comidas al día: lista por grupos, librería de platos, alimento nuevo y búsqueda en internet.
-   «Mis alimentos» (S.cf): los creados a mano y, desde la V1.0.1 (F-44), los buscados o escaneados en Open Food Facts, que se
+   «Mis alimentos» (S.myFoods): los creados a mano y, desde la V1.0.1 (F-44), los buscados o escaneados en Open Food Facts, que se
    guardan solos al añadirlos a una comida (sin repetirse) con su Nutri-Score (F-43). Cualquiera se puede borrar.
    Define: ownFoods, allFoods, NUTRI_SCORE, nutriScore, nutriScoreBadge, nutriScoreRow, saveOwnFood, foldText, groupNames, groupOfFood, foodList, addSheetBase, addMealItem, addSheet, onlineSheet, ownFoodDel  · acciones/registros: 15
 */
@@ -15,7 +15,7 @@ import { itemMacros, sumMacros } from './home.js';
 import { habitsCard } from './templates.js';
 import { html, raw } from '../core/html.js';
 /* alimentos de la lista y los propios (solo los que tienen nombre y sus valores: unos datos dañados no rompen la lista) */
-const ownFoods = () => (S.cf || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b));
+const ownFoods = () => (S.myFoods || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b));
 const allFoods = () => FOODS_SRC.concat(ownFoods());
 /* Nutri-Score (F-43): la letra de la A a la E que da Open Food Facts → la clase de su color (css/98-nutrition) */
 const NUTRI_SCORE = { a: 'ns-a', b: 'ns-b', c: 'ns-c', d: 'ns-d', e: 'ns-e' };
@@ -33,17 +33,17 @@ const saveOwnFood = f => {
     o.ns = f.ns;
   if (f.ean)
     o.ean = f.ean;
-  S.cf = S.cf || [];
-  const i = S.cf.findIndex(x => x && (o.ean && x.ean == o.ean || x.n == o.n));
+  S.myFoods = S.myFoods || [];
+  const i = S.myFoods.findIndex(x => x && (o.ean && x.ean == o.ean || x.n == o.n));
   if (i >= 0)
-    S.cf[i] = { ...S.cf[i], ...o };
+    S.myFoods[i] = { ...S.myFoods[i], ...o };
   else
-    S.cf.push(o);
+    S.myFoods.push(o);
 };
 /** Texto en minúsculas y sin tildes, para buscar. */
 const foldText = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 /* grupos de la hoja «Añadir»: los de data/foods y, si hay, los alimentos creados a mano */
-const groupNames = () => FOOD_GROUPS.concat(S.cf.length ? ['Mis alimentos'] : []);
+const groupNames = () => FOOD_GROUPS.concat(S.myFoods.length ? ['Mis alimentos'] : []);
 const groupOfFood = f => f.g >= 0 ? f.g : FOOD_GROUPS.length;
 /** Lista de alimentos de la hoja «Añadir»: con texto en `q`, los que tienen todas sus palabras (sin tildes) y primero los que
     empiezan por la primera; sin texto, los del grupo elegido (o todos), por orden alfabético. */
@@ -82,13 +82,13 @@ function addSheetBase() {
   if (a.tab == 0)
     return h + habitsCard(a.m) + html`<input placeholder="Buscar alimento" aria-label="Buscar alimento" data-u="foodSearch"><div class="fgc" role="group" aria-label="Grupos de alimentos">${[-1].concat(groupNames().map((x, i) => i)).map(i => html`<button class="chip${(a.cat >= 0 ? a.cat : -1) == i ? ' on' : ''}" data-a="foodGroup" data-i="${i}">${i < 0 ? 'Todos' : groupNames()[i]}</button>`)}</div><div id="rs"></div>`;
   if (a.tab == 1)
-    return h + (S.lib.length ? S.lib.map((p, i) => html`<div class="it" style="grid-template-columns:1fr auto auto"><span>${p.n}<br><small>${roundInt(sumMacros(p.it.map(itemMacros))[0])} kcal</small></span><button data-a="addLibraryDish" data-i="${i}">Añadir</button><button data-a="libraryDishDelete" data-i="${i}" aria-label="${'Borrar ' + p.n}" style="padding:6px">✕</button></div>`).join('') : '<p class="mu">Aún no hay platos. Pulsa el icono de guardar de una comida para guardarla como plato.</p>');
+    return h + (S.savedDishes.length ? S.savedDishes.map((p, i) => html`<div class="it" style="grid-template-columns:1fr auto auto"><span>${p.n}<br><small>${roundInt(sumMacros(p.it.map(itemMacros))[0])} kcal</small></span><button data-a="addLibraryDish" data-i="${i}">Añadir</button><button data-a="libraryDishDelete" data-i="${i}" aria-label="${'Borrar ' + p.n}" style="padding:6px">✕</button></div>`).join('') : '<p class="mu">Aún no hay platos. Pulsa el icono de guardar de una comida para guardarla como plato.</p>');
   return html`${raw(h)}<label for="n0">Nombre</label><input id="n0">${[['Kcal', 'k'], ['Hidratos g', 'c'], ['Proteínas g', 'p'], ['Grasas g', 'f'], ['Fibra g', 'fi'], ['Sal g', 's']].map(x => html`<label for="n_${x[1]}">${raw(x[0])} (por 100 g)</label><input type="number" id="n_${x[1]}">`)}<button class="pr" data-a="newFoodSave" style="width:100%;margin-top:10px">Guardar alimento</button>`;
 }
 A.addLibraryDish = i => {
   const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
   (S.meals[k] = S.meals[k] || {});
-  (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push(...S.lib[i].it.map(x => ({ ...x })));
+  (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push(...S.savedDishes[i].it.map(x => ({ ...x })));
   saveState();
   sheet();
   R();
@@ -111,9 +111,9 @@ A.addFood = () => {
     saveOwnFood(f);
   addMealItem();
   if (f && f.n && f.n != '__proto__' && Array.isArray(f.b)) {
-    S.fq = S.fq || {};
-    const q = S.fq[f.n] || { c: 0 };
-    S.fq[f.n] = { c: (q.c || 0) + 1, g, b: f.b, t: Date.now() };
+    S.frequentFoods = S.frequentFoods || {};
+    const q = S.frequentFoods[f.n] || { c: 0 };
+    S.frequentFoods[f.n] = { c: (q.c || 0) + 1, g, b: f.b, t: Date.now() };
     saveState();
   }
 };
@@ -164,7 +164,7 @@ A.newFoodSave = () => {
   const n = $('#n0').value.trim();
   if (!n)
     return;
-  S.cf.push({ n, b: [v('k'), v('c'), v('p'), v('f'), v('fi'), v('s')] });
+  S.myFoods.push({ n, b: [v('k'), v('c'), v('p'), v('f'), v('fi'), v('s')] });
   saveState();
   addState.tab = 0;
   sheet(addSheet());
@@ -184,7 +184,7 @@ A.ownFoodDelete = () => {
   ownFoodDel = -1;
   if (!f)
     return;
-  S.cf = S.cf.filter(x => x !== f);
+  S.myFoods = S.myFoods.filter(x => x !== f);
   saveState();
   if (addState && addState.cat >= groupNames().length)
     addState.cat = -1;

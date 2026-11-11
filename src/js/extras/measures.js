@@ -13,7 +13,7 @@ import { html, raw } from '../core/html.js';
 export const MEASURES = [['cu', 'Cuello'], ['ho', 'Hombros'], ['pe', 'Pecho'], ['br', 'Brazo'], ['ci', 'Cintura'], ['ca', 'Cadera'], ['mu', 'Muslo'], ['ge', 'Gemelo']];
 let measureState = { k: 'ci', di: -1 };
 export function measureList() {
-  return (Array.isArray(S.ms) ? S.ms : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object');
+  return (Array.isArray(S.measures) ? S.measures : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object');
 }
 function measureDelta(k) {
   const L = measureList().filter(m => +m.v[k] > 0);
@@ -98,7 +98,7 @@ A.measureSave = () => {
   }
   const L = measureList().filter(m => m.d != d);
   const old = measureList().find(m => m.d == d);
-  S.ms = L.concat({ d, v: Object.assign({}, old ? old.v : {}, v) }).sort((a, b) => a.d < b.d ? -1 : 1);
+  S.measures = L.concat({ d, v: Object.assign({}, old ? old.v : {}, v) }).sort((a, b) => a.d < b.d ? -1 : 1);
   saveState();
   checkAchievements();
   toast('Medición guardada');
@@ -114,7 +114,7 @@ A.measureDeleteAsk = i => {
 A.measureDelete = () => {
   const m = measureList()[measureState.di];
   if (m) {
-    S.ms = measureList().filter(x => x !== m);
+    S.measures = measureList().filter(x => x !== m);
     saveState();
   }
   measureState.di = -1;

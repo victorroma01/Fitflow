@@ -1,4 +1,4 @@
-# Nombres de las acciones antes y después de la V1.0.2 (I-17): registro nombre-viejo nombre-nuevo (A acciones, C cambios, U entradas).
+# Nombres de antes y después de la V1.0.2 (I-17): registro nombre-viejo nombre-nuevo (A acciones, C cambios, U entradas; S y W claves del estado).
 # Lo usa tests/walk.py (y tests/compare.sh, quinto argumento) para comparar una compilación anterior con una nueva. Ver docs/tecnica/nombres.md.
 # account
 A snc accountSyncNow
@@ -351,3 +351,78 @@ A crg routineGroup
 U cq routinePickerSearch
 C crn routineName
 C br routineBlockReps
+# S: estado (en el programa; se guarda con la clave vieja, core/schema)
+S prog program
+S np noProgram
+S nw welcomePending
+S cpi ownProgramIndex
+S lv level
+S wk week
+S sl selectedWeekday
+S sel selectedDay
+S done doneDays
+S pbk planBackup
+S dl deloadWeeks
+S dq deloadDeclined
+S dls deloadSheetWeek
+S rw rotationWeek
+S rq rotationPostponed
+S hist exerciseHistory
+S last lastWeights
+S pr records
+S pc recordCount
+S notes exerciseNotes
+S wl weightLog
+S ms measures
+S ach achievements
+S stz stagnationDismissed
+S wr weighReminder
+S rp reports
+S cp ownPrograms
+S cr routines
+S cx customExercises
+S nu nutritionGoals
+S bio biometrics
+S cf myFoods
+S lib savedDishes
+S tp mealTemplates
+S fq frequentFoods
+S wt water
+S bc barcodeCache
+S acc accent
+S acx accentColor
+S gm glassLevel
+S gl glassOn
+S gk glassLastLevel
+S rm reduceMotion
+S st0 startTab
+S tour tourSeen
+S rpe logRpe
+S mv migrationsDone
+S bdg iconBadge
+S un units
+S rest defaultRest
+S ar autoRest
+S snd sound
+S snt soundTone
+S vol volume
+S vib vibration
+S awk keepAwake
+S pf profile
+S wdc wodConfig
+S rg weightRange
+S bkd lastBackupDate
+S cb cloudBackup
+S nbk backupNoticeOff
+# W: entreno en curso
+W t0 startedAt
+W re restEndsAt
+W p pausedAt
+W x sets
+W o openPanels
+W fd folded
+W wu warmupsDone
+W ri restAfter
+W lb lastBeep
+W lc lastCurrent
+W dl deload

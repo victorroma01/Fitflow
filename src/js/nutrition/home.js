@@ -31,7 +31,7 @@ export const mealName = (i, n) => (n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x 
 export function nutritionBase(water) {
   const dt = new Date(Date.now() + nutriDayOffset * 864e5);
   const k = dayKey(dt);
-  const n = S.nu;
+  const n = S.nutritionGoals;
   const m = S.meals[k] || {};
   const tg = goalTargets();
   const w = MEAL_SPLITS[n.n] || Array(n.n).fill(1 / n.n);

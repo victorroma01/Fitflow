@@ -2,7 +2,7 @@
    La barra de pestañas (F-38): sus cuatro botones y la burbuja del color de acento que marca la pestaña abierta. Al cambiar de
    pestaña, la burbuja se desliza hasta la nueva. Al mantener pulsada cualquier pestaña (o deslizar el dedo sobre la barra), la
    burbuja sigue al dedo hasta que se suelta, y se abre la pestaña que queda debajo; en Android vibra un poco al pasar por cada
-   una. También la pestaña con la que se abre la app (Ajustes → Al abrir la app, S.st0).
+   una. También la pestaña con la que se abre la app (Ajustes → Al abrir la app, S.startTab).
    Fluidez (I-19): las medidas de la barra se toman una vez y no en cada movimiento del dedo (tabGeometry); mientras se
    arrastra, la burbuja sigue al dedo sin transición y en su propia capa; al cogerla se acerca al dedo en TAB_GRAB_MS en vez de
    saltar; y al soltarla, o al tocar una pestaña, sale hacia la pestaña nueva antes de que esta se pinte (core/render, A.selectTab),
@@ -200,9 +200,9 @@ const tabbarResized = () => {
 window.addEventListener('resize', tabbarResized);
 if (typeof ResizeObserver != 'undefined')
   new ResizeObserver(tabbarResized).observe(tabNav);
-/** Opciones de Ajustes → Al abrir la app: [S.st0, en la fila, en la lista]. */
+/** Opciones de Ajustes → Al abrir la app: [S.startTab, en la fila, en la lista]. */
 const START_TABS = [[-1, 'La última', 'La última que usaste'], ...TABS.map((t, i) => [i, t[1], t[1]])];
-const startOf = () => S.st0 >= 0 && S.st0 < TABS.length ? S.st0 : -1;
+const startOf = () => S.startTab >= 0 && S.startTab < TABS.length ? S.startTab : -1;
 export const startTabName = () => START_TABS.find(x => x[0] == startOf())[1];
 export const startTabCard = () => html`<p class="mu" style="margin:0 2px 12px;font-size:14px">La pestaña que ves al abrir StrataFit.</p><div class="cd srg" role="radiogroup" aria-label="Pestaña al abrir la app">${START_TABS.map(x => html`<button class="sr" data-a="setStartTab" data-v="${x[0]}" role="radio" aria-checked="${x[0] == startOf() ? 'true' : 'false'}"><span class="srl">${raw(x[2])}</span>${x[0] == startOf() ? raw(icon('chk', 20)) : ''}</button>`)}</div>`;
 /** Al arrancar: la pestaña elegida en Ajustes (si no, se queda la última que se usó). */
@@ -214,9 +214,9 @@ export const applyStartTab = () => {
 A.setStartTab = (i, b) => {
   const v = +b.dataset.v;
   if (v >= 0 && v < TABS.length)
-    S.st0 = v;
+    S.startTab = v;
   else
-    delete S.st0;
+    delete S.startTab;
   saveState();
   R();
 };

@@ -48,7 +48,7 @@ const plateResult = () => {
 };
 const plateSheet = () => html`<h3>Calculadora de discos</h3><label>Peso total (${weightUnit()})</label><input type="number" inputmode="decimal" data-u="platesWeight" value="${plateTotal}" aria-label="${'Peso total (' + weightUnit() + ')'}"><label>Barra</label><div class="g2" style="grid-template-columns:repeat(3,1fr)">${barSizes().map(b => html`<button data-a="platesBar" data-i="${b}" style="${plateBar == b ? 'border-color:var(--a2);color:var(--at)' : ''}">${b} ${weightUnit()}</button>`)}</div><div id="zpr">${raw(plateResult())}</div>`;
 A.openPlates = i => {
-  const a = W.x[i];
+  const a = W.sets[i];
   const q = a.find(x => !x.ok && +x.w > 0) || a.find(x => +x.w > 0);
   plateTotal = q ? toDisplayWeight(q.w) : (usesLb() ? 135 : 60);
   if (!barSizes().includes(plateBar))

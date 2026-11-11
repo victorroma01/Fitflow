@@ -25,17 +25,17 @@ const csvCell = v => {
 const csvBody = rows => '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
 const CSV_EXPORTS = {
   ent: { t: 'Entrenos', s: 'Fecha, tipo, series, volumen, minutos y esfuerzo', f: 'entrenos', n: () => (S.logs || []).length, b: () => [['Fecha', 'Tipo', 'Entreno', 'Series', 'Volumen (kg)', 'Minutos', 'RPE medio', 'Detalle']].concat((S.logs || []).filter(l => l && typeof l.d == 'string').slice().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0).map(l => [l.d, l.k == 'c' ? 'Cardio' : l.k == 'w' ? 'WOD' : 'Fuerza', l.n, +l.s || 0, +l.v || 0, +l.m || 0, +l.q || '', (l.x || '') + (l.nt ? ' · ' + l.nt : '')])) },
-  ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso, esfuerzo y técnica', f: 'series', n: () => Object.keys(S.hist || {}).length, b: () => {
+  ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso, esfuerzo y técnica', f: 'series', n: () => Object.keys(S.exerciseHistory || {}).length, b: () => {
       const r = [['Fecha', 'Ejercicio', 'Serie', 'Repeticiones', 'Peso (kg)', 'RPE', 'Técnica']];
-      Object.keys(S.hist || {}).sort().forEach(n => {
-        (Array.isArray(S.hist[n]) ? S.hist[n] : []).slice().reverse().forEach(x => {
+      Object.keys(S.exerciseHistory || {}).sort().forEach(n => {
+        (Array.isArray(S.exerciseHistory[n]) ? S.exerciseHistory[n] : []).slice().reverse().forEach(x => {
           /* la técnica de la serie, con la etiqueta del entreno (workout/technique): WKT, DS, RP, CL… */
           (x && Array.isArray(x.s) ? x.s : []).forEach((q, i) => r.push([x.d, n, i + 1, +q[0] || 0, +q[1] || 0, +q[2] || '', setLabel({ k: typeof q[4] == 'string' ? q[4] : '', t: +q[3] || 0 })]));
         });
       });
       return r;
     } },
-  peso: { t: 'Peso corporal', s: 'Registro de peso con fecha', f: 'peso-corporal', n: () => (S.wl || []).length, b: () => [['Fecha', 'Peso (kg)']].concat((S.wl || []).filter(p => p && p.d).slice().sort((a, b) => a.d < b.d ? -1 : 1).map(p => [p.d, +p.w || 0])) },
+  peso: { t: 'Peso corporal', s: 'Registro de peso con fecha', f: 'peso-corporal', n: () => (S.weightLog || []).length, b: () => [['Fecha', 'Peso (kg)']].concat((S.weightLog || []).filter(p => p && p.d).slice().sort((a, b) => a.d < b.d ? -1 : 1).map(p => [p.d, +p.w || 0])) },
   med: { t: 'Medidas', s: 'Cuello, hombros, pecho, brazo, cintura…', f: 'medidas', n: () => measureList().length, b: () => [['Fecha'].concat(MEASURES.map(x => x[1] + ' (cm)'))].concat(measureList().map(m => [m.d].concat(MEASURES.map(x => +m.v[x[0]] > 0 ? +m.v[x[0]] : '')))) },
   com: { t: 'Comidas', s: 'Alimentos, gramos y macros por día', f: 'comidas', n: () => Object.keys(S.meals || {}).length, b: () => {
       const r = [['Fecha', 'Comida', 'Alimento', 'Gramos', 'Kcal', 'Hidratos (g)', 'Proteínas (g)', 'Grasas (g)', 'Fibra (g)', 'Sal (g)']];
@@ -48,7 +48,7 @@ const CSV_EXPORTS = {
             if (!it || !Array.isArray(it.b))
               return;
             const v = itemMacros(it);
-            r.push([d, mealName(+i, (S.nu && S.nu.n) || 3), it.n, +it.g || 0, Math.round(v[0]), round1(v[1]), round1(v[2]), round1(v[3]), round1(v[4] || 0), Math.round((v[5] || 0) * 100) / 100]);
+            r.push([d, mealName(+i, (S.nutritionGoals && S.nutritionGoals.n) || 3), it.n, +it.g || 0, Math.round(v[0]), round1(v[1]), round1(v[2]), round1(v[3]), round1(v[4] || 0), Math.round((v[5] || 0) * 100) / 100]);
           });
         });
       });

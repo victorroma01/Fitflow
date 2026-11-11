@@ -90,20 +90,36 @@ def main(path):
                   Object.assign(S.meals,{'2026-08-14':it('Avena'),'2026-09-02':it('Arroz'),'2026-09-30':it('Pollo'),'2025-12-31':it('Turrón'),[dayKey(new Date())]:it('Yogur')});saveState()})()""")
             reload()
 
+            # ── nombres del programa y claves guardadas (core/schema, I-17) ──
+            sch = ev("""(()=>{const T=SCHEMA_TABLES,r={};for(const k of ['state','workout']){const st=T[k].map(x=>x[0]),nm=T[k].map(x=>x[1]);
+              r[k]={dupStored:st.length-new Set(st).size,dupName:nm.length-new Set(nm).size,clash:T[k].filter(x=>x[0]!=x[1]&&st.includes(x[1])).map(x=>x[1])}}
+              const s=JSON.parse(JSON.stringify(S)),back=stateFromStored(stateToStored(s));
+              r.round=JSON.stringify(back)===JSON.stringify(s);r.order=Object.keys(back).join()==Object.keys(s).join();
+              r.stored=Object.keys(stateToStored({selectedDay:1,week:2,exerciseHistory:{},zz:3})).join();
+              r.unknown=JSON.stringify(stateFromStored({dt:1,sel:2}));
+              r.w=JSON.stringify(workoutFromStored(workoutToStored({startedAt:1,restEndsAt:2,sets:[[{r:1}]],zz:1})));
+              return r})()""")
+            check('cada nombre y cada clave guardada, una sola vez, y ningún nombre es la clave de otra cosa', all(sch[k] == {'dupStored': 0, 'dupName': 0, 'clash': []} for k in ('state', 'workout')), str(sch))
+            check('el estado va y vuelve igual, en el mismo orden', sch['round'] and sch['order'])
+            check('se guarda con las claves cortas de siempre', sch['stored'] == 'sel,wk,hist,zz', sch['stored'])
+            check('una clave que no está en la tabla pasa tal cual', sch['unknown'] == '{"dt":1,"selectedDay":2}', sch['unknown'])
+            check('el entreno en curso, igual', sch['w'] == '{"startedAt":1,"restEndsAt":2,"sets":[[{"r":1}]],"zz":1}', sch['w'])
+            check('en el móvil, las claves guardadas', ev("(o=>'sel' in o&&'wk' in o&&!('selectedDay' in o))(JSON.parse(localStorage.getItem('ff')))"))
+
             # ── formato ──
             core = ev("JSON.parse(localStorage.getItem('ff'))")
             check('el núcleo lleva la marca de guardado por partes', core.get('_parts') == 1)
             check('las colecciones grandes van aparte', core.get('logs') == 'ff:logs' and core.get('hist') == 'ff:hist' and core.get('meals') == 'ff:meals', str({k: core.get(k) for k in ('logs', 'hist', 'meals')}))
             months = ev("[...new Set(Object.keys(S.meals).map(d=>d.slice(0,7)))].sort().map(m=>'ff:meals:'+m)")
             check('una clave de comidas por mes', ev("__T.keys('ff:meals:')") == months, str(ev("__T.keys('ff:')")))
-            check('lo guardado es exactamente el estado', ev('__T.can(__T.stored())===__T.can(S)'))
+            check('lo guardado es exactamente el estado', ev('__T.can(__T.stored())===__T.can(stateToStored(S))'))
             k1 = ev('Object.keys(S)')
             n1 = ev('S.logs.length')
             reload()
-            check('al recargar, el estado es el mismo (y en el mismo orden de claves)', ev('Object.keys(S)') == k1 and ev('S.logs.length') == n1 and ev('__T.can(__T.stored())===__T.can(S)'))
+            check('al recargar, el estado es el mismo (y en el mismo orden de claves)', ev('Object.keys(S)') == k1 and ev('S.logs.length') == n1 and ev('__T.can(__T.stored())===__T.can(stateToStored(S))'))
 
             # ── escribir solo lo que cambia y agrupar los guardados de una acción ──
-            ev("__T.spy();S.wt[dayKey(new Date())]=750;saveState();saveState();saveState()")
+            ev("__T.spy();S.water[dayKey(new Date())]=750;saveState();saveState();saveState()")
             check('un cambio de ajustes escribe solo el núcleo, una vez', ev('__w') == ['ff'], str(ev('__w')))
             ev("__w.length=0;S.meals['2026-09-02'][1]=[{n:'Kiwi',g:80,b:[61,15,1,.5,3,0]}];saveState()")
             check('una comida escribe solo su mes', ev('__w') == ['ff:meals:2026-09'], str(ev('__w')))
@@ -121,7 +137,7 @@ def main(path):
             legacy = ev("JSON.stringify(Object.assign({},S,{rest:61}))")
             ev("(s=>{localStorage.clear();localStorage.setItem('ff',s)})(%s)" % json.dumps(legacy))
             reload()
-            check('el estado entero en «ff» (serie de prueba) no se lee: no se migra', ev('S.rest') != 61 and ev('S.logs.length') == 0 and not ev('stateRecovered'))
+            check('el estado entero en «ff» (serie de prueba) no se lee: no se migra', ev('S.defaultRest') != 61 and ev('S.logs.length') == 0 and not ev('stateRecovered'))
             check('y se sustituye por el guardado por partes', ev("JSON.parse(localStorage.getItem('ff'))._parts") == 1)
             ev(SEED)
             ev(EXTRA)
@@ -132,11 +148,11 @@ def main(path):
             ev("localStorage.setItem('ff:hist','{roto');localStorage.removeItem('ffbad')")
             reload()
             check('con una parte dañada arranca', ev('!!window.__ffok&&stateRecovered==2'))
-            check('vacía solo esa parte', ev('Object.keys(S.hist).length') == 0 and ev('S.logs.length') == nlogs)
+            check('vacía solo esa parte', ev('Object.keys(S.exerciseHistory).length') == 0 and ev('S.logs.length') == nlogs)
             bad = ev("JSON.parse(localStorage.getItem('ffbad')||'null')")
             check('y la aparta para poder recuperarla', bool(bad) and bad.get('raw') == '{roto' and bad.get('k') == 'ff:hist', str(bad)[:120])
             check('avisa de que falta una parte', ev("/No se pudo leer una parte de tus datos/.test(document.body.innerText)"))
-            ev("document.querySelector('#dg').innerHTML='';S.rest=78;saveState()")
+            ev("document.querySelector('#dg').innerHTML='';S.defaultRest=78;saveState()")
             check('el siguiente guardado la repara', ev("JSON.parse(localStorage.getItem('ff:hist'))") == {})
             ev("localStorage.removeItem('ff:logs')")
             reload()
@@ -144,17 +160,17 @@ def main(path):
             ev("document.querySelector('#dg').innerHTML=''")
 
             # ── restaurar una copia con un guardado pendiente en la misma acción ──
-            ev("for(let i=0;i<5;i++)S.logs.push({d:'2026-10-0'+(i+1),n:'Día '+i,v:1000,s:10,m:40,q:7});S.hist={'Press banca':[{d:'2026-10-01',s:[[5,80,8,0]]}]};saveState()")
+            ev("for(let i=0;i<5;i++)S.logs.push({d:'2026-10-0'+(i+1),n:'Día '+i,v:1000,s:10,m:40,q:7});S.exerciseHistory={'Press banca':[{d:'2026-10-01',s:[[5,80,8,0]]}]};saveState()")
             # (sin los id de los entrenos: el arranque se los pone a los que no tienen, core/repair)
-            before = ev('(()=>{const s=JSON.parse(JSON.stringify(S));s.logs.forEach(l=>delete l.id);return __T.can(s)})()')
-            ev("(()=>{const s=JSON.parse(JSON.stringify(S));s.logs=s.logs.slice(0,2);s.meals={'2025-01-01':{0:[{n:'Copia',g:1,b:[1,1,1,1,0,0]}]}};s.rest=31;window.__bk=s})()")
+            before = ev('(()=>{const s=JSON.parse(JSON.stringify(stateToStored(S)));s.logs.forEach(l=>delete l.id);return __T.can(s)})()')
+            ev("(()=>{const s=JSON.parse(JSON.stringify(stateToStored(S)));s.logs=s.logs.slice(0,2);s.meals={'2025-01-01':{0:[{n:'Copia',g:1,b:[1,1,1,1,0,0]}]}};s.rest=31;window.__bk=s})()")
             with pg.expect_navigation():
-                ev("S.rest=999;saveState();pendingRestore={s:__bk};restoreBackup()")
+                ev("S.defaultRest=999;saveState();pendingRestore={s:__bk};restoreBackup()")
             pg.wait_for_load_state('load')
             booted(pg)
             pg.clock.run_for(1500)
             ev(HELPERS)
-            check('restaurar no lo pisa un guardado pendiente', ev('S.rest') == 31 and ev('S.logs.length') == 2, str((ev('S.rest'), ev('S.logs.length'))))
+            check('restaurar no lo pisa un guardado pendiente', ev('S.defaultRest') == 31 and ev('S.logs.length') == 2, str((ev('S.defaultRest'), ev('S.logs.length'))))
             check('y deja solo los meses de la copia', ev("__T.keys('ff:meals:')") == ['ff:meals:2025-01'], str(ev("__T.keys('ff:meals:')")))
             with pg.expect_navigation():
                 ev('A.backupUndo()')
@@ -162,17 +178,17 @@ def main(path):
             booted(pg)
             pg.clock.run_for(1500)
             ev(HELPERS)
-            check('deshacer la restauración devuelve los datos anteriores', ev('S.rest') == 999 and ev('(()=>{const s=JSON.parse(JSON.stringify(S));s.rest=%s;s.logs.forEach(l=>delete l.id);return __T.can(s)})()' % json.dumps(json.loads(before)['rest'])) == before)
+            check('deshacer la restauración devuelve los datos anteriores', ev('S.defaultRest') == 999 and ev('(()=>{const s=JSON.parse(JSON.stringify(stateToStored(S)));s.rest=%s;s.logs.forEach(l=>delete l.id);return __T.can(s)})()' % json.dumps(json.loads(before)['rest'])) == before)
             ev("document.querySelector('#dg')&&(document.querySelector('#dg').innerHTML='')")
 
             # ── restaurar sin espacio: se deshace y se sigue guardando con normalidad ──
-            before = ev('__T.can(S)')
+            before = ev('__T.can(stateToStored(S))')
             ev("window.__set2=Store.set;Store.set=(k,v)=>{if(k=='ff:hist'){const e=new Error('lleno');e.name='QuotaExceededError';throw e}return __set2(k,v)};0")
-            ev("(()=>{const s=JSON.parse(JSON.stringify(S));s.hist={'Sentadilla':[{d:'2026-10-02',s:[[5,100,8,0]]}]};s.logs=[];pendingRestore={s};restoreBackup()})()")
+            ev("(()=>{const s=JSON.parse(JSON.stringify(stateToStored(S)));s.hist={'Sentadilla':[{d:'2026-10-02',s:[[5,100,8,0]]}]};s.logs=[];pendingRestore={s};restoreBackup()})()")
             pg.clock.run_for(300)
             check('si la copia no cabe, avisa', ev("/No se pudo restaurar; tus datos siguen como estaban/.test(document.body.innerText)"))
             check('y los datos guardados siguen como estaban', ev('__T.can(__T.stored())') == before)
-            ev("Store.set=__set2;S.rest=32;saveState()")
+            ev("Store.set=__set2;S.defaultRest=32;saveState()")
             check('después sigue guardando', ev("JSON.parse(localStorage.getItem('ff')).rest") == 32)
 
             # ── pantalla de error de arranque ──

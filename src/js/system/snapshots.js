@@ -41,7 +41,7 @@ export const snapTx = (mode, fn) => snapDb().then(db => new Promise((res, rej) =
 export const snapList = () => snapTx('readonly', st => st.getAll()).then(a => (a || []).sort((x, y) => x.d < y.d ? 1 : -1));
 /** Guarda la copia de hoy si aún no existe (y si hay algo que guardar) y borra las que sobran. Devuelve 1 si guardó. */
 export const takeSnapshot = async () => {
-  if (!S.logs.length && !(S.cr || []).length && !(S.cp || []).length && !countOf(S.meals) && !(S.wl || []).length)
+  if (!S.logs.length && !(S.routines || []).length && !(S.ownPrograms || []).length && !countOf(S.meals) && !(S.weightLog || []).length)
     return 0;
   const d = dayKey(new Date());
   const all = await snapList();

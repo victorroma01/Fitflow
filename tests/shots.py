@@ -55,11 +55,11 @@ SCR={
  'ajustes':"S.tab=3;R();A.openSettings&&A.openSettings()",
  'ajustes_tema':"S.tab=3;R();A.openSettings&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'tema'}}))",
  'informe':"S.tab=3;R();A.openReport&&(A.openSettings(),A.openReport())",
- 'peso':"S.wr={n:2,u:'w',t:Date.now()};S.tab=2;R();A.openWeight&&A.openWeight()",
+ 'peso':"S.weighReminder={n:2,u:'w',t:Date.now()};S.tab=2;R();A.openWeight&&A.openWeight()",
  'analisis':"S.tab=3;R();A.openAnalysis&&A.openAnalysis()",
- 'avisos':"S.rp=[{id:'prueba-1793782800000',k:'f',a:'Algo se ve mal',t:'La gráfica de peso no se ve bien',ca:1793782800000,s:1,st:'v',rp:'Arreglado en la próxima versión',ra:1793869200000}];S.tab=3;R();A.openMyReports&&A.openMyReports()",
+ 'avisos':"S.reports=[{id:'prueba-1793782800000',k:'f',a:'Algo se ve mal',t:'La gráfica de peso no se ve bien',ca:1793782800000,s:1,st:'v',rp:'Arreglado en la próxima versión',ra:1793869200000}];S.tab=3;R();A.openMyReports&&A.openMyReports()",
  'nota':"S.tab=3;R();A.openSettings&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'nota'}}))",
- 'acento':"S.acc=-1;S.acx='#ff2d55';S.tab=3;R();A.openSettings&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'acento'}}))",
+ 'acento':"S.accent=-1;S.accentColor='#ff2d55';S.tab=3;R();A.openSettings&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'acento'}}))",
  'inicio':"S.tab=3;R();A.openSettings&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'inicio'}}))",
  'recorrido':"S.tab=0;R();A.tourReplay&&A.tourReplay()",
  'recorrido_fin':"S.tab=0;R();A.tourReplay&&(A.tourReplay(),A.tourNext(),A.tourNext(),A.tourNext(),A.tourNext(),A.tourNext())",
@@ -68,17 +68,18 @@ CFG={ # nombre: (w,h,scheme,gm,gl)
  'a':(390,844,'dark',3,1),'b':(390,844,'light',3,1),'c':(390,844,'dark',0,0),'d':(390,844,'dark',1,1),'e':(320,568,'dark',3,1),'f':(430,932,'light',2,1),
 }
 def old_names(js,path):
-    """El script de una pantalla con los nombres de acción de antes del mapa (A.nuevo → A.viejo, data-a=nuevo → data-a=viejo)."""
-    back={'A':{},'C':{},'U':{}}
+    """Un script con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo."""
+    back={'A':{},'C':{},'U':{},'S':{},'W':{}}
     for l in open(path,encoding='utf-8'):
         l=l.strip()
         if l and not l.startswith('#'):
             r,o,n=l.split();back[r][n]=o
-    js=re.sub(r'(?<![\w.$])([ACU])\.(\w+)',lambda m:m.group(1)+'.'+back[m.group(1)].get(m.group(2),m.group(2)),js)
+    js=re.sub(r'(?<![\w.$])([ACUSW])\.(\w+)',lambda m:m.group(1)+'.'+back[m.group(1)].get(m.group(2),m.group(2)),js)
     return re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
 def run(file,out,cfgs,ren=None):
     os.makedirs(out,exist_ok=True);res={}
     scr={k:old_names(js,ren) if ren else js for k,js in SCR.items()}
+    extra,init=(old_names(x,ren) for x in (EXTRA,INIT)) if ren else (EXTRA,INIT)
     # por HTTP, como el resto de pruebas (tests/browser.py): con file://, Chromium a veces recarga con el almacenamiento vacío
     url=app_url(file)
     with sync_playwright() as p:
@@ -87,7 +88,7 @@ def run(file,out,cfgs,ren=None):
             w,h,sch,gm,gl=CFG[cn]
             c=b.new_context(viewport={'width':w,'height':h},device_scale_factor=2,color_scheme=sch,has_touch=True,is_mobile=True,**context_opts(file))
             # con la sesión de prueba (tests/init.js): sin cuenta, la app solo enseña el inicio de sesión
-            c.add_init_script(INIT)
+            c.add_init_script(init)
             pg=c.new_page();errs=[]
             pg.on('pageerror',lambda e:errs.append('PAGEERR '+str(e)))
             for k,js in scr.items():
@@ -96,8 +97,9 @@ def run(file,out,cfgs,ren=None):
                 pg.goto(url);pg.wait_for_timeout(250)
                 pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(250)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
-                pg.evaluate(SEED.replace("S.gm=3;S.gl=1;S.theme='dark';","S.gm=%d;S.gl=%d;S.theme='%s';"%(gm,gl,sch)))
-                pg.evaluate(EXTRA);pg.evaluate("location.reload()");pg.wait_for_timeout(350)
+                sd=SEED.replace("S.glassLevel=3;S.glassOn=1;S.theme='dark';","S.glassLevel=%d;S.glassOn=%d;S.theme='%s';"%(gm,gl,sch))
+                pg.evaluate(old_names(sd,ren) if ren else sd)
+                pg.evaluate(extra);pg.evaluate("location.reload()");pg.wait_for_timeout(350)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
                 try:
                     pg.evaluate(js);pg.wait_for_timeout(900 if k in('edit','overview','go_open') else 220)

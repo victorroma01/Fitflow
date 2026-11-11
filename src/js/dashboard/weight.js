@@ -16,8 +16,8 @@ const weekKey = s => {
 };
 const bmiLabel = v => v < 18.5 ? 'Delgadez' : v < 25 ? 'Peso correcto' : v < 30 ? 'Sobrepeso moderado' : 'Sobrepeso extremo';
 export function weightPage() {
-  const L = (S.wl || []).slice().sort((a, b) => a.d < b.d ? -1 : 1);
-  const r = S.rg || 0;
+  const L = (S.weightLog || []).slice().sort((a, b) => a.d < b.d ? -1 : 1);
+  const r = S.weightRange || 0;
   const ky = d => r == 2 ? d.slice(0, 4) : r == 1 ? d.slice(0, 7) : weekKey(d);
   const bk = {};
   L.forEach(p => bk[ky(p.d)] = p.w);
@@ -26,7 +26,7 @@ export function weightPage() {
   const lo = Math.min(...v) - 1;
   const hi = Math.max(...v) + 1;
   const pt = v.map((y, i) => [ks.length > 1 ? 20 + i * 280 / (ks.length - 1) : 160, 130 - (y - lo) / (hi - lo) * 110]);
-  const h = +S.bio.h;
+  const h = +S.biometrics.h;
   const cur = L.length ? L[L.length - 1].w : 0;
   const w0 = L.length ? L[0].w : 0;
   const all = L.map(p => p.w);
@@ -42,7 +42,7 @@ A.weightBack = () => {
   R();
 };
 A.weightRange = i => {
-  S.rg = i;
+  S.weightRange = i;
   saveState();
   R();
 };
@@ -51,8 +51,8 @@ A.weightAdd = () => {
   const d = $('#wd').value;
   if (!w || !d)
     return;
-  S.wl = (S.wl || []).filter(p => p.d != d).concat({ d, w });
-  S.bio.w = S.wl.slice().sort((a, b) => a.d < b.d ? -1 : 1).pop().w;
+  S.weightLog = (S.weightLog || []).filter(p => p.d != d).concat({ d, w });
+  S.biometrics.w = S.weightLog.slice().sort((a, b) => a.d < b.d ? -1 : 1).pop().w;
   applyDiet();
   saveState();
   R();

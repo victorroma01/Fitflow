@@ -7,7 +7,7 @@
    Se hace sola una vez por semana, tras sincronizar bien (cloud/sync: afterSync), y cuando se quiera desde Copia de seguridad.
    La automática no sustituye una copia con bastantes más entrenos o comidas que el móvil (podría ser la buena): lo avisa.
    Restaurar baja los trozos, comprueba la huella y sigue el camino de siempre (system/backup: confirmar y poder deshacer).
-   Estado: S.cb = { at, lg, md }: la última copia en la nube (cuándo, entrenos y días de comidas), para todos los móviles.
+   Estado: S.cloudBackup = { at, lg, md }: la última copia en la nube (cuándo, entrenos y días de comidas), para todos los móviles.
    Define: CHUNK, MAX_CHUNKS, BACKUP_EVERY, cloudBusy, autoTried, pendingOld, backupPath, toB64, fromB64, canZip, zip, unzip, dataCounts, shrinks, writeCloudBackup, readCloudBackup, autoBackup, cloudBackupCard, wipeCloudBackup, saveNow  · acciones/registros: 3
 */
 import { $, APPV } from '../core/util.js';
@@ -73,7 +73,7 @@ const writeCloudBackup = async (old) => {
     writes.push(delWrite(backupPath('c' + i)));
   writes.push(setWrite(backupPath('meta'), meta));
   await commitWrites(writes);
-  S.cb = { at: meta.at, lg: c.lg, md: c.md };
+  S.cloudBackup = { at: meta.at, lg: c.lg, md: c.md };
   saveState();
 };
 /** La copia de la nube en texto (el de un archivo de copia), o '' si no hay ninguna. Lanza DAMAGED si está incompleta. */
@@ -99,9 +99,9 @@ const readCloudBackup = async () => {
 };
 /* tras sincronizar: si la última copia tiene una semana, otra; sin pisar una copia que parece tener más datos */
 const autoBackup = async () => {
-  if (autoTried || cloudBusy || !account || account.x || W || Date.now() - (+(S.cb && S.cb.at) || 0) < BACKUP_EVERY)
+  if (autoTried || cloudBusy || !account || account.x || W || Date.now() - (+(S.cloudBackup && S.cloudBackup.at) || 0) < BACKUP_EVERY)
     return;
-  if (!countOf(S.logs) && !countOf(S.meals) && !countOf(S.wl))
+  if (!countOf(S.logs) && !countOf(S.meals) && !countOf(S.weightLog))
     return;
   autoTried = 1;
   cloudBusy = 1;
@@ -127,7 +127,7 @@ const autoBackup = async () => {
 afterSync.push(autoBackup);
 /** Apartado «Copia en la nube» de Copia de seguridad (system/backup). */
 export const cloudBackupCard = () => {
-  const c = S.cb;
+  const c = S.cloudBackup;
   const line = c && +c.at > 0 ? html`Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas` : 'Aún no hay ninguna copia en la nube.';
   return html`<div class="cd cbk" id="cbk"><b>Copia en la nube</b><p class="mu">Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.</p><p class="cbl" id="cbl">${raw(line)}</p><div class="g2"><button class="pr" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button><button data-a="cloudBackupRestore"${cloudBusy ? ' disabled' : ''}>Restaurar</button></div></div>`;
 };
@@ -138,7 +138,7 @@ export const wipeCloudBackup = async () => {
     return;
   const n = Math.min(MAX_CHUNKS, +m.data.n || MAX_CHUNKS);
   await commitWrites(Array.from({ length: n }, (_, i) => delWrite(backupPath('c' + i))).concat([delWrite(backupPath('meta'))]));
-  delete S.cb;
+  delete S.cloudBackup;
 };
 const saveNow = async (old) => {
   cloudBusy = 1;

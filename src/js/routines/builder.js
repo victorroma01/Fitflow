@@ -25,7 +25,7 @@ export const routineExRows = () => {
 };
 const routineListPage = () => routineList();
 export const routineEditor = () => {
-  const r = S.cr[routineState.i];
+  const r = S.routines[routineState.i];
   return html`<div class="row"><button data-a="routineEditorBack">‹ Rutinas</button>${raw(routineState.nw ? '' : '<button data-a="routineDeleteAsk" style="color:var(--ctx)">Eliminar</button>')}</div><h2 style="margin:14px 0 4px;letter-spacing:-.02em">Workout personalizado</h2><label>Nombre</label><input data-c="routineName" value="${r.n}" aria-label="Nombre del workout"><label>Imagen del entrenamiento</label>${imagePicker(r)}${r.bl.map((b, j) => html`<div class="row" style="margin-top:16px"><b class="mu">SERIE ${raw(String.fromCharCode(65 + j))}</b>${b.ex.length > 1 ? html`<b style="color:var(--wnx)">${raw(BLOCK_KINDS[b.ex.length])} · 10 s</b>` : ''}<button data-a="routineBlockDelete" data-i="${j}" style="padding:4px 10px">Quitar</button></div>${b.ex.map(n => html`<div class="ovx"><div class="th">${exAnatomy(n, 64)}</div><b style="flex:1">${n}</b></div>`)}<div class="row" style="margin-top:6px"><span><button data-a="routineBlockSets" data-i="${j}" data-v="-1" aria-label="${'Una serie menos, serie ' + String.fromCharCode(65 + j)}">−</button> ${raw(b.s)} series <button data-a="routineBlockSets" data-i="${j}" data-v="1" aria-label="${'Una serie más, serie ' + String.fromCharCode(65 + j)}">+</button></span><select data-c="routineBlockReps" data-i="${j}" aria-label="${'Descanso, serie ' + String.fromCharCode(65 + j)}" style="width:auto">${REST_OPTIONS.map(v => html`<option value="${v}"${v == b.r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))}</option>`)}</select></div>`)}<button data-a="routineAddBlock" style="width:100%;margin-top:16px">+ Añadir bloque</button><div style="height:80px"></div><button class="sb" data-a="routineSaveAsk" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
 };
 const routineBlockPicker = () => html`<button data-a="routineEdit" data-i="${routineState.i}">‹ Cancelar</button><h3>Nuevo bloque</h3>${[1, 2, 3].map(k => html`<button class="chip${routineState.k == k ? ' on' : ''}" data-a="routineAddBlockKind" data-i="${k}">${raw(BLOCK_KINDS[k])}</button>`)}<p class="mu">Elige el ejercicio ${routineState.sel.length + 1} de ${routineState.k}${raw(routineState.sel.length ? ': ' + routineState.sel.map(X).join(' + ') : '')}</p><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="routinePickerSearch"><div id="cl2">${raw(routineExRows())}</div>`;
@@ -35,7 +35,7 @@ A.routinePickExercise = (i, b) => {
   if (routineState.sel.length >= routineState.k) {
     const l = routineState.sel[routineState.sel.length - 1];
     const r = restDefault(l);
-    S.cr[routineState.i].bl.push({ ex: routineState.sel, s: 3, r: REST_OPTIONS.includes(r) ? r : 90 });
+    S.routines[routineState.i].bl.push({ ex: routineState.sel, s: 3, r: REST_OPTIONS.includes(r) ? r : 90 });
     routineState.sel = [];
     saveState();
     sheet(routineEditor());
@@ -44,13 +44,13 @@ A.routinePickExercise = (i, b) => {
     sheet(routineBlockPicker());
 };
 A.routineBlockSets = (i, b) => {
-  const x = S.cr[routineState.i].bl[i];
+  const x = S.routines[routineState.i].bl[i];
   x.s = Math.max(1, x.s + +b.dataset.v);
   saveState();
   sheet(routineEditor());
 };
 A.routineBlockDelete = i => {
-  S.cr[routineState.i].bl.splice(i, 1);
+  S.routines[routineState.i].bl.splice(i, 1);
   saveState();
   sheet(routineEditor());
 };
@@ -60,7 +60,7 @@ const openRoutines = () => {
 };
 function routineRows() {
   const q = (routineState.s || '').toLowerCase();
-  let l = S.cr.map((r, i) => ({ r, i })).filter(o => o.r.n.toLowerCase().includes(q));
+  let l = S.routines.map((r, i) => ({ r, i })).filter(o => o.r.n.toLowerCase().includes(q));
   if (routineState.so)
     l.sort((a, b) => a.r.n.localeCompare(b.r.n));
   else
@@ -102,31 +102,31 @@ export const setOverviewSnapshot = v => {
 };
 A.routineNew = () => {
   routineState.nw = true;
-  S.cr.push({ n: 'Mi workout ' + (S.cr.length + 1), bl: [] });
-  routineState.i = S.cr.length - 1;
+  S.routines.push({ n: 'Mi workout ' + (S.routines.length + 1), bl: [] });
+  routineState.i = S.routines.length - 1;
   saveState();
   sheet(routineEditor());
   routineEditIndex = routineState.i;
-  routineSnapshot = JSON.stringify(S.cr[routineState.i]);
+  routineSnapshot = JSON.stringify(S.routines[routineState.i]);
 };
 A.routineEdit = i => {
   if (routineEditIndex !== i || routineSnapshot == null) {
     routineEditIndex = i;
-    routineSnapshot = JSON.stringify(S.cr[i]);
+    routineSnapshot = JSON.stringify(S.routines[i]);
     routineState.nw = false;
   }
   routineState.i = i;
   sheet(routineEditor());
 };
 A.routineEditorBack = () => {
-  if (routineSnapshot == null || !S.cr[routineEditIndex]) {
+  if (routineSnapshot == null || !S.routines[routineEditIndex]) {
     routineSnapshot = null;
     openRoutines();
     return;
   }
   if (routineState.nw)
     dialog('¿Descartar este workout?', 'Aún no lo has creado. Si sales, se perderá.', [['Seguir editando', 'doNothing', ''], ['Descartar', 'routineNewDiscard', 'pr']]);
-  else if (JSON.stringify(S.cr[routineEditIndex]) != routineSnapshot)
+  else if (JSON.stringify(S.routines[routineEditIndex]) != routineSnapshot)
     dialog('¿Guardar los cambios?', 'Has modificado este workout.', [['Descartar', 'routineDiscardChanges', ''], ['Guardar', 'routineKeepChanges', 'pr']]);
   else {
     routineSnapshot = null;
@@ -134,7 +134,7 @@ A.routineEditorBack = () => {
   }
 };
 A.routineNewDiscard = () => {
-  S.cr.splice(routineEditIndex, 1);
+  S.routines.splice(routineEditIndex, 1);
   routineState.nw = false;
   routineSnapshot = null;
   saveState();
@@ -146,13 +146,13 @@ A.routineKeepChanges = () => {
   openRoutines();
 };
 A.routineDiscardChanges = () => {
-  S.cr[routineEditIndex] = JSON.parse(routineSnapshot);
+  S.routines[routineEditIndex] = JSON.parse(routineSnapshot);
   routineSnapshot = null;
   saveState();
   openRoutines();
 };
 A.routineSaveAsk = () => {
-  const r = S.cr[routineState.i];
+  const r = S.routines[routineState.i];
   if (!r.bl.length) {
     dialog('Añade al menos un bloque', 'Elige uno o varios ejercicios con el botón Añadir bloque.', [['Entendido', 'doNothing', 'pr']]);
     return;
@@ -173,7 +173,7 @@ A.routineDeleteAsk = () => dialog('¿Borrar este workout?', 'Se eliminará de tu
 A.routineDelete = () => {
   routineState.nw = false;
   routineSnapshot = null;
-  S.cr.splice(routineState.i, 1);
+  S.routines.splice(routineState.i, 1);
   saveState();
   sheet(routineListPage());
 };
@@ -182,13 +182,13 @@ A.routineListDeleteAsk = i => {
   dialog('¿Borrar este workout?', 'Se eliminará de tu lista.', [['Cancelar', 'doNothing', ''], ['Borrar', 'routineListDelete', 'pr']]);
 };
 A.routineListDelete = () => {
-  S.cr.splice(routineState.dx, 1);
+  S.routines.splice(routineState.dx, 1);
   routineState.m = null;
   saveState();
   refreshRoutineRows();
 };
 export const routineToDay = i => {
-  const r = S.cr[i];
+  const r = S.routines[i];
   const ex = [];
   r.bl.forEach((b, j) => {
     const u = 'b' + Date.now() + j;
@@ -202,17 +202,17 @@ export const routineToDay = i => {
   return { n: r.n, ex, cu: 1, img: routineImage(r) };
 };
 export const restorePlanBackup = () => {
-  if (S.pbk) {
-    S.plan[S.pbk.sel] = S.pbk.day;
-    S.pbk = null;
+  if (S.planBackup) {
+    S.plan[S.planBackup.sel] = S.planBackup.day;
+    S.planBackup = null;
     saveState();
   }
 };
 A.routineStart = i => {
-  if (!S.cr[i].bl.length)
+  if (!S.routines[i].bl.length)
     return;
-  S.pbk = { sel: S.sel, day: S.plan[S.sel] };
-  S.plan[S.sel] = routineToDay(i);
+  S.planBackup = { sel: S.selectedDay, day: S.plan[S.selectedDay] };
+  S.plan[S.selectedDay] = routineToDay(i);
   saveState();
   sheet();
   A.startWorkout();
@@ -251,10 +251,10 @@ U.routinePickerSearch = v => {
   $('#cl2').innerHTML = routineExRows();
 };
 C.routineName = e => {
-  S.cr[routineState.i].n = e.value;
+  S.routines[routineState.i].n = e.value;
   saveState();
 };
 C.routineBlockReps = (e, i) => {
-  S.cr[routineState.i].bl[i].r = +e.value;
+  S.routines[routineState.i].bl[i].r = +e.value;
   saveState();
 };

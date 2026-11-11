@@ -10,16 +10,16 @@ import { toDisplayWeight, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
 let progressState = { n: '', m: 'e', p: -1 };
 const dateShort = d => new Date(d + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' });
-const progressExercises = () => Object.keys(S.hist || {}).filter(n => {
-  const h = S.hist[n];
+const progressExercises = () => Object.keys(S.exerciseHistory || {}).filter(n => {
+  const h = S.exerciseHistory[n];
   return Array.isArray(h) && h.some(x => x.s.some(y => +y[1] > 0));
 }).sort((a, b) => {
-  const da = (S.hist[a][0] || {}).d || '';
-  const db = (S.hist[b][0] || {}).d || '';
+  const da = (S.exerciseHistory[a][0] || {}).d || '';
+  const db = (S.exerciseHistory[b][0] || {}).d || '';
   return da < db ? 1 : da > db ? -1 : 0;
 });
 const progressSeries = (n, m) => {
-  const h = ((S.hist || {})[n] || []).slice().reverse();
+  const h = ((S.exerciseHistory || {})[n] || []).slice().reverse();
   return h.map(x => {
     const ss = x.s.filter(y => !y[3] && +y[1] > 0);
     let v = 0;
@@ -138,9 +138,9 @@ C.progressExercise = e => {
 export const progressCard = () => html`<div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">${raw(progressBody())}</div></div>`;
 const recordEvents = () => {
   const ev = [];
-  Object.keys(S.hist || {}).forEach(n => {
+  Object.keys(S.exerciseHistory || {}).forEach(n => {
     let b = 0;
-    S.hist[n].slice().reverse().forEach(x => {
+    S.exerciseHistory[n].slice().reverse().forEach(x => {
       const ss = x.s.filter(y => !y[3] && +y[1] > 0);
       if (!ss.length)
         return;

@@ -3,7 +3,7 @@
    pregunta si se quiere ver lo principal («Empezar el recorrido») u «Omitir». Son 5 pasos: cada uno ilumina una parte de la app
    (el entreno de hoy, la barra de pestañas, las comidas, el progreso y el perfil) con una tarjeta que la explica: «Paso N de 5»,
    puntos, «Omitir» y «Siguiente» («Terminar» en el último). Al final, «¡Listo!». En el paso de las pestañas se puede probar la
-   barra (tocar o arrastrar la burbuja). Contestar la primera pregunta lo da por visto: S.tour va en las preferencias de la cuenta
+   barra (tocar o arrastrar la burbuja). Contestar la primera pregunta lo da por visto: S.tourSeen va en las preferencias de la cuenta
    (cloud/sync), así no vuelve a salir, tampoco en otro móvil. Se puede ver otra vez en Ajustes → Ver el recorrido.
    Sale cuando la app está libre: con la sesión iniciada, sin entreno en marcha, sin otra ventana abierta y con la primera
    sincronización hecha (puede traer que ya se vio en otro móvil).
@@ -48,7 +48,7 @@ const tourShow = () => {
   }
   else if (i >= n) {
     r.className = 'trs';
-    r.innerHTML = tourSheet('chk', '¡Listo!', tour.again ? 'Ya conoces lo principal. Puedes volver a verlo cuando quieras en Ajustes.' : 'Ya conoces lo principal. Este recorrido no vuelve a salir; si quieres verlo otra vez, está en Ajustes.', S.np ? '<button class="pr" data-a="tourDone">Seleccionar programa</button>' : '<button class="pr" data-a="tourDone">Empezar a entrenar</button>');
+    r.innerHTML = tourSheet('chk', '¡Listo!', tour.again ? 'Ya conoces lo principal. Puedes volver a verlo cuando quieras en Ajustes.' : 'Ya conoces lo principal. Este recorrido no vuelve a salir; si quieres verlo otra vez, está en Ajustes.', S.noProgram ? '<button class="pr" data-a="tourDone">Seleccionar programa</button>' : '<button class="pr" data-a="tourDone">Empezar a entrenar</button>');
   }
   else {
     const st = TOUR_STEPS[i];
@@ -120,17 +120,17 @@ const tourBusy = () => {
 };
 /* tras la bienvenida de una cuenta nueva, el recorrido empieza directamente por el primer paso (sin volver a dar la bienvenida) */
 const tourAfterWelcome = () => {
-  if (S.tour)
+  if (S.tourSeen)
     return;
-  S.tour = 1;
+  S.tourSeen = 1;
   saveState();
   tour = { i: 0, again: 0, from: 0 };
   tourShow();
 };
 /** Al arrancar: saca el recorrido si esta cuenta aún no lo ha visto, en cuanto la app esté libre. En una cuenta nueva, antes,
-  la bienvenida con sus datos (S.nw; system/welcome). */
+  la bienvenida con sus datos (S.welcomePending; system/welcome). */
 export const tourCheck = () => {
-  if (tour || S.tour && !S.nw || !signedIn())
+  if (tour || S.tourSeen && !S.welcomePending || !signedIn())
     return;
   if (tourBusy()) {
     if (++tourTries < 120)
@@ -139,7 +139,7 @@ export const tourCheck = () => {
   }
   setWeightView(0);
   setOverviewMode(0);
-  if (S.nw) {
+  if (S.welcomePending) {
     if (S.tab)
       A.selectTab(0);
     welcomeShow(tourAfterWelcome);
@@ -156,7 +156,7 @@ window.addEventListener('scroll', tourPlace, { passive: true });
 A.tourStart = () => {
   if (!tour)
     return;
-  S.tour = 1;
+  S.tourSeen = 1;
   saveState();
   tour.i = 0;
   tourShow();
@@ -174,7 +174,7 @@ A.tourSkip = () => {
   if (!tour)
     return;
   if (!tour.again) {
-    S.tour = 1;
+    S.tourSeen = 1;
     saveState();
   }
   tourEnd(tour.i >= 0 && tour.i < TOUR_STEPS.length ? tour.from : -1);
@@ -182,7 +182,7 @@ A.tourSkip = () => {
 /* «Empezar a entrenar» o, sin programa todavía, «Seleccionar programa»: a Programas */
 A.tourDone = () => {
   tourEnd(0);
-  if (S.np)
+  if (S.noProgram)
     A.openPrograms();
 };
 /* Ajustes → Ver el recorrido: directo al primer paso */

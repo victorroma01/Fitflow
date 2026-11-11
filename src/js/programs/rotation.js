@@ -5,7 +5,7 @@
      (nunca en la semana de descarga). «Ahora no» la aplaza a la semana siguiente.
    - Manual: Menú → «Rotar ejercicios», cuando se quiera.
    Antes de rotar se ve qué cambia. Vale para cualquier plan (predefinido o propio, aunque se haya editado a mano).
-   S.rw: semana de la última rotación (o del inicio del plan) · S.rq: semana en que se dijo «Ahora no».
+   S.rotationWeek: semana de la última rotación (o del inicio del plan) · S.rotationPostponed: semana en que se dijo «Ahora no».
    Define: ROTATE_EVERY, HOME_EQUIP, cycleOf, equipOf, rotatedName, rotationChanges, rotationDue, rotationCard, rotationSheet  · acciones/registros: 3
 */
 import { toast } from '../core/toast.js';
@@ -57,11 +57,11 @@ const rotationChanges = (pl = S.plan) => {
 };
 /** ¿Toca proponer la rotación esta semana? */
 const rotationDue = () => {
-  const from = S.rw > 0 && S.rw <= S.wk ? S.rw : 1;
-  return !W && S.wk - from >= (ROTATE_EVERY[S.lv] || 5) && S.rq != S.wk && !isDeloadWeek(S.wk) && rotationChanges().length > 0;
+  const from = S.rotationWeek > 0 && S.rotationWeek <= S.week ? S.rotationWeek : 1;
+  return !W && S.week - from >= (ROTATE_EVERY[S.level] || 5) && S.rotationPostponed != S.week && !isDeloadWeek(S.week) && rotationChanges().length > 0;
 };
 /** Tarjeta de Workout que propone la rotación cuando toca. */
-export const rotationCard = () => rotationDue() ? html`<div class="cd rtc"><b>Toca rotar los ejercicios</b><div class="mu">Llevas ${raw(S.wk - (S.rw > 0 && S.rw <= S.wk ? S.rw : 1))} semanas con los mismos accesorios. Cambiarlos por otra variante del mismo movimiento sigue estimulando el músculo; los básicos se quedan para que veas tu progreso.</div><div class="g2"><button data-a="rotationNotNow">Ahora no</button><button class="pr" data-a="rotationShow">Ver cambios</button></div></div>` : '';
+export const rotationCard = () => rotationDue() ? html`<div class="cd rtc"><b>Toca rotar los ejercicios</b><div class="mu">Llevas ${raw(S.week - (S.rotationWeek > 0 && S.rotationWeek <= S.week ? S.rotationWeek : 1))} semanas con los mismos accesorios. Cambiarlos por otra variante del mismo movimiento sigue estimulando el músculo; los básicos se quedan para que veas tu progreso.</div><div class="g2"><button data-a="rotationNotNow">Ahora no</button><button class="pr" data-a="rotationShow">Ver cambios</button></div></div>` : '';
 /** Hoja con lo que cambia al rotar y el botón para hacerlo. */
 const rotationSheet = () => {
   const ch = rotationChanges();
@@ -74,7 +74,7 @@ const rotationSheet = () => {
 /* — manejadores de esta función (registros A / C / U) — */
 A.rotationShow = () => sheet(rotationSheet());
 A.rotationNotNow = () => {
-  S.rq = S.wk;
+  S.rotationPostponed = S.week;
   saveState();
   sheet();
   R();
@@ -91,8 +91,8 @@ A.rotationApply = () => {
     delete e.o;
     delete e.ou;
   });
-  S.rw = S.wk;
-  delete S.rq;
+  S.rotationWeek = S.week;
+  delete S.rotationPostponed;
   syncCustomProgram();
   saveState();
   sheet();

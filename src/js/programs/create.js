@@ -28,8 +28,8 @@ export let progDraft = { m: '', name: '', sel: [], plan: null, o: { lug: 'gym', 
 export const clone = x => JSON.parse(JSON.stringify(x));
 export const restDay = () => ({ n: 'Descanso', ex: [] });
 export const syncCustomProgram = () => {
-  if (S.cpi >= 0 && S.cp[S.cpi])
-    S.cp[S.cpi].plan = clone(S.plan);
+  if (S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex])
+    S.ownPrograms[S.ownProgramIndex].plan = clone(S.plan);
 };
 const WEEK_LAYOUTS = { 1: [0], 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 5: [0, 1, 2, 4, 5], 6: [0, 1, 2, 3, 4, 5] };
 const layoutWeek = (l, n) => {
@@ -45,7 +45,7 @@ const layoutWeek = (l, n) => {
 const MOVE_GROUP = { Pecho: 'Empuje', Hombros: 'Empuje', 'Tríceps': 'Empuje', Espalda: 'Tirón', 'Bíceps': 'Tirón', Antebrazos: 'Tirón', 'Cuádriceps': 'Piernas', 'Isquios y glúteos': 'Piernas', Gemelos: 'Piernas' };
 const routineMoveGroups = i => {
   const s = new Set();
-  S.cr[i].bl.forEach(b => b.ex.forEach(n => {
+  S.routines[i].bl.forEach(b => b.ex.forEach(n => {
     const g = groupOfName(n);
     if (g != 'Abdomen')
       s.add(MOVE_GROUP[g] || g);
@@ -102,14 +102,14 @@ const programRowsHtml = pl => pl.map((d, j) => {
   const r = !d.ex.length;
   return html`<div class="cd cpr${r ? ' rs' : ''}"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b><span class="cpm"><button data-a="createDayUp" data-i="${j}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button><button data-a="createDayDown" data-i="${j}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>${icon('chev', 18)}</button></span></div>${raw(r ? '<div class="mu" style="font-size:13px">Descanso</div>' : html`<div class="mu" style="font-size:12px;margin-top:2px">${d.ex.length}${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayMinutes(d)} min</div><div class="mu cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}</div>`;
 }).join('');
-const createHome = () => html`${pgHead('Crear programa', 'openPrograms')}<p class="mu" style="margin:-6px 0 14px">Elige cómo quieres montarlo.</p><button class="cpo" data-a="createFromRoutines"><span class="cpi">${icon('log', 26)}</span><span><b>Con mis workouts</b><small>${raw(S.cr.length ? S.cr.length + (S.cr.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}</small></span>›</button><button class="cpo" data-a="createGuided"><span class="cpi">${icon('prog', 26)}</span><span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›</button>`;
+const createHome = () => html`${pgHead('Crear programa', 'openPrograms')}<p class="mu" style="margin:-6px 0 14px">Elige cómo quieres montarlo.</p><button class="cpo" data-a="createFromRoutines"><span class="cpi">${icon('log', 26)}</span><span><b>Con mis workouts</b><small>${raw(S.routines.length ? S.routines.length + (S.routines.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}</small></span>›</button><button class="cpo" data-a="createGuided"><span class="cpi">${icon('prog', 26)}</span><span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›</button>`;
 const programNameBox = () => html`<div class="ph">Nombre del programa</div><input data-u="programName" value="${progDraft.name}" aria-label="Nombre del programa" placeholder="Mi programa" maxlength="60">`;
 const createFromMine = () => {
-  const n = S.cr.length;
+  const n = S.routines.length;
   let h = pgHead('Con mis workouts', 'createProgram');
   if (!n)
     return html`${raw(h)}<p class="mu">Aún no tienes workouts personalizados. Crea alguno y vuelve aquí para montar tu semana.</p><button class="pr" data-a="routineEditorBack" style="width:100%;margin-top:10px;padding:15px;border-radius:16px">Ir a Workouts personalizados</button>`;
-  h += html`<p class="mu" style="margin:-6px 0 12px">Marca los que quieras (hasta 6). Te propongo el orden y dónde poner los días de descanso.</p><div class="ph">Tus workouts</div>${S.cr.map((r, i) => {
+  h += html`<p class="mu" style="margin:-6px 0 12px">Marca los que quieras (hasta 6). Te propongo el orden y dónde poner los días de descanso.</p><div class="ph">Tus workouts</div>${S.routines.map((r, i) => {
     const on = progDraft.sel.includes(i);
     const ex = [].concat(...r.bl.map(b => b.ex));
     const gs = [...new Set(ex.map(x => groupLabel(groupOfName(x))))];
@@ -287,7 +287,7 @@ A.createFromRoutines = () => {
 };
 A.createToggleRoutine = (i, b) => {
   const k = +b.dataset.i;
-  const r = S.cr[k];
+  const r = S.routines[k];
   if (!r)
     return;
   if (progDraft.sel.includes(k))
@@ -304,7 +304,7 @@ A.createToggleRoutine = (i, b) => {
     progDraft.sel.push(k);
   }
   if (!progDraft.name || /^Mi programa( \d+)?$/.test(progDraft.name))
-    progDraft.name = 'Mi programa ' + (S.cp.length + 1);
+    progDraft.name = 'Mi programa ' + (S.ownPrograms.length + 1);
   buildFromMine();
   fullPage(createFromMine());
 };
@@ -356,12 +356,12 @@ U.programName = v => {
 A.createSave = () => {
   if (!progDraft.plan || !progDraft.plan.some(d => d.ex.length))
     return;
-  const nme = (progDraft.name || '').trim() || 'Mi programa ' + (S.cp.length + 1);
-  S.cp.push({ n: nme, plan: clone(progDraft.plan), t: Date.now(), src: progDraft.m, o: progDraft.m == 'guide' ? { ...progDraft.o, vr: progDraft.vr || 0 } : undefined, d: progDraft.m == 'guide' ? 'Programa guiado' : 'Hecho con tus workouts', dl: progDraft.dl != null ? progDraft.dl : undefined });
-  progDraft.k = S.cp.length - 1;
+  const nme = (progDraft.name || '').trim() || 'Mi programa ' + (S.ownPrograms.length + 1);
+  S.ownPrograms.push({ n: nme, plan: clone(progDraft.plan), t: Date.now(), src: progDraft.m, o: progDraft.m == 'guide' ? { ...progDraft.o, vr: progDraft.vr || 0 } : undefined, d: progDraft.m == 'guide' ? 'Programa guiado' : 'Hecho con tus workouts', dl: progDraft.dl != null ? progDraft.dl : undefined });
+  progDraft.k = S.ownPrograms.length - 1;
   saveState();
   A.openPrograms();
-  dialog('Programa creado', '«' + X(nme) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.np ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
+  dialog('Programa creado', '«' + X(nme) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
 };
 A.openOwnProgram = (i, b) => {
   const k = b && b.dataset ? +b.dataset.i : +i;
@@ -370,25 +370,25 @@ A.openOwnProgram = (i, b) => {
 };
 A.ownProgramShow = () => {
   const k = progDraft.k;
-  const p = S.cp[k];
+  const p = S.ownPrograms[k];
   if (!p)
     return A.openPrograms();
-  const act = S.cpi == k;
+  const act = S.ownProgramIndex == k;
   const pl = act ? S.plan : p.plan;
   sheet(html`${pgHead(X(p.n), 'openPrograms')}<p class="mu" style="margin:-6px 0 10px">${p.d || ''}${raw(act ? ' · <b style="color:var(--at)">Plan actual</b>' : '')}</p>${raw(programDaysHtml(pl))}${raw(deloadChips(p.dl, 'p'))}<div class="g2" style="margin-top:12px"><button data-a="ownProgramEdit">Ordenar días</button><button data-a="ownProgramDeleteAsk" style="color:var(--ctx)">Borrar</button></div><button data-a="ownProgramShare" style="width:100%;margin-top:8px">Compartir programa</button><div style="height:84px"></div>${raw(act ? '' : '<button class="sb pr" data-a="ownProgramApplyAsk" style="padding:16px;font-size:16px;border-radius:16px">Usar este programa</button>')}`);
   sheetToTop();
 };
 A.ownProgramApplyAsk = () => {
-  const p = S.cp[progDraft.k];
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
-  if (S.np)
+  if (S.noProgram)
     confirmDialog('¿Empezar con este programa?', 'Empezarás con «' + X(p.n) + '». Puedes cambiarlo cuando quieras.', 'ownProgramApply', 'Empezar');
   else
     confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(p.n) + '» y se reiniciará el progreso de la semana.', 'ownProgramApply', 'Cambiar');
 };
 A.ownProgramApply = () => {
-  const p = S.cp[progDraft.k];
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
   if (W) {
@@ -396,44 +396,44 @@ A.ownProgramApply = () => {
     return;
   }
   syncCustomProgram();
-  S.cpi = progDraft.k;
+  S.ownProgramIndex = progDraft.k;
   S.plan = clone(p.plan);
-  delete S.np;
+  delete S.noProgram;
   if (p.o && isLevel(p.o.niv))
-    S.lv = p.o.niv;
+    S.level = p.o.niv;
   dropResume();
-  S.wk = 1;
-  S.sl = 0;
-  S.sel = 0;
-  S.done = {};
+  S.week = 1;
+  S.selectedWeekday = 0;
+  S.selectedDay = 0;
+  S.doneDays = {};
   saveState();
   sheet();
   R();
 };
 A.ownProgramEdit = () => {
-  const p = S.cp[progDraft.k];
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
   progDraft.m = 'edit';
-  progDraft.plan = clone(S.cpi == progDraft.k ? S.plan : p.plan);
+  progDraft.plan = clone(S.ownProgramIndex == progDraft.k ? S.plan : p.plan);
   fullPage(orderWeekPage());
 };
 A.ownProgramEditSave = () => {
-  const p = S.cp[progDraft.k];
+  const p = S.ownPrograms[progDraft.k];
   if (!p || !progDraft.plan)
     return;
   p.plan = clone(progDraft.plan);
-  if (S.cpi == progDraft.k)
+  if (S.ownProgramIndex == progDraft.k)
     S.plan = clone(progDraft.plan);
   saveState();
   R();
   A.ownProgramShow();
 };
 A.ownProgramDeleteAsk = () => {
-  const p = S.cp[progDraft.k];
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
-  if (S.cpi == progDraft.k) {
+  if (S.ownProgramIndex == progDraft.k) {
     toast('Es tu plan actual y no se puede borrar');
     return;
   }
@@ -441,13 +441,13 @@ A.ownProgramDeleteAsk = () => {
 };
 A.ownProgramDelete = () => {
   const k = progDraft.k;
-  if (!S.cp[k])
+  if (!S.ownPrograms[k])
     return;
-  S.cp.splice(k, 1);
-  if (S.cpi == k)
-    S.cpi = -1;
-  else if (S.cpi > k)
-    S.cpi--;
+  S.ownPrograms.splice(k, 1);
+  if (S.ownProgramIndex == k)
+    S.ownProgramIndex = -1;
+  else if (S.ownProgramIndex > k)
+    S.ownProgramIndex--;
   progDraft.k = -1;
   saveState();
   A.openPrograms();
@@ -456,11 +456,11 @@ A.ownProgramDelete = () => {
 const setProgramDeload = (k, v) => {
   if (k == 'd')
     progDraft.dl = v;
-  else if (S.cp[progDraft.k]) {
+  else if (S.ownPrograms[progDraft.k]) {
     if (v == null)
-      delete S.cp[progDraft.k].dl;
+      delete S.ownPrograms[progDraft.k].dl;
     else
-      S.cp[progDraft.k].dl = v;
+      S.ownPrograms[progDraft.k].dl = v;
     saveState();
     R();
   }
@@ -468,7 +468,7 @@ const setProgramDeload = (k, v) => {
 const refreshDeload = k => k == 'p' ? A.ownProgramShow() : fullPage(progDraft.m == 'guide' ? guidedForm() : createFromMine());
 A.deloadEveryChoose = (i, b) => {
   const k = b.dataset.k;
-  const cur = k == 'd' ? progDraft.dl : (S.cp[progDraft.k] || {}).dl;
+  const cur = k == 'd' ? progDraft.dl : (S.ownPrograms[progDraft.k] || {}).dl;
   const ot = cur > 0 && ![4, 5, 6].includes(+cur);
   const v = b.dataset.v;
   /* tocar la opción elegida la quita (vuelve a la del nivel); «Otra» propone cada 8 semanas */

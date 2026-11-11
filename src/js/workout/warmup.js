@@ -14,10 +14,10 @@ const isWarmupLift = e => {
   return x && ['Barra', 'Smith'].includes(x.q) && COMPOUND_RE.test(e.n) && !/Hip thrust/i.test(e.n);
 };
 export const warmupHtml = (e, i) => {
-  const d = S.plan[S.sel];
-  if (!W || !isWarmupLift(e) || d.ex.findIndex(isWarmupLift) != i || W.x[i].some(s => s.ok))
+  const d = S.plan[S.selectedDay];
+  if (!W || !isWarmupLift(e) || d.ex.findIndex(isWarmupLift) != i || W.sets[i].some(s => s.ok))
     return '';
-  const w = +W.x[i][0].w || 0;
+  const w = +W.sets[i][0].w || 0;
   if (!w)
     return '<div class="mu" style="font-size:12px">Calentamiento: 2-3 series de aproximación al 50 %, 70 % y 85 % de tu peso de trabajo</div>';
   const lb = usesLb();
@@ -29,15 +29,15 @@ export const warmupHtml = (e, i) => {
     st.push([bar, 10]);
   st.push([rd(wl * .5), 8], [rd(wl * .7), 5], [rd(wl * .85), 2]);
   st = st.filter((x, k) => !k || x[0] != st[k - 1][0]);
-  W.wu = W.wu || {};
-  return html`<div class="wup"><span>Calentamiento</span>${st.map((x, k) => html`<button class="chip${W.wu[i + '_' + k] ? ' on' : ''}" data-a="toggleWarmupSet" data-i="${i}" data-k="${k}">${x[1]} × ${x[0]} ${weightUnit()}</button>`)}</div>`;
+  W.warmupsDone = W.warmupsDone || {};
+  return html`<div class="wup"><span>Calentamiento</span>${st.map((x, k) => html`<button class="chip${W.warmupsDone[i + '_' + k] ? ' on' : ''}" data-a="toggleWarmupSet" data-i="${i}" data-k="${k}">${x[1]} × ${x[0]} ${weightUnit()}</button>`)}</div>`;
 };
 A.toggleWarmupSet = (i, b) => {
-  W.wu = W.wu || {};
+  W.warmupsDone = W.warmupsDone || {};
   const k = i + '_' + b.dataset.k;
-  if (W.wu[k])
-    delete W.wu[k];
+  if (W.warmupsDone[k])
+    delete W.warmupsDone[k];
   else
-    W.wu[k] = 1;
+    W.warmupsDone[k] = 1;
   R();
 };

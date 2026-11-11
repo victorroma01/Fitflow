@@ -61,11 +61,11 @@ const parseImport = t => {
   return o;
 };
 const ensureExercises = pl => {
-  const have = new Set(EXERCISES.concat(S.cx).map(x => x.n));
+  const have = new Set(EXERCISES.concat(S.customExercises).map(x => x.n));
   pl.forEach(d => d.ex.forEach(e => {
     if (!have.has(e.n)) {
       have.add(e.n);
-      S.cx.push({ n: e.n, c: 'Culturismo', g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
+      S.customExercises.push({ n: e.n, c: 'Culturismo', g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
     }
   }));
 };
@@ -75,11 +75,11 @@ const sharePage = () => {
   return html`${pgHead('Compartir programa', shareState.back || 'openPrograms')}<p class="mu" style="margin:-6px 0 10px">«${shareState.n}». Envía este código por mensaje o correo; quien lo reciba lo pega en Programas, Importar.</p><textarea id="shc" aria-label="Código del programa" rows="6" readonly>${code}</textarea><div class="g2" style="margin-top:10px"><button class="pr" data-a="shareCopyCode">${navigator.share ? 'Compartir' : 'Copiar código'}</button><button data-a="shareDownload">Guardar archivo</button></div>`;
 };
 A.ownProgramShare = () => {
-  const p = S.cp[progDraft.k];
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
   try {
-    shareState = { n: p.n, plan: S.cpi == progDraft.k ? S.plan : p.plan, back: 'ownProgramShow' };
+    shareState = { n: p.n, plan: S.ownProgramIndex == progDraft.k ? S.plan : p.plan, back: 'ownProgramShow' };
     sheet(sharePage());
     sheetToTop();
   }
@@ -88,12 +88,12 @@ A.ownProgramShare = () => {
   }
 };
 A.sharePlan = () => {
-  if (S.np) {
+  if (S.noProgram) {
     toast('Aún no tienes un programa que compartir');
     return;
   }
   try {
-    shareState = { n: S.cpi >= 0 && S.cp[S.cpi] ? S.cp[S.cpi].n : PROGRAM_NAMES[S.prog], plan: S.plan, back: 'openPrograms' };
+    shareState = { n: S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex] ? S.ownPrograms[S.ownProgramIndex].n : PROGRAM_NAMES[S.program], plan: S.plan, back: 'openPrograms' };
     sheet(sharePage());
     sheetToTop();
   }
@@ -134,11 +134,11 @@ const importProgram = t => {
     const plan = cleanPlan(o.plan);
     const nm = (typeof o.n == 'string' && cleanText(o.n, 60)) || 'Programa importado';
     ensureExercises(plan);
-    S.cp.push({ n: nm, plan, t: Date.now(), src: 'import', d: 'Programa importado' });
-    progDraft.k = S.cp.length - 1;
+    S.ownPrograms.push({ n: nm, plan, t: Date.now(), src: 'import', d: 'Programa importado' });
+    progDraft.k = S.ownPrograms.length - 1;
     saveState();
     A.openPrograms();
-    dialog('Programa importado', '«' + X(nm) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.np ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
+    dialog('Programa importado', '«' + X(nm) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
   }
   catch (x) {
     const e = $('#ipe');

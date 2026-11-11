@@ -7,7 +7,7 @@ paso a paso, el DOM, el estado guardado y los pitidos. Sirve para demostrar que 
   python3 tests/walk.py trace ARCHIVO.html SEMILLA PASOS salida.json ; python3 tests/walk.py cmp a.json b.json
 Requiere:  pip install playwright  &&  playwright install chromium
 """
-import os,sys,json,random,hashlib,datetime
+import os,sys,json,random,hashlib,datetime,re
 from playwright.sync_api import sync_playwright
 from browser import app_url, context_opts
 HERE=os.path.dirname(os.path.abspath(__file__))
@@ -44,13 +44,20 @@ SIG="""(ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,
  return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps}}"""
 WORDS=['a','Prueba','12','Pollo','Press','x y','0','99','Arroz','Mi plan']
 def load_map(path):
-    """{'A': {viejo: nuevo}, 'C': …, 'U': …} de un mapa «registro viejo nuevo»."""
-    m={'A':{},'C':{},'U':{}}
+    """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado)} de un mapa «registro viejo nuevo»."""
+    m={'A':{},'C':{},'U':{},'S':{},'W':{}}
     for l in open(path,encoding='utf-8'):
         l=l.strip()
         if l and not l.startswith('#'):
             r,o,n=l.split();m[r][o]=n
     return m
+def old_js(js,ren):
+    """Un script de prueba con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo."""
+    if not ren:
+        return js
+    back={r:{n:o for o,n in d.items()} for r,d in ren.items()}
+    js=re.sub(r'(?<![\w.$])([ACUSW])\.(\w+)',lambda m:m.group(1)+'.'+back[m.group(1)].get(m.group(2),m.group(2)),js)
+    return re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
 def trace(file,seed,steps,ren=None):
     reg={'a':'A','c':'C','u':'U'}
     fwd=lambda k,v:ren[reg[k]].get(v,v) if ren else v                           # nombre de esta compilación → nuevo
@@ -62,7 +69,7 @@ def trace(file,seed,steps,ren=None):
         # por HTTP, como el resto de pruebas (tests/browser.py): con file://, Chromium a veces recarga con el almacenamiento vacío
         url=app_url(file);base=url.rsplit('/',1)[0]+'/'
         c=b.new_context(viewport={'width':390,'height':844},device_scale_factor=1,has_touch=True,is_mobile=True,color_scheme='dark' if seed%2==0 else 'light',**context_opts(file))
-        c.add_init_script(INIT)
+        c.add_init_script(old_js(INIT,ren))
         pg=c.new_page()
         pg.on('pageerror',lambda e:res['errs'].append('PAGEERR '+str(e)[:200]))
         pg.on('dialog',lambda d:d.accept())
@@ -72,8 +79,8 @@ def trace(file,seed,steps,ren=None):
         pg.goto(url);pg.wait_for_timeout(200)
         scen=seed%4
         if scen!=2:
-            pg.evaluate(SEED.replace("S.gm=3;S.gl=1;S.theme='dark';","S.gm=%d;S.gl=1;S.theme='%s';"%(3 if scen in(0,1) else 0,'dark' if seed%2==0 else 'light')))
-            pg.evaluate(EXTRA)
+            pg.evaluate(old_js(SEED.replace("S.glassLevel=3;S.glassOn=1;S.theme='dark';","S.glassLevel=%d;S.glassOn=1;S.theme='%s';"%(3 if scen in(0,1) else 0,'dark' if seed%2==0 else 'light')),ren))
+            pg.evaluate(old_js(EXTRA,ren))
             pg.evaluate("location.reload()");pg.wait_for_timeout(200)
         pg.clock.run_for(500)
         if scen==1:

@@ -25,7 +25,7 @@ function dashboardBase() {
   return html`<div class="hd"><h1>Dashboard</h1><button data-a="openWeight" aria-label="Evolución del peso" style="padding:8px 12px">${icon('dash', 24)}</button></div>${raw(weighBanner())}<div class="g2" style="margin-top:12px"><div class="cd"><b style="font-size:26px">${lg.length}</b><br><small>Entrenos totales</small></div><div class="cd"><b style="font-size:26px">${raw(wkc)}</b><br><small>Últimos 7 días</small></div><div class="cd"><b style="font-size:26px">${raw(volumeText(vol))}</b><br><small>Volumen total</small></div><div class="cd"><b style="font-size:26px">${roundInt(sumMacros((S.meals[dayKey(now)] && Object.values(S.meals[dayKey(now)]).flat() || []).map(itemMacros))[0])}</b><br><small>kcal hoy</small></div></div><div class="cd"><b>Volumen por sesión</b><div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:8px">${raw(last.length ? last.map(l => html`<div style="flex:1;background:var(--ac);border-radius:4px;height:${Math.max(6, l.v / mx * 100)}%"></div>`).join('') : '<small>Completa un entreno para ver tu progreso.</small>')}</div></div><div class="cd">${calendarPage()}</div>`;
 }
 const recordsCard = () => {
-  const ks = new Set(Object.keys(S.pr || {}).concat(Object.keys(S.hist || {})));
+  const ks = new Set(Object.keys(S.records || {}).concat(Object.keys(S.exerciseHistory || {})));
   const l = [...ks].map(n => [n, bestOf(n)]).filter(x => x[1]).sort((a, b) => b[1].e - a[1].e).slice(0, 6);
   return html`<div class="cd"><b>Récords personales</b>${raw(l.length ? l.map(x => html`<div class="it" style="grid-template-columns:1fr auto"><span>${x[0]}<br><small>${raw(x[1].d)}</small></span><span style="text-align:right"><b>${toDisplayWeight(x[1].w)} ${weightUnit()} × ${raw(x[1].r)}</b><br><small>1RM est. ${roundInt(toDisplayWeight(x[1].e))} ${weightUnit()}</small></span></div>`).join('') : '<p class="mu" style="margin:8px 0 0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>')}</div>`;
 };
@@ -50,7 +50,7 @@ export const weekStats = () => {
     day[l.d] = 1;
   });
   /* meta de esta semana: sus entrenos del plan; para la racha, los de la semana con menos (en un ciclo cambian: workout/week) */
-  const g = Math.max(1, trainingDays(S.wk, S.plan || []).length);
+  const g = Math.max(1, trainingDays(S.week, S.plan || []).length);
   const lo = Math.max(1, sessionsPerWeek(S.plan || [])[0]);
   const t = lo >= 4 ? lo - 1 : lo;
   const at = k => new Date(m0.getFullYear(), m0.getMonth(), m0.getDate() - 7 * k);

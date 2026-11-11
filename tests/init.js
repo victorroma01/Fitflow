@@ -9,7 +9,7 @@ document.addEventListener('securitypolicyviolation',function(e){(window.__csp=wi
 // verdad y la quita antes con window.__sfNoSession.
 if(!window.__sfNoSession)try{if(!localStorage.getItem('ffacct')){localStorage.setItem('ffacct',JSON.stringify({uid:'prueba',u:'Prueba',it:'x.e30.x',rt:'x',exp:4102444800000}));localStorage.setItem('ffown','prueba')}}catch(e){}
 // con el recorrido de la primera vez (system/tour) ya visto, para que no tape las pantallas de las pruebas: tests/experience.py
-// lo prueba quitándolo (delete S.tour) y tests/cloud.py, con cuentas nuevas de verdad
+// lo prueba quitándolo (delete S.tourSeen) y tests/cloud.py, con cuentas nuevas de verdad
 if(!window.__sfNoSession)try{if(!localStorage.getItem('ff'))localStorage.setItem('ff',JSON.stringify({_parts:1,tour:1}))}catch(e){}
 // y sin red hacia Firebase: la sincronización ve «sin conexión», sin errores en la consola (tests/cloud.py pone su servidor
 // de prueba con window.__sfNet)

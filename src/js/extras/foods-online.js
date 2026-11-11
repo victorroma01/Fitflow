@@ -559,7 +559,7 @@ async function lookupBarcode(code) {
   const current = () => mine === scanTry && !!document.getElementById('f2sm');
   scanMsg('Buscando ' + code + '…');
   try {
-    const c = S.bc && S.bc[code];
+    const c = S.barcodeCache && S.barcodeCache[code];
     let it = c && Array.isArray(c.b) && c.b.length == 6 ? { n: String(c.n || '').slice(0, 80), b: c.b.map(Number), ns: nutriScore(c.ns) } : null;
     if (!it) {
       const p = await offBarcode(code);
@@ -570,13 +570,13 @@ async function lookupBarcode(code) {
         scanMsg(p ? 'Este producto no tiene información nutricional completa. Créalo a mano con «+», en «Nuevo».' : 'Ese código no está en Open Food Facts. Créalo a mano con «+», en «Nuevo».');
         return;
       }
-      S.bc = S.bc && typeof S.bc == 'object' ? S.bc : {};
-      S.bc[code] = { n: it.n, b: it.b, t: Date.now() };
+      S.barcodeCache = S.barcodeCache && typeof S.barcodeCache == 'object' ? S.barcodeCache : {};
+      S.barcodeCache[code] = { n: it.n, b: it.b, t: Date.now() };
       if (it.ns)
-        S.bc[code].ns = it.ns;
-      const ks = Object.keys(S.bc);
+        S.barcodeCache[code].ns = it.ns;
+      const ks = Object.keys(S.barcodeCache);
       if (ks.length > 200) {
-        ks.sort((a, b) => (S.bc[a].t || 0) - (S.bc[b].t || 0)).slice(0, ks.length - 200).forEach(k => delete S.bc[k]);
+        ks.sort((a, b) => (S.barcodeCache[a].t || 0) - (S.barcodeCache[b].t || 0)).slice(0, ks.length - 200).forEach(k => delete S.barcodeCache[k]);
       }
       saveState();
     }

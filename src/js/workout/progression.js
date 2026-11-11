@@ -30,7 +30,7 @@ export function prefillSets(e, a) {
   const U = unitOf(e);
   const [lo, hi] = targetRange(e);
   const P = progressionOf(e);
-  const dl = !!(W && W.dl);
+  const dl = !!(W && W.deload);
   const main = a.filter(q => !q.t);
   const t = dl ? '' : (e.tk || '').split('+')[0];
   const pyr = t == 'PIR' && !U ? pyramidReps([lo, hi], main.length) : null;
@@ -95,7 +95,7 @@ export const suggestAfter = (e, a, j) => {
   let m = +a[j].w || 0;
   if (!(m > 0) || a[j].t)
     return;
-  const pyr = /^PIR/.test(e.tk || '') && !(W && W.dl);
+  const pyr = /^PIR/.test(e.tk || '') && !(W && W.deload);
   for (let k = j + 1; k < a.length; k++) {
     const q = a[k];
     const own = q.ok || (+q.w > 0 && !q.ws);
@@ -124,7 +124,7 @@ function progressionOf(e) {
   const ra = rp.length ? rp.reduce((a, b) => a + b, 0) / rp.length : 0;
   const full = w > 0 && ss.every(x => x[0] >= hi && x[1] > 0);
   const low = !full && w > 0 && ss.every(x => x[0] < lo && x[1] > 0);
-  const dl = W ? !!W.dl : isDeloadWeek(S.wk);
+  const dl = W ? !!W.deload : isDeloadWeek(S.week);
   let up = full;
   let dn = low;
   let why = '';
@@ -141,13 +141,13 @@ function progressionOf(e) {
   return { lo, hi, w, up, dn, nw, ra, why, r: +ss[0][0] || 0 };
 }
 const suggestionBox = (e, i, P) => {
-  if (!W || !W.x[i])
+  if (!W || !W.sets[i])
     return '';
   const u = weightUnit();
-  const dif = W.x[i].some(s => !s.ok && !s.t) && P && W.x[i].some(s => !s.ok && !s.t && Math.abs((+s.w || 0) - (W.dl ? deloadWeight(P.nw) : P.nw)) > 1e-6);
+  const dif = W.sets[i].some(s => !s.ok && !s.t) && P && W.sets[i].some(s => !s.ok && !s.t && Math.abs((+s.w || 0) - (W.deload ? deloadWeight(P.nw) : P.nw)) > 1e-6);
   const ap = dif ? html`<button class="chip" data-a="applySuggestion" data-i="${i}">Aplicar</button>` : '';
   /* semana de descarga: lo de esta semana y, entre paréntesis, lo normal */
-  if (W.dl) {
+  if (W.deload) {
     if (!P || unitOf(e))
       return html`<div class="sgb dlsg"><span><b>Descarga</b> · peso al 65 % y 2 repeticiones menos en cada serie</span></div>`;
     const r = P.up || P.dn ? P.lo : Math.min(P.hi, (P.r || P.lo - 1) + 1);
@@ -168,14 +168,14 @@ const suggestionBox = (e, i, P) => {
     t = 'mantén ' + wv + ' ' + u + ' y busca 1 rep más hasta ' + P.hi;
   /* pirámide: cada serie lleva su peso (sube en cada una) */
   if (/^PIR/.test(e.tk || ''))
-    t = 'pirámide: sube el peso en cada serie' + (W.x[i].some(s => !s.t && +s.w > 0) ? '' : ' (empieza con uno que te permita 12 repeticiones)');
+    t = 'pirámide: sube el peso en cada serie' + (W.sets[i].some(s => !s.t && +s.w > 0) ? '' : ' (empieza con uno que te permita 12 repeticiones)');
   return html`<div class="sgb"><span><b>Sugerido</b> · ${raw(t)}</span>${/^PIR/.test(e.tk || '') ? '' : ap}</div>`;
 };
 A.applySuggestion = i => {
-  const e = S.plan[S.sel].ex[i];
-  if (!e || !W.x[i])
+  const e = S.plan[S.selectedDay].ex[i];
+  if (!e || !W.sets[i])
     return;
-  prefillSets(e, W.x[i]);
+  prefillSets(e, W.sets[i]);
   R();
 };
 export const lastTimeLine = (e, i) => {

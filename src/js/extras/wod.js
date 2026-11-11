@@ -20,7 +20,7 @@ const WOD_MODES = [['amrap', 'AMRAP'], ['emom', 'EMOM'], ['tabata', 'Tabata'], [
 const WOD_DEFAULTS = { m: 'amrap', a: 12, en: 10, ei: 60, tw: 20, tr: 10, tn: 8, ct: 0, pre: 10 };
 const WOD_INFO = { amrap: 'Tantas rondas como puedas en el tiempo marcado. Cuenta cada ronda con un toque.', emom: 'Cada intervalo empieza un trabajo nuevo. Lo que te sobra del intervalo es descanso.', tabata: 'Trabajo y descanso en intervalos cortos. El clásico: 20 s de trabajo, 10 s de descanso, 8 rondas.', ft: 'Cronómetro hacia arriba. Completa el trabajo lo antes posible; opcionalmente con tiempo límite.' };
 const wodConfig = () => {
-  const c = Object.assign({}, WOD_DEFAULTS, S.wdc && typeof S.wdc == 'object' ? S.wdc : {});
+  const c = Object.assign({}, WOD_DEFAULTS, S.wodConfig && typeof S.wodConfig == 'object' ? S.wodConfig : {});
   return { m: WOD_MODES.some(x => x[0] == c.m) ? c.m : 'amrap', a: clampInt(c.a, 1, 180, 12), en: clampInt(c.en, 1, 120, 10), ei: clampInt(c.ei, 10, 600, 60), tw: clampInt(c.tw, 5, 600, 20), tr: clampInt(c.tr, 0, 600, 10), tn: clampInt(c.tn, 1, 99, 8), ct: clampInt(c.ct, 0, 180, 0), pre: clampInt(c.pre, 0, 30, 10) };
 };
 const wodTotal = c => c.m == 'amrap' ? c.a * 60 : c.m == 'emom' ? c.en * c.ei : c.m == 'tabata' ? (c.tw + c.tr) * c.tn - c.tr : c.ct * 60;
@@ -43,7 +43,7 @@ const wodSetup = () => {
 };
 A.openWod = () => fullPage(wodSetup());
 A.wodMode = (i, b) => {
-  S.wdc = Object.assign(wodConfig(), { m: b.dataset.v });
+  S.wodConfig = Object.assign(wodConfig(), { m: b.dataset.v });
   saveState();
   sheet(wodSetup());
 };
@@ -53,7 +53,7 @@ C.wodValue = e => {
     return;
   const c = wodConfig();
   c[k] = +e.value;
-  S.wdc = c;
+  S.wodConfig = c;
   saveState();
   e.value = wodConfig()[k];
   const t = document.getElementById('f2tt');
@@ -217,7 +217,7 @@ function wodTick() {
 }
 function wodStart() {
   const c = wodConfig();
-  S.wdc = c;
+  S.wodConfig = c;
   saveState();
   setWodRun({ c, t0: Date.now(), pt: 0, pa: 0, r: 0, laps: [], sg: '', bk: '', done: 0, ph: 'pre', fin: null });
   sheet();

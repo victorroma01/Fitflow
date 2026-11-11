@@ -23,12 +23,12 @@ function achStats() {
   catch (e) {
     logError('logros: racha semanal', e);
   }
-  return { n: L.length, vol: L.reduce((s, l) => s + (+l.v || 0), 0), st: best, pr: +S.pc || 0, km: cd.reduce((s, l) => s + (+l.c.km || 0), 0), cs: cd.length, wod: L.filter(l => l.k == 'w').length,
+  return { n: L.length, vol: L.reduce((s, l) => s + (+l.v || 0), 0), st: best, pr: +S.recordCount || 0, km: cd.reduce((s, l) => s + (+l.c.km || 0), 0), cs: cd.length, wod: L.filter(l => l.k == 'w').length,
     nd: Object.keys(S.meals || {}).filter(k => {
       const m = S.meals[k];
       return m && typeof m == 'object' && Object.values(m).some(a => Array.isArray(a) && a.length);
     }).length,
-    ms: measureList().length, wl: Array.isArray(S.wl) ? S.wl.length : 0, bk: S.bkd || S.cb ? 1 : 0 };
+    ms: measureList().length, wl: Array.isArray(S.weightLog) ? S.weightLog.length : 0, bk: S.lastBackupDate || S.cloudBackup ? 1 : 0 };
 }
 export const ACHIEVEMENTS = [
   ['e1', 'Primer paso', 'Registra tu primer entreno', 'n', 1], ['e2', 'Constancia', '10 entrenos registrados', 'n', 10], ['e3', 'En forma', '50 entrenos registrados', 'n', 50], ['e4', 'Centenario', '100 entrenos registrados', 'n', 100], ['e5', 'Leyenda', '250 entrenos registrados', 'n', 250],
@@ -44,8 +44,8 @@ export const ACHIEVEMENTS = [
 export function checkAchievements() {
   try {
     const st = achStats();
-    const first = !S.ach || typeof S.ach != 'object' || Array.isArray(S.ach);
-    const a = first ? {} : S.ach;
+    const first = !S.achievements || typeof S.achievements != 'object' || Array.isArray(S.achievements);
+    const a = first ? {} : S.achievements;
     const nw = [];
     ACHIEVEMENTS.forEach(x => {
       if (a[x[0]])
@@ -57,7 +57,7 @@ export function checkAchievements() {
       }
     });
     if (first || nw.length) {
-      S.ach = a;
+      S.achievements = a;
       saveState();
     }
     if (nw.length)
@@ -74,7 +74,7 @@ function achProgress(x, st) {
 }
 function achievementsPage() {
   const st = achStats();
-  const a = S.ach || {};
+  const a = S.achievements || {};
   const dn = ACHIEVEMENTS.filter(x => a[x[0]]);
   const pd = ACHIEVEMENTS.filter(x => !a[x[0]]);
   const row = (x, on) => html`<div class="f2ac${on ? ' on' : ''}"><span class="f2ai">${medalSvg(x[0], 58, on)}</span><span style="min-width:0"><b>${raw(x[1])}</b><br><small>${raw(x[2])}</small>${on ? '' : html`<div class="bar"><i style="width:${Math.min(100, Math.round(st[x[3]] / x[4] * 100))}%;background:var(--a2)"></i></div>`}</span><small style="white-space:nowrap">${raw(on ? (a[x[0]] && a[x[0]] != '-' ? fmtDateShort(a[x[0]], { day: 'numeric', month: 'short', year: '2-digit' }) : 'Conseguido') : achProgress(x, st))}</small></div>`;
