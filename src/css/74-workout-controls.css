@@ -1,13 +1,46 @@
 /* ═══ css/74-workout-controls ═══ Entreno en curso: Tips y Discos con icono (F-08), desplegables cortos (F-09), peso sugerido (F-10), etiqueta de técnica que se toca (F-11) y barra inferior pegada al borde (F-15) */
+/* herramientas de cada ejercicio en dos filas: Tips, Notas, Tempo y Descanso; Historial, Swap y Discos (I-26). Todas iguales:
+   la misma altura, en línea, con el mismo fondo y la misma letra. Se ven de 40 px y responden en 44 (css/97-touch-targets) */
 .xtl {
   display:flex;
-  gap:6px;
+  gap:8px;
   align-items:center;
   margin:8px 0;
   flex-wrap:wrap;
 }
-.xtl .chip {
+.xtl+.xtl {
+  margin-top:0;
+}
+.xtl .chip,.xtl .psel {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  box-sizing:border-box;
+  height:40px;
+  min-height:0;
   margin:0;
+  padding:0 14px;
+  font-size:13.5px;
+  font-weight:600;
+  line-height:1;
+  vertical-align:middle;
+}
+.xtl .chip.ic {
+  min-width:40px;
+  padding:0 11px;
+}
+.xtl .psel {
+  background:var(--cd);
+}
+html.gl .xtl .psel {
+  background:color-mix(in srgb,var(--tx) 8%,transparent);
+}
+/* el desplegable transparente, 2 px más arriba y más abajo que lo que se ve: zona táctil de 44 px */
+.xtl .psel select {
+  top:-2px;
+  bottom:-2px;
+  height:auto;
 }
 /* botones con icono en lugar de texto (Tips, Discos) */
 .chip.ic {

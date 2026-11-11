@@ -94,7 +94,8 @@ Cómo añadir una función, las reglas de calidad y cómo se publica una versió
 
 © 2026 V. M. Rodriguez Mazuelas. Todos los derechos reservados.
 
-Uso personal y gratuito de la app tal como se ofrece en su dirección oficial; no se permite copiar, modificar, redistribuir ni explotar
-comercialmente el código, los textos, los diseños ni las imágenes sin autorización. Condiciones completas en [`LICENSE`](LICENSE).
+Uso personal y gratuito durante la fase de pruebas, tal como se ofrece en su dirección oficial. Durante la fase de pruebas existe
+el riesgo de pérdida total o parcial de datos. No se permite copiar, modificar, redistribuir ni explotar comercialmente el código,
+los textos, los diseños ni las imágenes sin autorización. Condiciones completas en [`LICENSE`](LICENSE).
 
 Los consejos de entrenamiento y nutrición son orientativos y no sustituyen el consejo de un profesional sanitario.

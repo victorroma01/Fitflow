@@ -1,10 +1,14 @@
 /* ═══ workout/technique ═══
    Técnicas de intensidad en el entreno (F-02; data/techniques): la técnica de cada serie, la fila extra del drop set o del
    rest-pause tras la última serie y el descanso que toca después de cada serie. En la semana de descarga no se aplican.
-   Las filas del entreno (W.x) llevan k (abreviatura de la técnica, si no es una serie normal) y t (1 drop set, 2 rest-pause).
-   Define: LAST_SET, setTech, techLabel, dropWeight, withTechnique, restAfterSet
+   Las filas del entreno (W.x) llevan k (código de la técnica, si no es una serie normal) y t (1 drop set, 2 rest-pause).
+   La etiqueta de cada fila (setLabel; I-25, I-27): WKT en las series de trabajo (normales, de pirámide y la principal de un
+   drop set o un rest-pause), DS o RP en la fila extra que va debajo y su abreviatura en el resto de técnicas (CL, MYO, PAR…).
+   Lo guardado no cambia: la serie principal de un drop set sigue llevando k = 'DS'.
+   Define: LAST_SET, setTech, techLabel, WORK_SET, setLabel, setTechnique, dropWeight, withTechnique, restAfterSet
 */
 import { S, W } from '../core/state.js';
+import { TECHNIQUES } from '../data/techniques.js';
 import { fromDisplayWeight, toDisplayWeight, usesLb } from '../profile/units.js';
 import { blockOf, roundOf, setOrder } from './order.js';
 import { restAt } from './rest.js';
@@ -22,6 +26,16 @@ const setTech = (e, j, n) => {
 };
 /** Etiqueta del ejercicio en la vista del programa: su técnica (PIR + DS…) o SS si va en superserie sin técnica. */
 export const techLabel = e => e.tk ? e.tk.replace('+', ' + ') : e.b != null ? 'SS' : '';
+/* las series que se ven como de trabajo (WKT): normales, de pirámide y la principal de un drop set o un rest-pause */
+const WORK_SET = new Set(['WRK', 'PIR', 'DS', 'RP']);
+/** Etiqueta de la fila s del entreno: 'WKT', 'DS' o 'RP' (filas extra) o la abreviatura de su técnica. */
+export const setLabel = s => s.t == 1 ? 'DS' : s.t == 2 ? 'RP' : !s.k || WORK_SET.has(s.k) || !TECHNIQUES[s.k] ? 'WKT' : s.k;
+/** La técnica que explica la ventana al tocar la etiqueta de la fila s: la pirámide en sus series, el drop set y el rest-pause
+    en sus filas extra, la de la etiqueta en las demás técnicas y, si no, la serie normal. */
+export const setTechnique = s => {
+  const l = setLabel(s);
+  return l != 'WKT' ? l : s.k == 'PIR' ? 'PIR' : 'WRK';
+};
 /** Peso del drop set: un 25 % menos (la técnica pide bajar un 20-30 %), redondeado a lo que se puede cargar. */
 export const dropWeight = w => usesLb() ? fromDisplayWeight(Math.max(5, Math.round(toDisplayWeight(w) * .75 / 5) * 5)) : Math.max(1, Math.round(w * .75 * 2) / 2);
 /** Pone a cada serie la técnica que le toca y, tras la última, la fila del drop set o del rest-pause. */

@@ -1,7 +1,8 @@
 /* ═══ data/techniques ═══
-   Las 10 técnicas de intensidad (F-02): abreviatura → [nombre, cómo se ejecuta (el texto de la tabla de requisitos), qué
-   hace la app con ella en el entreno]. La abreviatura es la etiqueta de la serie (WRK en las normales); al tocarla, una
-   ventana enseña los otros dos textos (F-11).
+   Las 10 técnicas de intensidad (F-02): código → [nombre, cómo se ejecuta (el texto de la tabla de requisitos), qué hace la
+   app con ella en el entreno]. WRK es la serie normal. Al tocar la etiqueta de una serie, una ventana enseña los dos textos
+   (F-11). La etiqueta que se ve la da workout/technique (setLabel): WKT en las series normales, de pirámide y en la principal
+   de un drop set o un rest-pause (I-25, I-27).
    En los programas, cada ejercicio puede llevar una técnica (campo tk; workout/technique dice a qué series afecta):
    DS, RP y PAR van en la última serie; CL, MYO y PIR, en todas; SS, PRE y POST, en los dos ejercicios del bloque.
    «PIR+DS» y «PIR+PAR» son una pirámide cuya última serie acaba en drop set o en parciales.
