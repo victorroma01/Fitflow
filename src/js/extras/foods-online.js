@@ -7,7 +7,7 @@ import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
 import { addState, S, saveState } from '../core/state.js';
 import { onSheetClose, sheet } from '../core/ui.js';
-import { addSheet } from '../nutrition/add.js';
+import { addSheet, nutriScore, nutriScoreBadge } from '../nutrition/add.js';
 import { html, raw } from '../core/html.js';
 var onlineFoods = [];
 /* el texto de la última búsqueda lanzada (solo se pinta su respuesta) y el de la que está en marcha ('' si no hay) */
@@ -88,7 +88,9 @@ function offProduct(p) {
     const brs = Array.isArray(p.brands) ? p.brands[0] : String(p.brands || '');
     const br = String(brs || '').split(',')[0].trim();
     const r1 = v => Math.round(v * 10) / 10;
-    return { n: nm.slice(0, 60) + (br ? ' (' + br.slice(0, 24) + ')' : ''), b: [Math.round(kc), r1(c), r1(pr), r1(f), r1(Math.max(0, fi)), Math.round(Math.max(0, sa) * 100) / 100], ean: String(p.code || p._id || '').replace(/\D/g, '').slice(0, 14) };
+    /* Nutri-Score (F-43): la letra, si Open Food Facts la tiene */
+    const ns = nutriScore(String(p.nutriscore_grade || '').toLowerCase());
+    return { n: nm.slice(0, 60) + (br ? ' (' + br.slice(0, 24) + ')' : ''), b: [Math.round(kc), r1(c), r1(pr), r1(f), r1(Math.max(0, fi)), Math.round(Math.max(0, sa) * 100) / 100], ean: String(p.code || p._id || '').replace(/\D/g, '').slice(0, 14), ns };
   }
   catch (e) {
     return null;
@@ -100,7 +102,7 @@ function offProduct(p) {
       Lucene, así que al texto del usuario se le quitan los signos que allí son órdenes (dos puntos, comillas, paréntesis…);
    2. el antiguo (cgi/search.pl), más lento y limitado a 10 búsquedas por minuto: solo si el nuevo falla o no trae nada.
    Si fallan los dos, se espera un momento y se prueba el nuevo otra vez. Lo ya buscado se recuerda un rato (SEARCH_KEEP_MS). */
-const OFF_FIELDS = 'code,product_name,product_name_es,brands,nutriments';
+const OFF_FIELDS = 'code,product_name,product_name_es,brands,nutriments,nutriscore_grade';
 const SEARCH_SIZE = 24;
 const SEARCH_KEEP_MS = 6e5;
 /* texto → { t: cuándo, r: resultado } */
@@ -182,7 +184,7 @@ A.f2os = async () => {
     const r = await searchOnline(q, () => show(searchNote('Open Food Facts tarda en responder. Probando otra vez…')));
     if (onlineQuery == q)
       onlineFoods = r.list;
-    show(r.list.length ? html`<small class="mu" style="display:block;margin:6px 2px">Valores por 100 g · datos de Open Food Facts (ODbL)</small>${r.list.map((f, i) => html`<div class="it" style="grid-template-columns:1fr auto" data-a="f2op" data-i="${i}" role="button" tabindex="0"><span>${f.n}</span><small>${raw(f.b[0])} kcal</small></div>`)}` : searchNote(r.dropped ? 'Hay ' + r.dropped + (r.dropped == 1 ? ' producto' : ' productos') + ' para «' + q + '», pero sin datos nutricionales. Prueba con otra palabra o crea el alimento en «Nuevo».' : 'No hay resultados para «' + q + '». Prueba con otra palabra o crea el alimento en «Nuevo».'));
+    show(r.list.length ? html`<small class="mu" style="display:block;margin:6px 2px">Valores por 100 g · datos de Open Food Facts (ODbL)</small>${r.list.map((f, i) => html`<div class="it" style="grid-template-columns:1fr auto" data-a="f2op" data-i="${i}" role="button" tabindex="0"><span>${f.n}${raw(nutriScoreBadge(f.ns))}</span><small>${raw(f.b[0])} kcal</small></div>`)}` : searchNote(r.dropped ? 'Hay ' + r.dropped + (r.dropped == 1 ? ' producto' : ' productos') + ' para «' + q + '», pero sin datos nutricionales. Prueba con otra palabra o crea el alimento en «Nuevo».' : 'No hay resultados para «' + q + '». Prueba con otra palabra o crea el alimento en «Nuevo».'));
   }
   catch (x) {
     show(html`${raw(searchNote(offErrorText(x)))}<button data-a="f2os" style="width:100%">Reintentar</button>`);
@@ -196,7 +198,8 @@ A.f2op = i => {
   const f = onlineFoods[i];
   if (!f)
     return;
-  addState.pick = { n: f.n, b: f.b.slice() };
+  /* off: viene de Open Food Facts; al añadirlo a una comida se guarda en «Mis alimentos» (nutrition/add, F-44) */
+  addState.pick = { n: f.n, b: f.b.slice(), ns: f.ns, ean: f.ean, off: 1 };
   sheet(addSheet());
   U.gr(100);
 };
@@ -540,7 +543,7 @@ async function lookupBarcode(code) {
   scanMsg('Buscando ' + code + '…');
   try {
     const c = S.bc && S.bc[code];
-    let it = c && Array.isArray(c.b) && c.b.length == 6 ? { n: String(c.n || '').slice(0, 80), b: c.b.map(Number) } : null;
+    let it = c && Array.isArray(c.b) && c.b.length == 6 ? { n: String(c.n || '').slice(0, 80), b: c.b.map(Number), ns: nutriScore(c.ns) } : null;
     if (!it) {
       const p = await offBarcode(code);
       it = p ? offProduct(p) : null;
@@ -550,13 +553,15 @@ async function lookupBarcode(code) {
       }
       S.bc = S.bc && typeof S.bc == 'object' ? S.bc : {};
       S.bc[code] = { n: it.n, b: it.b, t: Date.now() };
+      if (it.ns)
+        S.bc[code].ns = it.ns;
       const ks = Object.keys(S.bc);
       if (ks.length > 200) {
         ks.sort((a, b) => (S.bc[a].t || 0) - (S.bc[b].t || 0)).slice(0, ks.length - 200).forEach(k => delete S.bc[k]);
       }
       saveState();
     }
-    addState.pick = { n: it.n, b: it.b.slice() };
+    addState.pick = { n: it.n, b: it.b.slice(), ns: it.ns, ean: code, off: 1 };
     sheet(addSheet());
     U.gr(100);
   }

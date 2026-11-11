@@ -46,6 +46,15 @@ const repairShape = () => {
         S[k] = [];
     });
     S.logs = S.logs.filter(l => O_(l));
+    /* alimentos propios (F-43, F-44): el Nutri-Score, una letra de la a a la e; el código de barras, solo cifras */
+    S.cf.forEach(f => {
+      if (!O_(f))
+        return;
+      if (f.ns != null && !['a', 'b', 'c', 'd', 'e'].includes(f.ns))
+        delete f.ns;
+      if (f.ean != null && !(typeof f.ean == 'string' && /^\d{8,14}$/.test(f.ean)))
+        delete f.ean;
+    });
     ['done', 'last', 'meals', 'hist', 'pr', 'notes', 'bio', 'pf', 'nu'].forEach(k => {
       if (S[k] != null && !O_(S[k]))
         delete S[k];
