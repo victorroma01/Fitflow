@@ -192,9 +192,9 @@ def main(path):
         ev("A.zaj()")
         run()
         rows = ev("[...document.querySelectorAll('#ajs .sr')].map(b=>b.dataset.a+(b.dataset.v?':'+b.dataset.v:''))")
-        want = ['ajp:cuenta', 'snc', 'ajp:tema', 'ajp:acento', 'ajp:inicio', 'ajp:unidades', 'ajp:sonido', 'zbk', 'rst', 'updChk', 'ajp:nota', 'trgo', 'diag', 'rpo', 'ajp:privacidad', 'ajp:legal', 'sout']
+        want = ['ajp:cuenta', 'snc', 'ajp:tema', 'ajp:acento', 'ajp:inicio', 'ajp:unidades', 'ajp:sonido', 'zbk', 'rst', 'updChk', 'ajp:nota', 'trgo', 'diag', 'rpo', 'ajp:avanzado', 'ajp:privacidad', 'ajp:legal', 'sout']
         check('Ajustes tiene todas sus filas', rows == want, str(rows))
-        check('con secciones', ev("[...document.querySelectorAll('#ajs .ph')].map(e=>e.innerText.trim().toLowerCase())") == ['cuenta', 'apariencia', 'entreno', 'datos', 'app', 'información'])
+        check('con secciones', ev("[...document.querySelectorAll('#ajs .ph')].map(e=>e.innerText.trim().toLowerCase())") == ['cuenta', 'apariencia', 'entreno', 'datos', 'app', 'ajustes avanzados', 'información'])
         check('«Cerrar sesión», en rojo y con su icono, al final', ev("(()=>{const b=document.querySelector('#ajs .sro [data-a=sout]');return !!b&&!!b.querySelector('.srl.red')&&!!b.querySelector('.sri.red svg')})()"))
         ev("A.ajp(0,{dataset:{v:'tema'}})")
         run()

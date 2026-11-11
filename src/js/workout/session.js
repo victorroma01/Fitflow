@@ -23,6 +23,7 @@ import { progressBody } from '../dashboard/progress.js';
 import { fromDisplayWeight, toDisplayWeight, weightUnit } from '../profile/units.js';
 import { buzz } from '../profile/feedback.js';
 import { exAnatomy } from '../extras/anatomy.js';
+import { rpeOn } from './rpe.js';
 import { html, raw } from '../core/html.js';
 export function sessionView() {
   const d = S.plan[S.sel];
@@ -249,7 +250,10 @@ const rpeRow = (i, j, s) => {
   const e = S.plan[S.sel].ex[i];
   if (!e || unitOf(e))
     return '';
-  return html`<div class="rpe"><span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<button class="chip${s.q == v ? ' on' : ''}" data-a="rpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}${usesWeight(e) && (+s.w || 0) > 0 ? html`<button class="chip" data-a="drp" data-i="${i}" data-j="${j}">+ Drop set</button>` : ''}</div>`;
+  /* el esfuerzo, solo si se activó en Ajustes avanzados (F-42); «+ Drop set», siempre que haya peso */
+  const rpe = rpeOn() ? html`<span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<button class="chip${s.q == v ? ' on' : ''}" data-a="rpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}` : '';
+  const drop = usesWeight(e) && (+s.w || 0) > 0 ? html`<button class="chip" data-a="drp" data-i="${i}" data-j="${j}">+ Drop set</button>` : '';
+  return rpe || drop ? html`<div class="rpe">${raw(rpe)}${raw(drop)}</div>` : '';
 };
 A.rpe = (i, b) => {
   const s = W.x[i] && W.x[i][+b.dataset.j];

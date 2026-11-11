@@ -20,6 +20,7 @@ import { badgeCard } from '../system/phone.js';
 import { offlineNote, releaseNotePage } from '../system/updates.js';
 import { acctName } from '../cloud/session.js';
 import { accountPage, passwordPage, syncShort } from '../account/account.js';
+import { rpeOn, rpeSettings } from '../workout/rpe.js';
 import { html, raw } from '../core/html.js';
 /* página abierta: '' la principal, una clave de SETTINGS_PAGES o null si Ajustes está cerrado */
 let settingsSub = null;
@@ -41,14 +42,15 @@ const SETTINGS_PAGES = {
   clave: () => ['Cambiar contraseña', passwordPage()],
   privacidad: () => ['Privacidad', html`<div class="srt">${PRIVACY_TEXT.map(p => html`<p>${p}</p>`)}</div>`],
   legal: () => ['Aviso legal', html`<div class="srt">${LEGAL_TEXT.map(p => html`<p>${p}</p>`)}</div>`],
-  nota: () => ['Nota de actualización', releaseNotePage()]
+  nota: () => ['Nota de actualización', releaseNotePage()],
+  avanzado: () => ['Ajustes avanzados', rpeSettings()]
 };
 function settingsMain() {
   const th = S.theme == 'dark' ? 'Oscuro' : S.theme == 'light' ? 'Claro' : 'Automático';
   const ac = accentNow();
   const ne = errorLog().length;
   const sec = (t, rows) => html`<div class="ph">${raw(t)}</div><div class="cd srg">${rows}</div>`;
-  return html`<div id="ajs">${pgHead('Ajustes')}${sec('Cuenta', [settingsRow('user', 'Cuenta', acctName(), 'ajp', { v: 'cuenta' }), settingsRow('cloud', 'Sincronización', syncShort(), 'snc', { act: 1 })])}${sec('Apariencia', [settingsRow('pal', 'Tema y estilo', th + ' · ' + (glassMode() > 0 ? 'Cristal' : 'Clásico'), 'ajp', { v: 'tema' }), settingsRow('drop', 'Color de acento', html`<i class="srd" style="background:linear-gradient(135deg,${raw(ac[1])},${raw(ac[2])})"></i>${raw(ac[0])}`, 'ajp', { v: 'acento' }), settingsRow('home', 'Al abrir la app', startTabName(), 'ajp', { v: 'inicio' })])}${sec('Entreno', [settingsRow('kgw', 'Unidades de carga', usesLb() ? 'Libras (lb)' : 'Kilos (kg)', 'ajp', { v: 'unidades' }), settingsRow('snd', 'Sonido y avisos', S.snd === 0 ? 'Sin sonido' : 'Con sonido', 'ajp', { v: 'sonido' })])}${sec('Datos', [settingsRow('bkp', 'Copia de seguridad', S.cb && +S.cb.at > 0 ? ago(+S.cb.at) : +S.bkd > 0 ? ago(+S.bkd) : 'Nunca', 'zbk'), settingsRow('del', 'Borrar todos los datos', '', 'rst', { red: 1, act: 1 })])}${sec('App', [settingsRow('upd', 'Actualizaciones', 'V' + APPV, 'updChk', { act: 1 }), settingsRow('news', 'Ver nota de actualización', '', 'ajp', { v: 'nota' }), settingsRow('tour', 'Ver el recorrido', '', 'trgo', { act: 1 }), settingsRow('pulse', 'Diagnóstico', ne ? ne + (ne == 1 ? ' error' : ' errores') : '', 'diag'), settingsRow('bug', 'Informar de un fallo', '', 'rpo')])}${offlineNote()}${sec('Información', [settingsRow('shd', 'Privacidad', '', 'ajp', { v: 'privacidad' }), settingsRow('doc', 'Aviso legal', '', 'ajp', { v: 'legal' })])}<div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'sout', { red: 1, act: 1 })}</div><div style="height:40px"></div></div>`;
+  return html`<div id="ajs">${pgHead('Ajustes')}${sec('Cuenta', [settingsRow('user', 'Cuenta', acctName(), 'ajp', { v: 'cuenta' }), settingsRow('cloud', 'Sincronización', syncShort(), 'snc', { act: 1 })])}${sec('Apariencia', [settingsRow('pal', 'Tema y estilo', th + ' · ' + (glassMode() > 0 ? 'Cristal' : 'Clásico'), 'ajp', { v: 'tema' }), settingsRow('drop', 'Color de acento', html`<i class="srd" style="background:linear-gradient(135deg,${raw(ac[1])},${raw(ac[2])})"></i>${raw(ac[0])}`, 'ajp', { v: 'acento' }), settingsRow('home', 'Al abrir la app', startTabName(), 'ajp', { v: 'inicio' })])}${sec('Entreno', [settingsRow('kgw', 'Unidades de carga', usesLb() ? 'Libras (lb)' : 'Kilos (kg)', 'ajp', { v: 'unidades' }), settingsRow('snd', 'Sonido y avisos', S.snd === 0 ? 'Sin sonido' : 'Con sonido', 'ajp', { v: 'sonido' })])}${sec('Datos', [settingsRow('bkp', 'Copia de seguridad', S.cb && +S.cb.at > 0 ? ago(+S.cb.at) : +S.bkd > 0 ? ago(+S.bkd) : 'Nunca', 'zbk'), settingsRow('del', 'Borrar todos los datos', '', 'rst', { red: 1, act: 1 })])}${sec('App', [settingsRow('upd', 'Actualizaciones', 'V' + APPV, 'updChk', { act: 1 }), settingsRow('news', 'Ver nota de actualización', '', 'ajp', { v: 'nota' }), settingsRow('tour', 'Ver el recorrido', '', 'trgo', { act: 1 }), settingsRow('pulse', 'Diagnóstico', ne ? ne + (ne == 1 ? ' error' : ' errores') : '', 'diag'), settingsRow('bug', 'Informar de un fallo', '', 'rpo')])}${offlineNote()}${sec('Ajustes avanzados', [settingsRow('gear', 'Esfuerzo (RPE)', rpeOn() ? 'Activado' : 'Desactivado', 'ajp', { v: 'avanzado' })])}${sec('Información', [settingsRow('shd', 'Privacidad', '', 'ajp', { v: 'privacidad' }), settingsRow('doc', 'Aviso legal', '', 'ajp', { v: 'legal' })])}<div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'sout', { red: 1, act: 1 })}</div><div style="height:40px"></div></div>`;
 }
 const settingsPage = k => {
   if (!k || !Object.prototype.hasOwnProperty.call(SETTINGS_PAGES, k))

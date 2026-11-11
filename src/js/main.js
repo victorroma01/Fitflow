@@ -47,6 +47,7 @@ import './workout/week.js';
 import './workout/technique.js';
 import './workout/order.js';
 import './workout/day.js';
+import './workout/rpe.js';
 import './workout/session.js';
 import './workout/finish.js';
 import './workout/resume.js';
