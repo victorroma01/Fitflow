@@ -21,7 +21,7 @@ import { libBody, libState } from '../library/browse.js';
 import { clone, progDraft } from '../programs/create.js';
 import { levelPlan } from '../programs/levels.js';
 import { isDeloadWeek } from '../workout/deload.js';
-import { planIndex } from '../workout/week.js';
+import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { updatesOn } from '../system/updates.js';
@@ -92,6 +92,7 @@ const DEBUG_NAMES = {
   snapTx: [() => snapTx],
   stateRecovered: [() => stateRecovered],
   Store: [() => Store],
+  syncSel: [() => syncSel],
   syncNow: [() => syncNow],
   syncState: [() => syncState],
   takeSnapshot: [() => takeSnapshot],

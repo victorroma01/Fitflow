@@ -11,6 +11,7 @@ import { R } from '../core/render.js';
 import { restorePlanBackup } from '../routines/builder.js';
 import { avgEffort } from './session.js';
 import { unitOf } from './targets.js';
+import { advanceDay } from './week.js';
 import { showSummary } from '../extras/summary.js';
 export let newRecords = [];
 const logWorkout = () => {
@@ -144,6 +145,9 @@ A.zend = () => {
   logWorkout();
   if (one && !had)
     delete S.done[k];
+  /* el día del plan queda completado: se pasa al siguiente (F-41). Un workout propio lanzado sobre el día no lo completa */
+  if (S.done[k] && !one)
+    advanceDay();
   if (S.logs.length > n1)
     setTimeout(showSummary, 50);
   restorePlanBackup();

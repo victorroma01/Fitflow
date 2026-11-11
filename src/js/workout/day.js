@@ -14,7 +14,7 @@ import { dayMinutes, rangeSelect, tempoOf, unitOf } from './targets.js';
 import { deloadCard, isDeloadWeek } from './deload.js';
 import { coverStyle } from './images.js';
 import { exTip, withExInfo } from '../library/howto.js';
-import { planIndex, syncSel, trainingDays } from './week.js';
+import { advanceDay, planIndex, syncSel, trainingDays } from './week.js';
 import { levelPill } from '../programs/levels.js';
 import { rotationCard } from '../programs/rotation.js';
 import { isFreshInstall, restoreBanner } from '../system/backup.js';
@@ -160,8 +160,10 @@ A.vw = () => {
   setWeekView(!weekView);
   R();
 };
+/* «Completar descanso»: el día queda completado y se pasa al siguiente (F-41) */
 A.rd = () => {
   S.done[S.wk + '-' + S.sl] = 1;
+  advanceDay();
   saveState();
   R();
 };
