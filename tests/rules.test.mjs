@@ -85,6 +85,11 @@ test('perfil: sexo y preferencias, sí; cambiar el usuario o ponerse «debe camb
   assert.ok(denied(await pr({ st0: 7 })), 'pestaña que no existe');
   assert.ok(denied(await pr({ tour: 'sí' })), 'recorrido visto con otro valor');
   assert.ok(denied(await pr({ rm: 5 })), 'reducir animaciones con otro valor');
+  // V1.0.1 (T-28): el sistema del último móvil, solo uno de los tres valores
+  assert.ok(allowed(await set('users/' + ana.uid, { os: 'ios' }, ana.t, { mask: ['os'] })), 'sistema del móvil');
+  assert.ok(allowed(await set('users/' + ana.uid, { os: 'android' }, ana.t, { mask: ['os'] })), 'otro sistema');
+  assert.ok(denied(await set('users/' + ana.uid, { os: 'windows' }, ana.t, { mask: ['os'] })), 'sistema desconocido');
+  assert.ok(denied(await set('users/' + ana.uid, { os: 'ios' }, bea.t, { mask: ['os'] })), 'el sistema de otra cuenta');
   assert.ok(denied(await set('users/' + ana.uid, { ro: 'admin', m: Date.now() }, ana.t, { mask: ['ro', 'm'] })), 'rol');
   assert.ok(denied(await set('users/' + ana.uid, { mc: true, m: Date.now() }, ana.t, { mask: ['mc', 'm'] })), 'mc a true');
   assert.ok(allowed(await ownerSet('users/' + ana.uid, { u: 'Ana_1', sx: 'M', pr: { theme: 'light' }, ca: 1, m: 2, mc: true })), 'GitHub Actions pone mc');

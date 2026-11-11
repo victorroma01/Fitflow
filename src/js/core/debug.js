@@ -36,6 +36,7 @@ import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
 import { refreshReports } from '../system/report.js';
 import { accentNow, customAccent } from '../profile/appearance.js';
 import { backTarget } from './back.js';
+import { deviceOS } from './platform.js';
 import { tourCheck } from '../system/tour.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
@@ -55,6 +56,7 @@ const DEBUG_NAMES = {
   customAccent: [() => customAccent],
   dayInfo: [() => dayInfo],
   dayKey: [() => dayKey],
+  deviceOS: [() => deviceOS],
   dialog: [() => dialog],
   errorLog: [() => errorLog],
   EX_PHOTO_KEY: [() => EX_PHOTO_KEY],

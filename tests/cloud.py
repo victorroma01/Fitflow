@@ -168,7 +168,7 @@ def main(path):
         login(p1, 'Ana_1', 'contraseña-1', new=True)
         uid = fb.uid_of('Ana_1')
         prof = fb.data('users/' + uid) or {}
-        check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm'}, str(prof))
+        check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm', 'os'}, str(prof))
         check('y se suben el índice y el núcleo', fb.data('users/%s/data/index' % uid) is not None and fb.part('users/%s/data/core' % uid) is not None)
         check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.pfn').textContent)") == 'Ana_1')
         check('el correo técnico no aparece en la app', '@stratafit.app' not in p1.content())
@@ -186,6 +186,7 @@ def main(path):
         prof = fb.data('users/' + uid) or {}
         core = fb.part('users/%s/data/core' % uid) or {}
         check('y queda en las preferencias del perfil de la cuenta, con el sexo elegido', prof.get('pr', {}).get('tour') == 1 and prof.get('sx') == 'F', str(prof))
+        check('el perfil guarda el sistema del móvil, a efectos estadísticos (T-28; en estas pruebas, ni iPhone ni Android: «otro»)', prof.get('os') == 'otro', str(prof))
         check('en la nube, ya sin la bienvenida pendiente y aún sin programa', 'nw' not in core and core.get('np') == 1 and core.get('bio', {}).get('h') == '168', str({k: core.get(k) for k in ('nw', 'np', 'bio')}))
 
         # ── datos en el móvil 1 → la nube ──
@@ -293,11 +294,16 @@ def main(path):
         p4.evaluate('S.tab=3;R()')
         check('con el rol de admin (desde GitHub), Perfil enseña Administración', p4.evaluate("!!document.querySelector('[data-a=adm]')"))
         temp = fb.reset_password('Ana_1')
-        fb.put('users/uintruso', {'u': {'stringValue': '<img src=x onerror=alert(1)>'}, 'sx': {'stringValue': 'M'}})
+        fb.put('users/uintruso', {'u': {'stringValue': '<img src=x onerror=alert(1)>'}, 'sx': {'stringValue': 'M'}, 'os': {'stringValue': 'ios'}})
+        fb.put('users/uviejo', {'u': {'stringValue': 'Viejo_1'}, 'sx': {'stringValue': 'F'}})
         p4.evaluate('A.adm()')
         wait(p4, "document.querySelector('#sh') && !document.querySelector('#sh').innerText.includes('Cargando')", 15000)
         txt = p4.inner_text('#sh')
         check('Administración lista las cuentas', 'Ana_1' in txt and 'VictorAdmin_' in txt, txt[:300])
+        os_n = p4.evaluate("[...document.querySelectorAll('#sh .aos > div')].map(d=>d.querySelector('small').textContent+':'+d.querySelector('b').textContent)")
+        check('y cuántas usan iPhone, Android u otro sistema; las que aún no abrieron la 1.0.1, «sin dato» (T-28)', os_n == ['iPhone:1', 'Android:0', 'Otro:2', 'Sin dato:1'], str(os_n))
+        row = p4.evaluate("[...document.querySelectorAll('#sh .acl .it')].map(r=>r.innerText.replace(/\\s+/g,' ')).find(t=>t.startsWith('Ana_1'))")
+        check('con el sistema de cada cuenta en su fila', row and 'Otro' in row, str(row))
         check('un usuario con código se ve como texto (nada se ejecuta)', p4.evaluate("!document.querySelector('#sh img') && document.querySelector('#sh').innerText.includes('<img src=x')"))
         check('la contraseña temporal sale oculta hasta pulsar «Ver»', temp not in txt and 'Ana_1' in txt)
         p4.click('#sh [data-a=adv]')

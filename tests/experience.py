@@ -716,6 +716,7 @@ def main(path):
         p3.clock.pause_at(datetime.datetime(2026, 11, 4, 10, 0, 10))
         e3 = p3.evaluate
         r3 = lambda ms=400: p3.clock.run_for(ms)
+        check('la app sabe que es un iPhone (y en Android, Android; en lo demás, «otro»: T-28)', e3('deviceOS()') == 'ios' and e3("(()=>{const d=Object.getOwnPropertyDescriptor(Navigator.prototype,'userAgent');Object.defineProperty(navigator,'userAgent',{get:()=>'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 Chrome/141.0 Mobile Safari/537.36',configurable:true});const a=deviceOS();Object.defineProperty(navigator,'userAgent',{get:()=>'Mozilla/5.0 (X11; Linux x86_64)',configurable:true});const o=deviceOS();delete navigator.userAgent;return a+','+o})()") == 'android,otro')
         n0 = e3('history.length')
         e3("S.tab=3;R();A.zaj();A.ajp(0,{dataset:{v:'tema'}})")
         r3()
