@@ -254,6 +254,31 @@ def main(path):
         check('un código de menos de 8 cifras no se busca', 'entre 8 y 14 cifras' in msg())
         ev("A.f2bk()")
 
+        # la cámara contesta tarde (al segundo), con el código escrito a mano ya buscándose; después se cierra la hoja antes de
+        # que llegue la respuesta
+        print('Una cámara o una respuesta que llegan tarde no pisan nada')
+        ev("""window.__md = !!navigator.mediaDevices;
+if (!window.__md) Object.defineProperty(navigator, 'mediaDevices', {value: {}, configurable: true});
+window.__trk = {on: 1, stop() { this.on = 0; }};
+window.__late = ok => { navigator.mediaDevices.getUserMedia = () => new Promise((y, n) => setTimeout(() => ok ? y({getTracks: () => [window.__trk]}) : n(Object.assign(new Error('sin cámara'), {name: 'NotFoundError'})), 1000)); };
+window.__late(0); 0""")
+        off.reset(v3=[('hang',)], v2=[('json', {'status': 1, 'product': product('8410000000185', 'Zumo de naranja', 45)})])
+        scan('8410000000185')
+        run(1200)
+        check('si la cámara falla tarde, sigue el mensaje de la búsqueda', 'Buscando 8410000000185' in msg(), msg())
+        ev("A.cl()")
+        off.release()
+        settle("false", ms=600)
+        check('si se cierra la hoja antes de la respuesta, el producto que llega después no abre nada', off.kinds() == ['v3', 'v2'] and ev("!document.querySelector('#sh .sp') && !(S.bc||{})['8410000000185']"), str(off.kinds()))
+        ev("window.__late(1); 0")
+        off.reset(v3=[('hang',)], v2=[('status', 404)])
+        scan('8410000000192')
+        run(1200)
+        check('si la cámara se abre tarde, se apaga y sigue el mensaje de la búsqueda', 'Buscando 8410000000192' in msg() and ev("window.__trk.on") == 0, msg())
+        ev("A.cl(); delete navigator.mediaDevices.getUserMedia; if (!window.__md) delete navigator.mediaDevices; 0")
+        off.release()
+        settle("false", ms=400)
+
         # ───────────────────────────── Nutri-Score y «Mis alimentos» ─────────────────────────────
         print('Nutri-Score (F-43) y «Mis alimentos» (F-44)')
         ev("S.cf=[];S.bc={};saveState()")

@@ -1,6 +1,6 @@
 /* ═══ extras/foods-online ═══
    Alimentos en línea (Open Food Facts) y escáner de códigos.
-   Define: onlineFoods, onlineQuery, onlineBusy, OFF_ERRORS, offErrorText, isOffline, pause, offFetch, offName, offProduct, OFF_FIELDS, SEARCH_SIZE, SEARCH_KEEP_MS, searchCache, luceneSafe, searchNewUrl, searchOldUrl, searchResult, searchOnline, searchNote, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanMsg, stopScan, startScan, scanLoop, offBarcode, lookupBarcode  · acciones/registros: 5
+   Define: onlineFoods, onlineQuery, onlineBusy, OFF_ERRORS, offErrorText, isOffline, pause, offFetch, offName, offProduct, OFF_FIELDS, SEARCH_SIZE, SEARCH_KEEP_MS, searchCache, luceneSafe, searchNewUrl, searchOldUrl, searchResult, searchOnline, searchNote, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanTry, scanMsg, stopScan, startScan, scanLoop, offBarcode, lookupBarcode  · acciones/registros: 5
 */
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -387,12 +387,16 @@ function eanFromFrame(img) {
   return null;
 }
 let scanState = null;
+/* cada apertura de la cámara lleva su número; buscar un código escrito a mano o cerrar la hoja (stopScan) la deja atrás, así que
+   una cámara que contesta tarde se apaga sin tocar el mensaje de la búsqueda */
+let scanTry = 0;
 const scanMsg = t => {
   const e = document.getElementById('f2sm');
   if (e)
     e.textContent = t;
 };
 function stopScan() {
+  scanTry++;
   if (scanState) {
     scanState.run = 0;
     try {
@@ -430,13 +434,19 @@ async function startScan() {
     scanMsg('Este navegador no permite usar la cámara. Escribe el código.');
     return;
   }
+  const mine = ++scanTry;
+  /* ¿sigue siendo esta la apertura que vale? Si no, apaga la cámara que acaba de llegar */
+  const still = st => {
+    if (mine === scanTry && document.getElementById('f2v'))
+      return true;
+    st.getTracks().forEach(t => t.stop());
+    return false;
+  };
   try {
     const st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
-    const v = document.getElementById('f2v');
-    if (!v) {
-      st.getTracks().forEach(t => t.stop());
+    if (!still(st))
       return;
-    }
+    const v = document.getElementById('f2v');
     v.srcObject = st;
     try {
       await v.play();
@@ -444,6 +454,8 @@ async function startScan() {
     catch (e) {
       /* el vídeo arranca solo en cuanto el navegador lo permite */
     }
+    if (!still(st))
+      return;
     let bd = null;
     try {
       if ('BarcodeDetector' in window)
@@ -457,7 +469,8 @@ async function startScan() {
     scanLoop();
   }
   catch (e) {
-    scanMsg(e && e.name == 'NotAllowedError' ? 'Permiso de cámara denegado. Puedes escribir el código.' : 'No se pudo abrir la cámara. Puedes escribir el código.');
+    if (mine === scanTry)
+      scanMsg(e && e.name == 'NotAllowedError' ? 'Permiso de cámara denegado. Puedes escribir el código.' : 'No se pudo abrir la cámara. Puedes escribir el código.');
   }
 }
 async function scanLoop() {
@@ -540,12 +553,18 @@ async function offBarcode(code) {
   throw error;
 }
 async function lookupBarcode(code) {
+  /* vale mientras siga abierta la hoja del escáner y no empiece otra búsqueda (stopScan y startScan cambian scanTry): una
+     respuesta que llega después no abre nada ni cambia el mensaje */
+  const mine = scanTry;
+  const current = () => mine === scanTry && !!document.getElementById('f2sm');
   scanMsg('Buscando ' + code + '…');
   try {
     const c = S.bc && S.bc[code];
     let it = c && Array.isArray(c.b) && c.b.length == 6 ? { n: String(c.n || '').slice(0, 80), b: c.b.map(Number), ns: nutriScore(c.ns) } : null;
     if (!it) {
       const p = await offBarcode(code);
+      if (!current())
+        return;
       it = p ? offProduct(p) : null;
       if (!it) {
         scanMsg(p ? 'Este producto no tiene información nutricional completa. Créalo a mano con «+», en «Nuevo».' : 'Ese código no está en Open Food Facts. Créalo a mano con «+», en «Nuevo».');
@@ -566,7 +585,8 @@ async function lookupBarcode(code) {
     U.gr(100);
   }
   catch (x) {
-    scanMsg(offErrorText(x) + (x == 'offline' ? '' : ' Los productos ya escaneados funcionan sin conexión.'));
+    if (current())
+      scanMsg(offErrorText(x) + (x == 'offline' ? '' : ' Los productos ya escaneados funcionan sin conexión.'));
   }
 }
 /* — manejadores de esta función (registros A / C / U) — */
