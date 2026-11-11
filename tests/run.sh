@@ -29,6 +29,7 @@ run python3 tests/photos.py dist/stratafit.html
 run python3 tests/security.py dist/stratafit.html
 run python3 tests/a11y.py dist/stratafit.html
 run python3 tests/features.py dist/stratafit.html
+run python3 tests/foods.py dist/stratafit.html
 run python3 tests/programs.py dist/stratafit.html
 run python3 tests/session.py dist/stratafit.html
 run python3 tests/followup.py dist/stratafit.html

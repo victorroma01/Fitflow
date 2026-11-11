@@ -1,6 +1,6 @@
 /* ═══ extras/foods-online ═══
    Alimentos en línea (Open Food Facts) y escáner de códigos.
-   Define: onlineFoods, onlineTimer, fetchTimeout, offProduct, searchOnline, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanMsg, stopScan, startScan, scanLoop, lookupBarcode  · acciones/registros: 5
+   Define: onlineFoods, onlineQuery, onlineBusy, OFF_ERRORS, offErrorText, isOffline, pause, offFetch, offName, offProduct, OFF_FIELDS, SEARCH_SIZE, SEARCH_KEEP_MS, searchCache, luceneSafe, searchNewUrl, searchOldUrl, searchResult, searchOnline, searchNote, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanMsg, stopScan, startScan, scanLoop, offBarcode, lookupBarcode  · acciones/registros: 5
 */
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -10,10 +10,28 @@ import { onSheetClose, sheet } from '../core/ui.js';
 import { addSheet } from '../nutrition/add.js';
 import { html, raw } from '../core/html.js';
 var onlineFoods = [];
-let onlineTimer = 0;
-async function fetchTimeout(url, ms) {
+/* el texto de la última búsqueda lanzada (solo se pinta su respuesta) y el de la que está en marcha ('' si no hay) */
+let onlineQuery = '';
+let onlineBusy = '';
+/* ── Open Food Facts ──
+   Qué puede fallar al pedirle algo, para decírselo al usuario con claridad (I-22):
+   'offline', el móvil no tiene conexión; 'busy', el servicio está saturado (429 o 503); 'slow', no contesta a tiempo;
+   'net', la petición no llega o la respuesta no vale. */
+const OFF_ERRORS = {
+  offline: 'No hay conexión a internet. Los alimentos de la lista y los ya escaneados siguen funcionando.',
+  busy: 'Open Food Facts está saturado ahora mismo. Prueba de nuevo en un minuto.',
+  slow: 'Open Food Facts tarda demasiado en responder. Prueba de nuevo en un momento.',
+  net: 'No se ha podido consultar Open Food Facts. Comprueba la conexión e inténtalo de nuevo.',
+};
+const offErrorText = e => OFF_ERRORS[e] || OFF_ERRORS.net;
+const isOffline = () => typeof navigator != 'undefined' && navigator.onLine === false;
+const pause = ms => new Promise(ok => setTimeout(ok, ms));
+/* Pide a Open Food Facts la dirección url y devuelve su JSON ({ _nf: 1 } si no existe: 404). Si falla, lanza uno de OFF_ERRORS. */
+async function offFetch(url, ms) {
+  if (isOffline())
+    throw 'offline';
   const ac = typeof AbortController != 'undefined' ? new AbortController() : null;
-  const t = ac ? setTimeout(() => ac.abort(), ms || 9000) : 0;
+  const t = ac ? setTimeout(() => ac.abort(), ms) : 0;
   try {
     const r = await fetch(url, { signal: ac ? ac.signal : undefined, headers: { Accept: 'application/json' } });
     if (r.status == 429 || r.status == 503)
@@ -21,19 +39,26 @@ async function fetchTimeout(url, ms) {
     if (r.status == 404)
       return { _nf: 1 };
     if (!r.ok)
-      throw 'http';
+      throw 'net';
     return await r.json();
+  }
+  catch (e) {
+    if (typeof e == 'string')
+      throw e;
+    throw e && e.name == 'AbortError' ? 'slow' : isOffline() ? 'offline' : 'net';
   }
   finally {
     if (t)
       clearTimeout(t);
   }
 }
+/* el nombre de un producto: un texto o, en el buscador nuevo, a veces un objeto por idiomas ({ main, es, en… }) */
+const offName = v => typeof v == 'string' ? v : v && typeof v == 'object' ? String(v.es || v.main || v.en || Object.values(v).find(x => typeof x == 'string') || '') : '';
 function offProduct(p) {
   try {
     if (!p || typeof p != 'object')
       return null;
-    const nm = String(p.product_name_es || p.product_name || '').trim();
+    const nm = (offName(p.product_name_es) || offName(p.product_name)).trim();
     if (!nm)
       return null;
     const m = p.nutriments && typeof p.nutriments == 'object' ? p.nutriments : {};
@@ -69,26 +94,68 @@ function offProduct(p) {
     return null;
   }
 }
-async function searchOnline(q) {
-  const fl_ = 'code,product_name,product_name_es,brands,nutriments';
-  let j;
-  try {
-    j = await fetchTimeout('https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + '&search_simple=1&action=process&json=1&page_size=24&sort_by=unique_scans_n&fields=' + fl_, 10000);
-  }
-  catch (e) {
-    if (e === 'busy')
-      throw e;
-    j = await fetchTimeout('https://search.openfoodfacts.org/search?q=' + encodeURIComponent(q) + '&page_size=24&langs=es&fields=' + fl_, 10000);
-  }
-  const arr = j && Array.isArray(j.products) ? j.products : j && Array.isArray(j.hits) ? j.hits : [];
+/* ── buscar por nombre ──
+   Dos buscadores de Open Food Facts, por este orden:
+   1. el nuevo (search.openfoodfacts.org), el que Open Food Facts recomienda para buscar por texto. Entiende la sintaxis de
+      Lucene, así que al texto del usuario se le quitan los signos que allí son órdenes (dos puntos, comillas, paréntesis…);
+   2. el antiguo (cgi/search.pl), más lento y limitado a 10 búsquedas por minuto: solo si el nuevo falla o no trae nada.
+   Si fallan los dos, se espera un momento y se prueba el nuevo otra vez. Lo ya buscado se recuerda un rato (SEARCH_KEEP_MS). */
+const OFF_FIELDS = 'code,product_name,product_name_es,brands,nutriments';
+const SEARCH_SIZE = 24;
+const SEARCH_KEEP_MS = 6e5;
+/* texto → { t: cuándo, r: resultado } */
+const searchCache = new Map();
+const luceneSafe = q => q.toLowerCase().replace(/[+\-&|!(){}[\]^"~*?:\\/]/g, ' ').replace(/\s+/g, ' ').trim();
+const searchNewUrl = q => 'https://search.openfoodfacts.org/search?q=' + encodeURIComponent(luceneSafe(q)) + '&langs=es,en&page_size=' + SEARCH_SIZE + '&fields=' + OFF_FIELDS;
+const searchOldUrl = q => 'https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + '&search_simple=1&action=process&json=1&page_size=' + SEARCH_SIZE + '&sort_by=unique_scans_n&fields=' + OFF_FIELDS;
+/* de la respuesta de un buscador: { list: alimentos que valen, sin repetir; dropped: productos sin nombre o sin calorías } */
+const searchResult = j => {
+  const arr = j && Array.isArray(j.hits) ? j.hits : j && Array.isArray(j.products) ? j.products : [];
+  const foods = arr.map(offProduct).filter(Boolean);
   const seen = new Set();
-  return arr.map(offProduct).filter(x => {
-    if (!x || seen.has(x.n))
+  const list = foods.filter(x => {
+    if (seen.has(x.n))
       return false;
     seen.add(x.n);
     return true;
   });
+  return { list, dropped: arr.length - foods.length };
+};
+/** Busca q en Open Food Facts. Devuelve { list, dropped } o lanza uno de OFF_ERRORS. onRetry avisa de que va a reintentarlo. */
+async function searchOnline(q, onRetry) {
+  const key = q.toLowerCase();
+  const kept = searchCache.get(key);
+  if (kept && Date.now() - kept.t < SEARCH_KEEP_MS)
+    return kept.r;
+  let found = null;
+  let error = '';
+  const tryOne = async (url, ms) => {
+    try {
+      const r = searchResult(await offFetch(url, ms));
+      if (!found || r.list.length)
+        found = r;
+    }
+    catch (e) {
+      error = e;
+    }
+  };
+  await tryOne(searchNewUrl(q), 7000);
+  if ((!found || !found.list.length) && error != 'offline')
+    await tryOne(searchOldUrl(q), 8000);
+  if (!found && error != 'offline') {
+    if (onRetry)
+      onRetry();
+    await pause(1500);
+    await tryOne(searchNewUrl(q), 7000);
+  }
+  if (!found)
+    throw error || 'net';
+  if (searchCache.size >= 30)
+    searchCache.delete(searchCache.keys().next().value);
+  searchCache.set(key, { t: Date.now(), r: found });
+  return found;
 }
+const searchNote = t => html`<p class="mu" style="margin:10px 2px">${t}</p>`;
 A.f2os = async () => {
   const inp = $('#f2q') || document.querySelector('input[data-u="fs"]');
   const q = ((inp && inp.value) || '').trim();
@@ -99,24 +166,30 @@ A.f2os = async () => {
     toast('Escribe al menos 2 letras');
     return;
   }
-  if (Date.now() - onlineTimer < 6000) {
-    toast('Espera unos segundos entre búsquedas');
+  /* un toque doble no lanza dos veces la misma búsqueda */
+  if (onlineBusy == q)
     return;
-  }
-  onlineTimer = Date.now();
-  e.innerHTML = '<p class="mu" style="margin:10px 2px">Buscando en Open Food Facts…</p>';
-  try {
-    const L = await searchOnline(q);
-    onlineFoods = L;
+  onlineBusy = q;
+  onlineQuery = q;
+  e.innerHTML = searchNote('Buscando en Open Food Facts…');
+  /* la respuesta solo se pinta si sigue siendo la de la última búsqueda y la hoja sigue abierta */
+  const show = h => {
     const e2 = $('#rs');
-    if (!e2)
-      return;
-    e2.innerHTML = L.length ? html`<small class="mu" style="display:block;margin:6px 2px">Valores por 100 g · datos de Open Food Facts (ODbL)</small>${L.map((f, i) => html`<div class="it" style="grid-template-columns:1fr auto" data-a="f2op" data-i="${i}"><span>${f.n}</span><small>${raw(f.b[0])} kcal</small></div>`)}` : html`<p class="mu" style="margin:10px 2px">No hay resultados para «${q}». Prueba con otra palabra o crea el alimento en «Nuevo».</p>`;
+    if (e2 && onlineQuery == q)
+      e2.innerHTML = h;
+  };
+  try {
+    const r = await searchOnline(q, () => show(searchNote('Open Food Facts tarda en responder. Probando otra vez…')));
+    if (onlineQuery == q)
+      onlineFoods = r.list;
+    show(r.list.length ? html`<small class="mu" style="display:block;margin:6px 2px">Valores por 100 g · datos de Open Food Facts (ODbL)</small>${r.list.map((f, i) => html`<div class="it" style="grid-template-columns:1fr auto" data-a="f2op" data-i="${i}" role="button" tabindex="0"><span>${f.n}</span><small>${raw(f.b[0])} kcal</small></div>`)}` : searchNote(r.dropped ? 'Hay ' + r.dropped + (r.dropped == 1 ? ' producto' : ' productos') + ' para «' + q + '», pero sin datos nutricionales. Prueba con otra palabra o crea el alimento en «Nuevo».' : 'No hay resultados para «' + q + '». Prueba con otra palabra o crea el alimento en «Nuevo».'));
   }
   catch (x) {
-    const e2 = $('#rs');
-    if (e2)
-      e2.innerHTML = html`<p class="mu" style="margin:10px 2px">${x === 'busy' ? 'Open Food Facts está saturado. Prueba en un minuto.' : 'No se pudo consultar. Comprueba tu conexión e inténtalo de nuevo.'}</p>`;
+    show(html`${raw(searchNote(offErrorText(x)))}<button data-a="f2os" style="width:100%">Reintentar</button>`);
+  }
+  finally {
+    if (onlineBusy == q)
+      onlineBusy = '';
   }
 };
 A.f2op = i => {
@@ -433,25 +506,43 @@ async function scanLoop() {
     await new Promise(r => setTimeout(r, 170));
   }
 }
+/* El producto del código de barras code en Open Food Facts: su JSON, o null si no lo tiene. Prueba la API v3 y, si falla o no
+   trae el producto, la v2; si fallan las dos, espera un momento y lo intenta una vez más. Lanza uno de OFF_ERRORS. */
+async function offBarcode(code) {
+  const urls = ['v3', 'v2'].map(v => 'https://world.openfoodfacts.org/api/' + v + '/product/' + code + '.json?fields=' + OFF_FIELDS);
+  let error = '';
+  for (let round = 0; round < 2; round++) {
+    if (round)
+      await pause(1500);
+    let answered = false;
+    for (const url of urls) {
+      try {
+        const j = await offFetch(url, 9000);
+        if (j && j.product)
+          return j.product;
+        answered = true;
+        if (j && j._nf)
+          return null;
+      }
+      catch (e) {
+        error = e;
+        if (e == 'offline')
+          throw e;
+      }
+    }
+    /* alguna ha contestado, y sin producto: no está */
+    if (answered)
+      return null;
+  }
+  throw error;
+}
 async function lookupBarcode(code) {
   scanMsg('Buscando ' + code + '…');
   try {
     const c = S.bc && S.bc[code];
     let it = c && Array.isArray(c.b) && c.b.length == 6 ? { n: String(c.n || '').slice(0, 80), b: c.b.map(Number) } : null;
     if (!it) {
-      const F_ = 'code,product_name,product_name_es,brands,nutriments';
-      let j = null;
-      try {
-        j = await fetchTimeout('https://world.openfoodfacts.org/api/v3/product/' + code + '.json?fields=' + F_, 9000);
-      }
-      catch (e) {
-        if (e === 'busy')
-          throw e;
-        j = null;
-      }
-      if (!j || (!j.product && !j._nf))
-        j = await fetchTimeout('https://world.openfoodfacts.org/api/v2/product/' + code + '.json?fields=' + F_, 9000);
-      const p = j && j.product;
+      const p = await offBarcode(code);
       it = p ? offProduct(p) : null;
       if (!it) {
         scanMsg(p ? 'Este producto no tiene información nutricional completa. Créalo a mano con «+», en «Nuevo».' : 'Ese código no está en Open Food Facts. Créalo a mano con «+», en «Nuevo».');
@@ -470,7 +561,7 @@ async function lookupBarcode(code) {
     U.gr(100);
   }
   catch (x) {
-    scanMsg(x === 'busy' ? 'Open Food Facts está saturado. Prueba en un minuto.' : 'No se pudo consultar. Comprueba tu conexión; los productos ya escaneados funcionan sin conexión.');
+    scanMsg(offErrorText(x) + (x == 'offline' ? '' : ' Los productos ya escaneados funcionan sin conexión.'));
   }
 }
 /* — manejadores de esta función (registros A / C / U) — */
