@@ -12,7 +12,7 @@ import { stateRecovered } from './persist.js';
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
-import { addState, flushState, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
+import { addState, flushState, markNewAccount, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
@@ -71,6 +71,7 @@ const DEBUG_NAMES = {
   libBody: [() => libBody],
   libState: [() => libState],
   logError: [() => logError],
+  markNewAccount: [() => markNewAccount],
   medalSvg: [() => medalSvg],
   nutriDayOffset: [() => nutriDayOffset],
   parseBackup: [() => parseBackup],

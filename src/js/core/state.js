@@ -1,12 +1,21 @@
 /* ═══ core/state ═══
    Estado global S (se guarda con saveState: core/persist), sesión en curso W, tema y banderas de interfaz.
-   Define: freshState, S, resetState, saveState, flushState, W, setW, nutriDayOffset, setNutriDayOffset, calMonthOffset, setCalMonthOffset, weekView, setWeekView, addState, setAddState, applyTheme, overviewMode, setOverviewMode, weightView, setWeightView, wodRun, setWodRun
+   Define: freshState, S, markNewAccount, resetState, saveState, flushState, W, setW, nutriDayOffset, setNutriDayOffset, calMonthOffset, setCalMonthOffset, weekView, setWeekView, addState, setAddState, applyTheme, overviewMode, setOverviewMode, weightView, setWeightView, wodRun, setWodRun
 */
 import { loadSavedState, scheduleWrite, writeState } from './persist.js';
 import { parseProgram } from '../data/library.js';
 /** Estado de una cuenta nueva. */
 const freshState = () => ({ tab: 0, prog: 0, plan: parseProgram(0), wk: 1, sel: 0, sl: 0, done: {}, logs: [], last: {}, rest: 120, theme: '', pf: {}, nu: { k: 1942, c: 50, p: 20, f: 30, n: 3 }, meals: {}, lib: [], cf: [], cx: [] });
 export const S = Object.assign(freshState(), loadSavedState());
+/** Una cuenta recién creada (account/login): sin programa elegido (np, I-24: la semana, toda de descanso) y con la
+    bienvenida por ver (nw, I-23: system/welcome). Las cuentas que ya existían no tienen ninguna de las dos. */
+export const markNewAccount = () => {
+  S.np = 1;
+  S.nw = 1;
+  S.plan = Array.from({ length: 7 }, () => ({ n: 'Descanso', ex: [] }));
+  S.sel = 0;
+  S.sl = 0;
+};
 /** Vuelve S al estado de una cuenta nueva, sin cambiar el objeto (al entrar con otra cuenta: account/login). */
 export const resetState = () => {
   for (const k of Object.keys(S))

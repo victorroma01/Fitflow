@@ -11,7 +11,7 @@ import { $, APPV } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
-import { flushState, resetState } from '../core/state.js';
+import { flushState, markNewAccount, resetState } from '../core/state.js';
 import { repairState } from '../core/repair.js';
 import { icon } from '../core/icons.js';
 import { morph } from '../core/morph.js';
@@ -124,6 +124,9 @@ const enterAccount = async (s, fresh) => {
     Store.set(Store.K.own, s.uid);
   }
   acctSave(s);
+  /* recién creada: sin programa y con la bienvenida por ver (se suben con la primera sincronización) */
+  if (fresh)
+    markNewAccount();
   if (!fresh)
     try {
       const d = await getDoc('users/' + s.uid);

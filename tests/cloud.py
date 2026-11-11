@@ -133,6 +133,17 @@ def main(path):
             if wait_app:
                 wait(pg, "window.__ffok && !document.getElementById('lgw') && document.querySelector('nav').style.display!='none'", 20000)
 
+        def new_account_bio(pg, sex):
+            """Bienvenida de una cuenta nueva: «Siguiente», los seis datos y «Guardar y continuar»."""
+            pg.click('#wlc [data-a=wln]')
+            pg.click('#wlc [data-a=wlsx][data-v=%s]' % sex)
+            for k, v in (('age', '31'), ('h', '168'), ('w', '62')):
+                pg.fill('#wl_' + k, v)
+            pg.select_option('#wl_act', '1')
+            pg.select_option('#wl_goal', '1')
+            pg.click('#wlc [data-a=wlok]')
+            wait(pg, "!document.getElementById('wlc') && !!document.querySelector('#tour .trst')")
+
         def sync(pg):
             pg.evaluate('syncNow()')
             return pg.evaluate('syncState().st')
@@ -161,13 +172,20 @@ def main(path):
         check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.pfn').textContent)") == 'Ana_1')
         check('el correo técnico no aparece en la app', '@stratafit.app' not in p1.content())
 
-        # ── recorrido de la primera vez (F-36): sale en la cuenta nueva; visto en un móvil, no vuelve a salir en otro ──
-        wait(p1, "!!document.querySelector('#tour.trs')", 30000)
-        check('cuenta nueva: tras la primera sincronización sale el recorrido, con «Empezar el recorrido» y «Omitir»', p1.evaluate("[...document.querySelectorAll('#tour button')].map(b=>b.textContent).join('|')") == 'Empezar el recorrido|Omitir')
+        # ── cuenta nueva (I-23, I-24): sin programa y, tras la primera sincronización, la bienvenida con sus datos; después, el
+        #    recorrido de la primera vez (F-36). Visto en un móvil, no vuelve a salir en otro ──
+        check('la cuenta nueva empieza sin programa: «Seleccionar programa»', p1.evaluate("S.np===1 && S.plan.every(d=>!d.ex.length) && (S.tab=0,R(),!!document.querySelector('#app .npc'))"))
+        wait(p1, "!!document.getElementById('wlc')", 30000)
+        check('cuenta nueva: tras la primera sincronización sale la bienvenida', 'Gracias por instalar la app' in p1.inner_text('#wlc') and p1.evaluate("!document.getElementById('tour')"))
+        new_account_bio(p1, 'F')
+        check('con los datos guardados, el recorrido empieza por su primer paso', p1.evaluate("document.querySelector('#tour .trst').textContent") == 'Paso 1 de 5' and p1.evaluate('S.nw') is None)
         p1.click('#tour [data-a=trx]')
         check('«Omitir» lo da por visto', p1.evaluate("!document.getElementById('tour') && S.tour") == 1)
         sync(p1)
-        check('y queda en las preferencias del perfil de la cuenta', (fb.data('users/' + uid) or {}).get('pr', {}).get('tour') == 1, str((fb.data('users/' + uid) or {}).get('pr')))
+        prof = fb.data('users/' + uid) or {}
+        core = fb.part('users/%s/data/core' % uid) or {}
+        check('y queda en las preferencias del perfil de la cuenta, con el sexo elegido', prof.get('pr', {}).get('tour') == 1 and prof.get('sx') == 'F', str(prof))
+        check('en la nube, ya sin la bienvenida pendiente y aún sin programa', 'nw' not in core and core.get('np') == 1 and core.get('bio', {}).get('h') == '168', str({k: core.get(k) for k in ('nw', 'np', 'bio')}))
 
         # ── datos en el móvil 1 → la nube ──
         p1.evaluate("S.logs.push({d:'%s',n:'Pecho',v:4000,s:16,m:55,q:7});S.meals['%s']={0:[%s]};saveState()" % (today, today, json.dumps(arroz)))
@@ -263,7 +281,8 @@ def main(path):
         # ── el admin: Administración, cuentas y contraseña temporal ──
         c4, p4 = device()
         login(p4, 'VictorAdmin_', 'admin-clave-1', new=True)
-        wait(p4, "!!document.querySelector('#tour.trs')", 30000)
+        wait(p4, "!!document.getElementById('wlc')", 30000)
+        new_account_bio(p4, 'M')
         p4.click('#tour [data-a=trx]')
         check('una cuenta nueva no es admin: sin Administración', p4.evaluate("(S.tab=3,R(),!document.querySelector('[data-a=adm]'))"))
         fb.set_role('VictorAdmin_', 'admin')

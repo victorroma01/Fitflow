@@ -22,14 +22,14 @@ A.pv = (i, b) => {
     setPreviewLevel(isLevel(S.lv) ? S.lv : 'int');
   if (!isLevel(previewLevel))
     setPreviewLevel('int');
-  const act = S.cpi < 0 && S.prog == i && previewLevel == S.lv;
+  const act = !S.np && S.cpi < 0 && S.prog == i && previewLevel == S.lv;
   const pl = act ? S.plan : levelPlan(parseProgram(i), previewLevel, i);
   sheet(html`${pgHead(X(PROGRAM_NAMES[i]), 'pg')}<p class="mu" style="margin:-6px 0 10px">${(previewLevel != 'int' && LEVEL_PROGRAM_NOTES[i] && LEVEL_PROGRAM_NOTES[i][previewLevel]) || PROGRAM_NOTES[i] || ''}</p>${levelSegment()}${raw(programDaysHtml(pl))}<div style="height:84px"></div>${act ? '' : (S.cpi < 0 && S.prog == i ? html`<button class="sb pr" data-a="lvs" data-v="${previewLevel}" style="padding:16px;font-size:16px;border-radius:16px">Usar nivel ${raw(LEVEL_NAMES[previewLevel].toLowerCase())}</button>` : html`<button class="sb pr" data-a="sp2" data-i="${i}" style="padding:16px;font-size:16px;border-radius:16px">Cambiar plan de entrenamiento</button>`)}`);
   sheetToTop();
 };
 /** Fila de un programa predefinido en la lista de Programas. */
 const presetRow = i => {
-  const act = S.cpi < 0 && S.prog == i;
+  const act = !S.np && S.cpi < 0 && S.prog == i;
   const pl = act ? S.plan : levelPlan(parseProgram(i), S.lv, i);
   return html`<button class="mb pgc" data-a="pv" data-i="${i}"><span style="flex:1;min-width:0">${programRow(PROGRAM_NAMES[i], levelTag(S.lv))}<small>${raw(act ? '<b style="color:var(--at)">Plan actual</b> · ' : '')}${perWeekText(pl)} · ${raw(pl.reduce((s, d) => s + d.ex.length, 0))} ejercicios</small></span>›</button>`;
 };
@@ -58,7 +58,10 @@ A.sp2 = i => {
   }
   previewProgram = i;
   const v = isLevel(previewLevel) ? previewLevel : S.lv;
-  confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(PROGRAM_NAMES[i]) + '» con nivel ' + LEVEL_NAMES[v].toLowerCase() + '. Se reiniciará el progreso de la semana.', 'sp2c', 'Cambiar');
+  if (S.np)
+    confirmDialog('¿Empezar con este programa?', 'Empezarás con «' + X(PROGRAM_NAMES[i]) + '», con nivel ' + LEVEL_NAMES[v].toLowerCase() + '. Puedes cambiarlo cuando quieras.', 'sp2c', 'Empezar');
+  else
+    confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(PROGRAM_NAMES[i]) + '» con nivel ' + LEVEL_NAMES[v].toLowerCase() + '. Se reiniciará el progreso de la semana.', 'sp2c', 'Cambiar');
 };
 A.sp2c = () => {
   syncCustomProgram();
@@ -67,6 +70,7 @@ A.sp2c = () => {
   S.lv = v;
   S.prog = previewProgram;
   S.cpi = -1;
+  delete S.np;
   S.plan = levelPlan(parseProgram(previewProgram), v, previewProgram);
   S.wk = 1;
   S.sl = 0;

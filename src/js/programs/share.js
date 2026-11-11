@@ -88,6 +88,10 @@ A.cpsh = () => {
   }
 };
 A.pgs0 = () => {
+  if (S.np) {
+    toast('Aún no tienes un programa que compartir');
+    return;
+  }
   try {
     shareState = { n: S.cpi >= 0 && S.cp[S.cpi] ? S.cp[S.cpi].n : PROGRAM_NAMES[S.prog], plan: S.plan, back: 'pg' };
     sheet(sharePage());
@@ -134,7 +138,7 @@ const importProgram = t => {
     progDraft.k = S.cp.length - 1;
     saveState();
     A.pg();
-    dialog('Programa importado', '«' + X(nm) + '» ya está en Mis programas. ¿Quieres empezar con él ahora? Se reiniciará el progreso de la semana.', [['Más tarde', 'zno', ''], ['Usar ahora', 'cpa', 'pr']]);
+    dialog('Programa importado', '«' + X(nm) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.np ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'zno', ''], ['Usar ahora', 'cpa', 'pr']]);
   }
   catch (x) {
     const e = $('#ipe');

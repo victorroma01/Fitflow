@@ -86,6 +86,7 @@ import './system/diagnostics.js';
 import './system/report.js';
 import './system/updates.js';
 import './system/phone.js';
+import './system/welcome.js';
 import './system/tour.js';
 import './extras/anatomy.js';
 import './extras/summary.js';

@@ -9,7 +9,7 @@
    Define: LAUNCH, launchAction, badgeOk, badgeCount, badgeLast, badgeSync, badgeCard  · acciones/registros: 1
 */
 import { logError } from '../core/errors.js';
-import { C } from '../core/registry.js';
+import { A, C } from '../core/registry.js';
 import { S, saveState, setNutriDayOffset, setWeightView, W } from '../core/state.js';
 import { toast } from '../core/toast.js';
 import { R } from '../core/render.js';
@@ -41,6 +41,9 @@ export const launchAction = () => {
     if (a == 'comida')
       setNutriDayOffset(0);
     setWeightView(a == 'peso' ? 1 : 0);
+    /* «Entreno de hoy» sin programa elegido todavía (I-24): a Programas, en cuanto la app esté pintada */
+    if (a == 'entreno' && S.np)
+      setTimeout(() => A.pg(), 0);
   }
   catch (e) {
     logError('acceso directo', e);

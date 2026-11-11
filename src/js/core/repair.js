@@ -24,6 +24,11 @@ const repairShape = () => {
     const O_ = x => x && typeof x == 'object' && !A_(x);
     if (!(S.prog >= 0 && S.prog < PROGRAMS.length))
       S.prog = 0;
+    /* sin programa elegido (I-24) y bienvenida por ver (I-23): 1 o nada */
+    ['np', 'nw'].forEach(k => {
+      if (S[k] !== 1)
+        delete S[k];
+    });
     if (!A_(S.plan) || !S.plan.length || !S.plan.every(d => d && typeof d.n == 'string' && A_(d.ex) && d.ex.every(e => e && typeof e.n == 'string' && +e.s > 0)))
       S.plan = parseProgram(S.prog);
     if (!(S.sel >= 0 && S.sel < S.plan.length))

@@ -125,7 +125,7 @@ export const levelPlan = (pl, lv, id) => {
 };
 const planSignature = pl => JSON.stringify(pl.map(d => [d.n, d.ex.map(e => [e.n, e.s, e.rg || 0, e.u || 0, e.r || 0, e.b || 0, e.tk || 0])]));
 export const currentCustomProgram = () => S.cpi >= 0 ? S.cp[S.cpi] : null;
-export const levelsActive = () => S.cpi < 0 || !!(currentCustomProgram() && currentCustomProgram().o);
+export const levelsActive = () => !S.np && (S.cpi < 0 || !!(currentCustomProgram() && currentCustomProgram().o));
 const levelGenerate = (v) => {
   const p = currentCustomProgram();
   if (p)

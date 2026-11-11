@@ -20,6 +20,10 @@ import { toast } from './toast.js';
 export const backTarget = () => {
   if ($('#lgw'))
     return null;
+  /* la bienvenida de una cuenta nueva no se cierra: sus datos son obligatorios (system/welcome) */
+  if ($('#wlc'))
+    return { k: 'aviso', go: () => {
+      } };
   if ($('#upd'))
     return { k: 'aviso', go: () => A.updLater() };
   if ($('#dg').firstChild)
