@@ -50,7 +50,7 @@ en el campo `j` (Firestore no admite listas dentro de listas, y el historial las
 
 | Documento | Qué guarda | Lee | Escribe |
 | --- | --- | --- | --- |
-| `users/{uid}` | `u` usuario, `sx` sexo, `pr` preferencias (tema, color y color propio, Cristal, animaciones, unidades, sonido y avisos, pestaña al abrir y si ya se vio el recorrido), `ca` alta, `m` último cambio y `mc` si debe cambiar la contraseña | Su dueño y el admin | Su dueño crea `u` (el de su correo técnico) y cambia `sx`, `pr` y `m`; `mc` solo lo puede quitar |
+| `users/{uid}` | `u` usuario, `sx` sexo, `pr` preferencias (tema, color y color propio, Cristal, animaciones, unidades, sonido y avisos, pestaña al abrir y si ya se vio el recorrido), `ca` alta, `m` último cambio, `mc` si debe cambiar la contraseña y `os` el sistema del último móvil que abrió la app (`ios`, `android` u `otro`; desde la V1.0.1, solo para el recuento de Administración, T-28) | Su dueño y el admin | Su dueño crea `u` (el de su correo técnico) y cambia `sx`, `pr`, `m` y `os`; `mc` solo lo puede quitar |
 | `users/{uid}/data/index` | `p`: la versión de cada parte (`{ "core": "…", "logs:2026": "…" }`) | Su dueño | Su dueño |
 | `users/{uid}/data/core` | El núcleo de `S` sin lo que es del dispositivo, ni lo que tiene su propio documento, ni las preferencias | Su dueño | Su dueño |
 | `users/{uid}/logs/{año}` | Entrenos de ese año (cada uno con su `id`) | Su dueño | Su dueño |
@@ -65,14 +65,16 @@ en el campo `j` (Firestore no admite listas dentro de listas, y el historial las
 Fuera de Firebase, en el código de la app: el catálogo de ejercicios con sus tips y explicaciones (T-05) y la nota de cada versión,
 que sale del `CHANGELOG.md` (T-20). No se sincronizan el entreno en curso, el registro de errores ni las copias automáticas del
 móvil, ni lo que es del dispositivo: pestaña y día elegidos, rango de la gráfica de peso, fecha de la última copia en archivo.
-Los índices de un solo campo están desactivados para `j` y `p` (`firestore.indexes.json`): nadie busca por ellos.
+Firestore indexa todos los campos (los índices de serie). Nadie busca por `j` ni por `p`, pero quitarles el índice necesita un
+permiso que la cuenta de servicio no tiene, y sin él todo funciona igual (I-16): desde la V1.0.1 no se intenta.
 
 ## Sincronización (`cloud/sync`)
 
 1. Cada parte del estado que se guarda (`core/persist`) se avisa a `Store.remote`; unos segundos después, y al volver la red o la
    app a primer plano, se sincroniza. Sin red no pasa nada: lo cambiado sigue en el móvil y se sube después, aunque se cierre la app.
 2. **Perfil.** Se juntan las preferencias del móvil y las de la nube (cada una por separado, gana el cambio más reciente). Si no
-   existe (cuenta recién creada), se crea.
+   existe (cuenta recién creada), se crea. Después, si ha cambiado, se escribe aparte el sistema del móvil (`os`): si las reglas
+   aún no lo admiten (una app publicada antes que ellas), solo falla eso y se reintenta en la siguiente sincronización.
 3. **Bajar.** El índice dice qué partes cambiaron en la nube desde la última vez (su versión no es la recordada). Se bajan de una
    vez y se juntan con lo local **sin esperas por medio**, así nada cambia `S` mientras tanto. Con un entreno en curso se espera a
    que acabe.
@@ -118,7 +120,7 @@ Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run wor
 | --- | --- | --- |
 | Restablecer contraseña | `admin-contrasena.yml` | Se escribe el usuario. Le pone una contraseña temporal, cierra sus sesiones y marca `mc` en su perfil; la contraseña solo se guarda en `adminInbox`, que el admin ve en Perfil → Administración durante 24 h. No aparece en el registro, que es público. |
 | Asignar rol | `admin-rol.yml` | Usuario y rol (admin o usuario). Vale la próxima vez que esa persona abra la app. |
-| Desplegar reglas | `firebase-reglas.yml` | Reglas e índices de Firestore (`tools/admin/reglas.mjs`: las reglas con la API de reglas de Firebase y los índices con la de Firestore; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Se lanza solo al fusionar en `main` un cambio de esos archivos. |
+| Desplegar reglas | `firebase-reglas.yml` | Reglas de Firestore (`tools/admin/reglas.mjs`, con la API de reglas de Firebase; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Se lanza solo al fusionar en `main` un cambio de las reglas o del flujo. |
 | Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuentas y acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
 
 Los flujos manuales solo aparecen en Actions cuando están en `main`.

@@ -105,15 +105,17 @@ el que usan la mayoría de las pruebas.
 │   │   ├── nutrition/      resumen, dieta, Mi nutrición, agua, añadir alimentos y plantillas
 │   │   ├── dashboard/      tarjetas, registro y calendario, progreso y peso corporal
 │   │   ├── profile/        Perfil, página de Ajustes, apariencia, unidades, sonido y vibración
-│   │   ├── system/         archivos, copias de seguridad, diagnóstico, actualizaciones, informe de fallos, PDF, recorrido de la
-│   │   │                   primera vez e integración con el móvil (accesos directos y globo del icono)
+│   │   ├── system/         archivos, copias de seguridad, diagnóstico, actualizaciones, informe de fallos, PDF, bienvenida de
+│   │   │                   una cuenta nueva, recorrido de la primera vez e integración con el móvil (accesos directos y globo)
 │   │   ├── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros, medallas, CSV y anatomía
 │   │   ├── cloud/          Firebase por REST: configuración, peticiones, sesión, cuentas, Firestore, fusión y sincronización
 │   │   └── account/        inicio de sesión y registro, la cuenta en Ajustes y Administración
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
-│   └── img/                day/ (portadas, order.txt) y ex/ (fotos de ejercicio, map.txt)
-├── static/                 sw.js (plantilla), manifiesto e iconos
-├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py
+│   └── img/                day/ (portadas, order.txt), ex/ (fotos de ejercicio, map.txt) y brand/ (el logo: fuentes y
+│                           lo que genera tools/marca.py)
+├── static/                 sw.js (plantilla), manifiesto, iconos de la app y de los accesos directos (tools/marca.py)
+├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py ·
+│                           marca.py (logo e iconos)
 │   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar)
 ├── tests/                  pruebas, run.sh y compare.sh
 ├── docs/
@@ -121,6 +123,6 @@ el que usan la mayoría de las pruebas.
 │   ├── tecnica/            esta documentación
 │   └── img/                capturas
 ├── .github/workflows/      pruebas y publicación automáticas, y los flujos de Firebase (reglas y administración)
-├── firestore.rules · firestore.indexes.json · firebase.json · .firebaserc     reglas, índices y proyecto de Firebase
+├── firestore.rules · firebase.json · .firebaserc     reglas y proyecto de Firebase
 └── build.py · package.json · CHANGELOG.md · LICENSE
 ```

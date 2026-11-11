@@ -358,7 +358,7 @@ def main(path):
         rid = p2.evaluate('S.rp[0].id')
         rdoc = fb.data('reports/' + rid) or {}
         check('el aviso llega a la nube: pendiente, con el usuario y el id de la cuenta', rdoc.get('st') == 'p' and rdoc.get('u') == 'Ana_1' and rdoc.get('uid') == uid and rid.startswith(uid + '-') and rdoc.get('k') == 'f' and rdoc.get('a') == 'Algo se ve mal', str(rdoc))
-        check('con los datos técnicos (versión y navegador; nada personal)', 'StrataFit 1.0.0' in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@stratafit.app' not in json.dumps(rdoc))
+        check('con los datos técnicos (versión y navegador; nada personal)', ('StrataFit ' + p2.evaluate('APPV')) in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@stratafit.app' not in json.dumps(rdoc))
         fb.set_offline(c2, True)
         p2.evaluate("A.rpo();document.querySelector('[data-a=rpk][data-v=s]').click()")
         p2.evaluate("document.getElementById('rpx').value='Poder exportar el análisis también en Excel';A.rps()")

@@ -5,14 +5,14 @@
 | Apartado | Qué tiene |
 | --- | --- |
 | Foto y usuario | Arriba, tu foto de perfil y tu nombre de usuario (y «Administrador», si lo eres). La primera vez que tocas la foto, la app pide tu consentimiento: la foto se guarda en tu cuenta para verla en tus otros móviles y solo la ves tú. **Quitar foto** la borra del móvil y de la cuenta. |
-| **Plan de entrenamiento** | El programa y el nivel actuales y cuántos entrenos por semana. |
+| **Plan de entrenamiento** | El programa y el nivel actuales y cuántos entrenos por semana. Sin programa todavía (una cuenta nueva), «Aún sin programa» y **Seleccionar programa**. |
 | **Medidas** | Cintura, brazo, pecho y más, con su gráfica, la última medición y el historial. (Las fotos de progreso de la serie de prueba ya no existen: no se guardan datos personales.) |
 | **Logros** | 25 logros, cada uno con su medalla: la forma y el color dicen el tipo de logro y el metal (bronce, plata, oro, platino o amatista), la dificultad. Las conseguidas salen juntas bajo el recuento; las que faltan, en gris. |
 | **Ver análisis mensual** | El resumen de cada mes, a partir del primer mes de uso, en una pantalla propia y descargable en PDF ([abajo](#análisis-mensual)). |
 | **Exportar datos (CSV)** | Entrenos, series, peso, medidas, comidas y cardio en archivos CSV para una hoja de cálculo. |
-| **Datos biométricos** | Sexo, edad, altura, peso, actividad diaria y objetivo físico. Con ellos se calculan el metabolismo basal, el gasto diario y los objetivos de Nutrición. El sexo (hombre o mujer, se puede cambiar cuando quieras) decide además qué programas salen arriba en Programas. |
+| **Datos biométricos** | Sexo, edad, altura, peso, actividad diaria y objetivo físico. Con ellos se calculan el metabolismo basal, el gasto diario y los objetivos de Nutrición. El sexo (hombre o mujer, se puede cambiar cuando quieras) decide además qué programas salen arriba en Programas. Una cuenta nueva los da al empezar, en la [bienvenida](experiencia.md#la-primera-vez). |
 | **Fallos y sugerencias** | Lo que has enviado con «Informar de un fallo», con su estado (pendiente, vista o contestada) y la respuesta ([abajo](#fallos-y-sugerencias)). |
-| **Administración** | Solo para el administrador: fallos y sugerencias de todos, contraseñas temporales y cuentas ([Cuenta](cuenta.md#administración-solo-el-administrador)). |
+| **Administración** | Solo para el administrador: fallos y sugerencias de todos, contraseñas temporales y cuentas, con cuántas usan iPhone, Android u otro sistema ([Cuenta](cuenta.md#administración-solo-el-administrador)). |
 | **Ajustes** | Abre la página de Ajustes. |
 
 Abajo, el nombre de la app y su versión.
@@ -27,8 +27,9 @@ Página propia, ordenada por secciones. Cada fila abre su página, con «←» p
 | Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico; reducir animaciones), **Color de acento** y **Al abrir la app** ([abajo](#apariencia)). |
 | Entreno | **Unidades de carga** (kg o lb) y **Sonido y avisos** (sonidos del descanso, vibración y, en iPhone, el [globo en el icono](experiencia.md#globo-en-el-icono-iphone)). |
 | Datos | **Copia de seguridad** y **Borrar todos los datos**. |
-| App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **Ver el recorrido** (el de la [primera vez](experiencia.md#recorrido-de-la-primera-vez)), **Diagnóstico** (versión, dispositivo, espacio y errores registrados) e **Informar de un fallo**. |
-| Información | **Privacidad** y **Aviso legal** (copyright, licencia, aviso de salud y origen de los datos de Open Food Facts). |
+| App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **Ver el recorrido** (el de la [primera vez](experiencia.md#recorrido-de-la-primera-vez)), **Diagnóstico** (versión, dispositivo, espacio, errores registrados y el **tiempo de pintado**: lo que tarda en verse cada pantalla, para comparar, por ejemplo, un color de serie con uno propio) e **Informar de un fallo**. |
+| Ajustes avanzados | **Esfuerzo (RPE)**: registrar lo dura que ha sido cada serie, del 6 al 10. Viene desactivado; al activarlo, una ventana explica con dibujos la escala, cómo se marca y para qué lo usa la app (la semana de descarga y el análisis mensual). **¿Qué es el RPE?** la vuelve a enseñar. Desactivarlo no borra lo ya anotado. |
+| Información | **Privacidad** y **Aviso legal** (copyright, licencia, aviso de salud y origen de los datos de Open Food Facts). Desde la V1.0.1, el aviso legal dice que el uso es gratuito durante la fase de pruebas y que en ella existe el riesgo de pérdida total o parcial de datos. |
 
 Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesión)).
 
@@ -39,7 +40,8 @@ Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesió
   que abre el selector de colores del móvil para elegir cualquiera. Con un color propio, la app calcula sus tonos (más claro y más
   oscuro) y el color del texto encima, blanco o casi negro, para que todo se lea bien con el tema oscuro y con el claro; si el color
   es muy oscuro o muy claro, lo ajusta un poco. Arriba, una **vista previa** enseña cómo quedan la cabecera de un día, un botón, los
-  chips, una barra y la barra de pestañas.
+  chips, una barra y la barra de pestañas. Mientras eliges un color propio cambia solo la vista previa; el color pasa a toda la app
+  cuando el selector se queda quieto. Sin elegir ninguno, la app usa **Azul eléctrico**, el del logo (hasta la V1.0.0, Morado).
 - **Tema y estilo**: tema claro, oscuro o automático (el del móvil); estilo Cristal (con tres intensidades) o Clásico; y **Reducir
   animaciones**, para que las páginas y ventanas aparezcan sin deslizarse (si el móvil tiene «Reducir movimiento», la app ya lo hace).
 - **Al abrir la app**: la pestaña con la que se abre StrataFit: la última que usaste (lo de siempre) o una fija (Workout, Nutrición,

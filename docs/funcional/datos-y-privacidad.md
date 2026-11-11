@@ -9,7 +9,9 @@
   servidores de Madrid; el usuario y la contraseña (cifrada) los guarda Firebase Authentication.
 - **Solo tu cuenta los lee.** Las reglas del servidor no dejan que otra cuenta lea ni escriba los tuyos.
 - **El administrador** ve de cada cuenta el usuario, el sexo, la fecha de alta y las preferencias de la app (aspecto, unidades, sonido
-  y si ya viste el recorrido); nunca tus entrenos, tus comidas, tus medidas, tu foto ni tu copia de seguridad. Sí ve los fallos y
+  y si ya viste el recorrido); nunca tus entrenos, tus comidas, tus medidas, tu foto ni tu copia de seguridad.
+- **El sistema del móvil**: desde la V1.0.1, tu cuenta guarda también el del último móvil con el que abriste la app (iPhone, Android
+  u otro), solo a efectos estadísticos: el administrador ve cuántas cuentas usan cada uno. Sí ve los fallos y
   sugerencias que le envías: tu usuario, el texto y, si los adjuntas, los datos técnicos.
 - **La copia de seguridad en la nube** es una sola por cuenta (cada copia sustituye a la anterior) y, como el resto de tus datos,
   solo la lee tu cuenta.

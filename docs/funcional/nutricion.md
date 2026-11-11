@@ -47,6 +47,15 @@ parte del objetivo y cuatro botones:
 **Buscar** y **Scan** usan Open Food Facts y traen los valores por 100 g. Solo se envía el texto que escribes o el número del código
 de barras; la imagen de la cámara no sale del móvil.
 
+- **Nutri-Score**: si el producto lo tiene, sale su letra (de la A, la mejor, a la E) con su color, en los resultados y al elegirlo o
+  escanearlo, con las cinco letras y la suya destacada.
+- **Mis alimentos**: lo que buscas o escaneas se guarda solo en el grupo **Mis alimentos** al añadirlo a una comida (una vez, aunque
+  lo añadas más veces), con su Nutri-Score, junto a los que creas en **Nuevo**. Cualquiera se borra con su **✕**; lo ya anotado en
+  tus comidas no cambia.
+- **Si la búsqueda falla**: la app prueba otro buscador de Open Food Facts y lo reintenta sola, y te dice qué pasa: sin conexión,
+  servicio saturado (prueba en un minuto), tarda demasiado, sin resultados o productos sin datos nutricionales, con
+  **Reintentar**. Los productos ya escaneados funcionan sin conexión.
+
 ## Plantillas
 
 Hay una plantilla para los días de entreno y otra para los de descanso. **Guardar día como plantilla** guarda las comidas del día;

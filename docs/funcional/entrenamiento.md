@@ -2,6 +2,9 @@
 
 ## El programa y la semana
 
+- **Sin programa todavía** (una cuenta nueva, desde la V1.0.1): Workout enseña un día de ejemplo difuminado y una tarjeta con
+  **Seleccionar programa**, que lleva a Programas. Hasta elegirlo, los días cuentan como de descanso (también en Nutrición y en el
+  Dashboard); la librería, los workouts personalizados, el WOD y el cardio se pueden usar igual.
 - **Programas listos**: Bro Split, Push Pull Leg, Torso / Pierna, Full Body, Glúteo y pierna, Híbrido y Hyrox / CrossFit, cada uno
   en tres niveles (principiante, intermedio y avanzado). El nivel cambia las series, las repeticiones, los descansos y las técnicas
   de intensidad.
@@ -21,19 +24,26 @@
 - **Semana**: arriba se cambia de semana (‹ ›). Los 7 días de la semana salen como botones; los de descanso llevan una luna.
 - **Tarjeta del día**: el día elegido, con su número de ejercicios, series y minutos. **Overview** enseña los ejercicios y permite
   editarlos; **Empezar** abre el entreno.
+- **Al completar un día** (guardando su entreno, o con **Completar descanso** en un día de descanso), queda elegido el siguiente
+  día sin completar; tras el último de la semana, el primero de la semana siguiente. Un día de descanso no se salta: la app se
+  queda en él hasta que lo marques como completado.
 
 ## Técnicas de intensidad
 
-Los programas combinan 10 técnicas según el ejercicio. En el entreno, cada serie lleva a la izquierda su abreviatura (WRK en las
-normales) y el objetivo del ejercicio dice la técnica; al tocar la abreviatura se abre una ventana pequeña con qué técnica es,
-cómo se hace y qué hace la app con ella. En la vista del programa hay una leyenda con las que usa.
+Los programas combinan 10 técnicas según el ejercicio. En el entreno, cada serie lleva a la izquierda su etiqueta y el objetivo del
+ejercicio dice la técnica; al tocar la etiqueta se abre una ventana pequeña con qué técnica es, cómo se hace y qué hace la app con
+ella. En la vista del programa hay una leyenda con las que usa.
 
-| Abreviatura | Técnica | En el entreno |
+Desde la V1.0.1, las series de trabajo (las normales, las de una pirámide y la última antes de un drop set o un rest-pause) llevan
+**WKT**; la fila extra del drop set lleva **DS** y la del rest-pause, **RP**. Al tocar WKT en una serie de pirámide, la ventana
+explica la pirámide.
+
+| Etiqueta | Técnica | En el entreno |
 | --- | --- | --- |
-| WRK | Serie normal | Series y descanso normales. |
-| PIR | Pirámide | Repeticiones que bajan en cada serie (12, 10, 8, 6) con más peso en cada una. |
-| DS | Drop set | La última serie acaba al fallo y, sin descanso, sigue una fila más con un 25 % menos de peso. |
-| RP | Rest-pause | Tras la última serie, 20 s de descanso y otro bloque corto con el mismo peso. |
+| WKT | Serie normal | Series y descanso normales. |
+| WKT | Pirámide | Repeticiones que bajan en cada serie (12, 10, 8, 6) con más peso en cada una. |
+| DS | Drop set | La última serie (WKT) acaba al fallo y, sin descanso, sigue una fila DS con un 25 % menos de peso. |
+| RP | Rest-pause | Tras la última serie (WKT), 20 s de descanso y una fila RP, un bloque corto con el mismo peso. |
 | MYO | Myo-reps | Una serie de activación y después mini series de 3-5 repeticiones con 15 s de descanso. |
 | CL | Cluster | Cada serie se hace en bloques de 2-3 repeticiones con micropausas de 15 s. |
 | PAR | Parciales | La última serie se alarga con repeticiones cortas en la posición de estiramiento. |
@@ -47,6 +57,8 @@ cómo se hace y qué hace la app con ella. En la vista del programa hay una leye
   básico, un drop set, myo-reps o parciales en el último aislamiento y superseries antagonistas en los bloques de bíceps y
   tríceps.
 - Un ejemplo de la nota: en Torso / Pierna, el press inclinado del día B es una pirámide 12 / 10 / 8 / 6 que acaba en drop set.
+- Desde la V1.0.1, Bro Split (Pecho) y Push Pull Leg (Push B) llevan **Press inclinado en máquina** donde antes iba el press de
+  pecho en máquina convergente, que sigue en la librería.
 
 ## Semana de descarga
 
@@ -77,7 +89,10 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
   pausar o pasar a la siguiente.
 - Cada ejercicio enseña su objetivo (series × repeticiones, repeticiones en reserva, descanso y tempo), el **calentamiento**
   propuesto, lo que hiciste la última vez y una **sugerencia** de peso y repeticiones para progresar.
-- Cada serie se anota con sus repeticiones y su peso, y se marca hecha con ✓. Se pueden añadir o quitar series.
+- Cada serie se anota con sus repeticiones y su peso, y se marca hecha con ✓. Se pueden añadir o quitar series. Al marcar la última
+  serie que faltaba, sale **¿Guardar el entreno?**, con **Guardar y salir** y **Cancelar** (como con el botón de avance de abajo).
+- **Esfuerzo (RPE)**: si lo activas en Ajustes → Ajustes avanzados, al marcar una serie salen debajo los números del 6 al 10 para
+  anotar lo dura que ha sido. Viene desactivado; **+ Drop set** sale siempre bajo la serie recién hecha que lleve peso.
 - **Peso sugerido**: al escribir el peso de una serie, las siguientes lo traen sugerido en gris oscuro, menos destacado que un
   peso ya registrado (en una pirámide, un escalón más en cada serie; en la bajada del drop set, un 25 % menos). Si cambias la
   serie 2, las siguientes sugieren el peso nuevo; una serie con el peso escrito a mano no cambia sola. El peso sugerido queda
@@ -93,7 +108,8 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
   **circuito**, que se hace igual, por rondas.
 - **Tips** (el icono «i»): el consejo propio de cada ejercicio (no hay dos iguales). **Notas**, **Historial** de sus series
   anteriores, **Swap** para cambiarlo por otro parecido sin perder el historial y **Discos** (el icono del disco), que calcula qué
-  discos poner en cada lado de la barra.
+  discos poner en cada lado de la barra. Van en dos filas (Tips, Notas, Tempo y Descanso; Historial, Swap y Discos), todos con la
+  misma altura.
 - **Cómo se hace**: al tocar la imagen del ejercicio (la foto o la figura) se abre su ejecución paso a paso, también propia de
   cada ejercicio, con un enlace a su ficha.
 - Al terminar, un **resumen** con el volumen, los récords y las series, que se puede compartir como imagen. Un entreno a medias se

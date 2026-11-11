@@ -12,6 +12,9 @@ Al abrir la app sin cuenta solo se ve la pantalla de inicio, con dos pestañas:
   mayúsculas o minúsculas: sale siempre como se registró.
 - **Entrar**: usuario y contraseña. El ojo del campo enseña u oculta la contraseña.
 
+Una cuenta recién creada empieza con la [bienvenida](experiencia.md#la-primera-vez): pide tus datos biométricos y, tras el recorrido,
+te invita a elegir un programa.
+
 Para crear la cuenta o entrar hace falta internet; después, la app funciona igual sin conexión. Si la contraseña falla cinco veces
 seguidas, hay que esperar unos segundos antes de volver a probar (cada fallo más dobla la espera, hasta 5 minutos).
 
@@ -49,7 +52,10 @@ El administrador ve en Perfil la fila **Administración**:
   la ve quien lo envió en su Perfil ([Perfil y Ajustes](perfil-y-ajustes.md#fallos-y-sugerencias)).
 - **Contraseñas temporales**: las que ha creado para quien olvidó la suya, durante 24 horas. Cada una sale oculta; **Ver** la enseña,
   **Copiar** la copia y **Entregada** la borra.
-- **Cuentas**: el usuario, el sexo y la fecha de alta de cada cuenta. Nunca sus entrenos, comidas, medidas ni foto.
+- **Cuentas**: el usuario, el sexo, el sistema del último móvil con el que abrió la app (iPhone, Android u otro) y la fecha de alta
+  de cada cuenta, y arriba cuántas usan cada sistema (las que aún no han abierto la V1.0.1 salen como «sin dato»). Nunca sus
+  entrenos, comidas, medidas ni foto. Al volver a Administración desde Fallos y sugerencias, se ve lo ya cargado mientras se
+  actualiza.
 
 Las tareas de administración se hacen desde GitHub (Actions → el flujo → *Run workflow*):
 

@@ -36,15 +36,14 @@ se interrumpe: el aviso espera a que termines. Lo que cambia en cada versión es
 
 <br clear="right">
 
-## Lo que llega en la V1.0.0
+## Versiones
 
-La V1.0.0 está en desarrollo, por milestones (M1 a M8) que se siguen en GitHub. Ya están en la rama de desarrollo las cuentas con
-usuario y contraseña, los datos en la nube con Firebase y los roles de administrador y usuario (M2), y los programas nuevos (M3):
-Push Pull Leg y Full Body en ciclo, Glúteo y pierna, programas recomendados según el sexo, 10 técnicas de intensidad, semana de
-descarga en naranja que se puede omitir, rotación de ejercicios y un consejo y una explicación de ejecución propios de cada
-ejercicio; la pantalla de entrenamiento renovada, con peso sugerido, superseries por rondas y el reloj circular del WOD (M4); el
-seguimiento (M5): recordatorio de pesaje, análisis mensual descargable en PDF, fallos y sugerencias con respuesta, nota de
-actualización y copia de seguridad única en la nube; y la experiencia de uso (M6): más colores y uno propio, el recorrido de la primera
-vez, deslizar para volver, arrastrar la burbuja de las pestañas, «atrás» de Android, accesos directos y globo en el icono, probados
-en Android e iPhone. Falta la revisión final (M8); las imágenes (M7) quedan para más adelante. Esta documentación se completa a medida
-que cada parte llega a la app.
+La **V1.0.0** es la publicada: cuentas con usuario y contraseña y datos en la nube, programas nuevos con técnicas de intensidad,
+semana de descarga y rotación, la pantalla de entrenamiento renovada, el seguimiento (pesaje, análisis mensual, fallos y
+sugerencias, copia en la nube) y el manejo de una app del móvil.
+
+La **V1.0.1**, en desarrollo, corrige lo encontrado al probarla en el iPhone (pantalla en negro al volver con el dedo, el sonido tras
+quitar el silencio, la búsqueda de alimentos, el color propio, la barra de pestañas…) y trae la bienvenida con los datos de una
+cuenta nueva, empezar sin programa, el logo nuevo, el paso al día siguiente, el RPE opcional, el Nutri-Score, «Mis alimentos» y el
+recuento de iPhone y Android en Administración. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md);
+lo pendiente, en los milestones de GitHub (V1.0.2, App móvil e Ideas futuras).

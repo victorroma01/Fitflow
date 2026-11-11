@@ -4,7 +4,13 @@ Revisión final del código (T-04) y pruebas (T-21) de la rama `desarrollo-1.0.0
 las issues encontradas, de cualquier tipo: las que ya se han corregido en M8 y las que quedan abiertas. Las abiertas están en
 GitHub como issues [#7 a #21](https://github.com/victorroma01/Fitflow/issues) (I-01 es la #7, I-02 la #8, y así hasta I-15, la
 #21), con su prioridad (High, Medium, Low) y su tipo como etiquetas; las de la publicación (I-01, I-02 e I-07), en el milestone M8.
-I-16 y C15 salieron al publicar; I-16 aún no está en GitHub.
+I-16 y C15 salieron al publicar; I-16 es la [#25](https://github.com/victorroma01/Fitflow/issues/25).
+
+**Estado tras la V1.0.1** (decisiones del propietario del 11 de noviembre de 2026): I-02 está cerrada (comprobaciones hechas);
+I-12, cerrada como «no se hará por ahora»; I-16 e I-15, corregidas en la V1.0.1 (sin el paso de los índices; iconos propios de los
+accesos directos); I-07 va con la publicación de la V1.0.1; I-03 pasa al milestone «App móvil»; I-04, I-05 (con App Check), I-06,
+I-08 a I-11, I-13 e I-14, a la V1.0.2; I-01 sigue abierta hasta la prueba en un Android. Lo encontrado al probar la V1.0.0 en el
+iPhone son las issues I-17 a I-29 (#26 a #38), en los milestones de la V1.0.1 y la V1.0.2.
 
 ## Resumen
 
