@@ -5,15 +5,20 @@
    rápido, vuelve; si no, se queda donde estaba. En las pestañas principales no hace nada, ni durante un entreno, en las
    ventanas de aviso, en el recorrido o en el temporizador de WOD. No empieza en un campo de texto ni en una fila que se desplaza
    de lado (por ejemplo, la de los filtros).
+   Mientras algo sigue al dedo, <html> lleva la clase «sliding»: lo que se mueve va sin desenfoque de fondo ni transparencia
+   (en iPhone, mover una capa con desenfoque la deja en negro a ratos; I-20). Si es una subpágina, debajo se ve la página a la
+   que se vuelve (showPageBelow) y no la pestaña.
    Define: SWIPE_KINDS, SWIPE_SKIP, swipe, swipeEnd, scrollsSideways, swipeMove, swipeReset, swipeStop
 */
 import { $ } from './util.js';
 import { backTarget } from './back.js';
+import { showPageBelow } from './ui.js';
 /** Lo que se cierra deslizando (tipos de backTarget). */
 const SWIPE_KINDS = ['hoja', 'menu', 'página'];
 /* donde no empieza el gesto: campos, la barra de pestañas (tiene el suyo: core/tabbar) y lo marcado con data-noswipe */
 const SWIPE_SKIP = 'input,textarea,select,[contenteditable],nav,canvas,[data-noswipe]';
-/* gesto en curso: { id, x0, y0, t (de backTarget), on (ya es nuestro), dx, w, vx, px, pt, also (lo que se mueve con la página) } */
+/* gesto en curso: { id, x0, y0, t (de backTarget), on (ya es nuestro), dx, w, vx, px, pt, also (lo que se mueve con la página),
+   bk (el fondo oscuro), below (quita la página puesta debajo, si la hay) } */
 let swipe = null;
 /* fin del último gesto: el toque que lo termina no debe pulsar lo que haya debajo */
 let swipeEnd = 0;
@@ -42,6 +47,9 @@ const swipeReset = s => {
   });
   if (s.bk)
     s.bk.style.opacity = '';
+  if (s.below)
+    s.below();
+  document.documentElement.classList.remove('sliding');
 };
 /* al soltar: vuelve si ha pasado la cuarta parte (o el gesto es rápido); si no, la página regresa a su sitio */
 const swipeStop = go => {
@@ -69,9 +77,13 @@ const swipeStop = go => {
       return;
     }
     s.t.go();
-    /* si era una subpágina, la anterior aparece en la misma hoja con un pequeño fundido */
     const p = $('#sh .sp');
-    if (p && p == s.t.el && !calm && p.animate)
+    if (!p || p != s.t.el)
+      return;
+    /* era una subpágina. Si la anterior ya se veía debajo, queda tal cual, sin animaciones; si no, entra con un pequeño fundido */
+    if (s.below)
+      p.classList.add('still');
+    else if (!calm && p.animate)
       p.animate([{ transform: 'translateX(-28px)', opacity: .6 }, { transform: 'none', opacity: 1 }], { duration: 180, easing: 'ease-out' });
   }, calm ? 0 : done ? 180 : 240);
 };
@@ -86,7 +98,7 @@ document.addEventListener('pointerdown', e => {
   const inside = t.el.contains(g) || t.k == 'hoja' && !!g.closest('#sh > .sb');
   if (!inside || scrollsSideways(g, t.el.parentElement))
     return;
-  swipe = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t, on: 0, dx: 0, vx: 0, px: e.clientX, pt: Date.now(), w: innerWidth, also: [], bk: null };
+  swipe = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t, on: 0, dx: 0, vx: 0, px: e.clientX, pt: Date.now(), w: innerWidth, also: [], bk: null, below: null };
 });
 document.addEventListener('pointermove', e => {
   const s = swipe;
@@ -103,9 +115,11 @@ document.addEventListener('pointermove', e => {
       return;
     }
     s.on = 1;
+    document.documentElement.classList.add('sliding');
     if (s.t.k == 'hoja') {
       s.also = [...document.querySelectorAll('#sh > .sb')];
       s.bk = $('#sh .bk');
+      s.below = showPageBelow();
     }
     else if (s.t.k == 'menu')
       s.bk = $('#mn .mbk');

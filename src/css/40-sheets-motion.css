@@ -69,6 +69,20 @@ details[open]>:not(summary) {
   border-radius:0;
   animation:slr .32s cubic-bezier(.2,.8,.2,1);
 }
+/* la página a la que se vuelve, puesta debajo de la subpágina que se desliza con el dedo (core/ui showPageBelow) */
+#sh.full .sp.spu {
+  z-index:8;
+  animation:none;
+  pointer-events:none;
+}
+/* la página que sigue al dedo, con una sombra en su borde: se ve que va por encima de lo que deja a la vista */
+html.sliding #sh.full .sp:not(.spu) {
+  box-shadow:-12px 0 32px rgba(0,0,0,.3);
+}
+/* esa página, y la misma ya de verdad al soltar el dedo (.still), salen tal cual: sin las animaciones de entrada */
+.sp.spu *,.sp.spu *::before,.sp.spu *::after,.sp.still,.sp.still *,.sp.still *::before,.sp.still *::after {
+  animation:none!important;
+}
 .swg {
   display:grid;
   grid-template-columns:repeat(4,1fr);

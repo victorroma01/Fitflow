@@ -264,6 +264,17 @@ html.gl #sh.full .sp {
   background:color-mix(in srgb,var(--bg) var(--pf),transparent);
   border:0;
 }
+/* mientras una página o una ventana siguen al dedo (core/swipe): sin desenfoque de fondo ni transparencia. En iPhone, mover
+   una capa con desenfoque la deja en negro a ratos (I-20) */
+html.gl.sliding #sh .sp {
+  background:var(--bg);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+html.gl.sliding #sh .bk {
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
 html.gl .bk {
   background:rgba(0,0,0,var(--dk));
   -webkit-backdrop-filter:blur(var(--bb));

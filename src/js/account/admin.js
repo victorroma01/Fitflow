@@ -47,7 +47,9 @@ const loadAdmin = async () => {
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.adm = () => {
-  adminState = { st: 'load', inbox: [], users: [], err: '', show: '', del: '', rp: -1 };
+  /* con los datos ya cargados (al volver de Fallos y sugerencias, o al abrirla otra vez), se enseñan mientras se piden de nuevo:
+     sin la pantalla vacía de «Cargando…» (I-20). Las contraseñas vuelven a salir ocultas */
+  adminState = adminState.st == 'ok' ? { ...adminState, show: '', del: '' } : { st: 'load', inbox: [], users: [], err: '', show: '', del: '', rp: -1 };
   fullPage(adminView());
   loadAdmin();
 };

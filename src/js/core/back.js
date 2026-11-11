@@ -5,9 +5,13 @@
    Lo usan deslizar para volver (core/swipe) y el botón o gesto atrás del sistema (Android, o el botón atrás del navegador):
    mientras hay algo que cerrar, la página tiene una entrada de más en el historial; al volver atrás, en vez de salir de la app
    se cierra lo de arriba. Desde Workout sale de la app, como siempre. Durante un entreno no se sale: lo avisa.
-   Define: backTarget, guarded, skipPops, backSync
+   En iPhone y iPad esa entrada no se pone (HISTORY_GUARD, I-20): no tienen botón atrás y, con ella, su gesto «atrás» (deslizar
+   desde el borde izquierdo) enseña una pantalla vacía —en negro con el tema oscuro— antes de volver. Sin ella, ese gesto no hace
+   nada y el dedo le llega a la app, que desliza la página (core/swipe).
+   Define: backTarget, HISTORY_GUARD, guarded, skipPops, backSync
 */
 import { $ } from './util.js';
+import { deviceOS } from './platform.js';
 import { logError } from './errors.js';
 import { A } from './registry.js';
 import { overviewMode, S, W, weightView } from './state.js';
@@ -52,6 +56,8 @@ try {
 catch (e) {
   /* navegador sin esta opción */
 }
+/* la entrada de más del historial solo hace falta donde hay botón o gesto «atrás» que la app pueda atender: en iOS, no */
+const HISTORY_GUARD = deviceOS() != 'ios';
 /* 1 si la entrada de más del historial es la de ahora */
 let guarded = false;
 /* tras recargar estando en la entrada de más (al actualizar, restaurar una copia…), esa entrada pasa a ser la normal: volver a
@@ -85,27 +91,29 @@ const backSync = () => {
     logError('historial (atrás)', e);
   }
 };
-window.addEventListener('popstate', () => {
-  if (skipPops) {
-    skipPops--;
+if (HISTORY_GUARD) {
+  window.addEventListener('popstate', () => {
+    if (skipPops) {
+      skipPops--;
+      backSync();
+      return;
+    }
+    /* el usuario ha vuelto atrás: se ha ido la entrada de más; se cierra lo de arriba y, si queda algo, vuelve a ponerse */
+    guarded = false;
+    const t = backTarget();
+    try {
+      if (t)
+        t.go();
+    }
+    catch (e) {
+      logError('atrás', e);
+    }
     backSync();
-    return;
+  });
+  /* cada vez que se abre o se cierra algo (pantalla, hoja, ventana, menú, recorrido…), se revisa */
+  if (typeof MutationObserver != 'undefined') {
+    const mo = new MutationObserver(backSync);
+    ['#app', '#sh', '#dg', '#mn'].forEach(s => $(s) && mo.observe($(s), { childList: true }));
+    mo.observe(document.body, { childList: true });
   }
-  /* el usuario ha vuelto atrás: se ha ido la entrada de más; se cierra lo de arriba y, si queda algo, vuelve a ponerse */
-  guarded = false;
-  const t = backTarget();
-  try {
-    if (t)
-      t.go();
-  }
-  catch (e) {
-    logError('atrás', e);
-  }
-  backSync();
-});
-/* cada vez que se abre o se cierra algo (pantalla, hoja, ventana, menú, recorrido…), se revisa */
-if (typeof MutationObserver != 'undefined') {
-  const mo = new MutationObserver(backSync);
-  ['#app', '#sh', '#dg', '#mn'].forEach(s => $(s) && mo.observe($(s), { childList: true }));
-  mo.observe(document.body, { childList: true });
 }
