@@ -20,7 +20,21 @@ def check(name, cond, info=''):
     print(('  ok   ' if cond else '  FALLA'), name, ('' if cond else info))
 
 
+# lo que piden el navegador y el service worker (para ver qué se vuelve a pedir: I-09) y lo que el servidor falla a propósito
+# (un trozo de código que no llega durante la instalación: I-08)
+REQS = []
+FAIL = set()
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        path = self.path.split('?')[0]
+        REQS.append(path)
+        if any(path.endswith(f) for f in FAIL):
+            self.send_error(500)
+            return
+        super().do_GET()
+
     def end_headers(self):
         self.send_header('Cache-Control', 'max-age=600')  # como GitHub Pages: el SW debe saltarse la caché HTTP
         super().end_headers()
@@ -115,6 +129,13 @@ def main(app):
                     cached = ev("caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url.split('/fitflow/')[1]))))).then(a=>a.flat())")
                     need = ['index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', ''] + code
                     check('precarga completa (también el código js/)', all(n in cached for n in need), str([n for n in need if n not in cached]))
+                    # lo que pide la página pasa por el service worker: el código sale de la caché sin volver a pedirlo al servidor y un
+                    # icono (o el documento, o una foto), de la caché pero revalidado (I-09)
+                    del REQS[:]
+                    eager = sorted(f for f in code if not re.match(r'js/(wod|csv|foods-online|exinfo|analysis|pdf)-', f))[0]
+                    ev("Promise.all([fetch('%s'),fetch('icon-192.png')]).then(()=>1)" % eager)
+                    pg.wait_for_timeout(800)
+                    check('el código sale de la caché sin pedirlo otra vez; un icono se revalida (I-09)', ('/fitflow/' + eager) not in REQS and '/fitflow/icon-192.png' in REQS, str(REQS[:12]))
                 else:
                     skipped('service worker y precarga')
                 # comprimido: líneas muy largas, de media más de 500 caracteres (los saltos que quedan son los de dentro de los textos;
@@ -256,6 +277,30 @@ def main(app):
                           str([ev('APPV'), v0, low_popup]))
                 else:
                     skipped('versión con un número menor')
+                # I-08: si un trozo de código no llega durante la primera instalación, no queda guardada una página a medias
+                if SW:
+                    lazy_one = sorted(f for f in os.listdir(os.path.join(site, 'fitflow', 'js')) if f.startswith('wod-'))[0]
+                    FAIL.add('/js/' + lazy_one)
+                    c4 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
+                    c4.add_init_script(INIT)
+                    p4 = c4.new_page()
+                    p4.goto(url)
+                    sw_js = "navigator.serviceWorker.getRegistration().then(r=>!!(r&&r.active))"
+                    docs_js = "caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url))))).then(a=>a.flat().filter(u=>/\\/fitflow\\/(index\\.html)?$/.test(u)).length)"
+                    p4.wait_for_timeout(3000)
+                    st4 = [p4.evaluate('!!window.__ffok'), p4.evaluate(sw_js), p4.evaluate(docs_js)]
+                    check('si un trozo de código no llega al instalarse, la app abre igual pero no se guarda una página a medias: la instalación falla (I-08)', st4 == [True, False, 0], str(st4))
+                    FAIL.clear()
+                    for _ in range(20):
+                        p4.reload()
+                        p4.wait_for_timeout(800)
+                        if p4.evaluate(sw_js) and p4.evaluate(docs_js) == 2:
+                            break
+                    have = p4.evaluate("caches.open('ff-app-2').then(c=>c.match('js/%s')).then(r=>!!r)" % lazy_one)
+                    check('y en la siguiente apertura con red se instala completa, con ese código', p4.evaluate(sw_js) and p4.evaluate(docs_js) == 2 and have, str([p4.evaluate(sw_js), p4.evaluate(docs_js), have]))
+                    c4.close()
+                else:
+                    skipped('instalación con un trozo de código que falla')
                 # app instalada: compartir copia de seguridad
                 c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
                 c2.add_init_script(INIT)
