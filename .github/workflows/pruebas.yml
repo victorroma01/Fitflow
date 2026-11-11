@@ -1,5 +1,5 @@
 # Pruebas y publicación de StrataFit.
-#  · En cada solicitud de fusión y en cada cambio en main o en una rama de desarrollo (desarrollo-1.0.1, desarrollo-…): compilar
+#  · En cada solicitud de fusión y en cada cambio en main o en una rama de desarrollo (desarrollo-1.0.2, desarrollo-…): compilar
 #    y probar en Chrome (Chromium) y en Safari (WebKit), y las reglas de Firestore y la nube con el emulador de Firebase. En
 #    las ramas de desarrollo no se etiqueta ni se publica nada.
 #  · En las solicitudes de fusión, además: comparar con la versión anterior (informativo, salvo con la etiqueta «refactor»).

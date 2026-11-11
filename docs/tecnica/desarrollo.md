@@ -91,7 +91,7 @@ como un archivo sin formatear.
 
 - Cada cambio va en su rama y llega a `main` con una solicitud de fusión; GitHub Actions pasa las pruebas en Chrome y en Safari y
   compara con la versión anterior.
-- Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` (la V1.0.1, en `desarrollo-1.0.1`), que GitHub prueba en cada subida
+- Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` (la V1.0.2, en `desarrollo-1.0.2`), que GitHub prueba en cada subida
   (las ramas `desarrollo-*`). No se fusiona ni se publica hasta que el propietario lo confirme.
 - Los avances se siguen con los milestones de GitHub: los de la V1.0.0 (M0 a M8), «V1.0.1 · Correcciones y mejoras», «V1.0.2 ·
   Código y técnica», «App móvil» e «Ideas futuras».

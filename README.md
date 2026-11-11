@@ -27,7 +27,7 @@
 
 ## Estado
 
-La versión publicada es la **V1.0.0**. La **V1.0.1** está en desarrollo en la rama `desarrollo-1.0.1`; se publica solo con la
+La versión publicada es la **V1.0.1**. La **V1.0.2** se desarrolla en la rama `desarrollo-1.0.2` y se publica solo con la
 confirmación del propietario. Los requisitos de cada versión se siguen en GitHub, por milestones:
 
 | Milestone | Contenido |
@@ -35,7 +35,7 @@ confirmación del propietario. Los requisitos de cada versión se siguen en GitH
 | M0 a M6 · V1.0.0 | Análisis, base técnica, cuentas y Firebase, programas, pantalla de entrenamiento, seguimiento y experiencia. Publicado y cerrado. |
 | M7 · Imágenes | Pospuesto por decisión del propietario, como el fondo del login (F-33, T-18). |
 | M8 · Cierre | Publicación de la V1.0.0 ([informe de issues](docs/tecnica/issues.md)); queda la prueba en un Android de verdad. |
-| **V1.0.1 · Correcciones y mejoras** | Lo encontrado al probar la V1.0.0 en el iPhone y las mejoras pedidas: bienvenida y datos de una cuenta nueva, empezar sin programa, logo nuevo, paso al día siguiente, RPE opcional, Nutri-Score, «Mis alimentos», recuento de iPhone y Android. Hecho en la rama. |
+| **V1.0.1 · Correcciones y mejoras** | Lo encontrado al probar la V1.0.0 en el iPhone y las mejoras pedidas: bienvenida y datos de una cuenta nueva, empezar sin programa, logo nuevo, paso al día siguiente, RPE opcional, Nutri-Score, «Mis alimentos», recuento de iPhone y Android. Publicado. |
 | V1.0.2 · Código y técnica | Código más claro y atómico y las issues técnicas pendientes (almacenamiento, App Check, accesibilidad, rendimiento…). |
 | App móvil · Ideas futuras | Lo que necesita una app de tienda (vibración en iPhone, recordatorio directo al calendario y notificaciones) y las interfaces de entrenador y nutricionista. Sin fecha. |
 
