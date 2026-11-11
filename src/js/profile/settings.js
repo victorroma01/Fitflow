@@ -3,7 +3,7 @@
    Información y, aparte y en rojo, «Cerrar sesión»);
    cada fila abre su página, con «←» de vuelta a Ajustes. Mientras una está abierta, cada R() la vuelve a pintar con core/morph
    (settingsSync), así los botones que cambian un ajuste (tema, color, unidades…) se ven al momento.
-   Define: settingsSub, settingsRow, ago, PRIVACY_TEXT, LEGAL_TEXT, SETTINGS_PAGES, settingsMain, settingsPage, settingsSync  · acciones/registros: 3
+   Define: settingsSub, settingsRow, ago, PRIVACY_TEXT, LEGAL_TEXT, SETTINGS_PAGES, settingsSection, accountRows, appearanceRows, workoutRows, dataRows, appRows, advancedRows, infoRows, settingsMain, settingsPage, settingsSync  · acciones/registros: 3
 */
 import { $, APPV } from '../core/util.js';
 import { errorLog } from '../core/errors.js';
@@ -47,12 +47,34 @@ const SETTINGS_PAGES = {
   icono: () => ['El icono nuevo', iconNoticeBody(0)],
   avanzado: () => ['Ajustes avanzados', rpeSettings()]
 };
+/* una sección de Ajustes: su título y sus filas */
+const settingsSection = (title, rows) => html`<div class="ph">${raw(title)}</div><div class="cd srg">${rows}</div>`;
+/* Cuenta: el usuario y la sincronización */
+const accountRows = () => [settingsRow('user', 'Cuenta', acctName(), 'openSettingsPage', { v: 'cuenta' }), settingsRow('cloud', 'Sincronización', syncShort(), 'accountSyncNow', { act: 1 })];
+/* Apariencia: tema y estilo, color de acento (con su muestra) y la pestaña al abrir la app */
+const appearanceRows = () => {
+  const theme = S.theme == 'dark' ? 'Oscuro' : S.theme == 'light' ? 'Claro' : 'Automático';
+  const accent = accentNow();
+  const swatch = html`<i class="srd" style="background:linear-gradient(135deg,${raw(accent[1])},${raw(accent[2])})"></i>${raw(accent[0])}`;
+  return [settingsRow('pal', 'Tema y estilo', theme + ' · ' + (glassMode() > 0 ? 'Cristal' : 'Clásico'), 'openSettingsPage', { v: 'tema' }), settingsRow('drop', 'Color de acento', swatch, 'openSettingsPage', { v: 'acento' }), settingsRow('home', 'Al abrir la app', startTabName(), 'openSettingsPage', { v: 'inicio' })];
+};
+/* Entreno: unidades y sonido */
+const workoutRows = () => [settingsRow('kgw', 'Unidades de carga', usesLb() ? 'Libras (lb)' : 'Kilos (kg)', 'openSettingsPage', { v: 'unidades' }), settingsRow('snd', 'Sonido y avisos', S.sound === 0 ? 'Sin sonido' : 'Con sonido', 'openSettingsPage', { v: 'sonido' })];
+/* Datos: la última copia (en la nube o en archivo) y borrarlo todo */
+const dataRows = () => {
+  const lastCopy = S.cloudBackup && +S.cloudBackup.at > 0 ? ago(+S.cloudBackup.at) : +S.lastBackupDate > 0 ? ago(+S.lastBackupDate) : 'Nunca';
+  return [settingsRow('bkp', 'Copia de seguridad', lastCopy, 'openBackup'), settingsRow('del', 'Borrar todos los datos', '', 'resetAllAsk', { red: 1, act: 1 })];
+};
+/* App: actualizaciones, nota, el icono nuevo (en un iPhone con el de antes: system/iconnotice), recorrido, diagnóstico y fallos */
+const appRows = () => {
+  const errors = errorLog().length;
+  return [settingsRow('upd', 'Actualizaciones', 'V' + APPV, 'updateCheck', { act: 1 }), settingsRow('news', 'Ver nota de actualización', '', 'openSettingsPage', { v: 'nota' }), iconNoticeApplies() ? settingsRow('home', 'El icono nuevo', 'Cómo cambiarlo', 'openSettingsPage', { v: 'icono' }) : '', settingsRow('tour', 'Ver el recorrido', '', 'tourReplay', { act: 1 }), settingsRow('pulse', 'Diagnóstico', errors ? errors + (errors == 1 ? ' error' : ' errores') : '', 'openDiagnostics'), settingsRow('bug', 'Informar de un fallo', '', 'openReport')];
+};
+const advancedRows = () => [settingsRow('gear', 'Esfuerzo (RPE)', rpeOn() ? 'Activado' : 'Desactivado', 'openSettingsPage', { v: 'avanzado' })];
+const infoRows = () => [settingsRow('shd', 'Privacidad', '', 'openSettingsPage', { v: 'privacidad' }), settingsRow('doc', 'Aviso legal', '', 'openSettingsPage', { v: 'legal' })];
+/* la página principal de Ajustes, por secciones, y al final «Cerrar sesión» */
 function settingsMain() {
-  const th = S.theme == 'dark' ? 'Oscuro' : S.theme == 'light' ? 'Claro' : 'Automático';
-  const ac = accentNow();
-  const ne = errorLog().length;
-  const sec = (t, rows) => html`<div class="ph">${raw(t)}</div><div class="cd srg">${rows}</div>`;
-  return html`<div id="ajs">${pgHead('Ajustes')}${sec('Cuenta', [settingsRow('user', 'Cuenta', acctName(), 'openSettingsPage', { v: 'cuenta' }), settingsRow('cloud', 'Sincronización', syncShort(), 'accountSyncNow', { act: 1 })])}${sec('Apariencia', [settingsRow('pal', 'Tema y estilo', th + ' · ' + (glassMode() > 0 ? 'Cristal' : 'Clásico'), 'openSettingsPage', { v: 'tema' }), settingsRow('drop', 'Color de acento', html`<i class="srd" style="background:linear-gradient(135deg,${raw(ac[1])},${raw(ac[2])})"></i>${raw(ac[0])}`, 'openSettingsPage', { v: 'acento' }), settingsRow('home', 'Al abrir la app', startTabName(), 'openSettingsPage', { v: 'inicio' })])}${sec('Entreno', [settingsRow('kgw', 'Unidades de carga', usesLb() ? 'Libras (lb)' : 'Kilos (kg)', 'openSettingsPage', { v: 'unidades' }), settingsRow('snd', 'Sonido y avisos', S.sound === 0 ? 'Sin sonido' : 'Con sonido', 'openSettingsPage', { v: 'sonido' })])}${sec('Datos', [settingsRow('bkp', 'Copia de seguridad', S.cloudBackup && +S.cloudBackup.at > 0 ? ago(+S.cloudBackup.at) : +S.lastBackupDate > 0 ? ago(+S.lastBackupDate) : 'Nunca', 'openBackup'), settingsRow('del', 'Borrar todos los datos', '', 'resetAllAsk', { red: 1, act: 1 })])}${sec('App', [settingsRow('upd', 'Actualizaciones', 'V' + APPV, 'updateCheck', { act: 1 }), settingsRow('news', 'Ver nota de actualización', '', 'openSettingsPage', { v: 'nota' }), iconNoticeApplies() ? settingsRow('home', 'El icono nuevo', 'Cómo cambiarlo', 'openSettingsPage', { v: 'icono' }) : '', settingsRow('tour', 'Ver el recorrido', '', 'tourReplay', { act: 1 }), settingsRow('pulse', 'Diagnóstico', ne ? ne + (ne == 1 ? ' error' : ' errores') : '', 'openDiagnostics'), settingsRow('bug', 'Informar de un fallo', '', 'openReport')])}${offlineNote()}${sec('Ajustes avanzados', [settingsRow('gear', 'Esfuerzo (RPE)', rpeOn() ? 'Activado' : 'Desactivado', 'openSettingsPage', { v: 'avanzado' })])}${sec('Información', [settingsRow('shd', 'Privacidad', '', 'openSettingsPage', { v: 'privacidad' }), settingsRow('doc', 'Aviso legal', '', 'openSettingsPage', { v: 'legal' })])}<div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div><div style="height:40px"></div></div>`;
+  return html`<div id="ajs">${pgHead('Ajustes')}${settingsSection('Cuenta', accountRows())}${settingsSection('Apariencia', appearanceRows())}${settingsSection('Entreno', workoutRows())}${settingsSection('Datos', dataRows())}${settingsSection('App', appRows())}${offlineNote()}${settingsSection('Ajustes avanzados', advancedRows())}${settingsSection('Información', infoRows())}<div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div><div style="height:40px"></div></div>`;
 }
 const settingsPage = k => {
   if (!k || !Object.prototype.hasOwnProperty.call(SETTINGS_PAGES, k))

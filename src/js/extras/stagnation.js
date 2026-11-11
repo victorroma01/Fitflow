@@ -1,6 +1,6 @@
 /* ═══ extras/stagnation ═══
    Detección de estancamiento.
-   Define: stagnation, stagnationCard  · acciones/registros: 2
+   Define: stagnation, stagnationCard, STAGNATION_TIPS, bestSetText  · acciones/registros: 2
 */
 import { est1RM, fmtDateShort, round1 } from '../core/util.js';
 import { A } from '../core/registry.js';
@@ -71,11 +71,18 @@ export function stagnationCard() {
     return '';
   }
 }
+/* qué probar para volver a progresar */
+const STAGNATION_TIPS = ['Cambia el rango de repeticiones durante 3 o 4 semanas, por ejemplo de 8-12 a 4-6 con más peso.', 'Añade una serie a este ejercicio o descansa un poco más entre series.', 'Revisa el sueño y la comida: dormir poco o comer en déficit frena la fuerza.', 'Prueba una variante del ejercicio (opción Swap) durante un bloque.', 'Una semana de descarga (peso al 65 % y 2 repeticiones menos) suele desbloquear el progreso.'];
+/* la mejor serie de una sesión: «60 kg × 8» */
+const bestSetText = b => b ? toDisplayWeight(b[1]) + ' ' + weightUnit() + ' × ' + b[0] : '';
 A.stagnationInfo = i => {
   const x = stagnation()[i];
   if (!x)
     return;
-  sheet(html`<h3>${x.n}</h3><p class="mu" style="margin:0 0 10px">Tu mejor marca estimada fue el ${raw(fmtDateShort(x.d, { day: 'numeric', month: 'long' }))}${raw(x.b ? ': ' + toDisplayWeight(x.b[1]) + ' ' + weightUnit() + ' × ' + x.b[0] : '')} (1RM estimado ${round1(toDisplayWeight(x.mx))} ${weightUnit()}). Desde entonces llevas ${raw(x.k)} sesiones sin superarla.</p><div class="cd" style="margin:0 0 10px"><small class="mu">Últimas sesiones</small>${x.ses.map(s => html`<div class="it" style="grid-template-columns:1fr auto"><span>${raw(fmtDateShort(s.d, { day: 'numeric', month: 'short' }))}</span><b>${raw(s.b ? toDisplayWeight(s.b[1]) + ' ' + weightUnit() + ' × ' + s.b[0] : '')}</b></div>`)}</div><b>Qué probar</b><div class="mu" style="font-size:14px;display:grid;gap:7px;margin:6px 0 12px"><div>· Cambia el rango de repeticiones durante 3 o 4 semanas, por ejemplo de 8-12 a 4-6 con más peso.</div><div>· Añade una serie a este ejercicio o descansa un poco más entre series.</div><div>· Revisa el sueño y la comida: dormir poco o comer en déficit frena la fuerza.</div><div>· Prueba una variante del ejercicio (opción Swap) durante un bloque.</div><div>· Una semana de descarga (peso al 65 % y 2 repeticiones menos) suele desbloquear el progreso.</div></div><div class="g2"><button data-a="stagnationDismiss" data-i="${i}">Ocultar 2 semanas</button><button class="pr" data-a="deloadOnFromSheet">Activar descarga</button></div>`);
+  const since = html`<p class="mu" style="margin:0 0 10px">Tu mejor marca estimada fue el ${raw(fmtDateShort(x.d, { day: 'numeric', month: 'long' }))}${raw(x.b ? ': ' + bestSetText(x.b) : '')} (1RM estimado ${round1(toDisplayWeight(x.mx))} ${weightUnit()}). Desde entonces llevas ${raw(x.k)} sesiones sin superarla.</p>`;
+  const sessions = html`<div class="cd" style="margin:0 0 10px"><small class="mu">Últimas sesiones</small>${x.ses.map(s => html`<div class="it" style="grid-template-columns:1fr auto"><span>${raw(fmtDateShort(s.d, { day: 'numeric', month: 'short' }))}</span><b>${raw(bestSetText(s.b))}</b></div>`)}</div>`;
+  const tips = html`<b>Qué probar</b><div class="mu" style="font-size:14px;display:grid;gap:7px;margin:6px 0 12px">${STAGNATION_TIPS.map(t => html`<div>· ${t}</div>`)}</div>`;
+  sheet(html`<h3>${x.n}</h3>${since}${sessions}${tips}<div class="g2"><button data-a="stagnationDismiss" data-i="${i}">Ocultar 2 semanas</button><button class="pr" data-a="deloadOnFromSheet">Activar descarga</button></div>`);
 };
 A.stagnationDismiss = i => {
   const x = stagnation()[i];

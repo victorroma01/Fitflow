@@ -35,7 +35,8 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
 SIG="""(ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
  if(ren){for(const [at,r] of [['data-a','A'],['data-enter','A'],['data-c','C'],['data-u','U']])b.querySelectorAll('['+at+']').forEach(e=>{const v=e.getAttribute(at);if(ren[r][v])e.setAttribute(at,ren[r][v])});
   b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])})}
- const h=b.innerHTML;let ls='';try{const g=k=>localStorage.getItem(k);let c=JSON.parse(g('ff')||'null');
+ /* lo que mide el tiempo de verdad (Diagnóstico e informe de un fallo: «Tiempo de pintado») cambia en cada ejecución */
+ const h=b.innerHTML.replace(/Tiempo de pintado: [^\\n<]*/g,'Tiempo de pintado: …');let ls='';try{const g=k=>localStorage.getItem(k);let c=JSON.parse(g('ff')||'null');
   if(c&&c._parts){delete c._parts;const ks=[],m={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('ff:'))ks.push(k)}
    ks.sort().forEach(k=>{const v=JSON.parse(g(k));if(k.startsWith('ff:meals:'))Object.assign(m,v);else if(c[k.slice(3)]===k)c[k.slice(3)]=v});if(c.meals==='ff:meals')c.meals=m}
   const can=v=>Array.isArray(v)?'['+v.map(can).join(',')+']':v&&typeof v=='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+can(v[k])).join(',')+'}':JSON.stringify(v);

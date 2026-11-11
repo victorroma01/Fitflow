@@ -2,7 +2,7 @@
    «Mi nutrición» (el icono de cuchillo y tenedor de Nutrición): kcal del día en un anillo con el reparto de macros, peso,
    objetivo (tipo de dieta), actividad y comidas al día; ajustar los objetivos a mano o recalcularlos con tus datos.
    Mientras estén a mano (S.nutritionGoals.man), cambiar el peso o la actividad no los pisa (nutrition/diet, applyDiet).
-   Define: ringSvg, myNutritionPage, refreshGoals, manualPage, manualValues  · acciones/registros: 9
+   Define: ringSvg, macroCell, goalSelect, goalsRing, goalsFields, myNutritionPage, refreshGoals, manualPage, manualValues  · acciones/registros: 9
 */
 import { $, clampInt, clampNum, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -29,17 +29,25 @@ const ringSvg = n => {
   });
   return html`<svg viewBox="0 0 128 128" width="150" height="150" aria-hidden="true"><g transform="rotate(-90 64 64)">${arcs}</g></svg>`;
 };
+/* un macro bajo el anillo: su % de las kcal, los gramos y el nombre, con el color de su parte del anillo */
+const macroCell = (label, percent, grams, color) => html`<div class="mnq"><small style="color:var(${raw(color)})">${icon('tgt', 13)}${percent} %</small><b>${roundInt(grams)}</b><small>${raw(label)}</small></div>`;
+/* un desplegable de «Mi nutrición» (C: goalsDiet, goalsActivity, goalsMeals) */
+const goalSelect = (change, label, options, current) => html`<select data-c="${change}" aria-label="${label}">${options.map((x, i) => html`<option value="${i}"${i == current ? ' selected' : ''}>${x}</option>`)}</select>`;
+/* el anillo con las kcal del día y los tres macros */
+const goalsRing = (goals, targets) => html`<div class="mnr"><div class="mnk">${ringSvg(goals)}<div class="mnc"><b>${roundInt(goals.k)}</b><small>kcal</small></div></div><div class="mnx">${macroCell('Hidratos', goals.c, targets[1], '--ctx')}${macroCell('Proteínas', goals.p, targets[2], '--ptx')}${macroCell('Grasas', goals.f, targets[3], '--gtx')}</div></div>`;
+/* lo que cambia los objetivos: peso, tipo de dieta (con la diferencia con el gasto), actividad y comidas al día */
+const goalsFields = (goals, diet, activity, diff) => html`<div class="mnl"><label class="mnw"><span>Peso</span><span class="mnv"><input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="goalsWeight" value="${S.biometrics.w || ''}" placeholder="—" aria-label="Peso en kg"> kg</span></label><div class="mnw"><span>Objetivo</span><span class="mnv" aria-hidden="true"><b>${raw(DIET_TYPES[diet][0])}</b>${raw(diff == null ? '' : html`<i class="mnd">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`)}${icon('chr', 16)}</span>${goalSelect('goalsDiet', 'Objetivo: tipo de dieta', DIET_TYPES.map(d => d[0]), diet)}</div><div class="mnw"><span>Actividad</span><span class="mnv" aria-hidden="true"><b>${raw(ACTIVITY_LEVELS[activity][0])}</b>${icon('chr', 16)}</span>${goalSelect('goalsActivity', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1]), activity)}</div><div class="mnw"><span>Comidas al día</span><span class="mnv" aria-hidden="true"><b>${goals.n}</b>${icon('chr', 16)}</span>${goalSelect('goalsMeals', 'Comidas al día', [2, 3, 4, 5, 6, 7, 8].map(String), goals.n - 2)}</div></div>`;
+/* «Mi nutrición»: los objetivos del día, de dónde salen (según el plan, a mano o por defecto) y lo que los cambia */
 function myNutritionPage() {
-  const n = S.nutritionGoals;
-  const t = tdee();
-  const tg = goalTargets();
-  const di = dietIndex();
-  const act = S.biometrics.act == null ? 1 : clampInt(S.biometrics.act, 0, ACTIVITY_LEVELS.length - 1, 1);
-  const mode = n.man ? 'A mano' : t ? 'Según tu plan' : 'Por defecto';
-  const diff = t ? roundInt(n.k - t.td) : null;
-  const mac = (l, pc, g, c) => html`<div class="mnq"><small style="color:var(${raw(c)})">${icon('tgt', 13)}${pc} %</small><b>${roundInt(g)}</b><small>${raw(l)}</small></div>`;
-  const sel = (c, label, list, cur) => html`<select data-c="${c}" aria-label="${label}">${list.map((x, i) => html`<option value="${i}"${i == cur ? ' selected' : ''}>${x}</option>`)}</select>`;
-  return html`<div id="mny"><div class="row"><button data-a="closeSheet" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div><div class="mnr"><div class="mnk">${ringSvg(n)}<div class="mnc"><b>${roundInt(n.k)}</b><small>kcal</small></div></div><div class="mnx">${mac('Hidratos', n.c, tg[1], '--ctx')}${mac('Proteínas', n.p, tg[2], '--ptx')}${mac('Grasas', n.f, tg[3], '--gtx')}</div></div><div class="mnl"><label class="mnw"><span>Peso</span><span class="mnv"><input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="goalsWeight" value="${S.biometrics.w || ''}" placeholder="—" aria-label="Peso en kg"> kg</span></label><div class="mnw"><span>Objetivo</span><span class="mnv" aria-hidden="true"><b>${raw(DIET_TYPES[di][0])}</b>${raw(diff == null ? '' : html`<i class="mnd">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`)}${icon('chr', 16)}</span>${sel('goalsDiet', 'Objetivo: tipo de dieta', DIET_TYPES.map(d => d[0]), di)}</div><div class="mnw"><span>Actividad</span><span class="mnv" aria-hidden="true"><b>${raw(ACTIVITY_LEVELS[act][0])}</b>${icon('chr', 16)}</span>${sel('goalsActivity', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1]), act)}</div><div class="mnw"><span>Comidas al día</span><span class="mnv" aria-hidden="true"><b>${n.n}</b>${icon('chr', 16)}</span>${sel('goalsMeals', 'Comidas al día', [2, 3, 4, 5, 6, 7, 8].map(String), n.n - 2)}</div></div><p class="mu mnp">${raw(t ? DIET_TYPES[di][4] + '. Gasto diario estimado: ' + roundInt(t.td) + ' kcal (metabolismo basal ' + roundInt(t.bm) + ' kcal).' : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.')}</p><div style="height:120px"></div><div class="sb mnb"><button data-a="openManualGoals">Ajustar a mano</button><button class="pr" data-a="goalsRecalculate">Recalcular con mis datos</button></div></div>`;
+  const goals = S.nutritionGoals;
+  const spend = tdee();
+  const targets = goalTargets();
+  const diet = dietIndex();
+  const activity = S.biometrics.act == null ? 1 : clampInt(S.biometrics.act, 0, ACTIVITY_LEVELS.length - 1, 1);
+  const mode = goals.man ? 'A mano' : spend ? 'Según tu plan' : 'Por defecto';
+  const diff = spend ? roundInt(goals.k - spend.td) : null;
+  const note = spend ? DIET_TYPES[diet][4] + '. Gasto diario estimado: ' + roundInt(spend.td) + ' kcal (metabolismo basal ' + roundInt(spend.bm) + ' kcal).' : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.';
+  return html`<div id="mny"><div class="row"><button data-a="closeSheet" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div>${goalsRing(goals, targets)}${goalsFields(goals, diet, activity, diff)}<p class="mu mnp">${raw(note)}</p><div style="height:120px"></div><div class="sb mnb"><button data-a="openManualGoals">Ajustar a mano</button><button class="pr" data-a="goalsRecalculate">Recalcular con mis datos</button></div></div>`;
 }
 /** Vuelve a pintar la página abierta («Mi nutrición» o «Ajustar a mano») y la pestaña de detrás. */
 const refreshGoals = () => {

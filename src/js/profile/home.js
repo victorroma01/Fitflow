@@ -1,7 +1,7 @@
 /* ═══ profile/home ═══
    Pestaña Perfil (foto, usuario, plan, medidas, logros, exportar, datos biométricos y, para el admin, Administración) y
    «Borrar todos los datos». La foto de perfil se sube a la cuenta solo con consentimiento (pf.pc: cuándo se dio).
-   Define: pfSummary, profileHead, bioCard, planCard, firstUseDay, analysisFrom, analysisLine, profileTab  · acciones/registros: 8
+   Define: pfSummary, profileHead, bioSex, bioNumber, bioChoices, bioCard, planCard, firstUseDay, analysisFrom, analysisLine, profileTab  · acciones/registros: 8
 */
 import { APPV, dayKey, fmtDateShort, roundInt, safeImage } from '../core/util.js';
 import { Store } from '../core/store.js';
@@ -50,11 +50,18 @@ A.resetAllConfirmed = async () => {
   location.reload();
 };
 A.resetAllAsk = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta, y también la copia de seguridad de la nube. Tu usuario se mantiene. No se puede deshacer.', 'resetAllConfirmed', 'Borrar todo');
+/* el sexo (con «Sin indicar» mientras no se haya elegido) */
+const bioSex = bio => html`<label>Sexo</label><select data-c="bioField" data-i="sex" aria-label="Sexo">${raw(bio.sex == 'M' || bio.sex == 'F' ? '' : '<option value="" selected disabled>Sin indicar</option>')}<option value="M"${bio.sex == 'M' ? ' selected' : ''}>Hombre</option><option value="F"${bio.sex == 'F' ? ' selected' : ''}>Mujer</option></select>`;
+/* un dato con número: edad, altura o peso */
+const bioNumber = (bio, label, key, unit) => html`<label>${raw(label)}</label><input type="number" inputmode="decimal" data-c="bioField" data-i="${key}" value="${bio[key] || ''}" placeholder="${unit}" aria-label="${label}">`;
+/* actividad diaria y objetivo físico (sin elegir, el segundo de cada lista) */
+const bioChoices = bio => html`<label>Actividad diaria</label><select data-c="bioField" data-i="act" aria-label="Actividad diaria">${ACTIVITY_LEVELS.map((a, i) => html`<option value="${i}"${(bio.act == null ? 1 : bio.act) == i ? ' selected' : ''}>${raw(a[0])} · ${raw(a[1])}</option>`)}</select><label>Objetivo físico</label><select data-c="bioField" data-i="goal" aria-label="Objetivo físico">${GOAL_LABELS.map((g, i) => html`<option value="${i}"${(bio.goal == null ? 1 : bio.goal) == i ? ' selected' : ''}>${raw(g)}</option>`)}</select>`;
+/* Perfil → Datos biométricos, con el metabolismo basal y el gasto diario cuando hay edad, altura y peso */
 function bioCard() {
-  const b = S.biometrics;
-  const t = tdee();
-  const f = (l, k, u) => html`<label>${raw(l)}</label><input type="number" inputmode="decimal" data-c="bioField" data-i="${k}" value="${b[k] || ''}" placeholder="${u}" aria-label="${l}">`;
-  return html`<details class="cd">${pfSummary('bio', 'Datos biométricos', 'Edad, altura, peso, actividad y objetivo')}<label>Sexo</label><select data-c="bioField" data-i="sex" aria-label="Sexo">${raw(b.sex == 'M' || b.sex == 'F' ? '' : '<option value="" selected disabled>Sin indicar</option>')}<option value="M"${b.sex == 'M' ? ' selected' : ''}>Hombre</option><option value="F"${b.sex == 'F' ? ' selected' : ''}>Mujer</option></select>${raw(f('Edad', 'age', 'años'))}${raw(f('Altura', 'h', 'cm'))}${raw(f('Peso', 'w', 'kg'))}<label>Actividad diaria</label><select data-c="bioField" data-i="act" aria-label="Actividad diaria">${ACTIVITY_LEVELS.map((a, i) => html`<option value="${i}"${(b.act == null ? 1 : b.act) == i ? ' selected' : ''}>${raw(a[0])} · ${raw(a[1])}</option>`)}</select><label>Objetivo físico</label><select data-c="bioField" data-i="goal" aria-label="Objetivo físico">${GOAL_LABELS.map((g, i) => html`<option value="${i}"${(b.goal == null ? 1 : b.goal) == i ? ' selected' : ''}>${raw(g)}</option>`)}</select>${raw(t ? html`<p><b>Metabolismo basal: ${roundInt(t.bm)} kcal</b><br><small>Gasto diario estimado: ${roundInt(t.td)} kcal (fórmula Mifflin-St Jeor)</small></p>` : '<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>')}</details>`;
+  const bio = S.biometrics;
+  const spend = tdee();
+  const energy = spend ? html`<p><b>Metabolismo basal: ${roundInt(spend.bm)} kcal</b><br><small>Gasto diario estimado: ${roundInt(spend.td)} kcal (fórmula Mifflin-St Jeor)</small></p>` : '<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>';
+  return html`<details class="cd">${pfSummary('bio', 'Datos biométricos', 'Edad, altura, peso, actividad y objetivo')}${bioSex(bio)}${raw(bioNumber(bio, 'Edad', 'age', 'años'))}${raw(bioNumber(bio, 'Altura', 'h', 'cm'))}${raw(bioNumber(bio, 'Peso', 'w', 'kg'))}${bioChoices(bio)}${raw(energy)}</details>`;
 }
 const planCard = () => {
   /* sin programa elegido (cuenta nueva; I-24) */

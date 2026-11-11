@@ -106,6 +106,12 @@ def main(path):
             check('el entreno en curso, igual', sch['w'] == '{"startedAt":1,"restEndsAt":2,"sets":[[{"r":1}]],"zz":1}', sch['w'])
             check('en el móvil, las claves guardadas', ev("(o=>'sel' in o&&'wk' in o&&!('selectedDay' in o))(JSON.parse(localStorage.getItem('ff')))"))
 
+            # «Qué incluye la copia» cuenta lo que hay (con las claves guardadas: core/schema)
+            inc = ev("A.openBackup(),[...document.querySelectorAll('#sh details')].find(d=>/Qué incluye/.test(d.textContent)).textContent")
+            n_hist = ev("Object.keys(S.exerciseHistory).length")
+            check('«Qué incluye la copia» cuenta los entrenos y el historial de cada ejercicio', ('de %d ejercicio' % n_hist) in inc and n_hist > 0 and ('%d entreno' % ev('S.logs.length')) in inc, inc[:200])
+            ev("sheet()")
+
             # ── formato ──
             core = ev("JSON.parse(localStorage.getItem('ff'))")
             check('el núcleo lleva la marca de guardado por partes', core.get('_parts') == 1)

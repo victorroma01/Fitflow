@@ -1,6 +1,6 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 18
+   Define: foldPassed, sessionHeader, setRow, restRunning, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 18
 */
 import { $, fmtDuration, fmtMinSec, round1, roundInt, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -25,33 +25,61 @@ import { buzz } from '../profile/feedback.js';
 import { exAnatomy } from '../extras/anatomy.js';
 import { rpeOn } from './rpe.js';
 import { html, raw } from '../core/html.js';
+/* al pasar a otro ejercicio, el que toca se despliega y el anterior, si ya está completo, se pliega */
+const foldPassed = current => {
+  if (!current || W.lastCurrent === current[0])
+    return;
+  const previous = W.lastCurrent;
+  W.lastCurrent = current[0];
+  W.folded = W.folded || {};
+  delete W.folded[current[0]];
+  if (previous != null && previous !== current[0] && W.sets[previous] && W.sets[previous].length && W.sets[previous].every(s => s.ok))
+    W.folded[previous] = 1;
+};
+/* la cabecera que se queda arriba: cronómetro, serie en curso y descanso (o pausa), la barra de progreso y lo que viene */
+const sessionHeader = (day, current, done, total) => {
+  const elapsed = roundInt(((W.pausedAt || Date.now()) - W.startedAt) / 1000);
+  return html`<div class="wsk"><div class="hd"><b style="font-size:22px" id="tm">${raw(fmtDuration(elapsed))}</b><span>Serie ${Math.min(done + 1, total)}/${total}</span><span class="mu" style="min-width:60px;text-align:right">${W.pausedAt ? 'En pausa' : restPill()}</span></div><div class="bar" style="height:5px;margin:10px 0"><i style="width:${done / total * 100}%;background:var(--a2)"></i></div>${raw(nextUpBar(day, current))}</div>`;
+};
+/* la fila de una serie: número, etiqueta de la técnica, repeticiones, peso (o un guion si el ejercicio no lleva), descanso y «hecha» */
+const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
+  const name = setName(setIndex, set, exercise);
+  const weightInput = html`<input type="number" inputmode="decimal" data-c="setWeight" data-i="${exIndex}" data-j="${setIndex}" value="${set.w ? toDisplayWeight(set.w) : ''}" placeholder="${weightUnit()}"${raw(set.ws && !set.ok ? (W.deload ? ' class="dlv"' : ' class="sug"') : '')} aria-label="${'Peso' + (set.ws && !set.ok ? ' sugerido' : '') + ', ' + name}">`;
+  const rest = restAfterSet(exIndex, setIndex);
+  return html`<div class="r2${isCurrent ? ' cur' : ''}"><span>${raw(setNo(W.sets[exIndex], setIndex))}</span>${raw(setLabelButton(set))}<input type="number" inputmode="decimal" data-c="setReps" data-i="${exIndex}" data-j="${setIndex}" value="${set.r}"${raw(W.deload && !set.ok ? ' class="dlv"' : '')} aria-label="${unitName(exercise) + ', ' + name}">${raw(!usesWeight(exercise) ? '<span class="mu" style="text-align:center">–</span>' : weightInput)}<span style="font-size:13px">${raw(rest ? fmtMinSec(rest) : '–')}</span><button class="ck ${set.ok ? 'on' : ''}" data-a="toggleSetDone" data-i="${exIndex}" data-j="${setIndex}" aria-label="${'Hecha, ' + name}" aria-pressed="${set.ok ? 'true' : 'false'}">✓</button></div>`;
+};
+/* el descanso en marcha, bajo la serie que lo lanzó: −15 s, la cuenta atrás con «Saltar» y +15 s */
+const restRunning = (exIndex, setIndex) => W.restEndsAt && W.restAfter && W.restAfter[0] == exIndex && W.restAfter[1] == setIndex ? html`<div class="rr"><button data-a="adjustRest" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000))))}</b><br><small data-a="adjustRest" data-i="0" role="button" tabindex="0" style="cursor:pointer;text-decoration:underline">Saltar</small></span><button data-a="adjustRest" data-i="15">+15s</button></div>` : '';
+/* la cabecera de un ejercicio: foto o figura, nombre, objetivo, la última vez y, si se cambió con Swap, desde cuál */
+const exerciseHead = (exercise, exIndex) => html`<div class="xh">${exThumb(exercise.n, exIndex)}<div style="min-width:0"><b style="font-size:18px">${exercise.n}</b>${targetLine(exercise, exIndex)}${lastTimeLine(exercise, exIndex)}${exercise.o ? html`<div class="mu" style="font-size:12px">Cambiado desde: ${exercise.o} · <u data-a="swapUndo" data-i="${exIndex}" role="button" tabindex="0" style="cursor:pointer">Deshacer</u></div>` : ''}</div>${foldButton(exIndex)}</div>`;
+/* la segunda fila de herramientas: Historial, Swap y, con barra, Discos */
+const exerciseTools2 = (exercise, exIndex) => html`<div class="xtl"><button class="chip" data-a="exerciseHistory" data-i="${exIndex}">Historial</button><button class="chip" data-a="openSwap" data-i="${exIndex}">${icon('swp', 15)} Swap</button>${usesBarbell(exercise.n) ? html`<button class="chip ic" data-a="openPlates" data-i="${exIndex}" aria-label="${'Discos, ' + exercise.n}">${icon('plate', 18)}</button>` : ''}</div>`;
+/* un ejercicio del entreno: su bloque (superserie…), cabecera, herramientas, las series con su descanso y RPE, y ± serie.
+   blockOf[i] = [bloque, si es el primero del bloque] */
+const exerciseSection = (day, blocks, blockOf, exercise, exIndex, current) => {
+  const sets = W.sets[exIndex];
+  const rows = sets.map((set, setIndex) => html`${setRow(exercise, exIndex, set, setIndex, current && current[0] == exIndex && current[1] == setIndex)}${restRunning(exIndex, setIndex)}${rpeRow(exIndex, setIndex, set)}`);
+  return html`<div class="xs${W.folded && W.folded[exIndex] ? ' fd' : ''}${sets.length && sets.every(s => s.ok) ? ' dn' : ''}" id="ex${exIndex}">${blockOf[exIndex][1] ? blockHeader(blocks, blockOf[exIndex][0], current) : ''}${blockBadge(day.ex, exIndex)}${exerciseHead(exercise, exIndex)}${foldSummary(exercise, exIndex)}${exToolsHtml(exercise, exIndex)}${exerciseTools2(exercise, exIndex)}<div class="thd"><span>Set</span><span></span><span>${raw(unitHead(exercise))}</span><span>${usesWeight(exercise) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${rows}<div class="g2" style="margin-top:8px"><button data-a="removeSet" data-i="${exIndex}">− Serie</button><button data-a="addSet" data-i="${exIndex}">+ Serie</button></div></div>`;
+};
+/* al final, «Salir y descartar» y «Log out»; abajo, pegada al borde, la barra de serie anterior, pausa y siguiente */
+const sessionFooter = () => html`<div class="g2" style="margin:16px 0 84px"><button data-a="discardAsk" style="background:#d4d4da;color:#111;border:0;padding:15px;border-radius:16px;font-size:15px">Salir y descartar</button><button data-a="finishAsk" style="background:#fff;color:#111;border:0;padding:15px;border-radius:16px;font-size:16px;font-weight:700">Log out</button></div><div class="pb"><button data-a="previousSet" aria-label="Serie anterior">${icon('prv', 26)}</button><button data-a="togglePause" aria-label="${W.pausedAt ? 'Reanudar' : 'Pausar'}">${icon(W.pausedAt ? 'ply' : 'pau', 30)}</button><button data-a="goToNextSet" aria-label="Siguiente serie">${icon('nxt', 26)}</button></div>`;
+/** La pantalla del entreno en curso. */
 export function sessionView() {
-  const d = S.plan[S.selectedDay];
-  const t = roundInt(((W.pausedAt || Date.now()) - W.startedAt) / 1000);
-  const L = dayBlocks(d);
-  const lt = {};
-  L.forEach((k, n) => k.x.forEach(i => lt[i] = [n, k.x[0] == i]));
-  let n = 0;
-  let o = 0;
-  W.sets.forEach(a => a.forEach(s => {
-    n++;
-    if (s.ok)
-      o++;
+  const day = S.plan[S.selectedDay];
+  const blocks = dayBlocks(day);
+  const blockOf = {};
+  blocks.forEach((block, b) => block.x.forEach(i => blockOf[i] = [b, block.x[0] == i]));
+  let total = 0;
+  let done = 0;
+  W.sets.forEach(sets => sets.forEach(set => {
+    total++;
+    if (set.ok)
+      done++;
   }));
   /* la serie que toca, en el orden del entreno (por rondas en las superseries: workout/order) */
-  const cur = currentSet();
-  if (cur && W.lastCurrent !== cur[0]) {
-    const pv = W.lastCurrent;
-    W.lastCurrent = cur[0];
-    W.folded = W.folded || {};
-    delete W.folded[cur[0]];
-    if (pv != null && pv !== cur[0] && W.sets[pv] && W.sets[pv].length && W.sets[pv].every(s => s.ok))
-      W.folded[pv] = 1;
-  }
-  return html`<div class="wsk"><div class="hd"><b style="font-size:22px" id="tm">${raw(fmtDuration(t))}</b><span>Serie ${Math.min(o + 1, n)}/${n}</span><span class="mu" style="min-width:60px;text-align:right">${W.pausedAt ? 'En pausa' : restPill()}</span></div><div class="bar" style="height:5px;margin:10px 0"><i style="width:${o / n * 100}%;background:var(--a2)"></i></div>${raw(nextUpBar(d, cur))}</div>${raw(W.deload ? deloadStrip() : '')}${d.ex.map((e, i) => html`<div class="xs${W.folded && W.folded[i] ? ' fd' : ''}${W.sets[i].length && W.sets[i].every(s => s.ok) ? ' dn' : ''}" id="ex${i}">${lt[i][1] ? blockHeader(L, lt[i][0], cur) : ''}${blockBadge(d.ex, i)}<div class="xh">${exThumb(e.n, i)}<div style="min-width:0"><b style="font-size:18px">${e.n}</b>${targetLine(e, i)}${lastTimeLine(e, i)}${e.o ? html`<div class="mu" style="font-size:12px">Cambiado desde: ${e.o} · <u data-a="swapUndo" data-i="${i}" role="button" tabindex="0" style="cursor:pointer">Deshacer</u></div>` : ''}</div>${foldButton(i)}</div>${foldSummary(e, i)}${exToolsHtml(e, i)}<div class="xtl"><button class="chip" data-a="exerciseHistory" data-i="${i}">Historial</button><button class="chip" data-a="openSwap" data-i="${i}">${icon('swp', 15)} Swap</button>${usesBarbell(e.n) ? html`<button class="chip ic" data-a="openPlates" data-i="${i}" aria-label="${'Discos, ' + e.n}">${icon('plate', 18)}</button>` : ''}</div><div class="thd"><span>Set</span><span></span><span>${raw(unitHead(e))}</span><span>${usesWeight(e) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${W.sets[i].map((s, j) => {
-    const c = cur && cur[0] == i && cur[1] == j;
-    return html`<div class="r2${c ? ' cur' : ''}"><span>${raw(setNo(W.sets[i], j))}</span>${raw(setLabelButton(s))}<input type="number" inputmode="decimal" data-c="setReps" data-i="${i}" data-j="${j}" value="${s.r}"${raw(W.deload && !s.ok ? ' class="dlv"' : '')} aria-label="${unitName(e) + ', ' + setName(j, s, e)}">${raw(!usesWeight(e) ? '<span class="mu" style="text-align:center">–</span>' : html`<input type="number" inputmode="decimal" data-c="setWeight" data-i="${i}" data-j="${j}" value="${s.w ? toDisplayWeight(s.w) : ''}" placeholder="${weightUnit()}"${raw(s.ws && !s.ok ? (W.deload ? ' class="dlv"' : ' class="sug"') : '')} aria-label="${'Peso' + (s.ws && !s.ok ? ' sugerido' : '') + ', ' + setName(j, s, e)}">`)}<span style="font-size:13px">${raw((r => r ? fmtMinSec(r) : '–')(restAfterSet(i, j)))}</span><button class="ck ${s.ok ? 'on' : ''}" data-a="toggleSetDone" data-i="${i}" data-j="${j}" aria-label="${'Hecha, ' + setName(j, s, e)}" aria-pressed="${s.ok ? 'true' : 'false'}">✓</button></div>${W.restEndsAt && W.restAfter && W.restAfter[0] == i && W.restAfter[1] == j ? html`<div class="rr"><button data-a="adjustRest" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000))))}</b><br><small data-a="adjustRest" data-i="0" role="button" tabindex="0" style="cursor:pointer;text-decoration:underline">Saltar</small></span><button data-a="adjustRest" data-i="15">+15s</button></div>` : ''}${rpeRow(i, j, s)}`;
-  })}<div class="g2" style="margin-top:8px"><button data-a="removeSet" data-i="${i}">− Serie</button><button data-a="addSet" data-i="${i}">+ Serie</button></div></div>`)}<div class="g2" style="margin:16px 0 84px"><button data-a="discardAsk" style="background:#d4d4da;color:#111;border:0;padding:15px;border-radius:16px;font-size:15px">Salir y descartar</button><button data-a="finishAsk" style="background:#fff;color:#111;border:0;padding:15px;border-radius:16px;font-size:16px;font-weight:700">Log out</button></div><div class="pb"><button data-a="previousSet" aria-label="Serie anterior">${icon('prv', 26)}</button><button data-a="togglePause" aria-label="${W.pausedAt ? 'Reanudar' : 'Pausar'}">${icon(W.pausedAt ? 'ply' : 'pau', 30)}</button><button data-a="goToNextSet" aria-label="Siguiente serie">${icon('nxt', 26)}</button></div>`;
+  const current = currentSet();
+  foldPassed(current);
+  return html`${sessionHeader(day, current, done, total)}${raw(W.deload ? deloadStrip() : '')}${day.ex.map((exercise, exIndex) => exerciseSection(day, blocks, blockOf, exercise, exIndex, current))}${sessionFooter()}`;
 }
 A.exerciseHistory = i => {
   const E = S.plan[S.selectedDay].ex[i];

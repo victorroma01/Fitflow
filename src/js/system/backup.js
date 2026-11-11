@@ -1,6 +1,6 @@
 /* ═══ system/backup ═══
    Copias de seguridad, restauración y avisos.
-   Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, cleanProfile, parseBackup, backupDate, askRestore, preRestore, restoreBackup, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
+   Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, cleanProfile, parseBackup, backupDate, askRestore, preRestore, restoreBackup, backupFileCard, backupContents, backupText, backupSnapshots, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
 */
 import { stateToStored } from '../core/schema.js';
 import { $, APPV, safeImage, X } from '../core/util.js';
@@ -272,11 +272,21 @@ A.backupDownload = async () => {
     toast(r == 'declined' ? 'No se guardó la copia' : 'No se pudo guardar el archivo. Usa la opción de texto.');
   }
 };
+/* el archivo en el móvil: siempre con el mismo nombre; guardar o importar */
+const backupFileCard = () => html`<div class="cd cbk"><b>Archivo en el móvil</b><p class="mu">Siempre con el mismo nombre, ${BACKUP_FILE}: cada archivo nuevo sustituye al anterior y no se acumulan copias en el teléfono.</p><p class="mu" style="font-size:12px;margin:0 0 10px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="backupDownload">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="backupImportFile"></label></div></div>`;
+/* lo que entra en una copia, contado con los datos de ahora (con las claves guardadas, como en la copia) */
+const backupContents = () => html`<details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(stateToStored(S), wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details>`;
+/* la copia como texto: copiarla o pegar una para restaurarla */
+const backupText = () => html`<details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="backupCopyText">Copiar</button><button class="pr" data-a="backupRestoreText">Restaurar</button></div></details>`;
+/* las copias automáticas de cada día (system/snapshots las rellena al abrir) */
+const backupSnapshots = () => html`<details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>`;
 A.openBackup = () => {
-  const p = preRestore();
+  const pre = preRestore();
   /* desde Ajustes es una página más, con «←» de vuelta; desde Perfil o un aviso, una hoja */
   const fromSettings = !!$('#ajs');
-  sheet(html`${fromSettings ? pgHead('Copia de seguridad', 'openSettings') : html`<h3>Copia de seguridad</h3>`}<p class="mu" style="margin:0 0 12px">Tus datos se guardan en este móvil y se sincronizan con tu cuenta. La copia de seguridad es una foto de tus datos en un momento, para volver a ella si algo se borra o se estropea.</p>${raw(cloudBackupCard())}<div class="cd cbk"><b>Archivo en el móvil</b><p class="mu">Siempre con el mismo nombre, ${BACKUP_FILE}: cada archivo nuevo sustituye al anterior y no se acumulan copias en el teléfono.</p><p class="mu" style="font-size:12px;margin:0 0 10px">${raw(backupAge())}</p><div class="g2"><button class="pr" data-a="backupDownload">Guardar archivo</button><label class="btnl">Importar archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="backupImportFile"></label></div></div><details class="cd" style="margin-top:12px"><summary>Qué incluye la copia</summary><div class="mu" style="font-size:13px;margin-top:8px;display:grid;gap:6px">${backupRows(S, wipSession()).map(x => html`<div>· ${x}</div>`)}</div></details><details class="cd" style="margin-top:12px"><summary>Copiar o pegar como texto</summary><textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" style="margin-top:8px">${buildBackup()}</textarea><div class="g2" style="margin-top:10px"><button data-a="backupCopyText">Copiar</button><button class="pr" data-a="backupRestoreText">Restaurar</button></div></details><details class="cd" style="margin-top:12px"><summary>Copias automáticas en este móvil</summary><div id="snapl"><p class="mu" style="font-size:13px;margin:8px 0 0">Cargando…</p></div></details>${p ? html`<button data-a="backupUndoAsk" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(p.t)})</button>` : ''}`);
+  const head = fromSettings ? pgHead('Copia de seguridad', 'openSettings') : html`<h3>Copia de seguridad</h3>`;
+  const undo = pre ? html`<button data-a="backupUndoAsk" style="width:100%;margin-top:12px">Deshacer última restauración (${backupDate(pre.t)})</button>` : '';
+  sheet(html`${head}<p class="mu" style="margin:0 0 12px">Tus datos se guardan en este móvil y se sincronizan con tu cuenta. La copia de seguridad es una foto de tus datos en un momento, para volver a ella si algo se borra o se estropea.</p>${raw(cloudBackupCard())}${backupFileCard()}${backupContents()}${backupText()}${backupSnapshots()}${undo}`);
   fillSnapshots();
 };
 export const isFreshInstall = () => !S.backupNoticeOff && !S.logs.length && !S.lastBackupDate && !(S.ownPrograms || []).length && !(S.routines || []).length && !countOf(S.meals) && !(S.weightLog || []).length;

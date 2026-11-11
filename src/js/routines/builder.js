@@ -1,6 +1,6 @@
 /* ═══ routines/builder ═══
    Mis workouts: lista, editor de bloques y lanzamiento.
-   Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineEditor, routineBlockPicker, openRoutines, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, setOverviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 25
+   Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineBlock, routineEditor, routineBlockPicker, openRoutines, routineCard, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, setOverviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 25
 */
 import { $, fmtMinSec, roundInt, X } from '../core/util.js';
 import { A, C, U } from '../core/registry.js';
@@ -24,9 +24,19 @@ export const routineExRows = () => {
   return filterRow(groupDropdown('crg', routineState.gs, bq), equipDropdown('cr', routineState.eq, equipIn(base), base, 1)) + base.filter(e => equipMatch(routineState.eq, e)).sort(exCompare).slice(0, 100).map(e => html`<div class="it exr" data-a="routinePickExercise" data-n="${e.n}" style="cursor:pointer"><span class="exc">${exCellHtml(e)}</span><small class="mu">Añadir +</small></div>`).join('') || '<p class="mu">Sin resultados.</p>';
 };
 const routineListPage = () => routineList();
+/* un bloque del workout (A, B, C…): si es superserie o triserie, sus ejercicios, las series (− +) y el descanso */
+const routineBlock = (block, j) => {
+  const letter = String.fromCharCode(65 + j);
+  const kind = block.ex.length > 1 ? html`<b style="color:var(--wnx)">${raw(BLOCK_KINDS[block.ex.length])} · 10 s</b>` : '';
+  const exercises = block.ex.map(n => html`<div class="ovx"><div class="th">${exAnatomy(n, 64)}</div><b style="flex:1">${n}</b></div>`);
+  const sets = html`<span><button data-a="routineBlockSets" data-i="${j}" data-v="-1" aria-label="${'Una serie menos, serie ' + letter}">−</button> ${raw(block.s)} series <button data-a="routineBlockSets" data-i="${j}" data-v="1" aria-label="${'Una serie más, serie ' + letter}">+</button></span>`;
+  const rest = html`<select data-c="routineBlockReps" data-i="${j}" aria-label="${'Descanso, serie ' + letter}" style="width:auto">${REST_OPTIONS.map(v => html`<option value="${v}"${v == block.r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))}</option>`)}</select>`;
+  return html`<div class="row" style="margin-top:16px"><b class="mu">SERIE ${raw(letter)}</b>${kind}<button data-a="routineBlockDelete" data-i="${j}" style="padding:4px 10px">Quitar</button></div>${exercises}<div class="row" style="margin-top:6px">${sets}${rest}</div>`;
+};
+/** El editor de un workout personalizado: nombre, imagen, sus bloques y «Crear» o «Guardar cambios». */
 export const routineEditor = () => {
-  const r = S.routines[routineState.i];
-  return html`<div class="row"><button data-a="routineEditorBack">‹ Rutinas</button>${raw(routineState.nw ? '' : '<button data-a="routineDeleteAsk" style="color:var(--ctx)">Eliminar</button>')}</div><h2 style="margin:14px 0 4px;letter-spacing:-.02em">Workout personalizado</h2><label>Nombre</label><input data-c="routineName" value="${r.n}" aria-label="Nombre del workout"><label>Imagen del entrenamiento</label>${imagePicker(r)}${r.bl.map((b, j) => html`<div class="row" style="margin-top:16px"><b class="mu">SERIE ${raw(String.fromCharCode(65 + j))}</b>${b.ex.length > 1 ? html`<b style="color:var(--wnx)">${raw(BLOCK_KINDS[b.ex.length])} · 10 s</b>` : ''}<button data-a="routineBlockDelete" data-i="${j}" style="padding:4px 10px">Quitar</button></div>${b.ex.map(n => html`<div class="ovx"><div class="th">${exAnatomy(n, 64)}</div><b style="flex:1">${n}</b></div>`)}<div class="row" style="margin-top:6px"><span><button data-a="routineBlockSets" data-i="${j}" data-v="-1" aria-label="${'Una serie menos, serie ' + String.fromCharCode(65 + j)}">−</button> ${raw(b.s)} series <button data-a="routineBlockSets" data-i="${j}" data-v="1" aria-label="${'Una serie más, serie ' + String.fromCharCode(65 + j)}">+</button></span><select data-c="routineBlockReps" data-i="${j}" aria-label="${'Descanso, serie ' + String.fromCharCode(65 + j)}" style="width:auto">${REST_OPTIONS.map(v => html`<option value="${v}"${v == b.r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))}</option>`)}</select></div>`)}<button data-a="routineAddBlock" style="width:100%;margin-top:16px">+ Añadir bloque</button><div style="height:80px"></div><button class="sb" data-a="routineSaveAsk" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
+  const routine = S.routines[routineState.i];
+  return html`<div class="row"><button data-a="routineEditorBack">‹ Rutinas</button>${raw(routineState.nw ? '' : '<button data-a="routineDeleteAsk" style="color:var(--ctx)">Eliminar</button>')}</div><h2 style="margin:14px 0 4px;letter-spacing:-.02em">Workout personalizado</h2><label>Nombre</label><input data-c="routineName" value="${routine.n}" aria-label="Nombre del workout"><label>Imagen del entrenamiento</label>${imagePicker(routine)}${routine.bl.map(routineBlock)}<button data-a="routineAddBlock" style="width:100%;margin-top:16px">+ Añadir bloque</button><div style="height:80px"></div><button class="sb" data-a="routineSaveAsk" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
 };
 const routineBlockPicker = () => html`<button data-a="routineEdit" data-i="${routineState.i}">‹ Cancelar</button><h3>Nuevo bloque</h3>${[1, 2, 3].map(k => html`<button class="chip${routineState.k == k ? ' on' : ''}" data-a="routineAddBlockKind" data-i="${k}">${raw(BLOCK_KINDS[k])}</button>`)}<p class="mu">Elige el ejercicio ${routineState.sel.length + 1} de ${routineState.k}${raw(routineState.sel.length ? ': ' + routineState.sel.map(X).join(' + ') : '')}</p><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="routinePickerSearch"><div id="cl2">${raw(routineExRows())}</div>`;
 A.routinePickExercise = (i, b) => {
@@ -58,6 +68,18 @@ const openRoutines = () => {
   sheet(routineListPage());
   $('#sh').className = 'full';
 };
+/* la tarjeta de un workout en «Mis workouts»: imagen, nombre, minutos aproximados y grupos musculares; con el menú abierto,
+   Empezar, Editar y Borrar */
+const routineCard = (routine, i) => {
+  const photo = routineImage(routine);
+  const exercises = [].concat(...routine.bl.map(b => b.ex));
+  const groups = [...new Set(exercises.map(n => groupLabel(groupOfName(n))))];
+  const sets = routine.bl.reduce((s, b) => s + b.s * b.ex.length, 0);
+  const menu = html`<button data-a="routineMenu" data-i="${i}" aria-label="${'Opciones de ' + routine.n}" style="border:0;background:none;padding:4px 8px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>`;
+  const tags = html`<div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tg">${roundInt(sets * 2.4)} min</span>${groups.slice(0, 2).map(g => html`<span class="tg">${raw(g)}</span>`)}${groups.length > 2 ? html`<span class="tg">+${groups.length - 2}</span>` : ''}</div>`;
+  const actions = routineState.m === i ? html`<div class="g2" style="margin-top:10px;grid-template-columns:repeat(3,1fr)"><button class="pr" data-a="routineStart" data-i="${i}">Empezar</button><button data-a="routineEdit" data-i="${i}">Editar</button><button data-a="routineListDeleteAsk" data-i="${i}" style="color:var(--ctx)">Borrar</button></div>` : '';
+  return html`<div class="ovx" style="align-items:flex-start;padding:16px 0"><div data-a="routineEdit" data-i="${i}" aria-hidden="true" style="width:96px;height:132px;border-radius:16px;flex:none;cursor:pointer;background:url(${DAY_PHOTOS[photo]}) center/cover"></div><div style="flex:1;min-width:0"><div class="row"><small style="color:var(--at);font-weight:700">${icon('prog', 14)} Personalizado</small>${menu}</div><b data-a="routineEdit" data-i="${i}" role="button" tabindex="0" style="font-size:20px;display:block;margin:4px 0 10px;cursor:pointer">${routine.n}</b>${tags}${actions}</div></div>`;
+};
 function routineRows() {
   const q = (routineState.s || '').toLowerCase();
   let l = S.routines.map((r, i) => ({ r, i })).filter(o => o.r.n.toLowerCase().includes(q));
@@ -65,13 +87,7 @@ function routineRows() {
     l.sort((a, b) => a.r.n.localeCompare(b.r.n));
   else
     l.reverse();
-  return l.map(({ r, i }) => {
-    const k = routineImage(r);
-    const ex = [].concat(...r.bl.map(b => b.ex));
-    const gs = [...new Set(ex.map(n => groupLabel(groupOfName(n))))];
-    const ns = r.bl.reduce((s, b) => s + b.s * b.ex.length, 0);
-    return html`<div class="ovx" style="align-items:flex-start;padding:16px 0"><div data-a="routineEdit" data-i="${i}" aria-hidden="true" style="width:96px;height:132px;border-radius:16px;flex:none;cursor:pointer;background:url(${DAY_PHOTOS[k]}) center/cover"></div><div style="flex:1;min-width:0"><div class="row"><small style="color:var(--at);font-weight:700">${icon('prog', 14)} Personalizado</small><button data-a="routineMenu" data-i="${i}" aria-label="${'Opciones de ' + r.n}" style="border:0;background:none;padding:4px 8px"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button></div><b data-a="routineEdit" data-i="${i}" role="button" tabindex="0" style="font-size:20px;display:block;margin:4px 0 10px;cursor:pointer">${r.n}</b><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tg">${roundInt(ns * 2.4)} min</span>${gs.slice(0, 2).map(g => html`<span class="tg">${raw(g)}</span>`)}${gs.length > 2 ? html`<span class="tg">+${gs.length - 2}</span>` : ''}</div>${routineState.m === i ? html`<div class="g2" style="margin-top:10px;grid-template-columns:repeat(3,1fr)"><button class="pr" data-a="routineStart" data-i="${i}">Empezar</button><button data-a="routineEdit" data-i="${i}">Editar</button><button data-a="routineListDeleteAsk" data-i="${i}" style="color:var(--ctx)">Borrar</button></div>` : ''}</div></div>`;
-  }).join('') || '<p class="mu">Aún no tienes workouts. Crea el primero con el botón de abajo.</p>';
+  return l.map(({ r, i }) => routineCard(r, i)).join('') || '<p class="mu">Aún no tienes workouts. Crea el primero con el botón de abajo.</p>';
 }
 function routineList() {
   return html`<div class="row"><button data-a="closeSheet" aria-label="Volver" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div><h1 style="font-size:32px;letter-spacing:-.03em;margin:10px 0 16px">Workouts personalizados</h1><div class="row" style="margin-bottom:6px"><input placeholder="Buscar" aria-label="Buscar workout" data-u="routinesFilter" value="${routineState.s || ''}"><button data-a="routinesSort" aria-label="Cambiar el orden" style="padding:12px 14px">${icon('swp', 20)}</button></div><div id="crl">${raw(routineRows())}</div><div style="height:90px"></div><button class="sb" data-a="routineNew" style="background:var(--tx);color:var(--bg);border:0;padding:16px;font-size:16px;border-radius:16px">Crear workout</button>`;
