@@ -10,7 +10,7 @@ import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
 import { stateRecovered } from './persist.js';
 import { A, C, U } from './registry.js';
-import { groupOf, parseProgram } from '../data/library.js';
+import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
 import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
@@ -77,6 +77,8 @@ const DEBUG_NAMES = {
   nutriDayOffset: [() => nutriDayOffset],
   parseBackup: [() => parseBackup],
   parseProgram: [() => parseProgram],
+  PROGRAM_NAMES: [() => PROGRAM_NAMES],
+  PROGRAMS: [() => PROGRAMS],
   pendingDocs: [() => pendingDocs],
   pendingRestore: [() => pendingRestore, setPendingRestore],
   planIndex: [() => planIndex],
