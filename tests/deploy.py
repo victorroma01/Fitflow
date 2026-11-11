@@ -103,6 +103,8 @@ def main(app):
                 check('metas de app instalable sin duplicar', ev("document.querySelectorAll('meta[name=apple-mobile-web-app-capable]').length") == 1)
                 m = ev("fetch('manifest.webmanifest').then(r=>r.json()).then(j=>[j.start_url,j.display,j.icons.length,(j.shortcuts||[]).map(s=>s.url).join()])")
                 check('manifiesto válido, con los accesos directos del icono (F-39)', m == ['./', 'standalone', 3, './?a=entreno,./?a=comida,./?a=peso'], str(m))
+                ic = ev("""fetch('manifest.webmanifest').then(r=>r.json()).then(j=>Promise.all([...j.icons.map(i=>i.src+':'+(i.purpose||'any')),...j.shortcuts.map(s=>s.icons[0].src)].map(u=>fetch(u.split(':')[0]).then(r=>[u,r.ok,r.headers.get('content-type')]))))""")
+                check('iconos del logo nuevo: el de la app, el adaptable de Android y uno propio para cada acceso directo (F-40, I-15)', [x[0] for x in ic] == ['icon-192.png:any', 'icon-512.png:any', 'icon-512-maskable.png:maskable', 'atajo-entreno.png', 'atajo-comida.png', 'atajo-peso.png'] and all(x[1] and 'png' in (x[2] or '') for x in ic), str(ic))
                 code = ['js/' + f for f in os.listdir(os.path.join(orig, 'js'))]
                 if SW:
                     ev("navigator.serviceWorker.ready.then(()=>1)")

@@ -86,7 +86,7 @@ html.gl .psel {
 }
 .psel:focus-within {
   border-color:var(--ac);
-  box-shadow:0 0 0 3px #9b5cf633;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--a2) 20%,transparent);
 }
 /* peso sugerido (F-10): gris oscuro, menos destacado que un peso ya registrado */
 .r2 input.sug {

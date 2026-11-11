@@ -1,7 +1,7 @@
 /* ═══ profile/appearance ═══
    Apariencia (F-31): tema, color de acento (los de serie o uno elegido a mano, con sus tonos y el color del texto calculados para
    que se lea bien), estilo Cristal y reducir animaciones. lookSync deja en <html> las clases del estilo en cada R().
-   Define: ACCENTS, HEX, hexRgb, rgbHex, rgbHsl, hslRgb, luminance, customAccentLast, customAccent, accentNow, setAccentVars, accentApplied, applyAccent, accentPreview, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, motionCard, lookSync, ACCENT_SETTLE_MS, accentPick, accentFrame, accentTimer, previewAccent, commitAccent, pickAccent  · acciones/registros: 8
+   Define: ACCENTS, DEFAULT_ACCENT, HEX, hexRgb, rgbHex, rgbHsl, hslRgb, luminance, customAccentLast, customAccent, accentNow, setAccentVars, accentApplied, applyAccent, accentPreview, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, motionCard, lookSync, ACCENT_SETTLE_MS, accentPick, accentFrame, accentTimer, previewAccent, commitAccent, pickAccent  · acciones/registros: 8
 */
 import { $ } from '../core/util.js';
 import { logError } from '../core/errors.js';
@@ -12,6 +12,8 @@ import { html, raw } from '../core/html.js';
 /** Colores de serie: [nombre, claro (a1), principal (a2), oscuro (a3), texto sobre el principal (ft)]. El orden no cambia
   (S.acc es la posición); los nuevos van al final. */
 export const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#6e5300', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#e8590c', '#702a05', '#fff'], ['Rosa', '#ff8fc8', '#d6337f', '#6b1440', '#fff'], ['Turquesa', '#4fd6cf', '#0d8a85', '#064a47', '#fff'], ['Lima', '#c8ee62', '#8cc61b', '#3f5c06', '#142000'], ['Grafito', '#b9bdc9', '#5b6170', '#2a2e37', '#fff']];
+/** El color con el que empieza la app, mientras no se elija otro: Azul eléctrico, el del logo (F-40; hasta la V1.0.0, Morado). */
+const DEFAULT_ACCENT = 1;
 /** Un color #rrggbb (el de «Personalizado», S.acx). */
 export const HEX = /^#[0-9a-f]{6}$/i;
 const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -56,7 +58,7 @@ export const customAccent = hex => {
   return tones;
 };
 /** El color de acento en uso: [nombre, a1, a2, a3, ft]. S.acc es la posición en ACCENTS, o -1 con un color propio en S.acx. */
-export const accentNow = () => S.acc == -1 && HEX.test(S.acx || '') ? customAccent(S.acx) : ACCENTS[S.acc >= 0 && S.acc < ACCENTS.length ? S.acc : 0];
+export const accentNow = () => S.acc == -1 && HEX.test(S.acx || '') ? customAccent(S.acx) : ACCENTS[S.acc >= 0 && S.acc < ACCENTS.length ? S.acc : DEFAULT_ACCENT];
 /* las variables de color de los tonos a ([nombre, a1, a2, a3, ft]) en el elemento el: en <html>, el color de toda la app */
 const setAccentVars = (el, a) => {
   el.style.setProperty('--a1', a[1]);
@@ -78,7 +80,7 @@ export function applyAccent() {
 const accentPreview = () => html`<div class="acp" aria-hidden="true"><div class="acph"><small>Vista previa</small><b>Pecho</b><span class="acpr"><i></i></span><span class="acpk"><span class="acpb">Empezar</span><span class="chip on">Hoy</span><span class="chip">Mañana</span></span></div><div class="acpn"><span class="on">Workout</span><span>Nutrición</span><span>Dashboard</span><span>Perfil</span></div></div>`;
 export const accentSwatches = () => {
   const own = HEX.test(S.acx || '');
-  const cur = S.acc == -1 && own ? -1 : S.acc >= 0 && S.acc < ACCENTS.length ? S.acc : 0;
+  const cur = S.acc == -1 && own ? -1 : S.acc >= 0 && S.acc < ACCENTS.length ? S.acc : DEFAULT_ACCENT;
   const sw = a => 'background:linear-gradient(135deg,' + a[1] + ',' + a[2] + ');color:' + a[4];
   /* sin color propio todavía, el círculo de «Personalizado» lleva todos los colores */
   const cs = own ? sw(customAccent(S.acx)) : '';

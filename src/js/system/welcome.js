@@ -12,7 +12,7 @@
 import { $ } from '../core/util.js';
 import { A } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
-import { icon } from '../core/icons.js';
+import { brandLogo } from '../core/brand.js';
 import { R } from '../core/render.js';
 import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS } from '../nutrition/diet.js';
 import { html, raw } from '../core/html.js';
@@ -30,7 +30,7 @@ const welcomeRoot = () => {
   return r;
 };
 /* paso 1: la bienvenida */
-const welcomeView = () => html`<div class="bk"></div><div class="sp" role="dialog" aria-modal="true" aria-labelledby="wlh"><div class="trw"><div class="trbg">${icon('workout', 30)}</div><h3 id="wlh">Te damos la bienvenida a StrataFit</h3><p class="mu">Gracias por instalar la app y por apoyar su desarrollo.</p><p class="mu">StrataFit está en fase de pruebas, así que puede haber errores. Si encuentras alguno, cuéntanoslo en Ajustes → Informar de un fallo: nos ayuda mucho a mejorarla.</p><p class="mu wlw">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p><button class="pr" data-a="wln">Siguiente</button></div></div>`;
+const welcomeView = () => html`<div class="bk"></div><div class="sp" role="dialog" aria-modal="true" aria-labelledby="wlh"><div class="trw">${brandLogo('wlg')}<h3 id="wlh">Te damos la bienvenida a StrataFit</h3><p class="mu">Gracias por instalar la app y por apoyar su desarrollo.</p><p class="mu">StrataFit está en fase de pruebas, así que puede haber errores. Si encuentras alguno, cuéntanoslo en Ajustes → Informar de un fallo: nos ayuda mucho a mejorarla.</p><p class="mu wlw">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p><button class="pr" data-a="wln">Siguiente</button></div></div>`;
 /* paso 2: los datos biométricos (con lo ya guardado, si lo hay) */
 const bioFormView = () => {
   const b = S.bio || {};

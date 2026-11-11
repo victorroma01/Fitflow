@@ -20,7 +20,7 @@
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -34,7 +34,7 @@
       "url": "./?a=entreno",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "atajo-entreno.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -47,7 +47,7 @@
       "url": "./?a=comida",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "atajo-comida.png",
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -60,7 +60,7 @@
       "url": "./?a=peso",
       "icons": [
         {
-          "src": "icon-192.png",
+          "src": "atajo-peso.png",
           "sizes": "192x192",
           "type": "image/png"
         }

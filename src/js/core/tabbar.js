@@ -58,7 +58,8 @@ export const tabbarSync = () => {
   tabButtons().forEach((e, i) => e.classList.toggle('on', i == S.tab));
   if (tabDrag && tabDrag.on)
     return;
-  const g = tabGeometry();
+  /* la barra oculta (en el entreno: core/render) no tiene medidas; al volver, la burbuja se coloca sin deslizarse */
+  const g = n.style.display == 'none' ? null : tabGeometry();
   if (!g) {
     n.classList.remove('nbon');
     return;

@@ -21,9 +21,11 @@
 .lgbr {
   text-align:center;
 }
-.lgbr .bw {
-  font-size:26px;
-  letter-spacing:.3em;
+.lgbr .brl {
+  width:120px;
+  height:120px;
+  margin:0 auto;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 14px 34px rgba(0,0,0,.45);
 }
 .lgs {
   margin:6px 0 22px;

@@ -27,6 +27,7 @@ import './data/techniques.js';
 import './data/rotation.js';
 import './core/state.js';
 import './core/icons.js';
+import './core/brand.js';
 import './core/ui.js';
 import './core/help.js';
 import './core/events.js';

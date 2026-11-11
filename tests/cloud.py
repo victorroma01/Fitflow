@@ -156,6 +156,7 @@ def main(path):
         # ── un móvil sin cuenta: solo el inicio de sesión ──
         c1, p1 = device()
         check('sin sesión, solo el inicio de sesión (sin la barra de pestañas)', p1.evaluate("!!document.getElementById('lgw') && document.querySelector('nav').style.display=='none'"))
+        check('el inicio de sesión lleva el logo (F-40)', p1.evaluate("(i=>!!i&&i.alt=='StrataFit'&&i.complete&&i.naturalWidth==288)(document.querySelector('#lgw img.brl'))"))
         check('sin datos personales en el registro: solo usuario y contraseña', p1.evaluate("(A.lgm(0,{dataset:{v:'up'}}),[...document.querySelectorAll('#lgw input')].map(i=>i.id).join())") == 'lgu,lgp,lgp2')
         p1.fill('#lgu', 'Ana_1'); p1.fill('#lgp', 'contraseña-1'); p1.fill('#lgp2', 'otra-cosa')
         p1.click('[data-a=lgo]')

@@ -81,3 +81,37 @@
   border-radius:16px;
   font-size:16px;
 }
+/* el logo (core/brand): el del tema claro o el del oscuro, según el tema que se ve */
+.brl {
+  display:block;
+  overflow:hidden;
+  border-radius:23%;
+  box-shadow:0 10px 28px rgba(0,0,0,.28);
+}
+.brl img,img.brl {
+  display:block;
+  width:100%;
+  height:100%;
+}
+.brl .brl-c {
+  display:none;
+}
+@media(prefers-color-scheme:light) {
+  :root:not([data-theme="dark"]) .brl .brl-c {
+    display:block;
+  }
+  :root:not([data-theme="dark"]) .brl .brl-o {
+    display:none;
+  }
+}
+:root[data-theme="light"] .brl .brl-c {
+  display:block;
+}
+:root[data-theme="light"] .brl .brl-o {
+  display:none;
+}
+.brl.wlg {
+  width:84px;
+  height:84px;
+  margin:4px auto 14px;
+}

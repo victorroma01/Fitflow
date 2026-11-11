@@ -1,7 +1,7 @@
 /* StrataFit · arranque instantáneo: abre al momento la última copia guardada y busca actualizaciones en segundo plano.
    build.py completa la lista de precarga con el código (js/…, nombres que cambian con cada versión) y las fotos (img/…).
    Un documento nuevo solo entra en la caché con todo su código ya guardado: así la app abre igual sin conexión. */
-const C='ff-app-2',PRE=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'/*@@FILES@@*/];
+const C='ff-app-2',PRE=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png','icon-dark-192.png'/*@@FILES@@*/];
 const abs=u=>new URL(u,self.registration.scope).href;
 self.addEventListener('install',e=>{e.waitUntil((async()=>{
   const c=await caches.open(C);
