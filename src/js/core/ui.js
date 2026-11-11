@@ -3,7 +3,7 @@
    Las páginas (fullPage) llevan un rastro: al pasar de una a una subpágina suya, la de antes se guarda tal como estaba. Con
    eso, al volver queda en el punto en que se dejó y, mientras la subpágina se desliza con el dedo, debajo se ve la página a la
    que se vuelve y no la pestaña (showPageBelow, para core/swipe; I-20).
-   Define: sheetBarFix, sheet, confirmDialog, dialog, onSheetClose, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 6
+   Define: sheetBarFix, pageTrail, pageKey, backLink, swapPage, showPageBelow, sheet, confirmDialog, dialog, onSheetClose, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 6
 */
 import { $ } from './util.js';
 import { logError } from './errors.js';

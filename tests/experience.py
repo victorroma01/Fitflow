@@ -42,6 +42,14 @@ STANDALONE = """try{Object.defineProperty(navigator,'standalone',{value:true,con
 window.__shared=[];window.__abort=0;navigator.canShare=function(d){return !!(d&&d.files&&d.files.length)};
 navigator.share=async function(d){const f=d.files[0];window.__shared.push({n:f.name,t:f.type,s:f.size,h:(await f.text()).slice(0,15)});if(window.__abort)throw new DOMException('cancelado','AbortError')};"""
 # septiembre y octubre de 2026: entrenos, comidas y peso (para el análisis mensual)
+# un AudioContext de mentira, que se puede dejar «interrupted» (iPhone: silencio, llamada, salir de la app) o sin responder
+FAKE_AUDIO = """window.__ac=[];window.__acStuck=0;window.AudioContext=class{
+ constructor(){this.state='suspended';this.currentTime=0;this.destination={};this.tones=0;this.resumes=0;this.suspends=0;__ac.push(this)}
+ resume(){this.resumes++;if(window.__acStuck)return new Promise(()=>{});this.state='running';return Promise.resolve()}
+ suspend(){this.suspends++;this.state='suspended';return Promise.resolve()}
+ close(){this.state='closed';return Promise.resolve()}
+ createOscillator(){const c=this;return {frequency:{value:0},connect(){},start(){c.tones++},stop(){}}}
+ createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}}}};"""
 SEED = """(()=>{const pad=n=>String(n).padStart(2,'0');S.logs=[];S.meals={};
  for(const m of [9,10])for(let d=1;d<=28;d++){const k='2026-'+pad(m)+'-'+pad(d);const wd=new Date(k+'T12:00:00').getDay();
   if([1,3,5].includes(wd))S.logs.push({d:k,n:'Fuerza',v:5000,s:18,m:60,q:8});
@@ -601,6 +609,7 @@ def main(path):
         c3.add_init_script(rd('init.js'))
         c3.add_init_script(PTR)
         c3.add_init_script(STANDALONE)
+        c3.add_init_script(FAKE_AUDIO)
         p3 = c3.new_page()
         errs3 = []
         p3.on('pageerror', lambda e: errs3.append(str(e)[:200]))
@@ -624,6 +633,42 @@ def main(path):
         e3("A.cl();S.tab=0;R();A.go()")
         r3()
         check('durante el entreno tampoco hay entrada de más: el gesto del iPhone ya no funde la pantalla a negro', e3('!!W') and e3('history.length') == n0 and not e3("!!(history.state&&history.state.sf)"))
+        e3("W=null;localStorage.removeItem('ffw');R()")
+
+        # ───────────────────────────── sonido tras el silencio ─────────────────────────────
+        print('El sonido vuelve tras el silencio del móvil o una interrupción, sin salir de la app (I-21)')
+        ac = lambda js: e3('(c=>%s)(__ac[__ac.length-1])' % js)
+        tap = "document.body.dispatchEvent(new Event('touchend',{bubbles:true}))"
+        check('hasta el primer toque no hay sonido en marcha', e3('__ac.length') == 0)
+        e3(tap)
+        r3(50)
+        check('el primer toque lo desbloquea', e3('__ac.length') == 1 and ac("c.state") == 'running')
+        r3(4000)
+        check('y en silencio se suspende: no gasta batería', ac("c.state") == 'suspended' and ac("c.suspends") == 1)
+        e3("A.zsnd1()")
+        r3(600)
+        t1 = ac("c.tones")
+        check('cada aviso lo reanuda y suena', t1 >= 2 and ac("c.resumes") == 2, str([t1, ac("c.resumes")]))
+        r3(5000)
+        check('al acabar vuelve a suspenderse', ac("c.state") == 'suspended' and ac("c.suspends") == 2)
+        e3("__ac[0].state='interrupted';A.zsnd1()")
+        r3(600)
+        check('interrumpido (iPhone: tras el silencio o una llamada), el siguiente aviso lo reanuda y suena, sin salir de la app', ac("c.tones") > t1 and ac("c.state") == 'running', str(ac("[c.tones,c.state]")))
+        r3(5000)
+        t2 = ac("c.tones")
+        e3("__acStuck=1;__ac[0].state='interrupted';A.zsnd1()")
+        r3(3000)
+        check('si no arranca a tiempo, el aviso se pierde: no se guarda para sonar tarde', ac("c.tones") == t2 and e3('__ac.length') == 1)
+        e3("__acStuck=0;" + tap)
+        r3(50)
+        check('y como no responde, el siguiente toque crea un contexto nuevo', e3('__ac.length') == 2 and e3("__ac[0].state") == 'closed' and ac("c.state") == 'running', str(e3("__ac.map(c=>c.state)")))
+        e3("A.zsnd1()")
+        r3(600)
+        check('que suena con normalidad; el viejo no llega a sonar', ac("c.tones") >= 2 and e3("__ac[0].tones") == t2)
+        e3("S.snd=0;__ac[1].state='interrupted';" + tap + ";A.zsnd1()")
+        r3(600)
+        check('con el sonido apagado en Ajustes, ni suena ni se reanuda', ac("c.state") == 'interrupted')
+        e3("S.snd=1")
         check('sin errores de JS', not errs3, str(errs3[:3]))
         c3.close()
         b.close()
