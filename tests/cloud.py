@@ -75,6 +75,9 @@ class EmuFirebase:
     def put(self, path, fields):
         self._req('%s/v1/projects/%s/databases/(default)/documents/%s' % (self.FS, self.P, path), {'fields': fields}, 'PATCH')
 
+    def delete(self, path):
+        self._req('%s/v1/projects/%s/databases/(default)/documents/%s' % (self.FS, self.P, path), method='DELETE')
+
     def data(self, path):
         try:
             d = self._req('%s/v1/projects/%s/databases/(default)/documents/%s' % (self.FS, self.P, path))
@@ -100,6 +103,9 @@ class FakeBackend(FakeFirebase):
 
     def put(self, path, fields):
         self._put(path, fields)
+
+    def delete(self, path):
+        self.docs.pop(path, None)
 
 
 def main(path):
@@ -242,14 +248,16 @@ def main(path):
         mpath = 'users/%s/meals/2026-11' % uid
         p1.evaluate("S.water=Object.assign(S.water||{},{'%s':500});S.meals['%s'][1].push(%s);saveState()" % (today, today, json.dumps(pollo)))
         sync(p1)
-        fb.docs.pop(mpath)
-        del fb.calls[:]
+        fb.delete(mpath)
         sync(p2)
         idx = (fb.data('users/%s/data/index' % uid) or {}).get('p', {})
         check('al sincronizar, el índice deja de nombrar lo que ya no existe y lo del móvil se vuelve a subir, sin perder nada (I-11)', 'meals:2026-11' in idx and fb.part(mpath) is not None and p2.evaluate("S.meals['%s'][0].length" % today) == 2, str([sorted(idx), fb.part(mpath) is not None]))
-        del fb.calls[:]
+        asked = []
+        note = lambda r: asked.append(r.url) if ':batchGet' in r.url else None
+        p2.on('request', note)
         sync(p2)
-        check('y la siguiente sincronización ya no pide documentos de más', not any(c[1] == ':batchGet' for c in fb.calls), str(fb.calls[:6]))
+        p2.remove_listener('request', note)
+        check('y la siguiente sincronización ya no pide documentos de más', not asked, str(asked[:3]))
         sync(p1)
 
         # ── espera creciente tras cinco fallos ──
