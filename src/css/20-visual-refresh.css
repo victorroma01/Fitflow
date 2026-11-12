@@ -19,7 +19,7 @@ button:active {
   box-shadow:0 8px 24px #0002;
 }
 .pr {
-  background:linear-gradient(135deg,var(--a1),var(--a2));
+  background:var(--ag);
   color:#fff;
   box-shadow:0 6px 18px color-mix(in srgb,var(--a2) 33%,transparent);
 }
@@ -58,7 +58,7 @@ button:active {
   border-radius:14px;
 }
 .dy.on {
-  background:linear-gradient(135deg,var(--a1),var(--a2));
+  background:var(--ag);
   box-shadow:0 4px 14px color-mix(in srgb,var(--a2) 40%,transparent);
 }
 nav {
@@ -96,7 +96,7 @@ input:focus,select:focus,textarea:focus {
 .ck.on {
   background:linear-gradient(135deg,#34d399,#10b981);
   border-color:#10b981;
-  color:#fff;
+  color:#052e16;
 }
 .chip {
   border-radius:999px;
@@ -148,12 +148,12 @@ details[open]>summary::after {
   --ft:#fff;
 }
 .pr {
-  background:linear-gradient(135deg,var(--a1),var(--a2));
+  background:var(--ag);
   color:var(--ft);
   box-shadow:0 6px 18px color-mix(in srgb,var(--a2) 35%,transparent);
 }
 .dy.on {
-  background:linear-gradient(135deg,var(--a1),var(--a2));
+  background:var(--ag);
   color:var(--ft);
   border-color:var(--a2);
 }

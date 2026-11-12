@@ -3,7 +3,12 @@
    Igual los colores de los macros (--c hidratos, también para borrar; --p proteínas; --g grasas) y de los estados (--okx
    bien, --wnx aviso, --erx mal, --snx visto) cuando son texto: --ctx, --ptx, --gtx…, más oscuros en el tema claro, con un
    contraste de 4,5 o más (WCAG AA) sobre el fondo, sobre las tarjetas (también las de Cristal) y sobre su etiqueta tintada.
-   --mu, el gris del texto secundario, también lo cumple sobre las tarjetas de Cristal del tema claro */
+   --mu, el gris del texto secundario, también lo cumple (con Cristal, css/90-glass lo ajusta a cada nivel).
+   --ag: el degradado del color de acento para lo que lleva texto encima (botón principal, día elegido…): del tono principal a
+   --age (uno más oscuro si el texto es blanco y más claro si es oscuro: profile/appearance), para que el texto (--ft) tenga
+   4,5 o más en todo el botón. --gmid: el color de acento
+   para lo que queda detrás del texto (el brillo de fondo de Cristal, la fila de la serie en curso), acotado por
+   profile/appearance (--gd2 en oscuro, --gl2 en claro). tests/contrast.py lo mide todo. */
 :root {
   --bg:#0b0b0d;
   --cd:#17171b;
@@ -23,6 +28,8 @@
   --wnx:#f59e0b;
   --erx:#e5484d;
   --snx:#4da3ff;
+  --ag:linear-gradient(135deg,var(--a2),var(--age,var(--a2)));
+  --gmid:var(--gd2,var(--a2));
   box-sizing:border-box;
   padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
   color-scheme:dark;
@@ -36,6 +43,7 @@
     --ln:#e0e0e6;
     --ib:#f3f3f7;
     --at:var(--a3);
+    --gmid:var(--gl2,var(--a2));
     --ctx:#a13a55;
     --ptx:#3f56a6;
     --gtx:#765720;
@@ -54,6 +62,7 @@
   --ln:#e0e0e6;
   --ib:#f3f3f7;
   --at:var(--a3);
+  --gmid:var(--gl2,var(--a2));
   --ctx:#a13a55;
   --ptx:#3f56a6;
   --gtx:#765720;
@@ -71,6 +80,7 @@
   --ln:#2a2a31;
   --ib:#0b0b0d;
   --at:var(--a1);
+  --gmid:var(--gd2,var(--a2));
   --ctx:var(--c);
   --ptx:var(--p);
   --gtx:var(--g);
@@ -114,4 +124,9 @@ input,select,textarea {
   padding:8px;
   width:100%;
   min-width:0;
+}
+/* el texto de ayuda de un campo, con el gris del texto secundario: el de serie del navegador no llega al contraste */
+::placeholder {
+  color:var(--mu);
+  opacity:1;
 }

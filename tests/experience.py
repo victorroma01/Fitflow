@@ -153,8 +153,8 @@ def main(path):
           const L=c=>{const v=[1,3,5].map(i=>parseInt(X(c).slice(i,i+2),16)/255).map(x=>x<=.03928?x/12.92:((x+.055)/1.055)**2.4);return .2126*v[0]+.7152*v[1]+.0722*v[2]};
           const l=c=>{const v=[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)/255);return (Math.max(...v)+Math.min(...v))/2};
           const x=L(a[4]),y=L(a[2]);return [h,a[2],a[4],+((Math.max(x,y)+.05)/(Math.min(x,y)+.05)).toFixed(2),+l(a[2]).toFixed(3)]})""")
-        bad = [r for r in res if not (r[3] >= 3.2 and .29 <= r[4] <= .63)]
-        check('cualquier color propio se lee bien: texto encima con contraste de 3,2 o más, ni muy oscuro ni muy claro', not bad, str(bad))
+        bad = [r for r in res if not (r[3] >= 4.5 and .19 <= r[4] <= .63)]
+        check('cualquier color propio se lee bien: texto encima con contraste de 4,5 o más (WCAG AA), ni muy oscuro ni muy claro', not bad, str(bad))
         check('un color de tono medio se queda tal cual', ev("customAccent('#d6337f')[2]") == '#d6337f')
         check('en un color claro (amarillo), el texto encima es casi negro', ev("customAccent('#ffee00')[4]") != '#fff')
         ev("A.openSettingsPage(0,{dataset:{v:'tema'}})")

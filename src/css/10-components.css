@@ -177,7 +177,7 @@ nav span {
 }
 .cal .on {
   background:var(--ac);
-  color:#fff;
+  color:var(--ft);
 }
 .av {
   width:84px;

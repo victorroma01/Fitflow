@@ -78,6 +78,13 @@ html.gl {
   --grim:inset 0 1.5px 0 var(--gh),inset 0 -1px 0 var(--gw),inset 0 26px 28px -26px rgba(255,255,255,calc(var(--gha)*.5));
 }
 html.gl[data-gm="1"] {
+  --mu:#b8b8c2;
+  --at:color-mix(in srgb,var(--a1) 60%,#fff);
+  --ctx:#f794ad;
+  --ptx:#9db2f7;
+  --okx:#4ade80;
+  --erx:#ffa3a6;
+  --snx:#7dbcff;
   --gfa:0.05;
   --gba:0.12;
   --gha:0.2;
@@ -88,6 +95,13 @@ html.gl[data-gm="1"] {
   --s3:0.06;
 }
 html.gl[data-gm="2"] {
+  --mu:#b8b8c2;
+  --at:color-mix(in srgb,var(--a1) 60%,#fff);
+  --ctx:#f794ad;
+  --ptx:#9db2f7;
+  --okx:#4ade80;
+  --erx:#ffa3a6;
+  --snx:#7dbcff;
   --gfa:0.09;
   --gba:0.2;
   --gha:0.38;
@@ -98,21 +112,45 @@ html.gl[data-gm="2"] {
   --s3:0.1;
 }
 html.gl[data-gm="3"] {
+  --mu:#d0d0d8;
+  --at:color-mix(in srgb,var(--a1) 40%,#fff);
+  --ctx:#fbb9c9;
+  --ptx:#bccbfa;
+  --gtx:#f6c56e;
+  --okx:#86efac;
+  --wnx:#fbbf4a;
+  --erx:#ffb9bb;
+  --snx:#a8d1ff;
   --gfa:0.14;
   --gba:0.34;
   --gha:0.65;
   --gz:1;
   --gss:0.4;
-  --s1:0.3;
+  --s1:0.22;
   --s2:0.07;
-  --s3:0.18;
+  --s3:0.14;
 }
-/* tema claro: el diálogo (--pd) casi opaco en todos los niveles. Su texto es oscuro y lo de detrás se oscurece (.dgb):
-   con el vidrio más fino quedaba gris y, sobre una foto oscura, el texto no se leía */
+/* el texto sobre vidrio: el gris del texto secundario (--mu) y los colores que hacen de texto (--at, --ctx, --ptx…) son más
+   claros en el tema oscuro y más oscuros en el claro que sin Cristal, y más aún en el nivel 3: detrás del vidrio va el brillo
+   de color del fondo y, con el gris de serie, el contraste no llegaba a 4,5 (tests/contrast.py) */
+/* tema claro: el diálogo (--pd), las hojas (--ps) y las páginas (--pf), casi opacos en todos los niveles. Su texto es oscuro
+   y lo de detrás se oscurece (.dgb, .bk): con el vidrio más fino quedaban grises y, sobre una foto oscura, el texto no se
+   leía (tests/contrast.py) */
 @media(prefers-color-scheme:light) {
   html.gl[data-gm="1"]:not([data-theme="dark"]) {
     --gsc:70,50,140;
+    --mu:#53535d;
+    --at:var(--a3);
+    --ctx:#a13a55;
+    --ptx:#3f56a6;
+    --gtx:#765720;
+    --okx:#146236;
+    --wnx:#7a4e08;
+    --erx:#922a2e;
+    --snx:#1a5294;
     --gtop:var(--a1);
+    --ps:92%;
+    --pf:95%;
     --gfa:0.78;
     --gba:0.75;
     --gha:0.95;
@@ -124,7 +162,18 @@ html.gl[data-gm="3"] {
   }
   html.gl[data-gm="2"]:not([data-theme="dark"]) {
     --gsc:70,50,140;
+    --mu:#53535d;
+    --at:var(--a3);
+    --ctx:#a13a55;
+    --ptx:#3f56a6;
+    --gtx:#765720;
+    --okx:#146236;
+    --wnx:#7a4e08;
+    --erx:#922a2e;
+    --snx:#1a5294;
     --gtop:var(--a1);
+    --ps:90%;
+    --pf:93%;
     --pd:84%;
     --gfa:0.55;
     --gba:0.85;
@@ -137,7 +186,18 @@ html.gl[data-gm="3"] {
   }
   html.gl[data-gm="3"]:not([data-theme="dark"]) {
     --gsc:70,50,140;
+    --mu:#474751;
+    --at:var(--a3);
+    --ctx:#8f3049;
+    --ptx:#374b93;
+    --gtx:#674b1a;
+    --okx:#115530;
+    --wnx:#6b4406;
+    --erx:#822428;
+    --snx:#164780;
     --gtop:var(--a1);
+    --ps:88%;
+    --pf:92%;
     --pd:84%;
     --gfa:0.4;
     --gba:0.95;
@@ -151,7 +211,18 @@ html.gl[data-gm="3"] {
 }
 html.gl[data-gm="1"][data-theme="light"] {
   --gsc:70,50,140;
+  --mu:#53535d;
+  --at:var(--a3);
+  --ctx:#a13a55;
+  --ptx:#3f56a6;
+  --gtx:#765720;
+  --okx:#146236;
+  --wnx:#7a4e08;
+  --erx:#922a2e;
+  --snx:#1a5294;
   --gtop:var(--a1);
+  --ps:92%;
+  --pf:95%;
   --gfa:0.78;
   --gba:0.75;
   --gha:0.95;
@@ -163,7 +234,18 @@ html.gl[data-gm="1"][data-theme="light"] {
 }
 html.gl[data-gm="2"][data-theme="light"] {
   --gsc:70,50,140;
+  --mu:#53535d;
+  --at:var(--a3);
+  --ctx:#a13a55;
+  --ptx:#3f56a6;
+  --gtx:#765720;
+  --okx:#146236;
+  --wnx:#7a4e08;
+  --erx:#922a2e;
+  --snx:#1a5294;
   --gtop:var(--a1);
+  --ps:90%;
+  --pf:93%;
   --pd:84%;
   --gfa:0.55;
   --gba:0.85;
@@ -176,7 +258,18 @@ html.gl[data-gm="2"][data-theme="light"] {
 }
 html.gl[data-gm="3"][data-theme="light"] {
   --gsc:70,50,140;
+  --mu:#474751;
+  --at:var(--a3);
+  --ctx:#8f3049;
+  --ptx:#374b93;
+  --gtx:#674b1a;
+  --okx:#115530;
+  --wnx:#6b4406;
+  --erx:#822428;
+  --snx:#164780;
   --gtop:var(--a1);
+  --ps:88%;
+  --pf:92%;
   --pd:84%;
   --gfa:0.4;
   --gba:0.95;
@@ -198,10 +291,10 @@ html.gl[data-gm="1"] body::before {
   background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -157.37% -14.54%/75.9% 31.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 187.54% 6.21%/63.6% 26.9% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 178.87% 91.06%/61.2% 26.9% no-repeat;
 }
 html.gl[data-gm="2"] body::before {
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -416.42% -20.33%/89.3% 37.4% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 249.04% 3.16%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--a2) min(100%,calc(var(--gz)*100%)),transparent),transparent) -149.04% 70.49%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 228.57% 93.91%/72.0% 31.7% no-repeat;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -416.42% -20.33%/89.3% 37.4% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 249.04% 3.16%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gmid) min(100%,calc(var(--gz)*100%)),transparent),transparent) -149.04% 70.49%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 228.57% 93.91%/72.0% 31.7% no-repeat;
 }
 html.gl[data-gm="3"] body::before {
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) 0.00% -32.71%/100.0% 46.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 831.25% -2.98%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--a2) min(100%,calc(var(--gz)*100%)),transparent),transparent) -731.25% 73.18%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 550.00% 99.67%/90.0% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*85%)),transparent),transparent) 0.00% 151.50%/100.0% 46.8% no-repeat;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) 0.00% -32.71%/100.0% 46.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 831.25% -2.98%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gmid) min(100%,calc(var(--gz)*100%)),transparent),transparent) -731.25% 73.18%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 550.00% 99.67%/90.0% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*85%)),transparent),transparent) 0.00% 151.50%/100.0% 46.8% no-repeat;
 }
 :where(html.gl) button {
   background:color-mix(in srgb,var(--tx) 8%,transparent);
@@ -236,7 +329,7 @@ html.gl nav {
   box-shadow:var(--gs),inset 0 1px 0 var(--gh),inset 0 -1px 0 var(--gw);
 }
 html.gl nav button.on {
-  background:linear-gradient(180deg,color-mix(in srgb,var(--a1) 62%,transparent),color-mix(in srgb,var(--a2) 86%,transparent));
+  background:linear-gradient(180deg,var(--a2),var(--age,var(--a2)));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 4px 14px color-mix(in srgb,var(--a2) 45%,transparent);
 }
 html.gl .pb {

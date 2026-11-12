@@ -365,7 +365,7 @@
   color:var(--mu);
 }
 .f2ac.on .f2ai {
-  background:linear-gradient(135deg,var(--a1),var(--a2));
+  background:var(--ag);
   color:var(--ft);
 }
 .f2ac .bar {
