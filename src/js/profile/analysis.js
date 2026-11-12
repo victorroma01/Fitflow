@@ -8,7 +8,7 @@
      medias o no cumplido; gráfica de las kcal de cada día.
    - Otros datos: medidas que cambian, logros conseguidos y agua. Y una conclusión en frases cortas.
    Se carga al usarlo (core/lazy).
-   Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, dayKcal, nutritionStats, otherStats, monthStats, conclusions, svgBars, svgLine, svgKcal, kpi, delta, analysisPage, analysisPdf  · acciones/registros: 3
+   Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, dayKcal, nutritionStats, otherStats, monthStats, conclusions, svgBars, svgLine, svgKcal, kpi, delta, analysisPage, analysisPdf  · acciones/registros: 3
 */
 import { APPV, dayKey, est1RM, fmtDateShort } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -23,6 +23,7 @@ import { sessionsPerWeek } from '../workout/week.js';
 import { MEASURES } from '../extras/measures.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { accentNow } from './appearance.js';
+import { toDisplayWeight, usesLb, weightUnit } from './units.js';
 import { analysisFrom } from './home.js';
 import { downloadFile } from '../system/files.js';
 import { loadPdf } from '../core/lazy.js';
@@ -36,6 +37,11 @@ const monthName = ym => MONTHS[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 /** Número en español: coma decimal y `d` decimales como mucho. */
 const fmtN = (v, d = 0) => (+v || 0).toLocaleString('es', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+/* las cargas, en la unidad elegida en Ajustes (profile/units): un peso, en kg o en lb, y un volumen, en toneladas o en miles
+   de libras. El peso corporal va siempre en kg */
+const loadNum = v => usesLb() ? toDisplayWeight(v) : v;
+const volNum = v => loadNum(v) / 1000;
+const volUnit = () => usesLb() ? ' k lb' : ' t';
 /** [primer día, último día (hoy si es el mes en curso), si está en curso, días que lleva]. */
 const monthRange = ym => {
   const [y, m] = ym.split('-').map(Number);
@@ -267,8 +273,8 @@ const analysisPage = () => {
   const ex = m.ex;
   const vc = n.verdict == 'Cumplido' ? 'ok' : n.verdict == 'A medias' ? 'seen' : n.verdict ? 'bad' : 'off';
   return html`<div id="anp">${pgHead('Análisis mensual')}<div class="anm"><button data-a="analysisMonth" data-i="-1" aria-label="Mes anterior"${i > 0 ? '' : ' disabled'}>‹</button><div><b>${cap(monthName(anaYm))}</b><small class="mu">${m.open ? 'del 1 al ' + m.nd + ' (en curso)' : 'del 1 al ' + m.nd}${f && f > m.a ? ' · desde el ' + +f.slice(8, 10) : ''}</small></div><button data-a="analysisMonth" data-i="1" aria-label="Mes siguiente"${i < L.length - 1 ? '' : ' disabled'}>›</button></div>
-<div class="ankg">${kpi('Entrenos', String(t.n), delta(t.n, m.pt.n), t.n >= m.pt.n ? 'up' : 'dn')}${kpi('Tiempo', hm, '')}${kpi('Volumen', fmtN(t.vol / 1000, 1) + ' t', delta(t.vol / 1000, m.pt.vol / 1000, ' t', 1), t.vol >= m.pt.vol ? 'up' : 'dn')}${kpi('Récords', String(ex.rec.length), ex.rec.length ? 'mejor 1RM estimado' : '')}${kpi('Peso', w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg', w.d == null ? 'sin pesajes' : w.tr, w.ok == null ? '' : w.ok ? 'up' : 'dn')}${kpi('Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días', '')}</div>
-<div class="cd ans"><b class="anh">Entrenamientos</b><p>${t.n ? (t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza')) + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? ', ' + t.nc + (t.nc == 1 ? ' sesión' : ' sesiones') + ' de cardio' + (t.km ? ' (' + fmtN(t.km, 1) + ' km)' : '') : '') + ' en ' + t.days + (t.days == 1 ? ' día' : ' días') + '. ' + fmtN(t.sets) + ' series' + (t.rpe ? ' · esfuerzo medio ' + fmtN(t.rpe, 1) : '') + '.' : 'Sin entrenos registrados este mes.'}</p>${raw(svgBars(m))}${m.plan > 0 ? html`<p class="mu">Tu plan marca unos ${fmtN(m.pwk, 1)} entrenos por semana: has hecho el ${Math.round((t.ns + t.nw) / m.plan * 100)} % de lo previsto${m.open ? ' hasta hoy' : ''}.</p>` : ''}${ex.rec.length ? html`<div class="anr"><small>Récords del mes (1RM estimado)</small>${ex.rec.slice(0, 4).map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(r.p)} → ${fmtN(r.m)} kg <span class="up">+${fmtN(r.g * 100)} %</span></b></div>`)}</div>` : ''}${ex.vol.length ? html`<div class="anr"><small>Más volumen</small>${ex.vol.map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(r.v / 1000, 1)} t</b></div>`)}</div>` : ''}</div>
+<div class="ankg">${kpi('Entrenos', String(t.n), delta(t.n, m.pt.n), t.n >= m.pt.n ? 'up' : 'dn')}${kpi('Tiempo', hm, '')}${kpi('Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1), t.vol >= m.pt.vol ? 'up' : 'dn')}${kpi('Récords', String(ex.rec.length), ex.rec.length ? 'mejor 1RM estimado' : '')}${kpi('Peso', w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg', w.d == null ? 'sin pesajes' : w.tr, w.ok == null ? '' : w.ok ? 'up' : 'dn')}${kpi('Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días', '')}</div>
+<div class="cd ans"><b class="anh">Entrenamientos</b><p>${t.n ? (t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza')) + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? ', ' + t.nc + (t.nc == 1 ? ' sesión' : ' sesiones') + ' de cardio' + (t.km ? ' (' + fmtN(t.km, 1) + ' km)' : '') : '') + ' en ' + t.days + (t.days == 1 ? ' día' : ' días') + '. ' + fmtN(t.sets) + ' series' + (t.rpe ? ' · esfuerzo medio ' + fmtN(t.rpe, 1) : '') + '.' : 'Sin entrenos registrados este mes.'}</p>${raw(svgBars(m))}${m.plan > 0 ? html`<p class="mu">Tu plan marca unos ${fmtN(m.pwk, 1)} entrenos por semana: has hecho el ${Math.round((t.ns + t.nw) / m.plan * 100)} % de lo previsto${m.open ? ' hasta hoy' : ''}.</p>` : ''}${ex.rec.length ? html`<div class="anr"><small>Récords del mes (1RM estimado)</small>${ex.rec.slice(0, 4).map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(loadNum(r.p))} → ${fmtN(loadNum(r.m))} ${weightUnit()} <span class="up">+${fmtN(r.g * 100)} %</span></b></div>`)}</div>` : ''}${ex.vol.length ? html`<div class="anr"><small>Más volumen</small>${ex.vol.map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(volNum(r.v), 1)}${volUnit()}</b></div>`)}</div>` : ''}</div>
 <div class="cd ans"><b class="anh">Peso corporal</b>${w.d == null ? html`<p class="mu">No hay pesajes este mes. En Dashboard → Evolución del peso puedes registrarlo y activar un recordatorio.</p>` : html`<p><b class="an${w.tr == 'estable' ? 'e' : w.ok ? 'o' : 'x'}">${cap(w.tr)}${w.tr == 'estable' ? '' : ' ' + fmtN(Math.abs(w.d), 1) + ' kg'}</b>${w.goal >= 0 ? ' · objetivo ' + GOAL_LABELS[w.goal] + (w.ok ? ': va bien' : ': ' + (KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : 'debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'))) : ''}</p>${raw(svgLine(m))}`}</div>
 <div class="cd ans"><b class="anh">Alimentación</b><p><span class="rps ${vc}">${n.verdict || 'Sin datos suficientes'}</span></p>${n.logged ? html`<div class="g2 ann"><div><small>kcal de media</small><b>${fmtN(n.ak)}</b><small class="mu">objetivo ${fmtN(n.tk)}</small></div><div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="mu">objetivo ${fmtN(n.tp)} g</small></div></div><p class="mu">${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? ' · de media ' + n.side : ''}.${n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''}</p>${raw(svgKcal(m))}<div class="anlg"><span><i class="bg-x2ecc71"></i>en objetivo</span><span><i class="bg-xf59e0b"></i>por encima</span><span><i class="bg-x4da3ff"></i>por debajo</span></div>` : html`<p class="mu">No hay comidas registradas este mes.</p>`}</div>
 ${m.o.ms.length || m.o.ach.length ? html`<div class="cd ans"><b class="anh">Otros datos</b>${m.o.ms.length ? html`<div class="anr"><small>Medidas</small>${m.o.ms.map(([k, d]) => html`<div class="row"><span>${k}</span><b>${d > 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)} cm</b></div>`)}</div>` : ''}${m.o.ach.length ? html`<div class="anr"><small>Logros conseguidos</small><p>${m.o.ach.join(' · ')}</p></div>` : ''}</div>` : ''}
@@ -320,7 +326,7 @@ const analysisPdf = async (ym) => {
   d.text(X0 + WD - 18, 68, 'STRATAFIT', { size: 11, bold: true, color: [255, 255, 255], align: 'right' });
   y = 128;
   /* cifras */
-  const tiles = [['Entrenos', String(t.n), delta(t.n, m.pt.n)], ['Tiempo', Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0') + ' min', ''], ['Volumen', fmtN(t.vol / 1000, 1) + ' t', delta(t.vol / 1000, m.pt.vol / 1000, ' t', 1)], ['Récords', String(m.ex.rec.length), m.ex.rec.length ? 'mejor 1RM estimado' : ''], ['Peso', w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg', w.d == null ? 'sin pesajes' : w.tr], ['Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días registrados']];
+  const tiles = [['Entrenos', String(t.n), delta(t.n, m.pt.n)], ['Tiempo', Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0') + ' min', ''], ['Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1)], ['Récords', String(m.ex.rec.length), m.ex.rec.length ? 'mejor 1RM estimado' : ''], ['Peso', w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg', w.d == null ? 'sin pesajes' : w.tr], ['Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días registrados']];
   const tw = (WD - 20) / 3;
   tiles.forEach((x, i) => {
     const tx = X0 + i % 3 * (tw + 10);
@@ -374,8 +380,8 @@ const analysisPdf = async (ym) => {
       y += 18;
     }
   };
-  rows('Récords del mes (1RM estimado)', m.ex.rec.slice(0, 6).map(r => [r.n, 'de ' + fmtN(r.p) + ' a ' + fmtN(r.m) + ' kg (+' + fmtN(r.g * 100) + ' %)']));
-  rows('Más volumen', m.ex.vol.map(r => [r.n, fmtN(r.v / 1000, 1) + ' t']));
+  rows('Récords del mes (1RM estimado)', m.ex.rec.slice(0, 6).map(r => [r.n, 'de ' + fmtN(loadNum(r.p)) + ' a ' + fmtN(loadNum(r.m)) + ' ' + weightUnit() + ' (+' + fmtN(r.g * 100) + ' %)']));
+  rows('Más volumen', m.ex.vol.map(r => [r.n, fmtN(volNum(r.v), 1) + volUnit()]));
   /* peso */
   section('Peso corporal');
   if (w.d == null)
