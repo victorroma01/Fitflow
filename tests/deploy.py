@@ -284,6 +284,28 @@ def main(app):
                           str([ev('APPV'), v0, low_popup]))
                 else:
                     skipped('versión con un número menor')
+                # una corrección publicada con el mismo número de versión (otro código, la misma versión): llega igual en la
+                # siguiente apertura, sin el aviso de versión nueva ni las novedades
+                if SW:
+                    deploy(orig, os.path.join(site, 'fitflow'), v0, '-mismo')
+                    reload(pg, log)
+                    pg.wait_for_load_state('load')
+                    pg.wait_for_timeout(1500)
+                    same_popup = ev("!!document.getElementById('upd')")
+                    for _ in range(30):
+                        if ev("caches.open('ff-app-2').then(c=>c.match(location.href,{ignoreSearch:true})).then(r=>r?r.text():'').then(t=>t.includes('-mismo.js'))"):
+                            break
+                        pg.wait_for_timeout(300)
+                    reload(pg, log)
+                    pg.wait_for_load_state('load')
+                    pg.wait_for_timeout(1500)
+                    now_js = ev("[...document.querySelectorAll('script[src]')].map(s=>s.getAttribute('src')).join()")
+                    check('una corrección con el mismo número de versión llega en la siguiente apertura, sin aviso ni novedades',
+                          ev('APPV') == v0 and '-mismo.js' in now_js and not same_popup and ev("!document.getElementById('upd')") and ev('!!window.__ffok'),
+                          str([ev('APPV'), now_js[:90], same_popup]))
+                    deploy(orig, os.path.join(site, 'fitflow'))
+                else:
+                    skipped('corrección con el mismo número de versión')
                 # I-08: si un trozo de código no llega durante la primera instalación, no queda guardada una página a medias
                 if SW:
                     lazy_one = sorted(f for f in os.listdir(os.path.join(site, 'fitflow', 'js')) if f.startswith('wod-'))[0]
