@@ -36,7 +36,7 @@ import { tdee } from '../nutrition/diet.js';
 import { account } from '../cloud/session.js';
 import { APP_CHECK } from '../cloud/config.js';
 import { appCheckOn } from '../cloud/appcheck.js';
-import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
+import { pendingDocs, stopSync, syncNow, syncState } from '../cloud/sync.js';
 import { refreshReports } from '../system/report.js';
 import { accentNow, customAccent } from '../profile/appearance.js';
 import { backTarget } from './back.js';
@@ -111,6 +111,7 @@ const DEBUG_NAMES = {
   Store: [() => Store],
   syncSel: [() => syncSel],
   syncNow: [() => syncNow],
+  stopSync: [() => stopSync],
   syncState: [() => syncState],
   takeSnapshot: [() => takeSnapshot],
   tdee: [() => tdee],

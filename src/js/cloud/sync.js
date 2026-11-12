@@ -573,12 +573,10 @@ export const startSync = () => {
       profileAt = 0;
       syncSoon(600);
     }
-    /* al irse a segundo plano, lo que esperaba se sube ya: puede que la app no vuelva en un rato (o que el móvil la cierre) */
-    else if (document.visibilityState == 'hidden' && timerAt) {
-      clearTimeout(timer);
-      timerAt = 0;
-      syncNow();
-    }
+    /* al irse a segundo plano, lo que esperaba se sube ya: puede que la app no vuelva en un rato (o que el móvil la cierre). En
+       la tarea siguiente: si la página se va (al recargarla), la subida no llega a empezar y no se corta a medias */
+    else if (document.visibilityState == 'hidden' && timerAt)
+      syncSoon(0);
   });
   syncSoon(1500);
 };
