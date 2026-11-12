@@ -13,18 +13,15 @@ import { avgEffort } from './session.js';
 import { unitOf } from './targets.js';
 import { advanceDay } from './week.js';
 import { showSummary } from '../extras/summary.js';
+import { bestLift, sessionVolume } from '../core/calc.js';
 export let newRecords = [];
 const logWorkout = () => {
   const d = S.plan[S.selectedDay];
-  let v = 0;
-  let n = 0;
+  /* el volumen: repeticiones × peso de las series hechas (los ejercicios que se miden en tiempo o distancia no cuentan) */
+  const { v, n } = sessionVolume(W.sets, d.ex.map(e => !unitOf(e)));
   W.sets.forEach((a, i) => a.forEach(s => {
-    if (s.ok) {
-      n++;
-      v += unitOf(d.ex[i]) ? 0 : s.r * s.w;
-      if (s.w)
-        S.lastWeights[d.ex[i].n] = s.w;
-    }
+    if (s.ok && s.w)
+      S.lastWeights[d.ex[i].n] = s.w;
   }));
   if (n) {
     S.logs.push({ d: dayKey(new Date), n: d.n, v, s: n, m: roundInt((Date.now() - W.startedAt) / 6e4), q: avgEffort(), dl: W.deload ? 1 : 0 });
@@ -59,16 +56,8 @@ const saveHistory = () => {
 };
 A.finishAsk = () => confirmDialog('¿Guardar el entreno?', 'Se registrarán las series completadas en tu historial.', 'finishSave', 'Guardar y salir');
 A.discardAsk = () => confirmDialog('¿Salir sin guardar?', 'Se perderán las series de este entreno.', 'discardWorkout', 'Salir y descartar');
-export const bestOf = n => {
-  let b = (S.records || {})[n] || null;
-  ((S.exerciseHistory || {})[n] || []).forEach(x => x.s.forEach(q => {
-    const r = +q[0];
-    const w = +q[1];
-    if (w > 0 && (!b || est1RM(w, r) > b.e + 1e-6))
-      b = { w, r, e: est1RM(w, r), d: x.d };
-  }));
-  return b;
-};
+/** La mejor marca del ejercicio `n` por 1RM estimado, entre la guardada y su historial (core/calc: bestLift). */
+export const bestOf = n => bestLift((S.records || {})[n], (S.exerciseHistory || {})[n]);
 const saveRecords = () => {
   try {
     if (W) {

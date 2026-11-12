@@ -3,6 +3,7 @@
    build.py lo compila con esbuild en un solo archivo (archivo único) o en el paquete con carga diferida.
 */
 import './core/util.js';
+import './core/calc.js';
 import './core/platform.js';
 import './core/html.js';
 import './core/toast.js';

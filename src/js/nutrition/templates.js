@@ -9,10 +9,10 @@ import { addState, S, saveState, setAddState, nutriDate } from '../core/state.js
 import { sheet } from '../core/ui.js';
 import { HELP, helpDot } from '../core/help.js';
 import { R } from '../core/render.js';
-import { itemMacros, mealItems, sumMacros } from './home.js';
 import { addSheet } from './add.js';
 import { planIndex, weekOffset } from '../workout/week.js';
 import { html, raw } from '../core/html.js';
+import { mealItems, dayTotals } from '../core/calc.js';
 const nutriDayKey = () => dayKey(nutriDate());
 /** Día del plan que toca en la fecha `k` (AAAA-MM-DD): la semana de entreno va de lunes a domingo y, en un ciclo que no es
     de 7 días (workout/week), las semanas de antes o de después siguen el ciclo desde la semana actual. */
@@ -50,7 +50,7 @@ export const templateCard = k => {
   const has = tp && Object.keys(tp).some(i => Array.isArray(tp[i]) && tp[i].length);
   let kc = '';
   if (has)
-    kc = roundInt(sumMacros(Object.keys(tp).flatMap(i => Array.isArray(tp[i]) ? tp[i] : []).map(itemMacros))[0]);
+    kc = roundInt(dayTotals(tp)[0]);
   return html`<details class="cd"><summary>Plantillas · día de ${raw(nm)}</summary><p class="mu tpw">${why}</p><div class="g2 mt-10"><div class="hqw"><button data-a="templateApply">Aplicar plantilla</button>${helpDot('tpa', 'Qué hace «Aplicar plantilla»')}</div><div class="hqw"><button data-a="templateSave">Guardar día como plantilla</button>${helpDot('tps', 'Qué hace «Guardar día como plantilla»')}</div></div><small class="mu d-block mt-8">${raw(has ? 'Plantilla de ' + nm + ' guardada · ' + kc + ' kcal. Solo se rellenan las comidas vacías.' : 'Todavía no tienes plantilla de día de ' + nm + '. Rellena el día y pulsa Guardar.')}</small></details>`;
 };
 A.templateSave = () => {

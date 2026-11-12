@@ -12,9 +12,9 @@ import { mealsPart } from '../core/persist.js';
 import { icon } from '../core/icons.js';
 import { confirmDialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { itemMacros, sumMacros } from './home.js';
 import { habitsCard } from './templates.js';
 import { html, raw } from '../core/html.js';
+import { itemMacros, sumMacros } from '../core/calc.js';
 /* alimentos de la lista y los propios (solo los que tienen nombre y sus valores: unos datos dañados no rompen la lista) */
 const ownFoods = () => (S.myFoods || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b));
 const allFoods = () => FOODS_SRC.concat(ownFoods());

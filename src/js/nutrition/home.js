@@ -1,6 +1,6 @@
 /* ═══ nutrition/home ═══
    Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones.
-   Define: itemMacros, mealItems, sumMacros, MACRO_CLASSES, nutritionDayHead, nutritionTotals, macroBar, mealItemRow, mealButtons, mealCard, mealName, nutritionBase  · acciones/registros: 2
+   Define: MACRO_CLASSES, nutritionDayHead, nutritionTotals, macroBar, mealItemRow, mealButtons, mealCard, mealName, nutritionBase  · acciones/registros: 2
 */
 import { clampNum, dayKey, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
@@ -12,16 +12,7 @@ import { R } from '../core/render.js';
 import { goalTargets } from './diet.js';
 import { dayType, templateCard } from './templates.js';
 import { html, raw } from '../core/html.js';
-/** Valores de un alimento anotado según sus gramos: siempre 6 números (kcal, hidratos, proteínas, grasas, fibra, sal), aunque
-    los datos vengan dañados o de una copia manipulada; un alimento roto no puede impedir que se pinte Nutrición. */
-export const itemMacros = it => {
-  const b = it && Array.isArray(it.b) ? it.b : [];
-  const g = it ? +it.g || 0 : 0;
-  return [0, 1, 2, 3, 4, 5].map(i => (+b[i] || 0) * g / 100);
-};
-/** Lista de alimentos de la comida `i` de un día (solo los que tienen nombre). */
-export const mealItems = (m, i) => (m && Array.isArray(m[i]) ? m[i] : []).filter(it => it && typeof it.n == 'string');
-export const sumMacros = a => a.reduce((s, t) => s.map((v, i) => v + t[i]), [0, 0, 0, 0, 0, 0]);
+import { itemMacros, mealItems, sumMacros } from '../core/calc.js';
 /* las clases del color de cada macro: el texto (c-ctx…: más oscuro en el tema claro) y la barra, con el de siempre */
 const MACRO_CLASSES = { c: ['c-ctx', 'bg-c'], p: ['c-ptx', 'bg-p'], g: ['c-gtx', 'bg-g'] };
 /* la cabecera del día: «‹ día ›», si es de entreno o de descanso y «Mi nutrición» */

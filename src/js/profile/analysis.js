@@ -8,7 +8,7 @@
      medias o no cumplido; gráfica de las kcal de cada día.
    - Otros datos: medidas que cambian, logros conseguidos y agua. Y una conclusión en frases cortas.
    Se carga al usarlo (core/lazy).
-   Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, dayKcal, nutritionStats, otherStats, monthStats, conclusions, svgBars, svgLine, svgKcal, kpi, delta, analysisPage, analysisPdf  · acciones/registros: 3
+   Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, nutritionStats, otherStats, monthStats, conclusions, svgBars, svgLine, svgKcal, kpi, delta, analysisPage, analysisPdf  · acciones/registros: 3
 */
 import { APPV, dayKey, est1RM, fmtDateShort } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -17,7 +17,6 @@ import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { fullPage, pgHead, sheet } from '../core/ui.js';
 import { acctName } from '../cloud/session.js';
-import { itemMacros, sumMacros } from '../nutrition/home.js';
 import { GOAL_LABELS } from '../nutrition/diet.js';
 import { sessionsPerWeek } from '../workout/week.js';
 import { MEASURES } from '../extras/measures.js';
@@ -28,6 +27,7 @@ import { analysisFrom } from './home.js';
 import { downloadFile } from '../system/files.js';
 import { loadPdf } from '../core/lazy.js';
 import { html, raw } from '../core/html.js';
+import { nutritionPeriod } from '../core/calc.js';
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 /* hacia dónde debería ir el peso con cada objetivo (GOAL_LABELS: Definir, Mantenimiento, Volumen, Recomposición) */
 const KIND_OK = ['baja', 'estable', 'sube', 'estable'];
@@ -130,41 +130,27 @@ const weightStats = (a, b) => {
   const tr = Math.abs(d) < .3 ? 'estable' : d > 0 ? 'sube' : 'baja';
   return { pts: inM, before, d, tr, goal, ok: goal >= 0 ? KIND_OK[goal] == tr : null, last: inM[inM.length - 1].w };
 };
-/** kcal y proteína del día `k`. */
-const dayKcal = k => {
-  const v = sumMacros((S.meals[k] && typeof S.meals[k] == 'object' ? Object.values(S.meals[k]).flat() : []).map(itemMacros));
-  return [v[0], v[2]];
-};
+/** Las comidas del mes frente al objetivo (core/calc: nutritionPeriod) y el agua de media. */
 const nutritionStats = (a, b) => {
   const tk = +S.nutritionGoals.k || 0;
   const tp = tk * (+S.nutritionGoals.p || 0) / 400;
-  const days = [];
-  let ok = 0;
-  let sk = 0;
-  let sp = 0;
-  let logged = 0;
+  const keys = [];
+  for (let t = new Date(a + 'T12:00:00'); dayKey(t) <= b; t.setDate(t.getDate() + 1))
+    keys.push(dayKey(t));
+  const period = nutritionPeriod(S.meals, keys, tk);
+  const { logged, ok } = period;
+  const days = period.days.map(d => d.on ? d.v[0] : 0);
   let wat = 0;
   let wd = 0;
-  for (let t = new Date(a + 'T12:00:00'); dayKey(t) <= b; t.setDate(t.getDate() + 1)) {
-    const k = dayKey(t);
-    const [kc, pr] = dayKcal(k);
-    const on = kc > 50;
-    if (on) {
-      logged++;
-      sk += kc;
-      sp += pr;
-      if (tk && Math.abs(kc - tk) <= tk * .1)
-        ok++;
-    }
-    days.push(on ? kc : 0);
+  for (const k of keys) {
     const w = S.water && +S.water[k];
     if (w > 0) {
       wat += w;
       wd++;
     }
   }
-  const ak = logged ? sk / logged : 0;
-  const ap = logged ? sp / logged : 0;
+  const ak = period.avg[0];
+  const ap = period.avg[2];
   const adh = logged ? ok / logged : 0;
   const verdict = logged < 3 ? '' : adh >= .7 ? 'Cumplido' : adh >= .4 ? 'A medias' : 'No cumplido';
   return { tk, tp, days, logged, ok, ak, ap, adh, verdict, side: !logged || !tk ? '' : ak > tk * 1.1 ? 'te pasas' : ak < tk * .9 ? 'te quedas corto' : '', water: wd ? wat / wd : 0 };

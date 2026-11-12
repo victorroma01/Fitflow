@@ -15,7 +15,7 @@ import { confirmDialog, dialog, linkRow } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
 import { currentCustomProgram, levelsActive, levelTag, programRow } from '../programs/levels.js';
-import { ACTIVITY_LEVELS, applyDiet, BIO_RANGES, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
+import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { acctName, isAdmin, signedIn } from '../cloud/session.js';
 import { wipeCloudData } from '../cloud/sync.js';
@@ -23,6 +23,7 @@ import { wipeCloudBackup } from '../cloud/backup.js';
 import { reportsLine } from '../system/report.js';
 import { html, raw } from '../core/html.js';
 import { perWeekText } from '../workout/week.js';
+import { BIO_RANGES } from '../core/calc.js';
 /* cabecera de un desplegable de Perfil con su icono y una línea que dice qué hay dentro, como las filas de Medidas o Logros */
 const pfSummary = (ic, t, s) => html`<summary class="pfs">${icon(ic, 30)}<span><b>${raw(t)}</b><br><small>${s}</small></span></summary>`;
 function profileHead() {
