@@ -244,7 +244,8 @@ def main(path):
             check('si otra llamada de la misma acción no dice nada, se mira todo', ev('savesDone().then(()=>__w)') == ['ff:logs'], str(ev('__w')))
             ev("__w.length=0;S.logs[0].v+=1;saveState('core')")
             ev("Object.defineProperty(document,'visibilityState',{get:()=>'hidden',configurable:true});document.dispatchEvent(new Event('visibilitychange'));delete document.visibilityState")
-            check('al salir de la app, el repaso se hace ya', ev('savesDone().then(()=>__w)') == ['ff:logs'], str(ev('__w')))
+            # (al salir de la app también se sincroniza ya lo pendiente: la sincronización anota su estado en ffsync)
+            check('al salir de la app, el repaso se hace ya', ev("savesDone().then(()=>__w.filter(k=>k!='ffsync'))") == ['ff:logs'], str(ev('__w')))
             ev("JSON.stringify=__js0;__T.unspy()")
             pg.clock.run_for(2500)
 
