@@ -29,7 +29,11 @@ def wait(pg, expr, timeout=20000):
     raise AssertionError('no llega: ' + expr)
 
 
+LAST = ['']  # la última comprobación, para saber dónde pasó un error de la página
+
+
 def check(name, cond, info=''):
+    LAST[0] = name
     (passes if cond else fails).append(name)
     print(('  ok   ' if cond else '  FALLA'), name, ('' if cond else info))
 
@@ -122,7 +126,7 @@ def main(path):
             c.add_init_script(INIT)
             fb.install(c)
             pg = c.new_page()
-            pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200]))
+            pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200] + ' (tras «%s»)' % LAST[0]))
             pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' and 'ERR_INTERNET_DISCONNECTED' not in m.text and 'Failed to load resource' not in m.text else None)
             pg.goto(url)
             wait(pg, 'window.__ffok')
@@ -153,6 +157,16 @@ def main(path):
         def sync(pg):
             pg.evaluate('syncNow()')
             return pg.evaluate('syncState().st')
+
+        def close(c, pg):
+            """Cierra un móvil sin una sincronización a medias (la que estaba programada ya no se hace): WebKit cuenta como
+            error de la página una petición cortada al cerrar."""
+            try:
+                pg.evaluate('stopSync()')
+                wait(pg, "syncState().st!='run'", 10000)
+            except Exception:
+                pass
+            c.close()
 
         today = '2026-11-04'
         arroz = {'n': 'Arroz', 'g': 150, 'b': [130, 28, 2.7, 0.3, 0, 0]}
@@ -324,7 +338,38 @@ def main(path):
             pa.evaluate("A.openSettings()")
             pa.evaluate("A.openSettingsPage(0,{dataset:{v:'privacidad'}})")
             check('y Privacidad lo cuenta', 'reCAPTCHA Enterprise' in pa.inner_text('#sh'))
-            ca.close()
+            close(ca, pa)
+
+        # ── subidas juntas: lo que se cambia seguido va en una sola subida, como mucho 30 s después del primer cambio sin subir, y
+        #    al pasar la app a segundo plano se sube ya (menos escrituras de Firestore). Con el reloj simulado ──
+        cj, pj = device()
+        login(pj, 'Ana_1', 'contraseña-1')
+        pj.wait_for_timeout(3000)
+        sync(pj)
+        sync(pj)
+        # (las subidas de datos: cada una escribe también el índice; la copia de seguridad semanal va aparte)
+        commits = []
+        pj.on('request', lambda r: commits.append(r.url) if r.method == 'POST' and ':commit' in r.url and '/data/index' in (r.post_data or '') else None)
+        pj.clock.install()
+        cpath = 'users/%s/data/core' % uid
+        pj.evaluate("S.water=Object.assign(S.water||{},{'%s':300});saveState('core')" % today)
+        pj.clock.run_for(10000)
+        pj.evaluate("(d=>{S.meals[d]=S.meals[d]||{};(S.meals[d][0]=S.meals[d][0]||[]).push(%s);saveState(mealsPart(d))})('%s')" % (json.dumps(pan), today))
+        pj.clock.run_for(10000)
+        pj.evaluate("S.water['%s']=600;saveState('core')" % today)
+        pj.clock.run_for(9000)
+        check('tres cambios seguidos (agua, una comida y agua): nada se sube antes de 30 s desde el primero', not commits and pj.evaluate('pendingDocs()') == 2, '%s %s' % (commits, pj.evaluate('pendingDocs()')))
+        pj.clock.run_for(1500)
+        wait(pj, "syncState().st=='ok' && !pendingDocs()")
+        check('y a los 30 s, los tres en una sola subida', len(commits) == 1 and ((fb.part(cpath) or {}).get('wt') or {}).get(today) == 600 and pan in ((fb.part(mpath) or {}).get(today) or {}).get('0', []), '%d %s' % (len(commits), ((fb.part(cpath) or {}).get('wt') or {}).get(today)))
+        pj.evaluate("S.water['%s']=750;saveState('core')" % today)
+        pj.evaluate("Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});document.dispatchEvent(new Event('visibilitychange'))")
+        pj.clock.run_for(50)
+        wait(pj, "syncState().st=='ok' && !pendingDocs()")
+        check('al pasar la app a segundo plano, lo que esperaba se sube ya', len(commits) == 2 and ((fb.part(cpath) or {}).get('wt') or {}).get(today) == 750, str(len(commits)))
+        close(cj, pj)
+        sync(p1)
+        sync(p2)
 
         # ── espera creciente tras cinco fallos ──
         c3, p3 = device()
@@ -333,7 +378,7 @@ def main(path):
             wait(p3, "document.getElementById('lge').textContent.length>0 && !document.querySelector('[data-a=loginSubmit]').textContent.includes('Entrando')")
         check('contraseña incorrecta: aviso sin decir si existe el usuario', 'Usuario o contraseña incorrectos' in p3.inner_text('#lge'))
         check('tras cinco fallos, hay que esperar (botón desactivado con la cuenta atrás)', p3.evaluate("document.querySelector('[data-a=loginSubmit]').disabled && /Espera \\d+ s/.test(document.querySelector('[data-a=loginSubmit]').textContent)"))
-        c3.close()
+        close(c3, p3)
 
         # ── foto de perfil: primero el consentimiento ──
         jpeg = base64.b64decode(p1.evaluate("(()=>{const c=document.createElement('canvas');c.width=c.height=8;const x=c.getContext('2d');x.fillStyle='#c33';x.fillRect(0,0,8,8);return c.toDataURL('image/jpeg',.8).split(',')[1]})()"))
@@ -410,7 +455,7 @@ def main(path):
         wait(p5, "window.__ffok && !document.getElementById('lgw')", 20000)
         check('con la nueva, entra con sus datos', p5.evaluate('S.logs.length') == n_logs and sync(p5) == 'ok', str(p5.evaluate('S.logs.length')))
         check('y el perfil ya no pide cambiarla', (fb.data('users/' + uid) or {}).get('mc') is False)
-        c5.close()
+        close(c5, p5)
         # ── la sesión abierta en el móvil 2 caduca: se vuelve a entrar sin perder lo del móvil (con el emulador, si caduca: el
         #    emulador no siempre invalida los tokens como Firebase) ──
         p2.reload()
@@ -489,7 +534,7 @@ def main(path):
         txt = p2.inner_text('#rpl')
         check('y en su lista: «Contestada», con la respuesta', 'Contestada' in txt and 'queda arreglado' in txt, txt[:300])
         check('al verla deja de ser nueva', p2.evaluate("(sheet(),R(),document.querySelector('[data-a=openMyReports]').innerText)").find('respuesta nueva') < 0)
-        c4.close()
+        close(c4, p4)
 
         # ── copia de seguridad en la nube (M5, F-30): una sola, que se sustituye ──
         # con datos y sin copia, la primera ya se hizo sola tras sincronizar

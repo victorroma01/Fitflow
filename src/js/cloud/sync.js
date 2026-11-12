@@ -1,7 +1,8 @@
 /* ═══ cloud/sync ═══
    Sincronización con Firebase (offline-first): el móvil manda y Firestore es la copia de referencia y el punto de encuentro
-   entre dispositivos. Cada parte del estado que se guarda (core/persist) se avisa aquí (Store.remote) y, unos segundos
-   después y si hay red, se sincroniza:
+   entre dispositivos. Cada parte del estado que se guarda (core/persist) se avisa aquí (Store.remote) y, como mucho 30 s
+   después del primer cambio sin subir (lo cambiado entretanto va en la misma subida: menos escrituras de Firestore), al pasar
+   la app a segundo plano y si hay red, se sincroniza:
      1. el perfil (users/{uid}: usuario, sexo y preferencias, que el admin ve);
      2. el índice (users/{uid}/data/index: la versión de cada documento) dice qué ha cambiado en la nube desde la última vez;
         lo cambiado se baja y se junta con lo local (cloud/merge), sin esperas por medio: nada cambia S mientras tanto;
@@ -13,7 +14,7 @@
    Lo de cada documento en la última sincronización se recuerda por huellas (clave `sync` de Store), no por copias: así se sabe
    qué cambió en cada lado sin duplicar los datos en el móvil. Lo que se vació al arrancar porque estaba dañado (core/persist)
    no cuenta como borrado: esas huellas se olvidan y se vuelve a bajar de la nube (forgetDamaged).
-   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, pruneIndex, push, syncRound, syncNow, syncSoon, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, pruneIndex, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
@@ -428,6 +429,10 @@ const push = async (idx) => {
   return true;
 };
 const syncRound = async () => {
+  /* esta vuelta sube todo lo cambiado hasta ahora: la programada ya no hace falta (lo que cambie a partir de aquí la vuelve a
+     programar) */
+  clearTimeout(timer);
+  timerAt = 0;
   /* sin los datos del móvil (core/persist: partsLost), la nube creería que se borraron: no se sincroniza nada */
   if (!account || partsLost)
     return;
@@ -499,9 +504,24 @@ export const syncNow = () => {
   })();
   return running;
 };
+/** Tras un cambio, cuánto se espera como mucho para subirlo (ms): lo que se cambie mientras tanto (otro alimento, otro vaso
+  de agua…) va en la misma subida, así que se gastan menos escrituras de Firestore (plan Spark: 20.000 al día para todas las
+  cuentas). Al pasar la app a segundo plano no se espera. */
+const CHANGE_WAIT = 3e4;
+/* cuándo toca la sincronización programada (ms; 0 si no hay ninguna) */
+let timerAt = 0;
 const syncSoon = ms => {
   clearTimeout(timer);
-  timer = setTimeout(syncNow, ms);
+  timerAt = Date.now() + ms;
+  timer = setTimeout(() => {
+    timerAt = 0;
+    syncNow();
+  }, ms);
+};
+/* tras un cambio: como mucho CHANGE_WAIT después del primero que aún no se ha subido (los de después no la retrasan) */
+const syncAfterChange = () => {
+  if (!timerAt || timerAt - Date.now() > CHANGE_WAIT)
+    syncSoon(CHANGE_WAIT);
 };
 const retryLater = ms => syncSoon(ms);
 /* aviso de Store (core/store) por cada clave que se escribe: solo cuentan las partes del estado */
@@ -522,7 +542,7 @@ const adapter = {
         meta.pt = now;
       }
     }
-    syncSoon(4e3);
+    syncAfterChange();
   }
 };
 /* datos dañados al arrancar (core/persist): lo que se vació en el móvil no es un borrado, así que esos documentos se olvidan y
@@ -553,6 +573,10 @@ export const startSync = () => {
       profileAt = 0;
       syncSoon(600);
     }
+    /* al irse a segundo plano, lo que esperaba se sube ya: puede que la app no vuelva en un rato (o que el móvil la cierre). En
+       la tarea siguiente: si la página se va (al recargarla), la subida no llega a empezar y no se corta a medias */
+    else if (document.visibilityState == 'hidden' && timerAt)
+      syncSoon(0);
   });
   syncSoon(1500);
 };
@@ -560,6 +584,7 @@ export const startSync = () => {
 export const stopSync = () => {
   Store.remote = null;
   clearTimeout(timer);
+  timerAt = 0;
 };
 /** Primera sincronización tras entrar (account/login), con los datos del móvil ya borrados: baja todo lo de la cuenta (o,
   si es nueva, crea su perfil y sube el estado inicial) sin pintar la app. true si terminó bien. */
