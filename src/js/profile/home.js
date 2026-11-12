@@ -3,7 +3,7 @@
    «Borrar todos los datos». La foto de perfil se sube a la cuenta solo con consentimiento (pf.pc: cuándo se dio).
    Define: pfSummary, profileHead, bioSex, bioNumber, bioChoices, bioCard, planCard, firstUseDay, analysisFrom, analysisLine, profileTab  · acciones/registros: 8
 */
-import { APPV, dayKey, fmtDateShort, roundInt, safeImage } from '../core/util.js';
+import { APPV, clampInt, dayKey, fmtDateShort, roundInt, safeImage, typedNum } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { clearSavedState, reloadApp } from '../core/persist.js';
 import { A, C } from '../core/registry.js';
@@ -15,7 +15,7 @@ import { confirmDialog, dialog, linkRow } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
 import { currentCustomProgram, levelsActive, levelTag, programRow } from '../programs/levels.js';
-import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
+import { ACTIVITY_LEVELS, applyDiet, BIO_RANGES, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { acctName, isAdmin, signedIn } from '../cloud/session.js';
 import { wipeCloudData } from '../cloud/sync.js';
@@ -105,7 +105,20 @@ export function profileTab() {
 /* — manejadores de esta función (registros A / C / U) — */
 C.bioField = e => {
   const k = e.dataset.i;
-  S.biometrics[k] = e.value;
+  /* edad, altura y peso, solo entre valores posibles (los de la bienvenida); la actividad y el objetivo, de su lista */
+  if (BIO_RANGES[k]) {
+    const v = typedNum(e.value);
+    if (!(v >= BIO_RANGES[k][0] && v <= BIO_RANGES[k][1])) {
+      toast('Escribe un valor entre ' + BIO_RANGES[k][0] + ' y ' + BIO_RANGES[k][1]);
+      R();
+      return;
+    }
+    S.biometrics[k] = String(v);
+  }
+  else if (k == 'act' || k == 'goal')
+    S.biometrics[k] = String(clampInt(e.value, 0, k == 'act' ? 4 : 3, 1));
+  else
+    S.biometrics[k] = e.value;
   if (k == 'goal')
     S.nutritionGoals.dt = GOAL_DIET[+e.value];
   /* elegir el objetivo físico es elegir un plan: recalcula aunque las kcal estuvieran a mano; el resto de datos, no */

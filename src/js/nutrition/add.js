@@ -2,12 +2,12 @@
    Añadir alimentos y comidas al día: lista por grupos, librería de platos, alimento nuevo y búsqueda en internet.
    «Mis alimentos» (S.myFoods): los creados a mano y, desde la V1.0.1 (F-44), los buscados o escaneados en Open Food Facts, que se
    guardan solos al añadirlos a una comida (sin repetirse) con su Nutri-Score (F-43). Cualquiera se puede borrar.
-   Define: ownFoods, allFoods, NUTRI_SCORE, nutriScore, nutriScoreBadge, nutriScoreRow, saveOwnFood, foldText, groupNames, groupOfFood, foodList, addSheetBase, addMealItem, addSheet, onlineSheet, ownFoodDel  · acciones/registros: 15
+   Define: ownFoods, allFoods, NUTRI_SCORE, nutriScore, nutriScoreBadge, nutriScoreRow, saveOwnFood, foldText, groupNames, groupOfFood, foodList, addSheetBase, typedGrams, addMealItem, addSheet, onlineSheet, ownFoodDel  · acciones/registros: 15
 */
-import { $, dayKey, round1, roundInt, X } from '../core/util.js';
+import { $, clampNum, dayKey, round1, roundInt, typedNum, X } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
-import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
+import { addState, S, saveState, setAddState, nutriDate } from '../core/state.js';
 import { mealsPart } from '../core/persist.js';
 import { icon } from '../core/icons.js';
 import { confirmDialog, sheet } from '../core/ui.js';
@@ -86,19 +86,22 @@ function addSheetBase() {
     return h + habitsCard(a.m) + html`<input placeholder="Buscar alimento" aria-label="Buscar alimento" data-u="foodSearch"><div class="fgc" role="group" aria-label="Grupos de alimentos">${[-1].concat(groupNames().map((x, i) => i)).map(i => html`<button class="chip${(a.cat >= 0 ? a.cat : -1) == i ? ' on' : ''}" data-a="foodGroup" data-i="${i}">${i < 0 ? 'Todos' : groupNames()[i]}</button>`)}</div><div id="rs"></div>`;
   if (a.tab == 1)
     return h + (S.savedDishes.length ? S.savedDishes.map((p, i) => html`<div class="it cols-1fr-auto-auto"><span>${p.n}<br><small>${roundInt(sumMacros(p.it.map(itemMacros))[0])} kcal</small></span><button data-a="addLibraryDish" data-i="${i}">Añadir</button><button data-a="libraryDishDelete" data-i="${i}" aria-label="${'Borrar ' + p.n}" class="p-6">✕</button></div>`).join('') : '<p class="mu">Aún no hay platos. Pulsa el icono de guardar de una comida para guardarla como plato.</p>');
-  return html`${raw(h)}<label for="n0">Nombre</label><input id="n0">${[['Kcal', 'k'], ['Hidratos g', 'c'], ['Proteínas g', 'p'], ['Grasas g', 'f'], ['Fibra g', 'fi'], ['Sal g', 's']].map(x => html`<label for="n_${x[1]}">${raw(x[0])} (por 100 g)</label><input type="number" id="n_${x[1]}">`)}<button class="pr w-full mt-10" data-a="newFoodSave">Guardar alimento</button>`;
+  return html`${raw(h)}<label for="n0">Nombre</label><input id="n0" maxlength="80">${[['Kcal', 'k'], ['Hidratos g', 'c'], ['Proteínas g', 'p'], ['Grasas g', 'f'], ['Fibra g', 'fi'], ['Sal g', 's']].map(x => html`<label for="n_${x[1]}">${raw(x[0])} (por 100 g)</label><input type="number" id="n_${x[1]}">`)}<button class="pr w-full mt-10" data-a="newFoodSave">Guardar alimento</button>`;
 }
 A.addLibraryDish = i => {
-  const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+  const k = dayKey(nutriDate());
   (S.meals[k] = S.meals[k] || {});
   (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push(...S.savedDishes[i].it.map(x => ({ ...x })));
   saveState(mealsPart(k));
   sheet();
   R();
 };
+/** Los gramos escritos al añadir un alimento: entre 0,1 g y 5 kg (como al cambiarlos después: C.setItemGrams); si no, 100. Un
+    número negativo o disparatado descuadraría los totales del día. */
+const typedGrams = e => clampNum(e ? typedNum(e.value) : NaN, 0.1, 5000, 100);
 const addMealItem = () => {
-  const g = +$('#gr').value || 100;
-  const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+  const g = typedGrams($('#gr'));
+  const k = dayKey(nutriDate());
   (S.meals[k] = S.meals[k] || {});
   (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push({ n: addState.pick.n, g, b: addState.pick.b });
   saveState(mealsPart(k));
@@ -108,7 +111,7 @@ const addMealItem = () => {
 A.addFood = () => {
   const f = addState && addState.pick;
   const e = $('#gr');
-  const g = e ? (+e.value || 100) : 100;
+  const g = typedGrams(e);
   /* lo buscado o escaneado en Open Food Facts pasa a «Mis alimentos» (F-44) */
   if (f && f.off)
     saveOwnFood(f);
@@ -163,8 +166,9 @@ A.pickFood = i => {
   U.foodGrams(100);
 };
 A.newFoodSave = () => {
-  const v = id => +$('#n_' + id).value || 0;
-  const n = $('#n0').value.trim();
+  /* por 100 g: de 0 a 900 kcal (la grasa pura) y de 0 a 100 g de cada cosa; fuera de eso no es un alimento */
+  const v = id => clampNum(typedNum($('#n_' + id).value), 0, id == 'k' ? 900 : 100, 0);
+  const n = $('#n0').value.trim().slice(0, 80);
   if (!n)
     return;
   S.myFoods.push({ n, b: [v('k'), v('c'), v('p'), v('f'), v('fi'), v('s')] });
@@ -194,7 +198,7 @@ A.ownFoodDelete = () => {
   foodList(String(($('input[data-u="foodSearch"]') || {}).value || ''));
 };
 A.removeMealItem = (i, b) => {
-  const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+  const k = dayKey(nutriDate());
   S.meals[k][i].splice(+b.dataset.j, 1);
   saveState(mealsPart(k));
   R();

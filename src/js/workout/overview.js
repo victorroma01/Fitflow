@@ -20,7 +20,7 @@ const overviewHead = editing => html`<div class="hd"><button data-a="overviewBac
 /* la foto del día con su nombre (al editar, un campo) y sus cifras: ejercicios, series y minutos */
 const overviewHero = (d, editing) => {
   const sets = d.ex.reduce((s, e) => s + e.s, 0);
-  const name = editing ? html`<input value="${d.n}" data-c="setDayName" aria-label="Nombre del día" class="m-6-0">` : html`<h2>${d.n}</h2>`;
+  const name = editing ? html`<input value="${d.n}" maxlength="60" data-c="setDayName" aria-label="Nombre del día" class="m-6-0">` : html`<h2>${d.n}</h2>`;
   return html`<div class="cd hero" data-style="${coverStyle(d.n, d)}"><small>Overview</small>${name}<div class="st"><div><b>${d.ex.length}</b><small>Ejercicios</small></div><div><b>${raw(sets)}</b><small>Series</small></div><div><b>${dayMinutes(d)}</b><small>Minutos</small></div></div></div>`;
 };
 /* en una semana de descarga, qué cambia al empezar */

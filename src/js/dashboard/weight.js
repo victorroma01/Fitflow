@@ -2,7 +2,8 @@
    Peso corporal y gráfica; debajo de «Registrar peso», el recordatorio de pesaje (dashboard/reminder).
    Define: weekKey, bmiLabel, weightEntry, weightChart, weightSummary, weightPage  · acciones/registros: 4
 */
-import { $, dayKey, roundInt } from '../core/util.js';
+import { $, dayKey, roundInt, typedNum } from '../core/util.js';
+import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { S, saveState, setWeightView } from '../core/state.js';
 import { R } from '../core/render.js';
@@ -16,7 +17,7 @@ const weekKey = s => {
 };
 const bmiLabel = v => v < 18.5 ? 'Delgadez' : v < 25 ? 'Peso correcto' : v < 30 ? 'Sobrepeso moderado' : 'Sobrepeso extremo';
 /* registrar un peso: kg y fecha */
-const weightEntry = () => html`<div class="cd"><div class="g2"><input id="wv" type="number" inputmode="decimal" placeholder="Peso (kg)" aria-label="Peso"><input id="wd" type="date" value="${dayKey(new Date)}" aria-label="Fecha"></div><button class="pr w-full mt-8" data-a="weightAdd">Registrar peso</button></div>`;
+const weightEntry = () => html`<div class="cd"><div class="g2"><input id="wv" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="Peso (kg)" aria-label="Peso"><input id="wd" type="date" value="${dayKey(new Date)}" max="${dayKey(new Date)}" aria-label="Fecha"></div><button class="pr w-full mt-8" data-a="weightAdd">Registrar peso</button></div>`;
 /* la gráfica: el último peso de cada semana, mes o año (las 12 últimas, o 5 años), con su valor encima de cada punto */
 const weightChart = (log, range) => {
   const periodOf = d => range == 2 ? d.slice(0, 4) : range == 1 ? d.slice(0, 7) : weekKey(d);
@@ -59,10 +60,17 @@ A.weightRange = i => {
   R();
 };
 A.weightAdd = () => {
-  const w = +$('#wv').value;
+  const w = Math.round(typedNum($('#wv').value) * 100) / 100;
   const d = $('#wd').value;
-  if (!w || !d)
+  /* un peso imposible o una fecha que aún no ha llegado descuadrarían la gráfica, el IMC y los objetivos de kcal */
+  if (!(w >= 30 && w <= 300)) {
+    toast('Escribe tu peso en kg (entre 30 y 300)');
     return;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > dayKey(new Date)) {
+    toast('La fecha no puede ser posterior a hoy');
+    return;
+  }
   S.weightLog = (S.weightLog || []).filter(p => p.d != d).concat({ d, w });
   S.biometrics.w = S.weightLog.slice().sort((a, b) => a.d < b.d ? -1 : 1).pop().w;
   applyDiet();

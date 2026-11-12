@@ -2,7 +2,7 @@
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
    Define: foldPassed, sessionHeader, setRow, restRunning, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 18
 */
-import { $, fmtDuration, fmtMinSec, round1, roundInt, X } from '../core/util.js';
+import { $, clampNum, fmtDuration, fmtMinSec, round1, roundInt, typedNum, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
 import { S, setOverviewMode, setW, W } from '../core/state.js';
@@ -371,11 +371,13 @@ A.adjustRest = i => {
   if (!i)
     restEnded();
 };
-C.setReps = (e, i, j) => W.sets[i][j].r = +e.value;
+/* lo anotado en una serie nunca es negativo ni disparatado (hasta 100.000: los metros de una distancia), ni el peso pasa de
+   2.000 en la unidad elegida: descuadraría el volumen, los récords y la progresión */
+C.setReps = (e, i, j) => W.sets[i][j].r = clampNum(typedNum(e.value), 0, 1e5, 0);
 /* el peso escrito pasa como sugerido a las series siguientes (F-10) */
 C.setWeight = (e, i, j) => {
   const a = W.sets[i];
-  a[j].w = fromDisplayWeight(+e.value);
+  a[j].w = fromDisplayWeight(clampNum(typedNum(e.value), 0, 2000, 0));
   a[j].ws = 0;
   suggestAfter(S.plan[S.selectedDay].ex[i], a, j);
   R();

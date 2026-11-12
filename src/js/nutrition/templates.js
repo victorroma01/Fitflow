@@ -5,7 +5,7 @@
 import { $, dayKey, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
-import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
+import { addState, S, saveState, setAddState, nutriDate } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { HELP, helpDot } from '../core/help.js';
 import { R } from '../core/render.js';
@@ -13,7 +13,7 @@ import { itemMacros, mealItems, sumMacros } from './home.js';
 import { addSheet } from './add.js';
 import { planIndex, weekOffset } from '../workout/week.js';
 import { html, raw } from '../core/html.js';
-const nutriDayKey = () => dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+const nutriDayKey = () => dayKey(nutriDate());
 /** Día del plan que toca en la fecha `k` (AAAA-MM-DD): la semana de entreno va de lunes a domingo y, en un ciclo que no es
     de 7 días (workout/week), las semanas de antes o de después siguen el ciclo desde la semana actual. */
 const planDayOf = k => {
@@ -104,7 +104,7 @@ A.templateApply = () => {
 const habitGrams = f => Math.min(5000, Math.max(0, Math.round(+(f && f.g) || 0))) || 100;
 export const habitsCard = m => {
   const l = Object.keys(S.frequentFoods || {}).map(n => [n, S.frequentFoods[n]]).filter(x => x[1] && x[1].c > 0 && Array.isArray(x[1].b)).sort((a, b) => b[1].c - a[1].c || (b[1].t || 0) - (a[1].t || 0)).slice(0, 8);
-  const yk = dayKey(new Date(Date.now() + (nutriDayOffset - 1) * 864e5));
+  const yk = dayKey(nutriDate(-1));
   const ys = (S.meals[yk] || {})[m] || [];
   if (!l.length && !ys.length)
     return '';
@@ -128,7 +128,7 @@ A.frequentAdd = (i, b) => {
 A.copyYesterday = () => {
   if (!addState)
     return;
-  const yk = dayKey(new Date(Date.now() + (nutriDayOffset - 1) * 864e5));
+  const yk = dayKey(nutriDate(-1));
   const ys = (S.meals[yk] || {})[addState.m] || [];
   if (!ys.length)
     return;
@@ -143,10 +143,10 @@ A.copyYesterday = () => {
 /* — manejadores de esta función (registros A / C / U) — */
 A.saveDishAsk = (i, b) => {
   setAddState({ m: i });
-  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" aria-label="Nombre del plato" value="${b.dataset.n}"><button class="pr w-full mt-10" data-a="saveDish">Guardar</button>`);
+  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" maxlength="80" aria-label="Nombre del plato" value="${b.dataset.n}"><button class="pr w-full mt-10" data-a="saveDish">Guardar</button>`);
 };
 A.saveDish = () => {
-  const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+  const k = dayKey(nutriDate());
   const it = ((S.meals[k] || {})[addState.m] || []).map(x => ({ ...x }));
   const n = $('#pn').value.trim() || 'Plato';
   if (it.length) {

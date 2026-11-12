@@ -2,7 +2,7 @@
    Mis workouts: lista, editor de bloques y lanzamiento.
    Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineBlock, routineEditor, routineBlockPicker, openRoutines, routineCard, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, setOverviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 25
 */
-import { $, fmtMinSec, roundInt, X } from '../core/util.js';
+import { $, clampNum, fmtMinSec, roundInt, typedNum, X } from '../core/util.js';
 import { A, C, U } from '../core/registry.js';
 import { groupLabel } from '../data/library.js';
 import { DAY_PHOTOS } from '../data/photos.js';
@@ -36,7 +36,7 @@ const routineBlock = (block, j) => {
 /** El editor de un workout personalizado: nombre, imagen, sus bloques y «Crear» o «Guardar cambios». */
 export const routineEditor = () => {
   const routine = S.routines[routineState.i];
-  return html`<div class="row"><button data-a="routineEditorBack">‹ Rutinas</button>${raw(routineState.nw ? '' : '<button data-a="routineDeleteAsk" class="c-ctx">Eliminar</button>')}</div><h2 class="m-14-0-4 ls-n0_02em">Workout personalizado</h2><label>Nombre</label><input data-c="routineName" value="${routine.n}" aria-label="Nombre del workout"><label>Imagen del entrenamiento</label>${imagePicker(routine)}${routine.bl.map(routineBlock)}<button data-a="routineAddBlock" class="w-full mt-16">+ Añadir bloque</button><div class="h-80"></div><button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineSaveAsk">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
+  return html`<div class="row"><button data-a="routineEditorBack">‹ Rutinas</button>${raw(routineState.nw ? '' : '<button data-a="routineDeleteAsk" class="c-ctx">Eliminar</button>')}</div><h2 class="m-14-0-4 ls-n0_02em">Workout personalizado</h2><label>Nombre</label><input data-c="routineName" maxlength="60" value="${routine.n}" aria-label="Nombre del workout"><label>Imagen del entrenamiento</label>${imagePicker(routine)}${routine.bl.map(routineBlock)}<button data-a="routineAddBlock" class="w-full mt-16">+ Añadir bloque</button><div class="h-80"></div><button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineSaveAsk">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
 };
 const routineBlockPicker = () => html`<button data-a="routineEdit" data-i="${routineState.i}">‹ Cancelar</button><h3>Nuevo bloque</h3>${[1, 2, 3].map(k => html`<button class="chip${routineState.k == k ? ' on' : ''}" data-a="routineAddBlockKind" data-i="${k}">${raw(BLOCK_KINDS[k])}</button>`)}<p class="mu">Elige el ejercicio ${routineState.sel.length + 1} de ${routineState.k}${raw(routineState.sel.length ? ': ' + routineState.sel.map(X).join(' + ') : '')}</p><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="routinePickerSearch"><div id="cl2">${raw(routineExRows())}</div>`;
 A.routinePickExercise = (i, b) => {
@@ -271,6 +271,6 @@ C.routineName = e => {
   saveState();
 };
 C.routineBlockReps = (e, i) => {
-  S.routines[routineState.i].bl[i].r = +e.value;
+  S.routines[routineState.i].bl[i].r = clampNum(typedNum(e.value), 0, 1e5, 0);
   saveState();
 };

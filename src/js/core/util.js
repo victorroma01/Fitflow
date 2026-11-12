@@ -1,10 +1,10 @@
 /* ═══ core/util ═══
    Utilidades puras (no importa nada): versión, selector $, escape HTML X, redondeos, fechas (dayKey) y formatos.
-   Define: APPV, FFDEP, $, X, safeImage, round1, roundInt, fmtMinSec, dayKey, est1RM, fmtDuration, clampInt, clampNum, fmtClock, fmtDateShort, newId
+   Define: APPV, FFDEP, $, X, safeImage, round1, roundInt, fmtMinSec, dayKey, est1RM, fmtDuration, clampInt, typedNum, clampNum, fmtClock, fmtDateShort, newId
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
-export const APPV = '1.0.2';
+export const APPV = '1.0.3';
 export const FFDEP = 0; /* 1 en el paquete instalable (dist/app): lo fija build.py; 0 en el archivo único */
 export const $ = q => document.querySelector(q);
 export const X = s => String(s).replace(/[&<>"]/g, c => '&#' + c.charCodeAt(0) + ';');
@@ -27,6 +27,11 @@ export const fmtDuration = s => {
 export const clampInt = (v, a, b, d) => {
   v = Math.round(+v);
   return v >= a && v <= b ? v : d;
+};
+/** Un número escrito por el usuario (admite la coma decimal), o NaN. */
+export const typedNum = v => {
+  const t = String(v == null ? '' : v).trim().replace(',', '.');
+  return t === '' ? NaN : +t;
 };
 export const clampNum = (v, a, b, d) => {
   v = +v;

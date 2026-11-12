@@ -29,7 +29,9 @@ const volumeBars = logs => {
 function dashboardBase() {
   const lg = S.logs;
   const now = new Date();
-  const wkc = lg.filter(l => (now - new Date(l.d)) < 7 * 864e5).length;
+  /* hoy y los seis días de antes, por fecha (restando horas, de madrugada entraba un octavo día) */
+  const from = dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 12));
+  const wkc = lg.filter(l => l.d >= from && l.d <= dayKey(now)).length;
   const vol = lg.reduce((s, l) => s + l.v, 0);
   const head = html`<div class="hd"><h1>Dashboard</h1><button data-a="openWeight" aria-label="Evolución del peso" class="p-8-12">${icon('dash', 24)}</button></div>`;
   const stats = html`<div class="g2 mt-12">${statCell(lg.length, 'Entrenos totales')}${statCell(raw(wkc), 'Últimos 7 días')}${statCell(raw(volumeText(vol)), 'Volumen total')}${statCell(kcalToday(now), 'kcal hoy')}</div>`;

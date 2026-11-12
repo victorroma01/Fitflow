@@ -27,7 +27,8 @@
 
 ## Estado
 
-La versión publicada es la **V1.0.2** (12 de noviembre de 2026). Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` y se
+La versión publicada es la **V1.0.2** (12 de noviembre de 2026); la **V1.0.3** (auditoría técnica) está en la rama
+`desarrollo-1.0.3`. Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` y se
 publica solo con la confirmación del propietario. Los requisitos de cada versión se siguen en GitHub, por milestones:
 
 | Milestone | Contenido |

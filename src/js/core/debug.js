@@ -32,7 +32,8 @@ import { medalSvg } from '../extras/medals.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { dayInfo } from '../nutrition/templates.js';
-import { tdee } from '../nutrition/diet.js';
+import { applyDiet, tdee } from '../nutrition/diet.js';
+import { bestOf } from '../workout/finish.js';
 import { account } from '../cloud/session.js';
 import { APP_CHECK } from '../cloud/config.js';
 import { appCheckOn } from '../cloud/appcheck.js';
@@ -115,6 +116,8 @@ const DEBUG_NAMES = {
   syncState: [() => syncState],
   takeSnapshot: [() => takeSnapshot],
   tdee: [() => tdee],
+  applyDiet: [() => applyDiet],
+  bestOf: [() => bestOf],
   tourCheck: [() => tourCheck],
   U: [() => U],
   updatesOn: [() => updatesOn],

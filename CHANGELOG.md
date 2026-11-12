@@ -10,6 +10,26 @@ aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en fr
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.3] — 2026-11-12
+
+### Mejoras
+- Lo que escribes se comprueba mejor: los gramos de un alimento, un alimento nuevo, tu peso, tu edad y tu altura, y las
+  repeticiones y el peso de una serie solo admiten valores posibles, y los decimales también se pueden escribir con coma.
+- Los nombres (de un día, un workout, un plato o un ejercicio nuevo) y las notas tienen un largo máximo.
+
+### Correcciones
+- Nutrición: si reduces las comidas al día, lo anotado en las que ya no están se sigue viendo y contando. Antes desaparecía de
+  la lista y del total del día, aunque el Dashboard sí lo contaba.
+- Nutrición: el día después del cambio de hora de marzo, entre las 00:00 y la 01:00, «ayer» se saltaba un día.
+- Dashboard: «Últimos 7 días» contaba un día de más de madrugada.
+- Los objetivos calculados nunca bajan de 800 kcal ni dan porcentajes imposibles con pesos muy altos.
+
+### Interno
+- Auditoría técnica de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): diagnóstico por áreas, lo corregido y lo pendiente.
+- `tests/calc.py`: las sumas de Nutrición, los objetivos (Mifflin-St Jeor), el volumen de un entreno (kg y lb), el 1RM estimado
+  y las fechas en los cambios de hora se comparan con la misma cuenta hecha aparte, con datos al azar; y la validación de lo
+  que se escribe. `typedNum` (`core/util`), `nutriDate` (`core/state`) y `BIO_RANGES` (`nutrition/diet`).
+
 ## [1.0.2] — 2026-11-12
 
 ### Novedades
