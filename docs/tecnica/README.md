@@ -65,14 +65,14 @@ el que usan la mayoría de las pruebas.
   lo escrito y el desplazamiento, y el resultado es el mismo HTML que pintando de cero.
 - **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
   exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
-- **Persistencia solo a través de `Store`** (`core/store`). Ninguna otra parte toca `localStorage`, y `Store` avisa de cada parte que
-  cambia a la sincronización con [Firebase](backend.md) (`Store.remote`).
+- **Persistencia solo a través de `Store`** (`core/store`) y de `core/persist`. Ninguna otra parte toca `localStorage` ni las partes
+  del estado en IndexedDB, y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`).
 - **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
   `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Ajustes → Diagnóstico; un `catch` vacío solo se
   permite con un comentario que explique por qué el fallo es esperable.
-- **Arranque explícito**: todo lo que se ejecuta al cargar (comprobar los datos con `core/repair`, reanudar un entreno, primer render y
-  empezar a sincronizar) vive en `core/boot`, en orden. El resto de módulos solo define y registra sus manejadores y escuchas
+- **Arranque explícito**: todo lo que se ejecuta al cargar (leer de IndexedDB las partes del estado, comprobar los datos con
+  `core/repair`, reanudar un entreno, primer render y empezar a sincronizar) vive en `core/boot`, en orden. El resto de módulos solo define y registra sus manejadores y escuchas
   (eventos, gestos de `core/tabbar` y `core/swipe`, historial de `core/back`), salvo `cloud/session`, que antes de leer el estado
   borra los datos de otra cuenta.
 - **Sin código muerto**: `tools/check.js` falla si algo declarado, exportado, registrado o dibujado no se usa, incluido el CSS

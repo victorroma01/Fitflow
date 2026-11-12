@@ -22,7 +22,7 @@ A.addWater = i => {
   S.water = S.water || {};
   const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
   S.water[k] = Math.max(0, (S.water[k] || 0) + i);
-  saveState();
+  saveState('core');
   R();
 };
 export function nutritionTab() {

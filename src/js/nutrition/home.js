@@ -6,6 +6,7 @@ import { clampNum, dayKey, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
 import { MEAL_NAMES, MEAL_SPLITS } from '../data/foods.js';
 import { nutriDayOffset, S, saveState, setNutriDayOffset } from '../core/state.js';
+import { mealsPart } from '../core/persist.js';
 import { icon } from '../core/icons.js';
 import { R } from '../core/render.js';
 import { goalTargets } from './diet.js';
@@ -60,11 +61,12 @@ A.nutritionDay = i => {
   R();
 };
 C.setItemGrams = (e, i, j) => {
-  const it = ((S.meals[dayKey(new Date(Date.now() + nutriDayOffset * 864e5))] || {})[i] || [])[j];
+  const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+  const it = ((S.meals[k] || {})[i] || [])[j];
   if (!it)
     return;
   /* gramos entre 0 y 5 kg: un número negativo o disparatado descuadraría los totales del día */
   it.g = clampNum(String(e.value).replace(',', '.'), 0, 5000, 0);
-  saveState();
+  saveState(mealsPart(k));
   R();
 };

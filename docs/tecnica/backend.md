@@ -90,6 +90,12 @@ un día de comidas, el historial de un ejercicio, cada clave del núcleo, cada p
   resto gana el cambio más reciente;
 - justo después de entrar, en un conflicto gana la nube (el móvil aún no tenía nada de la cuenta).
 
+Lo que el móvil vació al arrancar porque estaba dañado (`core/persist`) **no cuenta como borrado**: sus huellas se olvidan y esas
+partes se vuelven a bajar de la nube (con el núcleo dañado, todo, y en un conflicto gana la nube). Y si los datos del móvil no se
+pudieron leer (IndexedDB falla o falta una parte), no se sincroniza nada hasta poder leerlos: con la mitad de los datos, la nube
+creería que se borró el resto. Desde ese aviso, «Bajar de mi cuenta» borra lo del móvil y las huellas, y la app vuelve a bajarlo
+todo, como al entrar. La pantalla de error de arranque, al «Restablecer», también olvida las huellas (V1.0.2).
+
 Al entrar, los datos del móvil se borran si son de otra cuenta, se bajan los de la cuenta y la app se abre de nuevo con ellos.
 «Cerrar sesión» intenta subir lo pendiente y avisa si no puede; después borra del móvil los datos de la cuenta. «Borrar todos los
 datos» los borra primero de la nube (sin conexión no borra nada: si no, la siguiente sincronización los volvería a bajar).

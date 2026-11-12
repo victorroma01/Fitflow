@@ -151,8 +151,8 @@ def main(path):
 
         # persistencia
         ev('saveState()')
-        # entrenos guardados: dentro de 'ff' (1.20 y anteriores) o en su propia clave 'ff:logs' (guardado por partes, 1.21)
-        before = ev("(()=>{const c=JSON.parse(localStorage.getItem('ff'));return (Array.isArray(c.logs)?c.logs:JSON.parse(localStorage.getItem(c.logs))).length})()")
+        # entrenos guardados, en su propia parte (en IndexedDB: core/persist), leídos de lo guardado (tests/init.js)
+        before = ev("savesDone().then(()=>__stored()).then(s=>s.logs.length)")
         reload(pg)
         check('persistencia tras recargar', ev('S.logs.length') == before, '%s vs %s' % (ev('S.logs.length'), before))
         check('sin errores de JS durante la prueba', not errs, '; '.join(errs[:3]))

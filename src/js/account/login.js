@@ -12,6 +12,7 @@ import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
 import { flushState, markNewAccount, resetState } from '../core/state.js';
+import { reloadApp } from '../core/persist.js';
 import { repairState } from '../core/repair.js';
 import { icon } from '../core/icons.js';
 import { brandLogo } from '../core/brand.js';
@@ -159,7 +160,7 @@ const finishLogin = async () => {
     logError('entrar: primera sincronización', e);
   }
   flushState();
-  location.reload();
+  reloadApp();
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.loginMode = (i, b) => {
@@ -226,7 +227,7 @@ A.loginCreatePassword = async () => {
     return;
   }
   loginState = { m: 'in', busy: '', err: '', eye: 0 };
-  location.reload();
+  reloadApp();
 };
 A.loginPrivacy = () => sheet(html`${pgHead('Privacidad')}<div class="srt">${PRIVACY_TEXT.map(p => html`<p>${p}</p>`)}</div><div style="height:30px"></div>`);
 /* sesión caducada (contraseña restablecida, otro dispositivo la cambió…): volver a entrar sin perder lo del móvil */

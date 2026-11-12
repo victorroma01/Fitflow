@@ -32,13 +32,14 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
  else if(e.type=='range'){e.value=String(val)}
  else e.value=txt;
  e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}"""
-SIG="""(ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
+SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
  if(ren){for(const [at,r] of [['data-a','A'],['data-enter','A'],['data-c','C'],['data-u','U']])b.querySelectorAll('['+at+']').forEach(e=>{const v=e.getAttribute(at);if(ren[r][v])e.setAttribute(at,ren[r][v])});
   b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])})}
- /* lo que mide el tiempo de verdad (Diagnóstico e informe de un fallo: «Tiempo de pintado») cambia en cada ejecución */
- const h=b.innerHTML.replace(/Tiempo de pintado: [^\\n<]*/g,'Tiempo de pintado: …');let ls='';try{const g=k=>localStorage.getItem(k);let c=JSON.parse(g('ff')||'null');
-  if(c&&c._parts){delete c._parts;const ks=[],m={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('ff:'))ks.push(k)}
-   ks.sort().forEach(k=>{const v=JSON.parse(g(k));if(k.startsWith('ff:meals:'))Object.assign(m,v);else if(c[k.slice(3)]===k)c[k.slice(3)]=v});if(c.meals==='ff:meals')c.meals=m}
+ /* lo que mide el tiempo de verdad (Diagnóstico e informe de un fallo: «Tiempo de pintado») cambia en cada ejecución; y lo que
+    ocupa cada dato y el espacio usado, según dónde se guarde (localStorage o IndexedDB: core/persist, I-04) */
+ const h=b.innerHTML.replace(/Tiempo de pintado: [^\\n<]*/g,'Tiempo de pintado: …').replace(/(Almacenamiento|Espacio usado): [^\\n<]*\\n?/g,'');let ls='';try{const g=k=>localStorage.getItem(k);
+  /* lo guardado, completo (tests/init.js), cuando esté escrito */
+  if(window.savesDone)await savesDone();const c=await window.__stored();
   const can=v=>Array.isArray(v)?'['+v.map(can).join(',')+']':v&&typeof v=='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+can(v[k])).join(',')+'}':JSON.stringify(v);
   ls=(c?can(c):'')+'|'+(g('ffw')||'')}catch(e){ls='ERR '+e}
  const f=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x>>>0};
@@ -77,12 +78,13 @@ def trace(file,seed,steps,ren=None):
         pg.route('**/*',lambda r:r.continue_() if r.request.url.startswith(base) else r.abort())
         pg.clock.install(time=datetime.datetime(2026,10,29,12,0,0))
         pg.clock.pause_at(datetime.datetime(2026,10,29,12,0,1))
+        pg.add_init_script("window.__ffHintCheck=[]")  # cada saveState con partes se comprueba (core/persist, I-10)
         pg.goto(url);pg.wait_for_timeout(200)
         scen=seed%4
         if scen!=2:
             pg.evaluate(old_js(SEED.replace("S.glassLevel=3;S.glassOn=1;S.theme='dark';","S.glassLevel=%d;S.glassOn=1;S.theme='%s';"%(3 if scen in(0,1) else 0,'dark' if seed%2==0 else 'light')),ren))
             pg.evaluate(old_js(EXTRA,ren))
-            pg.evaluate("location.reload()");pg.wait_for_timeout(200)
+            pg.reload();pg.wait_for_timeout(200)
         pg.clock.run_for(500)
         if scen==1:
             go=back('a','startWorkout');pg.evaluate("A.%s&&A.%s()"%(go,go));pg.clock.run_for(300)
@@ -114,6 +116,9 @@ def trace(file,seed,steps,ren=None):
                 sg=pg.evaluate(SIG,ren)
             except Exception as e:
                 res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=pg.evaluate(SIG,ren)
+            miss=pg.evaluate("(window.__ffHintCheck||[]).splice(0)")
+            if miss:
+                res['errs'].append('PISTA paso %d %s: %s'%(st,act[1] if len(act)>1 else act,';'.join(miss)))
             res['steps'].append([act,sg,adv])
         b.close()
     return res

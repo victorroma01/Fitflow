@@ -260,6 +260,35 @@ def main(path):
         check('y la siguiente sincronización ya no pide documentos de más', not asked, str(asked[:3]))
         sync(p1)
 
+        # ── datos dañados en el móvil: lo que se vació no es un borrado; se vuelve a bajar de la nube (core/persist, I-04) ──
+        idb_put = "(([k,v])=>savesDone().then(()=>new Promise((res,rej)=>{const r=indexedDB.open('ffdata',1);r.onsuccess=()=>{const db=r.result,tx=db.transaction('parts','readwrite'),st=tx.objectStore('parts');v===null?st.delete(k):st.put(v,k);tx.oncomplete=()=>{db.close();res()};tx.onerror=()=>rej(tx.error)}})))"
+        lpath = 'users/%s/logs/2026' % uid
+        sync(p2)
+        p2.evaluate(idb_put, ['ff:logs', '{roto'])
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        check('(preparado: los entrenos de este móvil, dañados)', p2.evaluate('stateRecovered') == 2 and p2.evaluate('S.logs.length') == 0)
+        sync(p2)
+        check('los entrenos dañados se vuelven a bajar de la nube, sin borrarlos allí', sorted(p2.evaluate('S.logs.map(l=>l.n)')) == ['Pecho', 'Pierna'] and len(fb.part(lpath) or []) == 2, str([p2.evaluate('S.logs.length'), len(fb.part(lpath) or [])]))
+        p2.evaluate("document.querySelector('#dg').innerHTML=''")
+
+        # ── una parte que falta (IndexedDB borrada a medias): ni se guarda ni se sincroniza; «Bajar de mi cuenta» lo recupera ──
+        p2.evaluate(idb_put, ['ff:logs', None])
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        check('si faltan datos del móvil, avisa y no sincroniza', p2.evaluate('partsLost') == 1 and p2.evaluate("!!document.querySelector('#dg [data-v=partsFromCloudAsk]')") and p2.evaluate('!Store.remote'))
+        sync(p2)
+        check('y la nube no pierde nada aunque se pida sincronizar', len(fb.part(lpath) or []) == 2)
+        p2.evaluate("document.querySelector('#dg [data-v=partsFromCloudAsk]').click()")
+        check('«Bajar de mi cuenta» pide confirmación', p2.evaluate("!!document.querySelector('#dg [data-v=partsFromCloud]')"))
+        # (la acción del botón, sin cerrar el aviso con el historial: esa navegación de la misma página confundiría a la espera)
+        with p2.expect_navigation(timeout=20000):
+            p2.evaluate("A.partsFromCloud()")
+        wait(p2, 'window.__ffok')
+        wait(p2, 'S.logs.length==2', 20000)
+        check('«Bajar de mi cuenta» vuelve a bajar los datos de la cuenta', sorted(p2.evaluate('S.logs.map(l=>l.n)')) == ['Pecho', 'Pierna'] and not p2.evaluate('partsLost') and len(fb.part(lpath) or []) == 2)
+        sync(p2)
+
         # ── espera creciente tras cinco fallos ──
         c3, p3 = device()
         for _ in range(5):

@@ -8,7 +8,7 @@
 import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { stateRecovered } from './persist.js';
+import { mealsPart, partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
@@ -25,6 +25,7 @@ import { isDeloadWeek } from '../workout/deload.js';
 import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
+import { spaceCheck, spaceUse } from '../system/space.js';
 import { updatesOn } from '../system/updates.js';
 import { showSummary } from '../extras/summary.js';
 import { medalSvg } from '../extras/medals.js';
@@ -77,10 +78,13 @@ const DEBUG_NAMES = {
   libState: [() => libState],
   logError: [() => logError],
   markNewAccount: [() => markNewAccount],
+  mealsPart: [() => mealsPart],
   medalSvg: [() => medalSvg],
   nutriDayOffset: [() => nutriDayOffset],
   parseBackup: [() => parseBackup],
   parseProgram: [() => parseProgram],
+  partSizes: [() => partSizes],
+  partsLost: [() => partsLost],
   PROGRAM_NAMES: [() => PROGRAM_NAMES],
   PROGRAMS: [() => PROGRAMS],
   pendingDocs: [() => pendingDocs],
@@ -92,10 +96,13 @@ const DEBUG_NAMES = {
   restoreBackup: [() => restoreBackup],
   S: [() => S],
   saveState: [() => saveState],
+  savesDone: [() => savesDone],
   sheet: [() => sheet],
   showSummary: [() => showSummary],
   snapList: [() => snapList],
   snapTx: [() => snapTx],
+  spaceCheck: [() => spaceCheck],
+  spaceUse: [() => spaceUse],
   stateRecovered: [() => stateRecovered],
   Store: [() => Store],
   syncSel: [() => syncSel],

@@ -1,7 +1,10 @@
 # Qué guarda StrataFit
 
 Todo lo que la app recuerda está en el objeto `S` (`core/state`), que se guarda con `saveState()` (`core/persist`): el núcleo en la clave
-`ff` y las colecciones que más crecen (entrenos, historial y comidas) en claves propias, para escribir solo lo que cambia.
+`ff` de localStorage y las colecciones que más crecen (entrenos, historial y comidas) en partes propias, para escribir solo lo que
+cambia. Desde la V1.0.2 esas partes viven en IndexedDB (I-04), que admite mucho más que los unos 5 MB de localStorage; la primera vez
+que se abre la versión nueva pasan allí solas. Una acción puede decir qué partes ha tocado (`saveState('core')`,
+`saveState(mealsPart(día))`): así solo esas se pasan a texto, y poco después se repasan todas por si acaso (I-10).
 Desde la V1.0.2, en el programa cada clave de `S` y de `W` tiene un nombre que dice lo que guarda (`S.selectedDay`, `W.restEndsAt`),
 pero se guarda con su clave corta de siempre (`sel`, `re`): en el móvil, en Firebase y en las copias de seguridad. `core/schema` es
 el único módulo que conoce las dos y traduce al leer y al guardar, así que las claves guardadas **no se renombran** sin una
@@ -17,12 +20,12 @@ historial por año, las comidas por mes, las preferencias en el perfil y la foto
 
 | Clave | Contenido |
 |---|---|
-| `ff` (`app`) | Núcleo del estado `S`: todo menos `logs`, `hist` y `meals`, que quedan como el nombre de su clave (`"logs": "ff:logs"`), más la marca `_parts: 1`. Un `ff` sin la marca (el estado entero de la 1.20 y anteriores) no se lee: los datos de la serie de prueba no se migran. |
-| `ff:logs` | `S.logs`. |
-| `ff:hist` | `S.hist`. |
-| `ff:meals:AAAA-MM` | Los días de `S.meals` de ese mes (`ff:meals:otros` para claves que no son fechas). Un mes sin comidas no tiene clave. |
+| `ff` (`app`) | Núcleo del estado `S`: todo menos `logs`, `hist` y `meals`, que quedan como el nombre de su parte (`"logs": "ff:logs"`), más la marca `_parts` (2: las partes están en IndexedDB; 1: en localStorage, como hasta la V1.0.1 o si el navegador no tiene IndexedDB) y, con 2, `_pk`: la lista de partes que tiene que haber. Si al arrancar falta alguna o no se pueden leer, la app no guarda ni sincroniza nada y lo avisa (con «Reintentar» y «Bajar de mi cuenta»). Un `ff` sin la marca (el estado entero de la 1.20 y anteriores) no se lee: los datos de la serie de prueba no se migran. |
+| `ff:logs` | Parte: `S.logs`. |
+| `ff:hist` | Parte: `S.exerciseHistory` (guardado como `hist`). |
+| `ff:meals:AAAA-MM` | Parte: los días de `S.meals` de ese mes (`ff:meals:otros` para claves que no son fechas). Un mes sin comidas no tiene parte. |
 | `ffw` (`wip`) | Entreno en curso (`W` y el día), para reanudarlo si se cierra la app. |
-| `ffpre` (`pre`) | Estado anterior a la última restauración de una copia (permite deshacerla durante 30 días). |
+| `ffpre` (`pre`) | Fecha del estado anterior a la última restauración de una copia (`{ t, v, a: 1 }`; permite deshacerla durante 30 días). La copia, `{ t, v, s, w }`, va aparte (`asideSet` de `core/persist`): en IndexedDB o, sin ella, en `ffaside:pre`. Hasta la V1.0.1 iba entera aquí, y así se sigue leyendo. |
 | `ffrs` (`rs`) | Resumen pendiente de mostrar tras restaurar. |
 | `fferr` (`err`) | Últimos 30 errores registrados en este dispositivo (`core/errors`). No es un dato del usuario. |
 | `ffbad` (`bad`) | Copia de un estado que no se pudo leer al arrancar, apartada antes de empezar de cero. |
@@ -34,9 +37,11 @@ historial por año, las comidas por mes, las preferencias en el perfil y la foto
 | `ffown` (`own`) | uid de la cuenta cuyos datos hay en el móvil. Si entra otra, se borran antes de leer el estado. |
 | `ffsync` (`sync`) | Sincronización (`cloud/sync`): `{ dev: id del dispositivo, base: { parte: { r: versión, h: huellas de cada elemento } }, lt: último cambio local por tipo, pt: de las preferencias, fresh: 1 tras entrar, last: última sincronización }`. |
 | `fflgn` (`lgn`) | Intentos fallidos de entrar `{ n, t }`, para la espera creciente (`account/login`). |
+| `ffspace` (`space`) | Cuándo se avisó por última vez de que queda poco espacio (`system/space`, I-04): como mucho, una vez a la semana. No se sincroniza. |
 
-En IndexedDB: `ffsnap` (copias automáticas diarias, las 7 últimas; se borran al cerrar sesión). La base `ffph` de las fotos de
-progreso de la serie de prueba se borra al arrancar.
+En IndexedDB: `ffdata` (almacén `parts`: las partes del estado, con las mismas claves `ff:logs`, `ff:hist` y `ff:meals:AAAA-MM`, su
+texto JSON tal cual; almacén `aside`: lo grande que no es del estado, como la copia previa a restaurar) y `ffsnap` (copias automáticas diarias, las 7 últimas; se borran al cerrar sesión). La base `ffph` de las
+fotos de progreso de la serie de prueba se borra al arrancar.
 
 ## El estado `S`
 

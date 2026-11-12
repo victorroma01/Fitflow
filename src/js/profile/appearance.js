@@ -150,7 +150,7 @@ const commitAccent = () => {
   S.accentColor = accentPick;
   accentPick = '';
   applyAccent();
-  saveState();
+  saveState('core');
   R();
 };
 const pickAccent = v => {
@@ -169,7 +169,7 @@ A.accentChoose = i => {
   clearTimeout(accentTimer);
   S.accent = i;
   applyAccent();
-  saveState();
+  saveState('core');
   R();
 };
 U.accentLive = pickAccent;
@@ -177,7 +177,7 @@ C.accentCustom = e => pickAccent(e.value);
 A.themeChoose = (i, b) => {
   S.theme = b.dataset.v;
   applyTheme();
-  saveState();
+  saveState('core');
   R();
 };
 A.glassToggle = (i, b) => {
@@ -192,7 +192,7 @@ A.glassToggle = (i, b) => {
     S.glassLevel = 0;
   }
   S.glassOn = S.glassLevel ? 1 : 0;
-  saveState();
+  saveState('core');
   R();
 };
 A.glassLevel = (i, b) => {
@@ -200,11 +200,11 @@ A.glassLevel = (i, b) => {
   S.glassLevel = (v >= 1 && v <= 3) ? v : 2;
   S.glassLastLevel = S.glassLevel;
   S.glassOn = 1;
-  saveState();
+  saveState('core');
   R();
 };
 C.reduceMotion = e => {
   S.reduceMotion = e.checked ? 1 : 0;
-  saveState();
+  saveState('core');
   R();
 };

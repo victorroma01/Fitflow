@@ -55,7 +55,7 @@ A.weightBack = () => {
 };
 A.weightRange = i => {
   S.weightRange = i;
-  saveState();
+  saveState('core');
   R();
 };
 A.weightAdd = () => {
@@ -66,6 +66,6 @@ A.weightAdd = () => {
   S.weightLog = (S.weightLog || []).filter(p => p.d != d).concat({ d, w });
   S.biometrics.w = S.weightLog.slice().sort((a, b) => a.d < b.d ? -1 : 1).pop().w;
   applyDiet();
-  saveState();
+  saveState('core');
   R();
 };

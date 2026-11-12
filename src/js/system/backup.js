@@ -1,13 +1,13 @@
 /* ═══ system/backup ═══
    Copias de seguridad, restauración y avisos.
-   Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, cleanProfile, parseBackup, backupDate, askRestore, preRestore, restoreBackup, backupFileCard, backupContents, backupText, backupSnapshots, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
+   Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, cleanProfile, parseBackup, backupDate, askRestore, preRestore, preCopy, savePre, restoreBackup, backupFileCard, backupContents, backupText, backupSnapshots, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
 */
 import { stateToStored } from '../core/schema.js';
 import { $, APPV, safeImage, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
-import { lockSaves, replaceSavedState } from '../core/persist.js';
+import { asideGet, asideSet, lockSaves, reloadApp, replaceSavedState } from '../core/persist.js';
 import { A, C } from '../core/registry.js';
 import { flushState, S, saveState } from '../core/state.js';
 import { confirmDialog, pgHead, sheet } from '../core/ui.js';
@@ -148,10 +148,13 @@ export const askRestore = txt => {
   const ds = r.meta && r.meta.at ? backupDate(r.meta.at, 1) : '';
   confirmDialog('¿Restaurar esta copia?', html`<b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>${backupSummary(r.s)}${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}<br><br><b>Ahora tienes</b><br>${backupSummary(stateToStored(S))}<br><br>Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.`, 'backupRestoreConfirmed', 'Restaurar');
 };
+/* la copia previa a la última restauración, para deshacerla (30 días): en Store.K.pre, su fecha ({ t, v, a: 1 }); la copia,
+   aparte (core/persist: asideSet, en IndexedDB), porque con años de datos no cabría en localStorage. Hasta la V1.0.1 iba entera
+   en Store.K.pre ({ t, v, s, w }), y así se sigue leyendo */
 const preRestore = () => {
   try {
     const p = JSON.parse(Store.get(Store.K.pre));
-    if (p && p.s && Array.isArray(p.s.plan) && Date.now() - p.t < 30 * 864e5)
+    if (p && Date.now() - p.t < 30 * 864e5 && (p.a || p.s && Array.isArray(p.s.plan)))
       return p;
   }
   catch (e) {
@@ -159,24 +162,51 @@ const preRestore = () => {
   }
   return null;
 };
-export const restoreBackup = () => {
+/* la copia previa entera, { t, v, s: estado con las claves guardadas, w: entreno en curso } (promesa; null si no está) */
+const preCopy = async (p) => {
+  if (p.s)
+    return p;
+  try {
+    const c = JSON.parse(await asideGet('pre'));
+    if (c && c.t == p.t && c.s && Array.isArray(c.s.plan))
+      return c;
+  }
+  catch (e) {
+    logError('leer copia previa a restaurar', e);
+  }
+  return null;
+};
+/* guarda lo de ahora como copia previa (antes de restaurar o de deshacer). false si no cabe */
+const savePre = async () => {
+  const t = Date.now();
+  if (!await asideSet('pre', JSON.stringify({ t, v: APPV, s: stateToStored(S), w: Store.get(WIP_KEY) })))
+    return false;
+  try {
+    Store.set(Store.K.pre, JSON.stringify({ t, v: APPV, a: 1 }));
+    return true;
+  }
+  catch (e) {
+    logError('guardar copia previa a restaurar', e);
+    return false;
+  }
+};
+/** Restaura la copia pendiente (pendingRestore): guarda antes lo de ahora (para deshacer), escribe la copia en lugar de todo
+    y recarga la app. Si no se puede escribir, vuelve a guardar lo de ahora. Promesa (con IndexedDB, escribir espera). */
+export const restoreBackup = async () => {
   const r = pendingRestore;
   if (!r || !r.s)
     return;
   pendingRestore = null;
-  let pre;
-  try {
-    pre = JSON.stringify({ t: Date.now(), v: APPV, s: stateToStored(S), w: Store.get(WIP_KEY) });
-    Store.set(Store.K.pre, pre);
-  }
-  catch (e) {
+  const w0 = Store.get(WIP_KEY);
+  if (!await savePre()) {
     toast('No hay espacio para guardar tus datos actuales: no se restauró nada');
     return;
   }
   try {
     const s = r.s;
     s.bkd = Date.now();
-    replaceSavedState(s);
+    if (!await replaceSavedState(s))
+      throw new Error('no se pudo escribir la copia');
     if (r.wip) {
       r.wip.t = Date.now();
       Store.set(WIP_KEY, JSON.stringify(r.wip));
@@ -188,11 +218,10 @@ export const restoreBackup = () => {
   catch (e) {
     logError('restaurar copia', e);
     try {
-      const p = JSON.parse(pre);
-      if (!flushState())
+      if (!await flushState())
         throw new Error('no se pudo volver a guardar el estado anterior');
-      if (p.w)
-        Store.set(WIP_KEY, p.w);
+      if (w0)
+        Store.set(WIP_KEY, w0);
       else
         Store.del(WIP_KEY);
     }
@@ -203,27 +232,33 @@ export const restoreBackup = () => {
     return;
   }
   lockSaves();
-  location.reload();
+  reloadApp();
 };
-A.backupUndoAsk = () => {
+A.backupUndoAsk = async () => {
   const p = preRestore();
-  if (!p)
+  const c = p && await preCopy(p);
+  if (!c) {
+    if (p)
+      toast('No se encontró la copia de antes de restaurar');
     return;
-  confirmDialog('¿Deshacer la última restauración?', 'Volverás a los datos que tenías antes (' + X(backupSummary(p.s)) + '). Lo que tienes ahora se guardará por si cambias de idea.', 'backupUndo', 'Deshacer');
-};
-A.backupUndo = () => {
-  const p = preRestore();
-  if (!p)
-    return;
-  try {
-    Store.set(Store.K.pre, JSON.stringify({ t: Date.now(), v: APPV, s: stateToStored(S), w: Store.get(WIP_KEY) }));
   }
-  catch (e) {
+  confirmDialog('¿Deshacer la última restauración?', 'Volverás a los datos que tenías antes (' + X(backupSummary(c.s)) + '). Lo que tienes ahora se guardará por si cambias de idea.', 'backupUndo', 'Deshacer');
+};
+A.backupUndo = async () => {
+  const q = preRestore();
+  const p = q && await preCopy(q);
+  if (!p) {
+    if (q)
+      toast('No se encontró la copia de antes de restaurar');
+    return;
+  }
+  if (!await savePre()) {
     toast('No hay espacio para deshacer');
     return;
   }
   try {
-    replaceSavedState(p.s);
+    if (!await replaceSavedState(p.s))
+      throw new Error('no se pudo escribir la copia previa');
     if (p.w)
       Store.set(WIP_KEY, p.w);
     else
@@ -232,13 +267,13 @@ A.backupUndo = () => {
   }
   catch (e) {
     logError('deshacer restauración', e);
-    if (!flushState())
+    if (!await flushState())
       logError('guardar al deshacer restauración', new Error('no se pudo volver a guardar el estado actual'));
     toast('No se pudo deshacer');
     return;
   }
   lockSaves();
-  location.reload();
+  reloadApp();
 };
 C.backupImportFile = e => {
   const f = e.files && e.files[0];

@@ -8,6 +8,7 @@ import { $, dayKey, round1, roundInt, X } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
+import { mealsPart } from '../core/persist.js';
 import { icon } from '../core/icons.js';
 import { confirmDialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
@@ -91,7 +92,7 @@ A.addLibraryDish = i => {
   const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
   (S.meals[k] = S.meals[k] || {});
   (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push(...S.savedDishes[i].it.map(x => ({ ...x })));
-  saveState();
+  saveState(mealsPart(k));
   sheet();
   R();
 };
@@ -100,7 +101,7 @@ const addMealItem = () => {
   const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
   (S.meals[k] = S.meals[k] || {});
   (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push({ n: addState.pick.n, g, b: addState.pick.b });
-  saveState();
+  saveState(mealsPart(k));
   sheet();
   R();
 };
@@ -116,7 +117,7 @@ A.addFood = () => {
     S.frequentFoods = S.frequentFoods || {};
     const q = S.frequentFoods[f.n] || { c: 0 };
     S.frequentFoods[f.n] = { c: (q.c || 0) + 1, g, b: f.b, t: Date.now() };
-    saveState();
+    saveState('core');
   }
 };
 export const addSheet = () => addSheetBase();
@@ -167,7 +168,7 @@ A.newFoodSave = () => {
   if (!n)
     return;
   S.myFoods.push({ n, b: [v('k'), v('c'), v('p'), v('f'), v('fi'), v('s')] });
-  saveState();
+  saveState('core');
   addState.tab = 0;
   sheet(addSheet());
   foodList('');
@@ -187,14 +188,15 @@ A.ownFoodDelete = () => {
   if (!f)
     return;
   S.myFoods = S.myFoods.filter(x => x !== f);
-  saveState();
+  saveState('core');
   if (addState && addState.cat >= groupNames().length)
     addState.cat = -1;
   foodList(String(($('input[data-u="foodSearch"]') || {}).value || ''));
 };
 A.removeMealItem = (i, b) => {
-  S.meals[dayKey(new Date(Date.now() + nutriDayOffset * 864e5))][i].splice(+b.dataset.j, 1);
-  saveState();
+  const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+  S.meals[k][i].splice(+b.dataset.j, 1);
+  saveState(mealsPart(k));
   R();
 };
 U.foodGrams = v => {

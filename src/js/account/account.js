@@ -5,7 +5,7 @@
 */
 import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
-import { lockSaves } from '../core/persist.js';
+import { lockSaves, reloadApp } from '../core/persist.js';
 import { A } from '../core/registry.js';
 import { toast } from '../core/toast.js';
 import { confirmDialog } from '../core/ui.js';
@@ -86,5 +86,5 @@ A.signOutConfirmed = () => {
   catch (e) {
     /* sin dueño guardado: al entrar se borra igual lo que hubiera */
   }
-  location.reload();
+  reloadApp();
 };

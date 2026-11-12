@@ -94,7 +94,7 @@ export const linkPrev = (a, i) => {
 };
 A.linkToPrevious = i => {
   linkPrev(S.plan[S.selectedDay].ex, i);
-  saveState();
+  saveState('core');
   R();
 };
 const woShortcuts = () => html`<button class="cd" data-a="openLibrary" style="width:100%;text-align:left;display:flex;gap:14px;align-items:center">${icon('lib', 34)}<span><b style="font-size:17px">Librería de ejercicios</b><br><small>Explora por grupo muscular</small></span></button><button class="cd" data-a="routineEditorBack" style="width:100%;text-align:left;display:flex;gap:14px;align-items:center">${icon('prog', 34)}<span><b style="font-size:17px">Workout personalizado</b><br><small>Bloques sueltos, superseries y triseries</small></span></button>`;
@@ -153,7 +153,7 @@ A.selectDay = i => {
 A.changeWeek = i => {
   S.week = Math.max(1, S.week + i);
   syncSel();
-  saveState();
+  saveState('core');
   R();
 };
 A.toggleWeekView = () => {
@@ -164,41 +164,41 @@ A.toggleWeekView = () => {
 A.completeRestDay = () => {
   S.doneDays[S.week + '-' + S.selectedWeekday] = 1;
   advanceDay();
-  saveState();
+  saveState('core');
   R();
 };
 A.planSetMinus = i => {
   const e = planEx(i);
   e.s = Math.max(1, e.s - 1);
-  saveState();
+  saveState('core');
   R();
 };
 A.planSetPlus = i => {
   planEx(i).s++;
-  saveState();
+  saveState('core');
   R();
 };
 A.removePlanExercise = i => {
   S.plan[S.selectedDay].ex.splice(i, 1);
-  saveState();
+  saveState('core');
   R();
 };
 A.resetWeek = () => {
   Object.keys(S.doneDays).forEach(k => k.startsWith(S.week + '-') && delete S.doneDays[k]);
-  saveState();
+  saveState('core');
   sheet();
   R();
 };
 C.setPlanTempo = (e, i) => {
   S.plan[S.selectedDay].ex[i].t = e.value;
-  saveState();
+  saveState('core');
   R();
 };
 C.setExerciseNote = (e, i) => {
   S.exerciseNotes[S.plan[S.selectedDay].ex[i].n] = e.value;
-  saveState();
+  saveState('core');
 };
 C.setDayName = e => {
   S.plan[S.selectedDay].n = e.value;
-  saveState();
+  saveState('core');
 };

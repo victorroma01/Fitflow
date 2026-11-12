@@ -5,7 +5,7 @@
 */
 import { APPV, dayKey, fmtDateShort, roundInt, safeImage } from '../core/util.js';
 import { Store } from '../core/store.js';
-import { clearSavedState } from '../core/persist.js';
+import { clearSavedState, reloadApp } from '../core/persist.js';
 import { A, C } from '../core/registry.js';
 import { PROGRAM_NAMES } from '../data/library.js';
 import { S, saveState } from '../core/state.js';
@@ -47,7 +47,7 @@ A.resetAllConfirmed = async () => {
     }
   clearSavedState();
   Store.del(WIP_KEY);
-  location.reload();
+  reloadApp();
 };
 A.resetAllAsk = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta, y también la copia de seguridad de la nube. Tu usuario se mantiene. No se puede deshacer.', 'resetAllConfirmed', 'Borrar todo');
 /* el sexo (con «Sin indicar» mientras no se haya elegido) */

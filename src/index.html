@@ -2,18 +2,23 @@
 <style>@@CSS@@</style></head><body><div id="app"></div><div id="sh"></div>
 <script>
 (function(){var shown=0,T=function(m){var d=document.createElement('div');d.textContent=m;return d.innerHTML};
-/* estado guardado completo, sin depender del código de la app: el núcleo 'ff' más sus partes 'ff:…' (ver core/persist);
-   si algo no se puede leer, el texto de cada clave tal cual */
-function parts(){var o=[],i,k;for(i=0;i<localStorage.length;i++){k=localStorage.key(i);if(k&&k.indexOf('ff:')==0)o.push(k)}return o}
-function data(){var c=localStorage.getItem('ff'),p=parts(),o,m={},i,k,v,d;if(!p.length)return c;
-try{o=JSON.parse(c);if(o&&o._parts){delete o._parts;p.sort();for(i=0;i<p.length;i++){k=p[i];v=JSON.parse(localStorage.getItem(k));if(k.indexOf('ff:meals:')==0){for(d in v)m[d]=v[d]}else if(o[k.slice(3)]===k)o[k.slice(3)]=v}if(o.meals==='ff:meals')o.meals=m;return JSON.stringify(o)}}catch(e){}
-o={ff:c};for(i=0;i<p.length;i++)o[p[i]]=localStorage.getItem(p[i]);return JSON.stringify(o)}
+/* estado guardado completo, sin depender del código de la app: el núcleo 'ff' más sus partes 'ff:…', de IndexedDB (base
+   «ffdata») o de localStorage, según diga el núcleo (ver core/persist); si algo no se puede leer, el texto de cada clave tal
+   cual. cb(texto) */
+function lsParts(){var o={},i,k;for(i=0;i<localStorage.length;i++){k=localStorage.key(i);if(k&&k.indexOf('ff:')==0)o[k]=localStorage.getItem(k)}return o}
+function idbParts(cb){var done=0,end=function(o){if(!done){done=1;cb(o)}};try{var r=indexedDB.open('ffdata',1);r.onupgradeneeded=function(){r.result.createObjectStore('parts')};r.onerror=function(){end({})};r.onsuccess=function(){try{var db=r.result,tx=db.transaction('parts','readonly'),st=tx.objectStore('parts'),ks=st.getAllKeys(),vs=st.getAll();tx.oncomplete=function(){var o={},i;for(i=0;i<ks.result.length;i++)o[ks.result[i]]=vs.result[i];db.close();end(o)};tx.onerror=function(){db.close();end({})}}catch(e){end({})}}}catch(e){end({})}setTimeout(function(){end({})},3000)}
+function data(cb){idbParts(function(q){var c=localStorage.getItem('ff'),l=lsParts(),a,b,p,o,m={},i,k,v,d;try{o=JSON.parse(c)}catch(e){o=null}
+a=o&&o._parts>=2?q:l;b=a===q?l:q;for(k in b)if(!(k in a))a[k]=b[k];p=Object.keys(a).sort();if(!p.length)return cb(c);
+try{if(o&&o._parts){delete o._parts;delete o._pk;for(i=0;i<p.length;i++){k=p[i];v=JSON.parse(a[k]);if(k.indexOf('ff:meals:')==0){for(d in v)m[d]=v[d]}else if(o[k.slice(3)]===k)o[k.slice(3)]=v}if(o.meals==='ff:meals')o.meals=m;return cb(JSON.stringify(o))}}catch(e){}
+o={ff:c};for(i=0;i<p.length;i++)o[p[i]]=a[p[i]];cb(JSON.stringify(o))})}
 function fail(m){if(shown)return;shown=1;var d=document.createElement('div');d.id='ffe';d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99;background:#0b0b0d;color:#f4f4f6;padding:28px 20px;overflow:auto;font:15px/1.45 system-ui,-apple-system,sans-serif';
 d.innerHTML='<h2 style="margin:24px 0 8px;font-size:22px">StrataFit no ha podido iniciarse</h2><p style="color:#9a9aa6;margin:0 0 12px">Esto es lo que ha fallado. Si sigue ocurriendo, envíame una captura de este mensaje.</p><pre style="white-space:pre-wrap;word-break:break-word;background:#17171b;border-radius:12px;padding:12px;font-size:12px;color:#ffb4c0">'+T(m)+'</pre><button id="ffe1" style="width:100%;padding:15px;border-radius:14px;border:0;background:#fff;color:#111;font:700 16px system-ui;margin:10px 0">Reintentar</button><button id="ffe2" style="width:100%;padding:15px;border-radius:14px;border:1px solid #2a2a31;background:#17171b;color:#f4f4f6;font:600 15px system-ui;margin:0 0 10px">Ver mis datos (copia de seguridad)</button><button id="ffe3" style="width:100%;padding:15px;border-radius:14px;border:1px solid #5a2030;background:#17171b;color:#ff8da1;font:600 15px system-ui">Restablecer y abrir de nuevo</button><textarea id="ffe4" readonly style="display:none;width:100%;height:180px;margin-top:12px;background:#17171b;color:#f4f4f6;border:1px solid #2a2a31;border-radius:12px;padding:10px;font-size:11px"></textarea>';
 document.body.appendChild(d);
 document.getElementById('ffe1').onclick=function(){location.reload()};
-document.getElementById('ffe2').onclick=function(){var t=document.getElementById('ffe4');try{t.value=data()||'(sin datos)'}catch(e){t.value='(no se puede leer el almacenamiento)'}t.style.display='block';t.focus();t.select()};
-document.getElementById('ffe3').onclick=function(){try{var r=data();if(r)localStorage.setItem('ffbad',JSON.stringify({t:Date.now(),k:'ff',raw:r}))}catch(e){}try{parts().concat('ff','ffw').forEach(function(k){localStorage.removeItem(k)})}catch(e){}location.reload()};
+document.getElementById('ffe2').onclick=function(){var t=document.getElementById('ffe4');var show=function(v){t.value=v;t.style.display='block';t.focus();t.select()};try{data(function(r){show(r||'(sin datos)')})}catch(e){show('(no se puede leer el almacenamiento)')}};
+/* «Restablecer»: aparta lo guardado y empieza de cero (las partes de IndexedDB las vacía la app al arrancar sin núcleo). Sin
+   'ffsync', la sincronización no ve el móvil vacío como un borrado: vuelve a bajar lo de la cuenta */
+document.getElementById('ffe3').onclick=function(){var go=function(r){try{if(r)localStorage.setItem('ffbad',JSON.stringify({t:Date.now(),k:'ff',raw:r}))}catch(e){}try{Object.keys(lsParts()).concat('ff','ffw','ffsync').forEach(function(k){localStorage.removeItem(k)})}catch(e){}location.reload()};try{data(go)}catch(e){go(null)}};
 try{var l=JSON.parse(localStorage.getItem('fferr')||'[]');if(!Array.isArray(l))l=[];l.push({t:Date.now(),w:'arranque',m:String(m).slice(0,300),s:'',v:''});localStorage.setItem('fferr',JSON.stringify(l.slice(-30)))}catch(e){}}
 window.__ffe=fail;
 /* paquete: si no se puede descargar el código de la app (sin conexión ni copia guardada), se dice al momento; el error de

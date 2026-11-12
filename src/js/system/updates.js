@@ -9,6 +9,7 @@ import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
 import { RELEASE } from '../data/release.js';
 import { S, W } from '../core/state.js';
+import { savesDone } from '../core/persist.js';
 import { isStandalone } from './files.js';
 import { BRAND_LOGOS } from '../data/photos.js';
 import { html, raw } from '../core/html.js';
@@ -223,6 +224,8 @@ A.updateApply = async (i, b) => {
   catch (e) {
     logError('descargar actualización', e);
   }
+  /* lo pendiente de guardar (IndexedDB: core/persist), antes de recargar */
+  await Promise.race([savesDone(), new Promise(r => setTimeout(r, 5000))]);
   try {
     location.reload();
   }

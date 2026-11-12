@@ -11,14 +11,15 @@
    private/avatar (la foto, solo con consentimiento). Cada uno guarda su contenido como texto JSON (`j`): Firestore no admite
    listas dentro de listas, y el historial las tiene.
    Lo de cada documento en la última sincronización se recuerda por huellas (clave `sync` de Store), no por copias: así se sabe
-   qué cambió en cada lado sin duplicar los datos en el móvil.
-   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, pruneIndex, push, syncRound, syncNow, syncSoon, retryLater, adapter, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   qué cambió en cada lado sin duplicar los datos en el móvil. Lo que se vació al arrancar porque estaba dañado (core/persist)
+   no cuenta como borrado: esas huellas se olvidan y se vuelve a bajar de la nube (forgetDamaged).
+   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, pruneIndex, push, syncRound, syncNow, syncSoon, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
-import { partKey } from '../core/persist.js';
+import { badParts, partKey, partsLost, stateRecovered } from '../core/persist.js';
 import { applyTheme, flushState, S, W } from '../core/state.js';
 import { R } from '../core/render.js';
 import { dialog } from '../core/ui.js';
@@ -427,7 +428,8 @@ const push = async (idx) => {
   return true;
 };
 const syncRound = async () => {
-  if (!account)
+  /* sin los datos del móvil (core/persist: partsLost), la nube creería que se borraron: no se sincroniza nada */
+  if (!account || partsLost)
     return;
   if (account.x) {
     setStatus('dead');
@@ -523,8 +525,26 @@ const adapter = {
     syncSoon(4e3);
   }
 };
+/* datos dañados al arrancar (core/persist): lo que se vació en el móvil no es un borrado, así que esos documentos se olvidan y
+   se vuelven a bajar de la nube en vez de borrarlos allí. Con el núcleo dañado, todo, y en un conflicto gana la nube */
+const forgetDamaged = () => {
+  if (stateRecovered == 1) {
+    meta.base = {};
+    meta.fresh = 1;
+  }
+  else
+    for (const k of badParts) {
+      const kind = k == partKey('logs') ? 'logs:' : k == partKey('hist') ? 'hist:' : k.startsWith(partKey('meals:')) ? 'meals:' + k.slice(partKey('meals:').length) : '';
+      for (const id of Object.keys(meta.base))
+        if (kind && (kind.endsWith(':') ? id.startsWith(kind) : id == kind))
+          delete meta.base[id];
+    }
+  if (stateRecovered)
+    saveMeta();
+};
 /** Arranque con sesión (core/boot): escucha los cambios y la red, y sincroniza enseguida. */
 export const startSync = () => {
+  forgetDamaged();
   lastPrefs = hashOf(prefsLocal());
   Store.remote = adapter;
   window.addEventListener('online', () => syncSoon(800));

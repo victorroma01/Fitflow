@@ -217,6 +217,6 @@ A.setStartTab = (i, b) => {
     S.startTab = v;
   else
     delete S.startTab;
-  saveState();
+  saveState('core');
   R();
 };

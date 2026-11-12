@@ -22,9 +22,12 @@ export const resetState = () => {
     delete S[k];
   Object.assign(S, freshState());
 };
-/** Guarda S al terminar la acción en curso; solo se escribe lo que ha cambiado (core/persist). */
-export const saveState = () => scheduleWrite(S);
-/** Guarda S ya, sin esperar al final de la acción. Devuelve false si no se pudo. */
+/** Guarda S al terminar la acción en curso; solo se escribe lo que ha cambiado (core/persist). Si la acción solo ha tocado
+    el núcleo o algunas partes, decirlo ahorra pasarlo todo a texto (I-10): saveState('core'), saveState(mealsPart(día)),
+    saveState('logs', 'hist'). Sin decir nada, se mira todo. */
+export const saveState = (...parts) => scheduleWrite(S, parts);
+/** Guarda S ya, sin esperar al final de la acción (todo). Promesa: false si no se pudo; con IndexedDB, se cumple al quedar
+    escrito. */
 export const flushState = () => writeState(S);
 export let W = null;
 /** Cambia `W` desde otros módulos (un módulo no puede asignar una variable importada). */

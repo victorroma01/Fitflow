@@ -137,6 +137,18 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
   admite mucho más, pasando lo que haya en `localStorage` la primera vez; y avisar cuando el uso pase del 80 % (el Diagnóstico ya
   enseña lo que ocupa cada parte).
 - **Coste**: 4 PF = EO nueva «Aviso de espacio» (baja, 4); el cambio de almacenamiento no cambia ninguna función (0 PF) · 12 horas.
+- **V1.0.2**: hecha en `desarrollo-1.0.2`. Las partes viven en IndexedDB (base `ffdata`); el núcleo sigue en `localStorage`, que se
+  lee sin esperas. `core/boot` lee las partes antes de pintar; la primera vez pasan solas desde `localStorage` (todas en una
+  transacción, después el núcleo con la marca nueva y al final se borran las de antes: si algo se corta, se repite al abrir). Sin
+  IndexedDB, todo sigue en `localStorage`. Se escribe en orden (partes nuevas, núcleo, borrados), así el núcleo, que nombra las
+  partes que tiene que haber (`_pk`), nunca nombra una que no esté guardada; si al arrancar falta alguna o no se pueden leer, la app
+  no guarda ni sincroniza nada (con los datos a medias, la nube creería que se borraron) y avisa con «Reintentar» y «Bajar de mi
+  cuenta». Antes de recargar la página (restaurar, entrar, cerrar sesión, borrar, actualizar) se espera a que esté todo escrito.
+  El aviso de espacio (`system/space`) mira `localStorage` y lo que diga `navigator.storage.estimate()`; Diagnóstico enseña dónde
+  está cada parte y el espacio usado. De paso, dos arreglos de seguridad de los datos: lo que se vacía al arrancar por estar dañado
+  ya no se borra en la nube (se olvidan sus huellas y se vuelve a bajar), y «Restablecer», en la pantalla de error, también olvida
+  las huellas. La copia previa a una restauración, que también crece con los datos, va aparte en IndexedDB (almacén `aside`); en
+  `ffpre` queda solo su fecha.
 
 ### I-05 · Cualquiera puede crear cuentas sin límite y gastar la cuota de Firebase
 
@@ -214,6 +226,11 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Impacto**: con años de datos, unos milisegundos más en cada toque que guarda, en un móvil.
 - **Corrección**: marcar qué partes cambian (o recordar su huella) y convertir solo esas.
 - **Coste**: 0 PF · 4 horas.
+- **V1.0.2**: hecha en `desarrollo-1.0.2`. `saveState()` admite que la acción diga qué partes ha tocado: `saveState('core')` (solo
+  el núcleo), `saveState(mealsPart(día))` (ese mes de comidas)… Entonces solo esas se pasan a texto; las demás, en un repaso poco
+  después (2 s) con la app parada, o al salir de ella, por si una acción tocó algo sin decirlo. Sin decir nada, se mira todo, como
+  antes. Lo dicen las acciones más frecuentes: el agua, añadir, quitar o cambiar un alimento, la semana y el día del plan, el aspecto
+  y el peso. `tests/walk.py` comprueba en cada paso que ninguna acción toque una parte sin decirlo.
 
 ### I-11 · Un borrado de la nube a medias deja el índice con documentos ya borrados
 
