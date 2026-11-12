@@ -1,6 +1,6 @@
 /* ═══ extras/cardio ═══
    Registro de cardio.
-   Define: CARDIO_TYPES, cardioState, cardioLabel, cardioPace, paceLabel, cardioSheet, readCardio, cardioLogs, cardioCard  · acciones/registros: 4
+   Define: CARDIO_TYPES, cardioState, cardioLabel, cardioPace, paceLabel, cardioTypeChips, cardioInputs, cardioPaceBox, cardioSheet, readCardio, cardioLogs, cardioCard  · acciones/registros: 4
 */
 import { clampInt, clampNum, dayKey, fmtClock, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -26,10 +26,16 @@ export function cardioPace(t, km, sec) {
   return fmtClock(sec / km) + ' /km';
 }
 const paceLabel = t => t == 'bike' || t == 'ell' || t == 'oth' ? 'Velocidad media' : 'Ritmo';
+/* el tipo de cardio, como chips */
+const cardioTypeChips = t => html`<div>${CARDIO_TYPES.map(x => html`<button class="chip ${t == x[0] ? 'on' : ''}" data-a="cardioType" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
+/* la distancia (opcional) y el tiempo, en minutos y segundos: al escribir, se calcula el ritmo */
+const cardioInputs = () => html`<div class="g2"><div><label for="f2cdk">Distancia (km, opcional)</label><input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cardioPaceUpdate"></div><div><label>Tiempo (min y s)</label><div class="g2 gap-6"><input id="f2cdm" aria-label="Minutos" type="number" inputmode="numeric" min="0" max="999" placeholder="min" data-u="cardioPaceUpdate"><input id="f2cds" aria-label="Segundos" type="number" inputmode="numeric" min="0" max="59" placeholder="s" data-u="cardioPaceUpdate"></div></div></div>`;
+/* el ritmo (o la velocidad media), que rellena cardioPaceUpdate */
+const cardioPaceBox = t => html`<div class="cd m-12-0-0 ta-c"><small id="f2cdl" class="mu">${paceLabel(t)}</small><br><b id="f2cdr" class="fs-22">—</b></div>`;
 function cardioSheet() {
   const t = cardioState.t;
   const td = dayKey(new Date);
-  return html`<h3>Registrar cardio</h3><div>${CARDIO_TYPES.map(x => html`<button class="chip ${t == x[0] ? 'on' : ''}" data-a="cardioType" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><label for="f2cdd">Fecha</label><input id="f2cdd" type="date" value="${td}" max="${td}"><div class="g2"><div><label for="f2cdk">Distancia (km, opcional)</label><input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cardioPaceUpdate"></div><div><label>Tiempo (min y s)</label><div class="g2 gap-6"><input id="f2cdm" aria-label="Minutos" type="number" inputmode="numeric" min="0" max="999" placeholder="min" data-u="cardioPaceUpdate"><input id="f2cds" aria-label="Segundos" type="number" inputmode="numeric" min="0" max="59" placeholder="s" data-u="cardioPaceUpdate"></div></div></div><div class="cd m-12-0-0 ta-c"><small id="f2cdl" class="mu">${paceLabel(t)}</small><br><b id="f2cdr" class="fs-22">—</b></div><button class="pr w-full mt-12" data-a="cardioSave">Guardar</button>`;
+  return html`<h3>Registrar cardio</h3>${cardioTypeChips(t)}<label for="f2cdd">Fecha</label><input id="f2cdd" type="date" value="${td}" max="${td}">${cardioInputs()}${cardioPaceBox(t)}<button class="pr w-full mt-12" data-a="cardioSave">Guardar</button>`;
 }
 function readCardio() {
   const g = id => document.getElementById(id);

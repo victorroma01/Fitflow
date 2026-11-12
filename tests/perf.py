@@ -1,12 +1,13 @@
 """Medidas de rendimiento (T-26) con muchos datos: unos 700 entrenos, el historial de 150 ejercicios y tres años de comidas
-(unos 2 MB). Mide el arranque hasta el primer pintado, lo que tarda un guardado (mirándolo todo y diciendo solo el núcleo: I-10),
-lo que calcula la sincronización antes de hablar con Firebase y lo que tarda en pintarse cada pestaña. No es una prueba que pase o falle: sirve para comparar dos compilaciones en el mismo
-ordenador (docs/tecnica/rendimiento.md).
+(más de 1 MB). Mide el arranque hasta el primer pintado, lo que tarda un guardado (mirándolo todo y diciendo solo el núcleo:
+I-10), lo que calcula la sincronización antes de hablar con Firebase y lo que tarda en pintarse cada pestaña. No es una prueba
+que pase o falle: sirve para comparar dos compilaciones en el mismo ordenador (docs/tecnica/rendimiento.md). Una compilación
+anterior a la V1.0.2, con las claves cortas en S (hist, wt…), recibe los mismos datos con sus nombres (core/schema).
 
-  python3 tests/perf.py dist/stratafit.html [otra.html …]
+  python3 tests/perf.py dist/stratafit.html [otra.html …]       (PERF_ROUNDS=5 para más vueltas)
 Requiere:  pip install playwright  &&  playwright install chromium
 """
-import os, sys, json, statistics
+import os, re, sys, json, statistics
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts
 
@@ -16,6 +17,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 def rd(n):
     t = open(os.path.join(HERE, n), encoding='utf-8').read()
     return chr(10).join(l for l in t.split(chr(10)) if not l.startswith('//'))
+
+
+# las claves de S de core/schema: [guardada, nombre en el programa]
+PAIRS = re.findall(r"\['(\w+)', '(\w+)'\]", open(os.path.join(HERE, '..', 'src', 'js', 'core', 'schema.js'), encoding='utf-8').read().split('const WORKOUT_KEYS')[0])
+
+
+def old_names(js):
+    """El mismo código con las claves cortas de S, para una compilación anterior a la V1.0.2."""
+    for short, name in PAIRS:
+        js = re.sub(r'\bS\.' + name + r'\b', 'S.' + short, js)
+    return js
 
 
 # muchos datos: entrenos cada día y medio desde noviembre de 2023, 150 ejercicios con 120 registros y 1.100 días de comidas
@@ -40,8 +52,9 @@ def measure(path):
         pg = c.new_page()
         pg.goto(app_url(path))
         pg.wait_for_timeout(800)
-        pg.evaluate(rd('seed.js'))
-        pg.evaluate(BIG)
+        js = (lambda t: t) if pg.evaluate("'exerciseHistory' in S") else old_names
+        pg.evaluate(js(rd('seed.js')))
+        pg.evaluate(js(BIG))
         pg.wait_for_timeout(1500)
         out['datos (MB)'] = round(pg.evaluate('JSON.stringify(S).length') / 1048576, 2)
         paint = []
@@ -51,13 +64,13 @@ def measure(path):
             paint.append(pg.evaluate('window.__tok'))
         out['primer pintado (ms)'] = round(statistics.median(paint))
         pg.wait_for_timeout(3000)
-        water = "S.water[dayKey(new Date())]=(S.water[dayKey(new Date())]||0)+1"
+        water = js("S.water[dayKey(new Date())]=(S.water[dayKey(new Date())]||0)+1")
         # el guardado, como lo hace la acción: a la vuelta de la tarea (lo que espera IndexedDB no frena la pantalla)
         out['guardar, mirándolo todo (ms)'] = round(pg.evaluate(TIMED % (20, water + ";saveState();await Promise.resolve();await Promise.resolve()")), 1)
         if pg.evaluate("typeof mealsPart=='function'"):
             out['guardar, solo el núcleo (ms)'] = round(pg.evaluate(TIMED % (20, water + ";saveState('core');await Promise.resolve();await Promise.resolve()")), 1)
         # lo que hace la sincronización antes de hablar con Firebase: las huellas de cada elemento de todo (cloud/sync)
-        out['ver qué hay que subir (ms)'] = round(pg.evaluate(TIMED % (7, 'pendingDocs()')), 1)
+        out['ver qué hay que subir (ms)'] = round(pg.evaluate(TIMED % (15, 'pendingDocs()')), 1)
         for t, name in enumerate(['Workout', 'Nutrición', 'Dashboard', 'Perfil']):
             out['pintar %s (ms)' % name] = round(pg.evaluate(TIMED % (15, 'S.tab=%d;R()' % t)), 1)
         b.close()
@@ -65,5 +78,14 @@ def measure(path):
 
 
 if __name__ == '__main__':
-    for f in sys.argv[1:]:
-        print(os.path.basename(f), json.dumps(measure(f), ensure_ascii=False))
+    # las compilaciones, por turnos (A, B, A, B…) para que lo que haga el ordenador a la vez les toque a todas por igual; de cada
+    # medida, la mediana de las vueltas (PERF_ROUNDS, 3 si no se dice)
+    files = sys.argv[1:]
+    rounds = int(os.environ.get('PERF_ROUNDS', '3'))
+    runs = {f: [] for f in files}
+    for _ in range(rounds):
+        for f in files:
+            runs[f].append(measure(f))
+    for f in files:
+        out = {k: statistics.median(r[k] for r in runs[f]) for k in runs[f][0]}
+        print(os.path.basename(f), json.dumps(out, ensure_ascii=False))

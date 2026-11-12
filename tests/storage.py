@@ -329,7 +329,7 @@ def main(path):
             check('con «Copia de seguridad» a mano', ev("!!document.querySelector('#dg [data-v=openBackup]')"))
             ev("document.querySelector('#dg').innerHTML='';spaceCheck()")
             check('y no vuelve a avisar hasta dentro de una semana', ev("!document.querySelector('#dg .dgc')"))
-            ev("localStorage.removeItem('ffspace');window.__tr=document.createElement('div');__tr.id='tour';document.body.appendChild(__tr);spaceCheck()")
+            ev("window.__mark=1;localStorage.removeItem('ffspace');window.__tr=document.createElement('div');__tr.id='tour';document.body.appendChild(__tr);spaceCheck()")
             check('con algo delante (el recorrido), espera', ev("!document.querySelector('#dg .dgc')"))
             ev("__tr.remove()")
             # (lo que la app abra sola mientras tanto, como el aviso de pesarse, también la ocupa: se cierra y se espera otra vez)
@@ -341,7 +341,10 @@ def main(path):
                     break
                 seen.append(ev(busy))
                 ev("sheet();document.querySelector('#dg').innerHTML='';document.querySelector('#tour')&&document.querySelector('#tour').remove()")
-            check('y avisa en cuanto la app queda libre', ev("!!document.querySelector('#dg [data-v=openBackup]')"), str(seen))
+            # (si no avisa, lo que hace falta para saber por qué: si la página se recargó, si sigue el espacio simulado, la última
+            # medida, cuándo se avisó y los últimos errores registrados)
+            why = "spaceUse().then(u=>JSON.stringify({sigue:!!window.__mark,simulado:navigator.storage.estimate!==window.__est,usado:u.ratio,avisado:localStorage.getItem('ffspace'),historial:[history.length,history.state],errores:errorLog().slice(-3).map(e=>e.w+': '+e.m)}))"
+            check('y avisa en cuanto la app queda libre', ev("!!document.querySelector('#dg [data-v=openBackup]')"), str(seen) + ' ' + ev(why))
             ev("document.querySelector('#dg').innerHTML=''")
             ev("localStorage.removeItem('ffspace');navigator.storage.estimate=()=>Promise.resolve({usage:50e6,quota:100e6})")
             ev('spaceCheck()')

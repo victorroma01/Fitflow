@@ -1,6 +1,6 @@
 /* ═══ dashboard/home ═══
    Pestaña Dashboard: tarjetas de resumen.
-   Define: dashboardBase, recordsCard, weekMonday, weekStats, weekCard, dashboardTab
+   Define: statCell, kcalToday, volumeBars, dashboardBase, recordsCard, weekMonday, weekStats, weekCard, dashboardTab
 */
 import { dayKey, roundInt } from '../core/util.js';
 import { S } from '../core/state.js';
@@ -15,14 +15,25 @@ import { stagnationCard } from '../extras/stagnation.js';
 import { cardioCard } from '../extras/cardio.js';
 import { html, raw } from '../core/html.js';
 import { sessionsPerWeek, trainingDays } from '../workout/week.js';
+/* una cifra del resumen: el número, grande, y qué es */
+const statCell = (value, label) => html`<div class="cd"><b class="fs-26">${value}</b><br><small>${raw(label)}</small></div>`;
+/* las kcal de hoy */
+const kcalToday = now => roundInt(sumMacros((S.meals[dayKey(now)] && Object.values(S.meals[dayKey(now)]).flat() || []).map(itemMacros))[0]);
+/* el volumen de los 8 últimos entrenos (sin cardio), en columnas */
+const volumeBars = logs => {
+  const last = logs.filter(l => !l.k).slice(-8);
+  const mx = Math.max(1, ...last.map(l => l.v));
+  const bars = last.length ? last.map(l => html`<div class="fx-1 bg-ac r-4" data-style="height:${Math.max(6, l.v / mx * 100)}%"></div>`).join('') : '<small>Completa un entreno para ver tu progreso.</small>';
+  return html`<div class="cd"><b>Volumen por sesión</b><div class="d-flex ai-end gap-6 h-90 mt-8">${raw(bars)}</div></div>`;
+};
 function dashboardBase() {
   const lg = S.logs;
   const now = new Date();
   const wkc = lg.filter(l => (now - new Date(l.d)) < 7 * 864e5).length;
   const vol = lg.reduce((s, l) => s + l.v, 0);
-  const last = lg.filter(l => !l.k).slice(-8);
-  const mx = Math.max(1, ...last.map(l => l.v));
-  return html`<div class="hd"><h1>Dashboard</h1><button data-a="openWeight" aria-label="Evolución del peso" class="p-8-12">${icon('dash', 24)}</button></div>${raw(weighBanner())}<div class="g2 mt-12"><div class="cd"><b class="fs-26">${lg.length}</b><br><small>Entrenos totales</small></div><div class="cd"><b class="fs-26">${raw(wkc)}</b><br><small>Últimos 7 días</small></div><div class="cd"><b class="fs-26">${raw(volumeText(vol))}</b><br><small>Volumen total</small></div><div class="cd"><b class="fs-26">${roundInt(sumMacros((S.meals[dayKey(now)] && Object.values(S.meals[dayKey(now)]).flat() || []).map(itemMacros))[0])}</b><br><small>kcal hoy</small></div></div><div class="cd"><b>Volumen por sesión</b><div class="d-flex ai-end gap-6 h-90 mt-8">${raw(last.length ? last.map(l => html`<div class="fx-1 bg-ac r-4" data-style="height:${Math.max(6, l.v / mx * 100)}%"></div>`).join('') : '<small>Completa un entreno para ver tu progreso.</small>')}</div></div><div class="cd">${calendarPage()}</div>`;
+  const head = html`<div class="hd"><h1>Dashboard</h1><button data-a="openWeight" aria-label="Evolución del peso" class="p-8-12">${icon('dash', 24)}</button></div>`;
+  const stats = html`<div class="g2 mt-12">${statCell(lg.length, 'Entrenos totales')}${statCell(raw(wkc), 'Últimos 7 días')}${statCell(raw(volumeText(vol)), 'Volumen total')}${statCell(kcalToday(now), 'kcal hoy')}</div>`;
+  return html`${head}${raw(weighBanner())}${stats}${volumeBars(lg)}<div class="cd">${calendarPage()}</div>`;
 }
 const recordsCard = () => {
   const ks = new Set(Object.keys(S.records || {}).concat(Object.keys(S.exerciseHistory || {})));

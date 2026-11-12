@@ -1,6 +1,6 @@
 /* ═══ nutrition/home ═══
    Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones.
-   Define: itemMacros, mealItems, sumMacros, MACRO_CLASSES, macroBar, mealName, nutritionBase  · acciones/registros: 2
+   Define: itemMacros, mealItems, sumMacros, MACRO_CLASSES, nutritionDayHead, nutritionTotals, macroBar, mealName, nutritionBase  · acciones/registros: 2
 */
 import { clampNum, dayKey, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
@@ -24,6 +24,13 @@ export const mealItems = (m, i) => (m && Array.isArray(m[i]) ? m[i] : []).filter
 export const sumMacros = a => a.reduce((s, t) => s.map((v, i) => v + t[i]), [0, 0, 0, 0, 0, 0]);
 /* las clases del color de cada macro: el texto (c-ctx…: más oscuro en el tema claro) y la barra, con el de siempre */
 const MACRO_CLASSES = { c: ['c-ctx', 'bg-c'], p: ['c-ptx', 'bg-p'], g: ['c-gtx', 'bg-g'] };
+/* la cabecera del día: «‹ día ›», si es de entreno o de descanso y «Mi nutrición» */
+const nutritionDayHead = (dt, t) => {
+  const day = nutriDayOffset ? dt.toLocaleDateString('es', { day: 'numeric', month: 'short' }) : 'Hoy';
+  return html`<div class="hd"><button data-a="nutritionDay" data-i="-1" aria-label="Día anterior">‹</button><h1>${raw(day)}</h1><button data-a="nutritionDay" data-i="1" aria-label="Día siguiente">›</button></div><div class="ndy"><span class="ndt">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span><button class="nmb" data-a="openMyNutrition" aria-label="Mi nutrición: objetivo de kcal y macros">${icon('fk', 22)}</button></div>`;
+};
+/* lo comido frente al objetivo (los tres macros y las kcal), fijo arriba al desplazar */
+const nutritionTotals = (tt, tg) => html`<div class="cd pos-sticky top-6 z-3"><div class="mac">${macroBar('Hidratos', tt[1], tg[1], 'c')}${macroBar('Proteínas', tt[2], tg[2], 'p')}${macroBar('Grasas', tt[3], tg[3], 'g')}</div><div class="bar mt-8"><i class="bg-ac" data-style="width:${Math.min(100, tt[0] / tg[0] * 100)}%"></i></div><div class="ta-c"><b>${roundInt(tt[0])} / ${roundInt(tg[0])} kcal</b></div></div>`;
 function macroBar(l, v, t, m) {
   const [text, bar] = MACRO_CLASSES[m];
   return html`<div><span class="${text}">${raw(l)}</span><div class="bar"><i class="${bar}" data-style="width:${Math.min(100, v / t * 100 || 0)}%"></i></div><b>${roundInt(v)} / ${roundInt(t)} g</b></div>`;
@@ -46,7 +53,7 @@ export function nutritionBase(water) {
   });
   const tt = sumMacros(mt);
   const t = dayType(k);
-  let h = html`<div class="hd"><button data-a="nutritionDay" data-i="-1" aria-label="Día anterior">‹</button><h1>${raw(nutriDayOffset ? dt.toLocaleDateString('es', { day: 'numeric', month: 'short' }) : 'Hoy')}</h1><button data-a="nutritionDay" data-i="1" aria-label="Día siguiente">›</button></div><div class="ndy"><span class="ndt">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span><button class="nmb" data-a="openMyNutrition" aria-label="Mi nutrición: objetivo de kcal y macros">${icon('fk', 22)}</button></div><div class="cd pos-sticky top-6 z-3"><div class="mac">${macroBar('Hidratos', tt[1], tg[1], 'c')}${macroBar('Proteínas', tt[2], tg[2], 'p')}${macroBar('Grasas', tt[3], tg[3], 'g')}</div><div class="bar mt-8"><i class="bg-ac" data-style="width:${Math.min(100, tt[0] / tg[0] * 100)}%"></i></div><div class="ta-c"><b>${roundInt(tt[0])} / ${roundInt(tg[0])} kcal</b></div></div>${raw(water || '')}${templateCard(k)}`;
+  let h = html`${nutritionDayHead(dt, t)}${nutritionTotals(tt, tg)}${raw(water || '')}${templateCard(k)}`;
   for (let i = 0; i < n.n; i++) {
     const nm = mealName(i, n.n);
     const v0 = all[i];
