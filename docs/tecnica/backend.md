@@ -70,8 +70,10 @@ permiso que la cuenta de servicio no tiene, y sin él todo funciona igual (I-16)
 
 ## Sincronización (`cloud/sync`)
 
-1. Cada parte del estado que se guarda (`core/persist`) se avisa a `Store.remote`; unos segundos después, y al volver la red o la
-   app a primer plano, se sincroniza. Sin red no pasa nada: lo cambiado sigue en el móvil y se sube después, aunque se cierre la app.
+1. Cada parte del estado que se guarda (`core/persist`) se avisa a `Store.remote` y se sincroniza como mucho 30 s después del primer
+   cambio sin subir (`CHANGE_WAIT`): lo que se cambie entretanto (otro alimento, otro vaso de agua) va en la misma subida, así que se
+   gastan menos escrituras. También al pasar la app a segundo plano (lo pendiente se sube ya), al volver a primer plano y al volver
+   la red. Sin red no pasa nada: lo cambiado sigue en el móvil y se sube después, aunque se cierre la app.
 2. **Perfil.** Se juntan las preferencias del móvil y las de la nube (cada una por separado, gana el cambio más reciente). Si no
    existe (cuenta recién creada), se crea. Después, si ha cambiado, se escribe aparte el sistema del móvil (`os`): si las reglas
    aún no lo admiten (una app publicada antes que ellas), solo falla eso y se reintenta en la siguiente sincronización.
@@ -157,9 +159,16 @@ Los flujos manuales solo aparecen en Actions cuando están en `main`.
 
 ## Límites del plan Spark
 
-- Cada día, 50.000 lecturas y 20.000 escrituras de Firestore sin coste. Una sincronización sin cambios cuesta una lectura (el índice;
-  el perfil se vuelve a leer cada 10 minutos o al volver a la app) y una con cambios, una escritura por parte cambiada más el
-  índice: da para cientos de usuarios activos al día.
+- Cada día, 50.000 lecturas y 20.000 escrituras de Firestore sin coste, para todas las cuentas. Una sincronización sin cambios
+  cuesta una lectura (el índice; el perfil se vuelve a leer cada 10 minutos o al volver a la app) y una con cambios, una escritura
+  por parte cambiada más el índice. Un día de uso intenso (un entreno, 12 alimentos, agua y peso) son unas 46 escrituras si cada
+  cambio se sube por separado, y menos juntándolos (`CHANGE_WAIT`): las escrituras son lo primero que se acaba, con unos cientos de
+  usuarios activos al día (unas 430 personas con ese uso intenso, sin juntar nada).
+- 1 GiB guardado en total. Un año de uso ocupa unos 450 KB con uso intenso (5 entrenos por semana; 12 alimentos, agua y peso cada
+  día) y unos 265 KB con uso normal (medido en la app, noviembre de 2026); con lo que añade Firestore (nombres de campos, índices y
+  la copia semanal), unos 0,6 y 0,37 MB: da para unos 1.800-2.900 años de uso en total (por ejemplo, 500 usuarios intensos durante
+  unos 3,5 años). Por usuario no hay un tope alcanzable: un documento admite 1 MB y el más lleno, el historial de un año, ocupa unos
+  126 KB con uso intenso.
 - Si un día se superase, Firestore dejaría de responder hasta el día siguiente (la app seguiría en local); no hay cobro posible
   porque no hay tarjeta.
 - Notificaciones con la app cerrada o fotos en Cloud Storage necesitarían pasar a Blaze.

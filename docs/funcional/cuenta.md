@@ -23,7 +23,8 @@ seguidas, hay que esperar unos segundos antes de volver a probar (cada fallo má
 Todo se guarda en el móvil y, cuando hay internet, también en la cuenta. Sin cobertura (en el gimnasio, por ejemplo) se sigue
 usando todo; lo que hagas se sube solo al volver la red, aunque cierres la app entretanto.
 
-Con la misma cuenta en varios móviles, cada uno recibe lo de los demás al abrir la app o al volver a ella. Si cambias lo mismo en dos
+Lo que cambias se sube junto, como mucho medio minuto después o al salir de la app. Con la misma cuenta en varios móviles, cada uno
+recibe lo de los demás al abrir la app o al volver a ella. Si cambias lo mismo en dos
 móviles sin conexión, al sincronizar se juntan: las comidas de un mismo día y los entrenos de los dos se conservan; en lo demás (un
 programa, los objetivos…) se queda el cambio más reciente. Lo que borras en un móvil se borra también en los otros.
 

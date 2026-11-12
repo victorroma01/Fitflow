@@ -48,6 +48,8 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Nube: el índice se limpia solo de documentos que ya no existen (I-11); App Check preparado y apagado hasta configurarlo (I-05).
 - GitHub Actions (T-24): al publicar, primero las reglas de Firestore y después la app. `tests/deploy.py` anota las peticiones si
   una recarga se queda colgada (I-13).
+- Después de publicarla, con el mismo número y sin aviso: la sincronización junta los cambios y los sube como mucho 30 s después
+  del primero (antes, 4 s después de cada uno) y al pasar la app a segundo plano, para gastar menos escrituras de Firestore.
 
 ## [1.0.1] — 2026-11-11
 

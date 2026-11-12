@@ -326,6 +326,36 @@ def main(path):
             check('y Privacidad lo cuenta', 'reCAPTCHA Enterprise' in pa.inner_text('#sh'))
             ca.close()
 
+        # ── subidas juntas: lo que se cambia seguido va en una sola subida, como mucho 30 s después del primer cambio sin subir, y
+        #    al pasar la app a segundo plano se sube ya (menos escrituras de Firestore). Con el reloj simulado ──
+        cj, pj = device()
+        login(pj, 'Ana_1', 'contraseña-1')
+        pj.wait_for_timeout(3000)
+        sync(pj)
+        sync(pj)
+        # (las subidas de datos: cada una escribe también el índice; la copia de seguridad semanal va aparte)
+        commits = []
+        pj.on('request', lambda r: commits.append(r.url) if r.method == 'POST' and ':commit' in r.url and '/data/index' in (r.post_data or '') else None)
+        pj.clock.install()
+        cpath = 'users/%s/data/core' % uid
+        pj.evaluate("S.water=Object.assign(S.water||{},{'%s':300});saveState('core')" % today)
+        pj.clock.run_for(10000)
+        pj.evaluate("(d=>{S.meals[d]=S.meals[d]||{};(S.meals[d][0]=S.meals[d][0]||[]).push(%s);saveState(mealsPart(d))})('%s')" % (json.dumps(pan), today))
+        pj.clock.run_for(10000)
+        pj.evaluate("S.water['%s']=600;saveState('core')" % today)
+        pj.clock.run_for(9000)
+        check('tres cambios seguidos (agua, una comida y agua): nada se sube antes de 30 s desde el primero', not commits and pj.evaluate('pendingDocs()') == 2, '%s %s' % (commits, pj.evaluate('pendingDocs()')))
+        pj.clock.run_for(1500)
+        wait(pj, "syncState().st=='ok' && !pendingDocs()")
+        check('y a los 30 s, los tres en una sola subida', len(commits) == 1 and ((fb.part(cpath) or {}).get('wt') or {}).get(today) == 600 and pan in ((fb.part(mpath) or {}).get(today) or {}).get('0', []), '%d %s' % (len(commits), ((fb.part(cpath) or {}).get('wt') or {}).get(today)))
+        pj.evaluate("S.water['%s']=750;saveState('core')" % today)
+        pj.evaluate("Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});document.dispatchEvent(new Event('visibilitychange'))")
+        wait(pj, "syncState().st=='ok' && !pendingDocs()")
+        check('al pasar la app a segundo plano, lo que esperaba se sube ya', len(commits) == 2 and ((fb.part(cpath) or {}).get('wt') or {}).get(today) == 750, str(len(commits)))
+        cj.close()
+        sync(p1)
+        sync(p2)
+
         # ── espera creciente tras cinco fallos ──
         c3, p3 = device()
         for _ in range(5):
