@@ -10,11 +10,12 @@ cuenta hecha aquí aparte, con datos al azar (siempre los mismos: semilla fija),
 
   python3 tests/calc.py dist/stratafit.html
 """
-import os, sys, json, math, random, datetime
+import os, sys, json, math, random, datetime, zoneinfo
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+MADRID = zoneinfo.ZoneInfo('Europe/Madrid')
 passes, fails = [], []
 
 
@@ -52,7 +53,8 @@ def main(path):
             c.add_init_script(rd('init.js'))
             pg = c.new_page()
             pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
-            pg.clock.install(time=when)
+            # (la hora es la de Madrid, sea cual sea la zona del ordenador que pasa la prueba)
+            pg.clock.install(time=when.replace(tzinfo=MADRID))
             pg.goto(app_url(path))
             pg.clock.run_for(800)
             pg.evaluate(rd('seed.js'))
