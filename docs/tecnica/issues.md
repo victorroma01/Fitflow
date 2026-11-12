@@ -12,7 +12,7 @@ accesos directos); I-07, hecha en la rama y que se comprueba al publicar la V1.0
 I-08 a I-11, I-13 e I-14, a la V1.0.2; I-01 sigue abierta hasta la prueba en un Android. Lo encontrado al probar la V1.0.0 en el
 iPhone son las issues I-17 a I-29 (#26 a #38), en los milestones de la V1.0.1 y la V1.0.2.
 
-**Estado tras la V1.0.2** (rama `desarrollo-1.0.2`, pendiente de que el propietario la confirme para publicarla): hechas I-04, I-06,
+**Estado tras la V1.0.2** (publicada el 12 de noviembre de 2026): hechas I-04, I-06,
 I-08, I-09, I-10, I-11 (la parte de la sincronización; el orden del borrado se mantiene a propósito) e I-14; I-05, con el código
 listo y apagado hasta que el propietario configure App Check en la consola; I-13, sin reproducir, con más datos en la prueba por si
 vuelve a pasar; e I-17, con nombres claros (R1 y R2), las vistas más largas partidas (R4), las acciones de GitHub en orden (T-24) y
@@ -144,7 +144,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
   admite mucho más, pasando lo que haya en `localStorage` la primera vez; y avisar cuando el uso pase del 80 % (el Diagnóstico ya
   enseña lo que ocupa cada parte).
 - **Coste**: 4 PF = EO nueva «Aviso de espacio» (baja, 4); el cambio de almacenamiento no cambia ninguna función (0 PF) · 12 horas.
-- **V1.0.2**: hecha en `desarrollo-1.0.2`. Las partes viven en IndexedDB (base `ffdata`); el núcleo sigue en `localStorage`, que se
+- **V1.0.2**: hecha. Las partes viven en IndexedDB (base `ffdata`); el núcleo sigue en `localStorage`, que se
   lee sin esperas. `core/boot` lee las partes antes de pintar; la primera vez pasan solas desde `localStorage` (todas en una
   transacción, después el núcleo con la marca nueva y al final se borran las de antes: si algo se corta, se repite al abrir). Sin
   IndexedDB, todo sigue en `localStorage`. Se escribe en orden (partes nuevas, núcleo, borrados), así el núcleo, que nombra las
@@ -169,7 +169,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
   puede usarlos. Como la app usa la API REST, se pide el token de App Check y se envía en cada petición. Y alertas de uso en Firebase.
   Otra opción, si se quiere cerrar el alta: códigos de invitación que crea el admin (14 PF).
 - **Coste**: 0 PF con App Check (no cambia ninguna función) · 6 horas.
-- **V1.0.2**: código listo en `desarrollo-1.0.2` (`cloud/appcheck`), apagado hasta que el propietario lo configure: reCAPTCHA
+- **V1.0.2**: código publicado (`cloud/appcheck`), apagado hasta que el propietario lo configure: reCAPTCHA
   Enterprise da el token, App Check lo cambia por el suyo (una vez por hora) y Authentication y Firestore lo reciben en cada
   petición. Con `APP_CHECK` vacío no se carga nada y la CSP no lo admite. Los pasos de consola, en
   [Servidor: Firebase](backend.md#activar-app-check). `tests/cloud.py` lo prueba con reCAPTCHA y App Check simulados.
@@ -184,7 +184,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Corrección**: `role="dialog"`, `aria-modal` y título en las hojas; llevar el foco a la hoja al abrirla (sin abrir el teclado) y
   devolverlo al cerrarla; y probarlo con VoiceOver en el iPhone, porque la barra de pestañas sigue a la vista con algunas páginas.
 - **Coste**: 0 PF · 3 horas.
-- **V1.0.2**: hecha en `desarrollo-1.0.2`. Cada hoja y página, el aviso, el menú y el WOD se anuncian como ventana (`role="dialog"`,
+- **V1.0.2**: hecha. Cada hoja y página, el aviso, el menú y el WOD se anuncian como ventana (`role="dialog"`,
   `aria-modal` y su título; la hoja de añadir un alimento, que no lleva título a la vista, uno solo para el lector de pantalla). Al
   abrirlos o al pasar a otra página el foco va a ellos sin abrir el teclado, y al cerrarlos vuelve a lo que los abrió (o al que lo
   sustituye si se volvió a pintar), salvo a un campo de texto. Como en Safari tocar un botón no le da el foco, se recuerda también
@@ -214,7 +214,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Corrección**: en la instalación, lo mismo que al actualizar: guardar la página solo con todo su código, o reintentar lo que falte
   al activarse.
 - **Coste**: 0 PF · 2 horas.
-- **V1.0.2**: hecha en `desarrollo-1.0.2`. La instalación guarda primero el código y los demás archivos y, después, la página con
+- **V1.0.2**: hecha. La instalación guarda primero el código y los demás archivos y, después, la página con
   `putDoc`, que solo la guarda con todo su código; si algo falla, la instalación falla entera y el navegador la repite en la
   siguiente visita (`tests/deploy.py` lo prueba cortando un archivo de código durante la instalación).
 
@@ -226,7 +226,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Impacto**: peticiones y escrituras de más en cada apertura: algo más de datos y de batería.
 - **Corrección**: el código con nombre por versión, solo desde la caché; revalidar el documento, `version.json` y las fotos.
 - **Coste**: 0 PF · 1 hora.
-- **V1.0.2**: hecha en `desarrollo-1.0.2`. El código (`js/…`) se sirve desde la caché sin volver a pedirlo; lo demás, como antes
+- **V1.0.2**: hecha. El código (`js/…`) se sirve desde la caché sin volver a pedirlo; lo demás, como antes
   (`tests/deploy.py` cuenta las peticiones de una apertura).
 
 ### I-10 · Cada guardado vuelve a convertir todo el estado a texto
@@ -237,7 +237,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Impacto**: con años de datos, unos milisegundos más en cada toque que guarda, en un móvil.
 - **Corrección**: marcar qué partes cambian (o recordar su huella) y convertir solo esas.
 - **Coste**: 0 PF · 4 horas.
-- **V1.0.2**: hecha en `desarrollo-1.0.2`. `saveState()` admite que la acción diga qué partes ha tocado: `saveState('core')` (solo
+- **V1.0.2**: hecha. `saveState()` admite que la acción diga qué partes ha tocado: `saveState('core')` (solo
   el núcleo), `saveState(mealsPart(día))` (ese mes de comidas)… Entonces solo esas se pasan a texto; las demás, en un repaso poco
   después (2 s) con la app parada, o al salir de ella, por si una acción tocó algo sin decirlo. Sin decir nada, se mira todo, como
   antes. Lo dicen las acciones más frecuentes: el agua, añadir, quitar o cambiar un alimento, la semana y el día del plan, el aspecto
@@ -252,7 +252,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Impacto**: no se pierde nada; lecturas de más.
 - **Corrección**: borrar el índice en la primera tanda y, al sincronizar, quitar del índice lo que ya no existe.
 - **Coste**: 10 PF = EI cambiada «Borrar todos los datos» (media, 4) + EI cambiada «Sincronizar» (alta, 6) · 2 horas.
-- **V1.0.2**: hecha en `desarrollo-1.0.2`, solo la segunda parte: al sincronizar, lo que el índice nombra y ya no existe se quita
+- **V1.0.2**: hecha, solo la segunda parte: al sincronizar, lo que el índice nombra y ya no existe se quita
   del índice (con la misma comprobación de versión que el resto) y lo que el móvil tenía de ello se vuelve a subir. El índice sigue
   borrándose en la última tanda a propósito: si el borrado se corta, lo que queda en la nube es coherente (el índice nombra de más,
   nunca de menos) y la sincronización lo limpia. `tests/cloud.py` lo prueba.
@@ -285,7 +285,7 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
   todo lo que se pinta pasa por `html` (escapado), así que hoy no se puede inyectar nada (`tests/security.py`); es una defensa más.
 - **Corrección**: pasar los estilos en línea a clases y quitar `'unsafe-inline'`.
 - **Coste**: 0 PF · 16 horas.
-- **V1.0.2**: hecha en `desarrollo-1.0.2`. Los 424 `style="…"` de las plantillas pasan a clases: 388 con una herramienta (una clase
+- **V1.0.2**: hecha. Los 424 `style="…"` de las plantillas pasan a clases: 388 con una herramienta (una clase
   de utilidad por declaración, `css/99-utilities`, con `!important` como pesaba el estilo en línea) y 36 a mano (los colores de
   los niveles y de los macros, en clases; lo que depende de un dato, como el ancho de una barra o la foto de un día, en
   `data-style`, que aplica `core/dynstyle` con el CSSOM). Las reglas del cristal y de las pantallas estrechas que buscaban un
