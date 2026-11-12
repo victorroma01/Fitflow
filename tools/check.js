@@ -365,6 +365,19 @@ for (const f of cssFiles) {
       err('animación sin usar: @keyframes ' + m[1] + ' (src/css/' + f + ')');
 }
 
+// 13. estilos en línea (I-14): la CSP no deja style="…" ni <style> en el HTML que se pinta; lo fijo va en clases
+//     (css/99-utilities) y lo que depende de un dato, en data-style (core/dynstyle). Los comentarios no cuentan
+for (const m of mods) {
+  const code = src[m].replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  if (/(?<![\w-])style=["'\\]/.test(code) || /<style[\s>]/i.test(code))
+    err('estilo en línea en ' + m + ': usa una clase (css/99-utilities) o data-style (core/dynstyle)');
+}
+{
+  const tpl = fs.readFileSync(path.join(ROOT, 'src', 'index.html'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  if ((tpl.match(/(?<![\w-])style=["']/g) || []).length || (tpl.match(/<style[\s>]/gi) || []).length != 1)
+    err('estilo en línea en src/index.html: solo vale el <style> de la hoja de la app');
+}
+
 // ---- resultado
 warns.forEach(w => console.log('aviso:', w));
 errors.forEach(e => console.log('ERROR:', e));

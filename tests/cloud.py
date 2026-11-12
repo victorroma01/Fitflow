@@ -7,7 +7,7 @@ restaurar), foto con consentimiento, borrar todos los datos y seguridad (sin có
   SF_CLOUD=emulador python3 tests/cloud.py dist/emu/stratafit.html    (emulador de Firebase, con firestore.rules; en la CI)
 Con el emulador, la contraseña temporal la crea el script de verdad (tools/admin/contrasena.mjs, con firebase-admin).
 """
-import os, sys, json, base64, subprocess, urllib.request
+import os, re, sys, json, base64, subprocess, urllib.request
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts
 from fakefb import FakeFirebase
@@ -288,6 +288,43 @@ def main(path):
         wait(p2, 'S.logs.length==2', 20000)
         check('«Bajar de mi cuenta» vuelve a bajar los datos de la cuenta', sorted(p2.evaluate('S.logs.map(l=>l.n)')) == ['Pecho', 'Pierna'] and not p2.evaluate('partsLost') and len(fb.part(lpath) or []) == 2)
         sync(p2)
+
+        # ── App Check (I-05): sin configurar no hace nada; configurado, cada petición a Firebase lleva su token. reCAPTCHA y el
+        #    cambio de tokens, simulados (la CSP de esta compilación, sin App Check, no los admite: el contexto la salta) ──
+        if not EMU:
+            ca = b.new_context(viewport={'width': 390, 'height': 844}, bypass_csp=True, **context_opts(path))
+            ca.add_init_script('window.__sfNoSession=1;window.__sfNet=1;')
+            ca.add_init_script(INIT)
+            fb.install(ca)
+            ca.route(re.compile(r'https://www\.google\.com/recaptcha/enterprise\.js.*'), lambda r: r.fulfill(content_type='application/javascript', body="window.grecaptcha={enterprise:{ready:function(f){f()},execute:function(k,o){window.__rc=[k,o&&o.action];return Promise.resolve('rc-tok')}}};"))
+            exch = []
+            ca.route(re.compile(r'https://content-firebaseappcheck\.googleapis\.com/.*'), lambda r: (exch.append([r.request.url, r.request.post_data]), r.fulfill(content_type='application/json', body='{"token":"ac-tok","ttl":"3600s"}')))
+            pa = ca.new_page()
+            sent = []
+            pa.on('request', lambda r: sent.append(r.headers.get('x-firebase-appcheck')) if re.match(r'https://(identitytoolkit|securetoken|firestore)\.googleapis\.com/', r.url) else None)
+            pa.goto(url)
+            wait(pa, 'window.__ffok')
+            check('sin configurar, App Check no hace nada: ni carga reCAPTCHA ni lo menciona', not pa.evaluate('appCheckOn()') and not pa.evaluate("!!document.querySelector('script[src*=recaptcha]')") and 'reCAPTCHA' not in pa.inner_text('#lgw'))
+            on = "APP_CHECK.siteKey='clave-sitio';APP_CHECK.appId='1:1234:web:abcd';R()"
+            pa.evaluate(on)
+            check('configurado, el inicio de sesión dice que se usa reCAPTCHA (su sello no se ve)', 'reCAPTCHA' in pa.inner_text('#lgw'))
+            del sent[:]
+            login(pa, 'Ana_1', 'contraseña-1')
+            check('al entrar, la petición a Authentication lleva el token de App Check', sent[:1] == ['ac-tok'], str(sent[:3]))
+            check('que sale de reCAPTCHA Enterprise (con su clave) cambiado en App Check', len(exch) >= 1 and (':exchangeRecaptchaEnterpriseToken?key=' in exch[0][0]) and '/projects/' in exch[0][0] and '/apps/1:1234:web:abcd' in exch[0][0] and 'rc-tok' in (exch[0][1] or ''), str(exch[:1]))
+            # (entrar recarga la app, y la configuración de esta prueba se pierde: se vuelve a poner)
+            pa.evaluate(on)
+            del sent[:]
+            n = len(exch)
+            sync(pa)
+            pa.evaluate("window.__rc=null")
+            sync(pa)
+            check('cada petición de la sincronización lo lleva', len(sent) > 2 and all(h == 'ac-tok' for h in sent), str(sent[:8]))
+            check('y el token se pide una sola vez por hora (no en cada petición)', len(exch) == n + 1 and pa.evaluate('window.__rc') is None, str(len(exch) - n))
+            pa.evaluate("A.openSettings()")
+            pa.evaluate("A.openSettingsPage(0,{dataset:{v:'privacidad'}})")
+            check('y Privacidad lo cuenta', 'reCAPTCHA Enterprise' in pa.inner_text('#sh'))
+            ca.close()
 
         # ── espera creciente tras cinco fallos ──
         c3, p3 = device()

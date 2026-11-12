@@ -19,7 +19,7 @@ export const warmupHtml = (e, i) => {
     return '';
   const w = +W.sets[i][0].w || 0;
   if (!w)
-    return '<div class="mu" style="font-size:12px">Calentamiento: 2-3 series de aproximación al 50 %, 70 % y 85 % de tu peso de trabajo</div>';
+    return '<div class="mu fs-12">Calentamiento: 2-3 series de aproximación al 50 %, 70 % y 85 % de tu peso de trabajo</div>';
   const lb = usesLb();
   const wl = toDisplayWeight(w);
   const bar = lb ? 45 : 20;

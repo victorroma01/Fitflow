@@ -23,7 +23,7 @@ export const volumeText = (v, d) => {
   return (d ? round1(x) : roundInt(x)) + (S.units == 'lb' ? ' k lb' : ' t');
 };
 export const usesLb = () => S.units == 'lb';
-export const unitsCard = () => html`<label>Unidades de carga</label>${segmented('unitsChoose', usesLb() ? 'lb' : 'kg', [['kg', 'Kilos (kg)'], ['lb', 'Libras (lb)']])}<small class="mu" style="display:block;margin-top:4px">Cambia pesos, discos, volumen y récords. El peso corporal sigue en kg.</small>`;
+export const unitsCard = () => html`<label>Unidades de carga</label>${segmented('unitsChoose', usesLb() ? 'lb' : 'kg', [['kg', 'Kilos (kg)'], ['lb', 'Libras (lb)']])}<small class="mu d-block mt-4">Cambia pesos, discos, volumen y récords. El peso corporal sigue en kg.</small>`;
 A.unitsChoose = (i, b) => {
   S.units = b.dataset.v == 'lb' ? 'lb' : 'kg';
   setPlateTotal(usesLb() ? 135 : 60);

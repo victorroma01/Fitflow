@@ -1,11 +1,11 @@
 /* ═══ programs/levels ═══
    Niveles de programa (aplicar, variantes, selector).
-   Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelVars, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
+   Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
 */
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { parseProgram } from '../data/library.js';
-import { LEVEL_COLORS, LEVEL_DETAILS, LEVEL_EXTRA_DAYS, LEVEL_KEYS, LEVEL_LAYOUTS, LEVEL_NAMES, LEVEL_OVERRIDES, LEVEL_SUMMARY, LEVEL_SWAPS } from '../data/levels.js';
+import { LEVEL_CLASS, LEVEL_DETAILS, LEVEL_EXTRA_DAYS, LEVEL_KEYS, LEVEL_LAYOUTS, LEVEL_NAMES, LEVEL_OVERRIDES, LEVEL_SUMMARY, LEVEL_SWAPS } from '../data/levels.js';
 import { S, saveState, W } from '../core/state.js';
 import { confirmDialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
@@ -142,8 +142,7 @@ const planEdited = () => {
   }
 };
 const weekStarted = () => Object.keys(S.doneDays || {}).some(k => k.indexOf(S.week + '-') == 0 && S.doneDays[k]);
-export const levelDot = v => html`<i class="lvd" style="--lc:${LEVEL_COLORS[v]};--ld:${LEVEL_COLORS[v]}38"></i>`;
-const levelVars = v => '--lc:' + LEVEL_COLORS[v] + ';--lb:' + LEVEL_COLORS[v] + '24;--lr:' + LEVEL_COLORS[v] + '6b';
+export const levelDot = v => html`<i class="lvd ${LEVEL_CLASS[v]}"></i>`;
 let levelMenuOpen = false;
 /** Cambia `levelMenuOpen` desde otros módulos (un módulo no puede asignar una variable importada). */
 export const setLevelMenuOpen = v => {
@@ -159,7 +158,7 @@ export const levelPill = () => {
   if (!levelsActive())
     return '';
   const v = isLevel(S.level) ? S.level : 'int';
-  return html`<div class="lvw" style="${levelVars(v)}"><button class="lvp" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="levelMenuClose"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem" style="${levelVars(k)}">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
+  return html`<div class="lvw ${LEVEL_CLASS[v]}"><button class="lvp" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="levelMenuClose"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi ${LEVEL_CLASS[k]}${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
 };
 A.levelMenuToggle = () => {
   levelMenuOpen = !levelMenuOpen;
@@ -233,7 +232,7 @@ A.levelConfirm = () => {
   if (isLevel(pendingLevel))
     applyLevel(pendingLevel);
 };
-export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${k == previewLevel ? 'on' : ''}" data-a="previewChooseLevel" data-v="${k}" style="${levelVars(k)}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
+export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${LEVEL_CLASS[k]}${k == previewLevel ? ' on' : ''}" data-a="previewChooseLevel" data-v="${k}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
 A.previewChooseLevel = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   if (isLevel(v))
@@ -241,4 +240,4 @@ A.previewChooseLevel = (i, b) => {
   A.openProgramPreview(previewProgram);
 };
 export const levelTag = v => html`<span class="lvt">${levelDot(v)}${raw(LEVEL_NAMES[v])}</span>`;
-export const programRow = (n, tag) => html`<span class="pgr"><b style="font-size:17px">${n}</b>${raw(tag)}</span>`;
+export const programRow = (n, tag) => html`<span class="pgr"><b class="fs-17">${n}</b>${raw(tag)}</span>`;

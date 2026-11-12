@@ -32,7 +32,10 @@ técnicos de la conexión (por ejemplo, la dirección IP).
 ## Protección
 
 - **Solo su propio código**: una política de seguridad impide que la página ejecute código que no sea el de la app y que se conecte a
-  otro sitio que no sean ella misma, Firebase y Open Food Facts.
+  otro sitio que no sean ella misma, Firebase y Open Food Facts. Desde la V1.0.2, tampoco usa estilos escritos dentro de la página.
+- **Solo la app usa el servidor** (App Check, preparado en la V1.0.2 y apagado hasta que el administrador lo active): un programa no
+  puede crear cuentas ni gastar la cuota de Firebase. Cuando está activo, al entrar y al sincronizar se usa reCAPTCHA Enterprise de
+  Google, invisible (sin preguntas), y el inicio de sesión y Ajustes → Privacidad lo dicen.
 - **Contraseñas**: 8 caracteres o más; tras cinco fallos seguidos hay que esperar antes de volver a probar, y Firebase bloquea un rato
   los intentos repetidos. Una contraseña temporal (la que da el administrador si olvidas la tuya) hay que cambiarla al entrar.
 - **Copias automáticas**: cada día se guarda una copia en el móvil (las 7 últimas), útil para deshacer un error propio.

@@ -29,20 +29,20 @@ const repCard = d => {
   if (!on)
     return html`<div class="cd adr">${raw(head)}</div>`;
   const busy = repState.busy == d.id;
-  return html`<div class="cd adr on">${raw(head)}${o.dx ? html`<details><summary>Datos técnicos</summary><pre class="rpv">${String(o.dx)}</pre></details>` : ''}<label>Estado</label><div class="seg" role="radiogroup" aria-label="Estado">${ADMIN_STATES.map(x => html`<button class="${o.st == x[0] ? 'on' : ''}" data-a="reportsSetState" data-v="${d.id + ':' + x[0]}" role="radio" aria-checked="${o.st == x[0] ? 'true' : 'false'}"${busy ? ' disabled' : ''}>${x[1]}</button>`)}</div><label for="adrt">Respuesta o solución</label><textarea id="adrt" rows="4" maxlength="${REPORT_MAX}" placeholder="La verá el usuario en su Perfil">${String(o.rp || '')}</textarea><button class="pr" data-a="reportsReply" data-v="${d.id}" style="width:100%;margin-top:8px"${busy ? ' disabled' : ''}>${o.rp ? 'Cambiar la respuesta' : 'Enviar respuesta'}</button>${o.ra ? html`<small class="mu" style="display:block;margin-top:6px">Contestada el ${repDate(o.ra)}</small>` : ''}</div>`;
+  return html`<div class="cd adr on">${raw(head)}${o.dx ? html`<details><summary>Datos técnicos</summary><pre class="rpv">${String(o.dx)}</pre></details>` : ''}<label>Estado</label><div class="seg" role="radiogroup" aria-label="Estado">${ADMIN_STATES.map(x => html`<button class="${o.st == x[0] ? 'on' : ''}" data-a="reportsSetState" data-v="${d.id + ':' + x[0]}" role="radio" aria-checked="${o.st == x[0] ? 'true' : 'false'}"${busy ? ' disabled' : ''}>${x[1]}</button>`)}</div><label for="adrt">Respuesta o solución</label><textarea id="adrt" rows="4" maxlength="${REPORT_MAX}" placeholder="La verá el usuario en su Perfil">${String(o.rp || '')}</textarea><button class="pr w-full mt-8" data-a="reportsReply" data-v="${d.id}"${busy ? ' disabled' : ''}>${o.rp ? 'Cambiar la respuesta' : 'Enviar respuesta'}</button>${o.ra ? html`<small class="mu d-block mt-6">Contestada el ${repDate(o.ra)}</small>` : ''}</div>`;
 };
 const reportsAdminView = () => {
   const s = repState;
   const head = html`${pgHead('Fallos y sugerencias', 'openAdmin')}<div id="adrp"></div>`;
   if (s.st == 'load')
-    return html`${raw(head)}<p class="mu" style="margin:14px 2px">Cargando…</p>`;
+    return html`${raw(head)}<p class="mu m-14-2">Cargando…</p>`;
   if (s.st == 'err')
-    return html`${raw(head)}<p class="mu" style="margin:14px 2px">No se han podido cargar (${s.err}). Comprueba la conexión.</p><button data-a="openReports" style="width:100%">Reintentar</button>`;
+    return html`${raw(head)}<p class="mu m-14-2">No se han podido cargar (${s.err}). Comprueba la conexión.</p><button data-a="openReports" class="w-full">Reintentar</button>`;
   const n = repCounts();
   /* el abierto sigue a la vista aunque cambie de estado (al abrir uno pendiente pasa a visto) */
   const L = s.list.filter(d => !s.f || d.data.st == s.f || d.id == s.open);
   const tabs = [['p', 'Pendientes', n.p], ['v', 'Vistas', n.v], ['a', 'Arregladas', n.a], ['', 'Todas', s.list.length]];
-  return html`${raw(head)}<div class="seg adrf" role="tablist" aria-label="Filtrar por estado">${tabs.map(x => html`<button class="${s.f == x[0] ? 'on' : ''}" data-a="reportsFilter" data-v="${x[0] || 'all'}" role="tab" aria-selected="${s.f == x[0] ? 'true' : 'false'}">${x[1]} (${x[2]})</button>`)}</div>${raw(L.length ? L.map(repCard).join('') : '<p class="mu" style="margin:14px 2px">No hay ninguno.</p>')}`;
+  return html`${raw(head)}<div class="seg adrf" role="tablist" aria-label="Filtrar por estado">${tabs.map(x => html`<button class="${s.f == x[0] ? 'on' : ''}" data-a="reportsFilter" data-v="${x[0] || 'all'}" role="tab" aria-selected="${s.f == x[0] ? 'true' : 'false'}">${x[1]} (${x[2]})</button>`)}</div>${raw(L.length ? L.map(repCard).join('') : '<p class="mu m-14-2">No hay ninguno.</p>')}`;
 };
 const loadReports = async () => {
   try {

@@ -72,7 +72,7 @@ const ensureExercises = pl => {
 let shareState = null;
 const sharePage = () => {
   const code = programCode(shareState.n, shareState.plan);
-  return html`${pgHead('Compartir programa', shareState.back || 'openPrograms')}<p class="mu" style="margin:-6px 0 10px">«${shareState.n}». Envía este código por mensaje o correo; quien lo reciba lo pega en Programas, Importar.</p><textarea id="shc" aria-label="Código del programa" rows="6" readonly>${code}</textarea><div class="g2" style="margin-top:10px"><button class="pr" data-a="shareCopyCode">${navigator.share ? 'Compartir' : 'Copiar código'}</button><button data-a="shareDownload">Guardar archivo</button></div>`;
+  return html`${pgHead('Compartir programa', shareState.back || 'openPrograms')}<p class="mu m-n6-0-10">«${shareState.n}». Envía este código por mensaje o correo; quien lo reciba lo pega en Programas, Importar.</p><textarea id="shc" aria-label="Código del programa" rows="6" readonly>${code}</textarea><div class="g2 mt-10"><button class="pr" data-a="shareCopyCode">${navigator.share ? 'Compartir' : 'Copiar código'}</button><button data-a="shareDownload">Guardar archivo</button></div>`;
 };
 A.ownProgramShare = () => {
   const p = S.ownPrograms[progDraft.k];
@@ -125,7 +125,7 @@ A.shareDownload = async () => {
   toast(r == 'saved' ? 'Archivo guardado' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
 };
 A.openImport = () => {
-  sheet(html`${pgHead('Importar programa', 'openPrograms')}<p class="mu" style="margin:-6px 0 10px">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu" style="color:var(--ctx);display:none;margin:8px 0 0"></p><div class="g2" style="margin-top:10px"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="importFile"></label><button class="pr" data-a="importCode">Importar</button></div>`);
+  sheet(html`${pgHead('Importar programa', 'openPrograms')}<p class="mu m-n6-0-10">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu c-ctx d-none m-8-0-0"></p><div class="g2 mt-10"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="importFile"></label><button class="pr" data-a="importCode">Importar</button></div>`);
   sheetToTop();
 };
 const importProgram = t => {

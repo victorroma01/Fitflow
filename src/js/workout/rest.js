@@ -52,7 +52,7 @@ export const restSelect = (e, short) => {
   const i = d.ex.indexOf(e);
   const r = restAt(d, i);
   const l = blockEnd(d, i) ? 'Descanso de la ronda, ' : 'Descanso, ';
-  return html`<select data-c="setRest" data-i="${i}" aria-label="${l + e.n}"${raw(short ? '' : ' style="width:auto;padding:5px 10px;font-size:13px"')}>${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : 'Descanso ' + fmtMinSec(v) + ' por serie')}</option>`)}</select>`;
+  return html`<select data-c="setRest" data-i="${i}" aria-label="${l + e.n}"${raw(short ? '' : ' class="w-auto p-5-10 fs-13"')}>${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : 'Descanso ' + fmtMinSec(v) + ' por serie')}</option>`)}</select>`;
 };
 const HEAVY_TYPES = new Set(['Press plano', 'Press inclinado', 'Press declinado', 'Press vertical', 'Dominadas', 'Remo horizontal', 'Cadena posterior', 'Sentadilla', 'Prensa y hack', 'Bisagra de cadera', 'Empuje de cadera', 'Halterofilia']);
 export function restDefault(n) {

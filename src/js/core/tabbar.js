@@ -72,7 +72,7 @@ export const tabbarSync = () => {
 /** Pinta la barra (al arrancar). */
 export const buildTabbar = () => {
   /* la burbuja va detrás de los botones (y la última, para que los botones sigan siendo del 1 al 4) */
-  $('nav').innerHTML = html`${TABS.map((t, i) => html`<button data-a="selectTab" data-i="${i}"><span style="display:block;line-height:0;padding-bottom:4px">${icon(t[0], 28)}</span>${raw(t[1])}</button>`)}<i class="nbb" aria-hidden="true"></i>`;
+  $('nav').innerHTML = html`${TABS.map((t, i) => html`<button data-a="selectTab" data-i="${i}"><span class="d-block lh-0 pb-4">${icon(t[0], 28)}</span>${raw(t[1])}</button>`)}<i class="nbb" aria-hidden="true"></i>`;
 };
 /* la burbuja se despega de su pestaña y va hacia el dedo (en la posición x de la pantalla) */
 const dragStart = x => {
@@ -204,7 +204,7 @@ if (typeof ResizeObserver != 'undefined')
 const START_TABS = [[-1, 'La última', 'La última que usaste'], ...TABS.map((t, i) => [i, t[1], t[1]])];
 const startOf = () => S.startTab >= 0 && S.startTab < TABS.length ? S.startTab : -1;
 export const startTabName = () => START_TABS.find(x => x[0] == startOf())[1];
-export const startTabCard = () => html`<p class="mu" style="margin:0 2px 12px;font-size:14px">La pestaña que ves al abrir StrataFit.</p><div class="cd srg" role="radiogroup" aria-label="Pestaña al abrir la app">${START_TABS.map(x => html`<button class="sr" data-a="setStartTab" data-v="${x[0]}" role="radio" aria-checked="${x[0] == startOf() ? 'true' : 'false'}"><span class="srl">${raw(x[2])}</span>${x[0] == startOf() ? raw(icon('chk', 20)) : ''}</button>`)}</div>`;
+export const startTabCard = () => html`<p class="mu m-0-2-12 fs-14">La pestaña que ves al abrir StrataFit.</p><div class="cd srg" role="radiogroup" aria-label="Pestaña al abrir la app">${START_TABS.map(x => html`<button class="sr" data-a="setStartTab" data-v="${x[0]}" role="radio" aria-checked="${x[0] == startOf() ? 'true' : 'false'}"><span class="srl">${raw(x[2])}</span>${x[0] == startOf() ? raw(icon('chk', 20)) : ''}</button>`)}</div>`;
 /** Al arrancar: la pestaña elegida en Ajustes (si no, se queda la última que se usó). */
 export const applyStartTab = () => {
   if (startOf() >= 0)

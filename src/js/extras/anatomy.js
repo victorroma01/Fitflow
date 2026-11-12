@@ -7,11 +7,11 @@ import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
 import { groupIcon } from '../core/icons.js';
 import { exAll } from '../library/model.js';
 import { html, raw } from '../core/html.js';
-document.body.insertAdjacentHTML('afterbegin', '<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gB" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#a7adba"/><stop offset=".6" stop-color="#6b7080"/><stop offset="1" stop-color="#3b3f4b"/></linearGradient><linearGradient id="gR" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#d11f3a"/><stop offset="1" stop-color="#7d0d21"/></linearGradient><linearGradient id="gO" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ffb26b"/><stop offset="1" stop-color="#b8501a"/></linearGradient><pattern id="fb" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><rect width="1" height="2.2" fill="#000" opacity=".3"/></pattern><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>');
+document.body.insertAdjacentHTML('afterbegin', '<svg width="0" height="0" class="pos-abs"><defs><linearGradient id="gB" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#a7adba"/><stop offset=".6" stop-color="#6b7080"/><stop offset="1" stop-color="#3b3f4b"/></linearGradient><linearGradient id="gR" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#d11f3a"/><stop offset="1" stop-color="#7d0d21"/></linearGradient><linearGradient id="gO" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ffb26b"/><stop offset="1" stop-color="#b8501a"/></linearGradient><pattern id="fb" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><rect width="1" height="2.2" fill="#000" opacity=".3"/></pattern><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>');
 (function () {
   const pat = (id, r) => html`<pattern id="${id}" width="4" height="4" patternUnits="userSpaceOnUse"${raw(r ? ' patternTransform="rotate(' + r + ')"' : '')}><line x1="0" y1="0" x2="0" y2="4" stroke="#000" stroke-opacity=".26" stroke-width=".55"/></pattern>`;
   const gr = (id, a, b, c) => html`<radialGradient id="${id}" cx=".38" cy=".3" r=".9"><stop offset="0" stop-color="${a}"/><stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></radialGradient>`;
-  let h = html`<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>${raw(gr('gNe', '#5a617f', '#3b405a', '#252839'))}${raw(gr('gRd', '#ff7670', '#e0263a', '#7a0b1c'))}${raw(gr('gOr', '#ffd48f', '#f59a2c', '#a24f0a'))}${raw(pat('pa15', 80))}${raw(pat('pa35', 35))}${raw(pat('pa90', 0))}<path id="aS" d="${AN_S}"/><path id="aH" d="${AN_H}"/>`;
+  let h = html`<svg width="0" height="0" class="pos-abs" aria-hidden="true" focusable="false"><defs>${raw(gr('gNe', '#5a617f', '#3b405a', '#252839'))}${raw(gr('gRd', '#ff7670', '#e0263a', '#7a0b1c'))}${raw(gr('gOr', '#ffd48f', '#f59a2c', '#a24f0a'))}${raw(pat('pa15', 80))}${raw(pat('pa35', 35))}${raw(pat('pa90', 0))}<path id="aS" d="${AN_S}"/><path id="aH" d="${AN_H}"/>`;
   ['F', 'B'].forEach(v => {
     const ks = Object.keys(AN_R[v]);
     ks.forEach(k => {
@@ -44,7 +44,7 @@ const anatomySvg = (v, P, S, box, w, h) => {
 const GROUP_ANATOMY = { Pecho: ['F', ['pe'], ['dA', 'tr', 'sa'], '24 42 152 152'], Espalda: ['B', ['da', 'tm', 'ro'], ['dP', 'tr', 'er', 'rm'], '24 38 152 152'], Hombros: ['F', ['dA', 'dL'], ['ts', 'tr'], '30 40 140 140'], 'Bíceps': ['F', ['bi'], ['br', 'bq', 'an', 'dA'], '14 70 172 172'], 'Tríceps': ['B', ['tr'], ['dP', 'an', 'bq'], '14 70 172 172'], Antebrazos: ['F', ['an', 'bq'], ['bi', 'br'], '14 110 172 172'], Abdomen: ['F', ['ab'], ['ob', 'tv', 'fc', 'sa'], '36 98 128 128'], 'Cuádriceps': ['F', ['cu'], ['fc', 'ad', 'ta'], '36 196 128 128'], 'Isquios y glúteos': ['B', ['is', 'gl'], ['gm', 'ad', 'ge', 'er'], '36 160 128 128'], Gemelos: ['B', ['ge', 'so'], ['is', 'ta'], '36 270 128 128'] };
 export function groupAnatomy(g, s) {
   const a = GROUP_ANATOMY[g];
-  return a ? html`<span class="anb" style="width:${s}px;height:${s}px">${anatomySvg(a[0], a[1], a[2], a[3], s)}</span>` : '';
+  return a ? html`<span class="anb" data-style="width:${s}px;height:${s}px">${anatomySvg(a[0], a[1], a[2], a[3], s)}</span>` : '';
 }
 const regionsBox = (v, regs) => {
   let x0 = 999;
@@ -100,5 +100,5 @@ export const exAnatomyFull = e => {
   const S = has ? (e.s || []) : (a ? a[2] : []);
   if (!P.length && !S.length)
     return '';
-  return html`<div class="anf"><div>${anatomySvg('F', P, S, '0 0 200 410', 132, 271)}<small>Frontal</small></div><div>${anatomySvg('B', P, S, '0 0 200 410', 132, 271)}<small>Posterior</small></div><div class="anl"><span><i style="background:linear-gradient(135deg,#ff7670,#b0152b)"></i>Principal</span><span><i style="background:linear-gradient(135deg,#ffd48f,#e08419)"></i>Secundario</span></div></div>`;
+  return html`<div class="anf"><div>${anatomySvg('F', P, S, '0 0 200 410', 132, 271)}<small>Frontal</small></div><div>${anatomySvg('B', P, S, '0 0 200 410', 132, 271)}<small>Posterior</small></div><div class="anl"><span><i class="bg-grad-red"></i>Principal</span><span><i class="bg-grad-amber"></i>Secundario</span></div></div>`;
 };

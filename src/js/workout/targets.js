@@ -130,7 +130,7 @@ const weeklySets = pl => {
   const f = pl.length ? 7 / pl.length : 1;
   return Object.entries(o).map(([g, n]) => [g, Math.round(n * f)]).sort((a, b) => b[1] - a[1]);
 };
-export const weeklySetsCard = pl => html`<div class="cd" style="margin:8px 0"><b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${weeklySets(pl).map(o => html`<span style="padding:4px 10px;border-radius:12px;background:rgba(128,128,128,.18);font-size:12px">${o[0]} · ${raw(o[1])}</span>`)}</div></div>`;
+export const weeklySetsCard = pl => html`<div class="cd m-8-0"><b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b><div class="d-flex wrap gap-6 mt-8">${weeklySets(pl).map(o => html`<span class="p-4-10 r-12 bg-gray-18 fs-12">${o[0]} · ${raw(o[1])}</span>`)}</div></div>`;
 export const usesWeight = e => !unitOf(e) || /Sled|Farmers|Sandbag|Carry|chaleco|con peso|con balón|arrastre|Lunges/i.test(e.n);
 /** Repeticiones de cada serie de una pirámide: del tope del rango al mínimo (12, 10, 8, 6 con un rango de 6-12). */
 export const pyramidReps = (rg, n) => Array.from({ length: n }, (_, j) => n < 2 ? rg[1] : Math.round(rg[1] - (rg[1] - rg[0]) * j / (n - 1)));
@@ -165,7 +165,7 @@ export const rangeSelect = (e, i) => {
   if (unitOf(e))
     return '';
   const c = targetRange(e).join('-');
-  return html`<select data-c="setRepRange" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" style="width:auto;padding:5px 10px;font-size:13px">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
+  return html`<select data-c="setRepRange" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" class="w-auto p-5-10 fs-13">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
 };
 C.setRepRange = (e, i) => {
   const x = S.plan[S.selectedDay].ex[i];

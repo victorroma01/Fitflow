@@ -106,7 +106,7 @@ export const swapBody = () => {
   T.forEach(t => {
     if (!t[1].length)
       return;
-    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}" style="cursor:pointer"><span class="exc">${exCellHtml(e)}</span><small class="mu">Elegir ›</small></div>`)}`;
+    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}"><span class="exc">${exCellHtml(e)}</span><small class="mu">Elegir ›</small></div>`)}`;
   });
   return h || '<p class="mu">No hay alternativas con esos filtros.</p>';
 };
@@ -115,7 +115,7 @@ A.openSwap = i => {
   swapState = { i, q: '', eq: [], all: 0 };
   filterOpen.sw = 0;
   const e = S.plan[S.selectedDay].ex[i];
-  sheet(html`<h3>Swap</h3><p class="mu" style="margin:-4px 0 8px">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p><div id="swh">${raw(swapScope())}</div><input placeholder="Buscar alternativa" aria-label="Buscar alternativa" data-u="swapSearch" style="margin-top:8px"><div id="swb">${raw(swapBody())}</div>`);
+  sheet(html`<h3>Swap</h3><p class="mu m-n4-0-8">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p><div id="swh">${raw(swapScope())}</div><input placeholder="Buscar alternativa" aria-label="Buscar alternativa" data-u="swapSearch" class="mt-8"><div id="swb">${raw(swapBody())}</div>`);
 };
 A.swapScopeChoose = i => {
   swapState.all = i;

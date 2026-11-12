@@ -332,8 +332,16 @@ def main(path):
             ev("localStorage.removeItem('ffspace');window.__tr=document.createElement('div');__tr.id='tour';document.body.appendChild(__tr);spaceCheck()")
             check('con algo delante (el recorrido), espera', ev("!document.querySelector('#dg .dgc')"))
             ev("__tr.remove()")
-            pg.clock.run_for(31000)
-            check('y avisa en cuanto la app queda libre', until(pg, "!!document.querySelector('#dg [data-v=openBackup]')"))
+            # (lo que la app abra sola mientras tanto, como el aviso de pesarse, también la ocupa: se cierra y se espera otra vez)
+            busy = "[window.W&&'entreno',document.visibilityState=='hidden'&&'oculta',...['#lgw','#wlc','#tour','#upd','#f2w'].filter(x=>document.querySelector(x)),document.querySelector('#sh').firstChild&&'hoja',document.querySelector('#dg').firstChild&&'aviso',document.querySelector('#mn').firstChild&&'menú'].filter(Boolean)"
+            seen = []
+            for _ in range(3):
+                pg.clock.run_for(31000)
+                if until(pg, "!!document.querySelector('#dg [data-v=openBackup]')", 1500):
+                    break
+                seen.append(ev(busy))
+                ev("sheet();document.querySelector('#dg').innerHTML='';document.querySelector('#tour')&&document.querySelector('#tour').remove()")
+            check('y avisa en cuanto la app queda libre', ev("!!document.querySelector('#dg [data-v=openBackup]')"), str(seen))
             ev("document.querySelector('#dg').innerHTML=''")
             ev("localStorage.removeItem('ffspace');navigator.storage.estimate=()=>Promise.resolve({usage:50e6,quota:100e6})")
             ev('spaceCheck()')

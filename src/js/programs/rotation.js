@@ -69,7 +69,7 @@ const rotationSheet = () => {
     return html`<h3>Rotar ejercicios</h3><p class="mu">Este plan no tiene ejercicios con otra variante para rotar.</p>`;
   const by = {};
   ch.forEach(c => (by[c.d] = by[c.d] || []).push(c));
-  return html`<h3>Rotar ejercicios</h3><p class="mu" style="margin:0 0 10px">${raw(ch.length)} ${ch.length == 1 ? 'accesorio cambia' : 'accesorios cambian'} por otra variante del mismo movimiento, con las mismas series, repeticiones y descanso.</p>${Object.keys(by).map(d => html`<div class="cd rtd"><b>${S.plan[d].n}</b>${by[d].map(c => html`<div class="mu">${S.plan[d].ex[c.i].n} → <b>${c.n}</b></div>`)}</div>`)}<div class="g2" style="margin-top:12px"><button data-a="rotationNotNow">Ahora no</button><button class="pr" data-a="rotationApply">Rotar</button></div>`;
+  return html`<h3>Rotar ejercicios</h3><p class="mu m-0-0-10">${raw(ch.length)} ${ch.length == 1 ? 'accesorio cambia' : 'accesorios cambian'} por otra variante del mismo movimiento, con las mismas series, repeticiones y descanso.</p>${Object.keys(by).map(d => html`<div class="cd rtd"><b>${S.plan[d].n}</b>${by[d].map(c => html`<div class="mu">${S.plan[d].ex[c.i].n} → <b>${c.n}</b></div>`)}</div>`)}<div class="g2 mt-12"><button data-a="rotationNotNow">Ahora no</button><button class="pr" data-a="rotationApply">Rotar</button></div>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.rotationShow = () => sheet(rotationSheet());

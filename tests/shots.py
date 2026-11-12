@@ -99,7 +99,8 @@ def run(file,out,cfgs,ren=None):
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
                 sd=SEED.replace("S.glassLevel=3;S.glassOn=1;S.theme='dark';","S.glassLevel=%d;S.glassOn=%d;S.theme='%s';"%(gm,gl,sch))
                 pg.evaluate(old_names(sd,ren) if ren else sd)
-                pg.evaluate(extra);pg.evaluate("location.reload()");pg.wait_for_timeout(350)
+                # (pg.reload espera a que lo guardado quede escrito: con IndexedDB, location.reload() podía cortarlo)
+                pg.evaluate(extra);pg.reload();pg.wait_for_timeout(350)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
                 try:
                     pg.evaluate(js);pg.wait_for_timeout(900 if k in('edit','overview','go_open') else 220)

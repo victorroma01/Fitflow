@@ -42,10 +42,10 @@ export const pickBody = () => {
   const base = bq.filter(o => groupMatch(pickState.gs, o.e));
   const l = base.filter(o => equipMatch(pickState.eq, o.e)).sort((a, b) => exCompare(a.e, b.e));
   const lim = 120;
-  return filterRow(groupDropdown('pkg', pickState.gs, bq.map(o => o.e)), equipDropdown('pk', pickState.eq, equipIn(base.map(o => o.e)), base.map(o => o.e), 1)) + l.slice(0, lim).map(o => html`<div class="it exr" data-a="pickerAdd" data-i="${o.i}" style="cursor:pointer"><span class="exc">${exCellHtml(o.e)}</span><small class="mu">Añadir +</small></div>`).join('') + (l.length > lim ? html`<p class="mu" style="text-align:center">Mostrando ${lim} de ${l.length}. Usa la búsqueda o un grupo.</p>` : '') || '<p class="mu">Sin resultados.</p>';
+  return filterRow(groupDropdown('pkg', pickState.gs, bq.map(o => o.e)), equipDropdown('pk', pickState.eq, equipIn(base.map(o => o.e)), base.map(o => o.e), 1)) + l.slice(0, lim).map(o => html`<div class="it exr cur-pointer" data-a="pickerAdd" data-i="${o.i}"><span class="exc">${exCellHtml(o.e)}</span><small class="mu">Añadir +</small></div>`).join('') + (l.length > lim ? html`<p class="mu ta-c">Mostrando ${lim} de ${l.length}. Usa la búsqueda o un grupo.</p>` : '') || '<p class="mu">Sin resultados.</p>';
 };
 function pickSheet() {
-  return html`<h3>Añadir ejercicio</h3><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="pickerSearch" value="${pickState.q}"><div id="pkr">${raw(pickBody())}</div><label>Crear ejercicio nuevo</label><div class="g2" style="grid-template-columns:1fr auto"><input id="xn" placeholder="Nombre" aria-label="Nombre del ejercicio nuevo"><button class="pr" data-a="newExerciseSave">Crear</button></div>`;
+  return html`<h3>Añadir ejercicio</h3><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="pickerSearch" value="${pickState.q}"><div id="pkr">${raw(pickBody())}</div><label>Crear ejercicio nuevo</label><div class="g2 cols-1fr-auto"><input id="xn" placeholder="Nombre" aria-label="Nombre del ejercicio nuevo"><button class="pr" data-a="newExerciseSave">Crear</button></div>`;
 }
 A.openPicker = () => {
   pickState = { g: '', gs: [], q: '', eq: [] };

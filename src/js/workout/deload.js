@@ -78,7 +78,7 @@ export const deloadCard = () => {
     return html`<div class="dl2 dlc2"><button class="dlb" data-a="deloadInfo" aria-label="Semana de descarga: qué cambia"><span class="dli">${icon('dlw', 18)}</span><b>Semana de descarga</b></button><button class="dlo dls" data-a="deloadSkipAsk">Omitir</button></div>`;
   }
   if (S.week > 1 && deloadSuggested() && !(S.deloadDeclined && S.deloadDeclined[S.week]))
-    return '<div class="cd dlc"><b>Esfuerzo muy alto</b><div class="mu" style="font-size:13px;margin-top:4px">Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.</div><div class="g2" style="margin-top:10px"><button data-a="deloadNotNow">Ahora no</button><button class="pr" data-a="deloadOn">Activar descarga</button></div></div>';
+    return '<div class="cd dlc"><b>Esfuerzo muy alto</b><div class="mu fs-13 mt-4">Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.</div><div class="g2 mt-10"><button data-a="deloadNotNow">Ahora no</button><button class="pr" data-a="deloadOn">Activar descarga</button></div></div>';
   return '';
 };
 /** Franja del entreno en la semana de descarga. */

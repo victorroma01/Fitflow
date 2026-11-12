@@ -12,6 +12,13 @@ accesos directos); I-07, hecha en la rama y que se comprueba al publicar la V1.0
 I-08 a I-11, I-13 e I-14, a la V1.0.2; I-01 sigue abierta hasta la prueba en un Android. Lo encontrado al probar la V1.0.0 en el
 iPhone son las issues I-17 a I-29 (#26 a #38), en los milestones de la V1.0.1 y la V1.0.2.
 
+**Estado tras la V1.0.2** (rama `desarrollo-1.0.2`, pendiente de que el propietario la confirme para publicarla): hechas I-04, I-06,
+I-08, I-09, I-10, I-11 (la parte de la sincronización; el orden del borrado se mantiene a propósito) e I-14; I-05, con el código
+listo y apagado hasta que el propietario configure App Check en la consola; I-13, sin reproducir, con más datos en la prueba por si
+vuelve a pasar; e I-17, con nombres claros (R1 y R2), las vistas más largas partidas (R4), las acciones de GitHub en orden (T-24) y
+el rendimiento medido (T-26, [Rendimiento](rendimiento.md)). Lo que no se ha hecho de I-17, a propósito: renombrar los campos de
+dentro de cada dato (R3), que obligaría a migrar los datos de las cuentas, las copias y los códigos de programa.
+
 ## Resumen
 
 | Prioridad | Abiertas | Corregidas en M8 | Total |
@@ -162,6 +169,10 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
   puede usarlos. Como la app usa la API REST, se pide el token de App Check y se envía en cada petición. Y alertas de uso en Firebase.
   Otra opción, si se quiere cerrar el alta: códigos de invitación que crea el admin (14 PF).
 - **Coste**: 0 PF con App Check (no cambia ninguna función) · 6 horas.
+- **V1.0.2**: código listo en `desarrollo-1.0.2` (`cloud/appcheck`), apagado hasta que el propietario lo configure: reCAPTCHA
+  Enterprise da el token, App Check lo cambia por el suyo (una vez por hora) y Authentication y Firestore lo reciben en cada
+  petición. Con `APP_CHECK` vacío no se carga nada y la CSP no lo admite. Los pasos de consola, en
+  [Servidor: Firebase](backend.md#activar-app-check). `tests/cloud.py` lo prueba con reCAPTCHA y App Check simulados.
 
 ### I-06 · Hojas y páginas sin anunciarse como ventana ni recibir el foco
 
@@ -263,6 +274,9 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
   a abrir la página si pasa, y no ha vuelto a fallar. No se ha visto en el navegador normal.
 - **Corrección**: buscar la causa con el registro del service worker; si es del navegador sin pantalla, dejarlo como está.
 - **Coste**: 0 PF · 2 horas.
+- **V1.0.2**: sin reproducir (no ha vuelto a pasar desde M6, ni en las ejecuciones de esta versión). Se queda la mitigación y, si
+  vuelve a pasar, la prueba enseña las últimas peticiones que llegaron al servidor de la prueba, con su momento, para ver si la
+  recarga llegó a pedir la página o se quedó en el service worker.
 
 ### I-14 · La política de seguridad (CSP) permite estilos en línea
 
@@ -271,6 +285,13 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
   todo lo que se pinta pasa por `html` (escapado), así que hoy no se puede inyectar nada (`tests/security.py`); es una defensa más.
 - **Corrección**: pasar los estilos en línea a clases y quitar `'unsafe-inline'`.
 - **Coste**: 0 PF · 16 horas.
+- **V1.0.2**: hecha en `desarrollo-1.0.2`. Los 424 `style="…"` de las plantillas pasan a clases: 388 con una herramienta (una clase
+  de utilidad por declaración, `css/99-utilities`, con `!important` como pesaba el estilo en línea) y 36 a mano (los colores de
+  los niveles y de los macros, en clases; lo que depende de un dato, como el ancho de una barra o la foto de un día, en
+  `data-style`, que aplica `core/dynstyle` con el CSSOM). Las reglas del cristal y de las pantallas estrechas que buscaban un
+  estilo en línea (`[style*=…]`) usan ya esas clases, y la pantalla de error de arranque pone su aspecto con el CSSOM. La CSP solo
+  admite la hoja de la app, por su huella. `tools/check.js` falla si vuelve a aparecer un estilo en línea, y las capturas de las
+  47 pantallas en 6 configuraciones son iguales.
 
 ### I-15 · Los accesos directos del icono usan el mismo icono que la app
 

@@ -6,6 +6,7 @@
 */
 import { AUTH_URL, FIREBASE, TECH_DOMAIN, TOKEN_URL } from './config.js';
 import { fetchJson, netError } from './net.js';
+import { appCheckToken } from './appcheck.js';
 import { account, acctSave } from './session.js';
 /** Qué le falta a un nombre de usuario ('' si vale): de 3 a 20 caracteres, letras sin tilde, números, punto, guion y guion
   bajo, sin punto al principio, al final ni dos seguidos (no valdría como correo técnico). */
@@ -13,7 +14,7 @@ export const userProblem = u => !u ? 'Escribe tu usuario.' : u.length < 3 || u.l
 export const passProblem = p => !p ? 'Escribe la contraseña.' : p.length < 8 ? 'La contraseña tiene que tener 8 caracteres o más.' : p.length > 100 ? 'La contraseña tiene como mucho 100 caracteres.' : '';
 /** Correo técnico de un usuario: sin distinguir mayúsculas, como el propio usuario. */
 const techEmail = u => String(u).toLowerCase() + '@' + TECH_DOMAIN;
-const authCall = (op, body) => fetchJson(AUTH_URL + 'accounts:' + op + '?key=' + FIREBASE.apiKey, { method: 'POST', body });
+const authCall = async (op, body) => fetchJson(AUTH_URL + 'accounts:' + op + '?key=' + FIREBASE.apiKey, { method: 'POST', body, appCheck: await appCheckToken() });
 /** Respuesta de Authentication → sesión de cloud/session. */
 const sessionFrom = (r, u) => ({ uid: r.localId, u, it: r.idToken, rt: r.refreshToken, exp: Date.now() + (+r.expiresIn || 3600) * 1e3 });
 /** Crea la cuenta. Devuelve la sesión (sin guardarla); lanza un error de cloud/net (EMAIL_EXISTS si el usuario ya existe). */
@@ -37,7 +38,7 @@ export const idToken = async (force) => {
   if (!refreshing)
     refreshing = (async () => {
       try {
-        const r = await fetchJson(TOKEN_URL + '?key=' + FIREBASE.apiKey, { method: 'POST', form: { grant_type: 'refresh_token', refresh_token: a.rt } });
+        const r = await fetchJson(TOKEN_URL + '?key=' + FIREBASE.apiKey, { method: 'POST', form: { grant_type: 'refresh_token', refresh_token: a.rt }, appCheck: await appCheckToken() });
         if (account && account.uid == a.uid)
           acctSave({ ...account, it: r.id_token, rt: r.refresh_token, exp: Date.now() + (+r.expires_in || 3600) * 1e3 });
         return r.id_token;

@@ -75,7 +75,7 @@ export const resumeBanner = () => {
   const t = pendingResume;
   const n = t.W.x.reduce((a, b) => a + b.length, 0);
   const o = t.W.x.reduce((a, b) => a + b.filter(x => x.ok).length, 0);
-  return html`<div class="cd" style="border-color:var(--a2)"><small style="color:var(--at);font-weight:700;letter-spacing:.1em">ENTRENO EN CURSO</small><div style="font-size:19px;font-weight:700;margin:4px 0 2px">${t.d.n}</div><div class="mu" style="margin-bottom:12px">${raw(o)} de ${raw(n)} series completadas</div><div class="g2"><button data-a="resumeDiscardAsk">Descartar</button><button class="pr" data-a="resumeWorkout">Reanudar</button></div></div>`;
+  return html`<div class="cd bdc-a2"><small class="c-at fw-700 ls-0_1em">ENTRENO EN CURSO</small><div class="fs-19 fw-700 m-4-0-2">${t.d.n}</div><div class="mu mb-12">${raw(o)} de ${raw(n)} series completadas</div><div class="g2"><button data-a="resumeDiscardAsk">Descartar</button><button class="pr" data-a="resumeWorkout">Reanudar</button></div></div>`;
 };
 export const dropResume = () => {
   pendingResume = null;

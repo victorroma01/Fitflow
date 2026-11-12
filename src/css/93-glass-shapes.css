@@ -136,13 +136,13 @@ html.gl .rpe {
 html.gl .btnl {
   border-radius:17px;
 }
-html.gl [style*="border-radius:16px;"],html.gl [style$="border-radius:16px"] {
+html.gl .r-16 {
   border-radius:22px!important;
 }
-html.gl [style*="border-radius:14px;"],html.gl [style$="border-radius:14px"] {
+html.gl .r-14 {
   border-radius:20px!important;
 }
-html.gl [style*="border-radius:12px;"],html.gl [style$="border-radius:12px"] {
+html.gl .r-12 {
   border-radius:17px!important;
 }
 html.gl nav {

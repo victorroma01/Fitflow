@@ -28,9 +28,9 @@ const pfSummary = (ic, t, s) => html`<summary class="pfs">${icon(ic, 30)}<span><
 function profileHead() {
   const p = S.profile;
   const img = safeImage(p.img);
-  const pic = html`${img ? html`<img src="${img}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">` : ''}${img ? '' : icon('camera', 36)}`;
+  const pic = html`${img ? html`<img src="${img}" alt="" class="w-full h-full of-cover d-block">` : ''}${img ? '' : icon('camera', 36)}`;
   /* sin consentimiento, la foto abre antes el aviso (A.photoConsentAsk); con él, el selector de fotos */
-  const av = +p.pc > 0 ? html`<label class="av" style="cursor:pointer;font-size:0" aria-label="Foto de perfil">${raw(pic)}<input type="file" accept="image/*" data-c="photoFile" hidden id="avf"></label>` : html`<button class="av" data-a="photoConsentAsk" style="font-size:0;padding:0" aria-label="Foto de perfil">${raw(pic)}</button><input type="file" accept="image/*" data-c="photoFile" hidden id="avf">`;
+  const av = +p.pc > 0 ? html`<label class="av cur-pointer fs-0" aria-label="Foto de perfil">${raw(pic)}<input type="file" accept="image/*" data-c="photoFile" hidden id="avf"></label>` : html`<button class="av fs-0 p-0" data-a="photoConsentAsk" aria-label="Foto de perfil">${raw(pic)}</button><input type="file" accept="image/*" data-c="photoFile" hidden id="avf">`;
   return html`<div class="hd"><h1>Perfil</h1></div><div class="cd pfh">${raw(av)}<b class="pfn">${acctName()}</b>${isAdmin() ? html`<small class="pfa">Administrador</small>` : ''}${img ? html`<button class="pfq" data-a="photoDeleteAsk">Quitar foto</button>` : ''}</div>`;
 }
 A.resetAllConfirmed = async () => {
@@ -66,10 +66,10 @@ function bioCard() {
 const planCard = () => {
   /* sin programa elegido (cuenta nueva; I-24) */
   if (S.noProgram)
-    return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', 'Aún sin programa')}<p class="mu" style="margin:10px 0 0;font-size:14px">Elige uno de los predefinidos o crea el tuyo.</p><button class="pr" data-a="openPrograms" style="width:100%;margin-top:12px">Seleccionar programa</button></details>`;
+    return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', 'Aún sin programa')}<p class="mu m-10-0-0 fs-14">Elige uno de los predefinidos o crea el tuyo.</p><button class="pr w-full mt-12" data-a="openPrograms">Seleccionar programa</button></details>`;
   const p = currentCustomProgram();
   const nm = p ? p.n : PROGRAM_NAMES[S.program];
-  return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}<div style="margin-top:10px">${programRow(nm, levelsActive() ? levelTag(S.level) : '')}</div><button data-a="openPrograms" style="width:100%;margin-top:12px">Cambiar programa o nivel</button></details>`;
+  return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}<div class="mt-10">${programRow(nm, levelsActive() ? levelTag(S.level) : '')}</div><button data-a="openPrograms" class="w-full mt-12">Cambiar programa o nivel</button></details>`;
 };
 /** Primer día con datos (entrenos, comidas, peso o medidas), o '' si aún no hay ninguno. */
 const firstUseDay = () => {

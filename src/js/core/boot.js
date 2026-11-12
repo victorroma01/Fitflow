@@ -142,7 +142,7 @@ const start = () => {
       const o = JSON.parse(q);
       setTimeout(() => {
         try {
-          dialog(o.u ? 'Datos recuperados' : 'Copia restaurada', html`<div style="display:grid;gap:6px;text-align:left">${(o.s || []).map(x => html`<div>· ${x}</div>`)}</div>${o.f ? html`<div style="margin-top:10px">Se descartaron ${raw(plural(o.f, 'elemento dañado', 'elementos dañados'))} de la copia.</div>` : ''}`, [['Entendido', 'doNothing', 'pr']]);
+          dialog(o.u ? 'Datos recuperados' : 'Copia restaurada', html`<div class="d-grid gap-6 ta-l">${(o.s || []).map(x => html`<div>· ${x}</div>`)}</div>${o.f ? html`<div class="mt-10">Se descartaron ${raw(plural(o.f, 'elemento dañado', 'elementos dañados'))} de la copia.</div>` : ''}`, [['Entendido', 'doNothing', 'pr']]);
         }
         catch (e) {
           logError('arranque: aviso de restauración', e);

@@ -34,6 +34,8 @@ import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { dayInfo } from '../nutrition/templates.js';
 import { tdee } from '../nutrition/diet.js';
 import { account } from '../cloud/session.js';
+import { APP_CHECK } from '../cloud/config.js';
+import { appCheckOn } from '../cloud/appcheck.js';
 import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
 import { refreshReports } from '../system/report.js';
 import { accentNow, customAccent } from '../profile/appearance.js';
@@ -47,6 +49,8 @@ const DEBUG_NAMES = {
   accentNow: [() => accentNow],
   account: [() => account],
   ACHIEVEMENTS: [() => ACHIEVEMENTS],
+  APP_CHECK: [() => APP_CHECK],
+  appCheckOn: [() => appCheckOn],
   addState: [() => addState],
   applyTheme: [() => applyTheme],
   APPV: [() => APPV],

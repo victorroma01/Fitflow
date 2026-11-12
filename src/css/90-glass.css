@@ -302,7 +302,7 @@ html.gl .eqp {
 html.gl .eqf {
   background:color-mix(in srgb,var(--cd) 86%,transparent);
 }
-html.gl .cd[style*="sticky"] {
+html.gl .cd.pos-sticky {
   background:color-mix(in srgb,var(--cd) var(--pk),transparent);
   -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   backdrop-filter:blur(var(--bn)) saturate(var(--sa));

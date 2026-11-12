@@ -58,13 +58,16 @@ export const spaceCheck = async () => {
     if (Date.now() - (+Store.get(Store.K.space) || 0) < SPACE_EVERY)
       return;
     const u = await spaceUse();
-    if (u.ratio < SPACE_WARN)
+    if (u.ratio < SPACE_WARN) {
+      spaceTries = 0;
       return;
+    }
     if (spaceBusy()) {
       if (++spaceTries <= 20)
         setTimeout(spaceCheck, 30000);
       return;
     }
+    spaceTries = 0;
     Store.set(Store.K.space, String(Date.now()));
     dialog('Queda poco espacio', 'La app ya usa el ' + Math.round(u.ratio * 100) + ' % del espacio que el navegador le deja en este móvil. Si se llena, lo nuevo no se podrá guardar aquí. Haz una copia de seguridad y libera espacio en el móvil.', [['Más tarde', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'pr']]);
   }

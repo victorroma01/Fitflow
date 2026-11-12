@@ -169,3 +169,8 @@
   color:var(--mu);
   font-size:12px;
 }
+/* el sello de reCAPTCHA (cloud/appcheck, con App Check activado) taparía la barra de pestañas: no se enseña y, a cambio, el
+   inicio de sesión y Privacidad lo dicen, como piden sus condiciones */
+.grecaptcha-badge {
+  visibility:hidden!important;
+}

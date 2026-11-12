@@ -5,7 +5,7 @@ de archivo), código que se carga al usarlo, copia de seguridad desde la app ins
   python3 tests/deploy.py dist/app
 Requiere:  pip install playwright  &&  playwright install chromium
 """
-import os, sys, re, json, shutil, tempfile, threading, functools, http.server
+import os, sys, re, json, time, shutil, tempfile, threading, functools, http.server, collections
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, ENGINE
 # con la sesión de prueba de tests/init.js: sin cuenta, la app solo enseña el inicio de sesión
@@ -24,12 +24,16 @@ def check(name, cond, info=''):
 # (un trozo de código que no llega durante la instalación: I-08)
 REQS = []
 FAIL = set()
+# y las últimas peticiones, con su momento, para ver dónde se queda una recarga que no termina (I-13)
+REQLOG = collections.deque(maxlen=40)
+T0 = time.time()
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split('?')[0]
         REQS.append(path)
+        REQLOG.append('%.1f s %s' % (time.time() - T0, path))
         if any(path.endswith(f) for f in FAIL):
             self.send_error(500)
             return
@@ -57,7 +61,8 @@ def skipped(name):
 def reload(pg, notes):
     """Recarga la página. Si la recarga falla con un error interno de WebKit, o se queda sin terminar (de vez en cuando, en la
     integración continua de GitHub, una recarga con service worker no llega a «load» en Chromium), se vuelve a abrir la misma
-    dirección una vez y se anota, para que la prueba siga y se vea el resto; si vuelve a fallar, falla la prueba."""
+    dirección una vez y se anota, para que la prueba siga y se vea el resto; si vuelve a fallar, falla la prueba. Si se queda sin
+    terminar, enseña las últimas peticiones que llegaron al servidor, para ver si la recarga llegó a pedir la página (I-13)."""
     try:
         pg.reload()
     except Exception as e:
@@ -66,6 +71,8 @@ def reload(pg, notes):
             raise
         notes.append(('recarga sin terminar en 30 s' if stuck else 'recarga con error interno de WebKit') + ' en ' + pg.url[-30:])
         print('   (%s: se vuelve a abrir la dirección)' % notes[-1])
+        if stuck:
+            print('   últimas peticiones al servidor (desde el arranque de la prueba): ' + ' · '.join(list(REQLOG)[-10:]))
         pg.goto(pg.url)
 
 

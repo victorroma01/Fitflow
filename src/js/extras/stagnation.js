@@ -65,7 +65,7 @@ export function stagnationCard() {
     const L = stagnation();
     if (!L.length)
       return '';
-    return html`<div class="cd"><div class="row"><b>Posible estancamiento</b><small>${L.length}${L.length == 1 ? ' ejercicio' : ' ejercicios'}</small></div><div class="mu" style="font-size:13px;margin:4px 0 6px">No superas tu mejor marca desde hace varias sesiones.</div>${L.map((x, i) => html`<div class="it exr" data-a="stagnationInfo" data-i="${i}" role="button" tabindex="0" style="cursor:pointer"><span><b>${x.n}</b><br><small>Sin récord en ${raw(x.k)} sesiones</small></span><span class="mu" style="align-self:center">›</span></div>`)}</div>`;
+    return html`<div class="cd"><div class="row"><b>Posible estancamiento</b><small>${L.length}${L.length == 1 ? ' ejercicio' : ' ejercicios'}</small></div><div class="mu fs-13 m-4-0-6">No superas tu mejor marca desde hace varias sesiones.</div>${L.map((x, i) => html`<div class="it exr cur-pointer" data-a="stagnationInfo" data-i="${i}" role="button" tabindex="0"><span><b>${x.n}</b><br><small>Sin récord en ${raw(x.k)} sesiones</small></span><span class="mu as-c">›</span></div>`)}</div>`;
   }
   catch (e) {
     return '';
@@ -79,9 +79,9 @@ A.stagnationInfo = i => {
   const x = stagnation()[i];
   if (!x)
     return;
-  const since = html`<p class="mu" style="margin:0 0 10px">Tu mejor marca estimada fue el ${raw(fmtDateShort(x.d, { day: 'numeric', month: 'long' }))}${raw(x.b ? ': ' + bestSetText(x.b) : '')} (1RM estimado ${round1(toDisplayWeight(x.mx))} ${weightUnit()}). Desde entonces llevas ${raw(x.k)} sesiones sin superarla.</p>`;
-  const sessions = html`<div class="cd" style="margin:0 0 10px"><small class="mu">Últimas sesiones</small>${x.ses.map(s => html`<div class="it" style="grid-template-columns:1fr auto"><span>${raw(fmtDateShort(s.d, { day: 'numeric', month: 'short' }))}</span><b>${raw(bestSetText(s.b))}</b></div>`)}</div>`;
-  const tips = html`<b>Qué probar</b><div class="mu" style="font-size:14px;display:grid;gap:7px;margin:6px 0 12px">${STAGNATION_TIPS.map(t => html`<div>· ${t}</div>`)}</div>`;
+  const since = html`<p class="mu m-0-0-10">Tu mejor marca estimada fue el ${raw(fmtDateShort(x.d, { day: 'numeric', month: 'long' }))}${raw(x.b ? ': ' + bestSetText(x.b) : '')} (1RM estimado ${round1(toDisplayWeight(x.mx))} ${weightUnit()}). Desde entonces llevas ${raw(x.k)} sesiones sin superarla.</p>`;
+  const sessions = html`<div class="cd m-0-0-10"><small class="mu">Últimas sesiones</small>${x.ses.map(s => html`<div class="it cols-1fr-auto"><span>${raw(fmtDateShort(s.d, { day: 'numeric', month: 'short' }))}</span><b>${raw(bestSetText(s.b))}</b></div>`)}</div>`;
+  const tips = html`<b>Qué probar</b><div class="mu fs-14 d-grid gap-7 m-6-0-12">${STAGNATION_TIPS.map(t => html`<div>· ${t}</div>`)}</div>`;
   sheet(html`<h3>${x.n}</h3>${since}${sessions}${tips}<div class="g2"><button data-a="stagnationDismiss" data-i="${i}">Ocultar 2 semanas</button><button class="pr" data-a="deloadOnFromSheet">Activar descarga</button></div>`);
 };
 A.stagnationDismiss = i => {

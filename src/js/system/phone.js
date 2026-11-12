@@ -72,7 +72,7 @@ const badgeSync = () => {
   }
 };
 /** Opción de Ajustes → Sonido y avisos (solo donde el sistema tiene globos). */
-export const badgeCard = () => badgeOk() ? html`<label class="srk"><input type="checkbox" data-c="toggleBadge"${S.iconBadge ? ' checked' : ''}> Globo en el icono de la app</label><small class="mu" style="display:block;margin:-4px 0 8px">Al salir de la app, el icono enseña cuántas cosas tienes pendientes: el pesaje de hoy y las respuestas nuevas a tus fallos y sugerencias. En iPhone, la primera vez pide permiso de avisos.</small>` : '';
+export const badgeCard = () => badgeOk() ? html`<label class="srk"><input type="checkbox" data-c="toggleBadge"${S.iconBadge ? ' checked' : ''}> Globo en el icono de la app</label><small class="mu d-block m-n4-0-8">Al salir de la app, el icono enseña cuántas cosas tienes pendientes: el pesaje de hoy y las respuestas nuevas a tus fallos y sugerencias. En iPhone, la primera vez pide permiso de avisos.</small>` : '';
 afterSync.push(badgeSync);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState == 'hidden')

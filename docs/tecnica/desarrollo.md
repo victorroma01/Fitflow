@@ -79,6 +79,9 @@ el archivo único van incrustadas.
 10. Botones sin nombre accesible.
 11. **Código muerto**: declaraciones sin usar, exportaciones que nadie importa, acciones que nada lanza e iconos sin usar.
 12. **CSS sin usar**: clases, ids y animaciones que no aparecen en el código ni en la plantilla.
+13. **Estilos en línea** (`style="…"` o un `<style>` más): la política de seguridad no los deja (I-14). Lo fijo va en clases de
+    `css/99-utilities` (una por declaración: `mt-12`, `w-full`, `c-at`…) o en una clase propia; lo que depende de un dato (el
+    ancho de una barra, la foto de un día), en `data-style`, que aplica `core/dynstyle` con el CSSOM.
 
 Las reglas 11 y 12 hacen que el código muerto se quite en cada versión, no solo en una limpieza. Una clase CSS o una acción que se
 construye a trozos (`'an' + i`) no se ve como usada: se escriben enteras.

@@ -51,7 +51,7 @@ export const templateCard = k => {
   let kc = '';
   if (has)
     kc = roundInt(sumMacros(Object.keys(tp).flatMap(i => Array.isArray(tp[i]) ? tp[i] : []).map(itemMacros))[0]);
-  return html`<details class="cd"><summary>Plantillas · día de ${raw(nm)}</summary><p class="mu tpw">${why}</p><div class="g2" style="margin-top:10px"><div class="hqw"><button data-a="templateApply">Aplicar plantilla</button>${helpDot('tpa', 'Qué hace «Aplicar plantilla»')}</div><div class="hqw"><button data-a="templateSave">Guardar día como plantilla</button>${helpDot('tps', 'Qué hace «Guardar día como plantilla»')}</div></div><small class="mu" style="display:block;margin-top:8px">${raw(has ? 'Plantilla de ' + nm + ' guardada · ' + kc + ' kcal. Solo se rellenan las comidas vacías.' : 'Todavía no tienes plantilla de día de ' + nm + '. Rellena el día y pulsa Guardar.')}</small></details>`;
+  return html`<details class="cd"><summary>Plantillas · día de ${raw(nm)}</summary><p class="mu tpw">${why}</p><div class="g2 mt-10"><div class="hqw"><button data-a="templateApply">Aplicar plantilla</button>${helpDot('tpa', 'Qué hace «Aplicar plantilla»')}</div><div class="hqw"><button data-a="templateSave">Guardar día como plantilla</button>${helpDot('tps', 'Qué hace «Guardar día como plantilla»')}</div></div><small class="mu d-block mt-8">${raw(has ? 'Plantilla de ' + nm + ' guardada · ' + kc + ' kcal. Solo se rellenan las comidas vacías.' : 'Todavía no tienes plantilla de día de ' + nm + '. Rellena el día y pulsa Guardar.')}</small></details>`;
 };
 A.templateSave = () => {
   const k = nutriDayKey();
@@ -108,7 +108,7 @@ export const habitsCard = m => {
   const ys = (S.meals[yk] || {})[m] || [];
   if (!l.length && !ys.length)
     return '';
-  return html`<div class="mu" style="font-size:12px;margin:2px 0 6px">Habituales · un toque los añade</div><div class="hab">${raw(ys.length ? '<button class="chip" data-a="copyYesterday">Repetir comida de ayer</button>' : '')}${l.map(x => html`<button class="chip" data-a="frequentAdd" data-n="${x[0]}">${x[0]} · ${habitGrams(x[1])} g</button>`)}</div>`;
+  return html`<div class="mu fs-12 m-2-0-6">Habituales · un toque los añade</div><div class="hab">${raw(ys.length ? '<button class="chip" data-a="copyYesterday">Repetir comida de ayer</button>' : '')}${l.map(x => html`<button class="chip" data-a="frequentAdd" data-n="${x[0]}">${x[0]} · ${habitGrams(x[1])} g</button>`)}</div>`;
 };
 A.frequentAdd = (i, b) => {
   const n = b.dataset.n;
@@ -143,7 +143,7 @@ A.copyYesterday = () => {
 /* — manejadores de esta función (registros A / C / U) — */
 A.saveDishAsk = (i, b) => {
   setAddState({ m: i });
-  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" aria-label="Nombre del plato" value="${b.dataset.n}"><button class="pr" data-a="saveDish" style="width:100%;margin-top:10px">Guardar</button>`);
+  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" aria-label="Nombre del plato" value="${b.dataset.n}"><button class="pr w-full mt-10" data-a="saveDish">Guardar</button>`);
 };
 A.saveDish = () => {
   const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));

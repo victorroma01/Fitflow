@@ -310,7 +310,7 @@ def main(path):
         check('de derecha a izquierda no hace nada', title() == 'Tema y estilo')
         gesture('#ajs input[data-c=reduceMotion]', 220, 0)
         check('no empieza en un campo (casillas, textos…)', title() == 'Tema y estilo')
-        ev("document.querySelector('#ajs .pgt').insertAdjacentHTML('afterend','<div id=\"hsx\" style=\"overflow-x:auto;white-space:nowrap\"><span style=\"display:inline-block;width:900px\">fila que se desplaza de lado</span></div>')")
+        ev("document.querySelector('#ajs .pgt').insertAdjacentHTML('afterend','<div id=\"hsx\"><span>fila que se desplaza de lado</span></div>');document.getElementById('hsx').style.cssText='overflow-x:auto;white-space:nowrap';document.querySelector('#hsx span').style.cssText='display:inline-block;width:900px'")
         gesture('#hsx span', 220, 0)
         check('ni en una fila que se desplaza de lado (ese gesto es suyo)', title() == 'Tema y estilo')
         check('las páginas de dentro dejan el gesto de lado para la app', 'pan-y' in ev("getComputedStyle(document.querySelector('#sh .sp')).touchAction"))

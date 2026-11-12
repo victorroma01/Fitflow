@@ -29,7 +29,7 @@ export const routineImage = r => {
 const IMAGE_LABELS = { pecho: 'Pecho', espalda: 'Espalda', hombros: 'Hombros', brazos: 'Brazos', piernas: 'Piernas', legs: 'Prensa de piernas', torso: 'Torso', descanso: 'Descanso' };
 export const imagePicker = r => {
   const v = routineImage(r);
-  return html`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 4px">${Object.keys(DAY_PHOTOS).filter(k => k != 'descanso').map(k => html`<button data-a="routineSetImage" data-v="${k}" aria-label="${IMAGE_LABELS[k]}" style="padding:0;height:78px;position:relative;overflow:hidden;border-radius:14px;border:2px solid ${v == k ? 'var(--a2)' : 'var(--ln)'}"><img src="${DAY_PHOTOS[k]}" alt="" style="width:100%;height:100%;object-fit:cover;display:block${v == k ? '' : ';opacity:.55'}"></button>`)}</div>`;
+  return html`<div class="d-grid cols-4 gap-8 m-6-0-4">${Object.keys(DAY_PHOTOS).filter(k => k != 'descanso').map(k => html`<button data-a="routineSetImage" data-v="${k}" aria-label="${IMAGE_LABELS[k]}" class="p-0 h-78 pos-rel ov-hidden r-14 ${v == k ? 'bd-2-solid-a2' : 'bd-2-solid-ln'}"><img src="${DAY_PHOTOS[k]}" alt="" class="w-full h-full of-cover d-block${v == k ? '' : ' op-0_55'}"></button>`)}</div>`;
 };
 A.routineSetImage = (i, b) => {
   S.routines[routineState.i].img = b.dataset.v;

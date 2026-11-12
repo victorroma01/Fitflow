@@ -52,48 +52,48 @@
   input,select,textarea {
     font-size:16px;
   }
-  select[style*="font-size:13px"] {
+  select.fs-13 {
     font-size:16px!important;
   }
 }
 /* v20: filas del modo editar sin desbordes en pantallas estrechas */
-.it[style*="1fr auto 24px"] {
+.it.cols-1fr-auto-24 {
   grid-template-columns:minmax(0,1fr) auto 28px!important;
   align-items:center;
 }
-.it[style*="1fr auto 24px"]>span:nth-child(2) {
+.it.cols-1fr-auto-24>span:nth-child(2) {
   white-space:nowrap;
   display:flex;
   align-items:center;
   gap:6px;
 }
-.it[style*="1fr auto 24px"] select {
+.it.cols-1fr-auto-24 select {
   width:100%!important;
   max-width:100%;
 }
-.it[style*="1fr auto 24px"]>button[data-a="removePlanExercise"] {
+.it.cols-1fr-auto-24>button[data-a="removePlanExercise"] {
   width:28px;
   min-width:0;
   padding:4px 0!important;
   text-align:center;
 }
 @media(max-width:460px) {
-  .it[style*="1fr auto 24px"] {
+  .it.cols-1fr-auto-24 {
     grid-template-columns:1fr auto!important;
     row-gap:8px;
   }
-  .it[style*="1fr auto 24px"]>span:first-child {
+  .it.cols-1fr-auto-24>span:first-child {
     grid-column:1/-1;
   }
-  .it[style*="1fr auto 24px"]>span:nth-child(2) {
+  .it.cols-1fr-auto-24>span:nth-child(2) {
     grid-column:1;
     justify-self:start;
   }
-  .it[style*="1fr auto 24px"]>button[data-a="removePlanExercise"] {
+  .it.cols-1fr-auto-24>button[data-a="removePlanExercise"] {
     grid-column:2;
     justify-self:end;
   }
-  .it[style*="1fr auto 24px"] select {
+  .it.cols-1fr-auto-24 select {
     margin:3px 0;
   }
 }

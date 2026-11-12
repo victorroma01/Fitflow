@@ -37,6 +37,7 @@ antes de pintar y las guarda sin esperar (I-04), `page.goto` y `page.reload` esp
 
 | Prueba | Qué compara |
 | --- | --- |
+| `tests/perf.py` | No pasa ni falla: mide con muchos datos (unos 2 MB) el arranque hasta el primer pintado, lo que tarda un guardado y lo que tarda en pintarse cada pestaña, para comparar dos compilaciones en el mismo ordenador ([Rendimiento](rendimiento.md)). |
 | `tests/walk.py` | Paseo aleatorio diferencial: la misma secuencia de toques en las dos; compara pantalla, datos guardados y sonidos paso a paso. Por HTTP, como el resto. Con `window.__ffHintCheck`, cada guardado que dice qué partes tocó se comprueba en vez de repasarlo después (I-10): si cambió otra, el paso queda anotado como error. |
 | `tests/shots.py` | 47 pantallas × 6 configuraciones (temas, cristal, tamaños de iPhone), píxel a píxel. |
 

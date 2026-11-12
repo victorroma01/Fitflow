@@ -12,6 +12,7 @@ ver la [documentación funcional](../funcional/README.md).
 | [Servidor: Firebase](backend.md) | El servidor: cuentas, roles, documentos de Firestore, sincronización sin conexión, reglas de seguridad y administración desde GitHub. |
 | [Desarrollo](desarrollo.md) | Requisitos, comandos, cómo añadir una función, reglas de calidad y cómo se publica una versión. |
 | [Pruebas](pruebas.md) | Qué comprueba cada prueba, en qué navegadores y cuándo se pasan. |
+| [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en la V1.0.2 frente a la V1.0.1 (T-26). |
 | [Informe de issues](issues.md) | Lo encontrado en la revisión final (M8, T-22): lo corregido y lo que queda abierto, con su prioridad, el orden recomendado y su coste en puntos función. |
 | [Versiones de prueba](versiones-de-prueba.md) | Historial de la serie 1.19 – 1.24, anterior a la V1.0.0. |
 
@@ -58,7 +59,8 @@ el que usan la mayoría de las pruebas.
   insertado. Lo que ya es HTML de la app va tal cual (otra plantilla o una lista de ellas); cualquier otra excepción se marca con
   `raw(…)`, así que todo lo que no se escapa está a la vista.
 - **Solo su propio código**: una política de seguridad (CSP) en una etiqueta `<meta>` (`build.py`) solo deja ejecutar el código de la
-  app y solo conectar con su propia web, con Firebase y con Open Food Facts.
+  app, usar su hoja de estilo (sin estilos en línea desde la V1.0.2: clases de `css/99-utilities` y `core/dynstyle`) y conectar con
+  su propia web, con Firebase y con Open Food Facts.
 - **El móvil manda** (*offline-first*): las pantallas leen y escriben siempre en local; `cloud/sync` sube y baja los cambios cuando hay
   red y junta lo de varios dispositivos. Sin sesión, la app solo enseña el inicio de sesión (`account/login`).
 - **Pintar sin rehacer**: `R()` compara la pantalla nueva con la que hay y cambia solo lo distinto (`core/morph`): se conservan el foco,
