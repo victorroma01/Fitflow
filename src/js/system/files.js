@@ -66,7 +66,7 @@ export const copyText = async (t, el) => {
     return false;
   }
 };
-A.zbc = () => {
+A.backupCopyText = () => {
   const e = $('#bk');
   try {
     navigator.clipboard.writeText(e.value);
@@ -74,7 +74,7 @@ A.zbc = () => {
   catch (x) {
     e.select();
   }
-  S.bkd = Date.now();
+  S.lastBackupDate = Date.now();
   saveState();
   toast('Texto copiado');
 };

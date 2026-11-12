@@ -10,7 +10,7 @@ export const ACTIVITY_LEVELS = [['Baja', 'sedentario, menos de 5.000 pasos'], ['
 export const GOAL_LABELS = ['Definir', 'Mantenimiento', 'Volumen', 'Recomposición'];
 export const GOAL_DIET = [2, 3, 4, 1];
 export function tdee() {
-  const b = S.bio;
+  const b = S.biometrics;
   const w = +b.w;
   const h = +b.h;
   const a = +b.age;
@@ -19,33 +19,33 @@ export function tdee() {
   const bm = 10 * w + 6.25 * h - 5 * a + (b.sex == 'F' ? -161 : 5);
   return { bm, td: bm * ACTIVITY_FACTORS[b.act == null ? 1 : +b.act] };
 }
-/** Objetivo del día: [kcal, g de hidratos, g de proteína, g de grasa] a partir de S.nu. */
+/** Objetivo del día: [kcal, g de hidratos, g de proteína, g de grasa] a partir de S.nutritionGoals. */
 export const goalTargets = () => {
-  const n = S.nu;
+  const n = S.nutritionGoals;
   return [n.k, n.k * n.c / 400, n.k * n.p / 400, n.k * n.f / 900];
 };
 /** Índice del tipo de dieta elegido (Mantenimiento si no hay ninguno). */
-export const dietIndex = () => S.nu.dt >= 0 && S.nu.dt < DIET_TYPES.length ? S.nu.dt : 3;
+export const dietIndex = () => S.nutritionGoals.dt >= 0 && S.nutritionGoals.dt < DIET_TYPES.length ? S.nutritionGoals.dt : 3;
 /** Calcula kcal y reparto de macros con el gasto diario (tdee) y el tipo de dieta. Si los objetivos están puestos a mano
-    (S.nu.man), no los toca salvo que se pida (`force`: «Recalcular con mis datos» o cambiar el objetivo), y entonces vuelven al plan. */
+    (S.nutritionGoals.man), no los toca salvo que se pida (`force`: «Recalcular con mis datos» o cambiar el objetivo), y entonces vuelven al plan. */
 export function applyDiet(force) {
-  if (S.nu.man && !force)
+  if (S.nutritionGoals.man && !force)
     return;
   const t = tdee();
   if (!t)
     return;
   const d = DIET_TYPES[dietIndex()];
-  const w = +S.bio.w;
+  const w = +S.biometrics.w;
   const k = roundInt(t.td * d[1]);
   const pp = Math.round(d[2] * w * 400 / k);
   const fp = Math.min(Math.round(d[3] * w * 900 / k), 90 - pp);
-  S.nu.k = k;
-  S.nu.p = pp;
-  S.nu.f = fp;
-  S.nu.c = 100 - pp - fp;
-  delete S.nu.man;
+  S.nutritionGoals.k = k;
+  S.nutritionGoals.p = pp;
+  S.nutritionGoals.f = fp;
+  S.nutritionGoals.c = 100 - pp - fp;
+  delete S.nutritionGoals.man;
 }
-/** Deja S.nu con valores válidos (al arrancar): kcal entre 800 y 8000, porcentajes de 0 a 100, de 2 a 8 comidas y un
+/** Deja S.nutritionGoals con valores válidos (al arrancar): kcal entre 800 y 8000, porcentajes de 0 a 100, de 2 a 8 comidas y un
     tipo de dieta conocido. Unos datos dañados o manipulados no pueden dejar objetivos imposibles ni texto donde va un número. */
 export const cleanGoals = n => {
   n.k = clampInt(n.k, 800, 8000, 1942);

@@ -9,7 +9,7 @@ import { html } from './html.js';
 /** Textos de ayuda de los «?» (helpDot): cada módulo añade los suyos, HELP.clave = 'texto'. */
 export const HELP = {};
 /** Botón «?» pequeño que, al tocarlo, explica en una frase para qué sirve lo que tiene al lado (HELP[clave]). */
-export const helpDot = (k, label) => html`<button class="hq" data-a="hlp" data-v="${k}" aria-label="${label}">?</button>`;
+export const helpDot = (k, label) => html`<button class="hq" data-a="helpTip" data-v="${k}" aria-label="${label}">?</button>`;
 let tipFor = null;
 let tipOff = null;
 /** Cierra la ayuda abierta (si hay). */
@@ -54,7 +54,7 @@ const showTip = (b, text) => {
     window.removeEventListener('scroll', hideTip, { capture: true });
   };
 };
-A.hlp = (i, b) => {
+A.helpTip = (i, b) => {
   if (tipFor === b) {
     hideTip();
     return;

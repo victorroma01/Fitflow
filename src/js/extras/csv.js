@@ -25,17 +25,17 @@ const csvCell = v => {
 const csvBody = rows => '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
 const CSV_EXPORTS = {
   ent: { t: 'Entrenos', s: 'Fecha, tipo, series, volumen, minutos y esfuerzo', f: 'entrenos', n: () => (S.logs || []).length, b: () => [['Fecha', 'Tipo', 'Entreno', 'Series', 'Volumen (kg)', 'Minutos', 'RPE medio', 'Detalle']].concat((S.logs || []).filter(l => l && typeof l.d == 'string').slice().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0).map(l => [l.d, l.k == 'c' ? 'Cardio' : l.k == 'w' ? 'WOD' : 'Fuerza', l.n, +l.s || 0, +l.v || 0, +l.m || 0, +l.q || '', (l.x || '') + (l.nt ? ' · ' + l.nt : '')])) },
-  ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso, esfuerzo y técnica', f: 'series', n: () => Object.keys(S.hist || {}).length, b: () => {
+  ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso, esfuerzo y técnica', f: 'series', n: () => Object.keys(S.exerciseHistory || {}).length, b: () => {
       const r = [['Fecha', 'Ejercicio', 'Serie', 'Repeticiones', 'Peso (kg)', 'RPE', 'Técnica']];
-      Object.keys(S.hist || {}).sort().forEach(n => {
-        (Array.isArray(S.hist[n]) ? S.hist[n] : []).slice().reverse().forEach(x => {
+      Object.keys(S.exerciseHistory || {}).sort().forEach(n => {
+        (Array.isArray(S.exerciseHistory[n]) ? S.exerciseHistory[n] : []).slice().reverse().forEach(x => {
           /* la técnica de la serie, con la etiqueta del entreno (workout/technique): WKT, DS, RP, CL… */
           (x && Array.isArray(x.s) ? x.s : []).forEach((q, i) => r.push([x.d, n, i + 1, +q[0] || 0, +q[1] || 0, +q[2] || '', setLabel({ k: typeof q[4] == 'string' ? q[4] : '', t: +q[3] || 0 })]));
         });
       });
       return r;
     } },
-  peso: { t: 'Peso corporal', s: 'Registro de peso con fecha', f: 'peso-corporal', n: () => (S.wl || []).length, b: () => [['Fecha', 'Peso (kg)']].concat((S.wl || []).filter(p => p && p.d).slice().sort((a, b) => a.d < b.d ? -1 : 1).map(p => [p.d, +p.w || 0])) },
+  peso: { t: 'Peso corporal', s: 'Registro de peso con fecha', f: 'peso-corporal', n: () => (S.weightLog || []).length, b: () => [['Fecha', 'Peso (kg)']].concat((S.weightLog || []).filter(p => p && p.d).slice().sort((a, b) => a.d < b.d ? -1 : 1).map(p => [p.d, +p.w || 0])) },
   med: { t: 'Medidas', s: 'Cuello, hombros, pecho, brazo, cintura…', f: 'medidas', n: () => measureList().length, b: () => [['Fecha'].concat(MEASURES.map(x => x[1] + ' (cm)'))].concat(measureList().map(m => [m.d].concat(MEASURES.map(x => +m.v[x[0]] > 0 ? +m.v[x[0]] : '')))) },
   com: { t: 'Comidas', s: 'Alimentos, gramos y macros por día', f: 'comidas', n: () => Object.keys(S.meals || {}).length, b: () => {
       const r = [['Fecha', 'Comida', 'Alimento', 'Gramos', 'Kcal', 'Hidratos (g)', 'Proteínas (g)', 'Grasas (g)', 'Fibra (g)', 'Sal (g)']];
@@ -48,7 +48,7 @@ const CSV_EXPORTS = {
             if (!it || !Array.isArray(it.b))
               return;
             const v = itemMacros(it);
-            r.push([d, mealName(+i, (S.nu && S.nu.n) || 3), it.n, +it.g || 0, Math.round(v[0]), round1(v[1]), round1(v[2]), round1(v[3]), round1(v[4] || 0), Math.round((v[5] || 0) * 100) / 100]);
+            r.push([d, mealName(+i, (S.nutritionGoals && S.nutritionGoals.n) || 3), it.n, +it.g || 0, Math.round(v[0]), round1(v[1]), round1(v[2]), round1(v[3]), round1(v[4] || 0), Math.round((v[5] || 0) * 100) / 100]);
           });
         });
       });
@@ -56,12 +56,12 @@ const CSV_EXPORTS = {
     } },
   car: { t: 'Cardio', s: 'Sesiones con distancia, tiempo y ritmo', f: 'cardio', n: () => cardioLogs().length, b: () => [['Fecha', 'Tipo', 'Distancia (km)', 'Tiempo (min)', 'Ritmo o velocidad']].concat(cardioLogs().map(l => [l.d, cardioLabel(l.c.t), +l.c.km || '', round1((+l.c.sec || 0) / 60), cardioPace(l.c.t, +l.c.km, +l.c.sec)])) }
 };
-A.f2ex = () => fullPage(html`${pgHead('Exportar datos')}<p class="mu" style="margin:-6px 2px 10px;font-size:14px">Archivos CSV para abrir en Excel, Numbers o Google Sheets. Los pesos van en kg. Separador «;» y decimales con coma, listos para Excel en español.</p>${Object.keys(CSV_EXPORTS).map(k => {
+A.openCsvExport = () => fullPage(html`${pgHead('Exportar datos')}<p class="mu m-n6-2-10 fs-14">Archivos CSV para abrir en Excel, Numbers o Google Sheets. Los pesos van en kg. Separador «;» y decimales con coma, listos para Excel en español.</p>${Object.keys(CSV_EXPORTS).map(k => {
   const c = CSV_EXPORTS[k];
   const n = c.n();
-  return html`<div class="cd" style="display:flex;gap:12px;align-items:center;justify-content:space-between"><span style="min-width:0"><b>${raw(c.t)}</b><br><small>${raw(c.s)}</small></span><button data-a="f2exd" data-v="${k}" style="flex:none;white-space:nowrap${n ? '' : ';opacity:.45'}"${n ? '' : ' disabled'}>${icon('dwn', 16)} ${n ? 'CSV' : 'Vacío'}</button></div>`;
-})}<p class="mu" style="font-size:12px;margin:12px 2px">Para guardar todo y poder restaurarlo en StrataFit usa la copia de seguridad, no el CSV.</p><button data-a="zbk" style="width:100%">Copia de seguridad</button><div style="height:30px"></div>`);
-A.f2exd = async (i, b) => {
+  return html`<div class="cd d-flex gap-12 ai-c jc-between"><span class="minw-0"><b>${raw(c.t)}</b><br><small>${raw(c.s)}</small></span><button data-a="csvDownload" data-v="${k}" class="fx-none ws-nowrap${n ? '' : ' op-0_45'}"${n ? '' : ' disabled'}>${icon('dwn', 16)} ${n ? 'CSV' : 'Vacío'}</button></div>`;
+})}<p class="mu fs-12 m-12-2">Para guardar todo y poder restaurarlo en StrataFit usa la copia de seguridad, no el CSV.</p><button data-a="openBackup" class="w-full">Copia de seguridad</button><div class="h-30"></div>`);
+A.csvDownload = async (i, b) => {
   const c = CSV_EXPORTS[b.dataset.v];
   if (!c)
     return;

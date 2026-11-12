@@ -11,14 +11,15 @@
    private/avatar (la foto, solo con consentimiento). Cada uno guarda su contenido como texto JSON (`j`): Firestore no admite
    listas dentro de listas, y el historial las tiene.
    Lo de cada documento en la última sincronización se recuerda por huellas (clave `sync` de Store), no por copias: así se sabe
-   qué cambió en cada lado sin duplicar los datos en el móvil.
-   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, push, syncRound, syncNow, syncSoon, retryLater, adapter, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   qué cambió en cada lado sin duplicar los datos en el móvil. Lo que se vació al arrancar porque estaba dañado (core/persist)
+   no cuenta como borrado: esas huellas se olvidan y se vuelve a bajar de la nube (forgetDamaged).
+   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, pruneIndex, push, syncRound, syncNow, syncSoon, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
-import { partKey } from '../core/persist.js';
+import { badParts, partKey, partsLost, stateRecovered } from '../core/persist.js';
 import { applyTheme, flushState, S, W } from '../core/state.js';
 import { R } from '../core/render.js';
 import { dialog } from '../core/ui.js';
@@ -30,10 +31,12 @@ import { idToken } from './auth.js';
 import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.js';
 import { hashMap, hashOf, KINDS, merge3, sameHashes } from './merge.js';
 import { afterSync } from './hooks.js';
+import { stateName, stateToStored } from '../core/schema.js';
 /** Preferencias de la cuenta (van en el perfil, users/{uid}): tema, color (y el propio), estilo Cristal, animaciones, unidades,
-  sonido y vibración, la pestaña al abrir la app y si ya se vio el recorrido (system/tour). Las mismas que deja firestore.rules. */
+  sonido y vibración, la pestaña al abrir la app y si ya se vio el recorrido (system/tour). Las mismas que deja firestore.rules,
+  con las claves guardadas (core/schema). */
 const PREF_KEYS = ['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'st0', 'tour'];
-/** Claves de S que no van en data/core: lo que es de este dispositivo (pestaña, día elegido, rango de la gráfica, día del plan
+/** Claves guardadas de S que no van en data/core: lo que es de este dispositivo (pestaña, día elegido, rango de la gráfica, día del plan
   apartado durante un workout, fecha de la última copia en archivo, aviso descartado, globo del icono: system/phone), lo que va
   en su propio documento y las preferencias. */
 const LOCAL_ONLY = new Set(['tab', 'sel', 'sl', 'rg', 'pbk', 'bkd', 'nbk', 'bdg', 'pf', 'logs', 'hist', 'meals', ...PREF_KEYS]);
@@ -86,7 +89,7 @@ const setStatus = (st, code) => {
     R();
   if (st == 'dead' && !deadShown) {
     deadShown = 1;
-    dialog('Tu sesión ha caducado', 'Vuelve a entrar para subir tus datos a la nube. Mientras, todo se sigue guardando en este móvil.', [['Más tarde', 'zno', ''], ['Entrar', 'lgre', 'pr']]);
+    dialog('Tu sesión ha caducado', 'Vuelve a entrar para subir tus datos a la nube. Mientras, todo se sigue guardando en este móvil.', [['Más tarde', 'doNothing', ''], ['Entrar', 'reloginShow', 'pr']]);
   }
 };
 /** Estado de la sincronización en una línea (Ajustes y Diagnóstico). */
@@ -111,30 +114,34 @@ const profilePath = () => 'users/' + account.uid;
 /** Preferencias y sexo de este móvil, como van en el perfil. */
 const prefsLocal = () => {
   const o = {};
-  for (const k of PREF_KEYS)
-    if (S[k] !== undefined && S[k] !== null)
-      o[k] = S[k];
-  o.sx = S.bio && (S.bio.sex == 'M' || S.bio.sex == 'F') ? S.bio.sex : '';
+  for (const k of PREF_KEYS) {
+    const v = S[stateName(k)];
+    if (v !== undefined && v !== null)
+      o[k] = v;
+  }
+  o.sx = S.biometrics && (S.biometrics.sex == 'M' || S.biometrics.sex == 'F') ? S.biometrics.sex : '';
   return o;
 };
+/** Lo que va en data/core: S con las claves guardadas, sin lo de LOCAL_ONLY. */
 const coreOf = () => {
+  const s = stateToStored(S);
   const o = {};
-  for (const k of Object.keys(S))
-    if (!LOCAL_ONLY.has(k) && S[k] !== undefined)
-      o[k] = S[k];
+  for (const k of Object.keys(s))
+    if (!LOCAL_ONLY.has(k) && s[k] !== undefined)
+      o[k] = s[k];
   return o;
 };
 /** Contenido local de cada documento: { id: valor }. */
 const localDocs = () => {
   logIds();
   const out = { core: coreOf() };
-  if (S.pf && +S.pf.pc > 0 && S.pf.img)
-    out.avatar = { img: S.pf.img, pc: S.pf.pc };
+  if (S.profile && +S.profile.pc > 0 && S.profile.img)
+    out.avatar = { img: S.profile.img, pc: S.profile.pc };
   for (const l of S.logs || []) {
     const id = 'logs:' + yearOf(l.d);
     (out[id] = out[id] || []).push(l);
   }
-  const hist = S.hist || {};
+  const hist = S.exerciseHistory || {};
   for (const ex of Object.keys(hist))
     for (const e of Array.isArray(hist[ex]) ? hist[ex] : []) {
       const id = 'hist:' + yearOf(e.d);
@@ -157,34 +164,34 @@ const okType = (id, v) => {
 const applyDoc = (id, v) => {
   const [k, x] = id.split(':');
   if (k == 'core') {
-    for (const key of Object.keys(S))
+    for (const key of Object.keys(stateToStored(S)))
       if (!LOCAL_ONLY.has(key) && !(key in v))
-        delete S[key];
+        delete S[stateName(key)];
     for (const key of Object.keys(v))
       if (!LOCAL_ONLY.has(key))
-        S[key] = v[key];
+        S[stateName(key)] = v[key];
   }
   else if (k == 'avatar') {
     if (typeof v.img == 'string' && v.img) {
-      S.pf.img = v.img;
-      S.pf.pc = +v.pc || Date.now();
+      S.profile.img = v.img;
+      S.profile.pc = +v.pc || Date.now();
     }
     else {
-      delete S.pf.img;
-      delete S.pf.pc;
+      delete S.profile.img;
+      delete S.profile.pc;
     }
   }
   else if (k == 'logs')
     S.logs = S.logs.filter(l => yearOf(l.d) != x).concat(v).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
   else if (k == 'hist') {
-    S.hist = S.hist || {};
-    for (const ex of Object.keys(S.hist)) {
-      S.hist[ex] = S.hist[ex].filter(e => yearOf(e.d) != x);
-      if (!S.hist[ex].length && !v[ex])
-        delete S.hist[ex];
+    S.exerciseHistory = S.exerciseHistory || {};
+    for (const ex of Object.keys(S.exerciseHistory)) {
+      S.exerciseHistory[ex] = S.exerciseHistory[ex].filter(e => yearOf(e.d) != x);
+      if (!S.exerciseHistory[ex].length && !v[ex])
+        delete S.exerciseHistory[ex];
     }
     for (const ex of Object.keys(v))
-      S.hist[ex] = (S.hist[ex] || []).concat(v[ex]).sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0);
+      S.exerciseHistory[ex] = (S.exerciseHistory[ex] || []).concat(v[ex]).sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0);
   }
   else if (k == 'meals') {
     S.meals = S.meals || {};
@@ -218,11 +225,11 @@ const afterApply = () => {
 const applyPrefs = p => {
   for (const k of PREF_KEYS)
     if (k in p)
-      S[k] = p[k];
+      S[stateName(k)] = p[k];
     else
-      delete S[k];
+      delete S[stateName(k)];
   if (p.sx == 'M' || p.sx == 'F')
-    S.bio.sex = p.sx;
+    S.biometrics.sex = p.sx;
 };
 /* paso 1: el perfil. Si no existe (cuenta recién creada), se crea con el usuario; las preferencias se juntan como el núcleo */
 const syncProfile = async () => {
@@ -291,11 +298,15 @@ const pull = async (idx) => {
   /* desde aquí, sin esperas: lo local no puede cambiar mientras se junta */
   const local = localDocs();
   let touched = 0;
+  /* documentos que el índice nombra pero ya no existen (un borrado de la nube que se quedó a medias: I-11) */
+  const missing = [];
   for (const id of changed) {
     const kind = KINDS[id.split(':')[0]];
     const d = rv[id] ? got[docPath(id)] : null;
-    if (rv[id] && !d)
+    if (rv[id] && !d) {
+      missing.push(id);
       continue;
+    }
     let val = {};
     if (d) {
       try {
@@ -324,8 +335,29 @@ const pull = async (idx) => {
   }
   if (touched)
     afterApply();
+  if (missing.length)
+    await pruneIndex(idx, missing);
   saveMeta();
   return true;
+};
+/* quita del índice los documentos que ya no existen, para no volver a pedirlos en cada sincronización (I-11). Lo de este móvil
+   no se toca: si tenía algo de esos documentos, se vuelve a subir (paso 3), como si nunca se hubieran borrado. Si el índice
+   cambió entretanto, se deja para la próxima vez */
+const pruneIndex = async (idx, missing) => {
+  const p = { ...idx.data.p };
+  missing.forEach(id => {
+    delete p[id];
+    delete meta.base[id];
+  });
+  try {
+    const res = await commitWrites([setWrite(indexPath(), { p, m: Date.now(), d: meta.dev }, { updateTime: idx.ut })]);
+    idx.data.p = p;
+    idx.ut = res[0];
+  }
+  catch (e) {
+    if (e.code != 'FAILED_PRECONDITION' && e.code != 'ABORTED')
+      logError('sincronizar: limpiar el índice', e);
+  }
 };
 /* paso 3: subir lo cambiado en el móvil, con el índice, todo o nada. false si el índice cambió entretanto */
 const push = async (idx) => {
@@ -396,7 +428,8 @@ const push = async (idx) => {
   return true;
 };
 const syncRound = async () => {
-  if (!account)
+  /* sin los datos del móvil (core/persist: partsLost), la nube creería que se borraron: no se sincroniza nada */
+  if (!account || partsLost)
     return;
   if (account.x) {
     setStatus('dead');
@@ -492,8 +525,26 @@ const adapter = {
     syncSoon(4e3);
   }
 };
+/* datos dañados al arrancar (core/persist): lo que se vació en el móvil no es un borrado, así que esos documentos se olvidan y
+   se vuelven a bajar de la nube en vez de borrarlos allí. Con el núcleo dañado, todo, y en un conflicto gana la nube */
+const forgetDamaged = () => {
+  if (stateRecovered == 1) {
+    meta.base = {};
+    meta.fresh = 1;
+  }
+  else
+    for (const k of badParts) {
+      const kind = k == partKey('logs') ? 'logs:' : k == partKey('hist') ? 'hist:' : k.startsWith(partKey('meals:')) ? 'meals:' + k.slice(partKey('meals:').length) : '';
+      for (const id of Object.keys(meta.base))
+        if (kind && (kind.endsWith(':') ? id.startsWith(kind) : id == kind))
+          delete meta.base[id];
+    }
+  if (stateRecovered)
+    saveMeta();
+};
 /** Arranque con sesión (core/boot): escucha los cambios y la red, y sincroniza enseguida. */
 export const startSync = () => {
+  forgetDamaged();
   lastPrefs = hashOf(prefsLocal());
   Store.remote = adapter;
   window.addEventListener('online', () => syncSoon(800));

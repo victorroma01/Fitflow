@@ -154,8 +154,22 @@ jobs:
       pages: read
     outputs:
       pages: ${{ steps.pages.outputs.modo }}
+      reglas: ${{ steps.reglas.outputs.cambian }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      # ¿cambian las reglas (o cómo se despliegan) con esta publicación? Si no se sabe (primera subida), sí
+      - name: ¿Cambian las reglas de Firestore?
+        id: reglas
+        env:
+          ANTES: ${{ github.event.before }}
+        run: |
+          if [ -z "$ANTES" ] || [ "$ANTES" = 0000000000000000000000000000000000000000 ] || ! git cat-file -e "$ANTES^{commit}" 2>/dev/null; then cambian=si
+          elif git diff --quiet "$ANTES" "$GITHUB_SHA" -- firestore.rules tools/admin/reglas.mjs .github/workflows/firebase-reglas.yml; then cambian=no
+          else cambian=si; fi
+          echo "cambian=$cambian" >> "$GITHUB_OUTPUT"
+          if [ "$cambian" = si ]; then echo "::notice::Las reglas de Firestore cambian: se despliegan antes de publicar la app"; else echo "Las reglas de Firestore no cambian"; fi
       - uses: actions/setup-node@v6
         with:
           package-manager-cache: false
@@ -191,10 +205,20 @@ jobs:
           gh release create "v$v" --target "$GITHUB_SHA" --title "StrataFit $v" --notes-file notas.md
           echo "::notice::Publicada la versión v$v"
 
+  # primero las reglas (si cambian) y después la app (T-24): la app nueva nunca llega antes que las reglas que necesita
+  reglas:
+    name: Desplegar reglas de Firestore
+    needs: version
+    if: needs.version.outputs.reglas == 'si'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/firebase-reglas.yml
+    secrets: inherit
+
   pages:
     name: Publicar en GitHub Pages
-    needs: version
-    if: needs.version.outputs.pages == 'workflow'
+    needs: [version, reglas]
+    if: always() && needs.version.result == 'success' && needs.version.outputs.pages == 'workflow' && (needs.reglas.result == 'success' || needs.reglas.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

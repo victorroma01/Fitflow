@@ -21,10 +21,10 @@ const lazyAction = (load, names) => names.forEach(n => {
   });
   A[n] = stub;
 });
-lazyAction(() => import('../extras/wod.js'), ['wod']);
-lazyAction(() => import('../extras/csv.js'), ['f2ex']);
-lazyAction(() => import('../extras/foods-online.js'), ['f2os', 'f2sc']);
-lazyAction(() => import('../profile/analysis.js'), ['ana']);
+lazyAction(() => import('../extras/wod.js'), ['openWod']);
+lazyAction(() => import('../extras/csv.js'), ['openCsvExport']);
+lazyAction(() => import('../extras/foods-online.js'), ['searchFoodOnline', 'openScanner']);
+lazyAction(() => import('../profile/analysis.js'), ['openAnalysis']);
 /* lo que crea los PDF: system/pdf lo deja aquí al cargarse */
 let pdfMaker = null;
 /** system/pdf se apunta aquí al cargarse. */

@@ -1,25 +1,17 @@
 # Desplegar en Firebase las reglas de seguridad de Firestore (firestore.rules).
-# Solo desde main: se lanza solo al fusionar un cambio de las reglas o de este flujo (o a mano, desde main). Antes, la CI los prueba
-# con el emulador en cada cambio (pruebas.yml, «Reglas y nube»).
+# Solo desde main. Al publicar, lo llama pruebas.yml cuando cambian las reglas, después de las pruebas y antes de publicar la
+# app (T-24, V1.0.2): una app nueva nunca llega antes que las reglas que necesita. También se puede lanzar a mano, desde main.
+# Antes, la CI prueba las reglas con el emulador en cada cambio (pruebas.yml, «Reglas y nube»).
 # Con firebase-admin (tools/admin/reglas.mjs) y no con firebase-tools, que antes de desplegar comprueba qué APIs tiene
 # activas el proyecto, y la cuenta de servicio no tiene permiso para eso.
 name: Desplegar reglas
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - firestore.rules
-      - tools/admin/reglas.mjs
-      - .github/workflows/firebase-reglas.yml
+  workflow_call:
   workflow_dispatch:
 
 permissions:
   contents: read
-
-concurrency:
-  group: admin-firebase
-  cancel-in-progress: false
 
 jobs:
   desplegar:
@@ -27,6 +19,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # uno detrás de otro con los demás flujos que usan la cuenta de servicio (Comprobar Firebase, Asignar rol…)
+    concurrency:
+      group: admin-firebase
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6

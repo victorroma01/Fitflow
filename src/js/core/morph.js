@@ -4,6 +4,7 @@
    vuelven a cargar. El resultado es el mismo HTML que con innerHTML (atributos, valores de los campos y marcas).
    Define: sameNode, syncAttrs, syncFields, morphChildren, morph
 */
+import { applyStyles } from './dynstyle.js';
 /** ¿Se puede actualizar `a` para que sea `b`, o hay que sustituirlo? (otro tipo, otra etiqueta u otro id). Los <canvas> y
     los <video> siempre se sustituyen: su contenido no está en el HTML. */
 const sameNode = (a, b) => {
@@ -84,4 +85,6 @@ export const morph = (el, html) => {
     morphChildren(el, t.content);
   else
     el.appendChild(t.content);
+  /* lo que depende de un dato (data-style: core/dynstyle), ya puesto al terminar */
+  applyStyles(el);
 };

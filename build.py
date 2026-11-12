@@ -272,6 +272,8 @@ def stage(generated, deploy, emu=False):
             if t.count(a) != 1:
                 die('cloud/config.js debe tener una vez: ' + a)
             t = t.replace(a, b)
+        # el emulador no tiene App Check: sin él, aunque esté configurado para la app publicada
+        t = re.sub(r"export const APP_CHECK = \{[^}]*\};", "export const APP_CHECK = { siteKey: '', appId: '' };", t)
         write(p, t)
     if deploy:
         p = os.path.join(st, 'core', 'util.js')
@@ -343,7 +345,8 @@ HEAD_TAGS = '''<link rel="manifest" href="manifest.webmanifest">
 
 # Política de seguridad del contenido (CSP), en una etiqueta <meta> (GitHub Pages no deja poner cabeceras): solo se ejecuta
 # el código de la app (sus archivos de la propia web y los <script> de la plantilla, reconocidos por su huella sha256); nada
-# de atributos on…=, eval ni código de otros sitios. Las conexiones van solo a la propia web, a Firebase (Authentication y
+# de atributos on…=, eval ni código de otros sitios. Estilos, igual: solo la hoja de la plantilla (por su huella), sin
+# style="…" en el HTML (I-14: clases de css/99-utilities y, lo que depende de un dato, core/dynstyle). Las conexiones van solo a la propia web, a Firebase (Authentication y
 # Firestore: cloud/config) y a Open Food Facts, y las
 # imágenes solo pueden ser propias, data: o blob: (así un dato inyectado tampoco puede sacar información con una imagen
 # de otro sitio). frame-ancestors, sandbox y report-uri no valen en <meta>: no se ponen.
@@ -369,23 +372,48 @@ def template_scripts(tpl):
     return s
 
 
-def csp_meta(scripts, files, emu=False):
-    """<meta> con la CSP: la huella de cada <script> en línea (`scripts`, su texto exacto) y, con `files`, el código de la web."""
+# App Check (I-05, cloud/appcheck): solo si cloud/config trae su clave, la CSP admite el script y el marco de reCAPTCHA
+# Enterprise y el cambio de tokens en App Check
+APPCHECK_SCRIPT = 'https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/'
+APPCHECK_FRAME = 'https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/'
+APPCHECK_CONNECT = 'https://content-firebaseappcheck.googleapis.com'
+
+
+def app_check_on():
+    """¿Trae cloud/config la configuración de App Check (clave de sitio e id de la app)?"""
+    t = read(os.path.join(SRC, 'js', 'cloud', 'config.js'))
+    m = re.search(r"export const APP_CHECK = \{ siteKey: '([^']*)', appId: '([^']*)' \};", t)
+    if not m:
+        die('cloud/config.js debe definir APP_CHECK = { siteKey: \'…\', appId: \'…\' } en una línea')
+    return bool(m.group(1) and m.group(2))
+
+
+def sha256(s):
+    return "'sha256-%s'" % base64.b64encode(hashlib.sha256(s.encode('utf-8')).digest()).decode()
+
+
+def csp_meta(scripts, css, files, emu=False):
+    """<meta> con la CSP: la huella de cada <script> en línea (`scripts`, su texto exacto) y de la hoja de estilo en línea
+    (`css`) y, con `files`, el código de la web. Sin estilos en línea (I-14): ni style="…" ni otros <style>; lo que cambia con
+    un dato se pone desde el código (core/dynstyle)."""
     if any('\r' in s or '\0' in s for s in scripts):
         # el navegador los cambia al leer la página (\r\n → \n): la huella ya no coincidiría y el <script> no se ejecutaría
         die('\\r o \\0 dentro de un <script>')
-    sha = ["'sha256-%s'" % base64.b64encode(hashlib.sha256(s.encode('utf-8')).digest()).decode() for s in scripts]
-    pol = ["default-src 'self'", ' '.join(['script-src'] + (["'self'"] if files else []) + sha), "style-src 'self' 'unsafe-inline'",
-           "img-src 'self' data: blob:", "media-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self' " + CSP_CONNECT + (' %s %s' % (EMU_AUTH, EMU_FIRESTORE) if emu else ''),
+    sha = [sha256(s) for s in scripts]
+    ac = app_check_on() and not emu
+    pol = ["default-src 'self'", ' '.join(['script-src'] + (["'self'"] if files else []) + sha + ([APPCHECK_SCRIPT] if ac else [])), "style-src 'self' " + sha256(css),
+           "img-src 'self' data: blob:", "media-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self' " + CSP_CONNECT + (' %s %s' % (EMU_AUTH, EMU_FIRESTORE) if emu else '') + (' ' + APPCHECK_CONNECT if ac else ''),
            # el archivo único no trae manifiesto: system/updates genera uno en un blob: (el paquete usa el estático)
            "worker-src 'self'", "manifest-src 'self'" + ('' if files else ' blob:'), "object-src 'none'", "base-uri 'none'", "form-action 'none'"]
+    if ac:
+        pol.append('frame-src ' + APPCHECK_FRAME)
     return '<meta http-equiv="Content-Security-Policy" content="%s">' % '; '.join(pol)
 
 
 def page(tpl, css, js, emu=False):
     """Archivo único: todo en línea, con la CSP que admite justo sus dos <script> (el de arranque y el código)."""
     sc = ['\n' + js if s == '\n@@JS@@' else s for s in template_scripts(tpl)]
-    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, False, emu), 1)
+    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, css, False, emu), 1)
     # replace con texto literal: el código puede contener barras invertidas
     return h.replace('@@CSS@@', css).replace('@@JS@@', js)
 
@@ -397,7 +425,7 @@ def deploy_page(tpl, css, entry, eager):
         die('la plantilla debe tener <title>StrataFit</title> y «<script>» + salto + @@JS@@ + «</script>»')
     pre = ''.join('\n<link rel="modulepreload" href="%s">' % f for f in [entry] + eager)
     sc = [s for s in template_scripts(tpl) if s != '\n@@JS@@']
-    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, True) + '\n' + HEAD_TAGS + pre)
+    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, css, True) + '\n' + HEAD_TAGS + pre)
     # sin onerror="…" (la CSP no deja atributos on…): si el módulo no carga, lo ve el arranque de la plantilla (src/index.html)
     h = h.replace('<script>\n@@JS@@</script>', '<script type="module" src="%s"></script>' % entry)
     return h.replace('@@CSS@@', css)

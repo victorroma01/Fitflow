@@ -16,21 +16,21 @@ import { prefillSets } from '../workout/progression.js';
 import { html, raw } from '../core/html.js';
 /** Añade un ejercicio al día seleccionado. Si hay un entreno en curso, añade también sus series (si no, la sesión no podría pintarlo). */
 const addToDay = n => {
-  const d = S.plan[S.sel];
+  const d = S.plan[S.selectedDay];
   const ex = newPlanEx(n);
   d.ex.push(ex);
   if (d.n == 'Descanso')
     d.n = 'Entreno';
   if (W) {
-    const sets = Array.from({ length: ex.s }, () => ({ r: 10, w: S.last[n] || '', ok: 0 }));
+    const sets = Array.from({ length: ex.s }, () => ({ r: 10, w: S.lastWeights[n] || '', ok: 0 }));
     prefillSets(ex, sets);
-    W.x.push(sets);
+    W.sets.push(sets);
     saveSession();
   }
   saveState();
 };
-A.lad = (i, b) => {
-  addToDay(EXERCISES.concat(S.cx)[i].n);
+A.libraryAddToDay = (i, b) => {
+  addToDay(EXERCISES.concat(S.customExercises)[i].n);
   R();
   b.textContent = '✓ Añadido';
 };
@@ -42,39 +42,39 @@ export const pickBody = () => {
   const base = bq.filter(o => groupMatch(pickState.gs, o.e));
   const l = base.filter(o => equipMatch(pickState.eq, o.e)).sort((a, b) => exCompare(a.e, b.e));
   const lim = 120;
-  return filterRow(groupDropdown('pkg', pickState.gs, bq.map(o => o.e)), equipDropdown('pk', pickState.eq, equipIn(base.map(o => o.e)), base.map(o => o.e), 1)) + l.slice(0, lim).map(o => html`<div class="it exr" data-a="px" data-i="${o.i}" style="cursor:pointer"><span class="exc">${exCellHtml(o.e)}</span><small class="mu">Añadir +</small></div>`).join('') + (l.length > lim ? html`<p class="mu" style="text-align:center">Mostrando ${lim} de ${l.length}. Usa la búsqueda o un grupo.</p>` : '') || '<p class="mu">Sin resultados.</p>';
+  return filterRow(groupDropdown('pkg', pickState.gs, bq.map(o => o.e)), equipDropdown('pk', pickState.eq, equipIn(base.map(o => o.e)), base.map(o => o.e), 1)) + l.slice(0, lim).map(o => html`<div class="it exr cur-pointer" data-a="pickerAdd" data-i="${o.i}"><span class="exc">${exCellHtml(o.e)}</span><small class="mu">Añadir +</small></div>`).join('') + (l.length > lim ? html`<p class="mu ta-c">Mostrando ${lim} de ${l.length}. Usa la búsqueda o un grupo.</p>` : '') || '<p class="mu">Sin resultados.</p>';
 };
 function pickSheet() {
-  return html`<h3>Añadir ejercicio</h3><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="pks" value="${pickState.q}"><div id="pkr">${raw(pickBody())}</div><label>Crear ejercicio nuevo</label><div class="g2" style="grid-template-columns:1fr auto"><input id="xn" placeholder="Nombre" aria-label="Nombre del ejercicio nuevo"><button class="pr" data-a="nx">Crear</button></div>`;
+  return html`<h3>Añadir ejercicio</h3><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="pickerSearch" value="${pickState.q}"><div id="pkr">${raw(pickBody())}</div><label>Crear ejercicio nuevo</label><div class="g2 cols-1fr-auto"><input id="xn" placeholder="Nombre" aria-label="Nombre del ejercicio nuevo"><button class="pr" data-a="newExerciseSave">Crear</button></div>`;
 }
-A.pick = () => {
+A.openPicker = () => {
   pickState = { g: '', gs: [], q: '', eq: [] };
   filterOpen.pk = 0;
   filterOpen.pkg = 0;
   setAddState({ cat: 'Culturismo' });
   sheet(pickSheet());
 };
-A.pkg = (i, b) => {
+A.pickerGroup = (i, b) => {
   pickState.g = b.dataset.v;
   pickState.eq = [];
-  $('#pkgc').innerHTML = groupChips(pickState.g, 'pkg');
+  $('#pkgc').innerHTML = groupChips(pickState.g, 'pickerGroup');
   $('#pkr').innerHTML = pickBody();
 };
-U.pks = v => {
+U.pickerSearch = v => {
   pickState.q = v;
   $('#pkr').innerHTML = pickBody();
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.px = i => {
-  addToDay(EXERCISES.concat(S.cx)[i].n);
+A.pickerAdd = i => {
+  addToDay(EXERCISES.concat(S.customExercises)[i].n);
   sheet();
   R();
 };
-A.nx = () => {
+A.newExerciseSave = () => {
   const n = $('#xn').value.trim();
   if (!n)
     return;
-  S.cx.push({ n, c: categoryOf(pickState.g), g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
+  S.customExercises.push({ n, c: categoryOf(pickState.g), g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
   addToDay(n);
   sheet();
   R();

@@ -79,6 +79,9 @@ el archivo único van incrustadas.
 10. Botones sin nombre accesible.
 11. **Código muerto**: declaraciones sin usar, exportaciones que nadie importa, acciones que nada lanza e iconos sin usar.
 12. **CSS sin usar**: clases, ids y animaciones que no aparecen en el código ni en la plantilla.
+13. **Estilos en línea** (`style="…"` o un `<style>` más): la política de seguridad no los deja (I-14). Lo fijo va en clases de
+    `css/99-utilities` (una por declaración: `mt-12`, `w-full`, `c-at`…) o en una clase propia; lo que depende de un dato (el
+    ancho de una barra, la foto de un día), en `data-style`, que aplica `core/dynstyle` con el CSSOM.
 
 Las reglas 11 y 12 hacen que el código muerto se quite en cada versión, no solo en una limpieza. Una clase CSS o una acción que se
 construye a trozos (`'an' + i`) no se ve como usada: se escriben enteras.
@@ -114,20 +117,21 @@ app compilada.
 
 El diseño, los documentos y la sincronización están en [Servidor: Firebase](backend.md). Para administrar las cuentas no hace falta
 entrar en la consola: los flujos de GitHub Actions *Restablecer contraseña*, *Asignar rol* y *Comprobar Firebase* se lanzan desde
-Actions (cuando están en `main`), y *Desplegar reglas* se lanza solo al fusionar un cambio de `firestore.rules`. Todos usan el secreto
+Actions (cuando están en `main`), y *Desplegar reglas* se lanza solo al publicar, antes de la app, cuando cambia `firestore.rules`
+(también se puede lanzar a mano). Todos usan el secreto
 `FIREBASE_SERVICE_ACCOUNT`; nunca guardes la clave en el repositorio.
 
-**Orden al cambiar las reglas.** Al fusionar en `main`, *Desplegar reglas* y la publicación de la app corren a la vez, así que durante
-unos minutos puede haber app nueva con reglas viejas, o al revés. Lo que las reglas rechazan no se pierde (sigue en el móvil y la
-sincronización lo reintenta), pero mientras tanto esa cuenta no sincroniza nada. Por eso:
+**Orden al cambiar las reglas.** Desde la V1.0.2 (T-24), al fusionar en `main` GitHub Actions pasa las pruebas, mira si cambian
+`firestore.rules` (o cómo se despliegan) y, si cambian, despliega primero las reglas (*Desplegar reglas*, llamado desde `pruebas.yml`)
+y solo después publica la app. Si el despliegue falla, la app no se publica. Así, una app nueva que escribe un campo o un documento
+nuevo nunca llega antes que las reglas que lo admiten. Lo que las reglas rechazan no se pierde (sigue en el móvil y la
+sincronización lo reintenta), pero mientras tanto esa cuenta no sincroniza nada, así que queda un caso con orden propio:
 
-- si la app nueva escribe un campo o un documento nuevo (una preferencia más, por ejemplo), primero se fusiona el cambio de
-  `firestore.rules` que lo admite, compatible con la app publicada, y después la app;
-- si deja de escribir uno, al revés: primero la app y, cuando esté publicada, las reglas que ya no lo admiten.
+- si la app nueva deja de escribir un campo, primero se publica la app y, cuando ya la tengan los móviles, las reglas que ya no
+  lo admiten (otra fusión), porque las apps viejas lo siguen escribiendo hasta actualizarse.
 
-Un campo nuevo que no sea imprescindible se puede escribir aparte, sin que su rechazo pare la sincronización: es lo que hace el
-sistema del móvil del perfil (`os`, V1.0.1: `syncDeviceOS` en `cloud/sync`). Así da igual qué llegue antes; las reglas que lo
-admiten se despliegan solas al fusionar.
+Un campo nuevo que no sea imprescindible se puede escribir además aparte, sin que su rechazo pare la sincronización: es lo que hace
+el sistema del móvil del perfil (`os`, V1.0.1: `syncDeviceOS` en `cloud/sync`).
 
 ### Cambios de datos de una versión a otra
 

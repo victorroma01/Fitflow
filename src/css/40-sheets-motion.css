@@ -20,6 +20,22 @@ button:focus-visible {
 .sp {
   animation:upi .32s cubic-bezier(.2,.8,.2,1);
 }
+/* la hoja, el aviso, el menú y el WOD reciben el foco al abrirse (core/ui, I-06): son ventanas, no controles, así que sin marco */
+.sp:focus,.dgc:focus,.msd:focus,#f2w:focus {
+  outline:none;
+}
+/* solo para los lectores de pantalla: el nombre de una hoja que no lleva título a la vista (I-06) */
+.vh {
+  position:absolute;
+  width:1px;
+  height:1px;
+  margin:-1px;
+  padding:0;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+  border:0;
+}
 @keyframes fdi {
   from {
     opacity:0;

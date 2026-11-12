@@ -7,6 +7,7 @@
 import { FIREBASE, FIRESTORE_URL } from './config.js';
 import { fetchJson } from './net.js';
 import { idToken } from './auth.js';
+import { appCheckToken } from './appcheck.js';
 const DB_PATH = 'projects/' + FIREBASE.projectId + '/databases/(default)/documents';
 /** Nombre completo de un documento: docName('users/abc') → 'projects/…/documents/users/abc'. */
 const docName = path => DB_PATH + '/' + path;
@@ -29,15 +30,16 @@ const decFields = f => {
 };
 /** Documento de la API → { data, ut: updateTime (la versión, para escribir con condición) }. */
 const fsDoc = d => ({ data: decFields(d.fields), ut: d.updateTime });
-/* con el token de la sesión; si Firestore lo da por caducado (401), se renueva una vez y se repite */
+/* con el token de la sesión (y el de App Check, si está activado); si Firestore lo da por caducado (401), se renueva una vez y
+   se repite */
 const fsCall = async (url, o = {}) => {
   try {
-    return await fetchJson(url, { ...o, token: await idToken() });
+    return await fetchJson(url, { ...o, token: await idToken(), appCheck: await appCheckToken() });
   }
   catch (e) {
     if (e.status != 401)
       throw e;
-    return fetchJson(url, { ...o, token: await idToken(true) });
+    return fetchJson(url, { ...o, token: await idToken(true), appCheck: await appCheckToken() });
   }
 };
 /** Documento `path` o null si no existe. */

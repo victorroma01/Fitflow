@@ -1,11 +1,13 @@
 """Paseo aleatorio diferencial: ejecuta la misma secuencia de acciones (semilla) sobre dos compilaciones y compara,
 paso a paso, el DOM, el estado guardado y los pitidos. Sirve para demostrar que un refactor no cambia el comportamiento.
 
-  python3 tests/walk.py run REFERENCIA.html CANDIDATA.html 0,1,2,3 150
+  python3 tests/walk.py run REFERENCIA.html CANDIDATA.html 0,1,2,3 150 [mapa.txt]
+  Con mapa.txt (líneas «registro viejo nuevo», registro A, C o U), la referencia es de antes de renombrar acciones: sus nombres
+  se traducen a los nuevos para elegir lo mismo y comparar el mismo DOM.
   python3 tests/walk.py trace ARCHIVO.html SEMILLA PASOS salida.json ; python3 tests/walk.py cmp a.json b.json
 Requiere:  pip install playwright  &&  playwright install chromium
 """
-import os,sys,json,random,hashlib,datetime
+import os,sys,json,random,hashlib,datetime,re
 from playwright.sync_api import sync_playwright
 from browser import app_url, context_opts
 HERE=os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +15,7 @@ def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
     return chr(10).join(l for l in t.split(chr(10)) if not l.startswith('//'))
 SEED=_rd('seed.js');EXTRA=_rd('extra.js');INIT=_rd('init.js')
-SKIP={'rst','zrs','zrd','bkf','f2exd','f2sh','f2sc','f2ln','f2bk','f2os','upr','zbc','shg','shf','pgio','pgi','nsc','nfq','rps','rpc','sout','soutx','lgo','lgcp','lgre','lgrs','acpw','snc','avok','adc','adxx'}  # borrar todo, descargas, cámara, red, recargas, enlaces fuera, cuenta
+SKIP={'resetAllAsk','resetAllConfirmed','resumeDiscard','backupDownload','csvDownload','summaryShare','openScanner','scannerLookupTyped','scannerClose','searchFoodOnline','backupCopyText','shareCopyCode','shareDownload','importCode','openImport','openMealScanner','searchListOnline','reportSend','signOut','signOutConfirmed','loginSubmit','loginCreatePassword','reloginShow','reloginSubmit','accountChangePassword','accountSyncNow','photoConsentOk','adminCopyPassword','adminDelete'}  # borrar todo, descargas, cámara, red, recargas, enlaces fuera, cuenta
 CAND="""()=>{const out=[];const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!='hidden'&&!e.disabled};
  document.querySelectorAll('[data-a],[data-c],[data-u]').forEach(e=>{if(!vis(e))return;
   const a=e.getAttribute('data-a'),c=e.getAttribute('data-c'),u=e.getAttribute('data-u');
@@ -30,16 +32,38 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
  else if(e.type=='range'){e.value=String(val)}
  else e.value=txt;
  e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}"""
-SIG="""()=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
- const h=b.innerHTML;let ls='';try{const g=k=>localStorage.getItem(k);let c=JSON.parse(g('ff')||'null');
-  if(c&&c._parts){delete c._parts;const ks=[],m={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('ff:'))ks.push(k)}
-   ks.sort().forEach(k=>{const v=JSON.parse(g(k));if(k.startsWith('ff:meals:'))Object.assign(m,v);else if(c[k.slice(3)]===k)c[k.slice(3)]=v});if(c.meals==='ff:meals')c.meals=m}
+SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
+ if(ren){for(const [at,r] of [['data-a','A'],['data-enter','A'],['data-c','C'],['data-u','U']])b.querySelectorAll('['+at+']').forEach(e=>{const v=e.getAttribute(at);if(ren[r][v])e.setAttribute(at,ren[r][v])});
+  b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])})}
+ /* lo que mide el tiempo de verdad (Diagnóstico e informe de un fallo: «Tiempo de pintado») cambia en cada ejecución; y lo que
+    ocupa cada dato y el espacio usado, según dónde se guarde (localStorage o IndexedDB: core/persist, I-04) */
+ const h=b.innerHTML.replace(/Tiempo de pintado: [^\\n<]*/g,'Tiempo de pintado: …').replace(/(Almacenamiento|Espacio usado): [^\\n<]*\\n?/g,'');let ls='';try{const g=k=>localStorage.getItem(k);
+  /* lo guardado, completo (tests/init.js), cuando esté escrito */
+  if(window.savesDone)await savesDone();const c=await window.__stored();
   const can=v=>Array.isArray(v)?'['+v.map(can).join(',')+']':v&&typeof v=='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+can(v[k])).join(',')+'}':JSON.stringify(v);
   ls=(c?can(c):'')+'|'+(g('ffw')||'')}catch(e){ls='ERR '+e}
  const f=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x>>>0};
  return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps}}"""
 WORDS=['a','Prueba','12','Pollo','Press','x y','0','99','Arroz','Mi plan']
-def trace(file,seed,steps):
+def load_map(path):
+    """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado)} de un mapa «registro viejo nuevo»."""
+    m={'A':{},'C':{},'U':{},'S':{},'W':{}}
+    for l in open(path,encoding='utf-8'):
+        l=l.strip()
+        if l and not l.startswith('#'):
+            r,o,n=l.split();m[r][o]=n
+    return m
+def old_js(js,ren):
+    """Un script de prueba con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo."""
+    if not ren:
+        return js
+    back={r:{n:o for o,n in d.items()} for r,d in ren.items()}
+    js=re.sub(r'(?<![\w.$])([ACUSW])\.(\w+)',lambda m:m.group(1)+'.'+back[m.group(1)].get(m.group(2),m.group(2)),js)
+    return re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
+def trace(file,seed,steps,ren=None):
+    reg={'a':'A','c':'C','u':'U'}
+    fwd=lambda k,v:ren[reg[k]].get(v,v) if ren else v                           # nombre de esta compilación → nuevo
+    back=lambda k,v:{n:o for o,n in ren[reg[k]].items()}.get(v,v) if ren else v  # nuevo → el de esta compilación
     rng=random.Random(seed*7919+13)
     res={'seed':seed,'steps':[],'errs':[]}
     with sync_playwright() as p:
@@ -47,25 +71,28 @@ def trace(file,seed,steps):
         # por HTTP, como el resto de pruebas (tests/browser.py): con file://, Chromium a veces recarga con el almacenamiento vacío
         url=app_url(file);base=url.rsplit('/',1)[0]+'/'
         c=b.new_context(viewport={'width':390,'height':844},device_scale_factor=1,has_touch=True,is_mobile=True,color_scheme='dark' if seed%2==0 else 'light',**context_opts(file))
-        c.add_init_script(INIT)
+        c.add_init_script(old_js(INIT,ren))
         pg=c.new_page()
         pg.on('pageerror',lambda e:res['errs'].append('PAGEERR '+str(e)[:200]))
         pg.on('dialog',lambda d:d.accept())
         pg.route('**/*',lambda r:r.continue_() if r.request.url.startswith(base) else r.abort())
         pg.clock.install(time=datetime.datetime(2026,10,29,12,0,0))
         pg.clock.pause_at(datetime.datetime(2026,10,29,12,0,1))
+        pg.add_init_script("window.__ffHintCheck=[]")  # cada saveState con partes se comprueba (core/persist, I-10)
         pg.goto(url);pg.wait_for_timeout(200)
         scen=seed%4
         if scen!=2:
-            pg.evaluate(SEED.replace("S.gm=3;S.gl=1;S.theme='dark';","S.gm=%d;S.gl=1;S.theme='%s';"%(3 if scen in(0,1) else 0,'dark' if seed%2==0 else 'light')))
-            pg.evaluate(EXTRA)
-            pg.evaluate("location.reload()");pg.wait_for_timeout(200)
+            pg.evaluate(old_js(SEED.replace("S.glassLevel=3;S.glassOn=1;S.theme='dark';","S.glassLevel=%d;S.glassOn=1;S.theme='%s';"%(3 if scen in(0,1) else 0,'dark' if seed%2==0 else 'light')),ren))
+            pg.evaluate(old_js(EXTRA,ren))
+            pg.reload();pg.wait_for_timeout(200)
         pg.clock.run_for(500)
         if scen==1:
-            pg.evaluate("A.go&&A.go()");pg.clock.run_for(300)
-        res['steps'].append(['init',pg.evaluate(SIG)])
+            go=back('a','startWorkout');pg.evaluate("A.%s&&A.%s()"%(go,go));pg.clock.run_for(300)
+        res['steps'].append(['init',pg.evaluate(SIG,ren)])
         for st in range(steps):
-            cs=pg.evaluate(CAND)
+            cs=[[x[0],fwd(x[0],x[1])]+x[2:] for x in pg.evaluate(CAND)]
+            if ren:  # los botones de las ventanas y del menú llevan en data-v la acción que lanzan
+                cs=[x[:6]+[fwd('a',x[6])]+x[7:] if x[1] in ('dialogAnswer','menuItem') else x for x in cs]
             cs=[x for x in cs if x[1] not in SKIP]
             if not cs:
                 pg.evaluate("S.tab=(S.tab+1)%4;R()") if False else None
@@ -76,7 +103,7 @@ def trace(file,seed,steps):
                 same=[y for y in cs if y[0]==x[0] and y[1]==x[1]]
                 idx=same.index(x)
                 val=rng.random();txt=WORDS[rng.randrange(len(WORDS))]
-                r=pg.evaluate(CLICK,[x[0],x[1],idx,val,txt])
+                r=pg.evaluate(CLICK,[x[0],back(x[0],x[1]),idx,val,txt])
                 act=[x[0],x[1],x[4],x[5],x[6],r]
             adv=rng.choice([0,50,400,1500,6000,31000]);
             try:pg.clock.run_for(adv)
@@ -86,9 +113,12 @@ def trace(file,seed,steps):
                 if not pg.evaluate("(()=>{const e=document.querySelector('#snapl');return !!e&&/Cargando/.test(e.textContent)})()"):break
                 pg.wait_for_timeout(25)
             try:
-                sg=pg.evaluate(SIG)
+                sg=pg.evaluate(SIG,ren)
             except Exception as e:
-                res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=pg.evaluate(SIG)
+                res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=pg.evaluate(SIG,ren)
+            miss=pg.evaluate("(window.__ffHintCheck||[]).splice(0)")
+            if miss:
+                res['errs'].append('PISTA paso %d %s: %s'%(st,act[1] if len(act)>1 else act,';'.join(miss)))
             res['steps'].append([act,sg,adv])
         b.close()
     return res
@@ -109,11 +139,12 @@ if __name__=='__main__':
     elif cmd=='cmp':
         a=json.load(open(sys.argv[2]));b=json.load(open(sys.argv[3]));print(sys.argv[2].split('/')[-1],compare(a,b))
     elif cmd=='run':
-        # run FILE_A FILE_B seeds steps  → traza ambos y compara
+        # run FILE_A FILE_B seeds steps [mapa]  → traza ambos y compara (el mapa traduce los nombres de FILE_A)
         fa,fb,sd,ns=sys.argv[2],sys.argv[3],sys.argv[4].split(','),int(sys.argv[5])
+        ren=load_map(sys.argv[6]) if len(sys.argv)>6 else None
         bad=0
         for s in sd:
-            a=trace(fa,int(s),ns);b=trace(fb,int(s),ns)
+            a=trace(fa,int(s),ns,ren);b=trace(fb,int(s),ns)
             r=compare(a,b);print('seed',s,r if r[0]!='OK' else r,'errsA',len(a['errs']),'errsB',len(b['errs']))
             if r[0]!='OK':bad+=1
         sys.exit(1 if bad else 0)

@@ -4,6 +4,7 @@
 */
 import { $ } from './util.js';
 import { morph } from './morph.js';
+import { applyStyles } from './dynstyle.js';
 import { A } from './registry.js';
 import { overviewMode, S, setWeekView, W, weightView } from './state.js';
 import { workoutTab } from '../workout/day.js';
@@ -68,8 +69,10 @@ export function R() {
   /* en la misma pantalla solo cambia lo distinto (core/morph: se conservan el foco y el desplazamiento); otra pantalla se pinta de cero */
   if (screen == lastScreen)
     morph($('#app'), h);
-  else
+  else {
     $('#app').innerHTML = h;
+    applyStyles($('#app'));
+  }
   lastScreen = screen;
   if (lastTab == S.tab)
     document.querySelectorAll('#app details').forEach((d, i) => d.open = !!od[i]);
@@ -92,7 +95,7 @@ const paintSoon = () => {
     R();
   }, 0));
 };
-A.tab = (i, b) => {
+A.selectTab = (i, b) => {
   setLevelMenuOpen(false);
   S.tab = i;
   setWeekView(0);

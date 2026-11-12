@@ -38,12 +38,16 @@ se interrumpe: el aviso espera a que termines. Lo que cambia en cada versión es
 
 ## Versiones
 
-La **V1.0.0** es la publicada: cuentas con usuario y contraseña y datos en la nube, programas nuevos con técnicas de intensidad,
+La **V1.0.0** trajo las cuentas con usuario y contraseña y los datos en la nube, programas nuevos con técnicas de intensidad,
 semana de descarga y rotación, la pantalla de entrenamiento renovada, el seguimiento (pesaje, análisis mensual, fallos y
 sugerencias, copia en la nube) y el manejo de una app del móvil.
 
-La **V1.0.1**, en desarrollo, corrige lo encontrado al probarla en el iPhone (pantalla en negro al volver con el dedo, el sonido tras
-quitar el silencio, la búsqueda de alimentos, el color propio, la barra de pestañas…) y trae la bienvenida con los datos de una
+La **V1.0.1**, la publicada, corrigió lo encontrado al probarla en el iPhone (pantalla en negro al volver con el dedo, el sonido tras
+quitar el silencio, la búsqueda de alimentos, el color propio, la barra de pestañas…) y trajo la bienvenida con los datos de una
 cuenta nueva, empezar sin programa, el logo nuevo, el paso al día siguiente, el RPE opcional, el Nutri-Score, «Mis alimentos» y el
-recuento de iPhone y Android en Administración. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md);
-lo pendiente, en los milestones de GitHub (V1.0.2, App móvil e Ideas futuras).
+recuento de iPhone y Android en Administración.
+
+La **V1.0.2**, lista para publicar, es sobre todo por dentro: tus datos tienen sitio para años de uso y se guardan más rápido, la
+app avisa si queda poco espacio, se maneja mejor con VoiceOver, abre sin volver a descargar su código y, en un iPhone con el icono
+de antes, explica cómo poner el nuevo. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md); lo
+pendiente, en los milestones de GitHub (App móvil e Ideas futuras).

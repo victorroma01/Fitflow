@@ -1,11 +1,20 @@
 /* StrataFit · arranque instantáneo: abre al momento la última copia guardada y busca actualizaciones en segundo plano.
    build.py completa la lista de precarga con el código (js/…, nombres que cambian con cada versión) y las fotos (img/…).
-   Un documento nuevo solo entra en la caché con todo su código ya guardado: así la app abre igual sin conexión. */
+   Un documento solo entra en la caché con todo su código ya guardado, también al instalarse (I-08): así la app abre igual sin
+   conexión. El código sale siempre de la caché, sin volver a pedirlo (I-09); el documento, las fotos y los iconos se revalidan. */
 const C='ff-app-2',PRE=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png','icon-dark-192.png'/*@@FILES@@*/];
 const abs=u=>new URL(u,self.registration.scope).href;
+const DOCS=['./','index.html'];
 self.addEventListener('install',e=>{e.waitUntil((async()=>{
   const c=await caches.open(C);
-  await Promise.all(PRE.map(async u=>{try{const r=await fetch(new Request(u,{cache:'reload'}));if(r.ok&&!r.redirected)await c.put(abs(u),r)}catch(_){}}));
+  /* primero todo menos el documento: el código, imprescindible; una foto o un icono que falle se guardará al pedirlo */
+  await Promise.all(PRE.filter(u=>!DOCS.includes(u)).map(async u=>{
+    try{const r=await fetch(new Request(u,{cache:'reload'}));if(r.ok&&!r.redirected){await c.put(abs(u),r);return}}catch(_){}
+    if(/^js\//.test(u))throw new Error(u);
+  }));
+  /* el documento, solo con todo su código ya guardado (putDoc, como al actualizar). Si falta algo, la instalación falla y el
+     navegador la reintenta en la próxima apertura con red: nunca queda guardada una página a la que le falta código (I-08) */
+  for(const u of DOCS){const r=await fetch(new Request(u,{cache:'reload'}));if(!r.ok||r.redirected||!(await putDoc(c,abs(u),r)))throw new Error(u)}
   self.skipWaiting()
 })())});
 /* al activarse: fuera las cachés antiguas y el código de versiones anteriores (js/… que ya no está en la lista) */
@@ -50,7 +59,19 @@ self.addEventListener('fetch',e=>{
     })());
     return;
   }
-  /* la copia guardada al momento (si la hay) y, mientras, la de la red, que actualiza la caché y avisa si el documento cambió.
+  /* el código (js/…): su nombre cambia con cada versión, así que lo guardado nunca está viejo y sale de la caché sin volver a
+     pedirlo; si no está, de la red, y se guarda (I-09) */
+  if(/\/js\/[^/]+\.js$/.test(u.pathname)){
+    e.respondWith((async()=>{
+      const c=await caches.open(C),hit=await c.match(r,{ignoreSearch:true,ignoreVary:true});
+      if(hit)return hit;
+      const n=await fetch(r);
+      if(n&&n.ok&&n.type==='basic'&&!n.redirected)await c.put(r.url,n.clone());
+      return n;
+    })());
+    return;
+  }
+  /* lo demás (el documento, las fotos, los iconos): la copia guardada al momento (si la hay) y, mientras, la de la red, que actualiza la caché y avisa si el documento cambió.
      respondWith y waitUntil se llaman ya, durante el evento (WebKit no admite waitUntil más tarde) */
   const work=(async()=>{
     const c=await caches.open(C);

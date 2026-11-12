@@ -9,6 +9,7 @@ import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
 import { RELEASE } from '../data/release.js';
 import { S, W } from '../core/state.js';
+import { savesDone } from '../core/persist.js';
 import { isStandalone } from './files.js';
 import { BRAND_LOGOS } from '../data/photos.js';
 import { html, raw } from '../core/html.js';
@@ -74,14 +75,14 @@ export const offlineText = () => {
   const on = typeof navigator != 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller;
   return swState < 0 ? 'Uso sin conexión: no disponible en este entorno. Tus datos sí quedan guardados en el dispositivo, pero la app necesita internet para abrirse.' : on ? 'Uso sin conexión: activo. Si pierdes la cobertura, StrataFit se abre con la última versión que cargaste.' : 'Uso sin conexión: se prepara tras cargar la app una vez con conexión y volver a abrirla.';
 };
-export const offlineNote = () => html`<small class="mu" style="display:block;margin-top:10px">${offlineText()}</small>${raw(isStandalone() ? '' : '<small class="mu" style="display:block;margin-top:4px">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
+export const offlineNote = () => html`<small class="mu d-block mt-10">${offlineText()}</small>${raw(isStandalone() ? '' : '<small class="mu d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
 export let updatesOn = FFDEP;
 let updateReady = 0;
 let updateCheckedAt = 0;
 /** Versión publicada que se está anunciando (contenido de version.json) o null si no se pudo leer. */
 let updateInfo = null;
 /** ¿La versión a es posterior a b? Compara número a número: 1.10.0 es posterior a 1.9.3. */
-const isNewerVersion = (a, b) => {
+export const isNewerVersion = (a, b) => {
   const x = String(a || '').split('.').map(Number);
   const y = String(b || '').split('.').map(Number);
   for (let i = 0; i < 3; i++)
@@ -119,12 +120,12 @@ export const releaseNotePage = () => {
   const r = RELEASE;
   const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const body = (r.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
-  return html`<div class="cd rnp"><b class="rnv">Versión ${r.version || APPV}</b>${d ? html`<small class="mu">${d}</small>` : ''}${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}</div><div class="rnc"><button class="lnk" data-a="zaj">Cerrar</button></div>`;
+  return html`<div class="cd rnp"><b class="rnv">Versión ${r.version || APPV}</b>${d ? html`<small class="mu">${d}</small>` : ''}${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}</div><div class="rnc"><button class="lnk" data-a="openSettings">Cerrar</button></div>`;
 };
 /** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
 const updatePopupHtml = (info, mode) => {
   const v = info && info.version ? info.version : '';
-  return html`<div class="updb" data-a="updLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt"><button class="updx" data-a="updLater" aria-label="Cerrar">×</button><small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small><h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3><div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div><button class="upb" data-a="${mode == 'news' ? 'updLater' : 'updApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button></div>`;
+  return html`<div class="updb" data-a="updateLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt"><button class="updx" data-a="updateLater" aria-label="Cerrar">×</button><small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small><h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3><div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div><button class="upb" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button></div>`;
 };
 const showPopup = (info, mode) => {
   const old = document.getElementById('upd');
@@ -180,7 +181,7 @@ export const whatsNewDue = () => {
     return false;
   }
   /* hasta la 1.19.0 no se guardaba la versión: si ya había datos, es una actualización */
-  const updated = prev ? prev != APPV : (S.logs.length > 0 || (S.cp || []).length > 0 || (S.cr || []).length > 0);
+  const updated = prev ? prev != APPV : (S.logs.length > 0 || (S.ownPrograms || []).length > 0 || (S.routines || []).length > 0);
   /* la versión con la que empezó este móvil, una sola vez: la que ya tenía (o '0', si era anterior a la 1.19.0) o esta, si es nuevo */
   try {
     if (!Store.get(Store.K.inst))
@@ -212,7 +213,7 @@ export const showWhatsNew = () => {
 };
 /* — manejadores de esta función (registros A / C / U) — */
 /** Actualizar: descarga ya la versión nueva (el service worker la guarda) y vuelve a abrir la app con ella. */
-A.updApply = async (i, b) => {
+A.updateApply = async (i, b) => {
   if (b) {
     b.disabled = true;
     b.textContent = 'Actualizando…';
@@ -223,6 +224,8 @@ A.updApply = async (i, b) => {
   catch (e) {
     logError('descargar actualización', e);
   }
+  /* lo pendiente de guardar (IndexedDB: core/persist), antes de recargar */
+  await Promise.race([savesDone(), new Promise(r => setTimeout(r, 5000))]);
   try {
     location.reload();
   }
@@ -230,14 +233,14 @@ A.updApply = async (i, b) => {
     /* recargar puede no estar permitido en algunas vistas */
   }
 };
-A.updLater = () => {
+A.updateLater = () => {
   updateReady = 0;
   const d = document.getElementById('upd');
   if (d)
     d.remove();
 };
 /** Ajustes → Actualizaciones: comprueba si hay versión nueva. */
-A.updChk = async (i, b) => {
+A.updateCheck = async (i, b) => {
   if (!updatesOn) {
     toast('Las actualizaciones se comprueban en la app instalada');
     return;

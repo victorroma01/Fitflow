@@ -41,7 +41,7 @@ export const snapTx = (mode, fn) => snapDb().then(db => new Promise((res, rej) =
 export const snapList = () => snapTx('readonly', st => st.getAll()).then(a => (a || []).sort((x, y) => x.d < y.d ? 1 : -1));
 /** Guarda la copia de hoy si aún no existe (y si hay algo que guardar) y borra las que sobran. Devuelve 1 si guardó. */
 export const takeSnapshot = async () => {
-  if (!S.logs.length && !(S.cr || []).length && !(S.cp || []).length && !countOf(S.meals) && !(S.wl || []).length)
+  if (!S.logs.length && !(S.routines || []).length && !(S.ownPrograms || []).length && !countOf(S.meals) && !(S.weightLog || []).length)
     return 0;
   const d = dayKey(new Date());
   const all = await snapList();
@@ -60,7 +60,7 @@ export const takeSnapshot = async () => {
     });
   return 1;
 };
-const snapshotRows = l => l.length ? l.map(x => html`<div class="row" style="padding:8px 0;border-top:1px solid var(--ln)"><span><b>${backupDate(x.t, 1)}</b><br><small class="mu">${raw(plural(x.n || 0, 'entreno', 'entrenos'))} · versión ${x.v || ''}</small></span><button data-a="snapr" data-v="${x.d}">Restaurar</button></div>`).join('') : '<p class="mu" style="font-size:13px;margin:8px 0 0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>';
+const snapshotRows = l => l.length ? l.map(x => html`<div class="row p-8-0 bdt-1-solid-ln"><span><b>${backupDate(x.t, 1)}</b><br><small class="mu">${raw(plural(x.n || 0, 'entreno', 'entrenos'))} · versión ${x.v || ''}</small></span><button data-a="snapshotRestore" data-v="${x.d}">Restaurar</button></div>`).join('') : '<p class="mu fs-13 m-8-0-0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>';
 /** Rellena la lista de copias automáticas de la hoja de copia de seguridad (se carga aparte porque IndexedDB es asíncrono). */
 export const fillSnapshots = () => snapList().then(l => {
   const e = $('#snapl');
@@ -69,11 +69,11 @@ export const fillSnapshots = () => snapList().then(l => {
 }).catch(err => {
   const e = $('#snapl');
   if (e)
-    e.innerHTML = '<p class="mu" style="font-size:13px;margin:8px 0 0">Este navegador no permite guardar copias automáticas.</p>';
+    e.innerHTML = '<p class="mu fs-13 m-8-0-0">Este navegador no permite guardar copias automáticas.</p>';
   logError('copias automáticas', err);
 });
 /* — manejadores de esta función (registros A / C / U) — */
-A.snapr = (i, b) => {
+A.snapshotRestore = (i, b) => {
   const d = b.dataset.v;
   snapTx('readonly', st => st.get(d)).then(x => {
     if (x && x.data)

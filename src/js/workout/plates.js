@@ -44,22 +44,22 @@ const plateResult = () => {
   const u = weightUnit();
   if (!c)
     return '<p class="mu">El peso total es menor que la barra.</p>';
-  return html`${raw(c.o.length ? html`<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0">${c.o.map(x => html`<span class="tg" style="font-size:16px;padding:9px 14px"><b>${raw(x[1])} ×</b> ${raw(x[0])} ${raw(u)}</span>`)}</div>` : '<p class="mu">Solo la barra.</p>')}<p class="mu">Discos por cada lado con una barra de ${plateBar} ${raw(u)}.${raw(c.rem ? ' Sobran ' + c.rem + ' ' + u + ' por lado: ajusta el peso.' : '')}</p>`;
+  return html`${raw(c.o.length ? html`<div class="d-flex wrap gap-8 m-12-0">${c.o.map(x => html`<span class="tg fs-16 p-9-14"><b>${raw(x[1])} ×</b> ${raw(x[0])} ${raw(u)}</span>`)}</div>` : '<p class="mu">Solo la barra.</p>')}<p class="mu">Discos por cada lado con una barra de ${plateBar} ${raw(u)}.${raw(c.rem ? ' Sobran ' + c.rem + ' ' + u + ' por lado: ajusta el peso.' : '')}</p>`;
 };
-const plateSheet = () => html`<h3>Calculadora de discos</h3><label>Peso total (${weightUnit()})</label><input type="number" inputmode="decimal" data-u="zpw" value="${plateTotal}" aria-label="${'Peso total (' + weightUnit() + ')'}"><label>Barra</label><div class="g2" style="grid-template-columns:repeat(3,1fr)">${barSizes().map(b => html`<button data-a="zpbar" data-i="${b}" style="${plateBar == b ? 'border-color:var(--a2);color:var(--at)' : ''}">${b} ${weightUnit()}</button>`)}</div><div id="zpr">${raw(plateResult())}</div>`;
-A.zpl = i => {
-  const a = W.x[i];
+const plateSheet = () => html`<h3>Calculadora de discos</h3><label>Peso total (${weightUnit()})</label><input type="number" inputmode="decimal" data-u="platesWeight" value="${plateTotal}" aria-label="${'Peso total (' + weightUnit() + ')'}"><label>Barra</label><div class="g2 cols-3">${barSizes().map(b => html`<button data-a="platesBar" data-i="${b}" class="${plateBar == b ? 'bdc-a2 c-at' : ''}">${b} ${weightUnit()}</button>`)}</div><div id="zpr">${raw(plateResult())}</div>`;
+A.openPlates = i => {
+  const a = W.sets[i];
   const q = a.find(x => !x.ok && +x.w > 0) || a.find(x => +x.w > 0);
   plateTotal = q ? toDisplayWeight(q.w) : (usesLb() ? 135 : 60);
   if (!barSizes().includes(plateBar))
     plateBar = barSizes()[0];
   sheet(plateSheet());
 };
-A.zpbar = i => {
+A.platesBar = i => {
   plateBar = i;
   sheet(plateSheet());
 };
-U.zpw = v => {
+U.platesWeight = v => {
   plateTotal = +v || 0;
   const e = $('#zpr');
   if (e)

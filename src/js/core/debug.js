@@ -8,7 +8,8 @@
 import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { stateRecovered } from './persist.js';
+import { mealsPart, partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
+import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
@@ -24,6 +25,7 @@ import { isDeloadWeek } from '../workout/deload.js';
 import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
+import { spaceCheck, spaceUse } from '../system/space.js';
 import { updatesOn } from '../system/updates.js';
 import { showSummary } from '../extras/summary.js';
 import { medalSvg } from '../extras/medals.js';
@@ -32,18 +34,23 @@ import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { dayInfo } from '../nutrition/templates.js';
 import { tdee } from '../nutrition/diet.js';
 import { account } from '../cloud/session.js';
+import { APP_CHECK } from '../cloud/config.js';
+import { appCheckOn } from '../cloud/appcheck.js';
 import { pendingDocs, syncNow, syncState } from '../cloud/sync.js';
 import { refreshReports } from '../system/report.js';
 import { accentNow, customAccent } from '../profile/appearance.js';
 import { backTarget } from './back.js';
 import { deviceOS } from './platform.js';
 import { tourCheck } from '../system/tour.js';
+import { iconNoticeApplies, iconNoticeCheck } from '../system/iconnotice.js';
 /** nombre → [lectura, escritura opcional] */
 const DEBUG_NAMES = {
   A: [() => A],
   accentNow: [() => accentNow],
   account: [() => account],
   ACHIEVEMENTS: [() => ACHIEVEMENTS],
+  APP_CHECK: [() => APP_CHECK],
+  appCheckOn: [() => appCheckOn],
   addState: [() => addState],
   applyTheme: [() => applyTheme],
   APPV: [() => APPV],
@@ -75,10 +82,13 @@ const DEBUG_NAMES = {
   libState: [() => libState],
   logError: [() => logError],
   markNewAccount: [() => markNewAccount],
+  mealsPart: [() => mealsPart],
   medalSvg: [() => medalSvg],
   nutriDayOffset: [() => nutriDayOffset],
   parseBackup: [() => parseBackup],
   parseProgram: [() => parseProgram],
+  partSizes: [() => partSizes],
+  partsLost: [() => partsLost],
   PROGRAM_NAMES: [() => PROGRAM_NAMES],
   PROGRAMS: [() => PROGRAMS],
   pendingDocs: [() => pendingDocs],
@@ -90,10 +100,13 @@ const DEBUG_NAMES = {
   restoreBackup: [() => restoreBackup],
   S: [() => S],
   saveState: [() => saveState],
+  savesDone: [() => savesDone],
   sheet: [() => sheet],
   showSummary: [() => showSummary],
   snapList: [() => snapList],
   snapTx: [() => snapTx],
+  spaceCheck: [() => spaceCheck],
+  spaceUse: [() => spaceUse],
   stateRecovered: [() => stateRecovered],
   Store: [() => Store],
   syncSel: [() => syncSel],
@@ -105,7 +118,14 @@ const DEBUG_NAMES = {
   U: [() => U],
   updatesOn: [() => updatesOn],
   W: [() => W, setW],
-  weightView: [() => weightView, setWeightView]
+  weightView: [() => weightView, setWeightView],
+  SCHEMA_TABLES: [() => SCHEMA_TABLES],
+  stateFromStored: [() => stateFromStored],
+  stateToStored: [() => stateToStored],
+  workoutFromStored: [() => workoutFromStored],
+  workoutToStored: [() => workoutToStored],
+  iconNoticeApplies: [() => iconNoticeApplies],
+  iconNoticeCheck: [() => iconNoticeCheck]
 };
 for (const k in DEBUG_NAMES)
   Object.defineProperty(window, k, { get: DEBUG_NAMES[k][0], set: DEBUG_NAMES[k][1], configurable: true });

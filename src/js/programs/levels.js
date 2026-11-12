@@ -1,11 +1,11 @@
 /* ═══ programs/levels ═══
    Niveles de programa (aplicar, variantes, selector).
-   Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelVars, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
+   Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
 */
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { parseProgram } from '../data/library.js';
-import { LEVEL_COLORS, LEVEL_DETAILS, LEVEL_EXTRA_DAYS, LEVEL_KEYS, LEVEL_LAYOUTS, LEVEL_NAMES, LEVEL_OVERRIDES, LEVEL_SUMMARY, LEVEL_SWAPS } from '../data/levels.js';
+import { LEVEL_CLASS, LEVEL_DETAILS, LEVEL_EXTRA_DAYS, LEVEL_KEYS, LEVEL_LAYOUTS, LEVEL_NAMES, LEVEL_OVERRIDES, LEVEL_SUMMARY, LEVEL_SWAPS } from '../data/levels.js';
 import { S, saveState, W } from '../core/state.js';
 import { confirmDialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
@@ -124,26 +124,25 @@ export const levelPlan = (pl, lv, id) => {
   return L.map(k => k === -1 ? { n: 'Descanso', ex: [] } : typeof k == 'string' ? parseDays(LEVEL_EXTRA_DAYS[k])[0] : tx[k]);
 };
 const planSignature = pl => JSON.stringify(pl.map(d => [d.n, d.ex.map(e => [e.n, e.s, e.rg || 0, e.u || 0, e.r || 0, e.b || 0, e.tk || 0])]));
-export const currentCustomProgram = () => S.cpi >= 0 ? S.cp[S.cpi] : null;
-export const levelsActive = () => !S.np && (S.cpi < 0 || !!(currentCustomProgram() && currentCustomProgram().o));
+export const currentCustomProgram = () => S.ownProgramIndex >= 0 ? S.ownPrograms[S.ownProgramIndex] : null;
+export const levelsActive = () => !S.noProgram && (S.ownProgramIndex < 0 || !!(currentCustomProgram() && currentCustomProgram().o));
 const levelGenerate = (v) => {
   const p = currentCustomProgram();
   if (p)
     return p.o ? generateProgram({ ...p.o, niv: v, vr: p.o.vr || 0 }) : null;
-  return levelPlan(parseProgram(S.prog), v, S.prog);
+  return levelPlan(parseProgram(S.program), v, S.program);
 };
 const planEdited = () => {
   try {
-    const g = levelGenerate(S.lv);
+    const g = levelGenerate(S.level);
     return !g || planSignature(g) != planSignature(S.plan);
   }
   catch (e) {
     return true;
   }
 };
-const weekStarted = () => Object.keys(S.done || {}).some(k => k.indexOf(S.wk + '-') == 0 && S.done[k]);
-export const levelDot = v => html`<i class="lvd" style="--lc:${LEVEL_COLORS[v]};--ld:${LEVEL_COLORS[v]}38"></i>`;
-const levelVars = v => '--lc:' + LEVEL_COLORS[v] + ';--lb:' + LEVEL_COLORS[v] + '24;--lr:' + LEVEL_COLORS[v] + '6b';
+const weekStarted = () => Object.keys(S.doneDays || {}).some(k => k.indexOf(S.week + '-') == 0 && S.doneDays[k]);
+export const levelDot = v => html`<i class="lvd ${LEVEL_CLASS[v]}"></i>`;
 let levelMenuOpen = false;
 /** Cambia `levelMenuOpen` desde otros módulos (un módulo no puede asignar una variable importada). */
 export const setLevelMenuOpen = v => {
@@ -158,14 +157,14 @@ let pendingLevel = null;
 export const levelPill = () => {
   if (!levelsActive())
     return '';
-  const v = isLevel(S.lv) ? S.lv : 'int';
-  return html`<div class="lvw" style="${levelVars(v)}"><button class="lvp" data-a="lvo" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="lvx"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi${k == v ? ' on' : ''}" data-a="lvs" data-v="${k}" role="menuitem" style="${levelVars(k)}">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
+  const v = isLevel(S.level) ? S.level : 'int';
+  return html`<div class="lvw ${LEVEL_CLASS[v]}"><button class="lvp" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="levelMenuClose"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi ${LEVEL_CLASS[k]}${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
 };
-A.lvo = () => {
+A.levelMenuToggle = () => {
   levelMenuOpen = !levelMenuOpen;
   R();
 };
-A.lvx = () => {
+A.levelMenuClose = () => {
   levelMenuOpen = false;
   R();
 };
@@ -183,18 +182,18 @@ const applyLevel = v => {
       S.plan = clone(np);
     }
     else {
-      np = levelPlan(parseProgram(S.prog), v, S.prog);
+      np = levelPlan(parseProgram(S.program), v, S.program);
       S.plan = np;
     }
     dropResume();
-    S.lv = v;
+    S.level = v;
     /* plan nuevo: la próxima rotación (programs/rotation) cuenta desde esta semana */
-    S.rw = S.wk;
-    S.sl = 0;
-    S.sel = 0;
-    Object.keys(S.done || {}).forEach(k => {
-      if (k.indexOf(S.wk + '-') == 0)
-        delete S.done[k];
+    S.rotationWeek = S.week;
+    S.selectedWeekday = 0;
+    S.selectedDay = 0;
+    Object.keys(S.doneDays || {}).forEach(k => {
+      if (k.indexOf(S.week + '-') == 0)
+        delete S.doneDays[k];
     });
     saveState();
     sheet();
@@ -206,10 +205,10 @@ const applyLevel = v => {
     R();
   }
 };
-A.lvs = (i, b) => {
+A.levelChoose = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   levelMenuOpen = false;
-  if (!isLevel(v) || v == S.lv) {
+  if (!isLevel(v) || v == S.level) {
     R();
     return;
   }
@@ -224,21 +223,21 @@ A.lvs = (i, b) => {
   const zr = !!pendingResume;
   if (ed || dn || zr) {
     R();
-    confirmDialog('Cambiar a nivel ' + LEVEL_NAMES[v].toLowerCase(), 'Se reorganizarán los días del programa para el nivel ' + LEVEL_NAMES[v].toLowerCase() + '.' + (ed ? ' Perderás los cambios que hayas hecho a mano en los días.' : '') + (dn ? ' Se reiniciará el progreso de esta semana.' : '') + (zr ? ' Se descartará el entreno pausado.' : ''), 'lvc', 'Cambiar');
+    confirmDialog('Cambiar a nivel ' + LEVEL_NAMES[v].toLowerCase(), 'Se reorganizarán los días del programa para el nivel ' + LEVEL_NAMES[v].toLowerCase() + '.' + (ed ? ' Perderás los cambios que hayas hecho a mano en los días.' : '') + (dn ? ' Se reiniciará el progreso de esta semana.' : '') + (zr ? ' Se descartará el entreno pausado.' : ''), 'levelConfirm', 'Cambiar');
   }
   else
     applyLevel(v);
 };
-A.lvc = () => {
+A.levelConfirm = () => {
   if (isLevel(pendingLevel))
     applyLevel(pendingLevel);
 };
-export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${k == previewLevel ? 'on' : ''}" data-a="pvl" data-v="${k}" style="${levelVars(k)}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
-A.pvl = (i, b) => {
+export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${LEVEL_CLASS[k]}${k == previewLevel ? ' on' : ''}" data-a="previewChooseLevel" data-v="${k}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
+A.previewChooseLevel = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   if (isLevel(v))
     previewLevel = v;
-  A.pv(previewProgram);
+  A.openProgramPreview(previewProgram);
 };
 export const levelTag = v => html`<span class="lvt">${levelDot(v)}${raw(LEVEL_NAMES[v])}</span>`;
-export const programRow = (n, tag) => html`<span class="pgr"><b style="font-size:17px">${n}</b>${raw(tag)}</span>`;
+export const programRow = (n, tag) => html`<span class="pgr"><b class="fs-17">${n}</b>${raw(tag)}</span>`;

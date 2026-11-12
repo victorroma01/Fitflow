@@ -24,13 +24,13 @@ PAY = '"\'><img src=x onerror="window.__x=(window.__x||[]).concat(window.__scr)"
 # foto de perfil que intenta salirse del atributo src (auditoría S1)
 IMG = 'x" onerror="window.__x=(window.__x||[]).concat(\'foto \'+window.__scr)'
 MUT = """(P=>{const deep=o=>{if(o&&typeof o=='object')for(const k in o){const v=o[k];if(typeof v=='string'&&['n','nt','x','name','nm'].includes(k))o[k]=v+P;else deep(v)}};
- deep(S.cx);deep(S.cr);deep(S.cp);deep(S.logs);deep(S.plan);
- Object.keys(S.notes||{}).forEach(k=>{S.notes[k]+=P});
- S.pf=S.pf||{};S.pf.name='Yo'+P;S.pf.email=P;S.pf.tel=P;S.pf.img=%s;
- S.bio=Object.assign(S.bio||{},{age:P,h:P,w:P});S.nu=Object.assign(S.nu||{},{k:P});
+ deep(S.customExercises);deep(S.routines);deep(S.ownPrograms);deep(S.logs);deep(S.plan);
+ Object.keys(S.exerciseNotes||{}).forEach(k=>{S.exerciseNotes[k]+=P});
+ S.profile=S.profile||{};S.profile.name='Yo'+P;S.profile.email=P;S.profile.tel=P;S.profile.img=%s;
+ S.biometrics=Object.assign(S.biometrics||{},{age:P,h:P,w:P});S.nutritionGoals=Object.assign(S.nutritionGoals||{},{k:P});
  const d=Object.keys(S.meals||{})[0];if(d)Object.values(S.meals[d]).forEach(l=>(l||[]).forEach(it=>{it.g=P}));
- S.wdc=Object.assign(S.wdc||{},{md:'amrap',min:P});
- S.cf=(S.cf||[]).concat([{n:'Galleta'+P,b:[400,60,6,15,2,.5]}]);
+ S.wodConfig=Object.assign(S.wodConfig||{},{md:'amrap',min:P});
+ S.myFoods=(S.myFoods||[]).concat([{n:'Galleta'+P,b:[400,60,6,15,2,.5]}]);
  saveState()})(%s)""" % (repr(IMG), repr(PAY))
 
 
@@ -79,7 +79,7 @@ def main(path):
         pg.clock.run_for(800)
         bad = []
         # unos datos guardados con la foto manipulada: al arrancar se descarta
-        stored = pg.evaluate("S.pf.img===undefined")
+        stored = pg.evaluate("S.profile.img===undefined")
         for k, js in SCR.items():
             try:
                 pg.evaluate("window.__scr=%r;sheet();if(W){W=null}" % k)
@@ -89,12 +89,12 @@ def main(path):
             except Exception as e:
                 bad.append(k + ': ' + str(e)[:80])
         # y aunque llegara a la memoria, Perfil no la inserta: solo admite imágenes de verdad
-        pg.evaluate("window.__scr='perfil con foto manipulada';sheet();W=null;S.pf.img=%s;S.tab=3;R()" % repr(IMG))
+        pg.evaluate("window.__scr='perfil con foto manipulada';sheet();W=null;S.profile.img=%s;S.tab=3;R()" % repr(IMG))
         pg.clock.run_for(300)
         pg.wait_for_timeout(100)
         # una copia de seguridad con la foto manipulada se lee sin ella (y la cuenta como arreglada)
-        restored = pg.evaluate("(img=>{const r=parseBackup(JSON.stringify(Object.assign({},S,{pf:{name:'Ana',img}})));return [r.s.pf.img===undefined,r.s.pf.name,r.fix]})(%s)" % repr(IMG))
-        good = pg.evaluate("(()=>{const ok='data:image/jpeg;base64,/9j/4AAQSkZJRg==';return parseBackup(JSON.stringify(Object.assign({},S,{pf:{img:ok}}))).s.pf.img===ok})()")
+        restored = pg.evaluate("(img=>{const r=parseBackup(JSON.stringify(Object.assign({},stateToStored(S),{pf:{name:'Ana',img}})));return [r.s.pf.img===undefined,r.s.pf.name,r.fix]})(%s)" % repr(IMG))
+        good = pg.evaluate("(()=>{const ok='data:image/jpeg;base64,/9j/4AAQSkZJRg==';return parseBackup(JSON.stringify(Object.assign({},stateToStored(S),{pf:{img:ok}}))).s.pf.img===ok})()")
         hit = sorted(set(str(x) for x in pg.evaluate('window.__x||[]')))
         # control: en este recorrido (sin CSP) un HTML inyectado de verdad sí se ejecuta, así que la prueba lo vería
         pg.evaluate("document.body.insertAdjacentHTML('beforeend','<img src=\"data:,\" onerror=\"window.__z=1\">')")

@@ -28,8 +28,8 @@ export let progDraft = { m: '', name: '', sel: [], plan: null, o: { lug: 'gym', 
 export const clone = x => JSON.parse(JSON.stringify(x));
 export const restDay = () => ({ n: 'Descanso', ex: [] });
 export const syncCustomProgram = () => {
-  if (S.cpi >= 0 && S.cp[S.cpi])
-    S.cp[S.cpi].plan = clone(S.plan);
+  if (S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex])
+    S.ownPrograms[S.ownProgramIndex].plan = clone(S.plan);
 };
 const WEEK_LAYOUTS = { 1: [0], 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 5: [0, 1, 2, 4, 5], 6: [0, 1, 2, 3, 4, 5] };
 const layoutWeek = (l, n) => {
@@ -45,7 +45,7 @@ const layoutWeek = (l, n) => {
 const MOVE_GROUP = { Pecho: 'Empuje', Hombros: 'Empuje', 'Tríceps': 'Empuje', Espalda: 'Tirón', 'Bíceps': 'Tirón', Antebrazos: 'Tirón', 'Cuádriceps': 'Piernas', 'Isquios y glúteos': 'Piernas', Gemelos: 'Piernas' };
 const routineMoveGroups = i => {
   const s = new Set();
-  S.cr[i].bl.forEach(b => b.ex.forEach(n => {
+  S.routines[i].bl.forEach(b => b.ex.forEach(n => {
     const g = groupOfName(n);
     if (g != 'Abdomen')
       s.add(MOVE_GROUP[g] || g);
@@ -97,33 +97,33 @@ const techLegend = pl => {
   return l.length ? html`<div class="cd tql"><b>Técnicas de intensidad</b><div>${l.map(x => html`<span><b class="tqa">${x[0]}</b>${x[1]}</span>`)}</div></div>` : '';
 };
 /** Días del plan con sus ejercicios, series, técnica y descanso (vista de un programa); en un ciclo, cómo se repite. */
-export const programDaysHtml = pl => (isCycle(pl) ? html`<p class="mu cyn">Ciclo de ${raw(pl.length)} días que no se corta con la semana: cada semana empieza donde acabó la anterior.</p>` : '') + weeklySetsCard(pl) + techLegend(pl) + pl.map((d, j) => html`<div class="cd" style="margin:8px 0"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b>${d.ex.length ? html`<small>${raw(d.ex.reduce((s, e) => s + e.s, 0))} series</small>` : ''}</div>${raw(d.ex.length ? d.ex.map((e, i) => html`<div class="mu" style="font-size:13px;margin-top:3px">${raw(techLabel(e) ? html`<b class="tqa">${techLabel(e)}</b>` : '')}${e.n} · ${raw(planLine(e))} · ${raw(fmtMinSec(restAt(d, i)))}</div>`).join('') : '<div class="mu" style="font-size:13px;margin-top:3px">Descanso</div>')}</div>`).join('');
+export const programDaysHtml = pl => (isCycle(pl) ? html`<p class="mu cyn">Ciclo de ${raw(pl.length)} días que no se corta con la semana: cada semana empieza donde acabó la anterior.</p>` : '') + weeklySetsCard(pl) + techLegend(pl) + pl.map((d, j) => html`<div class="cd m-8-0"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b>${d.ex.length ? html`<small>${raw(d.ex.reduce((s, e) => s + e.s, 0))} series</small>` : ''}</div>${raw(d.ex.length ? d.ex.map((e, i) => html`<div class="mu fs-13 mt-3">${raw(techLabel(e) ? html`<b class="tqa">${techLabel(e)}</b>` : '')}${e.n} · ${raw(planLine(e))} · ${raw(fmtMinSec(restAt(d, i)))}</div>`).join('') : '<div class="mu fs-13 mt-3">Descanso</div>')}</div>`).join('');
 const programRowsHtml = pl => pl.map((d, j) => {
   const r = !d.ex.length;
-  return html`<div class="cd cpr${r ? ' rs' : ''}"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b><span class="cpm"><button data-a="cpu" data-i="${j}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button><button data-a="cpd" data-i="${j}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>${icon('chev', 18)}</button></span></div>${raw(r ? '<div class="mu" style="font-size:13px">Descanso</div>' : html`<div class="mu" style="font-size:12px;margin-top:2px">${d.ex.length}${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayMinutes(d)} min</div><div class="mu cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}</div>`;
+  return html`<div class="cd cpr${r ? ' rs' : ''}"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b><span class="cpm"><button data-a="createDayUp" data-i="${j}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button><button data-a="createDayDown" data-i="${j}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>${icon('chev', 18)}</button></span></div>${raw(r ? '<div class="mu fs-13">Descanso</div>' : html`<div class="mu fs-12 mt-2">${d.ex.length}${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayMinutes(d)} min</div><div class="mu cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}</div>`;
 }).join('');
-const createHome = () => html`${pgHead('Crear programa', 'pg')}<p class="mu" style="margin:-6px 0 14px">Elige cómo quieres montarlo.</p><button class="cpo" data-a="cpm"><span class="cpi">${icon('log', 26)}</span><span><b>Con mis workouts</b><small>${raw(S.cr.length ? S.cr.length + (S.cr.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}</small></span>›</button><button class="cpo" data-a="cpg"><span class="cpi">${icon('prog', 26)}</span><span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›</button>`;
-const programNameBox = () => html`<div class="ph">Nombre del programa</div><input data-u="cpn" value="${progDraft.name}" aria-label="Nombre del programa" placeholder="Mi programa" maxlength="60">`;
+const createHome = () => html`${pgHead('Crear programa', 'openPrograms')}<p class="mu m-n6-0-14">Elige cómo quieres montarlo.</p><button class="cpo" data-a="createFromRoutines"><span class="cpi">${icon('log', 26)}</span><span><b>Con mis workouts</b><small>${raw(S.routines.length ? S.routines.length + (S.routines.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}</small></span>›</button><button class="cpo" data-a="createGuided"><span class="cpi">${icon('prog', 26)}</span><span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›</button>`;
+const programNameBox = () => html`<div class="ph">Nombre del programa</div><input data-u="programName" value="${progDraft.name}" aria-label="Nombre del programa" placeholder="Mi programa" maxlength="60">`;
 const createFromMine = () => {
-  const n = S.cr.length;
-  let h = pgHead('Con mis workouts', 'cpn');
+  const n = S.routines.length;
+  let h = pgHead('Con mis workouts', 'createProgram');
   if (!n)
-    return html`${raw(h)}<p class="mu">Aún no tienes workouts personalizados. Crea alguno y vuelve aquí para montar tu semana.</p><button class="pr" data-a="cr" style="width:100%;margin-top:10px;padding:15px;border-radius:16px">Ir a Workouts personalizados</button>`;
-  h += html`<p class="mu" style="margin:-6px 0 12px">Marca los que quieras (hasta 6). Te propongo el orden y dónde poner los días de descanso.</p><div class="ph">Tus workouts</div>${S.cr.map((r, i) => {
+    return html`${raw(h)}<p class="mu">Aún no tienes workouts personalizados. Crea alguno y vuelve aquí para montar tu semana.</p><button class="pr w-full mt-10 p-15 r-16" data-a="routineEditorBack">Ir a Workouts personalizados</button>`;
+  h += html`<p class="mu m-n6-0-12">Marca los que quieras (hasta 6). Te propongo el orden y dónde poner los días de descanso.</p><div class="ph">Tus workouts</div>${S.routines.map((r, i) => {
     const on = progDraft.sel.includes(i);
     const ex = [].concat(...r.bl.map(b => b.ex));
     const gs = [...new Set(ex.map(x => groupLabel(groupOfName(x))))];
-    return html`<button class="cpw${on ? ' on' : ''}" data-a="cpt" data-i="${i}"><i>${on ? icon('chk', 14) : ''}</i><span><b>${r.n}</b><br><small class="mu">${raw(r.bl.length ? X(gs.slice(0, 3).join(' · ')) + ' · ' + ex.length + (ex.length == 1 ? ' ejercicio' : ' ejercicios') : 'Sin ejercicios')}</small></span></button>`;
+    return html`<button class="cpw${on ? ' on' : ''}" data-a="createToggleRoutine" data-i="${i}"><i>${on ? icon('chk', 14) : ''}</i><span><b>${r.n}</b><br><small class="mu">${raw(r.bl.length ? X(gs.slice(0, 3).join(' · ')) + ' · ' + ex.length + (ex.length == 1 ? ' ejercicio' : ' ejercicios') : 'Sin ejercicios')}</small></span></button>`;
   })}`;
   if (progDraft.plan) {
-    h += html`<div class="row" style="margin-top:20px"><div class="ph" style="margin:0">Estructura sugerida</div><button class="chip" data-a="cpr" style="margin:0">Reordenar</button></div><p class="mu" style="font-size:12px;margin:4px 0 8px">Alterno grupos musculares para que descanses cada zona. Usa las flechas para cambiar el orden.</p>${raw(programRowsHtml(progDraft.plan))}${programNameBox()}${raw(deloadChips(progDraft.dl, 'd'))}<div style="height:96px"></div><button class="sb pr" data-a="cps" style="padding:16px;font-size:16px;border-radius:16px">Crear programa</button>`;
+    h += html`<div class="row mt-20"><div class="ph m-0">Estructura sugerida</div><button class="chip m-0" data-a="createRebuild">Reordenar</button></div><p class="mu fs-12 m-4-0-8">Alterno grupos musculares para que descanses cada zona. Usa las flechas para cambiar el orden.</p>${raw(programRowsHtml(progDraft.plan))}${programNameBox()}${raw(deloadChips(progDraft.dl, 'd'))}<div class="h-96"></div><button class="sb pr p-16 fs-16 r-16" data-a="createSave">Crear programa</button>`;
   }
-  return html`${raw(h)}<div style="height:30px"></div>`;
+  return html`${raw(h)}<div class="h-30"></div>`;
 };
-const optionChips = (k, t, sub) => html`<div class="ph">${raw(t)}</div><div class="cps">${GUIDE_OPTIONS[k].map(o => html`<button class="chip${progDraft.o[k] == o[0] ? ' on' : ''}" data-a="cpq" data-k="${k}" data-v="${o[0]}">${k == 'niv' ? levelDot(o[0]) : ''}${raw(o[1])}</button>`)}</div>${sub ? html`<p class="mu" style="font-size:12px;margin:6px 2px 0">${raw(sub)}</p>` : ''}`;
+const optionChips = (k, t, sub) => html`<div class="ph">${raw(t)}</div><div class="cps">${GUIDE_OPTIONS[k].map(o => html`<button class="chip${progDraft.o[k] == o[0] ? ' on' : ''}" data-a="guidedAnswer" data-k="${k}" data-v="${o[0]}">${k == 'niv' ? levelDot(o[0]) : ''}${raw(o[1])}</button>`)}</div>${sub ? html`<p class="mu fs-12 m-6-2-0">${raw(sub)}</p>` : ''}`;
 const guidedForm = () => {
   const o = progDraft.o;
-  return html`${pgHead('Programa guiado', 'cpn')}<p class="mu" style="margin:-6px 0 4px">Responde cuatro cosas y te monto un programa a medida.</p>${optionChips('lug', 'Dónde entrenas')}${o.lug == 'home' ? optionChips('mat', 'Material en casa') : ''}${optionChips('est', 'Estilo de entrenamiento', STYLE_INFO[o.est])}${optionChips('obj', 'Objetivo', GOAL_INFO[o.obj])}${optionChips('dias', 'Días por semana')}${optionChips('niv', 'Nivel', LEVEL_DETAILS[o.niv])}${raw(deloadChips(progDraft.dl, 'd'))}<div style="height:96px"></div><button class="sb pr" data-a="cpgen" style="padding:16px;font-size:16px;border-radius:16px">Ver propuesta</button>`;
+  return html`${pgHead('Programa guiado', 'createProgram')}<p class="mu m-n6-0-4">Responde cuatro cosas y te monto un programa a medida.</p>${optionChips('lug', 'Dónde entrenas')}${o.lug == 'home' ? optionChips('mat', 'Material en casa') : ''}${optionChips('est', 'Estilo de entrenamiento', STYLE_INFO[o.est])}${optionChips('obj', 'Objetivo', GOAL_INFO[o.obj])}${optionChips('dias', 'Días por semana')}${optionChips('niv', 'Nivel', LEVEL_DETAILS[o.niv])}${raw(deloadChips(progDraft.dl, 'd'))}<div class="h-96"></div><button class="sb pr p-16 fs-16 r-16" data-a="guidedGenerate">Ver propuesta</button>`;
 };
 const makeEx = (tok, o) => {
   let sp = '';
@@ -273,21 +273,21 @@ const guidedProposal = () => {
   const o = progDraft.o;
   const pl = progDraft.plan;
   const lab = [o.lug == 'gym' ? 'Gimnasio' : 'Casa' + (o.mat == 'db' ? ' · mancuernas y bandas' : ' · peso corporal'), GUIDE_OPTIONS.est.find(x => x[0] == o.est)[1], GUIDE_OPTIONS.obj.find(x => x[0] == o.obj)[1], o.dias + ' días', GUIDE_OPTIONS.niv.find(x => x[0] == o.niv)[1]];
-  return html`${pgHead('Tu propuesta', 'cpg')}<div style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px">${lab.map(x => html`<span class="tg">${x}</span>`)}</div><div class="cd" style="margin:8px 0"><b>Cómo sacarle partido</b><p class="mu" style="margin:6px 0 0;font-size:13px;line-height:1.5">${progDraft.txt}</p></div>${weeklySetsCard(pl)}<div class="row" style="margin-top:14px"><div class="ph" style="margin:0">Semana</div><button class="chip rgb" data-a="cpvr" style="margin:0">${icon('rgn', 16)}Volver a generar</button></div><p class="mu" style="font-size:12px;margin:4px 0 8px">Usa las flechas para mover días y descansos a tu gusto.</p>${raw(programRowsHtml(pl))}${programNameBox()}<div style="height:96px"></div><button class="sb pr" data-a="cps" style="padding:16px;font-size:16px;border-radius:16px">Crear programa</button>`;
+  return html`${pgHead('Tu propuesta', 'createGuided')}<div class="d-flex wrap gap-6 m-n4-0-12">${lab.map(x => html`<span class="tg">${x}</span>`)}</div><div class="cd m-8-0"><b>Cómo sacarle partido</b><p class="mu m-6-0-0 fs-13 lh-1_5">${progDraft.txt}</p></div>${weeklySetsCard(pl)}<div class="row mt-14"><div class="ph m-0">Semana</div><button class="chip rgb m-0" data-a="guidedRegenerate">${icon('rgn', 16)}Volver a generar</button></div><p class="mu fs-12 m-4-0-8">Usa las flechas para mover días y descansos a tu gusto.</p>${raw(programRowsHtml(pl))}${programNameBox()}<div class="h-96"></div><button class="sb pr p-16 fs-16 r-16" data-a="createSave">Crear programa</button>`;
 };
-const orderWeekPage = () => html`${pgHead('Ordenar semana', 'cpv0')}<p class="mu" style="margin:-6px 0 8px">Mueve días y descansos con las flechas.</p>${raw(programRowsHtml(progDraft.plan))}<div style="height:96px"></div><button class="sb pr" data-a="cpes" style="padding:16px;font-size:16px;border-radius:16px">Guardar orden</button>`;
+const orderWeekPage = () => html`${pgHead('Ordenar semana', 'ownProgramShow')}<p class="mu m-n6-0-8">Mueve días y descansos con las flechas.</p>${raw(programRowsHtml(progDraft.plan))}<div class="h-96"></div><button class="sb pr p-16 fs-16 r-16" data-a="ownProgramEditSave">Guardar orden</button>`;
 const refreshCreate = () => fullPage(progDraft.m == 'mine' ? createFromMine() : progDraft.m == 'guide' ? guidedProposal() : orderWeekPage());
-A.cpn = () => {
+A.createProgram = () => {
   progDraft = { m: '', name: '', sel: [], plan: null, o: progDraft.o, vr: 0, k: -1, txt: '', dl: null };
   fullPage(createHome());
 };
-A.cpm = () => {
+A.createFromRoutines = () => {
   progDraft.m = 'mine';
   fullPage(createFromMine());
 };
-A.cpt = (i, b) => {
+A.createToggleRoutine = (i, b) => {
   const k = +b.dataset.i;
-  const r = S.cr[k];
+  const r = S.routines[k];
   if (!r)
     return;
   if (progDraft.sel.includes(k))
@@ -304,37 +304,37 @@ A.cpt = (i, b) => {
     progDraft.sel.push(k);
   }
   if (!progDraft.name || /^Mi programa( \d+)?$/.test(progDraft.name))
-    progDraft.name = 'Mi programa ' + (S.cp.length + 1);
+    progDraft.name = 'Mi programa ' + (S.ownPrograms.length + 1);
   buildFromMine();
   fullPage(createFromMine());
 };
-A.cpr = () => {
+A.createRebuild = () => {
   buildFromMine();
   fullPage(createFromMine());
 };
-A.cpg = () => {
+A.createGuided = () => {
   progDraft.m = 'guide';
   fullPage(guidedForm());
 };
-A.cpq = (i, b) => {
+A.guidedAnswer = (i, b) => {
   const k = b.dataset.k;
   const v = b.dataset.v;
   progDraft.o[k] = k == 'dias' ? +v : v;
   fullPage(guidedForm());
 };
-A.cpgen = () => {
+A.guidedGenerate = () => {
   progDraft.vr = 0;
   progDraft.plan = generateProgram({ ...progDraft.o, vr: 0 });
   progDraft.name = programNameFor(progDraft.o);
   progDraft.txt = programAdvice(progDraft.o);
   fullPage(guidedProposal());
 };
-A.cpvr = () => {
+A.guidedRegenerate = () => {
   progDraft.vr = (progDraft.vr || 0) + 1;
   progDraft.plan = generateProgram({ ...progDraft.o, vr: progDraft.vr });
   fullPage(guidedProposal());
 };
-A.cpu = i => {
+A.createDayUp = i => {
   const p = progDraft.plan;
   const k = +i;
   if (k > 0) {
@@ -342,7 +342,7 @@ A.cpu = i => {
     refreshCreate();
   }
 };
-A.cpd = i => {
+A.createDayDown = i => {
   const p = progDraft.plan;
   const k = +i;
   if (k < p.length - 1) {
@@ -350,45 +350,45 @@ A.cpd = i => {
     refreshCreate();
   }
 };
-U.cpn = v => {
+U.programName = v => {
   progDraft.name = v;
 };
-A.cps = () => {
+A.createSave = () => {
   if (!progDraft.plan || !progDraft.plan.some(d => d.ex.length))
     return;
-  const nme = (progDraft.name || '').trim() || 'Mi programa ' + (S.cp.length + 1);
-  S.cp.push({ n: nme, plan: clone(progDraft.plan), t: Date.now(), src: progDraft.m, o: progDraft.m == 'guide' ? { ...progDraft.o, vr: progDraft.vr || 0 } : undefined, d: progDraft.m == 'guide' ? 'Programa guiado' : 'Hecho con tus workouts', dl: progDraft.dl != null ? progDraft.dl : undefined });
-  progDraft.k = S.cp.length - 1;
+  const nme = (progDraft.name || '').trim() || 'Mi programa ' + (S.ownPrograms.length + 1);
+  S.ownPrograms.push({ n: nme, plan: clone(progDraft.plan), t: Date.now(), src: progDraft.m, o: progDraft.m == 'guide' ? { ...progDraft.o, vr: progDraft.vr || 0 } : undefined, d: progDraft.m == 'guide' ? 'Programa guiado' : 'Hecho con tus workouts', dl: progDraft.dl != null ? progDraft.dl : undefined });
+  progDraft.k = S.ownPrograms.length - 1;
   saveState();
-  A.pg();
-  dialog('Programa creado', '«' + X(nme) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.np ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'zno', ''], ['Usar ahora', 'cpa', 'pr']]);
+  A.openPrograms();
+  dialog('Programa creado', '«' + X(nme) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
 };
-A.cpv = (i, b) => {
+A.openOwnProgram = (i, b) => {
   const k = b && b.dataset ? +b.dataset.i : +i;
   progDraft.k = k;
-  A.cpv0();
+  A.ownProgramShow();
 };
-A.cpv0 = () => {
+A.ownProgramShow = () => {
   const k = progDraft.k;
-  const p = S.cp[k];
+  const p = S.ownPrograms[k];
   if (!p)
-    return A.pg();
-  const act = S.cpi == k;
+    return A.openPrograms();
+  const act = S.ownProgramIndex == k;
   const pl = act ? S.plan : p.plan;
-  sheet(html`${pgHead(X(p.n), 'pg')}<p class="mu" style="margin:-6px 0 10px">${p.d || ''}${raw(act ? ' · <b style="color:var(--at)">Plan actual</b>' : '')}</p>${raw(programDaysHtml(pl))}${raw(deloadChips(p.dl, 'p'))}<div class="g2" style="margin-top:12px"><button data-a="cpe">Ordenar días</button><button data-a="cpdl" style="color:var(--ctx)">Borrar</button></div><button data-a="cpsh" style="width:100%;margin-top:8px">Compartir programa</button><div style="height:84px"></div>${raw(act ? '' : '<button class="sb pr" data-a="cpac" style="padding:16px;font-size:16px;border-radius:16px">Usar este programa</button>')}`);
+  sheet(html`${pgHead(X(p.n), 'openPrograms')}<p class="mu m-n6-0-10">${p.d || ''}${raw(act ? ' · <b class="c-at">Plan actual</b>' : '')}</p>${raw(programDaysHtml(pl))}${raw(deloadChips(p.dl, 'p'))}<div class="g2 mt-12"><button data-a="ownProgramEdit">Ordenar días</button><button data-a="ownProgramDeleteAsk" class="c-ctx">Borrar</button></div><button data-a="ownProgramShare" class="w-full mt-8">Compartir programa</button><div class="h-84"></div>${raw(act ? '' : '<button class="sb pr p-16 fs-16 r-16" data-a="ownProgramApplyAsk">Usar este programa</button>')}`);
   sheetToTop();
 };
-A.cpac = () => {
-  const p = S.cp[progDraft.k];
+A.ownProgramApplyAsk = () => {
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
-  if (S.np)
-    confirmDialog('¿Empezar con este programa?', 'Empezarás con «' + X(p.n) + '». Puedes cambiarlo cuando quieras.', 'cpa', 'Empezar');
+  if (S.noProgram)
+    confirmDialog('¿Empezar con este programa?', 'Empezarás con «' + X(p.n) + '». Puedes cambiarlo cuando quieras.', 'ownProgramApply', 'Empezar');
   else
-    confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(p.n) + '» y se reiniciará el progreso de la semana.', 'cpa', 'Cambiar');
+    confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(p.n) + '» y se reiniciará el progreso de la semana.', 'ownProgramApply', 'Cambiar');
 };
-A.cpa = () => {
-  const p = S.cp[progDraft.k];
+A.ownProgramApply = () => {
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
   if (W) {
@@ -396,79 +396,79 @@ A.cpa = () => {
     return;
   }
   syncCustomProgram();
-  S.cpi = progDraft.k;
+  S.ownProgramIndex = progDraft.k;
   S.plan = clone(p.plan);
-  delete S.np;
+  delete S.noProgram;
   if (p.o && isLevel(p.o.niv))
-    S.lv = p.o.niv;
+    S.level = p.o.niv;
   dropResume();
-  S.wk = 1;
-  S.sl = 0;
-  S.sel = 0;
-  S.done = {};
+  S.week = 1;
+  S.selectedWeekday = 0;
+  S.selectedDay = 0;
+  S.doneDays = {};
   saveState();
   sheet();
   R();
 };
-A.cpe = () => {
-  const p = S.cp[progDraft.k];
+A.ownProgramEdit = () => {
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
   progDraft.m = 'edit';
-  progDraft.plan = clone(S.cpi == progDraft.k ? S.plan : p.plan);
+  progDraft.plan = clone(S.ownProgramIndex == progDraft.k ? S.plan : p.plan);
   fullPage(orderWeekPage());
 };
-A.cpes = () => {
-  const p = S.cp[progDraft.k];
+A.ownProgramEditSave = () => {
+  const p = S.ownPrograms[progDraft.k];
   if (!p || !progDraft.plan)
     return;
   p.plan = clone(progDraft.plan);
-  if (S.cpi == progDraft.k)
+  if (S.ownProgramIndex == progDraft.k)
     S.plan = clone(progDraft.plan);
   saveState();
   R();
-  A.cpv0();
+  A.ownProgramShow();
 };
-A.cpdl = () => {
-  const p = S.cp[progDraft.k];
+A.ownProgramDeleteAsk = () => {
+  const p = S.ownPrograms[progDraft.k];
   if (!p)
     return;
-  if (S.cpi == progDraft.k) {
+  if (S.ownProgramIndex == progDraft.k) {
     toast('Es tu plan actual y no se puede borrar');
     return;
   }
-  confirmDialog('¿Borrar este programa?', 'Se eliminará «' + X(p.n) + '» de tu lista.', 'cpdd', 'Borrar');
+  confirmDialog('¿Borrar este programa?', 'Se eliminará «' + X(p.n) + '» de tu lista.', 'ownProgramDelete', 'Borrar');
 };
-A.cpdd = () => {
+A.ownProgramDelete = () => {
   const k = progDraft.k;
-  if (!S.cp[k])
+  if (!S.ownPrograms[k])
     return;
-  S.cp.splice(k, 1);
-  if (S.cpi == k)
-    S.cpi = -1;
-  else if (S.cpi > k)
-    S.cpi--;
+  S.ownPrograms.splice(k, 1);
+  if (S.ownProgramIndex == k)
+    S.ownProgramIndex = -1;
+  else if (S.ownProgramIndex > k)
+    S.ownProgramIndex--;
   progDraft.k = -1;
   saveState();
-  A.pg();
+  A.openPrograms();
 };
 /* semana de descarga de un programa propio (F-20): chips de workout/deload ('d' el que se crea, 'p' el que se ve) */
 const setProgramDeload = (k, v) => {
   if (k == 'd')
     progDraft.dl = v;
-  else if (S.cp[progDraft.k]) {
+  else if (S.ownPrograms[progDraft.k]) {
     if (v == null)
-      delete S.cp[progDraft.k].dl;
+      delete S.ownPrograms[progDraft.k].dl;
     else
-      S.cp[progDraft.k].dl = v;
+      S.ownPrograms[progDraft.k].dl = v;
     saveState();
     R();
   }
 };
-const refreshDeload = k => k == 'p' ? A.cpv0() : fullPage(progDraft.m == 'guide' ? guidedForm() : createFromMine());
-A.dlch = (i, b) => {
+const refreshDeload = k => k == 'p' ? A.ownProgramShow() : fullPage(progDraft.m == 'guide' ? guidedForm() : createFromMine());
+A.deloadEveryChoose = (i, b) => {
   const k = b.dataset.k;
-  const cur = k == 'd' ? progDraft.dl : (S.cp[progDraft.k] || {}).dl;
+  const cur = k == 'd' ? progDraft.dl : (S.ownPrograms[progDraft.k] || {}).dl;
   const ot = cur > 0 && ![4, 5, 6].includes(+cur);
   const v = b.dataset.v;
   /* tocar la opción elegida la quita (vuelve a la del nivel); «Otra» propone cada 8 semanas */
@@ -476,7 +476,7 @@ A.dlch = (i, b) => {
   setProgramDeload(k, nv);
   refreshDeload(k);
 };
-C.dlnw = e => {
+C.deloadEveryWeeks = e => {
   const k = e.dataset.k;
   setProgramDeload(k, Math.min(16, Math.max(2, Math.round(+e.value) || 8)));
   refreshDeload(k);

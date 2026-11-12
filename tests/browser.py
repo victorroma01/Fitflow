@@ -4,8 +4,13 @@ Motor: variable de entorno SF_BROWSER = chromium (por defecto) | webkit (el moto
 Dirección: todo se sirve por HTTP desde su carpeta, como en GitHub Pages: el paquete (dist/app, con sw.js al lado), porque
 sus módulos ES no cargan desde file://, y también el archivo único (con file://, WebKit no guarda datos, y Chromium a veces
 abre la página recargada con el almacenamiento vacío). SF_HTTP=0 abre el archivo único como archivo, con Chromium.
+
+La app lee de IndexedDB los entrenos, el historial y las comidas antes de pintar nada, y los guarda allí sin esperar
+(core/persist, I-04). Por eso, en todas las pruebas, page.goto y page.reload esperan antes a que lo guardado quede escrito
+(savesDone) y, después, a que la app termine de arrancar (window.__ffready). En otras páginas no esperan nada.
 """
 import os, threading, functools, http.server
+from playwright.sync_api import Page
 
 ENGINE = os.environ.get('SF_BROWSER', 'chromium')
 HTTP = os.environ.get('SF_HTTP', '1') != '0' or ENGINE != 'chromium'
@@ -42,3 +47,27 @@ def context_opts(path):
     if HTTP and not is_package(path):
         return {'service_workers': 'block'}
     return {}
+
+
+def _quiet(page, expr):
+    """Evalúa expr en la página si se puede (si la página no es la app, o está cambiando, no pasa nada)."""
+    try:
+        return page.evaluate(expr)
+    except Exception:
+        return None
+
+
+def _settled(nav):
+    """page.goto / page.reload que antes esperan a lo pendiente de guardar y después a que la app arranque."""
+    def run(self, *a, **k):
+        _quiet(self, 'window.savesDone ? savesDone() : null')
+        r = nav(self, *a, **k)
+        _quiet(self, 'window.__ffready || null')
+        return r
+    return run
+
+
+if not getattr(Page, '_ff_settled', False):
+    Page.goto = _settled(Page.goto)
+    Page.reload = _settled(Page.reload)
+    Page._ff_settled = True

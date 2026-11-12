@@ -18,8 +18,8 @@ const errorCode = (j, status) => {
   const m = String(e.message || '').split(/[\s:]/)[0];
   return /^[A-Z][A-Z0-9_]{2,}$/.test(m) ? m : e.status || 'HTTP_' + status;
 };
-/** Petición a `url`. Opciones: method, body (se envía como JSON), form (como formulario), token (Bearer) y timeout (ms).
-  Devuelve el JSON de la respuesta ({} si no trae cuerpo). */
+/** Petición a `url`. Opciones: method, body (se envía como JSON), form (como formulario), token (Bearer), appCheck (el token
+  de App Check: cloud/appcheck) y timeout (ms). Devuelve el JSON de la respuesta ({} si no trae cuerpo). */
 export async function fetchJson(url, o = {}) {
   const ctl = new AbortController();
   const tm = setTimeout(() => ctl.abort(), o.timeout || 2e4);
@@ -27,6 +27,8 @@ export async function fetchJson(url, o = {}) {
   let body;
   if (o.token)
     headers.Authorization = 'Bearer ' + o.token;
+  if (o.appCheck)
+    headers['X-Firebase-AppCheck'] = o.appCheck;
   if (o.form) {
     headers['Content-Type'] = 'application/x-www-form-urlencoded';
     body = new URLSearchParams(o.form).toString();

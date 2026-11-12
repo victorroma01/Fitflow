@@ -1,4 +1,24 @@
 /* ═══ css/71-levels ═══ Niveles de programa */
+/* el color de cada nivel (programs/levels): --lc y sus transparencias para el halo del punto (--ld), el fondo (--lb) y el borde
+   (--lr) */
+.lv-ini {
+  --lc:#34d399;
+  --ld:#34d39938;
+  --lb:#34d39924;
+  --lr:#34d3996b;
+}
+.lv-int {
+  --lc:#fbbf24;
+  --ld:#fbbf2438;
+  --lb:#fbbf2424;
+  --lr:#fbbf246b;
+}
+.lv-ava {
+  --lc:#a78bfa;
+  --ld:#a78bfa38;
+  --lb:#a78bfa24;
+  --lr:#a78bfa6b;
+}
 /* v19 niveles */
 .lvd {
   display:inline-block;

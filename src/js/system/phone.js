@@ -42,8 +42,8 @@ export const launchAction = () => {
       setNutriDayOffset(0);
     setWeightView(a == 'peso' ? 1 : 0);
     /* «Entreno de hoy» sin programa elegido todavía (I-24): a Programas, en cuanto la app esté pintada */
-    if (a == 'entreno' && S.np)
-      setTimeout(() => A.pg(), 0);
+    if (a == 'entreno' && S.noProgram)
+      setTimeout(() => A.openPrograms(), 0);
   }
   catch (e) {
     logError('acceso directo', e);
@@ -58,7 +58,7 @@ let badgeLast = -1;
 const badgeSync = () => {
   if (!badgeOk())
     return;
-  const n = S.bdg ? badgeCount() : 0;
+  const n = S.iconBadge ? badgeCount() : 0;
   if (n == badgeLast)
     return;
   badgeLast = n;
@@ -72,16 +72,16 @@ const badgeSync = () => {
   }
 };
 /** Opción de Ajustes → Sonido y avisos (solo donde el sistema tiene globos). */
-export const badgeCard = () => badgeOk() ? html`<label class="srk"><input type="checkbox" data-c="bdg"${S.bdg ? ' checked' : ''}> Globo en el icono de la app</label><small class="mu" style="display:block;margin:-4px 0 8px">Al salir de la app, el icono enseña cuántas cosas tienes pendientes: el pesaje de hoy y las respuestas nuevas a tus fallos y sugerencias. En iPhone, la primera vez pide permiso de avisos.</small>` : '';
+export const badgeCard = () => badgeOk() ? html`<label class="srk"><input type="checkbox" data-c="toggleBadge"${S.iconBadge ? ' checked' : ''}> Globo en el icono de la app</label><small class="mu d-block m-n4-0-8">Al salir de la app, el icono enseña cuántas cosas tienes pendientes: el pesaje de hoy y las respuestas nuevas a tus fallos y sugerencias. En iPhone, la primera vez pide permiso de avisos.</small>` : '';
 afterSync.push(badgeSync);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState == 'hidden')
     badgeSync();
 });
 /* — manejadores de esta función (registros A / C / U) — */
-C.bdg = async (e) => {
+C.toggleBadge = async (e) => {
   if (!e.checked) {
-    S.bdg = 0;
+    S.iconBadge = 0;
     saveState();
     badgeSync();
     R();
@@ -101,7 +101,7 @@ C.bdg = async (e) => {
     toast('El móvil no deja poner el globo: permite los avisos de StrataFit en los ajustes del sistema');
     return;
   }
-  S.bdg = 1;
+  S.iconBadge = 1;
   saveState();
   badgeSync();
   R();

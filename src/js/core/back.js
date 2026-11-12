@@ -25,32 +25,32 @@ export const backTarget = () => {
     return { k: 'aviso', go: () => {
       } };
   if ($('#upd'))
-    return { k: 'aviso', go: () => A.updLater() };
+    return { k: 'aviso', go: () => A.updateLater() };
   if ($('#dg').firstChild)
     return { k: 'aviso', go: () => $('#dg').innerHTML = '' };
   if ($('#tour'))
-    return { k: 'recorrido', go: () => A.trx() };
+    return { k: 'recorrido', go: () => A.tourSkip() };
   if ($('.lvb'))
-    return { k: 'aviso', go: () => A.lvx() };
+    return { k: 'aviso', go: () => A.levelMenuClose() };
   if ($('#f2w'))
-    return { k: 'wod', go: () => A.wdx() };
+    return { k: 'wod', go: () => A.wodExit() };
   const m = $('#mn .msd');
   if (m && !m.classList.contains('out'))
-    return { k: 'menu', el: m, go: () => A.mnc() };
+    return { k: 'menu', el: m, go: () => A.closeMenu() };
   const p = $('#sh .sp');
   if (p) {
     /* el «←» (o «Cerrar») de la página; sin él, se cierra la hoja */
     const b = p.querySelector('[aria-label="Volver"],[aria-label="Cerrar"]');
-    return { k: 'hoja', el: p, go: () => b && A[b.dataset.a] ? A[b.dataset.a](+b.dataset.i, b) : A.cl() };
+    return { k: 'hoja', el: p, go: () => b && A[b.dataset.a] ? A[b.dataset.a](+b.dataset.i, b) : A.closeSheet() };
   }
   if (W)
     return { k: 'entreno', go: () => toast('El entreno sigue en marcha. Para salir, usa «Salir y descartar» o «Log out»') };
   if (overviewMode)
-    return { k: 'página', el: $('#app'), go: () => A.zovb() };
+    return { k: 'página', el: $('#app'), go: () => A.overviewBack() };
   if (weightView && S.tab == 2)
-    return { k: 'página', el: $('#app'), go: () => A.zwvb() };
+    return { k: 'página', el: $('#app'), go: () => A.weightBack() };
   if (S.tab)
-    return { k: 'pestaña', go: () => A.tab(0) };
+    return { k: 'pestaña', go: () => A.selectTab(0) };
   return null;
 };
 /* al moverse por el historial, el navegador no debe recolocar el desplazamiento de la página */

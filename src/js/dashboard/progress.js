@@ -10,16 +10,16 @@ import { toDisplayWeight, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
 let progressState = { n: '', m: 'e', p: -1 };
 const dateShort = d => new Date(d + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' });
-const progressExercises = () => Object.keys(S.hist || {}).filter(n => {
-  const h = S.hist[n];
+const progressExercises = () => Object.keys(S.exerciseHistory || {}).filter(n => {
+  const h = S.exerciseHistory[n];
   return Array.isArray(h) && h.some(x => x.s.some(y => +y[1] > 0));
 }).sort((a, b) => {
-  const da = (S.hist[a][0] || {}).d || '';
-  const db = (S.hist[b][0] || {}).d || '';
+  const da = (S.exerciseHistory[a][0] || {}).d || '';
+  const db = (S.exerciseHistory[b][0] || {}).d || '';
   return da < db ? 1 : da > db ? -1 : 0;
 });
 const progressSeries = (n, m) => {
-  const h = ((S.hist || {})[n] || []).slice().reverse();
+  const h = ((S.exerciseHistory || {})[n] || []).slice().reverse();
   return h.map(x => {
     const ss = x.s.filter(y => !y[3] && +y[1] > 0);
     let v = 0;
@@ -82,14 +82,14 @@ const progressChart = (pts, m, sel, inter) => {
       s += html`<circle cx="${cx}" cy="${cy}" r="9" fill="var(--a2)" opacity=".18"/>`;
     s += html`<circle cx="${cx}" cy="${cy}" r="${i == sel ? 5 : 3.6}" fill="${p.pr ? 'var(--a2)' : 'var(--cd)'}" stroke="${p.pr ? 'var(--cd)' : 'var(--a2)'}" stroke-width="2"/>`;
     if (inter)
-      s += html`<circle cx="${cx}" cy="${cy}" r="15" fill="transparent" data-a="pgp" data-i="${i}" style="cursor:pointer"/>`;
+      s += html`<circle cx="${cx}" cy="${cy}" r="15" fill="transparent" data-a="progressPeriod" data-i="${i}" class="cur-pointer"/>`;
   });
   return html`${raw(s)}</svg>`;
 };
 export const progressBody = (stat) => {
   const L = progressExercises();
   if (!L.length)
-    return '<p class="mu" style="margin:8px 0 0">Cuando registres pesos verás aquí la evolución de cada ejercicio.</p>';
+    return '<p class="mu m-8-0-0">Cuando registres pesos verás aquí la evolución de cada ejercicio.</p>';
   if (!stat && !L.includes(progressState.n))
     progressState.n = L[0];
   const n = stat || progressState.n;
@@ -98,10 +98,10 @@ export const progressBody = (stat) => {
   const ML = { e: '1RM estimado', w: 'Peso máximo', v: 'Volumen' };
   let h = '';
   if (!stat) {
-    h += html`<select data-c="pgn" aria-label="Ejercicio" style="margin:10px 0 8px">${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}</select>${raw(segmented('pgm', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"'))}`;
+    h += html`<select data-c="progressExercise" aria-label="Ejercicio" class="m-10-0-8">${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}</select>${raw(segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"'))}`;
   }
   if (!pts.length)
-    return html`${raw(h)}<p class="mu" style="margin:10px 0 0">Este ejercicio no tiene pesos registrados.</p>`;
+    return html`${raw(h)}<p class="mu m-10-0-0">Este ejercicio no tiene pesos registrados.</p>`;
   const sel = stat ? pts.length - 1 : (progressState.p >= 0 && progressState.p < pts.length ? progressState.p : pts.length - 1);
   const p = pts[sel];
   h += html`<div class="pgt2"><span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="pgr">RÉCORD</em>' : '')}</span><small>${raw(ML[m])} · ${raw(dateShort(p.d))}</small></div>${progressChart(pts, m, sel, !stat)}`;
@@ -109,7 +109,7 @@ export const progressBody = (stat) => {
     const a = pts[0].v;
     const z = pts[pts.length - 1].v;
     const dl = (z - a) / a * 100;
-    h += html`<div class="mu pgsum">De ${raw(progressFmt(a, m))} a ${raw(progressFmt(z, m))} · <b style="color:${dl >= 0 ? 'var(--a1)' : 'inherit'}">${dl >= 0 ? '+' : ''}${Math.round(dl * 10) / 10} %</b>${raw(m != 'v' ? '<br><span style="font-size:11.5px">Punto relleno = récord personal</span>' : '')}</div>`;
+    h += html`<div class="mu pgsum">De ${raw(progressFmt(a, m))} a ${raw(progressFmt(z, m))} · <b class="${dl >= 0 ? 'c-a1' : 'c-inherit'}">${dl >= 0 ? '+' : ''}${Math.round(dl * 10) / 10} %</b>${raw(m != 'v' ? '<br><span class="fs-11_5">Punto relleno = récord personal</span>' : '')}</div>`;
   }
   else
     h += '<div class="mu pgsum">Con una segunda sesión verás la tendencia.</div>';
@@ -120,16 +120,16 @@ const refreshProgress = () => {
   if (e)
     e.innerHTML = progressBody();
 };
-A.pgp = i => {
+A.progressPeriod = i => {
   progressState.p = +i;
   refreshProgress();
 };
-A.pgm = (i, b) => {
+A.progressMetric = (i, b) => {
   progressState.m = ['e', 'w', 'v'].includes(b.dataset.v) ? b.dataset.v : 'e';
   progressState.p = -1;
   refreshProgress();
 };
-C.pgn = e => {
+C.progressExercise = e => {
   const L = progressExercises();
   progressState.n = L[+e.value] || progressState.n;
   progressState.p = -1;
@@ -138,9 +138,9 @@ C.pgn = e => {
 export const progressCard = () => html`<div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">${raw(progressBody())}</div></div>`;
 const recordEvents = () => {
   const ev = [];
-  Object.keys(S.hist || {}).forEach(n => {
+  Object.keys(S.exerciseHistory || {}).forEach(n => {
     let b = 0;
-    S.hist[n].slice().reverse().forEach(x => {
+    S.exerciseHistory[n].slice().reverse().forEach(x => {
       const ss = x.s.filter(y => !y[3] && +y[1] > 0);
       if (!ss.length)
         return;
@@ -158,5 +158,5 @@ export const recordsTimeline = () => {
   const ev = recordEvents().slice(0, 8);
   if (!ev.length)
     return '';
-  return html`<div class="cd"><b>Línea de récords</b>${ev.map(o => html`<div class="it" style="grid-template-columns:1fr auto"><span>${o.n}<br><small>${raw(dateShort(o.d))}</small></span><span style="text-align:right"><b>${toDisplayWeight(o.w)} ${weightUnit()} × ${raw(o.r)}</b><br><small>1RM est. ${Math.round(toDisplayWeight(o.e) * 10) / 10} (+${Math.round(toDisplayWeight(o.up) * 10) / 10})</small></span></div>`)}</div>`;
+  return html`<div class="cd"><b>Línea de récords</b>${ev.map(o => html`<div class="it cols-1fr-auto"><span>${o.n}<br><small>${raw(dateShort(o.d))}</small></span><span class="ta-r"><b>${toDisplayWeight(o.w)} ${weightUnit()} × ${raw(o.r)}</b><br><small>1RM est. ${Math.round(toDisplayWeight(o.e) * 10) / 10} (+${Math.round(toDisplayWeight(o.up) * 10) / 10})</small></span></div>`)}</div>`;
 };

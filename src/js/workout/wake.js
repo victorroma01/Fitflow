@@ -6,7 +6,7 @@ import { S, W, wodRun } from '../core/state.js';
 let wakeLockHandle = null;
 export const keepAwake = async () => {
   try {
-    const want = !!(((W && !W.p && S.awk !== 0) || (wodRun && !wodRun.pa && !wodRun.done)) && document.visibilityState == 'visible');
+    const want = !!(((W && !W.pausedAt && S.keepAwake !== 0) || (wodRun && !wodRun.pa && !wodRun.done)) && document.visibilityState == 'visible');
     if (want && !wakeLockHandle && navigator.wakeLock) {
       const l = await navigator.wakeLock.request('screen');
       wakeLockHandle = l;

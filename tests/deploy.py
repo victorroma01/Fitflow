@@ -5,7 +5,7 @@ de archivo), código que se carga al usarlo, copia de seguridad desde la app ins
   python3 tests/deploy.py dist/app
 Requiere:  pip install playwright  &&  playwright install chromium
 """
-import os, sys, re, json, shutil, tempfile, threading, functools, http.server
+import os, sys, re, json, time, shutil, tempfile, threading, functools, http.server, collections
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, ENGINE
 # con la sesión de prueba de tests/init.js: sin cuenta, la app solo enseña el inicio de sesión
@@ -20,7 +20,25 @@ def check(name, cond, info=''):
     print(('  ok   ' if cond else '  FALLA'), name, ('' if cond else info))
 
 
+# lo que piden el navegador y el service worker (para ver qué se vuelve a pedir: I-09) y lo que el servidor falla a propósito
+# (un trozo de código que no llega durante la instalación: I-08)
+REQS = []
+FAIL = set()
+# y las últimas peticiones, con su momento, para ver dónde se queda una recarga que no termina (I-13)
+REQLOG = collections.deque(maxlen=40)
+T0 = time.time()
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        path = self.path.split('?')[0]
+        REQS.append(path)
+        REQLOG.append('%.1f s %s' % (time.time() - T0, path))
+        if any(path.endswith(f) for f in FAIL):
+            self.send_error(500)
+            return
+        super().do_GET()
+
     def end_headers(self):
         self.send_header('Cache-Control', 'max-age=600')  # como GitHub Pages: el SW debe saltarse la caché HTTP
         super().end_headers()
@@ -43,7 +61,8 @@ def skipped(name):
 def reload(pg, notes):
     """Recarga la página. Si la recarga falla con un error interno de WebKit, o se queda sin terminar (de vez en cuando, en la
     integración continua de GitHub, una recarga con service worker no llega a «load» en Chromium), se vuelve a abrir la misma
-    dirección una vez y se anota, para que la prueba siga y se vea el resto; si vuelve a fallar, falla la prueba."""
+    dirección una vez y se anota, para que la prueba siga y se vea el resto; si vuelve a fallar, falla la prueba. Si se queda sin
+    terminar, enseña las últimas peticiones que llegaron al servidor, para ver si la recarga llegó a pedir la página (I-13)."""
     try:
         pg.reload()
     except Exception as e:
@@ -52,6 +71,8 @@ def reload(pg, notes):
             raise
         notes.append(('recarga sin terminar en 30 s' if stuck else 'recarga con error interno de WebKit') + ' en ' + pg.url[-30:])
         print('   (%s: se vuelve a abrir la dirección)' % notes[-1])
+        if stuck:
+            print('   últimas peticiones al servidor (desde el arranque de la prueba): ' + ' · '.join(list(REQLOG)[-10:]))
         pg.goto(pg.url)
 
 
@@ -115,6 +136,13 @@ def main(app):
                     cached = ev("caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url.split('/fitflow/')[1]))))).then(a=>a.flat())")
                     need = ['index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', ''] + code
                     check('precarga completa (también el código js/)', all(n in cached for n in need), str([n for n in need if n not in cached]))
+                    # lo que pide la página pasa por el service worker: el código sale de la caché sin volver a pedirlo al servidor y un
+                    # icono (o el documento, o una foto), de la caché pero revalidado (I-09)
+                    del REQS[:]
+                    eager = sorted(f for f in code if not re.match(r'js/(wod|csv|foods-online|exinfo|analysis|pdf)-', f))[0]
+                    ev("Promise.all([fetch('%s'),fetch('icon-192.png')]).then(()=>1)" % eager)
+                    pg.wait_for_timeout(800)
+                    check('el código sale de la caché sin pedirlo otra vez; un icono se revalida (I-09)', ('/fitflow/' + eager) not in REQS and '/fitflow/icon-192.png' in REQS, str(REQS[:12]))
                 else:
                     skipped('service worker y precarga')
                 # comprimido: líneas muy largas, de media más de 500 caracteres (los saltos que quedan son los de dentro de los textos;
@@ -144,13 +172,13 @@ def main(app):
                         log.append('acceso directo sin conexión: error interno de WebKit al abrir la dirección')
                     pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
                     check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
-                    ev('A.wod()')
+                    ev('A.openWod()')
                     pg.wait_for_timeout(300)
                     check('sin conexión también abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
                     c.set_offline(False)
                 else:
                     skipped('sin conexión')
-                    ev('A.wod()')
+                    ev('A.openWod()')
                     pg.wait_for_timeout(300)
                     check('abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
                 reload(pg, log)
@@ -161,11 +189,11 @@ def main(app):
                 vj0 = open(vj, encoding='utf-8').read()
                 check('version.json publicado con la versión de la app', json.loads(vj0)['version'] == ev('APPV'))
                 # Perfil → Ajustes → Actualizaciones, sin versión nueva
-                ev("S.tab=3;R();A.zaj()")
-                pg.click('#sh [data-a=updChk]')
+                ev("S.tab=3;R();A.openSettings()")
+                pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones: «Tienes la última versión»', ev("/Tienes la última versión/.test(document.body.innerText)"))
-                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updChk] .srv').textContent") == 'V' + ev('APPV'))
+                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updateCheck] .srv').textContent") == 'V' + ev('APPV'))
 
                 def publish(ver, items, code=True):
                     if code:
@@ -180,8 +208,8 @@ def main(app):
                     reload(pg, log)
                     pg.wait_for_load_state('load')
                 else:
-                    ev("A.zaj()")
-                    pg.click('#sh [data-a=updChk]')  # sin service worker, el aviso llega desde Ajustes → Actualizaciones
+                    ev("A.openSettings()")
+                    pg.click('#sh [data-a=updateCheck]')  # sin service worker, el aviso llega desde Ajustes → Actualizaciones
                 try:
                     pg.wait_for_selector('#upd.update .updk', timeout=10000)
                 except Exception:
@@ -213,8 +241,8 @@ def main(app):
                     c.set_offline(False)
                 # Ajustes → Actualizaciones cuando hay una versión nueva en el servidor
                 publish('9.9.10', ['Otra mejora'], code=False)
-                ev("S.tab=3;R();A.zaj()")
-                pg.click('#sh [data-a=updChk]')
+                ev("S.tab=3;R();A.openSettings()")
+                pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones encuentra la versión nueva', ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión 9.9.10')
                 pg.click('#upd .updx')
@@ -256,6 +284,30 @@ def main(app):
                           str([ev('APPV'), v0, low_popup]))
                 else:
                     skipped('versión con un número menor')
+                # I-08: si un trozo de código no llega durante la primera instalación, no queda guardada una página a medias
+                if SW:
+                    lazy_one = sorted(f for f in os.listdir(os.path.join(site, 'fitflow', 'js')) if f.startswith('wod-'))[0]
+                    FAIL.add('/js/' + lazy_one)
+                    c4 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
+                    c4.add_init_script(INIT)
+                    p4 = c4.new_page()
+                    p4.goto(url)
+                    sw_js = "navigator.serviceWorker.getRegistration().then(r=>!!(r&&r.active))"
+                    docs_js = "caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url))))).then(a=>a.flat().filter(u=>/\\/fitflow\\/(index\\.html)?$/.test(u)).length)"
+                    p4.wait_for_timeout(3000)
+                    st4 = [p4.evaluate('!!window.__ffok'), p4.evaluate(sw_js), p4.evaluate(docs_js)]
+                    check('si un trozo de código no llega al instalarse, la app abre igual pero no se guarda una página a medias: la instalación falla (I-08)', st4 == [True, False, 0], str(st4))
+                    FAIL.clear()
+                    for _ in range(20):
+                        p4.reload()
+                        p4.wait_for_timeout(800)
+                        if p4.evaluate(sw_js) and p4.evaluate(docs_js) == 2:
+                            break
+                    have = p4.evaluate("caches.open('ff-app-2').then(c=>c.match('js/%s')).then(r=>!!r)" % lazy_one)
+                    check('y en la siguiente apertura con red se instala completa, con ese código', p4.evaluate(sw_js) and p4.evaluate(docs_js) == 2 and have, str([p4.evaluate(sw_js), p4.evaluate(docs_js), have]))
+                    c4.close()
+                else:
+                    skipped('instalación con un trozo de código que falla')
                 # app instalada: compartir copia de seguridad
                 c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
                 c2.add_init_script(INIT)
@@ -266,23 +318,23 @@ def main(app):
                 p2.on('pageerror', lambda e: e2.append(str(e)[:200]))
                 p2.goto(url)
                 p2.wait_for_timeout(800)
-                p2.evaluate("S.tab=3;saveState();R();A.zaj()")
+                p2.evaluate("S.tab=3;saveState();R();A.openSettings()")
                 p2.wait_for_timeout(200)
                 check('instalada: sin aviso de «Añadir a pantalla de inicio»', p2.evaluate("!/Añadir a pantalla de inicio/.test(document.body.innerText)"))
-                p2.evaluate("A.zbk()")
+                p2.evaluate("A.openBackup()")
                 p2.wait_for_timeout(200)
-                p2.click('[data-a=bkf]')
+                p2.click('[data-a=backupDownload]')
                 p2.wait_for_timeout(600)
                 sh = p2.evaluate("window.__sh")
                 check('instalada: comparte la copia como archivo JSON, siempre con el mismo nombre', bool(sh) and sh[0] == 'StrataFit-copia.json' and sh[1] and sh[2] == 'application/json', str(sh))
                 p2.evaluate("window.__abort=1;window.__sh=null")
-                p2.click('[data-a=bkf]')
+                p2.click('[data-a=backupDownload]')
                 p2.wait_for_timeout(600)
                 check('instalada: cancelar compartir lo indica', p2.evaluate("/No se guardó la copia/.test(document.body.innerText)"))
                 p3 = c.new_page()
                 p3.goto(url)
                 p3.wait_for_timeout(600)
-                p3.evaluate("S.tab=3;saveState();R();A.zaj()")
+                p3.evaluate("S.tab=3;saveState();R();A.openSettings()")
                 check('en el navegador: aviso de «Añadir a pantalla de inicio» en Ajustes', p3.evaluate("/Añadir a pantalla de inicio/.test(document.body.innerText)"))
                 check('sin errores de JS', not errs and not e2, str((errs + e2)[:3]))
             except Exception:

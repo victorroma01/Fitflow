@@ -63,28 +63,28 @@ def main(path):
         # entreno: empezar, completar series, terminar
         ev('S.tab=0;R()')
         n0 = ev('S.logs.length')
-        ev('A.go()')
+        ev('A.startWorkout()')
         pg.clock.run_for(300)
         check('empieza el entreno (W)', ev('!!W'))
         for _ in range(3):
             if ev("!!document.querySelector('.ck:not(.on)')"):
                 ev("document.querySelector('.ck:not(.on)').click()")
                 pg.clock.run_for(200)
-        check('se completan series', ev('W.x.flat().filter(s=>s.ok).length') >= 1)
+        check('se completan series', ev('W.sets.flat().filter(s=>s.ok).length') >= 1)
         # añadir un ejercicio desde la librería con el entreno en marcha (antes rompía la sesión)
-        nx = ev('W.x.length')
-        ev('A.lib();libState.q="remo";document.querySelector("#lr").innerHTML=libBody()')
+        nx = ev('W.sets.length')
+        ev('A.openLibrary();libState.q="remo";document.querySelector("#lr").innerHTML=libBody()')
         pg.clock.run_for(200)
-        ev("document.querySelector('#lr [data-a=lad]').click()")
+        ev("document.querySelector('#lr [data-a=libraryAddToDay]').click()")
         pg.clock.run_for(200)
-        check('añadir ejercicio en pleno entreno añade sus series', ev('W.x.length') == nx + 1 and ev('W.x.length==S.plan[S.sel].ex.length'))
+        check('añadir ejercicio en pleno entreno añade sus series', ev('W.sets.length') == nx + 1 and ev('W.sets.length==S.plan[S.selectedDay].ex.length'))
         ev('sheet()')
         pg.clock.run_for(200)
         check('la sesión se sigue pintando', ev("document.querySelectorAll('.xs').length") == nx + 1)
-        ev('A.end()')
+        ev('A.finishAsk()')
         pg.clock.run_for(200)
         check('diálogo de guardar', ev("!!document.querySelector('#dg .dgc')"))
-        ev("document.querySelector('#dg [data-v=zend]').click()")
+        ev("document.querySelector('#dg [data-v=finishSave]').click()")
         pg.clock.run_for(400)
         check('entreno guardado en el registro', ev('S.logs.length') == n0 + 1, str(ev('S.logs.length')))
         check('W liberado', ev('W===null||W===undefined||!W'))
@@ -93,20 +93,20 @@ def main(path):
         ev('S.tab=1;R()')
         k = ev("dayKey(new Date(Date.now()+nutriDayOffset*864e5))")
         m0 = ev("((S.meals[%s]||{})[0]||[]).length" % json.dumps(k))
-        ev('A.add(0)')
+        ev('A.openAddFood(0)')
         pg.clock.run_for(300)
-        ev('A.pk(0)')
+        ev('A.pickFood(0)')
         pg.clock.run_for(200)
-        ev('A.fa()')
+        ev('A.addFood()')
         pg.clock.run_for(300)
         check('alimento añadido', ev("((S.meals[%s]||{})[0]||[]).length" % json.dumps(k)) == m0 + 1)
 
         # hojas y pantallas auxiliares: no deben lanzar error
-        for name, js in [('librería', 'A.lib()'), ('programas', 'A.pg()'), ('crear programa', 'A.cpn()'), ('calendario', 'A.cl2()'), ('registros', 'A.lg()'),
-                         ('menú', 'A.menu()'), ('copia de seguridad', 'A.zbk()'), ('WOD', 'A.wod()'), ('cardio', 'A.cardio()'), ('medidas', 'A.f2ms()'),
-                         ('logros', 'A.f2lg()'), ('exportar CSV', 'A.f2ex()'), ('peso corporal', 'A.zwv()'), ('mis workouts', 'A.cr()'),
-                         ('mi nutrición', 'A.nmy()'), ('ajustar a mano', 'A.nmm()'), ('buscar alimento en internet', 'A.nfs(0)'), ('ajustes', 'A.zaj()'),
-                         ('informar de un fallo', 'A.rpo()'), ('privacidad', "A.zaj();A.ajp(0,{dataset:{v:'privacidad'}})")]:
+        for name, js in [('librería', 'A.openLibrary()'), ('programas', 'A.openPrograms()'), ('crear programa', 'A.createProgram()'), ('calendario', 'A.openCalendar()'), ('registros', 'A.openLogs()'),
+                         ('menú', 'A.openMenu()'), ('copia de seguridad', 'A.openBackup()'), ('WOD', 'A.openWod()'), ('cardio', 'A.openCardio()'), ('medidas', 'A.openMeasures()'),
+                         ('logros', 'A.openAchievements()'), ('exportar CSV', 'A.openCsvExport()'), ('peso corporal', 'A.openWeight()'), ('mis workouts', 'A.routineEditorBack()'),
+                         ('mi nutrición', 'A.openMyNutrition()'), ('ajustar a mano', 'A.openManualGoals()'), ('buscar alimento en internet', 'A.openFoodSearch(0)'), ('ajustes', 'A.openSettings()'),
+                         ('informar de un fallo', 'A.openReport()'), ('privacidad', "A.openSettings();A.openSettingsPage(0,{dataset:{v:'privacidad'}})")]:
             try:
                 ev(js)
                 pg.clock.run_for(300)
@@ -114,23 +114,23 @@ def main(path):
                 check('abre ' + name, n > 40, str(n))
             except Exception as e:
                 check('abre ' + name, False, str(e)[:120])
-            ev("A.cl&&A.cl();sheet()")
+            ev("A.closeSheet&&A.closeSheet();sheet()")
 
         # calendario de la tarjeta del Dashboard: cambiar de mes (antes daba error)
         ev('weightView=0;S.tab=2;R()')
         pg.clock.run_for(200)
-        m1 = ev("document.querySelector('[data-a=cm]').parentElement.innerText")
-        ev("document.querySelector('[data-a=cm][data-i=\"1\"]').click()")
+        m1 = ev("document.querySelector('[data-a=calendarMonth]').parentElement.innerText")
+        ev("document.querySelector('[data-a=calendarMonth][data-i=\"1\"]').click()")
         pg.clock.run_for(200)
-        check('las flechas del calendario del Dashboard cambian de mes', ev("document.querySelector('[data-a=cm]').parentElement.innerText") != m1)
-        ev("document.querySelector('[data-a=cm][data-i=\"-1\"]').click()")
+        check('las flechas del calendario del Dashboard cambian de mes', ev("document.querySelector('[data-a=calendarMonth]').parentElement.innerText") != m1)
+        ev("document.querySelector('[data-a=calendarMonth][data-i=\"-1\"]').click()")
         pg.clock.run_for(200)
 
         # Ajustes (su propia página) → Actualizaciones (en el archivo único no hay servidor: avisa; en el paquete por file:// no puede leer version.json)
-        ev("S.tab=3;R();A.zaj()")
+        ev("S.tab=3;R();A.openSettings()")
         pg.clock.run_for(200)
-        check('Ajustes tiene «Actualizaciones»', ev("!!document.querySelector('#sh [data-a=updChk]')"))
-        ev("document.querySelector('[data-a=updChk]').click()")
+        check('Ajustes tiene «Actualizaciones»', ev("!!document.querySelector('#sh [data-a=updateCheck]')"))
+        ev("document.querySelector('[data-a=updateCheck]').click()")
         pg.clock.run_for(300)
         pg.wait_for_timeout(300)
         pg.clock.run_for(100)
@@ -139,11 +139,11 @@ def main(path):
 
         # color de la barra del sistema (theme-color): sigue al tema elegido; en automático, al del móvil (etiquetas con media)
         tc = "(()=>{const m=[...document.querySelectorAll('meta[name=theme-color]')].find(m=>!m.media||matchMedia(m.media).matches);return m?m.content:''})()"
-        ev("A.zth(0,{dataset:{v:'light'}})")
+        ev("A.themeChoose(0,{dataset:{v:'light'}})")
         check('theme-color claro con el tema claro elegido', ev(tc) == '#f3f3f7', ev(tc))
-        ev("A.zth(0,{dataset:{v:'dark'}})")
+        ev("A.themeChoose(0,{dataset:{v:'dark'}})")
         check('theme-color oscuro con el tema oscuro elegido', ev(tc) == '#0b0b0d', ev(tc))
-        ev("A.zth(0,{dataset:{v:''}})")
+        ev("A.themeChoose(0,{dataset:{v:''}})")
         auto = ev(tc)
         check('en automático manda el tema del móvil', ev("!document.querySelector('meta[name=theme-color]:not([media])')") and auto in ('', '#0b0b0d'), auto)
         if 'index.html' in path:
@@ -151,8 +151,8 @@ def main(path):
 
         # persistencia
         ev('saveState()')
-        # entrenos guardados: dentro de 'ff' (1.20 y anteriores) o en su propia clave 'ff:logs' (guardado por partes, 1.21)
-        before = ev("(()=>{const c=JSON.parse(localStorage.getItem('ff'));return (Array.isArray(c.logs)?c.logs:JSON.parse(localStorage.getItem(c.logs))).length})()")
+        # entrenos guardados, en su propia parte (en IndexedDB: core/persist), leídos de lo guardado (tests/init.js)
+        before = ev("savesDone().then(()=>__stored()).then(s=>s.logs.length)")
         reload(pg)
         check('persistencia tras recargar', ev('S.logs.length') == before, '%s vs %s' % (ev('S.logs.length'), before))
         check('sin errores de JS durante la prueba', not errs, '; '.join(errs[:3]))

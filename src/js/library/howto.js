@@ -51,12 +51,12 @@ const exHow = n => (info && info.get(n) || {}).h || '';
 /** Imagen del ejercicio que se puede tocar para ver cómo se hace: la foto si la hay; si no, la figura anatómica. */
 const exImage = n => exHero(n) || html`<div class="hwa">${raw(exAnatomy(n, 132))}</div>`;
 /** Hoja de la ejecución; `back`, la vuelta a la ficha de la librería (si se abrió desde ella); si no, un enlace a la ficha. */
-const howSheet = (n, back) => html`${raw(back || '')}${raw(exImage(n))}<h3 class="hwt">${n}</h3><div class="ph">Cómo se hace</div><p class="hwp">${exHow(n) || 'Es un ejercicio tuyo: muévete con control, en todo el recorrido que tu técnica permita.'}</p>${raw(back || !exAll().some(e => e.n == n) ? '' : html`<button data-a="exv" data-n="${n}" style="width:100%;margin-top:6px">Ver la ficha del ejercicio</button>`)}`;
+const howSheet = (n, back) => html`${raw(back || '')}${raw(exImage(n))}<h3 class="hwt">${n}</h3><div class="ph">Cómo se hace</div><p class="hwp">${exHow(n) || 'Es un ejercicio tuyo: muévete con control, en todo el recorrido que tu técnica permita.'}</p>${raw(back || !exAll().some(e => e.n == n) ? '' : html`<button data-a="exerciseDetailByName" data-n="${n}" class="w-full mt-6">Ver la ficha del ejercicio</button>`)}`;
 /* — manejadores de esta función (registros A / C / U) — */
 /* al tocar la imagen del ejercicio (F-14): su ejecución; desde la ficha de la librería, con vuelta a la ficha (data-i) */
-A.exh = (i, b) => {
+A.exerciseHowTo = (i, b) => {
   const n = b.dataset.n;
-  const back = b.dataset.i != null && b.dataset.i !== '' ? '<div class="row"><button data-a="exd" data-i="' + X(b.dataset.i) + '" aria-label="Volver a la ficha" style="border:0;background:none;font-size:24px;padding:6px 10px">←</button></div>' : '';
+  const back = b.dataset.i != null && b.dataset.i !== '' ? '<div class="row"><button data-a="exerciseDetail" data-i="' + X(b.dataset.i) + '" aria-label="Volver a la ficha" class="bd-0 bg-none fs-24 p-6-10">←</button></div>' : '';
   withExInfo(() => {
     sheet(howSheet(n, back));
     sheetToTop();

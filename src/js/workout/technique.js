@@ -1,7 +1,7 @@
 /* ═══ workout/technique ═══
    Técnicas de intensidad en el entreno (F-02; data/techniques): la técnica de cada serie, la fila extra del drop set o del
    rest-pause tras la última serie y el descanso que toca después de cada serie. En la semana de descarga no se aplican.
-   Las filas del entreno (W.x) llevan k (código de la técnica, si no es una serie normal) y t (1 drop set, 2 rest-pause).
+   Las filas del entreno (W.sets) llevan k (código de la técnica, si no es una serie normal) y t (1 drop set, 2 rest-pause).
    La etiqueta de cada fila (setLabel; I-25, I-27): WKT en las series de trabajo (normales, de pirámide y la principal de un
    drop set o un rest-pause), DS o RP en la fila extra que va debajo y su abreviatura en el resto de técnicas (CL, MYO, PAR…).
    Lo guardado no cambia: la serie principal de un drop set sigue llevando k = 'DS'.
@@ -57,14 +57,14 @@ export const withTechnique = (e, a) => {
     bloque de rest-pause, 15 s entre las mini series de myo-reps y, en una superserie o triserie, 10 s hasta el siguiente
     ejercicio de la ronda y el descanso de la ronda al acabarla (F-12); si no, el del ejercicio. */
 export const restAfterSet = (i, j) => {
-  const d = S.plan[S.sel];
+  const d = S.plan[S.selectedDay];
   const e = d.ex[i];
-  const nx = W && W.x[i] && W.x[i][j + 1];
+  const nx = W && W.sets[i] && W.sets[i][j + 1];
   if (nx && nx.t == 1)
     return 0;
   if (nx && nx.t == 2)
     return 20;
-  if (nx && e.tk == 'MYO' && !W.dl)
+  if (nx && e.tk == 'MYO' && !W.deload)
     return 15;
   const bk = blockOf(i);
   if (bk.length < 2)

@@ -95,7 +95,7 @@ const bestE1 = E => {
 const exerciseStats = (a, b) => {
   const rec = [];
   const vol = [];
-  for (const [n, h] of Object.entries(S.hist || {})) {
+  for (const [n, h] of Object.entries(S.exerciseHistory || {})) {
     if (!Array.isArray(h))
       continue;
     const inM = h.filter(e => e && typeof e.d == 'string' && e.d >= a && e.d <= b);
@@ -112,14 +112,14 @@ const exerciseStats = (a, b) => {
   return { rec: rec.sort((x, y) => y.g - x.g), vol: vol.sort((x, y) => y.v - x.v).slice(0, 3) };
 };
 const weightStats = (a, b) => {
-  const W = (S.wl || []).filter(p => p && typeof p.d == 'string' && +p.w > 0).sort((x, y) => x.d < y.d ? -1 : 1);
+  const W = (S.weightLog || []).filter(p => p && typeof p.d == 'string' && +p.w > 0).sort((x, y) => x.d < y.d ? -1 : 1);
   const inM = W.filter(p => p.d >= a && p.d <= b);
   const before = W.filter(p => p.d < a).pop() || null;
   if (!inM.length)
     return { pts: [], before, d: null, tr: '' };
   const ref = before || inM[0];
   const d = inM[inM.length - 1].w - ref.w;
-  const g = +S.bio.goal;
+  const g = +S.biometrics.goal;
   const goal = g >= 0 && g < GOAL_LABELS.length ? g : -1;
   const tr = Math.abs(d) < .3 ? 'estable' : d > 0 ? 'sube' : 'baja';
   return { pts: inM, before, d, tr, goal, ok: goal >= 0 ? KIND_OK[goal] == tr : null, last: inM[inM.length - 1].w };
@@ -130,8 +130,8 @@ const dayKcal = k => {
   return [v[0], v[2]];
 };
 const nutritionStats = (a, b) => {
-  const tk = +S.nu.k || 0;
-  const tp = tk * (+S.nu.p || 0) / 400;
+  const tk = +S.nutritionGoals.k || 0;
+  const tp = tk * (+S.nutritionGoals.p || 0) / 400;
   const days = [];
   let ok = 0;
   let sk = 0;
@@ -151,7 +151,7 @@ const nutritionStats = (a, b) => {
         ok++;
     }
     days.push(on ? kc : 0);
-    const w = S.wt && +S.wt[k];
+    const w = S.water && +S.water[k];
     if (w > 0) {
       wat += w;
       wd++;
@@ -164,7 +164,7 @@ const nutritionStats = (a, b) => {
   return { tk, tp, days, logged, ok, ak, ap, adh, verdict, side: !logged || !tk ? '' : ak > tk * 1.1 ? 'te pasas' : ak < tk * .9 ? 'te quedas corto' : '', water: wd ? wat / wd : 0 };
 };
 const otherStats = (a, b) => {
-  const L = (Array.isArray(S.ms) ? S.ms : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object').sort((x, y) => x.d < y.d ? -1 : 1);
+  const L = (Array.isArray(S.measures) ? S.measures : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object').sort((x, y) => x.d < y.d ? -1 : 1);
   const ms = [];
   for (const [k, name] of MEASURES) {
     const inM = L.filter(m => m.d >= a && m.d <= b && +m.v[k] > 0);
@@ -175,7 +175,7 @@ const otherStats = (a, b) => {
     if (Math.abs(d) >= .2)
       ms.push([name, d]);
   }
-  const ach = Object.entries(S.ach || {}).filter(([, d]) => typeof d == 'string' && d >= a && d <= b).map(([id]) => (ACHIEVEMENTS.find(x => x[0] == id) || [])[1]).filter(Boolean);
+  const ach = Object.entries(S.achievements || {}).filter(([, d]) => typeof d == 'string' && d >= a && d <= b).map(([id]) => (ACHIEVEMENTS.find(x => x[0] == id) || [])[1]).filter(Boolean);
   return { ms, ach };
 };
 /** Todo lo del mes `ym`, con el anterior para comparar. */
@@ -266,13 +266,13 @@ const analysisPage = () => {
   const n = m.nu;
   const ex = m.ex;
   const vc = n.verdict == 'Cumplido' ? 'ok' : n.verdict == 'A medias' ? 'seen' : n.verdict ? 'bad' : 'off';
-  return html`<div id="anp">${pgHead('Análisis mensual')}<div class="anm"><button data-a="anm" data-i="-1" aria-label="Mes anterior"${i > 0 ? '' : ' disabled'}>‹</button><div><b>${cap(monthName(anaYm))}</b><small class="mu">${m.open ? 'del 1 al ' + m.nd + ' (en curso)' : 'del 1 al ' + m.nd}${f && f > m.a ? ' · desde el ' + +f.slice(8, 10) : ''}</small></div><button data-a="anm" data-i="1" aria-label="Mes siguiente"${i < L.length - 1 ? '' : ' disabled'}>›</button></div>
+  return html`<div id="anp">${pgHead('Análisis mensual')}<div class="anm"><button data-a="analysisMonth" data-i="-1" aria-label="Mes anterior"${i > 0 ? '' : ' disabled'}>‹</button><div><b>${cap(monthName(anaYm))}</b><small class="mu">${m.open ? 'del 1 al ' + m.nd + ' (en curso)' : 'del 1 al ' + m.nd}${f && f > m.a ? ' · desde el ' + +f.slice(8, 10) : ''}</small></div><button data-a="analysisMonth" data-i="1" aria-label="Mes siguiente"${i < L.length - 1 ? '' : ' disabled'}>›</button></div>
 <div class="ankg">${kpi('Entrenos', String(t.n), delta(t.n, m.pt.n), t.n >= m.pt.n ? 'up' : 'dn')}${kpi('Tiempo', hm, '')}${kpi('Volumen', fmtN(t.vol / 1000, 1) + ' t', delta(t.vol / 1000, m.pt.vol / 1000, ' t', 1), t.vol >= m.pt.vol ? 'up' : 'dn')}${kpi('Récords', String(ex.rec.length), ex.rec.length ? 'mejor 1RM estimado' : '')}${kpi('Peso', w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg', w.d == null ? 'sin pesajes' : w.tr, w.ok == null ? '' : w.ok ? 'up' : 'dn')}${kpi('Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días', '')}</div>
 <div class="cd ans"><b class="anh">Entrenamientos</b><p>${t.n ? (t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza')) + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? ', ' + t.nc + (t.nc == 1 ? ' sesión' : ' sesiones') + ' de cardio' + (t.km ? ' (' + fmtN(t.km, 1) + ' km)' : '') : '') + ' en ' + t.days + (t.days == 1 ? ' día' : ' días') + '. ' + fmtN(t.sets) + ' series' + (t.rpe ? ' · esfuerzo medio ' + fmtN(t.rpe, 1) : '') + '.' : 'Sin entrenos registrados este mes.'}</p>${raw(svgBars(m))}${m.plan > 0 ? html`<p class="mu">Tu plan marca unos ${fmtN(m.pwk, 1)} entrenos por semana: has hecho el ${Math.round((t.ns + t.nw) / m.plan * 100)} % de lo previsto${m.open ? ' hasta hoy' : ''}.</p>` : ''}${ex.rec.length ? html`<div class="anr"><small>Récords del mes (1RM estimado)</small>${ex.rec.slice(0, 4).map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(r.p)} → ${fmtN(r.m)} kg <span class="up">+${fmtN(r.g * 100)} %</span></b></div>`)}</div>` : ''}${ex.vol.length ? html`<div class="anr"><small>Más volumen</small>${ex.vol.map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(r.v / 1000, 1)} t</b></div>`)}</div>` : ''}</div>
 <div class="cd ans"><b class="anh">Peso corporal</b>${w.d == null ? html`<p class="mu">No hay pesajes este mes. En Dashboard → Evolución del peso puedes registrarlo y activar un recordatorio.</p>` : html`<p><b class="an${w.tr == 'estable' ? 'e' : w.ok ? 'o' : 'x'}">${cap(w.tr)}${w.tr == 'estable' ? '' : ' ' + fmtN(Math.abs(w.d), 1) + ' kg'}</b>${w.goal >= 0 ? ' · objetivo ' + GOAL_LABELS[w.goal] + (w.ok ? ': va bien' : ': ' + (KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : 'debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'))) : ''}</p>${raw(svgLine(m))}`}</div>
-<div class="cd ans"><b class="anh">Alimentación</b><p><span class="rps ${vc}">${n.verdict || 'Sin datos suficientes'}</span></p>${n.logged ? html`<div class="g2 ann"><div><small>kcal de media</small><b>${fmtN(n.ak)}</b><small class="mu">objetivo ${fmtN(n.tk)}</small></div><div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="mu">objetivo ${fmtN(n.tp)} g</small></div></div><p class="mu">${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? ' · de media ' + n.side : ''}.${n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''}</p>${raw(svgKcal(m))}<div class="anlg"><span><i style="background:#2ecc71"></i>en objetivo</span><span><i style="background:#f59e0b"></i>por encima</span><span><i style="background:#4da3ff"></i>por debajo</span></div>` : html`<p class="mu">No hay comidas registradas este mes.</p>`}</div>
+<div class="cd ans"><b class="anh">Alimentación</b><p><span class="rps ${vc}">${n.verdict || 'Sin datos suficientes'}</span></p>${n.logged ? html`<div class="g2 ann"><div><small>kcal de media</small><b>${fmtN(n.ak)}</b><small class="mu">objetivo ${fmtN(n.tk)}</small></div><div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="mu">objetivo ${fmtN(n.tp)} g</small></div></div><p class="mu">${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? ' · de media ' + n.side : ''}.${n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''}</p>${raw(svgKcal(m))}<div class="anlg"><span><i class="bg-x2ecc71"></i>en objetivo</span><span><i class="bg-xf59e0b"></i>por encima</span><span><i class="bg-x4da3ff"></i>por debajo</span></div>` : html`<p class="mu">No hay comidas registradas este mes.</p>`}</div>
 ${m.o.ms.length || m.o.ach.length ? html`<div class="cd ans"><b class="anh">Otros datos</b>${m.o.ms.length ? html`<div class="anr"><small>Medidas</small>${m.o.ms.map(([k, d]) => html`<div class="row"><span>${k}</span><b>${d > 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)} cm</b></div>`)}</div>` : ''}${m.o.ach.length ? html`<div class="anr"><small>Logros conseguidos</small><p>${m.o.ach.join(' · ')}</p></div>` : ''}</div>` : ''}
-<div class="cd ans"><b class="anh">Conclusión</b><ul class="anu">${conclusions(m).map(c => html`<li>${c}</li>`)}</ul></div><div style="height:96px"></div><div class="sb"><button class="pr" data-a="anpdf" style="width:100%;padding:15px;border-radius:16px;font-size:16px">Descargar PDF</button></div></div>`;
+<div class="cd ans"><b class="anh">Conclusión</b><ul class="anu">${conclusions(m).map(c => html`<li>${c}</li>`)}</ul></div><div class="h-96"></div><div class="sb"><button class="pr w-full p-15 r-16 fs-16" data-a="analysisDownloadPdf">Descargar PDF</button></div></div>`;
 };
 /* ── el PDF (T-15) ─────────────────────────────────────────────────────────────────────────────────────────────────── */
 const analysisPdf = async (ym) => {
@@ -462,8 +462,8 @@ const analysisPdf = async (ym) => {
   });
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.ana = () => fullPage(analysisPage());
-A.anm = i => {
+A.openAnalysis = () => fullPage(analysisPage());
+A.analysisMonth = i => {
   const L = monthList();
   const k = L.indexOf(anaYm) + (i > 0 ? 1 : -1);
   if (k >= 0 && k < L.length) {
@@ -471,7 +471,7 @@ A.anm = i => {
     sheet(analysisPage());
   }
 };
-A.anpdf = async () => {
+A.analysisDownloadPdf = async () => {
   try {
     const b = await analysisPdf(anaYm);
     const r = await downloadFile('StrataFit-analisis-' + anaYm + '.pdf', b, 'application/pdf');

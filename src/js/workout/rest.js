@@ -13,7 +13,7 @@ import { html, raw } from '../core/html.js';
 export const COMPOUND_RE = /^(Press banca|Press militar|Sentadilla|Peso muerto|Dominadas|Remo con barra|Remo T|Remo Pendlay|Prensa|Hack|Hip thrust|Clean|Snatch|Thruster|Power|Overhead|Push press|Buenos)/;
 export const REST_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180, 210, 240, 300];
 function restByName(n) {
-  const e = EXERCISES.concat(S.cx).find(x => x.n == n);
+  const e = EXERCISES.concat(S.customExercises).find(x => x.n == n);
   const g = e ? groupOf(e) : '';
   if (COMPOUND_RE.test(n))
     return 150;
@@ -25,7 +25,7 @@ function restByName(n) {
     return 45;
   if (['Bíceps', 'Tríceps', 'Antebrazos', 'Gemelos', 'Abdomen'].includes(g) || /Elevaciones|Pájaros|Face pull/.test(n))
     return 60;
-  return g ? 90 : S.rest;
+  return g ? 90 : S.defaultRest;
 }
 export const restOf = e => e.r || restDefault(e.n);
 /* superseries y triseries (F-12): 10 s fijos entre sus ejercicios y, al acabar cada ronda, el descanso del último
@@ -48,11 +48,11 @@ export const restAt = (d, i) => {
 };
 /** Selector del descanso de un ejercicio del día actual; `short`, sin «Descanso … por serie» en cada opción (F-09). */
 export const restSelect = (e, short) => {
-  const d = S.plan[S.sel];
+  const d = S.plan[S.selectedDay];
   const i = d.ex.indexOf(e);
   const r = restAt(d, i);
   const l = blockEnd(d, i) ? 'Descanso de la ronda, ' : 'Descanso, ';
-  return html`<select data-c="rx" data-i="${i}" aria-label="${l + e.n}"${raw(short ? '' : ' style="width:auto;padding:5px 10px;font-size:13px"')}>${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : 'Descanso ' + fmtMinSec(v) + ' por serie')}</option>`)}</select>`;
+  return html`<select data-c="setRest" data-i="${i}" aria-label="${l + e.n}"${raw(short ? '' : ' class="w-auto p-5-10 fs-13"')}>${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : 'Descanso ' + fmtMinSec(v) + ' por serie')}</option>`)}</select>`;
 };
 const HEAVY_TYPES = new Set(['Press plano', 'Press inclinado', 'Press declinado', 'Press vertical', 'Dominadas', 'Remo horizontal', 'Cadena posterior', 'Sentadilla', 'Prensa y hack', 'Bisagra de cadera', 'Empuje de cadera', 'Halterofilia']);
 export function restDefault(n) {
@@ -74,8 +74,8 @@ export function restDefault(n) {
 }
 /* — manejadores de esta función (registros A / C / U) — */
 /* el desplegable corto no enseña el valor (F-09): se repinta para que el objetivo de arriba y la columna Desc. lo digan */
-C.rx = (e, i) => {
-  S.plan[S.sel].ex[i].r = +e.value;
+C.setRest = (e, i) => {
+  S.plan[S.selectedDay].ex[i].r = +e.value;
   saveState();
   R();
 };

@@ -4,7 +4,10 @@
   · lo que se toca sin ser un botón (un div con data-a) se anuncia como botón (role="button") y se puede enfocar,
   · en el entreno en curso, a 390 y a 320 px de ancho, todo lo que se toca responde en al menos 44 × 44 px (el mínimo
     de Apple): se mide tocando de verdad (elementFromPoint) desde el centro hacia cada lado, así que cuenta la zona
-    táctil ampliada aunque el botón se vea más pequeño, y falla si otro control se la quita.
+    táctil ampliada aunque el botón se vea más pequeño, y falla si otro control se la quita,
+  · cada hoja, página, aviso o menú abierto se anuncia como ventana (role="dialog" y aria-modal) con un nombre (I-06),
+y, aparte, que el foco va a cada hoja, página, aviso y menú al abrirlos y vuelve a lo que los abrió al cerrarlos, también
+cuando tocar un botón no le da el foco (como en Safari).
 
   python3 tests/a11y.py dist/stratafit.html            (falla si hay algún problema)
   python3 tests/a11y.py dist/stratafit.html --lista    (además, enseña cada elemento con problemas)
@@ -36,7 +39,10 @@ SCAN = """(min => {
     (e.getAttribute('aria-labelledby') || '').split(' ').map(i => txt((document.getElementById(i) || {}).textContent)).join(' ').trim();
   const named = s => /[\\p{L}\\p{N}]/u.test(s);
   const desc = e => e.outerHTML.replace(/\\s+/g, ' ').slice(0, 120);
-  const out = { botones: [], campos: [], clicables: [], pequeños: [] };
+  const out = { botones: [], campos: [], clicables: [], pequeños: [], ventanas: [] };
+  // hojas, páginas, avisos y menú: ventanas para los lectores de pantalla, con nombre (I-06)
+  for (const w of document.querySelectorAll('#sh > .sp:not(.spu), #dg .dgc, #mn .msd, #f2w'))
+    if (w.getAttribute('role') != 'dialog' || w.getAttribute('aria-modal') != 'true' || !named(label(w))) out.ventanas.push(desc(w));
   for (const b of document.querySelectorAll('button, [role=button]'))
     if (vis(b) && !named(label(b) || txt(b.textContent))) out.botones.push(desc(b));
   for (const f of document.querySelectorAll('input:not([type=hidden]), select, textarea')) {
@@ -67,6 +73,91 @@ SCAN = """(min => {
   }
   return out;
 })"""
+
+
+# qué tiene el foco: una descripción corta
+ACTIVE = """(() => { const a = document.activeElement; if (!a || a == document.body) return 'nada';
+  const w = a.closest('#sh .sp, #dg .dgc, #mn .msd, #f2w'); const d = a.dataset && a.dataset.a ? '[data-a=' + a.dataset.a + ']' : '';
+  return (a == w ? 'ventana ' + (w.closest('#sh') ? 'hoja' : w.closest('#dg') ? 'aviso' : w.closest('#mn') ? 'menú' : 'wod') : w ? 'dentro de la ventana ' + d : 'fuera ' + a.tagName.toLowerCase() + d); })()"""
+# el nombre de la hoja o página abierta (lo que lee VoiceOver al llegar a ella)
+SHEET_NAME = """(() => { const p = document.querySelector('#sh > .sp'); const t = p && document.getElementById(p.getAttribute('aria-labelledby') || '');
+  return t ? t.textContent.trim() : ''; })()"""
+
+
+def focus_checks(b, path):
+    """El foco va a cada ventana al abrirla y vuelve a lo que la abrió al cerrarla (I-06)."""
+    c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark', **context_opts(path))
+    c.add_init_script(rd('init.js'))
+    pg = c.new_page()
+    errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)[:150]))
+    pg.clock.install(time=datetime.datetime(2026, 10, 29, 12, 0, 0))
+    pg.goto(app_url(path))
+    pg.clock.run_for(800)
+    pg.evaluate(rd('seed.js'))
+    pg.evaluate(rd('extra.js'))
+    pg.reload()
+    pg.wait_for_load_state('load')
+    pg.clock.run_for(800)
+    fails = 0
+
+    def check(name, ok, info=''):
+        nonlocal fails
+        print(('  ok   ' if ok else '  FALLA'), name, '' if ok else '· ' + str(info)[:160])
+        if not ok:
+            fails += 1
+
+    def press(sel, real=True):
+        # real: un toque de verdad (en Chromium le da el foco al botón); si no, un click() sin foco, como en Safari
+        if real:
+            pg.click(sel)
+        else:
+            pg.evaluate("document.querySelector(%r).click()" % sel)
+        pg.clock.run_for(400)
+
+    print('\nEl foco en las ventanas (I-06)')
+    pg.evaluate("S.tab=0;R()")
+    pg.clock.run_for(300)
+    press('[data-a=openMenu]')
+    check('al abrir el menú, el foco va a él', pg.evaluate(ACTIVE) == 'ventana menú', pg.evaluate(ACTIVE))
+    press('#mn [data-v=openPrograms]')
+    check('al elegir «Programas», el foco va a su hoja', pg.evaluate(ACTIVE) == 'ventana hoja', pg.evaluate(ACTIVE))
+    pg.evaluate("A.closeSheet()")
+    check('y al cerrarla vuelve al botón del menú', pg.evaluate(ACTIVE) == 'fuera button[data-a=openMenu]', pg.evaluate(ACTIVE))
+
+    pg.evaluate("S.tab=3;R()")
+    pg.clock.run_for(300)
+    press('[data-a=openSettings]')
+    check('al abrir Ajustes, el foco va a la página y se llama «Ajustes»', pg.evaluate(ACTIVE) == 'ventana hoja' and pg.evaluate(SHEET_NAME) == 'Ajustes', [pg.evaluate(ACTIVE), pg.evaluate(SHEET_NAME)])
+    press('[data-a=openSettingsPage][data-v=tema]')
+    check('al pasar a «Tema y estilo», el foco va a la página nueva y se llama así', pg.evaluate(ACTIVE) == 'ventana hoja' and pg.evaluate(SHEET_NAME) == 'Tema y estilo', [pg.evaluate(ACTIVE), pg.evaluate(SHEET_NAME)])
+    press('#sh [data-a=openSettings]')
+    check('con «←», de vuelta en «Ajustes», con el foco en ella', pg.evaluate(ACTIVE) == 'ventana hoja' and pg.evaluate(SHEET_NAME) == 'Ajustes', [pg.evaluate(ACTIVE), pg.evaluate(SHEET_NAME)])
+    press('[data-a=resetAllAsk]')
+    check('«Borrar todos los datos»: el foco va al aviso', pg.evaluate(ACTIVE) == 'ventana aviso', pg.evaluate(ACTIVE))
+    press('#dg [data-v=doNothing]')
+    check('«Cancelar»: el foco vuelve a «Borrar todos los datos»', pg.evaluate(ACTIVE) == 'dentro de la ventana [data-a=resetAllAsk]', pg.evaluate(ACTIVE))
+    press('#sh [aria-label=Volver]')
+    check('al cerrar Ajustes, el foco vuelve a la fila «Ajustes» de Perfil', pg.evaluate(ACTIVE) == 'fuera button[data-a=openSettings]', pg.evaluate(ACTIVE))
+
+    # como en Safari: el toque no le da el foco al botón; la hoja sabe igualmente qué la abrió
+    pg.evaluate("document.activeElement.blur()")
+    press('[data-a=openSettings]', real=False)
+    check('sin foco en el botón (Safari): el foco va a la página', pg.evaluate(ACTIVE) == 'ventana hoja', pg.evaluate(ACTIVE))
+    press('#sh [aria-label=Volver]', real=False)
+    check('y al cerrarla vuelve al botón que la abrió', pg.evaluate(ACTIVE) == 'fuera button[data-a=openSettings]', pg.evaluate(ACTIVE))
+
+    # a un campo de texto no se le devuelve el foco: en el móvil abriría el teclado
+    pg.evaluate("S.tab=1;R()")
+    pg.clock.run_for(300)
+    ok = pg.evaluate("""(() => { const i = document.createElement('input'); i.id = 'fx'; document.querySelector('#app').prepend(i); i.focus();
+      sheet('<h3>Prueba</h3><p>Hoja de prueba</p>'); const inside = document.activeElement.matches('#sh .sp'); sheet();
+      const back = document.activeElement == i; i.remove(); return [inside, back]; })()""")
+    check('abierta desde un campo de texto, el foco va a la hoja y al cerrarla no vuelve al campo', ok == [True, False], ok)
+    if errs:
+        check('sin errores de JS', False, errs[:3])
+    c.close()
+    return fails
 
 
 def main(path, show):
@@ -116,9 +207,10 @@ def main(path, show):
                 print('  FALLA errores de JS:', errs[:3])
                 fails += 1
             c.close()
+        fails += focus_checks(b, path)
         b.close()
-    print('\n  botones sin nombre: %d · campos sin etiqueta: %d · clicables sin rol de botón: %d · zonas táctiles de menos de %d px en el entreno: %d'
-          % (total.get('botones', 0), total.get('campos', 0), total.get('clicables', 0), MIN, total.get('pequeños', 0)))
+    print('\n  botones sin nombre: %d · campos sin etiqueta: %d · clicables sin rol de botón: %d · zonas táctiles de menos de %d px en el entreno: %d · ventanas sin anunciar: %d'
+          % (total.get('botones', 0), total.get('campos', 0), total.get('clicables', 0), MIN, total.get('pequeños', 0), total.get('ventanas', 0)))
     print('\n%s' % ('TODO CORRECTO' if not fails else 'FALLAN %d pantallas' % fails))
     sys.exit(1 if fails else 0)
 

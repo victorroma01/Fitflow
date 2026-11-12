@@ -7,7 +7,7 @@
    Se hace sola una vez por semana, tras sincronizar bien (cloud/sync: afterSync), y cuando se quiera desde Copia de seguridad.
    La automática no sustituye una copia con bastantes más entrenos o comidas que el móvil (podría ser la buena): lo avisa.
    Restaurar baja los trozos, comprueba la huella y sigue el camino de siempre (system/backup: confirmar y poder deshacer).
-   Estado: S.cb = { at, lg, md }: la última copia en la nube (cuándo, entrenos y días de comidas), para todos los móviles.
+   Estado: S.cloudBackup = { at, lg, md }: la última copia en la nube (cuándo, entrenos y días de comidas), para todos los móviles.
    Define: CHUNK, MAX_CHUNKS, BACKUP_EVERY, cloudBusy, autoTried, pendingOld, backupPath, toB64, fromB64, canZip, zip, unzip, dataCounts, shrinks, writeCloudBackup, readCloudBackup, autoBackup, cloudBackupCard, wipeCloudBackup, saveNow  · acciones/registros: 3
 */
 import { $, APPV } from '../core/util.js';
@@ -73,7 +73,7 @@ const writeCloudBackup = async (old) => {
     writes.push(delWrite(backupPath('c' + i)));
   writes.push(setWrite(backupPath('meta'), meta));
   await commitWrites(writes);
-  S.cb = { at: meta.at, lg: c.lg, md: c.md };
+  S.cloudBackup = { at: meta.at, lg: c.lg, md: c.md };
   saveState();
 };
 /** La copia de la nube en texto (el de un archivo de copia), o '' si no hay ninguna. Lanza DAMAGED si está incompleta. */
@@ -99,9 +99,9 @@ const readCloudBackup = async () => {
 };
 /* tras sincronizar: si la última copia tiene una semana, otra; sin pisar una copia que parece tener más datos */
 const autoBackup = async () => {
-  if (autoTried || cloudBusy || !account || account.x || W || Date.now() - (+(S.cb && S.cb.at) || 0) < BACKUP_EVERY)
+  if (autoTried || cloudBusy || !account || account.x || W || Date.now() - (+(S.cloudBackup && S.cloudBackup.at) || 0) < BACKUP_EVERY)
     return;
-  if (!countOf(S.logs) && !countOf(S.meals) && !countOf(S.wl))
+  if (!countOf(S.logs) && !countOf(S.meals) && !countOf(S.weightLog))
     return;
   autoTried = 1;
   cloudBusy = 1;
@@ -111,7 +111,7 @@ const autoBackup = async () => {
     /* el aviso no tapa otra ventana: si hay una abierta, espera a la próxima vez que se abra la app */
     if (old && shrinks(old.data, c)) {
       if (!$('#dg .dgb') && !$('#sh .sp'))
-        dialog('Tu copia en la nube tiene más datos', html`La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. No la hemos sustituido por si es la buena: en Copia de seguridad puedes restaurarla o guardar la de ahora.`, [['Ahora no', 'zno', ''], ['Copia de seguridad', 'zbk', 'pr']]);
+        dialog('Tu copia en la nube tiene más datos', html`La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. No la hemos sustituido por si es la buena: en Copia de seguridad puedes restaurarla o guardar la de ahora.`, [['Ahora no', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'pr']]);
     }
     else
       await writeCloudBackup(old);
@@ -127,9 +127,9 @@ const autoBackup = async () => {
 afterSync.push(autoBackup);
 /** Apartado «Copia en la nube» de Copia de seguridad (system/backup). */
 export const cloudBackupCard = () => {
-  const c = S.cb;
+  const c = S.cloudBackup;
   const line = c && +c.at > 0 ? html`Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas` : 'Aún no hay ninguna copia en la nube.';
-  return html`<div class="cd cbk" id="cbk"><b>Copia en la nube</b><p class="mu">Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.</p><p class="cbl" id="cbl">${raw(line)}</p><div class="g2"><button class="pr" data-a="cbs"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button><button data-a="cbr"${cloudBusy ? ' disabled' : ''}>Restaurar</button></div></div>`;
+  return html`<div class="cd cbk" id="cbk"><b>Copia en la nube</b><p class="mu">Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.</p><p class="cbl" id="cbl">${raw(line)}</p><div class="g2"><button class="pr" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button><button data-a="cloudBackupRestore"${cloudBusy ? ' disabled' : ''}>Restaurar</button></div></div>`;
 };
 /** «Borrar todos los datos» (profile/home): también la copia de la nube. */
 export const wipeCloudBackup = async () => {
@@ -138,7 +138,7 @@ export const wipeCloudBackup = async () => {
     return;
   const n = Math.min(MAX_CHUNKS, +m.data.n || MAX_CHUNKS);
   await commitWrites(Array.from({ length: n }, (_, i) => delWrite(backupPath('c' + i))).concat([delWrite(backupPath('meta'))]));
-  delete S.cb;
+  delete S.cloudBackup;
 };
 const saveNow = async (old) => {
   cloudBusy = 1;
@@ -156,10 +156,10 @@ const saveNow = async (old) => {
     cloudBusy = 0;
   }
   if ($('#cbk'))
-    A.zbk();
+    A.openBackup();
 };
 /* — manejadores de esta función (registros A / C / U) — */
-A.cbs = async () => {
+A.cloudBackupSave = async () => {
   if (cloudBusy || !account)
     return;
   /* antes de sustituirla, si la de la nube tiene bastantes más datos, se pregunta */
@@ -177,13 +177,13 @@ A.cbs = async () => {
   const c = dataCounts();
   if (old && shrinks(old.data, c)) {
     pendingOld = old;
-    confirmDialog('¿Sustituir la copia de la nube?', html`La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. Solo hay una copia: la de ahora sustituirá a esa.`, 'cbs2', 'Sustituir');
+    confirmDialog('¿Sustituir la copia de la nube?', html`La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. Solo hay una copia: la de ahora sustituirá a esa.`, 'cloudBackupSaveConfirmed', 'Sustituir');
     return;
   }
   saveNow(old);
 };
-A.cbs2 = () => saveNow(pendingOld);
-A.cbr = async () => {
+A.cloudBackupSaveConfirmed = () => saveNow(pendingOld);
+A.cloudBackupRestore = async () => {
   if (cloudBusy || !account)
     return;
   cloudBusy = 1;

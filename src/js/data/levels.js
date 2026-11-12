@@ -1,10 +1,11 @@
 /* ═══ data/levels ═══
    Datos de niveles de programa (principiante, intermedio, avanzado).
-   Define: LEVEL_KEYS, LEVEL_NAMES, LEVEL_COLORS, LEVEL_SUMMARY, LEVEL_DETAILS, LEVEL_PROGRAM_NOTES, LEVEL_SWAPS, LEVEL_OVERRIDES, LEVEL_EXTRA_DAYS, LEVEL_LAYOUTS
+   Define: LEVEL_KEYS, LEVEL_NAMES, LEVEL_CLASS, LEVEL_SUMMARY, LEVEL_DETAILS, LEVEL_PROGRAM_NOTES, LEVEL_SWAPS, LEVEL_OVERRIDES, LEVEL_EXTRA_DAYS, LEVEL_LAYOUTS
 */
 export const LEVEL_KEYS = ['ini', 'int', 'ava'];
 export const LEVEL_NAMES = { ini: 'Principiante', int: 'Intermedio', ava: 'Avanzado' };
-export const LEVEL_COLORS = { ini: '#34d399', int: '#fbbf24', ava: '#a78bfa' };
+/** La clase con el color de cada nivel (css/71-levels: --lc y sus transparencias). */
+export const LEVEL_CLASS = { ini: 'lv-ini', int: 'lv-int', ava: 'lv-ava' };
 export const LEVEL_SUMMARY = { ini: 'Menos volumen y ejercicios guiados', int: 'El plan base, equilibrado', ava: 'Más volumen, cargas altas y densidad' };
 export const LEVEL_DETAILS = { ini: 'Menos series (2-3), 8-15 repeticiones, máquinas y variantes guiadas en lugar de ejercicios técnicos, sin superseries ni técnicas de intensidad y descansos de hasta 2 min.',
   int: 'El programa base: volumen medio, rangos de fuerza e hipertrofia y descansos largos en los básicos.',
