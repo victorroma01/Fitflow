@@ -161,6 +161,12 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Corrección**: `role="dialog"`, `aria-modal` y título en las hojas; llevar el foco a la hoja al abrirla (sin abrir el teclado) y
   devolverlo al cerrarla; y probarlo con VoiceOver en el iPhone, porque la barra de pestañas sigue a la vista con algunas páginas.
 - **Coste**: 0 PF · 3 horas.
+- **V1.0.2**: hecha en `desarrollo-1.0.2`. Cada hoja y página, el aviso, el menú y el WOD se anuncian como ventana (`role="dialog"`,
+  `aria-modal` y su título; la hoja de añadir un alimento, que no lleva título a la vista, uno solo para el lector de pantalla). Al
+  abrirlos o al pasar a otra página el foco va a ellos sin abrir el teclado, y al cerrarlos vuelve a lo que los abrió (o al que lo
+  sustituye si se volvió a pintar), salvo a un campo de texto. Como en Safari tocar un botón no le da el foco, se recuerda también
+  lo último que se tocó. Las páginas a pantalla completa tapan la barra de pestañas, así que `aria-modal` no deja nada a la vista
+  fuera de su alcance. Queda la prueba con VoiceOver en el iPhone (en la lista de comprobaciones de la versión).
 
 ### I-07 · Acciones de GitHub Pages con Node.js 20 y paso de `ubuntu-latest` a Ubuntu 26
 
@@ -185,6 +191,9 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Corrección**: en la instalación, lo mismo que al actualizar: guardar la página solo con todo su código, o reintentar lo que falte
   al activarse.
 - **Coste**: 0 PF · 2 horas.
+- **V1.0.2**: hecha en `desarrollo-1.0.2`. La instalación guarda primero el código y los demás archivos y, después, la página con
+  `putDoc`, que solo la guarda con todo su código; si algo falla, la instalación falla entera y el navegador la repite en la
+  siguiente visita (`tests/deploy.py` lo prueba cortando un archivo de código durante la instalación).
 
 ### I-09 · El service worker vuelve a pedir cada archivo en cada apertura
 
@@ -194,6 +203,8 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Impacto**: peticiones y escrituras de más en cada apertura: algo más de datos y de batería.
 - **Corrección**: el código con nombre por versión, solo desde la caché; revalidar el documento, `version.json` y las fotos.
 - **Coste**: 0 PF · 1 hora.
+- **V1.0.2**: hecha en `desarrollo-1.0.2`. El código (`js/…`) se sirve desde la caché sin volver a pedirlo; lo demás, como antes
+  (`tests/deploy.py` cuenta las peticiones de una apertura).
 
 ### I-10 · Cada guardado vuelve a convertir todo el estado a texto
 
@@ -213,6 +224,10 @@ despliegue) cuenta **0 PF**. Por eso cada issue lleva también un **esfuerzo ori
 - **Impacto**: no se pierde nada; lecturas de más.
 - **Corrección**: borrar el índice en la primera tanda y, al sincronizar, quitar del índice lo que ya no existe.
 - **Coste**: 10 PF = EI cambiada «Borrar todos los datos» (media, 4) + EI cambiada «Sincronizar» (alta, 6) · 2 horas.
+- **V1.0.2**: hecha en `desarrollo-1.0.2`, solo la segunda parte: al sincronizar, lo que el índice nombra y ya no existe se quita
+  del índice (con la misma comprobación de versión que el resto) y lo que el móvil tenía de ello se vuelve a subir. El índice sigue
+  borrándose en la última tanda a propósito: si el borrado se corta, lo que queda en la nube es coherente (el índice nombra de más,
+  nunca de menos) y la sincronización lo limpia. `tests/cloud.py` lo prueba.
 
 ### I-12 · Quien olvida la contraseña depende del administrador
 

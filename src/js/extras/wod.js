@@ -107,7 +107,7 @@ function wodSkeleton() {
   const m = c.m;
   o.dataset.ph = wodRun.done ? 'done' : wodRun.ph || 'pre';
   o.classList.toggle('pz', !!wodRun.pa);
-  let h = html`<div class="f2hd"><button data-a="wodExit" aria-label="Cerrar" class="f2cl">${icon('x', 22)}</button><b>${wodName(c)}</b><span></span></div>`;
+  let h = html`<div class="f2hd"><button data-a="wodExit" aria-label="Cerrar" class="f2cl">${icon('x', 22)}</button><b id="f2wt">${wodName(c)}</b><span></span></div>`;
   if (wodRun.done) {
     const f = wodRun.fin;
     h += '<div class="f2dn"><small>Terminado</small>';
@@ -225,9 +225,15 @@ function wodStart() {
   if (!o) {
     o = document.createElement('div');
     o.id = 'f2w';
+    /* tapa toda la app: para los lectores de pantalla, una ventana con el nombre del WOD, y con el foco (I-06) */
+    o.setAttribute('role', 'dialog');
+    o.setAttribute('aria-modal', 'true');
+    o.setAttribute('aria-labelledby', 'f2wt');
+    o.tabIndex = -1;
     document.body.appendChild(o);
   }
   wodSkeleton();
+  o.focus({ preventScroll: true });
   clearInterval(wodTick.iv);
   wodTick.iv = setInterval(wodTick, 200);
   wodTick();

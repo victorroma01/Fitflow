@@ -74,11 +74,13 @@ function foodList(q) {
 }
 function addSheetBase() {
   const a = addState;
-  let h = html`<div style="margin-bottom:8px">${['Alimentos', 'Librería', 'Nuevo'].map((x, i) => html`<button class="chip ${a.tab == i ? 'on' : ''}" data-a="addTab" data-i="${i}">${raw(x)}</button>`)}</div>`;
+  const tabs = html`<div style="margin-bottom:8px">${['Alimentos', 'Librería', 'Nuevo'].map((x, i) => html`<button class="chip ${a.tab == i ? 'on' : ''}" data-a="addTab" data-i="${i}">${raw(x)}</button>`)}</div>`;
   if (a.pick) {
     const f = a.pick;
-    return html`${raw(h)}<h3>${f.n}</h3>${raw(nutriScoreRow(f.ns))}<label for="gr">Gramos</label><input id="gr" type="number" value="100" data-u="foodGrams"><p id="pv" class="mu"></p><button class="pr" data-a="addFood" style="width:100%">Añadir</button>`;
+    return html`${tabs}<h3>${f.n}</h3>${raw(nutriScoreRow(f.ns))}<label for="gr">Gramos</label><input id="gr" type="number" value="100" data-u="foodGrams"><p id="pv" class="mu"></p><button class="pr" data-a="addFood" style="width:100%">Añadir</button>`;
   }
+  /* sin título a la vista: el nombre de la hoja para los lectores de pantalla (core/ui, I-06) */
+  const h = html`<h3 class="vh">Añadir alimento</h3>${tabs}`;
   if (a.tab == 0)
     return h + habitsCard(a.m) + html`<input placeholder="Buscar alimento" aria-label="Buscar alimento" data-u="foodSearch"><div class="fgc" role="group" aria-label="Grupos de alimentos">${[-1].concat(groupNames().map((x, i) => i)).map(i => html`<button class="chip${(a.cat >= 0 ? a.cat : -1) == i ? ' on' : ''}" data-a="foodGroup" data-i="${i}">${i < 0 ? 'Todos' : groupNames()[i]}</button>`)}</div><div id="rs"></div>`;
   if (a.tab == 1)
