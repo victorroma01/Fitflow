@@ -20,6 +20,19 @@ def rd(n):
 fails = []
 
 
+def notes_items():
+    """Cuántos cambios tiene la nota de la versión actual: los de Novedades, Mejoras y Correcciones de la primera entrada de
+    CHANGELOG.md (Interno no se enseña)."""
+    entry = re.split(r'^## ', open(os.path.join(HERE, '..', 'CHANGELOG.md'), encoding='utf-8').read(), flags=re.M)[1]
+    n, shown = 0, False
+    for l in entry.splitlines():
+        if l.startswith('### '):
+            shown = l[4:].strip() in ('Novedades', 'Mejoras', 'Correcciones')
+        elif shown and l.startswith('- '):
+            n += 1
+    return n
+
+
 def check(name, cond, info=''):
     if not cond:
         fails.append(name)
@@ -191,7 +204,8 @@ def main(path):
         ev("document.querySelector('#ajs [data-a=openSettingsPage][data-v=nota]').click()")
         run()
         sec = ev("[...document.querySelectorAll('.rnp .ups')].map(x=>x.textContent)")
-        check('enseña la nota de la última versión, con todos sus cambios', 'Versión ' + ev("APPV") in txt('.rnp') and sec[:1] == ['Novedades'] and ev("document.querySelectorAll('.rnp li').length") >= 10, str(sec))
+        items = ev("document.querySelectorAll('.rnp li').length")
+        check('enseña la nota de la última versión, con todos sus cambios', 'Versión ' + ev("APPV") in txt('.rnp') and sec[:1] == ['Novedades'] and items == notes_items(), str(sec) + ' %d de %d' % (items, notes_items()))
         lk = ev("(b=>{const s=getComputedStyle(b);return [b.innerText,s.textDecorationLine,parseFloat(s.fontSize),s.color==getComputedStyle(document.querySelector('.rnp small.mu')||b).color,b.getBoundingClientRect().top>document.querySelector('.rnp').getBoundingClientRect().bottom]})(document.querySelector('.rnc .lnk'))")
         check('debajo, «Cerrar» pequeño, gris y subrayado', lk[0] == 'Cerrar' and 'underline' in lk[1] and lk[2] <= 14 and lk[3] and lk[4], str(lk))
         ev("document.querySelector('.rnc .lnk').click()")

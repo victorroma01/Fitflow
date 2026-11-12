@@ -10,6 +10,45 @@ aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en fr
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.2] — 2026-11-12
+
+### Novedades
+- Aviso de espacio: si lo que guarda la app se acerca al límite del móvil, te lo dice (como mucho una vez a la semana) y te lleva
+  a la copia de seguridad. Diagnóstico enseña el espacio usado.
+- En un iPhone con el icono de antes del logo nuevo, la app explica cómo cambiarlo: sincronizar, quitarla de la pantalla de
+  inicio y volver a añadirla desde Safari. También en Ajustes → App → El icono nuevo.
+
+### Mejoras
+- Tus entrenos, tu historial y tus comidas tienen sitio para años de uso: se guardan en la base de datos del navegador, sin el
+  límite de unos 5 MB de antes. Pasan solos la primera vez que abres esta versión.
+- Guardar va más rápido con muchos datos: anotar agua o una comida, o cambiar de pestaña o de día, ya no repasa todos tus datos.
+- Con VoiceOver, cada hoja, página, aviso y menú se anuncia como ventana; el foco va a ella al abrirla y vuelve al cerrarla.
+- La app abre sin volver a descargar su código, y una instalación o actualización nunca deja la página a medias.
+
+### Correcciones
+- Si los datos del móvil no se pueden leer, la app no guarda ni sincroniza nada (así no se borran en tu cuenta) y ofrece
+  «Reintentar» y «Bajar de mi cuenta».
+- Lo que se dañe en el móvil se vuelve a bajar de tu cuenta, en vez de borrarse también allí. Lo mismo al «Restablecer» desde la
+  pantalla de error.
+- Restaurar una copia con muchos datos ya no falla por falta de espacio.
+
+### Interno
+- Código claro (I-17): acciones (R1) y claves del estado (R2) con nombres que se entienden (T-23, [nombres](docs/tecnica/nombres.md));
+  `core/schema` las traduce a las claves guardadas, que no cambian. Vistas largas partidas en piezas con nombre (R4). Comprobado
+  con 282 capturas, el HTML de cada pantalla y el paseo aleatorio frente a la versión anterior. Los campos de dentro de cada dato
+  (R3) no se renombran: obligaría a migrar cuentas, copias y códigos de programa.
+- Datos (I-04, I-10): partes en IndexedDB (`ffdata`), con lista de partes en el núcleo (`_pk`), escritura en orden, `partsLost`,
+  `savesDone`/`reloadApp`, pistas de `saveState` y repaso a los 2 s; copia previa a restaurar aparte; `system/space`.
+  `cloud/sync` olvida las huellas de lo dañado y no sincroniza sin los datos del móvil.
+- Rendimiento (T-26): `tests/perf.py` y [rendimiento](docs/tecnica/rendimiento.md), medido frente a la V1.0.1.
+- Sin estilos en línea (I-14): clases de `css/99-utilities` y `data-style` con `core/dynstyle`; la CSP solo admite la hoja de la
+  app; `tools/check.js` lo vigila.
+- Accesibilidad (I-06): `role="dialog"`, `aria-modal` y foco en hojas, avisos, menú y WOD.
+- Service worker (I-08, I-09): la instalación guarda la página solo con todo su código; el código sale de la caché.
+- Nube: el índice se limpia solo de documentos que ya no existen (I-11); App Check preparado y apagado hasta configurarlo (I-05).
+- GitHub Actions (T-24): al publicar, primero las reglas de Firestore y después la app. `tests/deploy.py` anota las peticiones si
+  una recarga se queda colgada (I-13).
+
 ## [1.0.1] — 2026-11-11
 
 ### Novedades

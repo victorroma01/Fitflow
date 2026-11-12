@@ -63,6 +63,25 @@ def booted(pg, limit=8000):
     return False
 
 
+def reload_by(pg, js, limit=10000):
+    """Hace js, que recarga la app, y espera a que la página nueva haya arrancado. No vale pg.expect_navigation: también se
+    cumple con la navegación del historial de la misma página (la de «atrás» al cerrar un aviso, core/back), y la recarga de
+    verdad llegaría después, a mitad de la prueba siguiente."""
+    pg.evaluate('window.__old = 1')
+    try:
+        pg.evaluate(js)
+    except Exception:
+        pass  # (la recarga puede llegar antes de que termine la evaluación)
+    for _ in range(limit // 50):
+        try:
+            if pg.evaluate('!window.__old && !!window.__ffok'):
+                return True
+        except Exception:
+            pass
+        pg.wait_for_timeout(50)
+    return False
+
+
 def until(pg, js, limit=5000):
     """Espera (en tiempo real) a que js sea verdad en la página."""
     for _ in range(limit // 50):
@@ -264,11 +283,8 @@ def main(path):
             check('mientras, no se guarda nada (lo de antes queda intacto)', ev("savesDone().then(()=>localStorage.getItem('ff'))") == core_text and ev("__T.get('ff:logs')") is None)
             check('ni empieza a sincronizar', ev("syncState().st") in ('', 'idle', None) and ev("!Store.remote"), str(ev("syncState().st")))
             ev("__T.put('ff:logs',%s)" % json.dumps(logs_text))
-            # (la acción del botón, sin cerrar el aviso con el historial: esa navegación de la misma página confundiría a la espera)
-            with pg.expect_navigation():
-                ev("A.partsRetry()")
-            pg.wait_for_load_state('load')
-            booted(pg)
+            # (la acción del botón, sin cerrar el aviso con el historial)
+            reload_by(pg, "A.partsRetry()")
             pg.clock.run_for(1500)
             ev(HELPERS)
             check('con la parte de vuelta, «Reintentar» arranca con todo', not ev('partsLost') and ev('S.logs.length') == nlogs and ev("!document.querySelector('#dg .dgc')"))
@@ -278,10 +294,7 @@ def main(path):
             # (sin los id de los entrenos: el arranque se los pone a los que no tienen, core/repair)
             before = ev('(()=>{const s=JSON.parse(JSON.stringify(stateToStored(S)));s.logs.forEach(l=>delete l.id);return __T.can(s)})()')
             ev("(()=>{const s=JSON.parse(JSON.stringify(stateToStored(S)));s.logs=s.logs.slice(0,2);s.meals={'2025-01-01':{0:[{n:'Copia',g:1,b:[1,1,1,1,0,0]}]}};s.rest=31;window.__bk=s})()")
-            with pg.expect_navigation():
-                ev("S.defaultRest=999;saveState();pendingRestore={s:__bk};restoreBackup()")
-            pg.wait_for_load_state('load')
-            booted(pg)
+            reload_by(pg, "S.defaultRest=999;saveState();pendingRestore={s:__bk};restoreBackup()")
             pg.clock.run_for(1500)
             ev(HELPERS)
             check('restaurar no lo pisa un guardado pendiente', ev('S.defaultRest') == 31 and ev('S.logs.length') == 2, str((ev('S.defaultRest'), ev('S.logs.length'))))
@@ -289,10 +302,7 @@ def main(path):
             pre = ev("JSON.parse(localStorage.getItem('ffpre'))")
             pre_copy = json.loads(ev("__T.aside('pre')") or 'null') or {}
             check('la copia de antes de restaurar va aparte, en IndexedDB (en localStorage, solo su fecha)', pre.get('a') == 1 and 's' not in pre and pre_copy.get('t') == pre.get('t') and (pre_copy.get('s') or {}).get('rest') == 999, str(pre)[:100])
-            with pg.expect_navigation():
-                ev('A.backupUndo()')
-            pg.wait_for_load_state('load')
-            booted(pg)
+            reload_by(pg, 'A.backupUndo()')
             pg.clock.run_for(1500)
             ev(HELPERS)
             check('deshacer la restauración devuelve los datos anteriores', ev('S.defaultRest') == 999 and ev('(()=>{const s=JSON.parse(JSON.stringify(stateToStored(S)));s.rest=%s;s.logs.forEach(l=>delete l.id);return __T.can(s)})()' % json.dumps(json.loads(before)['rest'])) == before)
@@ -301,10 +311,7 @@ def main(path):
             ev("localStorage.setItem('ffpre',JSON.stringify({t:Date.now(),v:'1.0.1',s:Object.assign(JSON.parse(JSON.stringify(stateToStored(S))),{rest:57}),w:null}))")
             ev("A.backupUndoAsk()")
             check('una copia previa de la V1.0.1 se sigue pudiendo deshacer', ev("!!document.querySelector('#dg [data-v=backupUndo]')"))
-            with pg.expect_navigation():
-                ev("A.backupUndo()")
-            pg.wait_for_load_state('load')
-            booted(pg)
+            reload_by(pg, "A.backupUndo()")
             pg.clock.run_for(1500)
             ev(HELPERS)
             check('y vuelve a ella', ev('S.defaultRest') == 57)
@@ -322,8 +329,10 @@ def main(path):
             pg.clock.run_for(6000)
 
             # ── aviso de espacio (I-04): pasado el 80 %, una vez por semana, cuando la app esté libre ──
-            # (con la app libre: sin hojas, avisos ni el recorrido, que sale tras empezar de cero con los datos de la serie de prueba)
-            ev("sheet();document.querySelector('#dg').innerHTML='';document.querySelector('#tour')&&document.querySelector('#tour').remove();localStorage.removeItem('ffspace');window.__est=navigator.storage.estimate;navigator.storage.estimate=()=>Promise.resolve({usage:85e6,quota:100e6})")
+            # (con la app libre: sin hojas, avisos ni el recorrido, que sale tras empezar de cero con los datos de la serie de prueba;
+            # el espacio usado se simula en el prototipo: en WebKit, navigator.storage puede volver a crearse tras una recolección de
+            # basura y perder lo que se le haya puesto encima)
+            ev("sheet();document.querySelector('#dg').innerHTML='';document.querySelector('#tour')&&document.querySelector('#tour').remove();localStorage.removeItem('ffspace');window.__est=StorageManager.prototype.estimate;StorageManager.prototype.estimate=()=>Promise.resolve({usage:85e6,quota:100e6})")
             ev('spaceCheck()')
             check('con el 85 % usado, avisa', ev("/Queda poco espacio/.test(document.querySelector('#dg').innerText)&&/85 %/.test(document.querySelector('#dg').innerText)"), ev("document.querySelector('#dg').innerText.slice(0,120)"))
             check('con «Copia de seguridad» a mano', ev("!!document.querySelector('#dg [data-v=openBackup]')"))
@@ -343,15 +352,15 @@ def main(path):
                 ev("sheet();document.querySelector('#dg').innerHTML='';document.querySelector('#tour')&&document.querySelector('#tour').remove()")
             # (si no avisa, lo que hace falta para saber por qué: si la página se recargó, si sigue el espacio simulado, la última
             # medida, cuándo se avisó y los últimos errores registrados)
-            why = "spaceUse().then(u=>JSON.stringify({sigue:!!window.__mark,simulado:navigator.storage.estimate!==window.__est,usado:u.ratio,avisado:localStorage.getItem('ffspace'),historial:[history.length,history.state],errores:errorLog().slice(-3).map(e=>e.w+': '+e.m)}))"
+            why = "spaceUse().then(u=>JSON.stringify({sigue:!!window.__mark,simulado:StorageManager.prototype.estimate!==window.__est,usado:u.ratio,avisado:localStorage.getItem('ffspace'),historial:[history.length,history.state],errores:errorLog().slice(-3).map(e=>e.w+': '+e.m)}))"
             check('y avisa en cuanto la app queda libre', ev("!!document.querySelector('#dg [data-v=openBackup]')"), str(seen) + ' ' + ev(why))
             ev("document.querySelector('#dg').innerHTML=''")
-            ev("localStorage.removeItem('ffspace');navigator.storage.estimate=()=>Promise.resolve({usage:50e6,quota:100e6})")
+            ev("localStorage.removeItem('ffspace');StorageManager.prototype.estimate=()=>Promise.resolve({usage:50e6,quota:100e6})")
             ev('spaceCheck()')
             check('con la mitad usada, no avisa', ev("!document.querySelector('#dg .dgc')"))
             ev("A.openDiagnostics()")
             check('Diagnóstico dice dónde están las partes y el espacio usado', until(pg, "/Espacio usado: localStorage .*IndexedDB y caché .* \\(50 %\\)/.test(document.getElementById('diagt').value)") and '(IndexedDB)' in ev("document.getElementById('diagt').value"), ev("document.getElementById('diagt').value.split('\\n').filter(l=>/Espacio|Almacenamiento/.test(l)).join(' | ')")[:300])
-            ev("navigator.storage.estimate=__est;sheet()")
+            ev("StorageManager.prototype.estimate=__est;sheet()")
 
             # ── pantalla de error de arranque ──
             n = ev('S.logs.length')

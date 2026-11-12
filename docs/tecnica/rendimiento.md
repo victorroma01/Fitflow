@@ -36,8 +36,8 @@ alternando la V1.0.1 y la V1.0.2. Por debajo de 1 ms, la diferencia entre dos vu
 
 En resumen: lo que más se repite al usar la app (anotar agua o una comida, cambiar de pestaña o de día) guarda en menos de 1 ms
 aunque haya años de datos, y escribir en IndexedDB ya no frena la pantalla; pintar sigue igual de rápido. A cambio, abrir la app
-tarda unos 12 ms más (en un iPhone, del orden de 50 ms) por leer las partes de IndexedDB, que además deja de tener el límite de
-unos 5 MB de antes. Durante un entreno, marcar series guarda solo el entreno en curso (`workout/resume`), como antes.
+tarda unos 12 ms más (en un iPhone, del orden de 50 ms) porque las partes se leen de IndexedDB, que no tiene el límite de unos
+5 MB de localStorage. Durante un entreno, marcar series guarda solo el entreno en curso (`workout/resume`), como antes.
 
 ## Qué se hizo
 
