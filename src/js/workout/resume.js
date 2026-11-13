@@ -1,7 +1,7 @@
 /* ═══ workout/resume ═══
    Reanudar un entreno interrumpido (estado en curso guardado). Se guarda con las claves cortas de siempre (core/schema):
    { W, d: el día, sel, sl, wk, pb: si era un workout propio sobre el plan, t: cuándo }, y pendingResume lo tiene tal cual.
-   Define: WIP_KEY, pendingResume, setPendingResume, saveSession, resumeSync, resumeBanner, dropResume  · acciones/registros: 3
+   Define: WIP_KEY, pendingResume, setPendingResume, saveSession, resumeSync, sameExercises, resumeBanner, dropResume  · acciones/registros: 3
 */
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -33,20 +33,28 @@ export const resumeSync = () => {
   if (W)
     pendingResume = null;
 };
+/** ¿El día del plan `c` tiene los mismos ejercicios, en el mismo orden, que el día `d` con el que se empezó un entreno? */
+const sameExercises = (c, d) => !!c && !!d && Array.isArray(c.ex) && c.ex.length == d.ex.length && c.ex.every((x, i) => x.n == d.ex[i].n);
 A.resumeWorkout = () => {
   const z = pendingResume;
   pendingResume = null;
   if (!z)
     return;
-  S.selectedDay = z.sel;
-  S.selectedWeekday = z.sl >= 0 && z.sl < 7 ? z.sl : z.sel % 7;
+  /* si ese día ya no existe en el plan (llegó otro programa de la nube), el entreno sigue sobre el día que se está viendo */
+  const sel = S.plan[z.sel] ? z.sel : S.selectedDay;
+  S.selectedDay = sel;
+  S.selectedWeekday = z.sl >= 0 && z.sl < 7 ? z.sl : sel % 7;
   S.week = z.wk;
-  if (z.pb) {
-    S.planBackup = { sel: z.sel, day: S.plan[z.sel] };
-    S.plan[z.sel] = z.d;
+  /* el entreno sigue con los ejercicios con los que se empezó. Si era un workout propio, o el día del plan ha cambiado desde
+     entonces (se editó, se rotó o llegó otro de la nube), ese día se pone mientras dura el entreno y después vuelve el del
+     plan: con otros ejercicios, las series hechas irían al ejercicio que no es */
+  if (z.pb || !sameExercises(S.plan[sel], z.d)) {
+    S.planBackup = { sel, day: S.plan[sel] };
+    S.plan[sel] = z.d;
   }
   setW(workoutFromStored(z.W));
-  W.startedAt += Date.now() - z.t;
+  /* el tiempo con la app cerrada no cuenta; ni el de la pausa en la que estaba, si la había */
+  W.startedAt += Date.now() - (W.pausedAt > 0 && W.pausedAt < z.t ? W.pausedAt : z.t);
   W.restEndsAt = 0;
   W.pausedAt = 0;
   W.lastBeep = 0;

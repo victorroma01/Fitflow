@@ -39,8 +39,9 @@ export const backTarget = () => {
     return { k: 'menu', el: m, go: () => A.closeMenu() };
   const p = $('#sh .sp');
   if (p) {
-    /* el «←» (o «Cerrar») de la página; sin él, se cierra la hoja */
-    const b = p.querySelector('[aria-label="Volver"],[aria-label="Cerrar"]');
+    /* el botón de volver de la página: el que lleva un paso atrás dentro de ella (data-back: «‹ Rutinas», «‹ Grupos»), que
+       puede preguntar si se guardan los cambios, o su «←» (o «Cerrar»); sin ninguno, se cierra la hoja */
+    const b = p.querySelector('[data-back]') || p.querySelector('[aria-label="Volver"],[aria-label="Cerrar"]');
     return { k: 'hoja', el: p, go: () => b && A[b.dataset.a] ? A[b.dataset.a](+b.dataset.i, b) : A.closeSheet() };
   }
   if (W)

@@ -2,9 +2,10 @@
    Los cálculos de la app, sin estado ni pantalla: cada función recibe los datos y devuelve números, así que se prueban sueltas
    (tests/calc.test.mjs, sin navegador) y valen igual para una pantalla, el análisis mensual o una estadística nueva.
    Nutrición: lo que suma un alimento, una comida, un día o una semana, y los objetivos de kcal y macros a partir del gasto
-   (Mifflin-St Jeor). Entreno: el volumen de una sesión y la mejor marca. Calendario: el lunes de una semana y los días de un
-   periodo. Solo importa core/util (fechas y 1RM), que tampoco tiene estado.
-   Define: itemMacros, sumMacros, mealItems, dayItems, dayTotals, macroTargets, BIO_RANGES, ACTIVITY_FACTORS, energyNeeds, dietPlan, LOGGED_KCAL, GOAL_MARGIN, nutritionPeriod, sessionVolume, bestLift, weekMonday, weekKeys, countBetween
+   (Mifflin-St Jeor). Entreno: en qué se mide un ejercicio, el volumen y la duración de una sesión, qué serie cuenta para las
+   marcas (1RM estimado), la mejor marca y la progresión (qué peso toca la próxima vez, también en la semana de descarga).
+   Calendario: el lunes de una semana y los días de un periodo. Solo importa core/util (fechas y 1RM), que tampoco tiene estado.
+   Define: itemMacros, sumMacros, mealItems, dayItems, dayTotals, macroTargets, BIO_RANGES, ACTIVITY_FACTORS, energyNeeds, dietPlan, LOGGED_KCAL, GOAL_MARGIN, nutritionPeriod, unitFromName, measuredInReps, elapsedMs, sessionVolume, MAX_1RM_REPS, liftScore, bestSet, bestLift, LB_PER_KG, kgToLb, lbToKg, stepUpWeight, stepDownWeight, loadable, deloadWeight, dropSetWeight, progressionRule, nextWeight, kmTotal, weekMonday, weekKeys, countBetween
 */
 import { dayKey, est1RM } from './util.js';
 /* ── nutrición ─────────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -71,6 +72,28 @@ export const nutritionPeriod = (meals, keys, kcalGoal) => {
   return { days, logged: on.length, ok: on.filter(d => d.ok).length, avg: sumMacros(on.map(d => d.v)).map(v => on.length ? v / on.length : 0) };
 };
 /* ── entreno ───────────────────────────────────────────────────────────────────────────────────────────────────────── */
+/** En qué se mide un ejercicio, por su nombre, si no es en repeticiones: { u: 'm' | 'min' | 's', rg: [objetivo, objetivo] }
+    («Farmers carry 200 m», «Carrera continua», «Plancha»); null si se mide en repeticiones. */
+export const unitFromName = n => {
+  const m = String(n).match(/(\d+(?:[.,]\d+)?)\s*(km|m)\b/i);
+  if (m) {
+    const v = +m[1].replace(',', '.') * (m[2].toLowerCase() == 'km' ? 1000 : 1);
+    return { u: 'm', rg: [v, v] };
+  }
+  if (/^(Carrera continua|Rodaje|Trote|Bicicleta|Cinta|Elíptica|Caminata|Remo continuo|Natación)/i.test(n)) {
+    const z = /largo/i.test(n) ? 60 : /zona 2|suave/i.test(n) ? 45 : /Tabata|intervalos/i.test(n) ? 20 : 30;
+    return { u: 'min', rg: [z, z] };
+  }
+  if (/Plancha|Hollow hold|Dead hang|Wall sit|Farmers hold/i.test(n))
+    return { u: 's', rg: [40, 40] };
+  return null;
+};
+/** ¿El ejercicio de nombre `n` se mide en repeticiones? Solo esos tienen 1RM estimado, récords y volumen: en «32 kg × 200 m»,
+    los 200 no son repeticiones. */
+export const measuredInReps = n => !unitFromName(n);
+/** Milisegundos que lleva un entreno que empezó en `startedAt`, sin contar las pausas ya terminadas (que adelantan el
+    comienzo) ni la que esté en marcha desde `pausedAt` (0 si no hay). */
+export const elapsedMs = (startedAt, pausedAt, now) => Math.max(0, (pausedAt || now) - startedAt);
 /** Volumen de una sesión: { v: suma de repeticiones × peso (kg) de las series hechas, n: series hechas }. `sets` son las
     series de cada ejercicio ([{ r, w, ok }]) y `weighted[i]` dice si el ejercicio `i` cuenta para el volumen (los que se miden
     en tiempo o distancia, no). */
@@ -86,18 +109,107 @@ export const sessionVolume = (sets, weighted) => {
   }));
   return { v, n };
 };
-/** La mejor marca de un ejercicio por 1RM estimado: la guardada (`record`: { w, r, e, d }) o una mejor de su historial
-    ([{ d, s: [[repeticiones, peso, …]] }]); null si no hay ninguna con peso. */
-export const bestLift = (record, history) => {
-  let b = record || null;
-  (history || []).forEach(x => x.s.forEach(q => {
-    const r = +q[0];
-    const w = +q[1];
-    if (w > 0 && (!b || est1RM(w, r) > b.e + 1e-6))
-      b = { w, r, e: est1RM(w, r), d: x.d };
-  }));
+/** Repeticiones hasta las que se estima un 1RM: con más, la fórmula de Epley ya no dice nada del máximo. */
+const MAX_1RM_REPS = 30;
+/** 1RM estimado (Epley) de una serie del historial ([repeticiones, peso, RPE, fila extra, técnica]), o 0 si no cuenta para las
+    marcas: sin peso, sin repeticiones o con más de 30, o si es la fila extra de un drop set o un rest-pause. Es la única
+    regla de la app para récords, gráficas, estancamiento y análisis. */
+export const liftScore = s => {
+  if (!Array.isArray(s) || s[3])
+    return 0;
+  const r = +s[0];
+  const w = +s[1];
+  return w > 0 && r >= 1 && r <= MAX_1RM_REPS ? est1RM(w, r) : 0;
+};
+/** La serie con mejor 1RM estimado de una sesión del historial ({ d, s: series }): { w, r, e, d }, o null si ninguna cuenta. */
+export const bestSet = x => {
+  let b = null;
+  (x && Array.isArray(x.s) ? x.s : []).forEach(q => {
+    const e = liftScore(q);
+    if (e > 0 && (!b || e > b.e + 1e-6))
+      b = { w: +q[1], r: +q[0], e, d: x.d };
+  });
   return b;
 };
+/** La mejor marca de un ejercicio por 1RM estimado: la guardada (`record`: { w, r, e, d }) o una mejor de su historial
+    ([{ d, s: series }]); null si no hay ninguna. */
+export const bestLift = (record, history) => {
+  let b = record || null;
+  (Array.isArray(history) ? history : []).forEach(x => {
+    const s = bestSet(x);
+    if (s && (!b || s.e > b.e + 1e-6))
+      b = s;
+  });
+  return b;
+};
+/* — progresión: qué peso toca la próxima vez — */
+const LB_PER_KG = 2.20462;
+/** De kg a libras, con un decimal (lo que se enseña), y de libras a kg, con dos (lo que se guarda). */
+export const kgToLb = kg => Math.round(kg * LB_PER_KG * 10) / 10;
+export const lbToKg = lb => Math.round(lb / LB_PER_KG * 100) / 100;
+/** El peso `w` (kg) un escalón más alto: `step` kg (2,5 o, en los básicos de pierna, 5), redondeado a medio kilo; en libras
+    (`lb`), 5 o 10 lb, redondeado a 2,5 lb. */
+export const stepUpWeight = (w, step, lb) => lb ? lbToKg(Math.round((kgToLb(w) + (step == 5 ? 10 : 5)) / 2.5) * 2.5) : Math.round((w + step) * 2) / 2;
+/** El peso `w` (kg) un 8 % más bajo, redondeado a medio kilo (a 5 lb en libras). Con muy poco peso el redondeo no deja
+    bajar: entonces se queda como estaba (nunca sale cero ni más que antes). */
+const stepDownWeight = (w, lb) => {
+  const v = lb ? lbToKg(Math.round(kgToLb(w) * .92 / 5) * 5) : Math.round(w * .92 * 2) / 2;
+  return v > 0 && v < w ? v : w;
+};
+/* un peso `v` en la unidad elegida, redondeado a lo que se puede cargar: de 2,5 en 2,5 kg (de 5 en 5 lb) o, por debajo de
+   5 kg (10 lb), de medio en medio kilo (de 2,5 en 2,5 lb), con ese mínimo; devuelve kg */
+const loadable = (v, lb) => {
+  const [fine, coarse] = lb ? [2.5, 5] : [.5, 2.5];
+  const step = v < coarse * 2 ? fine : coarse;
+  const r = Math.max(fine, Math.round(v / step) * step);
+  return lb ? lbToKg(r) : r;
+};
+/** Peso de la semana de descarga: el 65 % del normal `w` (kg), redondeado a lo que se puede cargar y nunca por encima del
+    normal (con mancuernas ligeras, el redondeo a 2,5 kg lo subía). */
+export const deloadWeight = (w, lb) => Math.min(w, loadable((lb ? kgToLb(w) : w) * .65, lb));
+/** Peso del drop set: un 25 % menos que `w` (la técnica pide bajar un 20-30 %), redondeado a medio kilo (a 5 lb en libras),
+    con un mínimo de 1 kg (5 lb) y nunca por encima del de la serie. */
+export const dropSetWeight = (w, lb) => Math.min(w, lb ? lbToKg(Math.max(5, Math.round(kgToLb(w) * .75 / 5) * 5)) : Math.max(1, Math.round(w * .75 * 2) / 2));
+/** Qué toca en un ejercicio según las series de su última sesión (`sets`: [repeticiones, peso, RPE, fila extra…]) y su rango
+    de repeticiones `[lo, hi]` (doble progresión): si todas llegaron al tope del rango, sube un escalón, salvo con un RPE medio
+    de 9,5 o más; si ninguna llegó al mínimo, baja un 8 %; si no, el mismo peso buscando una repetición más. En la semana de
+    descarga (`deload`) ni sube ni baja. Las filas extra (drop set, rest-pause) no cuentan.
+    Devuelve { lo, hi, w: el mayor peso de esas series, up, dn, nw: lo que toca partiendo de `w`, ra: RPE medio, why: 'rpe',
+    'dl' o '', r: repeticiones de la primera serie, even: si todas se hicieron con el mismo peso }, o null si no hay series. */
+export const progressionRule = (sets, range, { step, lb, deload }) => {
+  const ss = (Array.isArray(sets) ? sets : []).filter(x => Array.isArray(x) && !x[3]);
+  if (!ss.length)
+    return null;
+  const [lo, hi] = range;
+  const w = Math.max(...ss.map(x => +x[1] || 0));
+  const rp = ss.map(x => +x[2] || 0).filter(x => x > 0);
+  const ra = rp.length ? rp.reduce((a, b) => a + b, 0) / rp.length : 0;
+  const full = w > 0 && ss.every(x => x[0] >= hi && x[1] > 0);
+  const low = !full && w > 0 && ss.every(x => x[0] < lo && x[1] > 0);
+  let up = full;
+  let dn = low;
+  let why = '';
+  if (up && ra >= 9.5) {
+    up = false;
+    why = 'rpe';
+  }
+  if (deload) {
+    up = false;
+    dn = false;
+    why = 'dl';
+  }
+  const nw = up ? stepUpWeight(w, step, lb) : dn ? stepDownWeight(w, lb) : w;
+  /* con tan poco peso que el redondeo no deja bajar, se mantiene */
+  if (dn && !(nw < w))
+    dn = false;
+  return { lo, hi, w, up, dn, nw, ra, why, r: +ss[0][0] || 0, even: ss.every(x => (+x[1] || 0) == w) };
+};
+/** El peso que toca en una serie que la última vez se hizo con `base` kg, según la regla `P` de progressionRule: un escalón
+    más, un 8 % menos o el mismo. Cada serie parte de su propio peso: si se bajó o se subió de una serie a otra, se respeta. */
+export const nextWeight = (P, base, step, lb) => P.up ? stepUpWeight(base, step, lb) : P.dn ? stepDownWeight(base, lb) : base;
+/** Suma de distancias en km (cada una, con dos decimales como mucho), redondeada a un decimal. Se suma en centésimas, que son
+    enteros: sumando decimales, 217,05 km salían como 217 en vez de 217,1. */
+export const kmTotal = list => Math.round(list.reduce((s, km) => s + Math.round((+km || 0) * 100), 0) / 10) / 10;
 /* ── calendario ────────────────────────────────────────────────────────────────────────────────────────────────────── */
 /** El lunes (a las 00:00) de la semana de `d`. */
 export const weekMonday = d => {

@@ -2,7 +2,8 @@
    Gráficas de progreso por ejercicio.
    Define: progressState, dateShort, progressExercises, progressSeries, progressFmt, axisLabel, progressChart, progressBody, refreshProgress, progressCard, recordEvents, recordsTimeline  · acciones/registros: 3
 */
-import { $, est1RM, round1, roundInt } from '../core/util.js';
+import { $, round1, roundInt } from '../core/util.js';
+import { bestSet, liftScore, measuredInReps } from '../core/calc.js';
 import { A, C } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { segmented } from '../core/ui.js';
@@ -18,15 +19,18 @@ const progressExercises = () => Object.keys(S.exerciseHistory || {}).filter(n =>
   const db = (S.exerciseHistory[b][0] || {}).d || '';
   return da < db ? 1 : da > db ? -1 : 0;
 });
+/* los puntos de la gráfica del ejercicio `n`: por sesión, el mejor 1RM estimado ('e'), el peso máximo ('w') o el volumen ('v').
+   El 1RM y el volumen son de series en repeticiones (core/calc: liftScore); las filas extra no cuentan para el máximo */
 const progressSeries = (n, m) => {
   const h = ((S.exerciseHistory || {})[n] || []).slice().reverse();
   return h.map(x => {
-    const ss = x.s.filter(y => !y[3] && +y[1] > 0);
     let v = 0;
     if (m == 'v')
       v = x.s.reduce((a, y) => a + (+y[0] || 0) * (+y[1] || 0), 0);
-    else if (ss.length)
-      v = Math.max(...ss.map(y => m == 'w' ? +y[1] : est1RM(+y[1], +y[0])));
+    else if (m == 'w')
+      v = Math.max(0, ...x.s.filter(y => !y[3]).map(y => +y[1] || 0));
+    else
+      v = Math.max(0, ...x.s.map(liftScore));
     return v > 0 ? { d: x.d, v } : null;
   }).filter(Boolean).slice(-30);
 };
@@ -93,12 +97,15 @@ export const progressBody = (stat) => {
   if (!stat && !L.includes(progressState.n))
     progressState.n = L[0];
   const n = stat || progressState.n;
-  const m = stat ? 'e' : progressState.m;
+  /* un ejercicio que se mide en tiempo o distancia (un arrastre con peso) no tiene 1RM ni volumen: solo su peso máximo */
+  const reps = measuredInReps(n);
+  const m = !reps ? 'w' : stat ? 'e' : progressState.m;
   const pts = progressSeries(n, m);
   const ML = { e: '1RM estimado', w: 'Peso máximo', v: 'Volumen' };
   let h = '';
   if (!stat) {
-    h += html`<select data-c="progressExercise" aria-label="Ejercicio" class="m-10-0-8">${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}</select>${raw(segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"'))}`;
+    const metric = reps ? segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"') : '<p class="mu fs-13 m-0-0-6">Se mide en tiempo o distancia: se ve el peso máximo de cada sesión.</p>';
+    h += html`<select data-c="progressExercise" aria-label="Ejercicio" class="m-10-0-8">${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}</select>${raw(metric)}`;
   }
   if (!pts.length)
     return html`${raw(h)}<p class="mu m-10-0-0">Este ejercicio no tiene pesos registrados.</p>`;
@@ -136,20 +143,20 @@ C.progressExercise = e => {
   refreshProgress();
 };
 export const progressCard = () => html`<div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">${raw(progressBody())}</div></div>`;
+/* cada vez que una sesión mejoró el 1RM estimado de un ejercicio (de los que se miden en repeticiones), de la más reciente a
+   la más antigua */
 const recordEvents = () => {
   const ev = [];
-  Object.keys(S.exerciseHistory || {}).forEach(n => {
+  Object.keys(S.exerciseHistory || {}).filter(measuredInReps).forEach(n => {
     let b = 0;
     S.exerciseHistory[n].slice().reverse().forEach(x => {
-      const ss = x.s.filter(y => !y[3] && +y[1] > 0);
-      if (!ss.length)
+      const top = bestSet(x);
+      if (!top)
         return;
-      const top = ss.reduce((a, y) => est1RM(+y[1], +y[0]) > est1RM(+a[1], +a[0]) ? y : a);
-      const m = est1RM(+top[1], +top[0]);
-      if (b > 0 && m > b + 1e-6)
-        ev.push({ d: x.d, n, w: +top[1], r: +top[0], e: m, up: m - b });
-      if (m > b)
-        b = m;
+      if (b > 0 && top.e > b + 1e-6)
+        ev.push({ d: x.d, n, w: top.w, r: top.r, e: top.e, up: top.e - b });
+      if (top.e > b)
+        b = top.e;
     });
   });
   return ev.sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : b.e - a.e);

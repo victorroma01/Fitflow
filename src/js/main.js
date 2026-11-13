@@ -46,6 +46,7 @@ import './library/filters.js';
 import './library/browse.js';
 import './library/swap.js';
 import './library/picker.js';
+import './library/custom.js';
 import './routines/builder.js';
 import './workout/week.js';
 import './workout/technique.js';

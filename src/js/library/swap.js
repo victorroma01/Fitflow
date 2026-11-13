@@ -28,10 +28,14 @@ const swapExercise = (i, b) => {
     }));
   else
     ch(d[i]);
+  /* en un entreno en curso: las series sin hacer toman el peso del ejercicio nuevo; las ya hechas se quedan con el nombre
+     del ejercicio con el que se hicieron (s.n), que es al que van al guardar (workout/finish) */
   if (W && W.sets[i])
     W.sets[i].forEach(s => {
       if (!s.ok)
         s.w = S.lastWeights[nn] || '';
+      else if (!s.n)
+        s.n = old;
     });
   saveState();
   sheet();
@@ -63,6 +67,11 @@ A.swapUndo = i => {
   W.sets[i].forEach(s => {
     if (!s.ok)
       s.w = S.lastWeights[o] || '';
+    /* las hechas con el ejercicio que se deshace se quedan con su nombre; las que eran del original vuelven a ser suyas */
+    else if (!s.n)
+      s.n = c;
+    else if (s.n == o)
+      delete s.n;
   });
   prefillSets(S.plan[S.selectedDay].ex[i], W.sets[i]);
   saveState();

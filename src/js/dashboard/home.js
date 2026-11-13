@@ -15,6 +15,7 @@ import { cardioCard } from '../extras/cardio.js';
 import { html, raw } from '../core/html.js';
 import { sessionsPerWeek, trainingDays } from '../workout/week.js';
 import { countBetween, dayTotals, weekMonday } from '../core/calc.js';
+import { nutritionRecentCard } from '../nutrition/week.js';
 /* una cifra del resumen: el número, grande, y qué es */
 const statCell = (value, label) => html`<div class="cd"><b class="fs-26">${value}</b><br><small>${raw(label)}</small></div>`;
 /* las kcal de hoy */
@@ -96,5 +97,5 @@ const weekCard = () => {
 export function dashboardTab() {
   const h = dashboardBase() + recordsCard();
   const m = '<div class="cd"><b>Volumen por sesión</b>';
-  return (h.indexOf(m) >= 0 ? h.replace(m, weekCard() + m) : h + weekCard()) + stagnationCard() + cardioCard() + progressCard() + recordsTimeline();
+  return (h.indexOf(m) >= 0 ? h.replace(m, weekCard() + m) : h + weekCard()) + stagnationCard() + cardioCard() + nutritionRecentCard() + progressCard() + recordsTimeline();
 }

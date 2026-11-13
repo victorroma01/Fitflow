@@ -11,6 +11,7 @@ import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText } from '.
 import { exHero } from './photo.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
 import { exTip, withExInfo } from './howto.js';
+import { customTools, isCustomExercise } from './custom.js';
 import { bestOf } from '../workout/finish.js';
 import { toDisplayWeight, weightUnit } from '../profile/units.js';
 import { exAnatomy, exAnatomyFull } from '../extras/anatomy.js';
@@ -35,7 +36,7 @@ export function libBody() {
     }
     h += exRowHtml(o, html`<button data-a="libraryAddToDay" data-i="${o.i}">+ Al día</button>`);
   });
-  return (g && !q ? html`<div class="row m-8-0-0"><button data-a="libraryGroup" data-v="">‹ Grupos</button><b>${groupLabel(g)} <span class="mu fw-400">· ${base.length}</span></b>${groupIcon(g, 60)}</div>` : '') + equipDropdown('lb', eq, equipIn(base.map(o => o.e)), base.map(o => o.e)) + (h || '<p class="mu">Sin resultados.</p>');
+  return (g && !q ? html`<div class="row m-8-0-0"><button data-a="libraryGroup" data-v="" data-back="1">‹ Grupos</button><b>${groupLabel(g)} <span class="mu fw-400">· ${base.length}</span></b>${groupIcon(g, 60)}</div>` : '') + equipDropdown('lb', eq, equipIn(base.map(o => o.e)), base.map(o => o.e)) + (h || '<p class="mu">Sin resultados.</p>');
 }
 const libPage = () => html`${pgHead('Librería de ejercicios')}<input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="librarySearch" value="${libState.q || ''}"><div id="lr">${raw(libBody())}</div>`;
 A.openLibrary = () => {
@@ -69,7 +70,7 @@ const exDetailHtml = (i, nav, w) => {
   /* la imagen (la foto o, si no hay, la figura) abre cómo se hace el ejercicio (F-14) */
   const tap = html` data-a="exerciseHowTo" data-n="${e.n}"${raw(w ? '' : ' data-i="' + i + '"')} role="button" tabindex="0" aria-label="Cómo se hace: ${e.n}"`;
   const ph = exHero(e.n);
-  return nav + (ph ? html`<div class="exhw"${tap}>${ph}<span class="hwh">Cómo se hace</span></div>` : '') + exDetailHead(e, g, ph, tap) + exAnatomyFull(e) + exDetailMuscles(e) + exDetailExtras(e, pr, vr) + '<div class="h-20"></div>';
+  return nav + (ph ? html`<div class="exhw"${tap}>${ph}<span class="hwh">Cómo se hace</span></div>` : '') + exDetailHead(e, g, ph, tap) + exAnatomyFull(e) + exDetailMuscles(e) + exDetailExtras(e, pr, vr) + (!w && isCustomExercise(e.n) ? customTools(i) : '') + '<div class="h-20"></div>';
 };
 A.exerciseDetail = i => {
   if (!exAll()[i])

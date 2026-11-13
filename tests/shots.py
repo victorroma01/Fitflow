@@ -24,7 +24,7 @@ SCR={
  'crear':"A.routineEditorBack()",
  'nutri':"S.tab=1;R()",
  'nutri_open':"S.tab=1;R();document.querySelectorAll('details').forEach(d=>d.open=true)",
- 'dash':"S.tab=2;R()",
+ 'dash':"S.meals[dayKey(new Date(Date.now()-864e5))]={0:[{n:'Arroz',g:400,b:[130,28,2.7,.3,0,0]}]};S.tab=2;R()",  # (con comidas de ayer: sale la tarjeta de nutrición de 7 días)
  'perfil':"S.tab=3;R()",
  'perfil_open':"S.tab=3;R();document.querySelectorAll('details').forEach(d=>d.open=true)",
  'menu':"A.openMenu()",

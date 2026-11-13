@@ -9,7 +9,8 @@
 */
 import { S, W } from '../core/state.js';
 import { TECHNIQUES } from '../data/techniques.js';
-import { fromDisplayWeight, toDisplayWeight, usesLb } from '../profile/units.js';
+import { usesLb } from '../profile/units.js';
+import { dropSetWeight } from '../core/calc.js';
 import { blockOf, roundOf, setOrder } from './order.js';
 import { restAt } from './rest.js';
 /* técnicas que van solo en la última serie del ejercicio */
@@ -36,8 +37,8 @@ export const setTechnique = s => {
   const l = setLabel(s);
   return l != 'WKT' ? l : s.k == 'PIR' ? 'PIR' : 'WRK';
 };
-/** Peso del drop set: un 25 % menos (la técnica pide bajar un 20-30 %), redondeado a lo que se puede cargar. */
-export const dropWeight = w => usesLb() ? fromDisplayWeight(Math.max(5, Math.round(toDisplayWeight(w) * .75 / 5) * 5)) : Math.max(1, Math.round(w * .75 * 2) / 2);
+/** Peso del drop set: un 25 % menos (la técnica pide bajar un 20-30 %), redondeado a lo que se puede cargar (core/calc). */
+export const dropWeight = w => dropSetWeight(w, usesLb());
 /** Pone a cada serie la técnica que le toca y, tras la última, la fila del drop set o del rest-pause. */
 export const withTechnique = (e, a) => {
   const n = a.length;

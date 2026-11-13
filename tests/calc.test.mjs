@@ -200,6 +200,218 @@ test('est1RM y bestLift: la mejor marca por 1RM estimado (Epley)', () => {
   assert.equal(C.bestLift(tie, hist), tie);
 });
 
+test('unitFromName y measuredInReps: en qué se mide un ejercicio por su nombre', () => {
+  assert.deepEqual(C.unitFromName('Farmers carry 200 m'), { u: 'm', rg: [200, 200] });
+  assert.deepEqual(C.unitFromName('Carrera 1 km con chaleco'), { u: 'm', rg: [1000, 1000] });
+  assert.deepEqual(C.unitFromName('Remo 0,5 km'), { u: 'm', rg: [500, 500] });
+  assert.deepEqual(C.unitFromName('Carrera continua suave'), { u: 'min', rg: [45, 45] });
+  assert.deepEqual(C.unitFromName('Plancha con arrastre de peso'), { u: 's', rg: [40, 40] });
+  assert.equal(C.unitFromName('Press banca'), null);
+  assert.equal(C.unitFromName('Remo con barra'), null); // «Remo continuo» sí, «Remo con barra» no
+  for (const n of ['Press banca', 'Sentadilla', 'Curl martillo', 'Mi ejercicio'])
+    assert.equal(C.measuredInReps(n), true, n);
+  for (const n of ['Sled push 50 m', 'Farmers carry 200 m', 'Farmers hold', 'Plancha', 'Cinta'])
+    assert.equal(C.measuredInReps(n), false, n);
+});
+
+test('elapsedMs: lo que lleva un entreno, sin la pausa en marcha', () => {
+  assert.equal(C.elapsedMs(1000, 0, 61000), 60000);
+  assert.equal(C.elapsedMs(1000, 31000, 9999999), 30000); // en pausa desde el segundo 30: el reloj no corre
+  assert.equal(C.elapsedMs(5000, 0, 1000), 0); // nunca negativo
+});
+
+test('liftScore: qué serie cuenta para las marcas', () => {
+  near(C.liftScore([10, 100, 8, 0]), 100 * (1 + 10 / 30));
+  near(C.liftScore([1, 100]), 100 * (1 + 1 / 30));
+  near(C.liftScore([30, 20, 0, 0]), 40);
+  assert.equal(C.liftScore([0, 100, 0, 0]), 0); // sin repeticiones
+  assert.equal(C.liftScore([31, 20, 0, 0]), 0); // más de 30: Epley ya no estima nada
+  assert.equal(C.liftScore([200, 32, 0, 0]), 0); // 200 m no son repeticiones
+  assert.equal(C.liftScore([10, 0, 0, 0]), 0); // sin peso
+  assert.equal(C.liftScore([10, 60, 0, 1]), 0); // drop set
+  assert.equal(C.liftScore([4, 80, 0, 2]), 0); // rest-pause
+  for (const bad of [null, undefined, 'x', {}, [], ['a', 'b'], [NaN, NaN]])
+    assert.equal(C.liftScore(bad), 0);
+});
+
+test('bestSet y bestLift: las filas extra, las series sin repeticiones y las de más de 30 no dan marca', () => {
+  // la serie con drop set: la principal (80 × 3 → 88) cuenta; el drop (60 × 15 → 90), no
+  assert.deepEqual(C.bestSet({ d: '2026-11-01', s: [[3, 80, 0, 0, 'DS'], [15, 60, 0, 1, 'DS']] }), { w: 80, r: 3, e: 88, d: '2026-11-01' });
+  assert.equal(C.bestSet({ d: 'x', s: [[0, 100, 0, 0], [40, 10, 0, 0]] }), null);
+  assert.equal(C.bestSet(null), null);
+  assert.equal(C.bestSet({ d: 'x' }), null);
+  assert.equal(C.bestLift(null, [{ d: 'x', s: [[0, 300, 0, 0]] }, { d: 'y', s: [[200, 32, 0, 0]] }]), null);
+  assert.equal(C.bestLift(null, 'roto'), null);
+  // con datos al azar, la mejor marca es el máximo de liftScore y nunca sale de una fila que no cuenta
+  const r = rng(77);
+  for (let k = 0; k < 300; k++) {
+    const hist = Array.from({ length: 1 + Math.floor(r() * 6) }, (_, i) => ({ d: '2026-0' + (1 + i) + '-10', s: Array.from({ length: 1 + Math.floor(r() * 5) }, () => [Math.floor(r() * 40), Math.round(r() * 150), 0, r() < .2 ? 1 + Math.floor(r() * 2) : 0]) }));
+    const all = hist.flatMap(x => x.s);
+    const mx = Math.max(0, ...all.map(C.liftScore));
+    const b = C.bestLift(null, hist);
+    if (!mx)
+      assert.equal(b, null);
+    else {
+      near(b.e, mx);
+      assert.ok(b.r >= 1 && b.r <= 30 && b.w > 0);
+    }
+  }
+});
+
+test('kgToLb y lbToKg: libras con un decimal, kg con dos; ida y vuelta sin perder el peso escrito', () => {
+  assert.equal(C.kgToLb(100), 220.5);
+  assert.equal(C.lbToKg(225), 102.06);
+  for (let lb = 2.5; lb <= 700; lb += 2.5)
+    assert.equal(C.kgToLb(C.lbToKg(lb)), lb, lb + ' lb');
+});
+
+test('stepUpWeight: un escalón más (2,5 o 5 kg; 5 o 10 lb)', () => {
+  assert.equal(C.stepUpWeight(80, 2.5, false), 82.5);
+  assert.equal(C.stepUpWeight(100, 5, false), 105);
+  assert.equal(C.stepUpWeight(7.25, 2.5, false), 10); // 9,75 → medio kilo más cercano (hacia arriba)
+  assert.equal(C.kgToLb(C.stepUpWeight(C.lbToKg(135), 2.5, true)), 140);
+  assert.equal(C.kgToLb(C.stepUpWeight(C.lbToKg(225), 5, true)), 235);
+});
+
+test('deloadWeight: el 65 %, redondeado a lo que se carga y nunca más que el peso normal', () => {
+  assert.equal(C.deloadWeight(100, false), 65);
+  assert.equal(C.deloadWeight(80, false), 52.5);
+  assert.equal(C.deloadWeight(60, false), 40);
+  assert.equal(C.deloadWeight(2, false), 1.5); // antes salían 2,5 kg: más que el normal
+  assert.equal(C.deloadWeight(6, false), 4); // antes, 5 kg (el 83 %)
+  assert.equal(C.kgToLb(C.deloadWeight(C.lbToKg(135), true)), 90);
+  assert.equal(C.kgToLb(C.deloadWeight(C.lbToKg(3), true)), 2.5); // antes salían 5 lb
+  for (const lb of [false, true]) {
+    const unit = w => lb ? C.kgToLb(w) : w;
+    for (let w = .5; w <= 300; w += .25) {
+      const d = C.deloadWeight(w, lb);
+      assert.ok(d > 0 && d <= w, 'descarga de ' + w + ' → ' + d);
+      // desde 3 kg (7 lb), entre la mitad y el 80 % del normal
+      if (unit(w) >= (lb ? 7 : 3))
+        assert.ok(d >= w * .5 - 1e-9 && d <= w * .8 + 1e-9, 'descarga de ' + w + (lb ? ' (lb)' : '') + ' → ' + d);
+      // múltiplo de medio kilo, o de 2,5 lb (si no se queda en el peso normal, que puede ser cualquiera)
+      if (d < w)
+        near(unit(d) / (lb ? 2.5 : .5), Math.round(unit(d) / (lb ? 2.5 : .5)), 1e-6);
+    }
+  }
+});
+
+test('dropSetWeight: un 25 % menos y nunca más que la serie', () => {
+  assert.equal(C.dropSetWeight(80, false), 60);
+  assert.equal(C.dropSetWeight(22.5, false), 17);
+  assert.equal(C.kgToLb(C.dropSetWeight(C.lbToKg(100), true)), 75);
+  for (const lb of [false, true])
+    for (let w = .5; w <= 300; w += .25) {
+      const d = C.dropSetWeight(w, lb);
+      assert.ok(d > 0 && d <= w, 'drop de ' + w + ' → ' + d);
+      if (w >= (lb ? 9 : 4))
+        assert.ok(d >= w * .6 && d <= w * .85, 'drop de ' + w + ' → ' + d);
+    }
+});
+
+test('progressionRule: sube al llegar todas al tope, baja si ninguna llega al mínimo y, si no, mantiene', () => {
+  const o = { step: 2.5, lb: false, deload: false };
+  // todas al tope del rango 8-12 → un escalón más
+  let P = C.progressionRule([[12, 60, 8, 0], [12, 60, 8, 0], [12, 60, 9, 0]], [8, 12], o);
+  assert.deepEqual([P.up, P.dn, P.w, P.nw, P.why, P.even], [true, false, 60, 62.5, '', true]);
+  // todas al tope, pero con RPE medio de 9,5 o más → mantiene
+  P = C.progressionRule([[12, 60, 10, 0], [12, 60, 9, 0]], [8, 12], o);
+  assert.deepEqual([P.up, P.nw, P.why], [false, 60, 'rpe']);
+  // ninguna llega al mínimo → un 8 % menos
+  P = C.progressionRule([[6, 60, 0, 0], [5, 60, 0, 0]], [8, 12], o);
+  assert.deepEqual([P.up, P.dn, P.nw], [false, true, 55]);
+  // unas sí y otras no → mismo peso
+  P = C.progressionRule([[12, 60, 0, 0], [9, 60, 0, 0]], [8, 12], o);
+  assert.deepEqual([P.up, P.dn, P.nw, P.r], [false, false, 60, 12]);
+  // semana de descarga: ni sube ni baja
+  P = C.progressionRule([[12, 60, 0, 0], [12, 60, 0, 0]], [8, 12], { ...o, deload: true });
+  assert.deepEqual([P.up, P.dn, P.nw, P.why], [false, false, 60, 'dl']);
+  // las filas extra no cuentan: el drop set con menos repeticiones no impide subir
+  P = C.progressionRule([[12, 60, 0, 0, 'DS'], [6, 45, 0, 1, 'DS']], [8, 12], o);
+  assert.equal(P.up, true);
+  // pesos distintos entre series: «even» lo dice y w es el mayor
+  P = C.progressionRule([[10, 80, 0, 0], [10, 75, 0, 0], [10, 70, 0, 0]], [8, 12], o);
+  assert.deepEqual([P.w, P.even, P.up, P.dn], [80, false, false, false]);
+  // sin peso (peso corporal) no hay nada que subir ni bajar
+  P = C.progressionRule([[15, 0, 0, 0], [15, 0, 0, 0]], [8, 12], o);
+  assert.deepEqual([P.up, P.dn, P.nw], [false, false, 0]);
+  // sin series (o solo filas extra), nada
+  assert.equal(C.progressionRule([], [8, 12], o), null);
+  assert.equal(C.progressionRule([[6, 45, 0, 1]], [8, 12], o), null);
+  assert.equal(C.progressionRule(undefined, [8, 12], o), null);
+  // con muy poco peso, el redondeo no deja bajar: se mantiene (y no sale «baja a 0»)
+  P = C.progressionRule([[3, C.lbToKg(2.5), 0, 0]], [8, 12], { step: 2.5, lb: true, deload: false });
+  assert.deepEqual([P.dn, P.nw], [false, C.lbToKg(2.5)]);
+});
+
+test('progressionRule y nextWeight: en 3.000 sesiones al azar, el peso que toca es coherente', () => {
+  const r = rng(2026);
+  for (let k = 0; k < 3000; k++) {
+    const lb = r() < .3;
+    const step = r() < .3 ? 5 : 2.5;
+    const lo = 3 + Math.floor(r() * 10);
+    const hi = lo + 2 + Math.floor(r() * 5);
+    const base = lb ? C.lbToKg(5 * (1 + Math.floor(r() * 80))) : .5 * (2 + Math.floor(r() * 400));
+    const n = 1 + Math.floor(r() * 5);
+    const kind = Math.floor(r() * 4); // 0 todas al tope, 1 ninguna al mínimo, 2 mezcla, 3 al azar
+    const sets = Array.from({ length: n }, (_, j) => {
+      const reps = kind == 0 ? hi + Math.floor(r() * 3) : kind == 1 ? Math.max(1, lo - 1 - Math.floor(r() * 2)) : kind == 2 ? (j ? lo : hi) : 1 + Math.floor(r() * (hi + 3));
+      const w = r() < .7 ? base : Math.max(.5, base - (lb ? C.lbToKg(5) : 2.5) * Math.floor(r() * 3));
+      return [reps, w, r() < .5 ? 6 + Math.floor(r() * 5) : 0, 0];
+    });
+    const deload = r() < .15;
+    const P = C.progressionRule(sets, [lo, hi], { step, lb, deload });
+    const all = f => sets.every(f);
+    const ra = (q => q.length ? q.reduce((a, b) => a + b, 0) / q.length : 0)(sets.map(s => s[2]).filter(q => q > 0));
+    assert.equal(P.w, Math.max(...sets.map(s => s[1])));
+    // nunca sube y baja a la vez; en descarga, ninguna de las dos
+    assert.ok(!(P.up && P.dn));
+    if (deload)
+      assert.ok(!P.up && !P.dn && P.nw == P.w);
+    else {
+      assert.equal(P.up, all(s => s[0] >= hi) && ra < 9.5, 'sube: ' + JSON.stringify(sets) + ' ' + lo + '-' + hi);
+      if (!all(s => s[0] < lo))
+        assert.equal(P.dn, false);
+    }
+    // el peso que toca: más si sube, menos si baja (nunca cero, ni menos del 85 %), igual si no
+    if (P.up)
+      assert.ok(P.nw > P.w && P.nw <= P.w + (lb ? C.lbToKg(12.5) : step + .5));
+    else if (P.dn)
+      assert.ok(P.nw < P.w && P.nw > 0 && P.nw >= P.w * .85);
+    else
+      assert.equal(P.nw, P.w);
+    // cada serie parte de su propio peso
+    for (const s of sets) {
+      const w = C.nextWeight(P, s[1], step, lb);
+      assert.ok(w > 0);
+      if (P.up)
+        assert.ok(w > s[1]);
+      else if (P.dn)
+        assert.ok(w <= s[1]);
+      else
+        assert.equal(w, s[1]);
+      // lo que se puede cargar: medio kilo, o 2,5 lb, si se partía de un peso así
+      if (P.up || (P.dn && w < s[1]))
+        near((lb ? C.kgToLb(w) / 2.5 : w * 2), Math.round(lb ? C.kgToLb(w) / 2.5 : w * 2), 1e-6);
+    }
+  }
+});
+
+test('kmTotal: los kilómetros se suman en centésimas y se redondean a un decimal', () => {
+  assert.equal(C.kmTotal([]), 0);
+  assert.equal(C.kmTotal([5, 10.25, 0.3]), 15.6); // 15,55 → 15,6
+  assert.equal(C.kmTotal([217.02, 0.03]), 217.1); // 217,05: sumando decimales salía 217
+  assert.equal(C.kmTotal([0.1, 0.2]), 0.3);
+  assert.equal(C.kmTotal([null, 'x', undefined, 3]), 3);
+  const r = rng(5);
+  for (let k = 0; k < 500; k++) {
+    const cents = Array.from({ length: 1 + Math.floor(r() * 40) }, () => Math.floor(r() * 4200));
+    const total = cents.reduce((a, b) => a + b, 0);
+    // la misma cuenta con enteros: décimas, con la mitad hacia arriba
+    assert.equal(C.kmTotal(cents.map(c => c / 100)), (Math.floor(total / 10) + (total % 10 >= 5 ? 1 : 0)) / 10);
+  }
+});
+
 test('weekMonday: el lunes de la semana, también en fin de año y en los cambios de hora', () => {
   const k = d => U.dayKey(C.weekMonday(d));
   assert.equal(k(new Date(2026, 10, 12, 15, 30)), '2026-11-09'); // jueves

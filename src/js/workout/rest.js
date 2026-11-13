@@ -8,7 +8,7 @@ import { EXERCISES, groupOf } from '../data/library.js';
 import { S, saveState } from '../core/state.js';
 import { R } from '../core/render.js';
 import { exAll } from '../library/model.js';
-import { unitFromName } from './targets.js';
+import { unitFromName } from '../core/calc.js';
 import { html, raw } from '../core/html.js';
 export const COMPOUND_RE = /^(Press banca|Press militar|Sentadilla|Peso muerto|Dominadas|Remo con barra|Remo T|Remo Pendlay|Prensa|Hack|Hip thrust|Clean|Snatch|Thruster|Power|Overhead|Push press|Buenos)/;
 export const REST_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180, 210, 240, 300];

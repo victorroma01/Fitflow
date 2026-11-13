@@ -73,7 +73,7 @@ predefinidos, `ta` es la técnica del nivel avanzado; `programs/levels` la aplic
 
 **Serie del entreno en curso** (`W.x[ejercicio][serie]`): `{ r: reps, w: kg, ok, q?: esfuerzo (RPE, solo con `rpe`), k?: técnica de
 la serie, t?: 1 fila del drop set, 2 bloque del rest-pause, ws?: 1 si el peso es sugerido (del historial o de la serie anterior) y aún
-no registrado }`. La etiqueta que se ve (`setLabel`) no se guarda: WKT en las series de trabajo, DS o RP en la fila extra y la
+no registrado, n?: el ejercicio con el que se hizo, si después se cambió por otro (Swap): al guardar va al historial de ese }`. La etiqueta que se ve (`setLabel`) no se guarda: WKT en las series de trabajo, DS o RP en la fila extra y la
 abreviatura en el resto de técnicas; la serie principal de un drop set sigue llevando `k: 'DS'`.
 `W.dl = 1` en la semana de descarga. `W.ri` es la serie que empezó el descanso en curso y `W.re`, cuándo acaba. El orden en que se
 hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se guarda.
@@ -85,8 +85,8 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 
 | Clave guardada (nombre en el programa) | Tipo | Qué es |
 |---|---|---|
-| `logs` | registro[] | Entrenos hechos: `{ id, d: 'AAAA-MM-DD', n, v: volumen kg, s: series, m: minutos, q?: esfuerzo, k?: 'c' cardio \| 'w' WOD, c?: datos de cardio, x?: resumen, nt?: nota }`. El `id` (lo pone `core/repair` a partir del contenido) identifica cada entreno al juntar los de dos dispositivos. |
-| `hist` (`exerciseHistory`) | `{ ejercicio: [{ d, s: [[reps, kg, rpe, extra, técnica?]] }] }` | Historial por ejercicio, el más reciente primero, completo (hasta M8 se quedaba en las 60 últimas sesiones de cada ejercicio). `extra`: 0 serie, 1 drop set, 2 rest-pause; la técnica, si no fue una serie normal. |
+| `logs` | registro[] | Entrenos hechos: `{ id, d: 'AAAA-MM-DD', n, v: volumen kg, s: series, m: minutos (sin las pausas), q?: esfuerzo, k?: 'c' cardio \| 'w' WOD, c?: datos de cardio, x?: resumen, nt?: nota, t?: marca del entreno }`. El `id` (lo pone `core/repair` a partir del contenido) identifica cada entreno al juntar los de dos dispositivos. `t` (desde la V1.0.3, en los de fuerza) es cuándo se guardó, en milisegundos: la llevan también sus series en `hist`, y así al borrar el registro se borran con él (`dashboard/history`). |
+| `hist` (`exerciseHistory`) | `{ ejercicio: [{ d, s: [[reps, kg, rpe, extra, técnica?]], t? }] }` | Historial por ejercicio, el más reciente primero, completo (hasta M8 se quedaba en las 60 últimas sesiones de cada ejercicio). `extra`: 0 serie, 1 drop set, 2 rest-pause; la técnica, si no fue una serie normal. `t`: la marca del entreno que las guardó (la de su registro en `logs`). Qué serie cuenta para las marcas (1RM estimado, récords, gráficas) lo dice `core/calc` (`liftScore`): con peso, de 1 a 30 repeticiones y sin las filas extra; los ejercicios que se miden en tiempo o distancia no tienen marcas. |
 | `last` (`lastWeights`) | `{ ejercicio: kg }` | Último peso usado (para rellenar). |
 | `pr` (`records`) | `{ ejercicio: { w, r, e } }` | Mejores marcas (peso, repeticiones, 1RM estimado). |
 | `pc` (`recordCount`) | número | Récords batidos en total (para logros). |
@@ -164,7 +164,7 @@ con las claves cortas (`core/schema`).
 | `re` (`restEndsAt`) | Cuándo acaba el descanso en marcha (ms), o 0. |
 | `ri` (`restAfter`) | `[ejercicio, serie]` tras la que corre ese descanso. |
 | `lb` (`lastBeep`) | Último segundo de la cuenta atrás que ya sonó (3, 2, 1). |
-| `x` (`sets`) | Las series de cada ejercicio: `[[{ r: repeticiones, w: peso, ok: 1 hecha, ws: 1 peso sugerido (no escrito a mano), q: RPE, t: 1 bajada del drop set \| 2 bloque del rest-pause }]]`. |
+| `x` (`sets`) | Las series de cada ejercicio: `[[{ r: repeticiones, w: peso, ok: 1 hecha, ws: 1 peso sugerido (no escrito a mano), q: RPE, t: 1 bajada del drop set \| 2 bloque del rest-pause, n: ejercicio con el que se hizo si luego se cambió }]]`. |
 | `o` (`openPanels`) | Paneles abiertos de cada ejercicio (consejo, notas…). |
 | `fd` (`folded`) | Ejercicios plegados (al acabarlos se pliegan solos). |
 | `lc` (`lastCurrent`) | Ejercicio que tocaba la última vez que se pintó (para plegar el anterior al pasar al siguiente). |

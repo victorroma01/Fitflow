@@ -15,6 +15,10 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 ### Novedades
 - Nutrición, la semana: al final de la página, una barra por día con sus kcal frente a tu objetivo, la media de kcal y de
   proteína de los días anotados y cuántos quedaron en objetivo. Al tocar un día, vas a él.
+- Dashboard: la tarjeta «Nutrición · 7 días», con la media de kcal y de proteína y los días en objetivo. Al tocarla, vas a
+  Nutrición.
+- Ejercicios propios: en su ficha de la librería puedes renombrarlos (con su historial, sus récords y sus notas) y eliminarlos.
+- Evolución del peso: el historial de tus pesajes. Al tocar uno, se borra.
 
 ### Mejoras
 - Todo el texto se lee mejor: se ha medido el contraste de cada texto en cada pantalla, con los dos temas, el estilo Cristal y
@@ -22,7 +26,13 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   oscuro con Cristal, las hojas del tema claro ya no se ven grises y los botones principales son de un color más uniforme.
 - Lo que escribes se comprueba mejor: los gramos de un alimento, un alimento nuevo, tu peso, tu edad y tu altura, y las
   repeticiones y el peso de una serie solo admiten valores posibles, y los decimales también se pueden escribir con coma.
-- Los nombres (de un día, un workout, un plato o un ejercicio nuevo) y las notas tienen un largo máximo.
+- Los nombres (de un día, un workout, un plato o un ejercicio nuevo) y las notas tienen un largo máximo, y no se quedan vacíos.
+- Peso sugerido: cada serie parte del peso que tuvo la última vez. Antes, si bajabas el peso de una serie a otra, la app
+  proponía el mayor en todas.
+- Al borrar un entreno en Registros se borran también sus series: los récords, las gráficas y la progresión se recalculan.
+- Al crear un ejercicio con el nombre de uno que ya existe, se añade ese en vez de duplicarlo.
+- «Atrás» en un workout que estás editando pregunta si lo descartas, y en un grupo de la librería vuelve a los grupos.
+- Si algo falla de forma inesperada, la app lo dice en vez de quedarse sin hacer nada.
 
 ### Correcciones
 - Nutrición: si reduces las comidas al día, lo anotado en las que ya no están se sigue viendo y contando. Antes desaparecía de
@@ -31,6 +41,18 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Con las cargas en libras, el análisis mensual y su PDF dan el volumen y los récords en libras (seguían en toneladas y kg).
 - Dashboard: «Últimos 7 días» contaba un día de más de madrugada.
 - Los objetivos calculados nunca bajan de 800 kcal ni dan porcentajes imposibles con pesos muy altos.
+- La duración de un entreno guardado en pausa ya no cuenta la pausa.
+- Reanudar un entreno a medias después de cambiar los ejercicios de ese día: sigue con los que empezó. Antes las series iban a
+  otro ejercicio y el entreno no se podía guardar.
+- Cambiar un ejercicio por otro (Swap) a mitad: las series ya hechas se guardan en el ejercicio con el que las hiciste.
+- Récords: los ejercicios que se miden en metros o segundos con peso (paseo del granjero, trineo…) ya no salen con un 1RM
+  imposible, y una serie sin repeticiones, de más de 30 o un drop set no cuentan como marca.
+- Semana de descarga con mancuernas ligeras: el peso propuesto ya no sube. El calentamiento tampoco propone más peso que la serie.
+- El aviso «Nuevo récord» sale una vez, no en cada serie con ese peso.
+- Un workout que dejabas sin crear ya no se queda vacío en la lista, y un día sin ejercicios no ofrece empezar el entreno.
+- Cardio: los kilómetros totales se redondean bien.
+- Una copia de seguridad dañada o manipulada ya no puede dejar una pantalla en blanco ni colar texto donde va un número: lo que
+  no vale se descarta al abrir la app.
 
 ### Interno
 - Auditoría técnica de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): diagnóstico por áreas, lo corregido y lo pendiente.
@@ -43,6 +65,14 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   texto por nivel de Cristal (`css/90-glass`), degradado del acento para lo que lleva texto (`--ag`) y acento acotado detrás del
   texto (`--gmid`); un color propio elige el texto de encima con 4,5:1.
 - `tests/samehtml.py`: compara el HTML de las 47 pantallas entre dos compilaciones.
+- Fases 4 y 5 de la auditoría. `core/calc` reúne también las reglas del entreno: en qué se mide un ejercicio, qué serie cuenta
+  para las marcas (`liftScore`, una sola regla para récords, gráficas, estancamiento, análisis y resumen), la duración sin
+  pausas y la progresión (`progressionRule`, `nextWeight`, `deloadWeight`, `dropSetWeight`), con 11 pruebas sueltas más.
+- `library/custom` (ejercicios propios). Cada entreno y sus series llevan la misma marca (`t`), para borrarlos juntos.
+- `core/repair` valida más al arrancar: cada dato de los ejercicios del plan, las fechas y los números de entrenos, historial,
+  récords, pesajes y medidas, y la forma de los workouts propios. `tests/security.py` restaura una copia manipulada entera.
+- `tests/training.py` (76 comprobaciones del entreno) y `tests/dashboard.py` (39: cada cifra del Dashboard, los CSV y la copia
+  de seguridad, frente a cuentas hechas aparte con cinco meses de datos al azar).
 
 ## [1.0.2] — 2026-11-12
 

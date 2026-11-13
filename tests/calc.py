@@ -191,8 +191,8 @@ def main(path):
             if units == 'lb':
                 check('lo escrito en libras se guarda en kg', any(abs(kg[i][j] - round(w / 2.20462, 2)) < 1e-9 for i, j, r, w, ok in typed if w), str(kg[:1]))
             ev("document.querySelector('#upd')&&document.querySelector('#upd').remove();sheet();document.querySelector('#dg').innerHTML=''")
-        best = ev("(()=>{const out=[];for(const n of Object.keys(S.exerciseHistory)){let b=((S.records||{})[n]||{}).e||0;S.exerciseHistory[n].forEach(x=>x.s.forEach(q=>{if(+q[1]>0)b=Math.max(b,q[1]*(1+q[0]/30))}));const r=bestOf(n);if(b>0)out.push([n,b,r&&r.e])}return out})()")
-        check('el récord de cada ejercicio es su mejor 1RM estimado (Epley: peso × (1 + repeticiones / 30)), entre el guardado y su historial', len(best) > 3 and all(abs(x[1] - x[2]) < 1e-6 for x in best), str([x for x in best if abs(x[1] - (x[2] or 0)) > 1e-6][:2]))
+        best = ev("(()=>{const out=[];for(const n of Object.keys(S.exerciseHistory)){let b=((S.records||{})[n]||{}).e||0;S.exerciseHistory[n].forEach(x=>x.s.forEach(q=>{if(!q[3]&&+q[1]>0&&+q[0]>=1&&+q[0]<=30)b=Math.max(b,q[1]*(1+q[0]/30))}));const r=bestOf(n);if(b>0)out.push([n,b,r&&r.e])}return out})()")
+        check('el récord de cada ejercicio es su mejor 1RM estimado (Epley: peso × (1 + repeticiones / 30)), entre el guardado y las series de 1 a 30 repeticiones de su historial (sin los drop sets)', len(best) > 3 and all(abs(x[1] - x[2]) < 1e-6 for x in best), str([x for x in best if abs(x[1] - (x[2] or 0)) > 1e-6][:2]))
         ev("S.units='kg';S.logs=[{d:'2026-11-12',n:'A',v:1,s:1,m:1,q:7},{d:'2026-11-06',n:'B',v:1,s:1,m:1,q:7},{d:'2026-11-05',n:'C',v:1,s:1,m:1,q:7},{d:'2026-11-13',n:'D',v:1,s:1,m:1,q:7}];S.tab=2;R()")
         check('«Últimos 7 días» cuenta hoy y los seis días de antes', ev("[...document.querySelectorAll('#app .g2 .cd')].map(x=>x.innerText.split('\\n')[0])[1]") == '2')
         c.close()

@@ -2,7 +2,9 @@
    Selector para añadir ejercicios al día.
    Define: addToDay, pickState, pickBody, pickSheet  · acciones/registros: 6
 */
-import { $ } from '../core/util.js';
+import { $, typedName } from '../core/util.js';
+import { toast } from '../core/toast.js';
+import { exerciseNamed } from './custom.js';
 import { A, U } from '../core/registry.js';
 import { EXERCISES } from '../data/library.js';
 import { S, saveState, setAddState, W } from '../core/state.js';
@@ -71,11 +73,16 @@ A.pickerAdd = i => {
   R();
 };
 A.newExerciseSave = () => {
-  const n = $('#xn').value.trim();
+  const n = typedName($('#xn').value, '', 80);
   if (!n)
     return;
-  S.customExercises.push({ n, c: categoryOf(pickState.g), g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
-  addToDay(n);
+  /* con el nombre de uno que ya existe (sin mirar mayúsculas ni tildes) no se crea otro igual: se añade ese al día */
+  const had = exerciseNamed(n);
+  if (had)
+    toast('«' + had.n + '» ya existe: se ha añadido al día');
+  else
+    S.customExercises.push({ n, c: categoryOf(pickState.g), g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
+  addToDay(had ? had.n : n);
   sheet();
   R();
 };

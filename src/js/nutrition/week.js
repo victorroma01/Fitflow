@@ -3,7 +3,7 @@
    días anotados y cuántos quedaron en objetivo. Las cuentas son las de core/calc (nutritionPeriod), las mismas reglas que el
    análisis mensual: un día cuenta como anotado con más de 50 kcal y está en objetivo a ±10 % de las kcal. Es la semana del
    día que se está viendo; al tocar un día se va a él. Las medias no cuentan hoy, que aún no ha terminado.
-   Define: DAY_LETTERS, DAY_NAMES, dayNumber, weekDayColumn, weekFigures, nutritionWeekCard  · acciones/registros: 1
+   Define: DAY_LETTERS, DAY_NAMES, dayNumber, weekDayColumn, weekFigures, nutritionWeekCard, nutritionRecentCard  · acciones/registros: 2
 */
 import { dayKey, fmtDateShort, roundInt } from '../core/util.js';
 import { nutritionPeriod, weekKeys } from '../core/calc.js';
@@ -50,7 +50,25 @@ export const nutritionWeekCard = () => {
   const empty = !done.length ? 'Las medias de la semana salen con los días ya terminados. La línea es tu objetivo de kcal.' : 'Sin comidas anotadas en los días terminados de esta semana. La línea es tu objetivo de kcal.';
   return html`<div class="cd nwk"><div class="row"><b>${title}</b><small>${note}</small></div><div class="nwb">${week.days.map((d, i) => weekDayColumn(d, i, top, seen, today))}<span class="nwl" aria-hidden="true"><i data-style="bottom:${kcalGoal / top * 100}%"></i></span></div>${p.logged ? weekFigures(p, kcalGoal, kcalGoal * (+n.p || 0) / 400) : html`<p class="mu fs-13 m-0">${empty}</p>`}</div>`;
 };
+/** En el Dashboard, la nutrición de los siete días anteriores a hoy (hoy, a medio anotar, bajaría la media): las mismas tres
+    cifras que la semana de Nutrición, con las mismas cuentas. Sin ningún día anotado no sale. Al tocarla se va a Nutrición. */
+export const nutritionRecentCard = () => {
+  const now = new Date();
+  const keys = [7, 6, 5, 4, 3, 2, 1].map(k => dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - k, 12)));
+  const n = S.nutritionGoals;
+  const kcalGoal = +n.k || 0;
+  const p = nutritionPeriod(S.meals, keys, kcalGoal);
+  if (!p.logged)
+    return '';
+  return html`<button class="cd w-full ta-l nwr" data-a="nutritionOpen"><span class="row"><b>Nutrición · 7 días</b><small>Hasta ayer, ${p.logged} de 7 anotados</small></span>${weekFigures(p, kcalGoal, kcalGoal * (+n.p || 0) / 400)}</button>`;
+};
 /* — manejadores de esta función (registros A / C / U) — */
+/* desde el Dashboard: a Nutrición, en el día de hoy y arriba del todo */
+A.nutritionOpen = () => {
+  setNutriDayOffset(0);
+  A.selectTab(1);
+  scrollTo(0, 0);
+};
 /* al tocar un día de la semana, Nutrición pasa a ese día (y sube arriba, donde están sus comidas) */
 A.nutritionGoDay = (i, b) => {
   const k = b && b.dataset.v;

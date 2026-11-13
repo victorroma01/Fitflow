@@ -1,6 +1,6 @@
 /* ═══ core/util ═══
    Utilidades puras (no importa nada): versión, selector $, escape HTML X, redondeos, fechas (dayKey) y formatos.
-   Define: APPV, FFDEP, $, X, safeImage, round1, roundInt, fmtMinSec, dayKey, est1RM, fmtDuration, clampInt, typedNum, clampNum, fmtClock, fmtDateShort, newId
+   Define: APPV, FFDEP, $, X, safeImage, round1, roundInt, fmtMinSec, dayKey, est1RM, fmtDuration, clampInt, typedNum, typedName, clampNum, fmtClock, fmtDateShort, newId
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
@@ -33,6 +33,8 @@ export const typedNum = v => {
   const t = String(v == null ? '' : v).trim().replace(',', '.');
   return t === '' ? NaN : +t;
 };
+/** Un nombre escrito por el usuario: sin espacios a los lados, de `max` letras como mucho y, si se queda vacío, `fallback`. */
+export const typedName = (v, fallback, max = 60) => String(v == null ? '' : v).trim().slice(0, max) || fallback;
 export const clampNum = (v, a, b, d) => {
   v = +v;
   return v >= a && v <= b ? v : d;

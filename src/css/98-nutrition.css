@@ -488,3 +488,16 @@ html.gl .mnv input {
   line-height:1.35;
   color:var(--mu);
 }
+/* en el Dashboard, la nutrición de los 7 días anteriores: una tarjeta que es un botón (lleva a Nutrición) */
+.nwr {
+  display:block;
+  font:inherit;
+  color:inherit;
+}
+.nwr .row {
+  display:flex;
+  margin-bottom:10px;
+}
+.nwr .row small {
+  color:var(--mu);
+}

@@ -2,7 +2,8 @@
    Resumen del entreno e imagen para compartir.
    Define: pctChange, signed, summaryData, deltaChip, showSummary, summaryImage  · acciones/registros: 1
 */
-import { est1RM, fmtDateShort } from '../core/util.js';
+import { fmtDateShort } from '../core/util.js';
+import { liftScore } from '../core/calc.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -28,15 +29,14 @@ function summaryData() {
   const o = { l, n: l.n, d: l.d, pr: [], ex: [], dv: null, ds: null, dm: null, volRec: false, st: 0 };
   if (sn) {
     sn.ex.forEach(e => {
-      let b = null;
-      e.sets.forEach(s => {
-        if (s[1] > 0 && (!b || est1RM(s[1], s[0]) > est1RM(b[1], b[0])))
-          b = s;
-      });
+      /* la serie más pesada (un récord de peso es de ella) y la mejor por 1RM estimado, que es la que se enseña del ejercicio;
+         si ninguna cuenta para el 1RM (más de 30 repeticiones), la más pesada */
+      const top = e.sets.reduce((a, s) => +s[1] > 0 && (!a || +s[1] > +a[1] || (+s[1] == +a[1] && +s[0] > +a[0])) ? s : a, null);
+      const b = e.sets.reduce((a, s) => liftScore(s) > (a ? liftScore(a) : 0) ? s : a, null) || top;
       const isPr = (newRecords || []).indexOf(e.n) >= 0;
       o.ex.push({ n: e.n, k: e.sets.length, b, u: e.u, pr: isPr });
-      if (isPr && b)
-        o.pr.push({ n: e.n, w: b[1], r: b[0] });
+      if (isPr && top)
+        o.pr.push({ n: e.n, w: top[1], r: top[0], u: e.u });
     });
     if (sn.pv) {
       o.dv = pctChange(l.v, sn.pv.v);
@@ -76,7 +76,7 @@ export function showSummary() {
     if (ch.length)
       h += html`<div class="f2cmp"><small class="mu">Frente al entreno anterior</small><div>${raw(ch.join(''))}</div></div>`;
     if (o.pr.length)
-      h += html`<div class="cd f2prc"><b>${raw(o.pr.length == 1 ? 'Récord personal' : o.pr.length + ' récords personales')}</b>${o.pr.map(p => html`<div class="it cols-1fr-auto"><span>${p.n}</span><b>${toDisplayWeight(p.w)} ${weightUnit()} × ${raw(p.r)}</b></div>`)}</div>`;
+      h += html`<div class="cd f2prc"><b>${raw(o.pr.length == 1 ? 'Récord personal' : o.pr.length + ' récords personales')}</b>${o.pr.map(p => html`<div class="it cols-1fr-auto"><span>${p.n}</span><b>${toDisplayWeight(p.w)} ${weightUnit()}${raw(p.u ? '' : ' × ' + p.r)}</b></div>`)}</div>`;
     if (o.ex.length)
       h += html`<details class="cd"${o.pr.length ? '' : ' open'}><summary>Resumen por ejercicio</summary>${o.ex.slice(0, 14).map(e => html`<div class="it cols-1fr-auto"><span>${e.n}<br><small>${raw(e.k)}${e.k == 1 ? ' serie' : ' series'}</small></span><small>${raw(e.b && !e.u ? toDisplayWeight(e.b[1]) + ' ' + weightUnit() + ' × ' + e.b[0] : '')}</small></div>`)}</details>`;
     if (o.st >= 2)
@@ -189,7 +189,7 @@ function summaryImage(o) {
       const lines = [];
       if (o.pr.length) {
         lines.push(['Récords personales', a1]);
-        o.pr.slice(0, 3).forEach(p => lines.push([fit(p.n, 560, 40, 600) + '|' + toDisplayWeight(p.w) + ' ' + weightUnit() + ' × ' + p.r, '#fff']));
+        o.pr.slice(0, 3).forEach(p => lines.push([fit(p.n, 560, 40, 600) + '|' + toDisplayWeight(p.w) + ' ' + weightUnit() + (p.u ? '' : ' × ' + p.r), '#fff']));
       }
       else if (o.ex.length) {
         lines.push(['Mejores series', a1]);

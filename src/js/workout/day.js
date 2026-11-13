@@ -2,6 +2,7 @@
    Pestaña Workout: vista del día, tempos, superseries y atajos.
    Define: planEx, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
 */
+import { typedName } from '../core/util.js';
 import { A, C } from '../core/registry.js';
 import { PROGRAM_NAMES } from '../data/library.js';
 import { overviewMode, S, saveState, setWeekView, W, weekView } from '../core/state.js';
@@ -10,7 +11,7 @@ import { linkRow, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { resumeBanner } from './resume.js';
 import { restSelect } from './rest.js';
-import { dayMinutes, rangeSelect, tempoOf, unitOf } from './targets.js';
+import { dayMinutes, MAX_SETS, rangeSelect, tempoOf, unitOf } from './targets.js';
 import { deloadCard, isDeloadWeek } from './deload.js';
 import { coverStyle } from './images.js';
 import { exTip, withExInfo } from '../library/howto.js';
@@ -174,7 +175,8 @@ A.planSetMinus = i => {
   R();
 };
 A.planSetPlus = i => {
-  planEx(i).s++;
+  const e = planEx(i);
+  e.s = Math.min(MAX_SETS, e.s + 1);
   saveState('core');
   R();
 };
@@ -198,7 +200,10 @@ C.setExerciseNote = (e, i) => {
   S.exerciseNotes[S.plan[S.selectedDay].ex[i].n] = e.value;
   saveState('core');
 };
+/* el nombre del día no se queda vacío: si se borra, vuelve el que tenía */
 C.setDayName = e => {
-  S.plan[S.selectedDay].n = e.value;
+  const d = S.plan[S.selectedDay];
+  d.n = typedName(e.value, d.n || 'Entreno');
+  e.value = d.n;
   saveState('core');
 };

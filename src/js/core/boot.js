@@ -8,7 +8,8 @@
 */
 import { $, fmtDuration, fmtMinSec, roundInt } from './util.js';
 import { Store } from './store.js';
-import { logError } from './errors.js';
+import { logError, setErrorNotice } from './errors.js';
+import { toast } from './toast.js';
 import { dropSavedState, loadParts, partsLost, reloadApp, stateRecovered } from './persist.js';
 import { A } from './registry.js';
 import { applyTheme, S, saveState, W } from './state.js';
@@ -31,7 +32,7 @@ import { applyStartTab, buildTabbar } from './tabbar.js';
 import { launchAction } from '../system/phone.js';
 import { tourCheck } from '../system/tour.js';
 import { iconNoticeCheck } from '../system/iconnotice.js';
-import { repairState } from './repair.js';
+import { cleanDay, repairState } from './repair.js';
 import { signedIn } from '../cloud/session.js';
 import { startSync } from '../cloud/sync.js';
 import { spaceCheck } from '../system/space.js';
@@ -50,6 +51,8 @@ A.partsFromCloud = () => {
   }
   reloadApp();
 };
+/* un error inesperado no se queda en silencio: se dice, y dónde contarlo si se repite (system/report) */
+setErrorNotice(() => toast('Algo ha fallado. Si se repite, cuéntalo en Ajustes → Informar de un fallo.'));
 const start = () => {
   repairState();
   applyTheme();
@@ -97,6 +100,8 @@ const start = () => {
     }
   }, 200);
   restorePlanBackup();
+  /* un workout propio sin bloques es uno que se empezó a crear y se dejó a medias (cerrando la app): no se queda en la lista */
+  S.routines = S.routines.filter(r => r.bl.length);
   S.plan.forEach(d => {
     if (!d.cu && d.img)
       delete d.img;
@@ -109,11 +114,12 @@ const start = () => {
   }
   (() => {
     const z = pendingResume;
-    let ok = !!(z && z.W && z.d && Array.isArray(z.W.x) && Date.now() - z.t < 864e5 && z.W.x.length == z.d.ex.length);
-    if (ok && !z.pb) {
-      const c = S.plan[z.sel];
-      ok = !!c && c.ex.length == z.d.ex.length && c.ex.every((x, i) => x.n == z.d.ex[i].n);
-    }
+    /* el entreno a medias vale si está entero y es de las últimas 24 h. Si el día del plan ha cambiado desde entonces, se
+       reanuda con los ejercicios con los que se empezó (workout/resume) */
+    const ok = !!(z && z.W && z.d && typeof z.d.n == 'string' && Array.isArray(z.d.ex) && z.d.ex.every(e => e && typeof e.n == 'string') && Array.isArray(z.W.x) && z.W.x.every(Array.isArray) && Date.now() - z.t < 864e5 && z.W.x.length == z.d.ex.length);
+    /* y su día, con cada dato del tipo que toca (puede venir de una copia de seguridad) */
+    if (ok)
+      cleanDay(z.d);
     if (!ok) {
       setPendingResume(null);
       try {

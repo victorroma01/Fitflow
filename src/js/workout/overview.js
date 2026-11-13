@@ -47,7 +47,8 @@ export function overviewPage() {
   const d = S.plan[S.selectedDay];
   const editing = overviewMode == 2;
   const add = editing ? '<button data-a="openPicker" class="w-full m-12-0">+ Añadir ejercicio</button>' : '';
-  const start = editing ? '' : '<button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="startWorkout">Empezar entreno</button>';
+  /* sin ejercicios no hay entreno que empezar: se dice cómo añadirlos */
+  const start = editing ? '' : d.ex.length ? '<button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="startWorkout">Empezar entreno</button>' : '<p class="mu ta-c">Este día no tiene ejercicios. Pulsa «Editar» para añadir alguno.</p>';
   return html`${overviewHead(editing)}${overviewHero(d, editing)}${raw(isDeloadWeek(S.week) ? DELOAD_NOTE : '')}${dayBlocks(d).map((k, n) => overviewBlock(d, k, n, editing))}${raw(add)}<div class="h-80"></div>${raw(start)}`;
 }
 A.openOverview = () => {

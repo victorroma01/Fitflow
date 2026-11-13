@@ -10,7 +10,7 @@
    Se carga al usarlo (core/lazy).
    Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, nutritionStats, otherStats, monthStats, conclusions, svgBars, svgLine, svgKcal, kpi, delta, analysisPage, analysisPdf  · acciones/registros: 3
 */
-import { APPV, dayKey, est1RM, fmtDateShort } from '../core/util.js';
+import { APPV, dayKey, fmtDateShort } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -27,7 +27,7 @@ import { analysisFrom } from './home.js';
 import { downloadFile } from '../system/files.js';
 import { loadPdf } from '../core/lazy.js';
 import { html, raw } from '../core/html.js';
-import { nutritionPeriod } from '../core/calc.js';
+import { liftScore, measuredInReps, nutritionPeriod } from '../core/calc.js';
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 /* hacia dónde debería ir el peso con cada objetivo (GOAL_LABELS: Definir, Mantenimiento, Volumen, Recomposición) */
 const KIND_OK = ['baja', 'estable', 'sube', 'estable'];
@@ -88,21 +88,15 @@ const weekRows = (a, b) => {
   }
   return out;
 };
-/** Mejor 1RM estimado de unas entradas del historial (sin las filas extra: drop set y rest-pause). */
-const bestE1 = E => {
-  let m = 0;
-  for (const e of E)
-    for (const s of Array.isArray(e.s) ? e.s : [])
-      if (Array.isArray(s) && !s[3] && +s[1] > 0 && +s[0] >= 1 && +s[0] <= 30)
-        m = Math.max(m, est1RM(+s[1], +s[0]));
-  return m;
-};
+/** Mejor 1RM estimado de unas entradas del historial (core/calc: las series que cuentan para las marcas). */
+const bestE1 = E => E.reduce((m, e) => Math.max(m, ...(Array.isArray(e.s) ? e.s : []).map(liftScore)), 0);
 /** Ejercicios del mes: récords (mejor 1RM estimado que antes del mes) y los de más volumen. */
 const exerciseStats = (a, b) => {
   const rec = [];
   const vol = [];
   for (const [n, h] of Object.entries(S.exerciseHistory || {})) {
-    if (!Array.isArray(h))
+    /* los que se miden en tiempo o distancia no tienen 1RM ni volumen (en «32 kg × 200 m», los 200 no son repeticiones) */
+    if (!Array.isArray(h) || !measuredInReps(n))
       continue;
     const inM = h.filter(e => e && typeof e.d == 'string' && e.d >= a && e.d <= b);
     if (!inM.length)

@@ -88,7 +88,12 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 - Arriba, el **cronómetro** del entreno y la serie en la que vas. Abajo, pegada al borde, la barra para ir a la serie anterior,
   pausar o pasar a la siguiente.
 - Cada ejercicio enseña su objetivo (series × repeticiones, repeticiones en reserva, descanso y tempo), el **calentamiento**
-  propuesto, lo que hiciste la última vez y una **sugerencia** de peso y repeticiones para progresar.
+  propuesto (siempre por debajo del peso de trabajo), lo que hiciste la última vez y una **sugerencia** de peso y repeticiones
+  para progresar.
+- **Cómo progresa** (doble progresión): si la última vez todas las series llegaron al tope del rango, sube un escalón (2,5 kg, o
+  5 en los básicos de pierna; 5 o 10 lb), salvo que el esfuerzo medio fuera de 9,5 o más; si ninguna llegó al mínimo, baja un 8 %;
+  si no, el mismo peso buscando una repetición más. **Cada serie parte del peso que tuvo la última vez**: si bajaste o subiste
+  de una serie a otra, se respeta. **Aplicar** vuelve a poner lo sugerido si has escrito otra cosa.
 - Cada serie se anota con sus repeticiones y su peso, y se marca hecha con ✓. Se pueden añadir o quitar series. Al marcar la última
   serie que faltaba, sale **¿Guardar el entreno?**, con **Guardar y salir** y **Cancelar** (como con el botón de avance de abajo).
 - **Esfuerzo (RPE)**: si lo activas en Ajustes → Ajustes avanzados, al marcar una serie salen debajo los números del 6 al 10 para
@@ -107,13 +112,18 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
   que lleve unido detrás) y **Separar** parte el bloque por ese ejercicio. De cuatro ejercicios seguidos en adelante, es un
   **circuito**, que se hace igual, por rondas.
 - **Tips** (el icono «i»): el consejo propio de cada ejercicio (no hay dos iguales). **Notas**, **Historial** de sus series
-  anteriores, **Swap** para cambiarlo por otro parecido sin perder el historial y **Discos** (el icono del disco), que calcula qué
-  discos poner en cada lado de la barra. Van en dos filas (Tips, Notas, Tempo y Descanso; Historial, Swap y Discos), todos con la
+  anteriores, **Swap** para cambiarlo por otro parecido sin perder el historial (las series que ya llevaras hechas se guardan
+  en el ejercicio con el que las hiciste) y **Discos** (el icono del disco), que calcula qué discos poner en cada lado de la
+  barra. Van en dos filas (Tips, Notas, Tempo y Descanso; Historial, Swap y Discos), todos con la
   misma altura.
 - **Cómo se hace**: al tocar la imagen del ejercicio (la foto o la figura) se abre su ejecución paso a paso, también propia de
   cada ejercicio, con un enlace a su ficha.
-- Al terminar, un **resumen** con el volumen, los récords y las series, que se puede compartir como imagen. Un entreno a medias se
-  puede reanudar al volver a abrir la app.
+- Al terminar, un **resumen** con el volumen, los récords y las series, que se puede compartir como imagen. La duración no
+  cuenta las pausas. Un entreno a medias se puede reanudar al volver a abrir la app: sigue con los ejercicios con los que
+  empezó, aunque entre tanto hayas cambiado ese día del plan, y el tiempo con la app cerrada no cuenta.
+- **Marcas**: la mejor marca de un ejercicio es su mejor 1RM estimado (peso × (1 + repeticiones / 30)) en series de 1 a 30
+  repeticiones; un drop set o un rest-pause no cuentan, ni los ejercicios que se miden en tiempo o distancia (un arrastre de
+  200 m con peso no tiene 1RM). El aviso «Nuevo récord» es de peso: el mayor que has movido en ese ejercicio.
 - Si un ejercicio lleva varias sesiones sin superar tu mejor marca, la app lo avisa y propone qué probar.
 
 ## Librería de ejercicios
@@ -122,9 +132,16 @@ Más de 550 ejercicios con su mapa muscular, fotos y filtros por grupo muscular 
 nombres habituales. La ficha de cada ejercicio trae su **consejo** y, al tocar su imagen, **cómo se hace**. Desde la ficha se añade
 al día con «+ Al día».
 
+**Ejercicios propios**: se crean al añadir un ejercicio al día («Crear ejercicio nuevo»); si ya hay uno con ese nombre (sin mirar
+mayúsculas ni tildes), se añade ese en vez de duplicarlo. En su ficha de la librería se pueden **renombrar** (su historial, sus
+récords, sus notas y los días y workouts en los que está pasan al nombre nuevo) y **eliminar** (solo el ejercicio, conservando su
+historial, o con su historial). Uno que esté en el plan, en un programa propio o en un workout hay que quitarlo antes de ahí, y
+con un entreno en curso no se toca ninguno.
+
 ## Workouts personalizados
 
-Bloques sueltos, superseries y triseries que puedes montar a tu gusto y usar después en un programa propio.
+Bloques sueltos, superseries y triseries que puedes montar a tu gusto y usar después en un programa propio. Un workout que
+se deja sin crear no se queda en la lista, y «atrás» en el editor pregunta antes si se descartan los cambios.
 
 ## Temporizador WOD y cardio
 

@@ -1,6 +1,6 @@
 /* ═══ dashboard/history ═══
    Registro de entrenos y calendario.
-   Define: calendarPage, logsPage, logIndex, logText, logRight  · acciones/registros: 5
+   Define: calendarPage, logsPage, logSeries, dropSeries, logIndex, logText, logRight  · acciones/registros: 5
 */
 import { $, dayKey, round1, roundInt, X } from '../core/util.js';
 import { A } from '../core/registry.js';
@@ -9,6 +9,7 @@ import { confirmDialog, fullPage, pgHead, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
+import { bestLift } from '../core/calc.js';
 export function calendarPage() {
   const b = new Date();
   const d = new Date(b.getFullYear(), b.getMonth() + calMonthOffset, 1);
@@ -42,15 +43,62 @@ const logsPage = () => {
   return html`${raw(h)}<p class="mu fs-12 mt-14">Toca un registro para borrarlo.</p>`;
 };
 A.openLogs = () => fullPage(logsPage());
+/** Las series que guardó el entreno `l` en el historial de ejercicios: [[ejercicio, entrada], …]. Las de la V1.0.3 en adelante
+    llevan la marca de su entreno (t); las de antes son las de ese día, si ese día no hay otro entreno sin marca (con dos, no se
+    puede saber de cuál son: null). El cardio y los WOD no tienen series. */
+const logSeries = l => {
+  if (!l || l.k)
+    return [];
+  const H = S.exerciseHistory || {};
+  const all = pick => Object.keys(H).flatMap(n => (Array.isArray(H[n]) ? H[n] : []).filter(pick).map(x => [n, x]));
+  if (l.t)
+    return all(x => x.t === l.t);
+  if (S.logs.filter(x => x && !x.k && !x.t && x.d == l.d).length > 1)
+    return null;
+  return all(x => !x.t && x.d == l.d);
+};
+/* quita del historial las series de un entreno y pone al día lo que salía de ellas: la mejor marca de cada ejercicio (si era
+   de ese día, se busca otra vez en lo que queda) y su último peso */
+const dropSeries = (series, day) => {
+  const H = S.exerciseHistory;
+  new Set(series.map(x => x[0])).forEach(n => {
+    const gone = new Set(series.filter(x => x[0] == n).map(x => x[1]));
+    const h = H[n].filter(x => !gone.has(x));
+    if (h.length)
+      H[n] = h;
+    else
+      delete H[n];
+    const r = S.records && S.records[n];
+    if (r && r.d == day) {
+      const b = bestLift(null, h);
+      if (b)
+        S.records[n] = b;
+      else
+        delete S.records[n];
+    }
+    const withWeight = h.find(x => x.s.some(s => +s[1] > 0));
+    if (withWeight)
+      S.lastWeights[n] = +withWeight.s.filter(s => +s[1] > 0).pop()[1];
+    else
+      delete S.lastWeights[n];
+  });
+};
 A.logDeleteAsk = i => {
   logIndex = i;
   const l = S.logs[i];
-  if (l)
-    confirmDialog('¿Borrar este registro?', l.n + ' · ' + l.d, 'logDelete', 'Borrar');
+  if (!l)
+    return;
+  /* un entreno se borra con sus series: si no, sus pesos seguirían en los récords, las gráficas y la progresión */
+  const series = logSeries(l);
+  const n = series ? new Set(series.map(x => x[0])).size : 0;
+  const also = !series ? ' Sus series se quedan en el historial: ese día hay otro entreno y no se sabe de cuál son.' : n ? ' También se borran sus series (' + n + (n == 1 ? ' ejercicio' : ' ejercicios') + '): los récords y las gráficas se recalculan.' : '';
+  confirmDialog('¿Borrar este registro?', html`${l.n} · ${l.d}.${also}`, 'logDelete', 'Borrar');
 };
 let logIndex = -1;
 A.logDelete = () => {
-  if (S.logs[logIndex]) {
+  const l = S.logs[logIndex];
+  if (l) {
+    dropSeries(logSeries(l) || [], l.d);
     S.logs.splice(logIndex, 1);
     saveState();
   }

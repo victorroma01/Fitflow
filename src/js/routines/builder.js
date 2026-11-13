@@ -2,7 +2,7 @@
    Mis workouts: lista, editor de bloques y lanzamiento.
    Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineBlock, routineEditor, routineBlockPicker, openRoutines, routineCard, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, setOverviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 25
 */
-import { $, clampNum, fmtMinSec, roundInt, typedNum, X } from '../core/util.js';
+import { $, clampNum, fmtMinSec, roundInt, typedName, typedNum, X } from '../core/util.js';
 import { A, C, U } from '../core/registry.js';
 import { groupLabel } from '../data/library.js';
 import { DAY_PHOTOS } from '../data/photos.js';
@@ -13,6 +13,7 @@ import { exAll, exCellHtml, exCompare, exSearchText, groupOfName } from '../libr
 import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, groupDropdown, groupMatch } from '../library/filters.js';
 import { REST_OPTIONS, restDefault } from '../workout/rest.js';
 import { imagePicker, routineImage } from '../workout/images.js';
+import { MAX_SETS } from '../workout/targets.js';
 import { exAnatomy } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 export let routineState = { i: -1, k: 1, sel: [], q: '' };
@@ -36,9 +37,9 @@ const routineBlock = (block, j) => {
 /** El editor de un workout personalizado: nombre, imagen, sus bloques y «Crear» o «Guardar cambios». */
 export const routineEditor = () => {
   const routine = S.routines[routineState.i];
-  return html`<div class="row"><button data-a="routineEditorBack">‹ Rutinas</button>${raw(routineState.nw ? '' : '<button data-a="routineDeleteAsk" class="c-ctx">Eliminar</button>')}</div><h2 class="m-14-0-4 ls-n0_02em">Workout personalizado</h2><label>Nombre</label><input data-c="routineName" maxlength="60" value="${routine.n}" aria-label="Nombre del workout"><label>Imagen del entrenamiento</label>${imagePicker(routine)}${routine.bl.map(routineBlock)}<button data-a="routineAddBlock" class="w-full mt-16">+ Añadir bloque</button><div class="h-80"></div><button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineSaveAsk">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
+  return html`<div class="row"><button data-a="routineEditorBack" data-back="1">‹ Rutinas</button>${raw(routineState.nw ? '' : '<button data-a="routineDeleteAsk" class="c-ctx">Eliminar</button>')}</div><h2 class="m-14-0-4 ls-n0_02em">Workout personalizado</h2><label>Nombre</label><input data-c="routineName" maxlength="60" value="${routine.n}" aria-label="Nombre del workout"><label>Imagen del entrenamiento</label>${imagePicker(routine)}${routine.bl.map(routineBlock)}<button data-a="routineAddBlock" class="w-full mt-16">+ Añadir bloque</button><div class="h-80"></div><button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineSaveAsk">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
 };
-const routineBlockPicker = () => html`<button data-a="routineEdit" data-i="${routineState.i}">‹ Cancelar</button><h3>Nuevo bloque</h3>${[1, 2, 3].map(k => html`<button class="chip${routineState.k == k ? ' on' : ''}" data-a="routineAddBlockKind" data-i="${k}">${raw(BLOCK_KINDS[k])}</button>`)}<p class="mu">Elige el ejercicio ${routineState.sel.length + 1} de ${routineState.k}${raw(routineState.sel.length ? ': ' + routineState.sel.map(X).join(' + ') : '')}</p><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="routinePickerSearch"><div id="cl2">${raw(routineExRows())}</div>`;
+const routineBlockPicker = () => html`<button data-a="routineEdit" data-i="${routineState.i}" data-back="1">‹ Cancelar</button><h3>Nuevo bloque</h3>${[1, 2, 3].map(k => html`<button class="chip${routineState.k == k ? ' on' : ''}" data-a="routineAddBlockKind" data-i="${k}">${raw(BLOCK_KINDS[k])}</button>`)}<p class="mu">Elige el ejercicio ${routineState.sel.length + 1} de ${routineState.k}${raw(routineState.sel.length ? ': ' + routineState.sel.map(X).join(' + ') : '')}</p><input placeholder="Buscar por nombre, músculo o equipo" aria-label="Buscar ejercicio" data-u="routinePickerSearch"><div id="cl2">${raw(routineExRows())}</div>`;
 A.routinePickExercise = (i, b) => {
   routineState.sel.push(b.dataset.n);
   routineState.q = '';
@@ -55,7 +56,7 @@ A.routinePickExercise = (i, b) => {
 };
 A.routineBlockSets = (i, b) => {
   const x = S.routines[routineState.i].bl[i];
-  x.s = Math.max(1, x.s + +b.dataset.v);
+  x.s = Math.max(1, Math.min(MAX_SETS, x.s + +b.dataset.v));
   saveState();
   sheet(routineEditor());
 };
@@ -266,8 +267,11 @@ U.routinePickerSearch = v => {
   routineState.q = v;
   $('#cl2').innerHTML = routineExRows();
 };
+/* el nombre del workout no se queda vacío: si se borra, vuelve el que tenía */
 C.routineName = e => {
-  S.routines[routineState.i].n = e.value;
+  const r = S.routines[routineState.i];
+  r.n = typedName(e.value, r.n || 'Mi workout');
+  e.value = r.n;
   saveState();
 };
 C.routineBlockReps = (e, i) => {
