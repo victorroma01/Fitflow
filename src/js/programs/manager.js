@@ -9,10 +9,9 @@ import { parseProgram, PROGRAM_NAMES, PROGRAM_NOTES, PROGRAM_PREF } from '../dat
 import { LEVEL_NAMES, LEVEL_PROGRAM_NOTES } from '../data/levels.js';
 import { S, saveState, W } from '../core/state.js';
 import { confirmDialog, fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
-import { R } from '../core/render.js';
 import { dropResume } from '../workout/resume.js';
 import { perWeekText } from '../workout/week.js';
-import { programDaysHtml, syncCustomProgram } from './create.js';
+import { programDaysHtml, startPlanFromWeekOne, syncCustomProgram } from './create.js';
 import { isLevel, levelPlan, levelSegment, levelTag, previewLevel, programRow, setPreviewLevel } from './levels.js';
 import { html, raw } from '../core/html.js';
 export let previewProgram = 0;
@@ -72,11 +71,5 @@ A.programSelectConfirmed = () => {
   S.ownProgramIndex = -1;
   delete S.noProgram;
   S.plan = levelPlan(parseProgram(previewProgram), v, previewProgram);
-  S.week = 1;
-  S.selectedWeekday = 0;
-  S.selectedDay = 0;
-  S.doneDays = {};
-  saveState();
-  sheet();
-  R();
+  startPlanFromWeekOne();
 };

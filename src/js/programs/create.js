@@ -1,6 +1,6 @@
 /* ═══ programs/create ═══
    Crear programa: guiado y a partir de mis workouts.
-   Define: progDraft, clone, restDay, syncCustomProgram, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, techLegend, programDaysHtml, programRowsHtml, createHome, programNameBox, createFromMine, optionChips, guidedForm, makeEx, ANTAGONISTS, antagonist, guideTechniques, generateProgram, parseDays, programNameFor, programAdvice, guidedProposal, orderWeekPage, refreshCreate, setProgramDeload, refreshDeload  · acciones/registros: 22
+   Define: progDraft, clone, restDay, syncCustomProgram, startPlanFromWeekOne, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, techLegend, programDaysHtml, programRowsHtml, createHome, programNameBox, createFromMine, optionChips, guidedForm, makeEx, ANTAGONISTS, antagonist, guideTechniques, generateProgram, parseDays, programNameFor, programAdvice, guidedProposal, orderWeekPage, refreshCreate, setProgramDeload, refreshDeload  · acciones/registros: 22
 */
 import { fmtMinSec, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -30,6 +30,17 @@ export const restDay = () => ({ n: 'Descanso', ex: [] });
 export const syncCustomProgram = () => {
   if (S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex])
     S.ownPrograms[S.ownProgramIndex].plan = clone(S.plan);
+};
+/** Tras cambiar de programa: el plan empieza por la semana 1 y su primer día, sin días hechos; se guarda, se cierra la hoja y
+    se pinta. */
+export const startPlanFromWeekOne = () => {
+  S.week = 1;
+  S.selectedWeekday = 0;
+  S.selectedDay = 0;
+  S.doneDays = {};
+  saveState();
+  sheet();
+  R();
 };
 const WEEK_LAYOUTS = { 1: [0], 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 4], 5: [0, 1, 2, 4, 5], 6: [0, 1, 2, 3, 4, 5] };
 const layoutWeek = (l, n) => {
@@ -402,13 +413,7 @@ A.ownProgramApply = () => {
   if (p.o && isLevel(p.o.niv))
     S.level = p.o.niv;
   dropResume();
-  S.week = 1;
-  S.selectedWeekday = 0;
-  S.selectedDay = 0;
-  S.doneDays = {};
-  saveState();
-  sheet();
-  R();
+  startPlanFromWeekOne();
 };
 A.ownProgramEdit = () => {
   const p = S.ownPrograms[progDraft.k];

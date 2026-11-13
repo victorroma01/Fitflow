@@ -6,12 +6,13 @@
    Cada hoja o página se anuncia como una ventana (role="dialog", aria-modal y su título) y, al abrirla o al pasar a otra página,
    el foco va a ella (sin abrir el teclado); al cerrarla vuelve a lo que la abrió (I-06), para que con VoiceOver o con teclado no
    se siga por la pantalla de detrás. Igual el aviso (#dg) y el menú (#mn), que se abren y cierran también desde otros módulos.
-   Define: sheetBarFix, pageTrail, pageKey, backLink, touched, touchedAt, recentTouch, TYPING, openerNow, focusBack, openers, sheetDialog, swapPage, showPageBelow, sheet, confirmDialog, dialog, watchLayer, closeLayer, onSheetClose, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 6
+   Define: sheetBarFix, pageTrail, pageKey, backLink, touched, touchedAt, recentTouch, TYPING, openerNow, focusBack, openers, sheetDialog, swapPage, showPageBelow, sheet, appBusy, confirmDialog, dialog, watchLayer, closeLayer, onSheetClose, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 6
 */
 import { applyStyles } from './dynstyle.js';
 import { $ } from './util.js';
 import { logError } from './errors.js';
 import { A } from './registry.js';
+import { W } from './state.js';
 import { icon } from './icons.js';
 import { html, raw } from './html.js';
 function sheetBarFix() {
@@ -165,6 +166,10 @@ export const sheet = h => {
     openers['#sh'] = null;
   }
 };
+/** ¿Hay algo delante de las pestañas, o la app no se ve? Un entreno en marcha, una hoja o página, un aviso, el menú, el inicio
+    de sesión, la bienvenida, el recorrido, el aviso de versión nueva o el temporizador de WOD. Lo que sale solo (el recorrido,
+    el aviso del icono nuevo, el de espacio) espera a que no haya nada. */
+export const appBusy = () => !!(W || document.visibilityState == 'hidden' || $('#lgw') || $('#wlc') || $('#tour') || $('#upd') || $('#f2w') || $('#sh').firstChild || $('#dg').firstChild || $('#mn').firstChild);
 export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'pr']]);
 /* (#tt, los avisos breves: una región que los lectores de pantalla leen al cambiar, sin quitar el foco de donde está) */
 document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt" role="status" aria-live="polite"></div>');

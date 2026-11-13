@@ -1,14 +1,12 @@
 /* ═══ core/persist ═══
-   Guardado del estado S en el dispositivo, por partes.
+   Guardado del estado S en el dispositivo, por partes: leerlo al arrancar y escribir lo que cambia.
    El núcleo de S (ajustes, plan, programas, peso…) va en localStorage, en la clave `ff`, que se lee sin esperas al arrancar.
-   Las colecciones que más crecen van aparte: `ff:logs` (entrenos), `ff:hist` (historial por ejercicio) y las comidas, una
-   clave por mes (`ff:meals:2026-10`). Esas partes viven en IndexedDB (base «ffdata»), que admite mucho más que los unos 5 MB
-   de localStorage (I-04): core/boot las lee (loadParts) antes de pintar nada. La primera vez pasan allí las que había en
+   Las colecciones que más crecen (entrenos, historial y comidas) van aparte, cada una en sus claves (core/parts dice cómo se
+   reparten). Esas partes viven en IndexedDB (base «ffdata», con core/idb), que admite mucho más que los unos 5 MB de
+   localStorage (I-04): core/boot las lee (loadParts) antes de pintar nada. La primera vez pasan allí las que había en
    localStorage; sin IndexedDB, se quedan en localStorage, como antes.
-   En el núcleo, cada colección apartada queda con el nombre de su clave ("logs": "ff:logs"), así se sabe qué hay que leer y
-   el orden de las claves de S se conserva; `_parts` dice dónde están (1, en localStorage; 2, en IndexedDB) y, en IndexedDB,
-   `_pk`, cuáles tiene que haber. Si no se pueden leer o falta alguna, no se guarda ni se sincroniza nada (partsLost): con los
-   datos a medias, la nube creería que se borraron.
+   Si las partes no se pueden leer o falta alguna de las que el núcleo nombra, no se guarda ni se sincroniza nada (partsLost):
+   con los datos a medias, la nube creería que se borraron.
    Cada guardado escribe solo las claves que han cambiado, y todos los saveState() de una misma acción se agrupan en uno solo
    al terminar la acción (queueMicrotask). Para saber qué ha cambiado se pasa a texto el núcleo y las partes que la acción dice
    haber tocado (saveState('core'), saveState(mealsPart(día))…; si no dice nada, todas) y, poco después y con la app parada,
@@ -20,20 +18,16 @@
    Cada parte que cambia se avisa enseguida a Store.remote (cloud/sync, que la sube a Firebase).
    Este módulo no conoce S: core/state le pasa el estado (saveState, flushState). Se guarda con las claves cortas de siempre y
    se lee con los nombres del programa (core/schema).
-   Define: STATE_PARTS, partKey, monthKey, mealsPart, stateRecovered, partsLost, badParts, savedText, queued, queuedParts, saveLocked, lastKey, idb, expectedParts, leftovers, lastState, allSaved, splitState, readPart, setAside, loadSavedState, DB_NAME, dbPromise, openDb, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
+   Leer y escribir comparten lo que se sabe de cada clave (savedText), dónde están las partes (idb) y si se puede guardar
+   (saveLocked): por eso van juntos en este módulo, y lo que no tiene estado, fuera (core/parts y core/idb).
+   Define: stateRecovered, partsLost, badParts, savedText, queued, queuedParts, saveLocked, lastKey, idb, expectedParts, leftovers, lastState, allSaved, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
 */
 import { Store } from './store.js';
+import { idbStore } from './idb.js';
+import { partKey, readPart, splitState, STATE_PARTS } from './parts.js';
 import { stateFromStored, stateName, stateToStored } from './schema.js';
 import { logError } from './errors.js';
 import { toast } from './toast.js';
-/** Colecciones de S que se guardan en su propia clave (las comidas, además, una clave por mes). */
-const STATE_PARTS = ['logs', 'hist', 'meals'];
-/** Clave de una parte: partKey('logs') → 'ff:logs'; partKey('') es el prefijo común. */
-export const partKey = k => Store.K.app + ':' + k;
-/* mes de las comidas de un día ('otros' si la clave no es una fecha) */
-const monthKey = d => /^\d{4}-\d\d-\d\d$/.test(d) ? d.slice(0, 7) : 'otros';
-/** La parte con las comidas de un día, para saveState: mealsPart('2026-10-29') → 'meals:2026-10'. */
-export const mealsPart = d => 'meals:' + monthKey(d);
 /** Al arrancar: 1 si el núcleo estaba dañado (se empezó de cero, conservando las partes legibles), 2 si solo lo estaba
   alguna parte. Lo dañado queda apartado en Store.K.bad y core/boot avisa. */
 export let stateRecovered = 0;
@@ -64,53 +58,6 @@ let lastState = null;
 /** 1 desde la primera vez que se mira todo: hasta entonces (lo que arregla core/repair al arrancar, por ejemplo) o tras un fallo,
   un guardado que dice sus partes también lo mira todo. */
 let allSaved = 0;
-/** El estado `s`, ya con las claves guardadas, dividido en claves de Store: { out: { clave: texto JSON }, keys: claves de
-  todas las partes que tiene }. Del núcleo siempre sale el texto; de las partes, solo de las de `want` (de todas si es null).
-  El núcleo lleva la marca _parts y, en IndexedDB, la lista _pk. */
-const splitState = (s, want) => {
-  const out = {};
-  const keys = [];
-  const core = {};
-  const part = (k, v) => {
-    keys.push(k);
-    if (!want || want.has(k))
-      out[k] = JSON.stringify(v);
-  };
-  for (const k in s) {
-    const v = s[k];
-    if (!STATE_PARTS.includes(k) || !v || typeof v != 'object' || (k == 'logs') != Array.isArray(v)) {
-      core[k] = v;
-      continue;
-    }
-    core[k] = partKey(k);
-    if (k != 'meals') {
-      part(partKey(k), v);
-      continue;
-    }
-    const months = {};
-    for (const d in v)
-      (months[monthKey(d)] = months[monthKey(d)] || {})[d] = v[d];
-    for (const m in months)
-      part(partKey('meals:' + m), months[m]);
-  }
-  core._parts = idb ? 2 : 1;
-  if (idb)
-    core._pk = keys.slice().sort();
-  out[Store.K.app] = JSON.stringify(core);
-  return { out, keys };
-};
-/** Texto de una parte → su valor (lista para `logs`, objeto para el resto), o undefined si falta o está dañada. */
-const readPart = (k, raw) => {
-  try {
-    const v = JSON.parse(raw);
-    if (v && typeof v == 'object' && (k == 'logs') == Array.isArray(v))
-      return v;
-  }
-  catch (e) {
-    /* dañada: quien llama la aparta */
-  }
-  return undefined;
-};
 /* aparta en Store.K.bad lo que no se pudo leer ({ clave: texto }) y lo anota para el aviso de core/boot y para cloud/sync */
 const setAside = (bad, salvage) => {
   const keys = Object.keys(bad);
@@ -215,71 +162,8 @@ export const loadSavedState = () => {
   setAside(bad, salvage);
   return stateFromStored(core);
 };
-const DB_NAME = 'ffdata';
-let dbPromise = null;
-/* la base de las partes (se abre una vez; si la conexión se pierde, la siguiente transacción abre otra) */
-const openDb = () => dbPromise || (dbPromise = new Promise((res, rej) => {
-  if (!window.indexedDB)
-    return rej(new Error('IndexedDB no disponible'));
-  const r = indexedDB.open(DB_NAME, 1);
-  r.onupgradeneeded = () => {
-    for (const n of ['parts', 'aside'])
-      if (!r.result.objectStoreNames.contains(n))
-        r.result.createObjectStore(n);
-  };
-  r.onsuccess = () => {
-    const db = r.result;
-    db.onclose = () => {
-      dbPromise = null;
-    };
-    db.onversionchange = () => {
-      db.close();
-      dbPromise = null;
-    };
-    res(db);
-  };
-  r.onerror = () => rej(r.error || new Error('no se pudo abrir ' + DB_NAME));
-  r.onblocked = () => rej(new Error(DB_NAME + ' bloqueada'));
-}).catch(e => {
-  dbPromise = null;
-  throw e;
-}));
-/* una transacción sobre un almacén de la base (las partes, o lo apartado: asideSet): fn(almacén) hace las peticiones y devuelve
-   la que interesa (o una lista); se resuelve con su resultado cuando la transacción termina. Si la conexión se había perdido
-   (Safari, al volver del fondo), se abre otra y se repite una vez */
-const dbTx = (name, mode, fn, retry = 1) => openDb().then(db => new Promise((res, rej) => {
-  let tx;
-  try {
-    tx = db.transaction(name, mode);
-  }
-  catch (e) {
-    return rej(e);
-  }
-  let rq;
-  tx.oncomplete = () => res(Array.isArray(rq) ? rq.map(x => x.result) : rq && rq.result);
-  tx.onerror = () => rej(tx.error || new Error('transacción fallida'));
-  tx.onabort = () => rej(tx.error || new Error('transacción abortada'));
-  try {
-    rq = fn(tx.objectStore(name));
-  }
-  catch (e) {
-    try {
-      tx.abort();
-    }
-    catch (x) {
-      /* ya terminada */
-    }
-    return rej(e);
-  }
-  /* sin esperar a que se vacíe la cola de tareas: así queda escrito aunque se cierre la app justo después */
-  if (mode == 'readwrite' && tx.commit)
-    tx.commit();
-})).catch(e => {
-  if (!retry || e && e.name == 'QuotaExceededError')
-    throw e;
-  dbPromise = null;
-  return dbTx(name, mode, fn, 0);
-});
+/* la base de las partes (core/idb): las transacciones sobre el almacén de las partes y el de lo apartado (asideSet) */
+const dbTx = idbStore('ffdata', { parts: null, aside: null });
 const partsTx = (mode, fn) => dbTx('parts', mode, fn);
 /** Guarda aparte un texto grande que no es del estado (la copia previa a restaurar: system/backup), en IndexedDB si las partes
   están allí y si no en localStorage. Promesa: false si no cabe. */
@@ -377,7 +261,7 @@ const moveToIdb = async (s) => {
   idb = 1;
   let split;
   try {
-    split = splitState(stateToStored(s), null);
+    split = splitState(stateToStored(s), null, idb);
     await partsTx('readwrite', st => {
       st.clear();
       for (const k of split.keys)
@@ -576,7 +460,7 @@ const writeIdb = ({ out, keys }, report) => {
 /* las pruebas: ¿cambió alguna parte que la acción no dijo? (se anota en window.__ffHintCheck) */
 const hintCheck = (s, parts) => {
   try {
-    const { out, keys } = splitState(stateToStored(s), null);
+    const { out, keys } = splitState(stateToStored(s), null, idb);
     const miss = keys.filter(k => !parts.has(k) && savedText.get(k) !== out[k]);
     if (miss.length)
       window.__ffHintCheck.push(miss.join());
@@ -589,7 +473,7 @@ const hintCheck = (s, parts) => {
 const writeSplit = (stored, want, report) => {
   let split;
   try {
-    split = splitState(stored(), want);
+    split = splitState(stored(), want, idb);
   }
   catch (e) {
     if (report)

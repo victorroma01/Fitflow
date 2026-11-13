@@ -17,11 +17,12 @@ import { icon } from '../core/icons.js';
 import { dialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { html, raw } from '../core/html.js';
+import { currentCustomProgram } from '../programs/levels.js';
 /** Cada cuántas semanas toca la descarga si el programa no dice otra cosa, según el nivel. */
 const DELOAD_DEFAULT = { ini: 6, int: 5, ava: 4 };
 /** Semanas entre descargas del plan actual (0: nunca). */
 const deloadEvery = () => {
-  const p = S.ownProgramIndex >= 0 && S.ownPrograms ? S.ownPrograms[S.ownProgramIndex] : null;
+  const p = currentCustomProgram();
   return p && p.dl != null ? +p.dl || 0 : DELOAD_DEFAULT[S.level] || 5;
 };
 export const isDeloadWeek = wk => {

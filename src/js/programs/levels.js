@@ -1,10 +1,10 @@
 /* ═══ programs/levels ═══
    Niveles de programa (aplicar, variantes, selector).
-   Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
+   Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, programName, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
 */
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
-import { parseProgram } from '../data/library.js';
+import { parseProgram, PROGRAM_NAMES } from '../data/library.js';
 import { LEVEL_CLASS, LEVEL_DETAILS, LEVEL_EXTRA_DAYS, LEVEL_KEYS, LEVEL_LAYOUTS, LEVEL_NAMES, LEVEL_OVERRIDES, LEVEL_SUMMARY, LEVEL_SWAPS } from '../data/levels.js';
 import { S, saveState, W } from '../core/state.js';
 import { confirmDialog, sheet } from '../core/ui.js';
@@ -124,7 +124,13 @@ export const levelPlan = (pl, lv, id) => {
   return L.map(k => k === -1 ? { n: 'Descanso', ex: [] } : typeof k == 'string' ? parseDays(LEVEL_EXTRA_DAYS[k])[0] : tx[k]);
 };
 const planSignature = pl => JSON.stringify(pl.map(d => [d.n, d.ex.map(e => [e.n, e.s, e.rg || 0, e.u || 0, e.r || 0, e.b || 0, e.tk || 0])]));
+/** El programa propio en uso, o null si se sigue uno predefinido. */
 export const currentCustomProgram = () => S.ownProgramIndex >= 0 ? S.ownPrograms[S.ownProgramIndex] : null;
+/** El nombre del programa en uso: el del propio o, si no, el del predefinido. */
+export const programName = () => {
+  const p = currentCustomProgram();
+  return p ? p.n : PROGRAM_NAMES[S.program];
+};
 export const levelsActive = () => !S.noProgram && (S.ownProgramIndex < 0 || !!(currentCustomProgram() && currentCustomProgram().o));
 const levelGenerate = (v) => {
   const p = currentCustomProgram();

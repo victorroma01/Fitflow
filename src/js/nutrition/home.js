@@ -6,7 +6,7 @@ import { clampNum, dayKey, fmtDate, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
 import { MEAL_NAMES, MEAL_SPLITS } from '../data/foods.js';
 import { nutriDayOffset, S, saveState, setNutriDayOffset, nutriDate } from '../core/state.js';
-import { mealsPart } from '../core/persist.js';
+import { mealsPart } from '../core/parts.js';
 import { icon } from '../core/icons.js';
 import { R } from '../core/render.js';
 import { goalTargets } from './diet.js';

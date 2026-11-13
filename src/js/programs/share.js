@@ -5,12 +5,13 @@
 import { $, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
-import { EXERCISES, PROGRAM_NAMES } from '../data/library.js';
+import { EXERCISES } from '../data/library.js';
 import { DAY_PHOTOS } from '../data/photos.js';
 import { TECH_CODES } from '../data/techniques.js';
 import { S, saveState } from '../core/state.js';
 import { dialog, pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { progDraft, restDay } from './create.js';
+import { programName } from './levels.js';
 import { cleanText, copyText, downloadFile, fromBase64, toBase64 } from '../system/files.js';
 import { html } from '../core/html.js';
 /** Plan válido a partir de lo importado: una semana de 7 días o un ciclo de hasta 14 (workout/week), con lo que se conoce. */
@@ -93,7 +94,7 @@ A.sharePlan = () => {
     return;
   }
   try {
-    shareState = { n: S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex] ? S.ownPrograms[S.ownProgramIndex].n : PROGRAM_NAMES[S.program], plan: S.plan, back: 'openPrograms' };
+    shareState = { n: programName(), plan: S.plan, back: 'openPrograms' };
     sheet(sharePage());
     sheetToTop();
   }

@@ -1,6 +1,6 @@
 /* ═══ system/files ═══
    Descarga, copia y codificación de archivos.
-   Define: isStandalone, downloadFile, copyText, toBase64, fromBase64, cleanText  · acciones/registros: 1
+   Define: isStandalone, saveBlob, downloadFile, copyText, toBase64, fromBase64, cleanText  · acciones/registros: 1
 */
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -13,6 +13,17 @@ export const isStandalone = () => {
   catch (e) {
     return false;
   }
+};
+/** Descarga un archivo (un Blob) con su nombre, como al pulsar un enlace de descarga. */
+export const saveBlob = (blob, name) => {
+  const u = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = u;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 4000);
 };
 /** Guarda un archivo en el móvil: en la app instalada, con «Compartir» (en el iPhone, «Guardar en Archivos»); si no, como
     descarga. `type`: su tipo (JSON si no se dice). Devuelve 'saved', 'declined' o 'fail'. */
@@ -31,15 +42,7 @@ export const downloadFile = async (name, data, type = 'application/json') => {
     }
   }
   try {
-    const b = new Blob([data], { type });
-    const u = URL.createObjectURL(b);
-    const a = document.createElement('a');
-    a.href = u;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(u), 4000);
+    saveBlob(new Blob([data], { type }), name);
     return 'saved';
   }
   catch (e) {

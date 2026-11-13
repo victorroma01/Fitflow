@@ -8,7 +8,8 @@
 import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { mealsPart, partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
+import { partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
+import { mealsPart } from './parts.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';

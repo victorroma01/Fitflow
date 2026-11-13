@@ -7,21 +7,20 @@
    libre; «Más tarde» la deja para la próxima vez que se abra la app y «Entendido» la da por vista (Store.K.icon). Se puede volver
    a ver en Ajustes → App → El icono nuevo (profile/settings), mientras el iPhone tenga el icono de antes. Al reinstalarla, el iPhone empieza de cero con la versión de ese momento, así que ya no sale. En
    Android, Chrome cambia el icono solo.
-   Define: iconNoticeApplies, iconSyncInfo, iconNoticeBody, iconTries, iconBusy, iconNoticeCheck  · acciones/registros: 3
+   Define: iconNoticeApplies, iconSyncInfo, iconNoticeBody, iconTries, iconNoticeCheck  · acciones/registros: 3
 */
 import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
-import { W } from '../core/state.js';
-import { sheet } from '../core/ui.js';
+import { appBusy, sheet } from '../core/ui.js';
 import { html } from '../core/html.js';
 import { deviceOS } from '../core/platform.js';
 import { BRAND_LOGOS } from '../data/photos.js';
 import { isStandalone } from './files.js';
 import { isNewerVersion } from './updates.js';
 import { account, signedIn } from '../cloud/session.js';
-import { pendingDocs, syncLine, syncNow, syncState } from '../cloud/sync.js';
+import { pendingDocs, syncBusy, syncLine, syncNow, syncState } from '../cloud/sync.js';
 /** ¿Tiene este móvil el icono de antes? En la app instalada en un iPhone que empezó con una versión anterior a la 1.0.1. */
 export const iconNoticeApplies = () => {
   try {
@@ -65,11 +64,6 @@ export const iconNoticeBody = withButtons => {
 };
 /* intentos de enseñarla mientras la app está ocupada (un segundo cada uno) */
 let iconTries = 0;
-/* ¿Hay algo delante (un entreno, una ventana, la bienvenida, el recorrido…) o aún se está sincronizando? */
-const iconBusy = () => {
-  const st = syncState().st;
-  return !!(W || st == 'idle' || st == 'run' || document.visibilityState == 'hidden' || $('#lgw') || $('#wlc') || $('#tour') || $('#upd') || $('#sh').firstChild || $('#dg').firstChild || $('#mn').firstChild);
-};
 /** Al arrancar (core/boot): la enseña si toca y aún no se dio por vista, cuando la app esté libre. */
 export const iconNoticeCheck = () => {
   try {
@@ -80,7 +74,8 @@ export const iconNoticeCheck = () => {
     logError('aviso del icono nuevo', e);
     return;
   }
-  if (iconBusy()) {
+  /* con algo delante (un entreno, una ventana, la bienvenida, el recorrido, el WOD…) o aún sincronizando, espera */
+  if (appBusy() || syncBusy()) {
     if (++iconTries < 120)
       setTimeout(iconNoticeCheck, 1000);
     return;

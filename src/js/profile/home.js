@@ -7,14 +7,13 @@ import { APPV, clampInt, dayKey, fmtDateShort, roundInt, safeImage, typedNum } f
 import { Store } from '../core/store.js';
 import { clearSavedState, reloadApp } from '../core/persist.js';
 import { A, C } from '../core/registry.js';
-import { PROGRAM_NAMES } from '../data/library.js';
 import { S, saveState } from '../core/state.js';
 import { toast } from '../core/toast.js';
 import { icon } from '../core/icons.js';
 import { confirmDialog, dialog, linkRow } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
-import { currentCustomProgram, levelsActive, levelTag, programRow } from '../programs/levels.js';
+import { levelsActive, levelTag, programName, programRow } from '../programs/levels.js';
 import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { acctName, isAdmin, signedIn } from '../cloud/session.js';
@@ -68,8 +67,7 @@ const planCard = () => {
   /* sin programa elegido (cuenta nueva; I-24) */
   if (S.noProgram)
     return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', 'Aún sin programa')}<p class="mu m-10-0-0 fs-14">Elige uno de los predefinidos o crea el tuyo.</p><button class="pr w-full mt-12" data-a="openPrograms">Seleccionar programa</button></details>`;
-  const p = currentCustomProgram();
-  const nm = p ? p.n : PROGRAM_NAMES[S.program];
+  const nm = programName();
   return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}<div class="mt-10">${programRow(nm, levelsActive() ? levelTag(S.level) : '')}</div><button data-a="openPrograms" class="w-full mt-12">Cambiar programa o nivel</button></details>`;
 };
 /** Primer día con datos (entrenos, comidas, peso o medidas), o '' si aún no hay ninguno. */

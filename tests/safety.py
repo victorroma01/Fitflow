@@ -133,6 +133,28 @@ def main(path):
             pg.wait_for_timeout(300)
             check('«Restaurar» pide confirmación con el resumen de la copia', ev("!!document.querySelector('#dg .dgc')&&/Restaurar/.test(document.querySelector('#dg').innerText)"))
             ev("document.querySelector('#dg').innerHTML='';sheet()")
+            # la conexión con IndexedDB se puede perder (Safari la cierra al volver del fondo): la siguiente vez se abre otra y se
+            # repite (core/idb). Antes, las copias automáticas dejaban de funcionar hasta volver a abrir la app
+            ev("window.__tr=IDBDatabase.prototype.transaction;window.__lost=0;IDBDatabase.prototype.transaction=function(){if(this.name=='ffsnap'&&!window.__lost){window.__lost=1;const e=new Error('conexión cerrada');e.name='InvalidStateError';throw e}return __tr.apply(this,arguments)};0")
+            l = ev('snapList()')
+            ev('IDBDatabase.prototype.transaction=window.__tr;0')
+            check('si se pierde la conexión con las copias, se vuelve a abrir y siguen ahí', ev('window.__lost') == 1 and len(l) == 7, str(len(l)))
+            # y si otra pestaña (u otra versión de la app) pide cambiar la base, esta suelta su conexión en vez de bloquearla
+            freed = ev("new Promise(res=>{const r=indexedDB.deleteDatabase('ffsnap');r.onsuccess=()=>res('libre');r.onblocked=()=>res('bloqueada');r.onerror=()=>res('error')})")
+            ev('takeSnapshot()')
+            pg.wait_for_timeout(300)
+            l = ev('snapList()')
+            check('la base de las copias no se queda bloqueada, y se vuelve a crear al guardar la siguiente', freed == 'libre' and len(l) == 1 and l[0]['d'] == ev('dayKey(new Date())'), '%s %s' % (freed, [x['d'] for x in l]))
+            # instalada, la app puede seguir abierta de un día para otro: al volver a ella, la copia de ese día (antes, solo al abrirla)
+            today = ev('dayKey(new Date())')
+            ev("document.dispatchEvent(new Event('visibilitychange'))")
+            pg.wait_for_timeout(200)
+            same = len(ev('snapList()'))
+            pg.clock.fast_forward('24:00:00')
+            ev("document.dispatchEvent(new Event('visibilitychange'))")
+            pg.wait_for_timeout(300)
+            l = ev('snapList()')
+            check('al volver a la app al día siguiente sin haberla cerrado, se hace la copia de ese día (y no otra el mismo día)', same == 1 and len(l) == 2 and l[0]['d'] == ev('dayKey(new Date())') != today and l[1]['d'] == today, '%s %s' % (same, [x['d'] for x in l]))
 
             # datos dañados al arrancar (el núcleo 'ff'; los entrenos y comidas, guardados aparte, se conservan)
             nlogs = ev('S.logs.length')

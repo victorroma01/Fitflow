@@ -9,7 +9,7 @@ import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { addState, S, saveState, setAddState, nutriDate } from '../core/state.js';
-import { mealsPart } from '../core/persist.js';
+import { mealsPart } from '../core/parts.js';
 import { icon } from '../core/icons.js';
 import { confirmDialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';

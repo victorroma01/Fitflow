@@ -8,23 +8,24 @@
         lo cambiado se baja y se junta con lo local (cloud/merge), sin esperas por medio: nada cambia S mientras tanto;
      3. lo que cambió en el móvil se sube en una sola escritura con el índice, con la condición de que el índice no haya
         cambiado entretanto; si cambió (otro dispositivo subió algo), se vuelve al paso 2.
-   Documentos: data/core (el núcleo de S sin lo que es del dispositivo), logs/{año}, hist/{año}, meals/{año-mes} y
-   private/avatar (la foto, solo con consentimiento). Cada uno guarda su contenido como texto JSON (`j`): Firestore no admite
-   listas dentro de listas, y el historial las tiene.
+   Qué va en cada documento (data/core, logs/{año}, hist/{año}, meals/{año-mes} y private/avatar) y cómo vuelve a S lo dice
+   cloud/docs. Cada uno guarda su contenido como texto JSON (`j`): Firestore no admite listas dentro de listas, y el historial
+   las tiene.
    Lo de cada documento en la última sincronización se recuerda por huellas (clave `sync` de Store), no por copias: así se sabe
    qué cambió en cada lado sin duplicar los datos en el móvil. Lo que se vació al arrancar porque estaba dañado (core/persist)
    no cuenta como borrado: esas huellas se olvidan y se vuelve a bajar de la nube (forgetDamaged).
-   Define: PREF_KEYS, LOCAL_ONLY, newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, deadShown, setStatus, syncLine, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, afterApply, applyPrefs, syncProfile, syncDeviceOS, pull, pruneIndex, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   Define: newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, unsynced, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
-import { badParts, partKey, partsLost, stateRecovered } from '../core/persist.js';
-import { applyTheme, flushState, S, W } from '../core/state.js';
+import { badParts, partsLost, stateRecovered } from '../core/persist.js';
+import { partKey } from '../core/parts.js';
+import { applyTheme, flushState, W } from '../core/state.js';
 import { R } from '../core/render.js';
 import { dialog } from '../core/ui.js';
-import { logIds, repairState } from '../core/repair.js';
+import { repairState } from '../core/repair.js';
 import { applyAccent } from '../profile/appearance.js';
 import { account, acctSave, isAdmin } from './session.js';
 import { netError } from './net.js';
@@ -32,15 +33,7 @@ import { idToken } from './auth.js';
 import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.js';
 import { hashMap, hashOf, KINDS, merge3, sameHashes } from './merge.js';
 import { afterSync } from './hooks.js';
-import { stateName, stateToStored } from '../core/schema.js';
-/** Preferencias de la cuenta (van en el perfil, users/{uid}): tema, color (y el propio), estilo Cristal, animaciones, unidades,
-  sonido y vibración, la pestaña al abrir la app y si ya se vio el recorrido (system/tour). Las mismas que deja firestore.rules,
-  con las claves guardadas (core/schema). */
-const PREF_KEYS = ['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', 'snd', 'snt', 'vol', 'vib', 'awk', 'st0', 'tour'];
-/** Claves guardadas de S que no van en data/core: lo que es de este dispositivo (pestaña, día elegido, rango de la gráfica, día del plan
-  apartado durante un workout, fecha de la última copia en archivo, aviso descartado, globo del icono: system/phone), lo que va
-  en su propio documento y las preferencias. */
-const LOCAL_ONLY = new Set(['tab', 'sel', 'sl', 'rg', 'pbk', 'bkd', 'nbk', 'bdg', 'pf', 'logs', 'hist', 'meals', ...PREF_KEYS]);
+import { applyDoc, applyPrefs, docPath, indexPath, localDocs, okType, PREF_KEYS, prefsLocal, profilePath } from './docs.js';
 const newMeta = fresh => ({ dev: newId(), base: {}, lt: {}, pt: 0, fresh: fresh ? 1 : 0, last: 0 });
 /** { dev: id del dispositivo, base: { documento: { r: versión, h: huellas } }, lt: último cambio local de cada tipo (ms), pt: de
   las preferencias, fresh: 1 tras entrar (en un conflicto gana la nube), last: última sincronización completa (ms) } */
@@ -80,6 +73,9 @@ let tokenFresh = 0;
 let running = null;
 let again = false;
 export const syncState = () => status;
+/** ¿Falta la primera sincronización de esta apertura, o hay una en marcha? (lo que sale solo espera: puede traer que ya se vio
+    en otro móvil) */
+export const syncBusy = () => status.st == 'idle' || status.st == 'run';
 /* 1 cuando ya se avisó en esta apertura de que la sesión caducó */
 let deadShown = 0;
 const setStatus = (st, code) => {
@@ -102,106 +98,6 @@ export const syncLine = () => {
   const t = meta.last ? new Date(meta.last).toLocaleString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
   return { run: 'sincronizando…', off: 'sin conexión; se sube al volver la red', wait: 'al terminar el entreno', err: 'no se pudo (' + status.code + '); se reintenta sola' }[status.st] || (t ? 'al día · ' + t : 'pendiente');
 };
-const yearOf = d => typeof d == 'string' && /^\d{4}-/.test(d) ? d.slice(0, 4) : 'otros';
-const monthOf = d => /^\d{4}-\d\d-\d\d$/.test(d) ? d.slice(0, 7) : 'otros';
-/** Ruta en Firestore de cada documento: 'core', 'avatar', 'logs:2026', 'hist:2026', 'meals:2026-11'. */
-const docPath = id => {
-  const [k, x] = id.split(':');
-  const u = 'users/' + account.uid;
-  return k == 'core' ? u + '/data/core' : k == 'avatar' ? u + '/private/avatar' : u + '/' + k + '/' + x;
-};
-const indexPath = () => 'users/' + account.uid + '/data/index';
-const profilePath = () => 'users/' + account.uid;
-/** Preferencias y sexo de este móvil, como van en el perfil. */
-const prefsLocal = () => {
-  const o = {};
-  for (const k of PREF_KEYS) {
-    const v = S[stateName(k)];
-    if (v !== undefined && v !== null)
-      o[k] = v;
-  }
-  o.sx = S.biometrics && (S.biometrics.sex == 'M' || S.biometrics.sex == 'F') ? S.biometrics.sex : '';
-  return o;
-};
-/** Lo que va en data/core: S con las claves guardadas, sin lo de LOCAL_ONLY. */
-const coreOf = () => {
-  const s = stateToStored(S);
-  const o = {};
-  for (const k of Object.keys(s))
-    if (!LOCAL_ONLY.has(k) && s[k] !== undefined)
-      o[k] = s[k];
-  return o;
-};
-/** Contenido local de cada documento: { id: valor }. */
-const localDocs = () => {
-  logIds();
-  const out = { core: coreOf() };
-  if (S.profile && +S.profile.pc > 0 && S.profile.img)
-    out.avatar = { img: S.profile.img, pc: S.profile.pc };
-  for (const l of S.logs || []) {
-    const id = 'logs:' + yearOf(l.d);
-    (out[id] = out[id] || []).push(l);
-  }
-  const hist = S.exerciseHistory || {};
-  for (const ex of Object.keys(hist))
-    for (const e of Array.isArray(hist[ex]) ? hist[ex] : []) {
-      const id = 'hist:' + yearOf(e.d);
-      const o = out[id] = out[id] || {};
-      (o[ex] = o[ex] || []).push(e);
-    }
-  for (const d of Object.keys(S.meals || {})) {
-    const id = 'meals:' + monthOf(d);
-    (out[id] = out[id] || {})[d] = S.meals[d];
-  }
-  return out;
-};
-/** ¿Tiene el contenido que llega de la nube la forma de su tipo? (lo demás lo deja válido core/repair) */
-const okType = (id, v) => {
-  const k = id.split(':')[0];
-  const O = x => x && typeof x == 'object' && !Array.isArray(x);
-  return k == 'logs' ? Array.isArray(v) && v.every(l => O(l) && typeof l.id == 'string') : k == 'hist' ? O(v) && Object.values(v).every(Array.isArray) : k == 'meals' ? O(v) && Object.values(v).every(O) : O(v);
-};
-/** Pone en S el resultado de la fusión de un documento. */
-const applyDoc = (id, v) => {
-  const [k, x] = id.split(':');
-  if (k == 'core') {
-    for (const key of Object.keys(stateToStored(S)))
-      if (!LOCAL_ONLY.has(key) && !(key in v))
-        delete S[stateName(key)];
-    for (const key of Object.keys(v))
-      if (!LOCAL_ONLY.has(key))
-        S[stateName(key)] = v[key];
-  }
-  else if (k == 'avatar') {
-    if (typeof v.img == 'string' && v.img) {
-      S.profile.img = v.img;
-      S.profile.pc = +v.pc || Date.now();
-    }
-    else {
-      delete S.profile.img;
-      delete S.profile.pc;
-    }
-  }
-  else if (k == 'logs')
-    S.logs = S.logs.filter(l => yearOf(l.d) != x).concat(v).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
-  else if (k == 'hist') {
-    S.exerciseHistory = S.exerciseHistory || {};
-    for (const ex of Object.keys(S.exerciseHistory)) {
-      S.exerciseHistory[ex] = S.exerciseHistory[ex].filter(e => yearOf(e.d) != x);
-      if (!S.exerciseHistory[ex].length && !v[ex])
-        delete S.exerciseHistory[ex];
-    }
-    for (const ex of Object.keys(v))
-      S.exerciseHistory[ex] = (S.exerciseHistory[ex] || []).concat(v[ex]).sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0);
-  }
-  else if (k == 'meals') {
-    S.meals = S.meals || {};
-    for (const d of Object.keys(S.meals))
-      if (monthOf(d) == x)
-        delete S.meals[d];
-    Object.assign(S.meals, v);
-  }
-};
 /* tras aplicar lo de la nube: estado válido, guardado (sin contarlo como cambio local), tema y color, y la app pintada */
 const afterApply = () => {
   applying = 1;
@@ -222,15 +118,6 @@ const afterApply = () => {
     catch (e) {
       logError('pintar tras sincronizar', e);
     }
-};
-const applyPrefs = p => {
-  for (const k of PREF_KEYS)
-    if (k in p)
-      S[stateName(k)] = p[k];
-    else
-      delete S[stateName(k)];
-  if (p.sx == 'M' || p.sx == 'F')
-    S.biometrics.sex = p.sx;
 };
 /* paso 1: el perfil. Si no existe (cuenta recién creada), se crea con el usuario; las preferencias se juntan como el núcleo */
 const syncProfile = async () => {
@@ -360,11 +247,10 @@ const pruneIndex = async (idx, missing) => {
       logError('sincronizar: limpiar el índice', e);
   }
 };
-/* paso 3: subir lo cambiado en el móvil, con el índice, todo o nada. false si el índice cambió entretanto */
-const push = async (idx) => {
-  const local = localDocs();
-  const rv = { ...(idx && idx.data.p && typeof idx.data.p == 'object' ? idx.data.p : {}) };
-  const ops = [];
+/* los documentos con cambios del móvil aún sin subir: [{ id, m: su contenido de ahora por elementos (cloud/merge), h: sus
+   huellas }]. Lo son los que no coinciden con lo de la última sincronización y los nuevos que tienen algo */
+const unsynced = local => {
+  const out = [];
   for (const id of new Set([...Object.keys(local), ...Object.keys(meta.base).filter(k => k != 'profile')])) {
     const kind = KINDS[id.split(':')[0]];
     if (!kind)
@@ -372,8 +258,17 @@ const push = async (idx) => {
     const m = kind.split(local[id]);
     const h = hashMap(m);
     const b = meta.base[id];
-    if (b ? sameHashes(h, b.h) : !m.size)
-      continue;
+    if (b ? !sameHashes(h, b.h) : m.size)
+      out.push({ id, m, h });
+  }
+  return out;
+};
+/* paso 3: subir lo cambiado en el móvil, con el índice, todo o nada. false si el índice cambió entretanto */
+const push = async (idx) => {
+  const local = localDocs();
+  const rv = { ...(idx && idx.data.p && typeof idx.data.p == 'object' ? idx.data.p : {}) };
+  const ops = [];
+  for (const { id, m, h } of unsynced(local)) {
     if (!m.size) {
       ops.push({ id, size: 200 });
       continue;
@@ -601,20 +496,7 @@ export const firstSync = async () => {
   return status.st == 'ok';
 };
 /** Documentos con cambios del móvil aún sin subir. */
-export const pendingDocs = () => {
-  const local = localDocs();
-  let n = 0;
-  for (const id of new Set([...Object.keys(local), ...Object.keys(meta.base).filter(k => k != 'profile')])) {
-    const kind = KINDS[id.split(':')[0]];
-    if (!kind)
-      continue;
-    const m = kind.split(local[id]);
-    const b = meta.base[id];
-    if (b ? !sameHashes(hashMap(m), b.h) : m.size)
-      n++;
-  }
-  return n;
-};
+export const pendingDocs = () => unsynced(localDocs()).length;
 /** Borra de la nube todos los datos de la cuenta (no la cuenta ni su perfil): «Borrar todos los datos» en Ajustes. */
 export const wipeCloudData = async () => {
   const idx = await getDoc(indexPath());

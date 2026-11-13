@@ -7,15 +7,15 @@
    (cloud/sync), así no vuelve a salir, tampoco en otro móvil. Se puede ver otra vez en Ajustes → Ver el recorrido.
    Sale cuando la app está libre: con la sesión iniciada, sin entreno en marcha, sin otra ventana abierta y con la primera
    sincronización hecha (puede traer que ya se vio en otro móvil).
-   Define: TOUR_STEPS, tour, tourTries, tourRoot, tourSheet, tourShow, tourPlace, tourEnd, tourBusy, tourAfterWelcome, tourCheck  · acciones/registros: 5
+   Define: TOUR_STEPS, tour, tourTries, tourRoot, tourSheet, tourShow, tourPlace, tourEnd, tourAfterWelcome, tourCheck  · acciones/registros: 5
 */
 import { $ } from '../core/util.js';
 import { A } from '../core/registry.js';
-import { S, saveState, setOverviewMode, setWeightView, W } from '../core/state.js';
+import { S, saveState, setOverviewMode, setWeightView } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { sheet } from '../core/ui.js';
+import { appBusy, sheet } from '../core/ui.js';
 import { signedIn } from '../cloud/session.js';
-import { syncState } from '../cloud/sync.js';
+import { syncBusy } from '../cloud/sync.js';
 import { welcomeShow } from './welcome.js';
 import { html, raw } from '../core/html.js';
 /** Pasos: pestaña (-1: la que esté), qué se ilumina (alt: algo más pequeño si no cabe con la tarjeta, en un móvil pequeño),
@@ -113,11 +113,6 @@ const tourEnd = tab => {
   if (tab >= 0 && S.tab != tab)
     A.selectTab(tab);
 };
-/* ¿está la app ocupada? (otra ventana, el entreno, el inicio de sesión, la primera sincronización por hacer…) */
-const tourBusy = () => {
-  const st = syncState().st;
-  return !!(W || st == 'idle' || st == 'run' || document.visibilityState == 'hidden' || $('#lgw') || $('#wlc') || $('#sh').firstChild || $('#dg').firstChild || $('#mn').firstChild || $('#upd') || $('#f2w'));
-};
 /* tras la bienvenida de una cuenta nueva, el recorrido empieza directamente por el primer paso (sin volver a dar la bienvenida) */
 const tourAfterWelcome = () => {
   if (S.tourSeen)
@@ -132,7 +127,8 @@ const tourAfterWelcome = () => {
 export const tourCheck = () => {
   if (tour || S.tourSeen && !S.welcomePending || !signedIn())
     return;
-  if (tourBusy()) {
+  /* la app, ocupada (otra ventana, el entreno, el inicio de sesión…) o con la primera sincronización por hacer */
+  if (appBusy() || syncBusy()) {
     if (++tourTries < 120)
       setTimeout(tourCheck, 1000);
     return;

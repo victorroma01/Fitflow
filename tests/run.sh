@@ -24,6 +24,7 @@ run python3 build.py --check
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs
+run node --test --test-reporter=dot tests/parts.test.mjs
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
 run python3 tests/photos.py dist/stratafit.html

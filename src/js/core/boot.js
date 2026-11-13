@@ -24,7 +24,7 @@ import { applyAccent } from '../profile/appearance.js';
 import { beep, buzz } from '../profile/feedback.js';
 import { isStandalone } from '../system/files.js';
 import { plural } from '../system/backup.js';
-import { takeSnapshot } from '../system/snapshots.js';
+import { startSnapshots } from '../system/snapshots.js';
 import { showWhatsNew, whatsNewDue } from '../system/updates.js';
 import { checkAchievements } from '../extras/achievements.js';
 import { html, raw } from './html.js';
@@ -187,7 +187,7 @@ const start = () => {
   /* lo arreglado al arrancar se guarda (solo se escribe lo que cambió: core/persist) */
   setTimeout(saveState, 1000);
   if (signedIn()) {
-    setTimeout(() => takeSnapshot().catch(e => logError('copia automática', e)), 4000);
+    startSnapshots();
     if (whatsNewDue())
       setTimeout(showWhatsNew, 900);
     /* «Día de pesarse» (F-25), tras las novedades: si estas salen, el aviso espera a la próxima vez que se vuelva a la app */
