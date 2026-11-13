@@ -348,7 +348,10 @@ def main(path):
             check('y el token se pide una sola vez por hora (no en cada petición)', len(exch) == n + 1 and pa.evaluate('window.__rc') is None, str(len(exch) - n))
             pa.evaluate("A.openSettings()")
             pa.evaluate("A.openSettingsPage(0,{dataset:{v:'privacidad'}})")
-            check('y Privacidad lo cuenta', 'reCAPTCHA Enterprise' in pa.inner_text('#sh'), repr(pa.inner_text('#sh')[:300]))
+            # (si falla, dice si la configuración sigue puesta, si el texto está en la página aunque no se lea, y cómo acaba)
+            seen = pa.inner_text('#sh')
+            check('y Privacidad lo cuenta', 'reCAPTCHA Enterprise' in seen,
+                  repr([pa.evaluate('appCheckOn()'), 'reCAPTCHA Enterprise' in pa.evaluate("document.querySelector('#sh').textContent"), len(seen), seen[-160:]]))
             close(ca, pa)
 
         # ── subidas juntas: lo que se cambia seguido va en una sola subida, como mucho 30 s después del primer cambio sin subir, y

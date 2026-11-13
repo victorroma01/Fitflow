@@ -93,8 +93,21 @@ def _with_setup(make):
     return run
 
 
+def _page_text(self, selector, **k):
+    """page.inner_text en Firefox: Playwright lo lee en un contexto aparte, donde no vale el arreglo de GECKO_TEXT_JS (y el texto
+    de #sh sale vacío o a medias). Se lee en la página, esperando a que el elemento exista como hace Playwright."""
+    for _ in range(50):
+        r = self.evaluate("s => { const e = document.querySelector(s); return e ? [e.innerText] : null; }", selector)
+        if r:
+            return r[0]
+        self.wait_for_timeout(100)
+    raise AssertionError('no existe ' + selector)
+
+
 if not getattr(Page, '_ff_settled', False):
     Page.goto = _settled(Page.goto)
     Page.reload = _settled(Page.reload)
     Browser.new_context = _with_setup(Browser.new_context)
+    if ENGINE == 'firefox':
+        Page.inner_text = _page_text
     Page._ff_settled = True

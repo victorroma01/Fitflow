@@ -148,6 +148,25 @@ pestaña del navegador con el tema oscuro, los iconos de los accesos directos (c
 logo) y el logo dentro de la app (`src/img/brand/logo-*.webp`, que `build.py` mete en `data/media` y usa `core/brand`). Con un logo
 nuevo, se cambian las dos fuentes y se lanza de nuevo.
 
+### Cómo llega una versión al móvil (service worker)
+
+`static/sw.js` guarda la app en el móvil y la abre desde ahí, sin esperar a la red. Sus reglas, que `tests/deploy.py` comprueba:
+
+- **Abrir**: sirve el documento guardado y, mientras, pide el de la red. Si ha cambiado, lo guarda con todo su código (nunca un
+  documento sin su código, I-08) y avisa a la página, que enseña «Versión nueva» si el número es mayor. «Actualizar» pide la
+  versión de la red (`?fresh=…`) y recarga.
+- **Una copia por dirección**: todo se guarda y se busca por su dirección sin parámetros (`keyOf`). `./?a=peso` (un acceso
+  directo del icono) y `./` son el mismo documento. Antes cada dirección dejaba su copia, y una vieja podía salir antes que la
+  buena (SW1 de la [auditoría](auditoria-1.0.3.md)).
+- **El código** (`js/…`, con nombres que cambian en cada versión) sale siempre de la caché. Al activarse una versión se conserva
+  el código de la anterior (lo anota en `codigo-actual.json`, dentro de la caché) y se borra el de antes: la página que siga
+  abierta con la versión anterior aún puede cargar lo que no había usado.
+- **Al activarse** también borra las cachés antiguas y cualquier copia guardada con parámetros (las del service worker de
+  hasta la V1.0.2): así se arregla solo un móvil que se quedó con una.
+
+Si cambia el service worker, la prueba tiene que seguir actualizando desde el anterior publicado: `tests/sw-anterior.js` es el
+de hasta la V1.0.2; al cambiar el de la V1.0.3, se añade este como otro punto de partida.
+
 ### Paso de la 1.24.0 a la 1.0.0
 
 La numeración empieza de nuevo en la 1.0.0. Un móvil con la 1.24.0 la recibe igual: su service worker guarda el documento nuevo en
