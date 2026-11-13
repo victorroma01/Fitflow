@@ -9,7 +9,7 @@ En pantallas grandes, el contenido va en una columna centrada, no estirado de la
 Y, al arrancar con datos, nada da un salto en la pantalla (layout shift), en Chromium, que es el que lo mide.
 
   python3 tests/layout.py dist/stratafit.html            (falla si hay algún problema)
-  python3 tests/layout.py dist/stratafit.html --lista    (además, enseña cada elemento con problemas)
+  python3 tests/layout.py dist/stratafit.html --lista    (enseña más elementos con problemas; sin ella, los cuatro primeros)
 """
 import os, sys, datetime
 from playwright.sync_api import sync_playwright
@@ -36,7 +36,22 @@ SCAN = """(() => {
   const vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility != 'hidden' && s.display != 'none' && (!e.checkVisibility || e.checkVisibility()); };
   const desc = e => (e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (typeof e.className == 'string' && e.className ? '.' + e.className.trim().split(/\\s+/).slice(0, 3).join('.') : '')) + ' «' + (e.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 40) + '»';
   const top = document.querySelector('#dg .dgc') || document.querySelector('#mn .msd') || document.querySelector('#f2w') || document.querySelector('#sh > .sp:not(.spu)') || document.querySelector('#app');
-  if (document.documentElement.scrollWidth > W + 1) out.push(['página más ancha que la pantalla', document.documentElement.scrollWidth + ' > ' + W]);
+  if (document.documentElement.scrollWidth > W + 1) {
+    // quién la ensancha: lo que pasa del borde derecho sin que nada lo recorte, contando las zonas táctiles (::before y ::after)
+    const clipped = e => { for (let p = e.parentElement; p && p != document.documentElement; p = p.parentElement) { if (/(auto|scroll|hidden|clip)/.test(getComputedStyle(p).overflowX)) return true; } return false; };
+    const who = [];
+    for (const e of document.querySelectorAll('body *')) {
+      if (who.length > 4) break;
+      if (!vis(e) || clipped(e)) continue;
+      const r = e.getBoundingClientRect();
+      if (r.right > W + 1) who.push(desc(e) + ' hasta ' + Math.round(r.right));
+      for (const ps of ['::before', '::after']) {
+        const s = getComputedStyle(e, ps), rt = parseFloat(s.right);
+        if (s.content != 'none' && s.position == 'absolute' && !isNaN(rt) && r.right - rt > W + 1) who.push(desc(e) + ps + ' hasta ' + Math.round(r.right - rt));
+      }
+    }
+    out.push(['página más ancha que la pantalla', document.documentElement.scrollWidth + ' > ' + W + ' (body ' + document.body.scrollWidth + ', #app ' + document.querySelector('#app').scrollWidth + ', #sh ' + document.querySelector('#sh').scrollWidth + ') · ' + (who.join(' | ') || 'no se ve qué elemento')]);
+  }
   if (top.scrollWidth > top.clientWidth + 1) out.push(['ventana con desplazamiento horizontal', desc(top) + ' ' + top.scrollWidth + ' > ' + top.clientWidth]);
   // ¿dentro de algo que se desplaza en horizontal a propósito?
   const scrolls = e => { for (let p = e.parentElement; p && p != document.body; p = p.parentElement) { const s = getComputedStyle(p); if (/(auto|scroll)/.test(s.overflowX) && p.scrollWidth > p.clientWidth + 1) return true; } return false; };
@@ -106,10 +121,9 @@ def main(path, show):
                   '' if col_ok else '· columna de contenido %s' % column, '' if not errs else '· errores de JS: %s' % errs[:2])
             if not ok:
                 fails += 1
-                if show:
-                    for kind, v in bad.items():
-                        for k, d in v[:12]:
-                            print('         ', kind, '·', k, '·', d)
+                for kind, v in bad.items():
+                    for k, d in v[:12 if show else 4]:
+                        print('         ', kind, '·', k, '·', d)
             for kind, v in bad.items():
                 total[kind] = total.get(kind, 0) + len(v)
             c.close()

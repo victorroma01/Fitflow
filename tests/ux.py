@@ -1,7 +1,7 @@
 """Avisos, deshacer y «atrás» (auditoría de la V1.0.3, fase 6).
 
 - El aviso breve cabe en la pantalla a 320 y a 390 px (los largos saltan de línea: antes se salían por los dos lados), lo leen
-  los lectores de pantalla y dura más cuanto más largo es.
+  los lectores de pantalla, dura más cuanto más largo es y no recoge los toques (lo que tapa sigue respondiendo).
 - Lo que se quita sin preguntar se puede deshacer, y vuelve a su sitio tal como estaba: un alimento de una comida, un ejercicio
   del día, un plato guardado, una serie ya hecha, las marcas de la semana y la plantilla que se sustituye.
 - «Atrás» (el gesto o el botón del móvil) dentro de un grupo de la librería vuelve a los grupos.
@@ -72,6 +72,11 @@ def main(path):
         run(100)
         gone = ev("JSON.stringify(%s)" % day)
         check('al quitar un alimento sale el aviso con «Deshacer»', gone != before and '«Arroz» quitado' in tt() and ev("!!document.querySelector('.tst [data-a=toastUndo]')"), tt())
+        # el aviso no recoge los toques (tapa el «←» y el título de una página): lo de debajo responde; su «Deshacer», también
+        hit = ev("""(() => { const c = e => { const r = e.getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); };
+          const t = document.querySelector('.tst'), u = t.querySelector('.tsu'), r = t.getBoundingClientRect(), under = document.elementFromPoint(r.left + 8, r.top + r.height / 2);
+          return [!!under && !t.contains(under), c(u) == u]; })()""")
+        check('el aviso no tapa los toques: lo de debajo responde, y su «Deshacer» se puede tocar', hit == [True, True], str(hit))
         run(2700)
         check('el aviso con «Deshacer» sigue a la vista pasado el tiempo de un aviso normal', 'Deshacer' in tt(), tt())
         ev("document.querySelector('[data-a=toastUndo]').click()")

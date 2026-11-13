@@ -1,6 +1,9 @@
 """Navegador y dirección de la app para las pruebas.
 
 Motor: variable de entorno SF_BROWSER = chromium (por defecto) | webkit (el motor de Safari, el del iPhone) | firefox.
+Letra: SF_FONT="DejaVu Sans" pone esa letra en toda la app. El ancho de los textos cambia de un sistema a otro (San Francisco
+en el iPhone, Roboto en Android, DejaVu en los ordenadores de GitHub, que es de las más anchas) y nada debe depender de él:
+sirve para repetir aquí lo que falla allí.
 Dirección: todo se sirve por HTTP desde su carpeta, como en GitHub Pages: el paquete (dist/app, con sw.js al lado), porque
 sus módulos ES no cargan desde file://, y también el archivo único (con file://, WebKit no guarda datos, y Chromium a veces
 abre la página recargada con el almacenamiento vacío). SF_HTTP=0 abre el archivo único como archivo, con Chromium.
@@ -9,11 +12,14 @@ La app lee de IndexedDB los entrenos, el historial y las comidas antes de pintar
 (core/persist, I-04). Por eso, en todas las pruebas, page.goto y page.reload esperan antes a que lo guardado quede escrito
 (savesDone) y, después, a que la app termine de arrancar (window.__ffready). En otras páginas no esperan nada.
 """
-import os, threading, functools, http.server
-from playwright.sync_api import Page
+import os, json, threading, functools, http.server
+from playwright.sync_api import Page, Browser
 
 ENGINE = os.environ.get('SF_BROWSER', 'chromium')
 HTTP = os.environ.get('SF_HTTP', '1') != '0' or ENGINE != 'chromium'
+FONT = os.environ.get('SF_FONT', '')
+# la letra pedida, puesta con una hoja de estilo creada desde el código (la CSP de la app no deja añadir una etiqueta <style>)
+FONT_JS = "addEventListener('DOMContentLoaded',()=>{try{const s=new CSSStyleSheet();s.replaceSync(%s);document.adoptedStyleSheets=[...document.adoptedStyleSheets,s]}catch(e){}})" % json.dumps('*{font-family:"%s" !important}' % FONT)
 
 
 def launch(p, sound=False):
@@ -67,7 +73,18 @@ def _settled(nav):
     return run
 
 
+def _with_font(make):
+    """browser.new_context que, con SF_FONT, pone esa letra en todas las páginas del contexto."""
+    def run(self, *a, **k):
+        c = make(self, *a, **k)
+        if FONT:
+            c.add_init_script(FONT_JS)
+        return c
+    return run
+
+
 if not getattr(Page, '_ff_settled', False):
     Page.goto = _settled(Page.goto)
     Page.reload = _settled(Page.reload)
+    Browser.new_context = _with_font(Browser.new_context)
     Page._ff_settled = True

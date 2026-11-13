@@ -230,7 +230,7 @@ def main(path):
         print('Copia de seguridad única (F-30, T-14)')
         ev("A.openBackup()")
         run()
-        check('la copia va a la nube: una sola, que se sustituye', 'Copia en la nube' in txt('#sh') and 'cada copia nueva sustituye a la anterior' in txt('#sh'))
+        check('la copia va a la nube: una sola, que se sustituye', 'Copia en la nube' in txt('#sh') and 'cada copia nueva sustituye a la anterior' in txt('#sh'), repr(txt('#sh')[:300]))
         name, data = download("document.querySelector('[data-a=backupDownload]').click()")
         check('el archivo se llama siempre igual (StrataFit-copia.json)', name == 'StrataFit-copia.json' and data.startswith(b'{"_sf"'), name)
         name2, _ = download("document.querySelector('[data-a=backupDownload]').click()")

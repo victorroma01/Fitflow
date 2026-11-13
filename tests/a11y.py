@@ -12,7 +12,7 @@ y, aparte, que el foco va a cada hoja, página, aviso y menú al abrirlos y vuel
 cuando tocar un botón no le da el foco (como en Safari).
 
   python3 tests/a11y.py dist/stratafit.html            (falla si hay algún problema)
-  python3 tests/a11y.py dist/stratafit.html --lista    (además, enseña cada elemento con problemas)
+  python3 tests/a11y.py dist/stratafit.html --lista    (enseña todos los elementos con problemas; sin ella, los cinco primeros)
 """
 import os, sys, datetime
 from playwright.sync_api import sync_playwright
@@ -231,10 +231,9 @@ def main(path, show):
                 print(('  ok   ' if not n else '  FALLA'), k, '' if not n else ' · '.join('%d %s' % (len(v), kk) for kk, v in r.items() if v))
                 if n:
                     fails += 1
-                    if show:
-                        for kk, v in r.items():
-                            for x in v:
-                                print('         ', kk, '·', x)
+                    for kk, v in r.items():
+                        for x in (v if show else v[:5]):
+                            print('         ', kk, '·', x)
             if errs:
                 print('  FALLA errores de JS:', errs[:3])
                 fails += 1

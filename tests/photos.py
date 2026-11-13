@@ -74,7 +74,7 @@ def main(path, shots=None):
         pg.clock.run_for(300)
         ok = ev("(()=>{const f=document.querySelector('#sh .exph img.f');return !!f&&f.complete&&f.naturalWidth>100})()")
         check('la ficha de Remo mancuerna muestra la foto', ok)
-        check('la ficha sigue teniendo la anatomía y los músculos', ev("!!document.querySelector('#sh .anb')&&/músculos principales/i.test(document.querySelector('#sh').innerText)"))
+        check('la ficha sigue teniendo la anatomía y los músculos', ev("!!document.querySelector('#sh .anb')&&/músculos principales/i.test(document.querySelector('#sh').innerText)"), repr(ev("[!!document.querySelector('#sh .anb'), document.querySelector('#sh').innerText.slice(0, 300)]")))
         if shots:
             pg.screenshot(path=os.path.join(shots, 'ficha.png'))
         i = ev("exAll().findIndex(e=>e.n=='Press banca')")

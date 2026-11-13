@@ -90,9 +90,9 @@ En la librería de ejercicios, «atrás» dentro de un grupo muscular vuelve a l
 
 ## Avisos y «Deshacer»
 
-Los avisos breves salen abajo, sobre la barra de pestañas, y se van solos: duran más cuanto más largos son (entre 2,6 y 6
-segundos) y, si no caben en una línea, saltan a la siguiente. Los lectores de pantalla (VoiceOver, TalkBack) los leen al salir,
-sin quitar el foco de donde está.
+Los avisos breves salen arriba y se van solos: duran más cuanto más largos son (entre 2,6 y 6 segundos) y, si no caben en una
+línea, saltan a la siguiente. No estorban: lo que quede debajo (el «←» de una página, por ejemplo) sigue respondiendo, y el
+gesto de volver, también. Los lectores de pantalla (VoiceOver, TalkBack) los leen al salir, sin quitar el foco de donde está.
 
 Lo que se quita de un toque, sin preguntar, trae **Deshacer** en su aviso, durante 6 segundos:
 

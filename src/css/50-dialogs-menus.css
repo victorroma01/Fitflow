@@ -41,9 +41,12 @@
   margin:2px 8px 2px;
   opacity:.8;
 }
-/* el aviso breve: centrado y tan ancho como su texto, que salta de línea si no cabe (antes iba en una sola línea y los avisos
-   largos, los de error sobre todo, se salían por los dos lados de la pantalla) */
+/* el aviso breve: arriba, centrado y tan ancho como su texto, que salta de línea si no cabe (antes iba en una sola línea y los
+   avisos largos, los de error sobre todo, se salían por los dos lados de la pantalla). No recoge los toques: mientras está a
+   la vista, lo que tapa (el «←» y el título de una página) sigue respondiendo, y el gesto de volver, también; solo su
+   «Deshacer» se puede tocar */
 .tst {
+  pointer-events:none;
   position:fixed;
   left:14px;
   right:14px;
@@ -65,6 +68,7 @@
 }
 /* «Deshacer» dentro del aviso: como un enlace, con sitio de sobra para el dedo */
 .tsu {
+  pointer-events:auto;
   margin:-10px -10px -10px 6px;
   padding:10px;
   border:0;

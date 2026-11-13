@@ -632,7 +632,8 @@ def main(path):
                 touch('touchMove', tx + 22 * i, ty + 2)
             touch('touchEnd')
             run(400)
-            check('deslizar el dedo de izquierda a derecha vuelve a Ajustes', title() == 'Ajustes')
+            check('deslizar el dedo de izquierda a derecha vuelve a Ajustes', title() == 'Ajustes',
+                  str(ev("(p => [document.querySelector('#ajs .pgt').textContent, p.scrollWidth + '/' + p.clientWidth, innerWidth, document.documentElement.scrollWidth, (backTarget() || {}).k, (e => e ? e.tagName + '.' + e.className : '')(document.elementFromPoint(%d, %d))])(document.querySelector('#sh > .sp:not(.spu)'))" % (tx, ty))))
             ev("A.openSettingsPage(0,{dataset:{v:'privacidad'}})")
             run()
             pg.wait_for_timeout(450)
