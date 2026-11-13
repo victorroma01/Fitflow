@@ -12,7 +12,7 @@ import { S, saveState } from '../core/state.js';
 import { dialog, pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { progDraft, restDay } from './create.js';
 import { programName } from './levels.js';
-import { cleanText, copyText, downloadFile, fromBase64, toBase64 } from '../system/files.js';
+import { cleanText, copyText, downloadFile, fromBase64, readTextFile, toBase64 } from '../system/files.js';
 import { html } from '../core/html.js';
 /** Plan válido a partir de lo importado: una semana de 7 días o un ciclo de hasta 14 (workout/week), con lo que se conoce. */
 const cleanPlan = pl => {
@@ -153,13 +153,4 @@ A.importCode = () => {
   const e = $('#ipc');
   importProgram(e ? e.value : '');
 };
-C.importFile = e => {
-  const f = e.files && e.files[0];
-  if (!f)
-    return;
-  const r = new FileReader();
-  r.onload = () => importProgram(String(r.result));
-  r.onerror = () => toast('No se pudo leer el archivo');
-  r.readAsText(f);
-  e.value = '';
-};
+C.importFile = e => readTextFile(e, importProgram);

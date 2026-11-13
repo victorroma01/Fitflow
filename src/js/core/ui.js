@@ -74,8 +74,9 @@ const focusBack = o => {
 };
 /* qué abrió cada ventana: la hoja (#sh), el aviso (#dg) y el menú (#mn) */
 const openers = {};
-/* la hoja o página abierta, como ventana: su título (el primero que lleve) le da nombre; con focus, el foco va a ella */
-const sheetDialog = (p, focus) => {
+/** La hoja o página abierta, como ventana: su título (el primero que lleve) le da nombre; con focus, el foco va a ella. Quien
+    vuelve a pintar su contenido sin pasar por sheet() (profile/settings, con core/morph) la llama después. */
+export const sheetDialog = (p, focus) => {
   const t = p.querySelector('h1,h2,h3');
   if (t) {
     t.id = t.id || 'sht';

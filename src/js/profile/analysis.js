@@ -19,7 +19,7 @@ import { fullPage, pgHead, sheet } from '../core/ui.js';
 import { acctName } from '../cloud/session.js';
 import { GOAL_LABELS } from '../nutrition/diet.js';
 import { sessionsPerWeek } from '../workout/week.js';
-import { MEASURES } from '../extras/measures.js';
+import { measureList, MEASURES } from '../extras/measures.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { accentNow } from './appearance.js';
 import { toDisplayWeight, usesLb, weightUnit } from './units.js';
@@ -150,7 +150,7 @@ const nutritionStats = (a, b) => {
   return { tk, tp, days, logged, ok, ak, ap, adh, verdict, side: !logged || !tk ? '' : ak > tk * 1.1 ? 'te pasas' : ak < tk * .9 ? 'te quedas corto' : '', water: wd ? wat / wd : 0 };
 };
 const otherStats = (a, b) => {
-  const L = (Array.isArray(S.measures) ? S.measures : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object').sort((x, y) => x.d < y.d ? -1 : 1);
+  const L = measureList().sort((x, y) => x.d < y.d ? -1 : 1);
   const ms = [];
   for (const [k, name] of MEASURES) {
     const inM = L.filter(m => m.d >= a && m.d <= b && +m.v[k] > 0);

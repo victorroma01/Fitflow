@@ -87,7 +87,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   Zonas táctiles con pseudo-elementos (`css/97-touch-targets`, clase `tz`): no cambian el dibujo de la pantalla.
 - `tests/layout.py` (47 pantallas en 5 tamaños, de 320 a 1280 px: sin desbordes ni textos cortados, y sin saltos al arrancar),
   `tests/ux.py` (26 comprobaciones: avisos, deshacer, «atrás», cargas con mala cobertura) y `tests/a11y.py` mide la zona que
-  responde de cada control (ninguno por debajo de 24 × 24 px; el 92 %, en 44 × 44 px o más).
+  responde de cada control, con la pantalla quieta (ninguno por debajo de 24 × 24 px; antes, 10).
 - Integración continua: `npm audit` en cada subida (avisa, no detiene) y las pruebas también en Firefox (informativo).
 - Rendimiento medido frente a la V1.0.2 ([Rendimiento](docs/tecnica/rendimiento.md)): `fmtDate` (`core/util`) reutiliza los
   formatos de fecha y `mondayKey` (`core/calc`) recuerda el lunes de cada día. `tests/perf.py` mide también abrir Registros.

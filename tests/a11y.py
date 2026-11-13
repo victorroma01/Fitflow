@@ -34,6 +34,9 @@ VIEWS = [(390, 844, list(SCR)), (320, 568, list(WORKOUT))]
 MIN = 44
 # fuera del entreno, lo mínimo que tiene que responder cualquier control (WCAG 2.2 AA, 2.5.8)
 FLOOR = 24
+# las pantallas con la lista de alimentos (unas 500 filas de 35 px de alto cada una): más de la mitad de los controles de la app;
+# la parte que llega a 44 px se da también sin ellas
+FOOD_LIST = ('nuadd', 'scan')
 # los fondos que cierran una hoja o el menú al tocar fuera no son controles: la hoja tiene su propio botón de cerrar
 BACKDROPS = '.bk, .mbk, .lvb'
 SCAN = """((min, floor) => {
@@ -158,8 +161,14 @@ def focus_checks(b, path):
     pg.clock.run_for(300)
     press('[data-a=openSettings]')
     check('al abrir Ajustes, el foco va a la página y se llama «Ajustes»', pg.evaluate(ACTIVE) == 'ventana hoja' and pg.evaluate(SHEET_NAME) == 'Ajustes', [pg.evaluate(ACTIVE), pg.evaluate(SHEET_NAME)])
+    # Ajustes se vuelve a pintar tras cada cambio (R()): la ventana sigue teniendo nombre (lo perdía: su título se quedaba sin id)
+    pg.evaluate("R()")
+    check('y se sigue llamando «Ajustes» cuando se vuelve a pintar', pg.evaluate(SHEET_NAME) == 'Ajustes', pg.evaluate(SHEET_NAME))
     press('[data-a=openSettingsPage][data-v=tema]')
     check('al pasar a «Tema y estilo», el foco va a la página nueva y se llama así', pg.evaluate(ACTIVE) == 'ventana hoja' and pg.evaluate(SHEET_NAME) == 'Tema y estilo', [pg.evaluate(ACTIVE), pg.evaluate(SHEET_NAME)])
+    pg.evaluate("(e => { e.checked = !e.checked; e.dispatchEvent(new Event('change', { bubbles: true })); })(document.querySelector('#ajs input[type=checkbox]'))")
+    check('y sigue con su nombre al cambiar un ajuste', pg.evaluate(SHEET_NAME) == 'Tema y estilo', pg.evaluate(SHEET_NAME))
+    pg.evaluate("(e => { e.checked = !e.checked; e.dispatchEvent(new Event('change', { bubbles: true })); })(document.querySelector('#ajs input[type=checkbox]'))")
     press('#sh [data-a=openSettings]')
     check('con «←», de vuelta en «Ajustes», con el foco en ella', pg.evaluate(ACTIVE) == 'ventana hoja' and pg.evaluate(SHEET_NAME) == 'Ajustes', [pg.evaluate(ACTIVE), pg.evaluate(SHEET_NAME)])
     press('[data-a=resetAllAsk]')
@@ -189,12 +198,17 @@ def focus_checks(b, path):
     return fails
 
 
+# espera a que terminen las animaciones de entrada (las que no acaban nunca, como la del icono del ejercicio en curso, no)
+SETTLED = "Promise.all((document.getAnimations ? document.getAnimations() : []).filter(a => a.effect && isFinite(a.effect.getComputedTiming().endTime)).map(a => a.finished.catch(() => 0))).then(() => 0)"
+
+
 def main(path, show):
     fails = 0
     total = {}
     with sync_playwright() as p:
         b = launch(p)
-        measured = [0, 0]
+        # controles medidos y cuántos responden en 44 × 44; y, de ellos, los de la lista de alimentos
+        measured = [0, 0, 0, 0]
         for w, h, screens in VIEWS:
             c = b.new_context(viewport={'width': w, 'height': h}, has_touch=True, is_mobile=True, color_scheme='dark', **context_opts(path))
             c.add_init_script(rd('init.js'))
@@ -217,9 +231,18 @@ def main(path, show):
                     pg.clock.run_for(800)
                     pg.evaluate(SCR[k])
                     pg.clock.run_for(400)
+                    # con la pantalla quieta: mientras una hoja entra deslizándose, lo que se mide se está moviendo (en WebKit,
+                    # la zona de un botón salía de 1 px de alto)
+                    pg.evaluate(SETTLED)
                     r = pg.evaluate(SCAN + '(%d, %d)' % (MIN if k in WORKOUT else 0, FLOOR))
-                    measured[0] += r.pop('medidos')
-                    measured[1] += r.pop('de44')
+                    # (se cuentan una vez: las pantallas del entreno se repiten a 320 px)
+                    n_all, n_44 = r.pop('medidos'), r.pop('de44')
+                    if w == 390:
+                        measured[0] += n_all
+                        measured[1] += n_44
+                        if k in FOOD_LIST:
+                            measured[2] += n_all
+                            measured[3] += n_44
                     r['bloqueos de la CSP'] = pg.evaluate('window.__csp||[]')
                 except Exception as e:
                     print('  FALLA', k, 'no se pudo abrir:', str(e)[:100])
@@ -240,8 +263,9 @@ def main(path, show):
             c.close()
         fails += focus_checks(b, path)
         b.close()
-    print('\n  zonas táctiles: %d controles medidos · %d de menos de %d px (WCAG 2.2 AA) · %d (el %d %%) responden en 44 × 44 px o más'
-          % (measured[0], total.get('diminutos', 0), FLOOR, measured[1], round(measured[1] * 100 / max(1, measured[0]))))
+    rest = (measured[0] - measured[2], measured[1] - measured[3])
+    print('\n  zonas táctiles: %d controles medidos · %d de menos de %d px (WCAG 2.2 AA) · %d (el %d %%) responden en 44 × 44 px o más; sin la lista de alimentos, %d de %d (el %d %%)'
+          % (measured[0], total.get('diminutos', 0), FLOOR, measured[1], round(measured[1] * 100 / max(1, measured[0])), rest[1], rest[0], round(rest[1] * 100 / max(1, rest[0]))))
     print('\n  botones sin nombre: %d · campos sin etiqueta: %d · clicables sin rol de botón: %d · zonas táctiles de menos de %d px en el entreno: %d · ventanas sin anunciar: %d'
           % (total.get('botones', 0), total.get('campos', 0), total.get('clicables', 0), MIN, total.get('pequeños', 0), total.get('ventanas', 0)))
     print('\n%s' % ('TODO CORRECTO' if not fails else 'FALLAN %d pantallas' % fails))

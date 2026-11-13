@@ -50,7 +50,27 @@ SCAN = """(() => {
         if (s.content != 'none' && s.position == 'absolute' && !isNaN(rt) && r.right - rt > W + 1) who.push(desc(e) + ps + ' hasta ' + Math.round(r.right - rt));
       }
     }
-    out.push(['página más ancha que la pantalla', document.documentElement.scrollWidth + ' > ' + W + ' (body ' + document.body.scrollWidth + ', #app ' + document.querySelector('#app').scrollWidth + ', #sh ' + document.querySelector('#sh').scrollWidth + ') · ' + (who.join(' | ') || 'no se ve qué elemento')]);
+    // si no se ve a simple vista: se va ocultando cada hijo, de fuera adentro, hasta dar con el que la ensancha
+    if (!who.length) {
+      const wide = () => document.documentElement.scrollWidth > W + 1;
+      const about = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return desc(e) + ' [' + Math.round(r.left) + ', ' + Math.round(r.right) + '] ' + s.position + ' ' + s.overflowX + (s.transform != 'none' ? ' ' + s.transform.slice(0, 30) : '') + (s.animationName != 'none' ? ' anim ' + s.animationName : '') + ' ancho ' + e.scrollWidth + '/' + e.clientWidth; };
+      let node = document.body;
+      for (let depth = 0; depth < 14; depth++) {
+        let found = null;
+        for (const c of node.children) {
+          const old = c.style.display;
+          c.style.display = 'none';
+          const still = wide();
+          c.style.display = old;
+          if (!still) { found = c; break; }
+        }
+        if (!found) break;
+        who.push(about(found));
+        node = found;
+      }
+      who.splice(0, Math.max(0, who.length - 3));
+    }
+    out.push(['página más ancha que la pantalla', document.documentElement.scrollWidth + ' > ' + W + ' (body ' + document.body.scrollWidth + ', #app ' + document.querySelector('#app').scrollWidth + ', #sh ' + document.querySelector('#sh').scrollWidth + ') · ' + (who.join(' ⟩ ') || 'no se ve qué elemento')]);
   }
   if (top.scrollWidth > top.clientWidth + 1) out.push(['ventana con desplazamiento horizontal', desc(top) + ' ' + top.scrollWidth + ' > ' + top.clientWidth]);
   // ¿dentro de algo que se desplaza en horizontal a propósito?

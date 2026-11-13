@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
+   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
 */
 import { typedName } from '../core/util.js';
 import { A, C } from '../core/registry.js';
@@ -21,20 +21,43 @@ import { rotationCard } from '../programs/rotation.js';
 import { isFreshInstall, restoreBanner } from '../system/backup.js';
 import { html, raw } from '../core/html.js';
 const planEx = (i) => S.plan[S.selectedDay].ex[i];
+/** El botón de una serie menos (by = -1) o una más (by = 1) de un ejercicio del plan (al editar la semana y en Overview). */
+export const planSetButton = (e, i, by) => html`<button data-a="${by < 0 ? 'planSetMinus' : 'planSetPlus'}" data-i="${i}" aria-label="${(by < 0 ? 'Una serie menos, ' : 'Una serie más, ') + e.n}" class="tz">${by < 0 ? '−' : '+'}</button>`;
+/* el botón de un día de la semana: hecho (✓), de descanso (☾) o su número */
+const weekdayButton = j => html`<button class="dy ${j == S.selectedWeekday ? 'on' : ''}" data-a="selectDay" data-i="${j}">DÍA<br>${raw(S.doneDays[S.week + '-' + j] ? '✓' : !S.plan[planIndex(j)].ex.length ? '☾' : j + 1)}</button>`;
+/* la cabecera de la pestaña: el nivel, el programa y el menú; la semana, con sus flechas; y los siete días */
+const weekHeader = () => {
+  const deload = isDeloadWeek(S.week);
+  const top = html`<div class="hd"><div>${levelPill()}<h1>${programName()}</h1></div><button data-a="openMenu" aria-label="Menú" class="fs-26 p-6-14">☰</button></div>`;
+  const week = html`<div class="wk mt-12"><button data-a="changeWeek" data-i="-1" aria-label="Semana anterior" class="tz">‹</button><b${raw(deload ? ' class="wkdl"' : '')}>Semana ${raw(S.week)}${deload ? ' · descarga' : ''}</b><button data-a="changeWeek" data-i="1" aria-label="Semana siguiente" class="tz">›</button></div>`;
+  return html`${top}${week}<div class="dys">${[0, 1, 2, 3, 4, 5, 6].map(weekdayButton)}</div>`;
+};
+/* un ejercicio del día al editar la semana: su bloque y su nombre; el descanso, el rango y «Unir al anterior»; las series, con
+   − y +; y la ✕ que lo quita */
+const dayEditRow = (d, e, i) => {
+  const link = i ? html` <button data-a="linkToPrevious" data-i="${i}" class="p-5-9 fs-12">${e.b && d.ex[i - 1].b == e.b ? 'Separar' : 'Unir al anterior'}</button>` : '';
+  const sets = html`<span>${planSetButton(e, i, -1)} ${raw(e.s)} ${planSetButton(e, i, 1)}</span>`;
+  return html`<div class="it cols-1fr-auto-24"><span>${blockBadge(d.ex, i)}${e.n}<br>${restSelect(e)}${rangeSelect(e, i)}${link}</span>${sets}<button data-a="removePlanExercise" data-i="${i}" aria-label="${'Quitar ' + e.n}" class="p-2-6">✕</button></div>`;
+};
+/* el día al editar la semana: su nombre y sus ejercicios, «+ Añadir ejercicio» y «Listo» */
+const dayEditCard = d => html`<div class="cd"><label>Nombre del día</label><input value="${d.n}" maxlength="60" data-c="setDayName" aria-label="Nombre del día">${d.ex.map((e, i) => dayEditRow(d, e, i))}</div><button data-a="openPicker" class="w-full">+ Añadir ejercicio</button><button class="pr w-full mt-8" data-a="toggleWeekView">Listo</button>`;
+/* un día sin ejercicios: descanso, con su botón para completarlo (`done`: ya está completado) */
+const restDayCard = done => html`<div class="cd hero ta-c p-50-14" data-style="${coverStyle('Descanso')}"><div class="fs-44">☾</div><h2>Día de descanso</h2><p class="mu">Hoy toca recuperar.</p><button class="pr" data-a="completeRestDay">${done ? 'Descanso completado ✓' : 'Completar descanso'}</button></div><button data-a="openPicker" class="w-full">+ Convertir en día de entreno</button>`;
+/* un día de entreno: su portada, con los ejercicios, las series y los minutos, Overview y «Empezar» (o «Repetir», si ya está hecho) */
+const trainingDayCard = (d, done) => {
+  const sets = d.ex.reduce((s, e) => s + e.s, 0);
+  const stats = html`<div class="st"><div><b>${d.ex.length}</b><small>Ejercicios</small></div><div><b>${raw(sets)}</b><small>Series</small></div><div><b>${dayMinutes(d)}</b><small>Minutos</small></div></div>`;
+  return html`<div class="cd hero" data-style="${coverStyle(d.n, d)}"><h2>${d.n}</h2>${stats}<div class="g2"><button data-a="openOverview">Overview</button><button class="pr" data-a="startWorkout">${done ? 'Repetir' : 'Empezar'} día ${raw(S.selectedWeekday + 1)}</button></div></div>`;
+};
 function workoutDayBase() {
   /* con un entreno en curso no se toca el día: es el de la sesión */
   if (!W)
     syncSel();
   const d = S.plan[S.selectedDay];
-  const k = S.week + '-' + S.selectedWeekday;
-  const rest = !d.ex.length;
-  const ns = d.ex.reduce((s, e) => s + e.s, 0);
-  let h = html`<div class="hd"><div>${levelPill()}<h1>${programName()}</h1></div><button data-a="openMenu" aria-label="Menú" class="fs-26 p-6-14">☰</button></div><div class="wk mt-12"><button data-a="changeWeek" data-i="-1" aria-label="Semana anterior" class="tz">‹</button><b${raw(isDeloadWeek(S.week) ? ' class="wkdl"' : '')}>Semana ${raw(S.week)}${isDeloadWeek(S.week) ? ' · descarga' : ''}</b><button data-a="changeWeek" data-i="1" aria-label="Semana siguiente" class="tz">›</button></div><div class="dys">${[0, 1, 2, 3, 4, 5, 6].map(j => html`<button class="dy ${j == S.selectedWeekday ? 'on' : ''}" data-a="selectDay" data-i="${j}">DÍA<br>${raw(S.doneDays[S.week + '-' + j] ? '✓' : !S.plan[planIndex(j)].ex.length ? '☾' : j + 1)}</button>`)}</div>`;
-  if (weekView && !rest)
-    return html`${raw(h)}<div class="cd"><label>Nombre del día</label><input value="${d.n}" maxlength="60" data-c="setDayName" aria-label="Nombre del día">${d.ex.map((e, i) => html`<div class="it cols-1fr-auto-24"><span>${blockBadge(d.ex, i)}${e.n}<br>${restSelect(e)}${rangeSelect(e, i)}${i ? html` <button data-a="linkToPrevious" data-i="${i}" class="p-5-9 fs-12">${e.b && d.ex[i - 1].b == e.b ? 'Separar' : 'Unir al anterior'}</button>` : ''}</span><span><button data-a="planSetMinus" data-i="${i}" aria-label="${'Una serie menos, ' + e.n}" class="tz">−</button> ${raw(e.s)} <button data-a="planSetPlus" data-i="${i}" aria-label="${'Una serie más, ' + e.n}" class="tz">+</button></span><button data-a="removePlanExercise" data-i="${i}" aria-label="${'Quitar ' + e.n}" class="p-2-6">✕</button></div>`)}</div><button data-a="openPicker" class="w-full">+ Añadir ejercicio</button><button class="pr w-full mt-8" data-a="toggleWeekView">Listo</button>`;
-  if (rest)
-    return html`${raw(h)}<div class="cd hero ta-c p-50-14" data-style="${coverStyle('Descanso')}"><div class="fs-44">☾</div><h2>Día de descanso</h2><p class="mu">Hoy toca recuperar.</p><button class="pr" data-a="completeRestDay">${S.doneDays[k] ? 'Descanso completado ✓' : 'Completar descanso'}</button></div><button data-a="openPicker" class="w-full">+ Convertir en día de entreno</button>`;
-  return html`${raw(h)}<div class="cd hero" data-style="${coverStyle(d.n, d)}"><h2>${d.n}</h2><div class="st"><div><b>${d.ex.length}</b><small>Ejercicios</small></div><div><b>${raw(ns)}</b><small>Series</small></div><div><b>${dayMinutes(d)}</b><small>Minutos</small></div></div><div class="g2"><button data-a="openOverview">Overview</button><button class="pr" data-a="startWorkout">${S.doneDays[k] ? 'Repetir' : 'Empezar'} día ${raw(S.selectedWeekday + 1)}</button></div></div>`;
+  const done = S.doneDays[S.week + '-' + S.selectedWeekday];
+  if (!d.ex.length)
+    return html`${weekHeader()}${restDayCard(done)}`;
+  return html`${weekHeader()}${weekView ? dayEditCard(d) : trainingDayCard(d, done)}`;
 }
 const TEMPOS = [['2/0/2/0', 'Estándar'], ['3/0/1/0', 'Excéntrico controlado'], ['3/0/3/0', 'Lento y controlado'], ['4/1/1/0', 'Excéntrico lento con pausa'], ['3/1/X/0', 'Pausa abajo y subida explosiva'], ['1/0/X/0', 'Explosivo'], ['2/2/2/0', 'Pausa en la contracción'], ['5/0/1/0', 'Excéntrico muy lento'], ['1/1/1/1', 'Pausa en ambos extremos'], ['Libre', 'Sin tempo fijo']];
 /** Desplegable corto (F-09): enseña solo su nombre («Tempo», «Descanso»), porque el valor ya está en el objetivo de arriba;

@@ -2,22 +2,43 @@
    Deja el estado S válido: tipos, rangos y valores conocidos, sin datos personales y con un id en cada entreno. Lo usan el
    arranque (core/boot) y la sincronización, tras juntar lo que llega de Firebase (cloud/sync): unos datos dañados o
    manipulados nunca llegan a las pantallas. Se puede llamar las veces que haga falta (lo ya válido no cambia).
-   Define: repairShape, repairPrograms, repairLevels, EXERCISE_UNITS, TEMPO_RE, isRange, cleanDay, repairTraining, isDay, repairSettings, repairRecords, repairFollowUp, logIds, MIGRATIONS, migrateData, repairState
+   Define: isPlanDay, isPlan, cleanProfile, repairShape, repairPrograms, repairLevels, EXERCISE_UNITS, TEMPO_RE, isRange, cleanDay, repairTraining, isDay, repairSettings, repairRecords, repairFollowUp, logIds, MIGRATIONS, migrateData, repairState
 */
 import { logError } from './errors.js';
+import { safeImage } from './util.js';
 import { parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { TECH_CODES, TECHNIQUES } from '../data/techniques.js';
 import { DAY_PHOTOS } from '../data/photos.js';
 import { S } from './state.js';
 import { generateProgram } from '../programs/create.js';
 import { isLevel } from '../programs/levels.js';
-import { cleanProfile } from '../system/backup.js';
 import { cleanGoals } from '../nutrition/diet.js';
 import { hashOf } from '../cloud/merge.js';
 import { syncSel } from '../workout/week.js';
 import { WEIGH_UNITS } from '../dashboard/reminder.js';
 import { REPORT_MAX } from '../system/report.js';
 import { ACCENTS, HEX } from '../profile/appearance.js';
+/* ¿tiene `d` la forma de un día del plan? Un nombre y una lista de ejercicios, cada uno con su nombre y sus series */
+const isPlanDay = d => !!d && typeof d.n == 'string' && Array.isArray(d.ex) && d.ex.every(e => e && typeof e.n == 'string' && +e.s > 0);
+/** ¿Es `p` un plan? Una lista con al menos un día, todos con la forma de un día. Lo que no lo es no se usa: ni al arrancar ni
+    al restaurar una copia (system/backup). */
+export const isPlan = p => Array.isArray(p) && p.length > 0 && p.every(isPlanDay);
+/** Deja en el perfil solo lo que la app guarda: la foto, si es una imagen válida, y cuándo se dio el consentimiento para
+  subirla (`pc`). El nombre, el email y el teléfono de la serie de prueba se borran sin contarlos como daño: la V1.0.0 no
+  guarda datos personales (F-35). Devuelve cuántos datos estaban dañados. */
+export const cleanProfile = pf => {
+  if (!pf || typeof pf != 'object')
+    return 0;
+  let n = 0;
+  for (const k of Object.keys(pf)) {
+    if (k == 'img' && safeImage(pf.img) || k == 'pc' && +pf.pc > 0)
+      continue;
+    if (k == 'img' || k == 'pc')
+      n++;
+    delete pf[k];
+  }
+  return n;
+};
 /* forma básica: plan, pestaña, semana, listas y objetos; objetivos de nutrición válidos y perfil sin datos personales */
 const repairShape = () => {
   try {
@@ -30,7 +51,7 @@ const repairShape = () => {
       if (S[k] !== 1)
         delete S[k];
     });
-    if (!A_(S.plan) || !S.plan.length || !S.plan.every(d => d && typeof d.n == 'string' && A_(d.ex) && d.ex.every(e => e && typeof e.n == 'string' && +e.s > 0)))
+    if (!isPlan(S.plan))
       S.plan = parseProgram(S.program);
     if (!(S.selectedDay >= 0 && S.selectedDay < S.plan.length))
       S.selectedDay = 0;
@@ -95,10 +116,9 @@ const repairShape = () => {
 const repairPrograms = () => {
   try {
     const n0 = (S.ownPrograms || []).length;
-    const okd = d => d && typeof d.n == 'string' && Array.isArray(d.ex) && d.ex.every(e => e && typeof e.n == 'string' && +e.s > 0);
     if (!Array.isArray(S.ownPrograms))
       S.ownPrograms = [];
-    S.ownPrograms = S.ownPrograms.filter(p => p && typeof p.n == 'string' && Array.isArray(p.plan) && p.plan.length && p.plan.every(okd));
+    S.ownPrograms = S.ownPrograms.filter(p => p && typeof p.n == 'string' && isPlan(p.plan));
     if (S.ownPrograms.length != n0 || !(S.ownProgramIndex >= 0 && S.ownProgramIndex < S.ownPrograms.length))
       S.ownProgramIndex = -1;
     if (S.ownProgramIndex < 0 && (S.level || 'int') == 'int') {

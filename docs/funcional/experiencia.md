@@ -119,8 +119,9 @@ Ajustes → Diagnóstico, para poder contarlo en **Informar de un fallo**.
 
 Las flechas de semana, día y mes, los − y + de las series, la ✕ de un alimento, las casillas y los desplegables se ven igual que
 antes, pero responden también alrededor: el dedo acierta aunque no caiga justo encima. Ningún control responde en menos de
-24 × 24 px (el mínimo de las pautas de accesibilidad WCAG 2.2 AA) y nueve de cada diez lo hacen en 44 × 44 px o más (lo que
-recomienda Apple); en la pantalla de entreno, todos.
+24 × 24 px (el mínimo de las pautas de accesibilidad WCAG 2.2 AA). En la pantalla de entreno, todos lo hacen en 44 × 44 px o
+más (lo que recomienda Apple); en el resto, el 85 %, sin contar las filas de la lista de alimentos, que miden 35 px de alto
+para que quepan más en la pantalla.
 
 ## Tamaños de pantalla
 
