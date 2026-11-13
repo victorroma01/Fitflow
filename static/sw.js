@@ -26,17 +26,20 @@ self.addEventListener('install',e=>{e.waitUntil((async()=>{
    quedó con una de ellas se arregla aquí) y el código (js/…) de versiones anteriores, menos el de la versión que había justo
    antes: una página suya que siga abierta (con el aviso de versión nueva cerrado, o en mitad de un entreno) aún puede cargar
    lo que no había usado (el WOD, el análisis, los consejos…). Qué código era el de cada versión se anota en la caché (CODE);
-   sin esa nota (se viene de un service worker anterior a esta regla), todo el que hay guardado es el de la versión anterior */
+   sin esa nota (se viene de un service worker anterior a esta regla), todo el que hay guardado es el de la versión anterior.
+   Es una limpieza: si algo de ella falla (sin espacio para la nota, por ejemplo), la activación sigue y la página queda atendida */
 const CODE='codigo-actual.json';
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{
-  for(const k of await caches.keys())if(k!==C)await caches.delete(k);
-  const c=await caches.open(C),isCode=u=>/\/js\/[^/]+\.js$/.test(new URL(u).pathname);
-  const all=(await c.keys()).map(r=>r.url),now=PRE.map(abs).filter(isCode);
-  let before=null;
-  try{const m=await c.match(abs(CODE));if(m)before=await m.json()}catch(_){}
-  const keep=new Set(now.concat(Array.isArray(before)?before:all));
-  for(const u of all)if(u.includes('?')||(isCode(u)&&!keep.has(u)))await c.delete(u,{ignoreVary:true});
-  await c.put(abs(CODE),new Response(JSON.stringify(now),{headers:{'content-type':'application/json'}}));
+  try{
+    for(const k of await caches.keys())if(k!==C)await caches.delete(k);
+    const c=await caches.open(C),isCode=u=>/\/js\/[^/]+\.js$/.test(new URL(u).pathname);
+    const all=(await c.keys()).map(r=>r.url),now=PRE.map(abs).filter(isCode);
+    let before=null;
+    try{const m=await c.match(abs(CODE));if(m)before=await m.json()}catch(_){}
+    const keep=new Set(now.concat(Array.isArray(before)?before:all));
+    for(const u of all)if(u.includes('?')||(isCode(u)&&!keep.has(u)))await c.delete(u,{ignoreVary:true});
+    await c.put(abs(CODE),new Response(JSON.stringify(now),{headers:{'content-type':'application/json'}}));
+  }catch(_){}
   await self.clients.claim()
 })())});
 const same=async(a,b)=>{const[x,y]=await Promise.all([a.arrayBuffer(),b.arrayBuffer()]);if(x.byteLength!==y.byteLength)return false;const p=new Uint8Array(x),q=new Uint8Array(y);for(let i=0;i<p.length;i++)if(p[i]!==q[i])return false;return true};

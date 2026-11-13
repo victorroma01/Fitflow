@@ -39,7 +39,7 @@ STRAY = "caches.open('ff-app-2').then(c=>c.keys()).then(k=>k.map(r=>r.url.replac
 WOD_OPEN = "/Temporizador WOD/.test(document.querySelector('#sh').innerText)"
 # los archivos de código (js/…) que hay en la caché, y los de la versión activa según la nota del service worker (CODE)
 CODE_FILES = "caches.open('ff-app-2').then(c=>c.keys()).then(k=>k.map(r=>r.url.split('/').pop()).filter(u=>/\\.js$/.test(u)))"
-CODE_NOTE = "caches.open('ff-app-2').then(c=>c.match('codigo-actual.json')).then(r=>r?r.json():[]).then(l=>l.map(u=>u.split('/').pop()))"
+CODE_NOTE = "caches.open('ff-app-2').then(c=>c.match('codigo-actual.json')).then(r=>r?r.text():'[]').then(t=>{try{return JSON.parse(t)}catch(e){return []}}).then(l=>l.map(u=>u.split('/').pop()))"
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -307,6 +307,10 @@ def main(app):
 
                 # versión nueva publicada: la app abre la copia guardada al momento y avisa con la tarjeta de novedades
                 v0 = ev('APPV')
+                if SW:
+                    # (con la nota del código ilegible: el service worker nuevo conserva entonces todo el código guardado, y
+                    # la vuelve a escribir)
+                    ev("caches.open('ff-app-2').then(c=>c.put('codigo-actual.json',new Response('{')))")
                 publish('9.9.9', ['Prueba de novedades'])
                 if SW:
                     reload(pg, log)

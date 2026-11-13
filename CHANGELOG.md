@@ -107,8 +107,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   actualiza desde el service worker anterior (`tests/sw-anterior.js`), con la caché HTTP caducada.
 - El service worker conserva el código de la versión anterior hasta la siguiente actualización (anota en la caché cuál es
   el de cada versión, `codigo-actual.json`): antes lo borraba al activarse, y la página aún abierta de esa versión ya no
-  podía cargar lo que no había usado. Las dos comprobaciones del WOD de `tests/deploy.py` miraban toda la página, donde
-  «AMRAP» sale siempre: ahora miran la hoja.
+  podía cargar lo que no había usado. La limpieza de la activación no la deja a medias si algo falla (sin espacio, o con la
+  nota ilegible). Las dos comprobaciones del WOD de `tests/deploy.py` miraban toda la página, donde «AMRAP» sale siempre: ahora
+  miran la hoja.
 - En WebKit, el texto de la opción elegida de un `select` cuenta como contenido que se sale si es más ancho que él: el
   desplegable corto del entreno (Tempo) ensanchaba la página a 446 px en las pruebas con móviles de 320 a 430. `.psel` lo
   recorta a lo ancho. `tests/layout.py` dice mejor quién ensancha la página (recorta cada hijo antes de ocultarlo).
