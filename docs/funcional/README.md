@@ -32,7 +32,8 @@ Instalada, se abre a pantalla completa y funciona sin conexión, también en un 
 
 La app comprueba sola si hay una versión nueva cada vez que se abre, y también desde **Ajustes → Actualizaciones**. Cuando la hay,
 aparece una tarjeta con la versión y sus novedades; **Actualizar** la descarga y vuelve a abrir la app con ella. Durante un entreno no
-se interrumpe: el aviso espera a que termines. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md).
+se interrumpe: el aviso espera a que termines. Si cierras el aviso, la app sigue funcionando entera con la versión que tenías, y
+la nueva se abre la próxima vez. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md).
 
 <br clear="right">
 

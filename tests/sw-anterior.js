@@ -1,3 +1,6 @@
+/* (tests) El service worker de hasta la V1.0.2, tal cual se publicó: tests/deploy.py (from_previous) instala la app con él y
+   publica encima una versión con el de ahora, para comprobar que un móvil que viene de aquel se actualiza bien. No forma parte de
+   la app. Lo de abajo no se toca. */
 /* StrataFit · arranque instantáneo: abre al momento la última copia guardada y busca actualizaciones en segundo plano.
    build.py completa la lista de precarga con el código (js/…, nombres que cambian con cada versión) y las fotos (img/…).
    Un documento solo entra en la caché con todo su código ya guardado, también al instalarse (I-08): así la app abre igual sin
