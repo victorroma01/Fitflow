@@ -1,6 +1,6 @@
 /* ═══ programs/create ═══
    Crear programa: guiado y a partir de mis workouts.
-   Define: progDraft, clone, restDay, syncCustomProgram, startPlanFromWeekOne, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, techLegend, programDaysHtml, programRowsHtml, createHome, programNameBox, createFromMine, optionChips, guidedForm, makeEx, ANTAGONISTS, antagonist, guideTechniques, generateProgram, parseDays, programNameFor, programAdvice, guidedProposal, orderWeekPage, refreshCreate, setProgramDeload, refreshDeload  · acciones/registros: 22
+   Define: progDraft, clone, restDay, syncCustomProgram, addOwnProgram, startPlanFromWeekOne, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, techLegend, programDaysHtml, programRowsHtml, createHome, programNameBox, createFromMine, optionChips, guidedForm, makeEx, ANTAGONISTS, antagonist, guideTechniques, generateProgram, parseDays, programNameFor, programAdvice, guidedProposal, orderWeekPage, refreshCreate, setProgramDeload, refreshDeload  · acciones/registros: 22
 */
 import { fmtMinSec, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -30,6 +30,15 @@ export const restDay = () => ({ n: 'Descanso', ex: [] });
 export const syncCustomProgram = () => {
   if (S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex])
     S.ownPrograms[S.ownProgramIndex].plan = clone(S.plan);
+};
+/** Añade a Mis programas el programa `p`, ya montado; abre Programas y pregunta si se empieza con él ahora (`title` es el
+    título del aviso: «Programa creado» o «Programa importado»). */
+export const addOwnProgram = (p, title) => {
+  S.ownPrograms.push(p);
+  progDraft.k = S.ownPrograms.length - 1;
+  saveState();
+  A.openPrograms();
+  dialog(title, '«' + X(p.n) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
 };
 /** Tras cambiar de programa: el plan empieza por la semana 1 y su primer día, sin días hechos; se guarda, se cierra la hoja y
     se pinta. */
@@ -368,11 +377,7 @@ A.createSave = () => {
   if (!progDraft.plan || !progDraft.plan.some(d => d.ex.length))
     return;
   const nme = (progDraft.name || '').trim() || 'Mi programa ' + (S.ownPrograms.length + 1);
-  S.ownPrograms.push({ n: nme, plan: clone(progDraft.plan), t: Date.now(), src: progDraft.m, o: progDraft.m == 'guide' ? { ...progDraft.o, vr: progDraft.vr || 0 } : undefined, d: progDraft.m == 'guide' ? 'Programa guiado' : 'Hecho con tus workouts', dl: progDraft.dl != null ? progDraft.dl : undefined });
-  progDraft.k = S.ownPrograms.length - 1;
-  saveState();
-  A.openPrograms();
-  dialog('Programa creado', '«' + X(nme) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
+  addOwnProgram({ n: nme, plan: clone(progDraft.plan), t: Date.now(), src: progDraft.m, o: progDraft.m == 'guide' ? { ...progDraft.o, vr: progDraft.vr || 0 } : undefined, d: progDraft.m == 'guide' ? 'Programa guiado' : 'Hecho con tus workouts', dl: progDraft.dl != null ? progDraft.dl : undefined }, 'Programa creado');
 };
 A.openOwnProgram = (i, b) => {
   const k = b && b.dataset ? +b.dataset.i : +i;

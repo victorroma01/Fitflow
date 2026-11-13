@@ -33,7 +33,8 @@ gimnasio sin cobertura (*offline-first*).
 | `cloud/auth` | Registro, entrada, renovación del token (dura una hora) y cambio de contraseña; textos de error en español. |
 | `cloud/firestore` | Leer, leer varios, listar, escribir varios a la vez con condición (`commit`) y borrar. |
 | `cloud/merge` | Fusión a tres bandas, código puro (`tests/merge.test.mjs`). |
-| `cloud/sync` | La sincronización (abajo). |
+| `cloud/docs` | Qué va en cada documento de Firestore y cómo vuelve a `S` lo que llega de ellos (`PREF_KEYS`, `LOCAL_ONLY`, `localDocs`, `applyDoc`). Sin red ni estado de la sincronización. |
+| `cloud/sync` | La sincronización (abajo): cuándo se sube y se baja, y qué hacer si algo cambia entretanto. |
 | `account/login` | Inicio de sesión, registro, contraseña temporal y volver a entrar si la sesión caduca. |
 | `account/account` | Ajustes → Cuenta, Cambiar contraseña y «Cerrar sesión». |
 | `account/admin` | Perfil → Administración. |

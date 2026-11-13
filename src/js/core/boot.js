@@ -4,7 +4,7 @@
    sesión, empieza a sincronizar con Firebase (cloud/sync). Si esos datos no se pudieron leer, no se guarda ni se sincroniza
    nada (con la mitad de los datos, la nube creería que se borró el resto) y se avisa, con «Reintentar» y, con sesión, «Bajar
    de mi cuenta». window.__ffready se cumple al terminar el arranque; window.__ffok vale 1 desde el primer pintado.
-   Define: lostDialog, start  · acciones/registros: 3
+   Define: RESTORE_HINT, lostDialog, start  · acciones/registros: 3
 */
 import { $, fmtDuration, fmtMinSec, roundInt } from './util.js';
 import { Store } from './store.js';
@@ -37,6 +37,8 @@ import { signedIn } from '../cloud/session.js';
 import { startSync } from '../cloud/sync.js';
 import { spaceCheck } from '../system/space.js';
 /* los datos de este móvil no se pudieron leer (core/persist: partsLost): nada se guarda ni se sincroniza hasta que se lean */
+/* cómo recuperar los datos, en los avisos de datos dañados */
+const RESTORE_HINT = 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.';
 const lostDialog = () => dialog('No se pudieron leer tus datos', 'Tus entrenos y comidas de este móvil no se han podido leer. Para no perder nada, la app no guardará ni sincronizará hasta que se puedan leer: prueba a cerrarla y abrirla de nuevo.' + (signedIn() ? ' Si sigue igual, puedes bajar otra vez los datos de tu cuenta (lo que no se hubiera sincronizado se perderá).' : ''), signedIn() ? [['Bajar de mi cuenta', 'partsFromCloudAsk', ''], ['Reintentar', 'partsRetry', 'pr']] : [['Reintentar', 'partsRetry', 'pr']]);
 A.partsRetry = () => location.reload();
 A.partsFromCloudAsk = () => confirmDialog('¿Bajar los datos de tu cuenta?', 'Se borran los datos de este móvil y se bajan otra vez los de tu cuenta. Lo que no se hubiera sincronizado se perderá.', 'partsFromCloud', 'Bajar');
@@ -181,9 +183,9 @@ const start = () => {
   }
   /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
   if (stateRecovered == 1)
-    setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.', [['Entendido', 'doNothing', 'pr']]), 600);
+    setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + RESTORE_HINT, [['Entendido', 'doNothing', 'pr']]), 600);
   else if (stateRecovered == 2)
-    setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.', [['Entendido', 'doNothing', 'pr']]), 600);
+    setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. ' + RESTORE_HINT, [['Entendido', 'doNothing', 'pr']]), 600);
   /* lo arreglado al arrancar se guarda (solo se escribe lo que cambió: core/persist) */
   setTimeout(saveState, 1000);
   if (signedIn()) {

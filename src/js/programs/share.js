@@ -2,15 +2,15 @@
    Compartir e importar programas mediante código.
    Define: cleanPlan, programCode, parseImport, ensureExercises, shareState, sharePage, importProgram  · acciones/registros: 7
 */
-import { $, X } from '../core/util.js';
+import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
 import { EXERCISES } from '../data/library.js';
 import { DAY_PHOTOS } from '../data/photos.js';
 import { TECH_CODES } from '../data/techniques.js';
-import { S, saveState } from '../core/state.js';
-import { dialog, pgHead, sheet, sheetToTop } from '../core/ui.js';
-import { progDraft, restDay } from './create.js';
+import { S } from '../core/state.js';
+import { pgHead, sheet, sheetToTop } from '../core/ui.js';
+import { addOwnProgram, progDraft, restDay } from './create.js';
 import { programName } from './levels.js';
 import { cleanText, copyText, downloadFile, fromBase64, readTextFile, toBase64 } from '../system/files.js';
 import { html } from '../core/html.js';
@@ -135,11 +135,7 @@ const importProgram = t => {
     const plan = cleanPlan(o.plan);
     const nm = (typeof o.n == 'string' && cleanText(o.n, 60)) || 'Programa importado';
     ensureExercises(plan);
-    S.ownPrograms.push({ n: nm, plan, t: Date.now(), src: 'import', d: 'Programa importado' });
-    progDraft.k = S.ownPrograms.length - 1;
-    saveState();
-    A.openPrograms();
-    dialog('Programa importado', '«' + X(nm) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
+    addOwnProgram({ n: nm, plan, t: Date.now(), src: 'import', d: 'Programa importado' }, 'Programa importado');
   }
   catch (x) {
     const e = $('#ipe');

@@ -6,7 +6,7 @@
    Cada hoja o página se anuncia como una ventana (role="dialog", aria-modal y su título) y, al abrirla o al pasar a otra página,
    el foco va a ella (sin abrir el teclado); al cerrarla vuelve a lo que la abrió (I-06), para que con VoiceOver o con teclado no
    se siga por la pantalla de detrás. Igual el aviso (#dg) y el menú (#mn), que se abren y cierran también desde otros módulos.
-   Define: sheetBarFix, pageTrail, pageKey, backLink, touched, touchedAt, recentTouch, TYPING, openerNow, focusBack, openers, sheetDialog, swapPage, showPageBelow, sheet, appBusy, confirmDialog, dialog, watchLayer, closeLayer, onSheetClose, sheetToTop, fullPage, pgHead, segmented, linkRow  · acciones/registros: 6
+   Define: sheetBarFix, pageTrail, pageKey, backLink, touched, touchedAt, recentTouch, TYPING, openerNow, focusBack, openers, sheetDialog, swapPage, showPageBelow, sheet, appBusy, confirmDialog, dialogButtons, dialog, watchLayer, closeLayer, onSheetClose, sheetToTop, fullPage, backRow, pgHead, segmented, linkRow  · acciones/registros: 6
 */
 import { applyStyles } from './dynstyle.js';
 import { $ } from './util.js';
@@ -174,9 +174,12 @@ export const appBusy = () => !!(W || document.visibilityState == 'hidden' || $('
 export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'pr']]);
 /* (#tt, los avisos breves: una región que los lectores de pantalla leen al cambiar, sin quitar el foco de donde está) */
 document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt" role="status" aria-live="polite"></div>');
+/** Los botones de una ventana de aviso, en una fila con tantas columnas como botones. `b`: [[texto, acción, clase]…]; al tocar
+    uno, la ventana se cierra y se hace su acción (A.dialogAnswer). */
+export const dialogButtons = b => html`<div class="g2 ${['cols-1', 'cols-2', 'cols-3', 'cols-4'][b.length - 1] || ''}">${b.map(x => html`<button class="${x[2]}" data-a="dialogAnswer" data-v="${x[1]}">${raw(x[0])}</button>`)}</div>`;
 export function dialog(t, p, b) {
   /* para los lectores de pantalla, una ventana que tapa la app (aria-modal) con su título */
-  $('#dg').innerHTML = html`<div class="dgb"><div class="dgc" role="dialog" aria-modal="true" aria-labelledby="dgt"><h3 id="dgt" class="m-0-0-6">${raw(t)}</h3><p class="mu m-0-0-16 fs-14">${raw(p)}</p><div class="g2 ${['cols-1', 'cols-2', 'cols-3', 'cols-4'][b.length - 1] || ''}">${b.map(x => html`<button class="${x[2]}" data-a="dialogAnswer" data-v="${x[1]}">${raw(x[0])}</button>`)}</div></div></div>`;
+  $('#dg').innerHTML = html`<div class="dgb"><div class="dgc" role="dialog" aria-modal="true" aria-labelledby="dgt"><h3 id="dgt" class="m-0-0-6">${raw(t)}</h3><p class="mu m-0-0-16 fs-14">${raw(p)}</p>${dialogButtons(b)}</div></div>`;
   applyStyles($('#dg'));
 }
 /* el aviso y el menú se abren y se cierran escribiendo en #dg y #mn (también desde workout/rpe, core/back y core/swipe): al
@@ -245,7 +248,10 @@ export const fullPage = h => {
   sheet(h);
   s.className = 'full';
 };
-export const pgHead = (t, back) => html`<div class="row"><button data-a="${back || 'closeSheet'}" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div><h1 class="pgt">${raw(t)}</h1>`;
+/** La fila con la «←» de una página. `back`: la acción a la que vuelve; si no se dice, cierra la hoja. */
+export const backRow = back => html`<div class="row"><button data-a="${back || 'closeSheet'}" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div>`;
+/** La cabecera de una página: la «←» y, debajo, el título. */
+export const pgHead = (t, back) => html`${backRow(back)}<h1 class="pgt">${raw(t)}</h1>`;
 A.openMenu = () => {
   $('#mn').innerHTML = html`<div class="mbk" data-a="closeMenu"></div><div class="msd" role="dialog" aria-modal="true" aria-label="Menú"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="closeMenu" aria-label="Cerrar">${icon('x', 22)}</button><div class="mti">Menú</div>${[['openPrograms', 'prog', 'Programas'], ['openCalendar', 'cal', 'Calendario'], ['openLogs', 'log', 'Registros'], ['rotationShow', 'swp', 'Rotar ejercicios'], ['resetWeek', 'reset', 'Reiniciar semana']].map((x, i) => html`<button class="mi" data-style="--d:${70 + i * 60}ms" data-a="menuItem" data-v="${x[0]}"><span>${raw(x[2])}</span>${icon(x[1], 22)}</button>`)}</div></div>`;
   applyStyles($('#mn'));

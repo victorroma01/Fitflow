@@ -14,7 +14,7 @@ cuando tocar un botón no le da el foco (como en Safari).
   python3 tests/a11y.py dist/stratafit.html            (falla si hay algún problema)
   python3 tests/a11y.py dist/stratafit.html --lista    (enseña todos los elementos con problemas; sin ella, los cinco primeros)
 """
-import os, sys, datetime
+import os, sys, time, datetime
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts
 
@@ -198,8 +198,16 @@ def focus_checks(b, path):
     return fails
 
 
-# espera a que terminen las animaciones de entrada (las que no acaban nunca, como la del icono del ejercicio en curso, no)
-SETTLED = "Promise.all((document.getAnimations ? document.getAnimations() : []).filter(a => a.effect && isFinite(a.effect.getComputedTiming().endTime)).map(a => a.finished.catch(() => 0))).then(() => 0)"
+# cuántas animaciones de entrada siguen en marcha (las que no acaban nunca, como la del icono del ejercicio en curso, no cuentan)
+RUNNING = "(document.getAnimations ? document.getAnimations() : []).filter(a => a.playState == 'running' && a.effect && isFinite(a.effect.getComputedTiming().endTime)).length"
+
+
+def settle(pg, limit=2.0):
+    """Espera a que la pantalla se quede quieta: a que terminen las animaciones de entrada o, como mucho, `limit` segundos (una
+    animación dentro de algo que el navegador no pinta, como una fila con content-visibility fuera de la pantalla, no termina)."""
+    end = time.time() + limit
+    while time.time() < end and pg.evaluate(RUNNING):
+        pg.wait_for_timeout(50)
 
 
 def main(path, show):
@@ -233,7 +241,7 @@ def main(path, show):
                     pg.clock.run_for(400)
                     # con la pantalla quieta: mientras una hoja entra deslizándose, lo que se mide se está moviendo (en WebKit,
                     # la zona de un botón salía de 1 px de alto)
-                    pg.evaluate(SETTLED)
+                    settle(pg)
                     r = pg.evaluate(SCAN + '(%d, %d)' % (MIN if k in WORKOUT else 0, FLOOR))
                     # (se cuentan una vez: las pantallas del entreno se repiten a 320 px)
                     n_all, n_44 = r.pop('medidos'), r.pop('de44')

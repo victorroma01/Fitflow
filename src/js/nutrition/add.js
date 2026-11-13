@@ -8,7 +8,7 @@ import { $, clampNum, dayKey, round1, roundInt, typedNum, X } from '../core/util
 import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
-import { addState, S, saveState, setAddState, nutriDate } from '../core/state.js';
+import { addState, mealList, S, saveState, setAddState, nutriDate } from '../core/state.js';
 import { mealsPart } from '../core/parts.js';
 import { icon } from '../core/icons.js';
 import { confirmDialog, sheet } from '../core/ui.js';
@@ -91,8 +91,7 @@ function addSheetBase() {
 }
 A.addLibraryDish = i => {
   const k = dayKey(nutriDate());
-  (S.meals[k] = S.meals[k] || {});
-  (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push(...S.savedDishes[i].it.map(x => ({ ...x })));
+  mealList(k, addState.m).push(...S.savedDishes[i].it.map(x => ({ ...x })));
   saveState(mealsPart(k));
   sheet();
   R();
@@ -103,8 +102,7 @@ const typedGrams = e => clampNum(e ? typedNum(e.value) : NaN, 0.1, 5000, 100);
 const addMealItem = () => {
   const g = typedGrams($('#gr'));
   const k = dayKey(nutriDate());
-  (S.meals[k] = S.meals[k] || {});
-  (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push({ n: addState.pick.n, g, b: addState.pick.b });
+  mealList(k, addState.m).push({ n: addState.pick.n, g, b: addState.pick.b });
   saveState(mealsPart(k));
   sheet();
   R();
@@ -209,7 +207,7 @@ A.removeMealItem = (i, b) => {
   saveState(mealsPart(k));
   R();
   toast('«' + it.n + '» quitado', () => {
-    ((S.meals[k] = S.meals[k] || {})[i] = S.meals[k][i] || []).splice(j, 0, it);
+    mealList(k, i).splice(j, 0, it);
     saveState(mealsPart(k));
     R();
   });

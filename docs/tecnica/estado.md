@@ -11,7 +11,7 @@ el único módulo que conoce las dos y traduce al leer y al guardar, así que la
 migración; un nombre del programa, en cambio, se puede mejorar cambiando solo `core/schema` y el código. Los campos de dentro de
 cada dato (las series de un entreno, los alimentos de una comida…) siguen con sus claves cortas, descritas aquí.
 `core/repair` deja el estado válido al arrancar y tras cada sincronización. Este documento es el diccionario de datos; si añades
-una clave, añádela aquí y en `core/schema` (y, si es del dispositivo y no de la cuenta, en `LOCAL_ONLY` de `cloud/sync`).
+una clave, añádela aquí y en `core/schema` (y, si es del dispositivo y no de la cuenta, en `LOCAL_ONLY` de `cloud/docs`).
 
 Desde la V1.0.0 todo se sincroniza con Firebase ([Servidor: Firebase](backend.md)): el núcleo en `data/core`, los entrenos y el
 historial por año, las comidas por mes, las preferencias en el perfil y la foto en su documento privado. No hay datos personales.

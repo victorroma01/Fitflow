@@ -11,6 +11,7 @@ import { S, saveState } from '../core/state.js';
 import { R } from '../core/render.js';
 import { html, raw } from '../core/html.js';
 import { usesLb } from '../profile/units.js';
+import { dialogButtons } from '../core/ui.js';
 /** La escala: [valor, repeticiones en reserva, cómo se siente, color]. */
 const RPE_SCALE = [[6, '4 o más', 'Cómoda: te quedaban 4 o más', '#34d399'], [7, '3', 'Exigente: te quedaban 3', '#a3d65c'], [8, '2', 'Dura: te quedaban 2', '#fbbf24'], [9, '1', 'Muy dura: te quedaba 1', '#fb8c3c'], [10, '0', 'Al límite: ni una más', '#ef4444']];
 /** ¿Se registra el esfuerzo en el entreno? */
@@ -24,10 +25,7 @@ const rpeExampleHtml = () => {
   return html`<div class="rpxe" aria-hidden="true"><div class="rpxr"><b>Serie 2</b><span>10 × ${w}</span><i class="ck on">✓</i></div><div class="rpe"><span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<i class="chip${v == 8 ? ' on' : ''}">${raw(v)}</i>`)}</div><small>10 repeticiones con ${w} y te quedaban 2: RPE 8</small></div>`;
 };
 /* los botones de la ventana: «Cancelar» y «Activar», o solo «Entendido» */
-const rpeButtons = withOn => {
-  const b = withOn ? [['Cancelar', 'doNothing', ''], ['Activar', 'enableRpe', 'pr']] : [['Entendido', 'doNothing', 'pr']];
-  return html`<div class="g2 ${withOn ? 'cols-2' : 'cols-1'}">${b.map(x => html`<button class="${x[2]}" data-a="dialogAnswer" data-v="${x[1]}">${raw(x[0])}</button>`)}</div>`;
-};
+const rpeButtons = withOn => dialogButtons(withOn ? [['Cancelar', 'doNothing', ''], ['Activar', 'enableRpe', 'pr']] : [['Entendido', 'doNothing', 'pr']]);
 /** La ventana que lo explica. withOn: con «Activar» (al activarlo en Ajustes); si no, solo «Entendido». */
 const rpeExplain = withOn => {
   $('#dg').innerHTML = html`<div class="dgb"><div class="dgc rpx" role="dialog" aria-modal="true" aria-labelledby="dgt"><h3 id="dgt">Registrar el esfuerzo (RPE)</h3><p>El RPE es lo dura que ha sido una serie, del 6 al 10, según las repeticiones que te quedaban antes de no poder hacer ni una más.</p>${raw(rpeScaleSvg())}<ul class="rpxl">${RPE_SCALE.map(([v, , t]) => html`<li><b>${raw(v)}</b> ${t}</li>`)}</ul><h4>Cómo se marca</h4><p>Al marcar una serie como hecha, debajo salen los números del 6 al 10: toca el que corresponda. Es opcional en cada serie.</p>${raw(rpeExampleHtml())}<h4>Para qué lo usa la app</h4><p>Con tus RPE, la app ve si vas acumulando fatiga para proponerte la semana de descarga y te enseña tu esfuerzo medio en el análisis mensual.</p>${rpeButtons(withOn)}</div></div>`;

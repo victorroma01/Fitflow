@@ -8,7 +8,7 @@ import { groupLabel } from '../data/library.js';
 import { DAY_PHOTOS } from '../data/photos.js';
 import { S, saveState } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { dialog, sheet } from '../core/ui.js';
+import { backRow, dialog, sheet } from '../core/ui.js';
 import { exAll, exCellHtml, exCompare, exSearchText, groupOfName } from '../library/model.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, groupDropdown, groupMatch } from '../library/filters.js';
 import { REST_OPTIONS, restDefault } from '../workout/rest.js';
@@ -91,7 +91,7 @@ function routineRows() {
   return l.map(({ r, i }) => routineCard(r, i)).join('') || '<p class="mu">Aún no tienes workouts. Crea el primero con el botón de abajo.</p>';
 }
 function routineList() {
-  return html`<div class="row"><button data-a="closeSheet" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div><h1 class="fs-32 ls-n0_03em m-10-0-16">Workouts personalizados</h1><div class="row mb-6"><input placeholder="Buscar" aria-label="Buscar workout" data-u="routinesFilter" value="${routineState.s || ''}"><button data-a="routinesSort" aria-label="Cambiar el orden" class="p-12-14">${icon('swp', 20)}</button></div><div id="crl">${raw(routineRows())}</div><div class="h-90"></div><button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineNew">Crear workout</button>`;
+  return html`${backRow()}<h1 class="fs-32 ls-n0_03em m-10-0-16">Workouts personalizados</h1><div class="row mb-6"><input placeholder="Buscar" aria-label="Buscar workout" data-u="routinesFilter" value="${routineState.s || ''}"><button data-a="routinesSort" aria-label="Cambiar el orden" class="p-12-14">${icon('swp', 20)}</button></div><div id="crl">${raw(routineRows())}</div><div class="h-90"></div><button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineNew">Crear workout</button>`;
 }
 const refreshRoutineRows = () => {
   const e = $('#crl');

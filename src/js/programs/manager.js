@@ -7,7 +7,7 @@ import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { parseProgram, PROGRAM_NAMES, PROGRAM_NOTES, PROGRAM_PREF } from '../data/library.js';
 import { LEVEL_NAMES, LEVEL_PROGRAM_NOTES } from '../data/levels.js';
-import { S, saveState, W } from '../core/state.js';
+import { profileSex, S, saveState, W } from '../core/state.js';
 import { confirmDialog, fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { dropResume } from '../workout/resume.js';
 import { perWeekText } from '../workout/week.js';
@@ -34,7 +34,7 @@ const presetRow = i => {
 };
 /** Predefinidos según el sexo del perfil (F-05): arriba los preferentes y debajo el resto. Sin sexo elegido, se pregunta. */
 const presetList = () => {
-  const sx = S.biometrics && (S.biometrics.sex == 'M' || S.biometrics.sex == 'F') ? S.biometrics.sex : '';
+  const sx = profileSex();
   if (!sx)
     return html`<div class="cd pgsx"><b>¿Hombre o mujer?</b><p class="mu">Así salen primero los programas pensados para ti. Puedes cambiarlo cuando quieras en Perfil.</p><div class="g2"><button data-a="programsSex" data-v="M">Hombre</button><button data-a="programsSex" data-v="F">Mujer</button></div></div><div class="ph">Predefinidos</div>${PROGRAM_NAMES.map((n, i) => presetRow(i))}`;
   const pf = PROGRAM_PREF[sx];

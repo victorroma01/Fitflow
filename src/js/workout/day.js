@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
+   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
 */
 import { typedName } from '../core/util.js';
 import { A, C } from '../core/registry.js';
@@ -63,12 +63,25 @@ const TEMPOS = [['2/0/2/0', 'Estándar'], ['3/0/1/0', 'Excéntrico controlado'],
 /** Desplegable corto (F-09): enseña solo su nombre («Tempo», «Descanso»), porque el valor ya está en el objetivo de arriba;
     al tocarlo se abre la lista de siempre (el select va encima, transparente). */
 const shortSelect = (l, sel) => html`<label class="psel"><span>${l}</span>${icon('chev', 14)}${raw(sel)}</label>`;
-export function exToolsHtml(e, i) {
-  const o = W.openPanels;
+/* el desplegable con el tempo de un ejercicio del día */
+const tempoSelect = (e, i) => {
   const t = tempoOf(e) || '2/0/2/0';
+  return html`<select data-c="setPlanTempo" data-i="${i}" aria-label="${'Tempo, ' + e.n}">${TEMPOS.map(m => html`<option value="${m[0]}"${m[0] == t ? ' selected' : ''}>${raw(m[0])} · ${raw(m[1])}</option>`)}</select>`;
+};
+/** Lo que lleva un ejercicio durante el entreno bajo sus series: los botones de Tips y Notas, el tempo y el descanso, y,
+    abiertos, el consejo y las notas. */
+export function exToolsHtml(e, i) {
+  const tipOn = W.openPanels[i + 't'];
+  const notesOn = W.openPanels[i + 'n'];
+  const tipButton = html`<button class="chip ic${tipOn ? ' on' : ''}" data-a="toggleExerciseTip" data-i="${i}" data-v="t" aria-label="${'Tips, ' + e.n}" aria-pressed="${tipOn ? 'true' : 'false'}">${icon('info', 18)}</button>`;
+  const notesButton = html`<button class="chip${notesOn ? ' on' : ''} m-0" data-a="toggleExerciseTip" data-i="${i}" data-v="n">Notas</button>`;
+  /* lo que se mide en tiempo o en distancia no lleva tempo */
+  const tempo = unitOf(e) ? '' : shortSelect('Tempo', tempoSelect(e, i));
   /* en una superserie solo el último ejercicio tiene descanso que elegir (el de la ronda): entre ejercicios son 10 s fijos */
-  const rs = inSuperset(i) ? '' : shortSelect('Descanso', restSelect(e, 1));
-  return html`<div class="xtl"><button class="chip ic${o[i + 't'] ? ' on' : ''}" data-a="toggleExerciseTip" data-i="${i}" data-v="t" aria-label="${'Tips, ' + e.n}" aria-pressed="${o[i + 't'] ? 'true' : 'false'}">${icon('info', 18)}</button><button class="chip${o[i + 'n'] ? ' on' : ''} m-0" data-a="toggleExerciseTip" data-i="${i}" data-v="n">Notas</button>${unitOf(e) ? '' : raw(shortSelect('Tempo', html`<select data-c="setPlanTempo" data-i="${i}" aria-label="${'Tempo, ' + e.n}">${TEMPOS.map(m => html`<option value="${m[0]}"${m[0] == t ? ' selected' : ''}>${raw(m[0])} · ${raw(m[1])}</option>`)}</select>`))}${raw(rs)}</div>${o[i + 't'] ? html`<div class="mu tip">${exTip(e.n) || 'Cargando…'}</div>` : ''}${o[i + 'n'] ? html`<textarea rows="3" maxlength="2000" data-c="setExerciseNote" data-i="${i}" aria-label="${'Notas, ' + e.n}" placeholder="Anota lo que quieras sobre este ejercicio" class="mb-8">${S.exerciseNotes[e.n] || ''}</textarea>` : ''}`;
+  const rest = inSuperset(i) ? '' : shortSelect('Descanso', restSelect(e, 1));
+  const tip = tipOn ? html`<div class="mu tip">${exTip(e.n) || 'Cargando…'}</div>` : '';
+  const notes = notesOn ? html`<textarea rows="3" maxlength="2000" data-c="setExerciseNote" data-i="${i}" aria-label="${'Notas, ' + e.n}" placeholder="Anota lo que quieras sobre este ejercicio" class="mb-8">${S.exerciseNotes[e.n] || ''}</textarea>` : '';
+  return html`<div class="xtl">${tipButton}${notesButton}${tempo}${rest}</div>${tip}${notes}`;
 }
 A.toggleExerciseTip = (i, b) => {
   const k = i + b.dataset.v;

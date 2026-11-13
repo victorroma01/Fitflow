@@ -73,12 +73,22 @@ def _settled(nav):
     return run
 
 
-def _with_font(make):
-    """browser.new_context que, con SF_FONT, pone esa letra en todas las páginas del contexto."""
+# Firefox (Gecko) da '' al leer innerText de #sh, la capa de las hojas y páginas: mide 0 de alto y su contenido va con posición
+# fija. Las páginas de dentro (.sp) sí lo dan. Como las pruebas leen «lo que se ve en la hoja» con #sh, en Firefox se lee de sus
+# hijos. La app no usa innerText: es solo cómo miran las pruebas.
+GECKO_TEXT_JS = """(() => { const d = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerText');
+  Object.defineProperty(HTMLElement.prototype, 'innerText', { configurable: true, set(v) { d.set.call(this, v); },
+    get() { const t = d.get.call(this); return t || this.id != 'sh' ? t : [...this.children].map(c => d.get.call(c)).filter(Boolean).join('\\n'); } }); })()"""
+
+
+def _with_setup(make):
+    """browser.new_context que prepara cada página del contexto: con SF_FONT, pone esa letra; en Firefox, lee bien el texto de las hojas."""
     def run(self, *a, **k):
         c = make(self, *a, **k)
         if FONT:
             c.add_init_script(FONT_JS)
+        if ENGINE == 'firefox':
+            c.add_init_script(GECKO_TEXT_JS)
         return c
     return run
 
@@ -86,5 +96,5 @@ def _with_font(make):
 if not getattr(Page, '_ff_settled', False):
     Page.goto = _settled(Page.goto)
     Page.reload = _settled(Page.reload)
-    Browser.new_context = _with_font(Browser.new_context)
+    Browser.new_context = _with_setup(Browser.new_context)
     Page._ff_settled = True

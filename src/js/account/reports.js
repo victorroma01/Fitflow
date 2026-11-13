@@ -13,6 +13,7 @@ import { fullPage, pgHead, sheet } from '../core/ui.js';
 import { commitWrites, listDocs, setWrite } from '../cloud/firestore.js';
 import { REPORT_KINDS, REPORT_MAX } from '../system/report.js';
 import { html, raw } from '../core/html.js';
+import { waitingView } from './admin.js';
 /** Estados que pone el admin: [código, nombre]. */
 const ADMIN_STATES = [['p', 'Pendiente'], ['v', 'Vista'], ['a', 'Arreglada']];
 /* st: 'load' | 'ok' | 'err'; list: avisos [{ id, data }]; f: filtro ('p', 'v', 'a' o '' para todos); open: id abierto; busy: id que se guarda */
@@ -34,10 +35,9 @@ const repCard = d => {
 const reportsAdminView = () => {
   const s = repState;
   const head = html`${pgHead('Fallos y sugerencias', 'openAdmin')}<div id="adrp"></div>`;
-  if (s.st == 'load')
-    return html`${raw(head)}<p class="mu m-14-2">Cargando…</p>`;
-  if (s.st == 'err')
-    return html`${raw(head)}<p class="mu m-14-2">No se han podido cargar (${s.err}). Comprueba la conexión.</p><button data-a="openReports" class="w-full">Reintentar</button>`;
+  const waiting = waitingView(s, 'No se han podido cargar', 'openReports');
+  if (waiting)
+    return html`${head}${waiting}`;
   const n = repCounts();
   /* el abierto sigue a la vista aunque cambie de estado (al abrir uno pendiente pasa a visto) */
   const L = s.list.filter(d => !s.f || d.data.st == s.f || d.id == s.open);

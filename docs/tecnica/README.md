@@ -53,7 +53,8 @@ el que usan la mayoría de las pruebas.
 ## Principios del código
 
 - **Estado único `S`**, guardado con `saveState()`; el entreno en curso es `W` y `R()` pinta la pantalla. Se guarda por partes
-  (`core/persist`): solo se escribe lo que cambia y todos los guardados de una acción se agrupan en uno.
+  (`core/persist`): solo se escribe lo que cambia y todos los guardados de una acción se agrupan en uno. Cómo se reparte en
+  claves lo dice `core/parts` (sin estado, con pruebas sin navegador) y a IndexedDB se llega por `core/idb`.
 - **Eventos delegados**: el HTML lleva `data-a`, `data-c` o `data-u` y un único listener (`core/events`) llama al manejador
   `A.nombre`, `C.nombre` o `U.nombre`, escrito junto a la función que lo usa.
 - **HTML seguro por defecto**: las pantallas se escriben con plantillas ``html`…${valor}…` `` (`core/html`), que escapan cada valor
@@ -69,7 +70,7 @@ el que usan la mayoría de las pruebas.
 - **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
   exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
 - **Persistencia solo a través de `Store`** (`core/store`) y de `core/persist`. Ninguna otra parte toca `localStorage` ni las partes
-  del estado en IndexedDB, y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`).
+  del estado en IndexedDB (las copias automáticas, `system/snapshots`, tienen su propia base, también con `core/idb`), y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`).
 - **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
   `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Ajustes → Diagnóstico; un `catch` vacío solo se

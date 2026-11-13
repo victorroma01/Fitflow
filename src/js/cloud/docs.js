@@ -6,7 +6,7 @@
    con consentimiento). Cada documento se nombra con un id corto: 'core', 'avatar', 'logs:2026', 'hist:2026', 'meals:2026-11'.
    Define: PREF_KEYS, LOCAL_ONLY, yearOf, monthOf, docPath, indexPath, profilePath, prefsLocal, coreOf, localDocs, okType, applyDoc, applyPrefs
 */
-import { S } from '../core/state.js';
+import { profileSex, S } from '../core/state.js';
 import { logIds } from '../core/repair.js';
 import { stateName, stateToStored } from '../core/schema.js';
 import { account } from './session.js';
@@ -36,7 +36,7 @@ export const prefsLocal = () => {
     if (v !== undefined && v !== null)
       o[k] = v;
   }
-  o.sx = S.biometrics && (S.biometrics.sex == 'M' || S.biometrics.sex == 'F') ? S.biometrics.sex : '';
+  o.sx = profileSex();
   return o;
 };
 /** Lo que va en data/core: S con las claves guardadas, sin lo de LOCAL_ONLY. */

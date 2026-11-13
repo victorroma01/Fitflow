@@ -5,7 +5,7 @@
 import { $, dayKey, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
-import { addState, S, saveState, setAddState, nutriDate } from '../core/state.js';
+import { addState, mealList, S, saveState, setAddState, nutriDate } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { HELP, helpDot } from '../core/help.js';
 import { R } from '../core/render.js';
@@ -122,8 +122,7 @@ A.frequentAdd = (i, b) => {
   if (!f || !addState || !Array.isArray(f.b))
     return;
   const k = nutriDayKey();
-  (S.meals[k] = S.meals[k] || {});
-  (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push({ n, g: habitGrams(f), b: [0, 1, 2, 3, 4, 5].map(j => +f.b[j] || 0) });
+  mealList(k, addState.m).push({ n, g: habitGrams(f), b: [0, 1, 2, 3, 4, 5].map(j => +f.b[j] || 0) });
   f.c = (+f.c || 0) + 1;
   f.t = Date.now();
   saveState();
@@ -139,8 +138,7 @@ A.copyYesterday = () => {
   if (!ys.length)
     return;
   const k = nutriDayKey();
-  (S.meals[k] = S.meals[k] || {});
-  (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push(...ys.map(x => ({ ...x })));
+  mealList(k, addState.m).push(...ys.map(x => ({ ...x })));
   saveState();
   sheet();
   R();

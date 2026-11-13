@@ -33,7 +33,7 @@ python -m playwright install chromium webkit
 2. Impórtalo en `src/js/main.js` antes de `core/boot.js`. Si es algo poco usado, en lugar de eso cárgalo desde `core/lazy`.
 3. Si guarda datos nuevos, documenta la clave en [estado.md](estado.md), valídala en `core/repair` (al arrancar y tras cada
    sincronización) y decide dónde va: con la cuenta (se sincroniza sola, en `data/core`), en el perfil (preferencias: `PREF_KEYS`
-   de `cloud/sync` y `firestore.rules`) o solo en el dispositivo (`LOCAL_ONLY` de `cloud/sync`).
+   de `cloud/docs` y `firestore.rules`) o solo en el dispositivo (`LOCAL_ONLY` de `cloud/docs`).
 4. Si cambia lo que se guarda en Firestore (un documento o un campo nuevo), cambia también `firestore.rules` y su prueba,
    `tests/rules.test.mjs`.
 5. Si el usuario lo ve, descríbelo en la [documentación funcional](../funcional/README.md).
