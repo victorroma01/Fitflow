@@ -22,14 +22,19 @@ MEASURE = """(q => { const top = document.querySelector('#sh > .sp:not(.spu)') |
 OFF = '.psel{overflow-x:visible!important}'
 CASES = {
     'go': ('.psel select', [('tal cual (con el arreglo)', ''), ('sin el arreglo', OFF), ('+ padding 10', OFF + '.psel select{padding:10px!important}'),
+                            ('+ padding 1', OFF + '.psel select{padding:1px!important}'), ('+ padding solo a los lados', OFF + '.psel select{padding:0 10px!important}'),
                             ('+ borde 1px', OFF + '.psel select{border:1px solid transparent!important}'), ('+ min-height 0', OFF + '.xs select{min-height:0!important}'),
                             ('+ peso 400', OFF + '.psel select{font-weight:400!important}'), ('+ alto 100%', OFF + '.xtl .psel select{height:100%!important;top:0!important;bottom:0!important}'),
                             ('+ opacity 1', OFF + '.psel select{opacity:1!important}'), ('+ select overflow hidden', OFF + '.psel select{overflow:hidden!important}'),
-                            ('+ select contain paint', OFF + '.psel select{contain:paint!important}'), ('+ chip inline-flex', OFF + '.chip.ic{display:inline-flex!important}'),
-                            ('+ select estático', OFF + '.psel select{position:static!important}'), ('+ appearance none', OFF + '.psel select{-webkit-appearance:none!important;appearance:none!important}')]),
+                            ('+ select overflow clip', OFF + '.psel select{overflow:clip!important}'), ('+ select contain paint', OFF + '.psel select{contain:paint!important}'),
+                            ('+ select text-overflow', OFF + '.psel select{text-overflow:ellipsis!important}'), ('+ chip inline-flex', OFF + '.chip.ic{display:inline-flex!important}'),
+                            ('+ select estático', OFF + '.psel select{position:static!important}'), ('+ appearance none', OFF + '.psel select{-webkit-appearance:none!important;appearance:none!important}'),
+                            ('+ letra 13px', OFF + '.psel select{font-size:13px!important}')]),
     'nutri_my': ('.mnw select', [('tal cual', ''), ('padding 0', '.mnw select{padding:0!important}'), ('borde 0', '.mnw select{border:0!important}'), ('padding y borde 0', '.mnw select{padding:0!important;border:0!important}'),
-                                 ('peso 600', '.mnw select{font-weight:600!important}'), ('min-height 44', '.mnw select{min-height:44px!important}'), ('alto auto', '.mnw select{height:auto!important;top:-2px!important;bottom:-2px!important}')]),
-    'perfil_open': ('details[open] select', [('tal cual', ''), ('padding 0', 'details select{padding:0!important}'), ('borde 0', 'details select{border:0!important}'), ('padding y borde 0', 'details select{padding:0!important;border:0!important}')]),
+                                 ('peso 600', '.mnw select{font-weight:600!important}'), ('min-height 44', '.mnw select{min-height:44px!important}'), ('alto auto', '.mnw select{height:auto!important;top:-2px!important;bottom:-2px!important}'),
+                                 ('todo como el del entreno', '.mnw select{padding:0!important;border:0!important;margin:0!important;font-weight:600!important;min-height:44px!important;height:auto!important;top:-2px!important;bottom:-2px!important}')]),
+    'perfil_open': ('details[open] select', [('tal cual', ''), ('padding 0', 'details select{padding:0!important}'), ('borde 0', 'details select{border:0!important}'), ('padding y borde 0', 'details select{padding:0!important;border:0!important}'),
+                                             ('ancho 97px', 'details select{width:97px!important}'), ('ancho 97px, padding y borde 0', 'details select{width:97px!important;padding:0!important;border:0!important}')]),
 }
 path = sys.argv[1] if len(sys.argv) > 1 else 'dist/stratafit.html'
 with sync_playwright() as p:
@@ -54,7 +59,9 @@ with sync_playwright() as p:
         pg.wait_for_timeout(150)
         for name, css in variants:
             pg.evaluate(SET, css)
-            pg.wait_for_timeout(60)
+            # todo se vuelve a colocar desde cero: WebKit no recalcula lo que se sale al cambiar solo un estilo
+            pg.evaluate("(()=>{const b=document.body;b.style.display='none';b.offsetHeight;b.style.display='';b.offsetHeight;return 0})()")
+            pg.wait_for_timeout(80)
             r = pg.evaluate(MEASURE, q)
             print('SONDA %-12s %-28s página %s · ventana %s' % (k, name, r['doc'], r['top']))
             if name.startswith('tal cual') or name == 'sin el arreglo':

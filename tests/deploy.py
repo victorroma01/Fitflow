@@ -35,6 +35,11 @@ CACHE = ['max-age=600']
 HERE = os.path.dirname(os.path.abspath(__file__))
 # las copias del documento guardadas con parámetros en su dirección (no debe haber ninguna: static/sw.js, keyOf)
 STRAY = "caches.open('ff-app-2').then(c=>c.keys()).then(k=>k.map(r=>r.url.replace(location.origin,'')).filter(u=>u.includes('?')))"
+# el temporizador WOD (código que se carga al usarlo) abierto en su hoja; «AMRAP» sale también en la pestaña Workout
+WOD_OPEN = "/Temporizador WOD/.test(document.querySelector('#sh').innerText)"
+# los archivos de código (js/…) que hay en la caché, y los de la versión activa según la nota del service worker (CODE)
+CODE_FILES = "caches.open('ff-app-2').then(c=>c.keys()).then(k=>k.map(r=>r.url.split('/').pop()).filter(u=>/\\.js$/.test(u)))"
+CODE_NOTE = "caches.open('ff-app-2').then(c=>c.match('codigo-actual.json')).then(r=>r?r.json():[]).then(l=>l.map(u=>u.split('/').pop()))"
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -156,6 +161,16 @@ def from_previous(b, orig, log):
                 break
             pg.wait_for_timeout(300)
         check('el service worker nuevo borra la copia vieja al activarse', ev(STRAY) == [], str(ev(STRAY)))
+        # la página abierta sigue siendo la de la versión anterior, y su código ya no está en el servidor: lo que aún no había
+        # usado (el temporizador WOD) tiene que salir de la caché, que conserva el código de la versión anterior
+        ev('A.openWod()')
+        for _ in range(20):
+            if ev(WOD_OPEN):
+                break
+            pg.wait_for_timeout(250)
+        check('con la versión nueva ya activa, la página abierta de la anterior aún carga lo que no había usado (WOD)', ev(WOD_OPEN) and ev('APPV') == v0,
+              ev("document.querySelector('#tt')?document.querySelector('#tt').innerText.slice(0,120):''"))
+        ev("sheet()")
         if ev("!!document.querySelector('#upd .upb')"):
             with pg.expect_navigation():
                 pg.click('#upd .upb')
@@ -256,7 +271,7 @@ def main(app):
                     check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
                     ev('A.openWod()')
                     pg.wait_for_timeout(300)
-                    check('sin conexión también abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
+                    check('sin conexión también abre lo que se carga al usarlo (WOD)', ev(WOD_OPEN))
                     c.set_offline(False)
                     # con conexión, otro acceso directo: abre su pantalla y no deja en la caché otra copia del documento con esa
                     # dirección (./?a=comida), que nadie actualizaría (static/sw.js: todo se guarda sin parámetros)
@@ -269,7 +284,7 @@ def main(app):
                     skipped('sin conexión')
                     ev('A.openWod()')
                     pg.wait_for_timeout(300)
-                    check('abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
+                    check('abre lo que se carga al usarlo (WOD)', ev(WOD_OPEN))
                 reload(pg, log)
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(800)
@@ -314,6 +329,16 @@ def main(app):
                 check('tarjeta negra con letra blanca', bool(card) and card['bg'] == 'rgb(0, 0, 0)' and card['fg'] == 'rgb(255, 255, 255)', str(card and (card['bg'], card['fg'])))
                 a1 = ev("(()=>{const d=document.createElement('i');d.style.color=getComputedStyle(document.documentElement).getPropertyValue('--a1');document.body.appendChild(d);const c=getComputedStyle(d).color;d.remove();return c})()")
                 check('botón Actualizar del color del tema, letra negra y mayúsculas', bool(card) and card['bbg'] == a1 and card['bfg'] == 'rgb(0, 0, 0)' and card['label'] == 'ACTUALIZAR', str(card and (card['bbg'], a1, card['bfg'], card['label'])))
+                if SW:
+                    # el service worker de la versión nueva se activa con la página de la anterior aún abierta: guarda el código
+                    # nuevo y conserva el de la versión anterior, por si esa página carga algo que aún no había usado
+                    old_code = sorted(os.listdir(os.path.join(orig, 'js')))
+                    for _ in range(60):
+                        if any(f.endswith('-999.js') for f in ev(CODE_NOTE)):
+                            break
+                        pg.wait_for_timeout(300)
+                    have = ev(CODE_FILES)
+                    check('al activarse la versión nueva, el código de la anterior se conserva', all(f in have for f in old_code) and any(f.endswith('-999.js') for f in have), str(sorted(have)[:4]))
                 with pg.expect_navigation():
                     pg.click('#upd .upb')
                 pg.wait_for_load_state('load')
@@ -392,6 +417,13 @@ def main(app):
                     check('una corrección con el mismo número de versión llega en la siguiente apertura, sin aviso ni novedades',
                           ev('APPV') == v0 and '-mismo.js' in now_js and not same_popup and ev("!document.getElementById('upd')") and ev('!!window.__ffok'),
                           str([ev('APPV'), now_js[:90], same_popup]))
+                    # el código guardado no crece sin fin: queda el de esta versión y el de la anterior; el de la 9.9.9, ya no
+                    for _ in range(40):
+                        if any(f.endswith('-mismo.js') for f in ev(CODE_NOTE)) and not any(f.endswith('-999.js') for f in ev(CODE_FILES)):
+                            break
+                        pg.wait_for_timeout(300)
+                    have = ev(CODE_FILES)
+                    check('y el código de dos versiones atrás se borra', not any(f.endswith('-999.js') for f in have) and any(f.endswith('-mismo.js') for f in have), str(sorted(have)[:6]))
                     deploy(orig, os.path.join(site, 'fitflow'))
                 else:
                     skipped('corrección con el mismo número de versión')

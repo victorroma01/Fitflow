@@ -38,6 +38,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Actualizaciones: si alguna vez abriste la app con conexión desde un acceso directo del icono («Entreno de hoy», «Nutrición
   de hoy» o «Registrar el peso»), al publicarse una versión la app seguía abriendo la anterior, con el aviso de versión nueva
   una y otra vez, y podía dejar de arrancar. Ya no ocurre, y un móvil que se quedó así se arregla solo al abrirla con conexión.
+- Con una versión nueva ya descargada, si cerrabas el aviso o estabas en mitad de un entreno, lo que se descarga al usarlo (el
+  temporizador WOD, los consejos de un ejercicio, el análisis mensual, el PDF, el CSV, la búsqueda de alimentos en internet y
+  el escáner) no se abría hasta actualizar.
 - Nutrición: al reducir las comidas al día, lo anotado en las que ya no están se sigue viendo y contando. Y «ayer» ya no se
   salta un día tras el cambio de hora de marzo.
 - Entreno: la duración no cuenta las pausas. Reanudar un entreno a medias tras cambiar los ejercicios del día sigue con los
@@ -100,8 +103,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   `./?a=peso` con conexión dejaba otra copia del documento con esa dirección, que no se actualizaba y salía antes que la buena
   (la caché devuelve la primera que coincide sin mirar los parámetros). Al activarse, el service worker nuevo borra esas copias:
   así se arreglan los móviles que venían de la V1.0.2 o anteriores. Lo encontró la prueba en Firefox, donde «sin conexión»
-  no corta las peticiones del service worker. `tests/deploy.py` (51 comprobaciones) abre un acceso directo con conexión y
+  no corta las peticiones del service worker. `tests/deploy.py` (54 comprobaciones) abre un acceso directo con conexión y
   actualiza desde el service worker anterior (`tests/sw-anterior.js`), con la caché HTTP caducada.
+- El service worker conserva el código de la versión anterior hasta la siguiente actualización (anota en la caché cuál es
+  el de cada versión, `codigo-actual.json`): antes lo borraba al activarse, y la página aún abierta de esa versión ya no
+  podía cargar lo que no había usado. Las dos comprobaciones del WOD de `tests/deploy.py` miraban toda la página, donde
+  «AMRAP» sale siempre: ahora miran la hoja.
 - En WebKit, el texto de la opción elegida de un `select` cuenta como contenido que se sale si es más ancho que él: el
   desplegable corto del entreno (Tempo) ensanchaba la página a 446 px en las pruebas con móviles de 320 a 430. `.psel` lo
   recorta a lo ancho. `tests/layout.py` dice mejor quién ensancha la página (recorta cada hijo antes de ocultarlo).
