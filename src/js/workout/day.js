@@ -4,6 +4,7 @@
 */
 import { typedName } from '../core/util.js';
 import { A, C } from '../core/registry.js';
+import { toast } from '../core/toast.js';
 import { PROGRAM_NAMES } from '../data/library.js';
 import { overviewMode, S, saveState, setWeekView, W, weekView } from '../core/state.js';
 import { icon } from '../core/icons.js';
@@ -29,9 +30,9 @@ function workoutDayBase() {
   const k = S.week + '-' + S.selectedWeekday;
   const rest = !d.ex.length;
   const ns = d.ex.reduce((s, e) => s + e.s, 0);
-  let h = html`<div class="hd"><div>${levelPill()}<h1>${S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex] ? S.ownPrograms[S.ownProgramIndex].n : PROGRAM_NAMES[S.program]}</h1></div><button data-a="openMenu" aria-label="Menú" class="fs-26 p-6-14">☰</button></div><div class="wk mt-12"><button data-a="changeWeek" data-i="-1" aria-label="Semana anterior">‹</button><b${raw(isDeloadWeek(S.week) ? ' class="wkdl"' : '')}>Semana ${raw(S.week)}${isDeloadWeek(S.week) ? ' · descarga' : ''}</b><button data-a="changeWeek" data-i="1" aria-label="Semana siguiente">›</button></div><div class="dys">${[0, 1, 2, 3, 4, 5, 6].map(j => html`<button class="dy ${j == S.selectedWeekday ? 'on' : ''}" data-a="selectDay" data-i="${j}">DÍA<br>${raw(S.doneDays[S.week + '-' + j] ? '✓' : !S.plan[planIndex(j)].ex.length ? '☾' : j + 1)}</button>`)}</div>`;
+  let h = html`<div class="hd"><div>${levelPill()}<h1>${S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex] ? S.ownPrograms[S.ownProgramIndex].n : PROGRAM_NAMES[S.program]}</h1></div><button data-a="openMenu" aria-label="Menú" class="fs-26 p-6-14">☰</button></div><div class="wk mt-12"><button data-a="changeWeek" data-i="-1" aria-label="Semana anterior" class="tz">‹</button><b${raw(isDeloadWeek(S.week) ? ' class="wkdl"' : '')}>Semana ${raw(S.week)}${isDeloadWeek(S.week) ? ' · descarga' : ''}</b><button data-a="changeWeek" data-i="1" aria-label="Semana siguiente" class="tz">›</button></div><div class="dys">${[0, 1, 2, 3, 4, 5, 6].map(j => html`<button class="dy ${j == S.selectedWeekday ? 'on' : ''}" data-a="selectDay" data-i="${j}">DÍA<br>${raw(S.doneDays[S.week + '-' + j] ? '✓' : !S.plan[planIndex(j)].ex.length ? '☾' : j + 1)}</button>`)}</div>`;
   if (weekView && !rest)
-    return html`${raw(h)}<div class="cd"><label>Nombre del día</label><input value="${d.n}" maxlength="60" data-c="setDayName" aria-label="Nombre del día">${d.ex.map((e, i) => html`<div class="it cols-1fr-auto-24"><span>${blockBadge(d.ex, i)}${e.n}<br>${restSelect(e)}${rangeSelect(e, i)}${i ? html` <button data-a="linkToPrevious" data-i="${i}" class="p-5-9 fs-12">${e.b && d.ex[i - 1].b == e.b ? 'Separar' : 'Unir al anterior'}</button>` : ''}</span><span><button data-a="planSetMinus" data-i="${i}" aria-label="${'Una serie menos, ' + e.n}">−</button> ${raw(e.s)} <button data-a="planSetPlus" data-i="${i}" aria-label="${'Una serie más, ' + e.n}">+</button></span><button data-a="removePlanExercise" data-i="${i}" aria-label="${'Quitar ' + e.n}" class="p-2-6">✕</button></div>`)}</div><button data-a="openPicker" class="w-full">+ Añadir ejercicio</button><button class="pr w-full mt-8" data-a="toggleWeekView">Listo</button>`;
+    return html`${raw(h)}<div class="cd"><label>Nombre del día</label><input value="${d.n}" maxlength="60" data-c="setDayName" aria-label="Nombre del día">${d.ex.map((e, i) => html`<div class="it cols-1fr-auto-24"><span>${blockBadge(d.ex, i)}${e.n}<br>${restSelect(e)}${rangeSelect(e, i)}${i ? html` <button data-a="linkToPrevious" data-i="${i}" class="p-5-9 fs-12">${e.b && d.ex[i - 1].b == e.b ? 'Separar' : 'Unir al anterior'}</button>` : ''}</span><span><button data-a="planSetMinus" data-i="${i}" aria-label="${'Una serie menos, ' + e.n}" class="tz">−</button> ${raw(e.s)} <button data-a="planSetPlus" data-i="${i}" aria-label="${'Una serie más, ' + e.n}" class="tz">+</button></span><button data-a="removePlanExercise" data-i="${i}" aria-label="${'Quitar ' + e.n}" class="p-2-6">✕</button></div>`)}</div><button data-a="openPicker" class="w-full">+ Añadir ejercicio</button><button class="pr w-full mt-8" data-a="toggleWeekView">Listo</button>`;
   if (rest)
     return html`${raw(h)}<div class="cd hero ta-c p-50-14" data-style="${coverStyle('Descanso')}"><div class="fs-44">☾</div><h2>Día de descanso</h2><p class="mu">Hoy toca recuperar.</p><button class="pr" data-a="completeRestDay">${S.doneDays[k] ? 'Descanso completado ✓' : 'Completar descanso'}</button></div><button data-a="openPicker" class="w-full">+ Convertir en día de entreno</button>`;
   return html`${raw(h)}<div class="cd hero" data-style="${coverStyle(d.n, d)}"><h2>${d.n}</h2><div class="st"><div><b>${d.ex.length}</b><small>Ejercicios</small></div><div><b>${raw(ns)}</b><small>Series</small></div><div><b>${dayMinutes(d)}</b><small>Minutos</small></div></div><div class="g2"><button data-a="openOverview">Overview</button><button class="pr" data-a="startWorkout">${S.doneDays[k] ? 'Repetir' : 'Empezar'} día ${raw(S.selectedWeekday + 1)}</button></div></div>`;
@@ -180,16 +181,33 @@ A.planSetPlus = i => {
   saveState('core');
   R();
 };
+/* quitar un ejercicio del día no pregunta: se puede deshacer (vuelve a su sitio, con sus series, descanso y bloque) */
 A.removePlanExercise = i => {
-  S.plan[S.selectedDay].ex.splice(i, 1);
+  const d = S.plan[S.selectedDay];
+  if (!d.ex[i])
+    return;
+  const [e] = d.ex.splice(i, 1);
   saveState('core');
   R();
+  toast('«' + e.n + '» quitado del día', () => {
+    d.ex.splice(i, 0, e);
+    saveState('core');
+    R();
+  });
 };
+/* «Reiniciar semana» quita las marcas de hecho de la semana (los entrenos guardados no se tocan). No pregunta: se puede deshacer */
 A.resetWeek = () => {
-  Object.keys(S.doneDays).forEach(k => k.startsWith(S.week + '-') && delete S.doneDays[k]);
+  const marks = Object.keys(S.doneDays).filter(k => k.startsWith(S.week + '-'));
+  const before = marks.map(k => [k, S.doneDays[k]]);
+  marks.forEach(k => delete S.doneDays[k]);
   saveState('core');
   sheet();
   R();
+  toast(before.length ? 'Semana reiniciada' : 'La semana ya estaba sin días hechos', before.length ? () => {
+    before.forEach(([k, v]) => S.doneDays[k] = v);
+    saveState('core');
+    R();
+  } : null);
 };
 C.setPlanTempo = (e, i) => {
   S.plan[S.selectedDay].ex[i].t = e.value;

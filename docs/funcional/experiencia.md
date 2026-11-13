@@ -86,6 +86,47 @@ la página de dentro (volviendo a la anterior, como «←»), Overview o Evoluci
 Workout; desde Workout, sin nada abierto, sale de la app, como siempre. Durante un entreno no sale: avisa de que sigue en marcha
 (para salir, «Salir y descartar» o «Log out»). En el navegador, el botón atrás hace lo mismo.
 
+En la librería de ejercicios, «atrás» dentro de un grupo muscular vuelve a los grupos, y otro «atrás» la cierra.
+
+## Avisos y «Deshacer»
+
+Los avisos breves salen abajo, sobre la barra de pestañas, y se van solos: duran más cuanto más largos son (entre 2,6 y 6
+segundos) y, si no caben en una línea, saltan a la siguiente. Los lectores de pantalla (VoiceOver, TalkBack) los leen al salir,
+sin quitar el foco de donde está.
+
+Lo que se quita de un toque, sin preguntar, trae **Deshacer** en su aviso, durante 6 segundos:
+
+| Al… | «Deshacer»… |
+| --- | --- |
+| quitar un alimento de una comida (**✕**) | lo devuelve a su comida y a su sitio, con sus gramos. |
+| quitar un ejercicio del día (al editar la semana o en Overview) | lo devuelve a su sitio, con sus series, su descanso, su rango y su bloque. |
+| borrar un plato guardado de la Librería | lo devuelve a la lista. |
+| quitar una serie ya hecha durante el entreno | la devuelve, hecha, con sus repeticiones y su peso. |
+| **Reiniciar semana** | vuelve a marcar los días que estaban hechos. |
+| guardar una plantilla sobre la que ya había | recupera la plantilla anterior. |
+
+Lo que no se puede recuperar así (borrar un entreno de Registros, un pesaje, un ejercicio propio, un workout, restaurar una
+copia, borrar todos los datos) pregunta antes en una ventana.
+
+Algunas partes de la app instalada se descargan la primera vez que se abren (el temporizador de WOD, exportar a CSV, el análisis
+mensual y su PDF, la búsqueda de alimentos en internet con el escáner, y la ficha de los ejercicios). Si tardan más de medio segundo, la app dice **Cargando…**; si no
+llegan (sin cobertura), lo dice, y al volver a tocar lo intenta de nuevo. Una vez abiertas, funcionan sin conexión.
+
+Si algo falla de forma inesperada, la app lo dice («Algo ha fallado…», como mucho una vez cada medio minuto) y lo anota en
+Ajustes → Diagnóstico, para poder contarlo en **Informar de un fallo**.
+
+## Botones pequeños
+
+Las flechas de semana, día y mes, los − y + de las series, la ✕ de un alimento, las casillas y los desplegables se ven igual que
+antes, pero responden también alrededor: el dedo acierta aunque no caiga justo encima. Ningún control responde en menos de
+24 × 24 px (el mínimo de las pautas de accesibilidad WCAG 2.2 AA) y nueve de cada diez lo hacen en 44 × 44 px o más (lo que
+recomienda Apple); en la pantalla de entreno, todos.
+
+## Tamaños de pantalla
+
+La app está hecha para el móvil en vertical, desde 320 px de ancho (un iPhone SE). En una tableta o en un ordenador, el
+contenido va en una columna centrada de 560 px de ancho como mucho, no estirado de lado a lado.
+
 ## Accesos directos del icono (Android)
 
 Al mantener pulsado el icono de StrataFit salen tres accesos directos, cada uno con su icono: **Entreno de hoy** (Workout; sin

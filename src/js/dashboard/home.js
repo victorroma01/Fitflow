@@ -14,10 +14,11 @@ import { stagnationCard } from '../extras/stagnation.js';
 import { cardioCard } from '../extras/cardio.js';
 import { html, raw } from '../core/html.js';
 import { sessionsPerWeek, trainingDays } from '../workout/week.js';
-import { countBetween, dayTotals, weekMonday } from '../core/calc.js';
+import { countBetween, dayTotals, mondayKey, weekMonday } from '../core/calc.js';
 import { nutritionRecentCard } from '../nutrition/week.js';
-/* una cifra del resumen: el número, grande, y qué es */
-const statCell = (value, label) => html`<div class="cd"><b class="fs-26">${value}</b><br><small>${raw(label)}</small></div>`;
+/* una cifra del resumen: el número, grande, y qué es (sin margen propio: la separación entre las cuatro es la de su rejilla,
+   igual a lo ancho que a lo alto) */
+const statCell = (value, label) => html`<div class="cd m-0"><b class="fs-26">${value}</b><br><small>${raw(label)}</small></div>`;
 /* las kcal de hoy */
 const kcalToday = now => roundInt(dayTotals(S.meals[dayKey(now)])[0]);
 /* el volumen de los 8 últimos entrenos (sin cardio), en columnas */
@@ -51,10 +52,9 @@ export const weekStats = () => {
   (S.logs || []).forEach(l => {
     if (!l || typeof l.d != 'string')
       return;
-    const t = new Date(l.d + 'T12:00:00');
-    if (isNaN(t))
+    const k = mondayKey(l.d);
+    if (!k)
       return;
-    const k = dayKey(weekMonday(t));
     cnt[k] = (cnt[k] || 0) + 1;
     day[l.d] = 1;
   });

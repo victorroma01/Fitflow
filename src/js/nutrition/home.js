@@ -2,7 +2,7 @@
    Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones.
    Define: MACRO_CLASSES, nutritionDayHead, nutritionTotals, macroBar, mealItemRow, mealButtons, mealCard, mealName, nutritionBase  · acciones/registros: 2
 */
-import { clampNum, dayKey, round1, roundInt } from '../core/util.js';
+import { clampNum, dayKey, fmtDate, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
 import { MEAL_NAMES, MEAL_SPLITS } from '../data/foods.js';
 import { nutriDayOffset, S, saveState, setNutriDayOffset, nutriDate } from '../core/state.js';
@@ -18,8 +18,8 @@ import { nutritionWeekCard } from './week.js';
 const MACRO_CLASSES = { c: ['c-ctx', 'bg-c'], p: ['c-ptx', 'bg-p'], g: ['c-gtx', 'bg-g'] };
 /* la cabecera del día: «‹ día ›», si es de entreno o de descanso y «Mi nutrición» */
 const nutritionDayHead = (dt, t) => {
-  const day = nutriDayOffset ? dt.toLocaleDateString('es', { day: 'numeric', month: 'short' }) : 'Hoy';
-  return html`<div class="hd"><button data-a="nutritionDay" data-i="-1" aria-label="Día anterior">‹</button><h1>${raw(day)}</h1><button data-a="nutritionDay" data-i="1" aria-label="Día siguiente">›</button></div><div class="ndy"><span class="ndt">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span><button class="nmb" data-a="openMyNutrition" aria-label="Mi nutrición: objetivo de kcal y macros">${icon('fk', 22)}</button></div>`;
+  const day = nutriDayOffset ? fmtDate(dt, { day: 'numeric', month: 'short' }) : 'Hoy';
+  return html`<div class="hd"><button data-a="nutritionDay" data-i="-1" aria-label="Día anterior" class="tz">‹</button><h1>${raw(day)}</h1><button data-a="nutritionDay" data-i="1" aria-label="Día siguiente" class="tz">›</button></div><div class="ndy"><span class="ndt">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span><button class="nmb" data-a="openMyNutrition" aria-label="Mi nutrición: objetivo de kcal y macros">${icon('fk', 22)}</button></div>`;
 };
 /* lo comido frente al objetivo (los tres macros y las kcal), fijo arriba al desplazar */
 const nutritionTotals = (tt, tg) => html`<div class="cd pos-sticky top-6 z-3"><div class="mac">${macroBar('Hidratos', tt[1], tg[1], 'c')}${macroBar('Proteínas', tt[2], tg[2], 'p')}${macroBar('Grasas', tt[3], tg[3], 'g')}</div><div class="bar mt-8"><i class="bg-ac" data-style="width:${Math.min(100, tt[0] / tg[0] * 100 || 0)}%"></i></div><div class="ta-c"><b>${roundInt(tt[0])} / ${roundInt(tg[0])} kcal</b></div></div>`;
@@ -30,7 +30,7 @@ function macroBar(l, v, t, m) {
 /* un alimento anotado: sus valores, sus gramos (que se pueden cambiar) y «✕» */
 const mealItemRow = (it, i, j) => {
   const v = itemMacros(it);
-  return html`<div class="it"><div>${it.n}<br><small>${roundInt(v[0])} kcal · C ${round1(v[1])} P ${round1(v[2])} G ${round1(v[3])}</small></div><input type="number" inputmode="decimal" min="0" max="5000" value="${it.g}" data-c="setItemGrams" data-i="${i}" data-j="${j}" aria-label="${'Gramos de ' + it.n}"><button data-a="removeMealItem" data-i="${i}" data-j="${j}" aria-label="${'Quitar ' + it.n}" class="p-2-6">✕</button></div>`;
+  return html`<div class="it"><div>${it.n}<br><small>${roundInt(v[0])} kcal · C ${round1(v[1])} P ${round1(v[2])} G ${round1(v[3])}</small></div><input type="number" inputmode="decimal" min="0" max="5000" value="${it.g}" data-c="setItemGrams" data-i="${i}" data-j="${j}" aria-label="${'Gramos de ' + it.n}"><button data-a="removeMealItem" data-i="${i}" data-j="${j}" aria-label="${'Quitar ' + it.n}" class="p-2-6 tz">✕</button></div>`;
 };
 /* los botones de una comida: añadir, guardarla como plato, buscar en internet y escanear */
 const mealButtons = (i, nm) => html`<div class="mlb"><button class="mlp mli" data-a="openAddFood" data-i="${i}" aria-label="${'Añadir alimento, ' + nm}">${icon('plus', 20)}</button><button class="mlp mli" data-a="saveDishAsk" data-i="${i}" data-n="${nm}" aria-label="${'Guardar ' + nm + ' como plato'}">${icon('bkm', 18)}</button><button class="mlp" data-a="openFoodSearch" data-i="${i}" aria-label="${'Buscar alimento en internet, ' + nm}">${icon('srch', 17)}<span>Buscar</span></button><button class="mlp" data-a="openMealScanner" data-i="${i}" aria-label="${'Escanear código de barras, ' + nm}">${icon('bar', 17)}<span>Scan</span></button></div>`;

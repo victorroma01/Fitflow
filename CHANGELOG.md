@@ -33,6 +33,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Al crear un ejercicio con el nombre de uno que ya existe, se añade ese en vez de duplicarlo.
 - «Atrás» en un workout que estás editando pregunta si lo descartas, y en un grupo de la librería vuelve a los grupos.
 - Si algo falla de forma inesperada, la app lo dice en vez de quedarse sin hacer nada.
+- «Deshacer»: al quitar un alimento de una comida, un ejercicio del día, un plato guardado o una serie ya hecha, al reiniciar la
+  semana y al guardar una plantilla sobre otra, el aviso trae «Deshacer» durante unos segundos.
+- Los botones pequeños (las flechas de semana, día y mes, − y +, ✕, las casillas y los desplegables) responden también
+  alrededor: es más fácil acertar con el dedo.
+- Lo que se descarga la primera vez que lo abres (temporizador WOD, exportar CSV, análisis mensual) dice «Cargando…» si tarda.
+- Más rápida con muchos datos: Registros se abre más de tres veces antes con cientos de entrenos, y el Dashboard, un 30 % antes.
 
 ### Correcciones
 - Nutrición: si reduces las comidas al día, lo anotado en las que ya no están se sigue viendo y contando. Antes desaparecía de
@@ -53,6 +59,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Cardio: los kilómetros totales se redondean bien.
 - Una copia de seguridad dañada o manipulada ya no puede dejar una pantalla en blanco ni colar texto donde va un número: lo que
   no vale se descarta al abrir la app.
+- Los avisos largos se cortaban por los dos lados: ahora saltan de línea y duran más cuanto más largos son.
+- En móviles estrechos, los grupos de la librería de ejercicios se salían por la derecha.
+- Si fallaba la descarga de una parte de la app (sin cobertura), no se podía volver a intentar sin cerrarla.
 
 ### Interno
 - Auditoría técnica de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): diagnóstico por áreas, lo corregido y lo pendiente.
@@ -67,12 +76,22 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - `tests/samehtml.py`: compara el HTML de las 47 pantallas entre dos compilaciones.
 - Fases 4 y 5 de la auditoría. `core/calc` reúne también las reglas del entreno: en qué se mide un ejercicio, qué serie cuenta
   para las marcas (`liftScore`, una sola regla para récords, gráficas, estancamiento, análisis y resumen), la duración sin
-  pausas y la progresión (`progressionRule`, `nextWeight`, `deloadWeight`, `dropSetWeight`), con 11 pruebas sueltas más.
+  pausas y la progresión (`progressionRule`, `nextWeight`, `deloadWeight`, `dropSetWeight`), con 13 pruebas sueltas más (34).
 - `library/custom` (ejercicios propios). Cada entreno y sus series llevan la misma marca (`t`), para borrarlos juntos.
 - `core/repair` valida más al arrancar: cada dato de los ejercicios del plan, las fechas y los números de entrenos, historial,
   récords, pesajes y medidas, y la forma de los workouts propios. `tests/security.py` restaura una copia manipulada entera.
 - `tests/training.py` (76 comprobaciones del entreno) y `tests/dashboard.py` (39: cada cifra del Dashboard, los CSV y la copia
   de seguridad, frente a cuentas hechas aparte con cinco meses de datos al azar).
+- Fases 6 y 7. `core/toast`: aviso con «Deshacer» y región `aria-live`. `core/lazy` (`lazyLoad`): «Cargando…» y reintento
+  tras un fallo de descarga (Chrome guarda el fallo de un `import()` mientras dura la página: se reintenta con otra URL).
+  Zonas táctiles con pseudo-elementos (`css/97-touch-targets`, clase `tz`): no cambian el dibujo de la pantalla.
+- `tests/layout.py` (47 pantallas en 5 tamaños, de 320 a 1280 px: sin desbordes ni textos cortados, y sin saltos al arrancar),
+  `tests/ux.py` (26 comprobaciones: avisos, deshacer, «atrás», cargas con mala cobertura) y `tests/a11y.py` mide la zona que
+  responde de cada control (ninguno por debajo de 24 × 24 px; el 92 %, en 44 × 44 px o más).
+- Integración continua: `npm audit` en cada subida (avisa, no detiene) y las pruebas también en Firefox (informativo).
+- Rendimiento medido frente a la V1.0.2 ([Rendimiento](docs/tecnica/rendimiento.md)): `fmtDate` (`core/util`) reutiliza los
+  formatos de fecha y `mondayKey` (`core/calc`) recuerda el lunes de cada día. `tests/perf.py` mide también abrir Registros.
+  `tests/samehtml.py` ya no cuenta como distinto lo que depende del momento (Diagnóstico, la burbuja de la barra).
 
 ## [1.0.2] — 2026-11-12
 

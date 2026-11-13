@@ -5,6 +5,7 @@
    Define: ownFoods, allFoods, NUTRI_SCORE, nutriScore, nutriScoreBadge, nutriScoreRow, saveOwnFood, foldText, groupNames, groupOfFood, foodList, addSheetBase, typedGrams, addMealItem, addSheet, onlineSheet, ownFoodDel  · acciones/registros: 15
 */
 import { $, clampNum, dayKey, round1, roundInt, typedNum, X } from '../core/util.js';
+import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { addState, S, saveState, setAddState, nutriDate } from '../core/state.js';
@@ -197,11 +198,21 @@ A.ownFoodDelete = () => {
     addState.cat = -1;
   foodList(String(($('input[data-u="foodSearch"]') || {}).value || ''));
 };
+/* quitar un alimento de una comida no pregunta: se puede deshacer */
 A.removeMealItem = (i, b) => {
   const k = dayKey(nutriDate());
-  S.meals[k][i].splice(+b.dataset.j, 1);
+  const j = +b.dataset.j;
+  const meal = S.meals[k] && S.meals[k][i];
+  if (!meal || !meal[j])
+    return;
+  const [it] = meal.splice(j, 1);
   saveState(mealsPart(k));
   R();
+  toast('«' + it.n + '» quitado', () => {
+    ((S.meals[k] = S.meals[k] || {})[i] = S.meals[k][i] || []).splice(j, 0, it);
+    saveState(mealsPart(k));
+    R();
+  });
 };
 U.foodGrams = v => {
   const e = $('#pv');

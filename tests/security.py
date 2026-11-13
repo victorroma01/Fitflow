@@ -120,7 +120,8 @@ def tampered(b, path, numbers):
     alive = pg.evaluate('!!window.__ffok')
     for k, js in list(SCR.items()) + list(MORE.items()):
         try:
-            pg.evaluate("window.__scr=%r;document.querySelector('#dg').innerHTML='';sheet();if(W){W=null};S.planBackup=null" % k)
+            # (cada pantalla, sin lo que dejó abierto la anterior: el aviso, la hoja, el entreno, el Overview o la página de peso)
+            pg.evaluate("window.__scr=%r;document.querySelector('#dg').innerHTML='';sheet();if(W){W=null};S.planBackup=null;overviewMode=0;weightView=0" % k)
             pg.evaluate(js)
             pg.clock.run_for(300)
             pg.wait_for_timeout(60)
@@ -153,7 +154,8 @@ def main(path):
         stored = pg.evaluate("S.profile.img===undefined")
         for k, js in SCR.items():
             try:
-                pg.evaluate("window.__scr=%r;sheet();if(W){W=null}" % k)
+                # (sin lo que dejó abierto la anterior: con el Overview abierto, las pestañas no llegarían a pintarse)
+                pg.evaluate("window.__scr=%r;sheet();if(W){W=null};overviewMode=0;weightView=0" % k)
                 pg.evaluate(js)
                 pg.clock.run_for(300)
                 pg.wait_for_timeout(100)

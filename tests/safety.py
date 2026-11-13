@@ -105,6 +105,8 @@ def main(path):
             pg.clock.run_for(100)
             check('si no puede guardar, avisa', ev("/No se ha podido guardar/.test(document.body.innerText)"))
             check('y lo registra', any(x['w'] == 'guardar ff' and 'QuotaExceededError' in x['m'] for x in ev('errorLog()')))
+            # (un aviso tan largo dura más de 5 s: se quita de la pantalla para ver si vuelve a salir)
+            ev("document.querySelector('#tt').innerHTML=''")
             ev('saveState()')
             pg.clock.run_for(3000)
             ev('saveState()')

@@ -147,8 +147,13 @@ html.gl .sr {
   font-size:15px;
   color:var(--tx);
 }
+/* la casilla, de 20 px y del color de acento (la de serie del navegador mide 13 y casi no se veía junto al texto) */
 .srk input {
-  width:auto;
+  flex:none;
+  width:20px;
+  height:20px;
+  margin:0;
+  accent-color:var(--a2);
 }
 .srt p {
   margin:0 0 12px;

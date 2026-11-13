@@ -1,6 +1,6 @@
 /* ═══ core/util ═══
    Utilidades puras (no importa nada): versión, selector $, escape HTML X, redondeos, fechas (dayKey) y formatos.
-   Define: APPV, FFDEP, $, X, safeImage, round1, roundInt, fmtMinSec, dayKey, est1RM, fmtDuration, clampInt, typedNum, typedName, clampNum, fmtClock, fmtDateShort, newId
+   Define: APPV, FFDEP, $, X, safeImage, round1, roundInt, fmtMinSec, dayKey, est1RM, fmtDuration, clampInt, typedNum, typedName, clampNum, fmtClock, dateFormats, fmtDate, fmtDateShort, newId
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
@@ -43,8 +43,21 @@ export const fmtClock = s => {
   s = Math.max(0, Math.round(s));
   return s >= 3600 ? Math.floor(s / 3600) + ':' + String(Math.floor(s % 3600 / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0') : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 };
+/* los formatos de fecha ya creados, por sus opciones: crear uno (lo que hace toLocaleDateString en cada llamada) cuesta decenas
+   de veces más que usarlo, y Registros escribe dos fechas por entreno */
+const dateFormats = new Map();
+/** Una fecha (un Date válido) en español, con las opciones de Intl.DateTimeFormat: lo mismo que d.toLocaleDateString('es', o),
+    sin crear el formato cada vez. */
+export const fmtDate = (d, o) => {
+  const k = JSON.stringify(o);
+  let f = dateFormats.get(k);
+  if (!f)
+    dateFormats.set(k, f = new Intl.DateTimeFormat('es', o));
+  return f.format(d);
+};
+/** Un día dado por su clave (AAAA-MM-DD), en español: «12 nov» o con las opciones `o`. Si la clave no es una fecha, tal cual. */
 export const fmtDateShort = (d, o) => {
   const t = new Date(d + 'T12:00:00');
-  return isNaN(t) ? String(d || '') : t.toLocaleDateString('es', o || { day: 'numeric', month: 'short' });
+  return isNaN(t) ? String(d || '') : fmtDate(t, o || { day: 'numeric', month: 'short' });
 };
 export const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);

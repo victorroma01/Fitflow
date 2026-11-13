@@ -94,7 +94,8 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
   5 en los básicos de pierna; 5 o 10 lb), salvo que el esfuerzo medio fuera de 9,5 o más; si ninguna llegó al mínimo, baja un 8 %;
   si no, el mismo peso buscando una repetición más. **Cada serie parte del peso que tuvo la última vez**: si bajaste o subiste
   de una serie a otra, se respeta. **Aplicar** vuelve a poner lo sugerido si has escrito otra cosa.
-- Cada serie se anota con sus repeticiones y su peso, y se marca hecha con ✓. Se pueden añadir o quitar series. Al marcar la última
+- Cada serie se anota con sus repeticiones y su peso, y se marca hecha con ✓. Se pueden añadir o quitar series (al quitar una
+  ya hecha, el aviso trae [«Deshacer»](experiencia.md#avisos-y-deshacer)). Al marcar la última
   serie que faltaba, sale **¿Guardar el entreno?**, con **Guardar y salir** y **Cancelar** (como con el botón de avance de abajo).
 - **Esfuerzo (RPE)**: si lo activas en Ajustes → Ajustes avanzados, al marcar una serie salen debajo los números del 6 al 10 para
   anotar lo dura que ha sido. Viene desactivado; **+ Drop set** sale siempre bajo la serie recién hecha que lleve peso.

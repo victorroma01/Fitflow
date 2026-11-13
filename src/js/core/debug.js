@@ -13,7 +13,7 @@ import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, worko
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
-import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
+import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, overviewMode, S, saveState, setOverviewMode, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
@@ -123,6 +123,7 @@ const DEBUG_NAMES = {
   updatesOn: [() => updatesOn],
   W: [() => W, setW],
   weightView: [() => weightView, setWeightView],
+  overviewMode: [() => overviewMode, setOverviewMode],
   SCHEMA_TABLES: [() => SCHEMA_TABLES],
   stateFromStored: [() => stateFromStored],
   stateToStored: [() => stateToStored],

@@ -1,6 +1,7 @@
 """Medidas de rendimiento (T-26) con muchos datos: unos 700 entrenos, el historial de 150 ejercicios y tres años de comidas
 (más de 1 MB). Mide el arranque hasta el primer pintado, lo que tarda un guardado (mirándolo todo y diciendo solo el núcleo:
-I-10), lo que calcula la sincronización antes de hablar con Firebase y lo que tarda en pintarse cada pestaña. No es una prueba
+I-10), lo que calcula la sincronización antes de hablar con Firebase, lo que tarda en pintarse cada pestaña y lo que tarda en
+abrirse Registros (la página más larga: una fila por entreno). No es una prueba
 que pase o falle: sirve para comparar dos compilaciones en el mismo ordenador (docs/tecnica/rendimiento.md). Una compilación
 anterior a la V1.0.2, con las claves cortas en S (hist, wt…), recibe los mismos datos con sus nombres (core/schema).
 
@@ -40,6 +41,8 @@ S.logs=L;S.exerciseHistory=H;S.meals=M;saveState()})()"""
 FIRST_PAINT = "Object.defineProperty(window,'__ffok',{set(v){window.__tok=performance.now()},get(){return window.__tok?1:undefined},configurable:true})"
 # mediana de n veces lo que tarda js
 TIMED = "(async()=>{const r=[];for(let i=0;i<%d;i++){const t=performance.now();%s;r.push(performance.now()-t)}r.sort((a,b)=>a-b);return r[Math.floor(r.length/2)]})()"
+# lo mismo, con algo que hacer antes de cada vez sin contarlo (cerrar la página que se va a abrir)
+TIMED_AFTER = "(async()=>{const r=[];for(let i=0;i<%d;i++){%s;const t=performance.now();%s;r.push(performance.now()-t)}r.sort((a,b)=>a-b);return r[Math.floor(r.length/2)]})()"
 
 
 def measure(path):
@@ -73,6 +76,10 @@ def measure(path):
         out['ver qué hay que subir (ms)'] = round(pg.evaluate(TIMED % (15, 'pendingDocs()')), 1)
         for t, name in enumerate(['Workout', 'Nutrición', 'Dashboard', 'Perfil']):
             out['pintar %s (ms)' % name] = round(pg.evaluate(TIMED % (15, 'S.tab=%d;R()' % t)), 1)
+        # la página más larga de la app: Registros, con una fila por entreno (desde la V1.0.2, que es cuando se llama así)
+        if pg.evaluate("typeof A.openLogs=='function'"):
+            out['abrir Registros (ms)'] = round(pg.evaluate(TIMED_AFTER % (9, 'sheet()', 'A.openLogs()')), 1)
+            pg.evaluate('sheet()')
         b.close()
     return out
 

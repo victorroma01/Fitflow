@@ -437,6 +437,23 @@ test('weekKeys: los siete días de lunes a domingo, también con un día de 23 o
   }
 });
 
+test('mondayKey: el lunes de un día por su clave, igual que weekMonday, y \'\' si no es una fecha', () => {
+  assert.equal(C.mondayKey('2026-11-12'), '2026-11-09');
+  assert.equal(C.mondayKey('2027-01-01'), '2026-12-28');
+  assert.equal(C.mondayKey('2026-03-29'), '2026-03-23');
+  assert.equal(C.mondayKey('no es una fecha'), '');
+  assert.equal(C.mondayKey(''), '');
+  // todos los días de dos años, dos veces (la segunda sale de lo ya calculado): lo mismo que la cuenta directa
+  for (let pass = 0; pass < 2; pass++)
+    for (let d = new Date(2026, 0, 1, 12); d.getFullYear() < 2028; d.setDate(d.getDate() + 1))
+      assert.equal(C.mondayKey(U.dayKey(d)), U.dayKey(C.weekMonday(d)));
+  // con muchas fechas distintas (más de las que se recuerdan) sigue dando lo mismo
+  for (let i = 0; i < 12000; i++) {
+    const d = new Date(1990, 0, 1 + i, 12);
+    assert.equal(C.mondayKey(U.dayKey(d)), U.dayKey(C.weekMonday(d)));
+  }
+});
+
 test('countBetween: registros con la fecha dentro del periodo', () => {
   const logs = [{ d: '2026-11-05' }, { d: '2026-11-06' }, { d: '2026-11-12' }, { d: '2026-11-13' }, null, {}];
   assert.equal(C.countBetween(logs, '2026-11-06', '2026-11-12'), 2);
@@ -465,6 +482,20 @@ test('typedNum, clampNum y clampInt: lo que escribe el usuario', () => {
   assert.equal(U.clampNum(100, 0, 100, 7), 100);
   assert.equal(U.clampInt('3.6', 0, 4, 1), 4);
   assert.equal(U.clampInt('9', 0, 4, 1), 1);
+});
+
+test('fmtDate y fmtDateShort: lo mismo que toLocaleDateString, reutilizando el formato', () => {
+  const opts = [{ day: 'numeric', month: 'short' }, { month: 'long', year: 'numeric' }, { weekday: 'short', day: 'numeric', month: 'short' }, { day: 'numeric', month: 'long', year: 'numeric' }];
+  for (let d = new Date(2026, 0, 1, 12); d.getFullYear() < 2028; d.setDate(d.getDate() + 1))
+    for (const o of opts) {
+      assert.equal(U.fmtDate(d, o), d.toLocaleDateString('es', o));
+      assert.equal(U.fmtDateShort(U.dayKey(d), o), d.toLocaleDateString('es', o));
+    }
+  assert.equal(U.fmtDateShort('2026-11-12'), new Date(2026, 10, 12, 12).toLocaleDateString('es', { day: 'numeric', month: 'short' }));
+  // una clave que no es una fecha sale tal cual (quien la pinta la escapa)
+  assert.equal(U.fmtDateShort('<b>x</b>'), '<b>x</b>');
+  assert.equal(U.fmtDateShort(''), '');
+  assert.equal(U.fmtDateShort(undefined), '');
 });
 
 test('redondeos y formatos de tiempo', () => {

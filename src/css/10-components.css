@@ -208,9 +208,11 @@ label {
   color:var(--mu);
   margin:8px 0 3px;
 }
+/* los grupos de la librería, en tres columnas iguales que encogen con la pantalla (con 1fr a secas no bajaban del ancho de
+   su figura y, a 320 px, la tercera columna se salía por la derecha) */
 .gg {
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:8px;
   margin-top:8px;
 }
@@ -219,6 +221,7 @@ label {
   flex-direction:column;
   align-items:center;
   gap:4px;
+  min-width:0;
   padding:10px 4px;
   font-size:12px;
 }

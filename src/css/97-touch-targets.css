@@ -1,6 +1,7 @@
 /* ═══ css/97-touch-targets ═══ Zona táctil de al menos 44 × 44 px en el entreno en curso (el mínimo que recomienda Apple)
    Lo que se ve pequeño conserva su aspecto: un ::after invisible amplía la zona que responde al dedo hasta 44 px, centrada
-   (inset negativo solo si el control mide menos). tests/a11y.py comprueba que ningún vecino se la quite. */
+   (inset negativo solo si el control mide menos). tests/a11y.py comprueba que ningún vecino se la quite. Fuera del entreno
+   (abajo), lo mismo para lo más pequeño: ahí la prueba pide 24 px (WCAG 2.2 AA) y mide cuánto llega a 44. */
 .xs .chip,.xs .g2 button,.xs .fdb,.rr button,.rr small[data-a],.wsn,.wsr {
   position:relative;
 }
@@ -29,4 +30,25 @@
 /* un select no admite ::after: el de descanso crece de verdad, igual de alto que el de tempo */
 .xs select {
   min-height:44px;
+}
+/* — fuera del entreno — */
+/* un botón pequeño (flechas de semana, día y mes, − y + series, la ✕ de un alimento), los chips y la píldora del nivel
+   responden alrededor hasta 44 px, sin cambiar de aspecto */
+.tz,.chip,.lvp {
+  position:relative;
+}
+.tz::after,.chip::after,.lvp::after {
+  content:"";
+  position:absolute;
+  inset:min(0px,calc(50% - 22px));
+}
+/* el título de un desplegable y una casilla con su texto (unos 20 px de alto) responden en 44, por arriba y por abajo, con
+   una zona invisible que no ocupa sitio: nada se mueve */
+summary,.srk {
+  position:relative;
+}
+summary::before,.srk::after {
+  content:"";
+  position:absolute;
+  inset:-12px 0;
 }

@@ -29,6 +29,7 @@ run python3 tests/smoke.py dist/app/index.html
 run python3 tests/photos.py dist/stratafit.html
 run python3 tests/security.py dist/stratafit.html
 run python3 tests/a11y.py dist/stratafit.html
+run python3 tests/layout.py dist/stratafit.html
 # el contraste se mide en Chromium: los colores son los mismos en cualquier navegador
 if [ "${SF_BROWSER:-chromium}" = chromium ]; then run python3 tests/contrast.py dist/stratafit.html; fi
 run python3 tests/features.py dist/stratafit.html
@@ -38,6 +39,7 @@ run python3 tests/session.py dist/stratafit.html
 run python3 tests/training.py dist/stratafit.html
 run python3 tests/followup.py dist/stratafit.html
 run python3 tests/experience.py dist/stratafit.html
+run python3 tests/ux.py dist/stratafit.html
 run python3 tests/safety.py dist/stratafit.html
 run python3 tests/storage.py dist/stratafit.html
 run python3 tests/calc.py dist/stratafit.html

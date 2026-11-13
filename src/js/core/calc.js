@@ -5,7 +5,7 @@
    (Mifflin-St Jeor). Entreno: en qué se mide un ejercicio, el volumen y la duración de una sesión, qué serie cuenta para las
    marcas (1RM estimado), la mejor marca y la progresión (qué peso toca la próxima vez, también en la semana de descarga).
    Calendario: el lunes de una semana y los días de un periodo. Solo importa core/util (fechas y 1RM), que tampoco tiene estado.
-   Define: itemMacros, sumMacros, mealItems, dayItems, dayTotals, macroTargets, BIO_RANGES, ACTIVITY_FACTORS, energyNeeds, dietPlan, LOGGED_KCAL, GOAL_MARGIN, nutritionPeriod, unitFromName, measuredInReps, elapsedMs, sessionVolume, MAX_1RM_REPS, liftScore, bestSet, bestLift, LB_PER_KG, kgToLb, lbToKg, stepUpWeight, stepDownWeight, loadable, deloadWeight, dropSetWeight, progressionRule, nextWeight, kmTotal, weekMonday, weekKeys, countBetween
+   Define: itemMacros, sumMacros, mealItems, dayItems, dayTotals, macroTargets, BIO_RANGES, ACTIVITY_FACTORS, energyNeeds, dietPlan, LOGGED_KCAL, GOAL_MARGIN, nutritionPeriod, unitFromName, measuredInReps, elapsedMs, sessionVolume, MAX_1RM_REPS, liftScore, bestSet, bestLift, LB_PER_KG, kgToLb, lbToKg, stepUpWeight, stepDownWeight, loadable, deloadWeight, dropSetWeight, progressionRule, nextWeight, kmTotal, weekMonday, mondays, mondayKey, weekKeys, countBetween
 */
 import { dayKey, est1RM } from './util.js';
 /* ── nutrición ─────────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -216,6 +216,20 @@ export const weekMonday = d => {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
   return x;
+};
+/* el lunes de cada día ya pedido: no cambia nunca, y el Dashboard lo pide para cada entreno guardado cada vez que se pinta */
+const mondays = new Map();
+/** La clave (AAAA-MM-DD) del lunes de la semana de un día dado por su clave; '' si la clave no es una fecha. */
+export const mondayKey = d => {
+  let k = mondays.get(d);
+  if (k === undefined) {
+    const t = new Date(d + 'T12:00:00');
+    k = isNaN(t) ? '' : dayKey(weekMonday(t));
+    if (mondays.size >= 5000)
+      mondays.clear();
+    mondays.set(d, k);
+  }
+  return k;
 };
 /** Las claves (AAAA-MM-DD) de los siete días, de lunes a domingo, de la semana de `d`. Por calendario: el día del cambio de
     hora tiene 23 o 25 h. */

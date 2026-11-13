@@ -10,7 +10,7 @@ import { sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { checkAchievements } from './achievements.js';
 import { html, raw } from '../core/html.js';
-import { kmTotal, weekMonday } from '../core/calc.js';
+import { kmTotal, mondayKey, weekMonday } from '../core/calc.js';
 const CARDIO_TYPES = [['run', 'Carrera'], ['walk', 'Caminata'], ['bike', 'Bici'], ['row', 'Remo'], ['swim', 'Natación'], ['ell', 'Elíptica'], ['oth', 'Otro']];
 let cardioState = { t: 'run' };
 export const cardioLabel = t => (CARDIO_TYPES.find(x => x[0] == t) || CARDIO_TYPES[6])[1];
@@ -98,7 +98,7 @@ export function cardioCard() {
     const wk = k => dayKey(new Date(m0.getFullYear(), m0.getMonth(), m0.getDate() - 7 * k));
     const W4 = [3, 2, 1, 0].map(k => {
       const key = wk(k);
-      const a = L.filter(l => dayKey(weekMonday(new Date(l.d + 'T12:00:00'))) == key);
+      const a = L.filter(l => mondayKey(l.d) == key);
       return { k, n: a.length, km: kmTotal(a.map(l => l.c.km)), sec: a.reduce((s, l) => s + (+l.c.sec || 0), 0) };
     });
     const cur = W4[3];

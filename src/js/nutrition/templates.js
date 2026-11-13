@@ -71,10 +71,16 @@ A.templateSave = () => {
     return;
   }
   S.mealTemplates = S.mealTemplates || {};
+  /* si ya había una plantilla de este tipo de día, la nueva la sustituye: se puede deshacer */
+  const before = S.mealTemplates[t];
   S.mealTemplates[t] = o;
   saveState();
   R();
-  toast('Plantilla de ' + (t == 't' ? 'entreno' : 'descanso') + ' guardada');
+  toast('Plantilla de ' + (t == 't' ? 'entreno' : 'descanso') + ' guardada', before && (() => {
+    S.mealTemplates[t] = before;
+    saveState();
+    R();
+  }));
 };
 A.templateApply = () => {
   const k = nutriDayKey();
@@ -155,8 +161,17 @@ A.saveDish = () => {
   }
   sheet();
 };
+/* borrar un plato guardado no pregunta: se puede deshacer */
 A.libraryDishDelete = i => {
-  S.savedDishes.splice(i, 1);
+  if (!S.savedDishes[i])
+    return;
+  const [dish] = S.savedDishes.splice(i, 1);
   saveState();
   sheet(addSheet());
+  toast('Plato «' + dish.n + '» borrado', () => {
+    S.savedDishes.splice(i, 0, dish);
+    saveState();
+    if ($('#sh .sp'))
+      sheet(addSheet());
+  });
 };

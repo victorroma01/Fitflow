@@ -3,10 +3,12 @@ módulo) no cambia nada de lo que se pinta. Más rápido y preciso que comparar 
 
 Abre en las dos las pantallas de tests/shots.py con los mismos datos y la misma fecha, y compara el HTML de la página (sin el
 código ni los estilos, y con los estilos puestos por core/dynstyle). No es una prueba de la batería: se usa a mano.
+Lo que depende del momento y no del código no se compara: los tiempos y el espacio medidos de Diagnóstico y la clase que
+anima la burbuja de la barra de pestañas (se pone en el siguiente fotograma). Así, dos compilaciones iguales dan 0 distintas.
 
   python3 tests/samehtml.py antes.html despues.html [pantalla,pantalla…]
 """
-import os, sys
+import os, re, sys
 from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +16,9 @@ sys.path.insert(0, HERE)
 from shots import SCR, SEED, EXTRA, INIT  # noqa: E402
 from browser import app_url, context_opts  # noqa: E402
 
-BODY = "(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('script,style').forEach(e=>e.remove());return c.innerHTML})()"
+BODY = "(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('script,style').forEach(e=>e.remove());c.querySelectorAll('nav').forEach(n=>n.classList.remove('nbon'));return c.innerHTML})()"
+# las líneas de Diagnóstico con medidas del momento
+NOISE = re.compile(r'(Tiempo de pintado|Espacio usado): [^\n<]*')
 
 
 def grab(path, screens):
@@ -38,7 +42,7 @@ def grab(path, screens):
             try:
                 pg.evaluate(SCR[k])
                 pg.wait_for_timeout(900 if k in ('edit', 'overview', 'go_open') else 300)
-                out[k] = pg.evaluate(BODY)
+                out[k] = NOISE.sub(r'\1: …', pg.evaluate(BODY))
             except Exception as e:
                 out[k] = 'EXC ' + str(e)[:200]
         out['(errores de JS)'] = str(errs)

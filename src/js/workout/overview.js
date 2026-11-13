@@ -28,7 +28,7 @@ const DELOAD_NOTE = '<div class="cd m-12-0-0"><b>Semana de descarga</b><div clas
 /* los botones de un ejercicio al editar: una serie menos o más, descanso, rango, enlazar con el anterior, cambiar y quitar */
 const overviewEditButtons = (d, e, i) => {
   const link = i ? html`<button data-a="overviewLink" data-i="${i}">${e.b != null && d.ex[i - 1].b == e.b ? 'Separar' : 'Enlazar'}</button>` : '';
-  return html`<div class="d-flex gap-6 wrap mt-6"><button data-a="planSetMinus" data-i="${i}" aria-label="${'Una serie menos, ' + e.n}">−</button><button data-a="planSetPlus" data-i="${i}" aria-label="${'Una serie más, ' + e.n}">+</button>${restSelect(e)}${rangeSelect(e, i)}${link}<button data-a="openSwap" data-i="${i}">Cambiar</button><button data-a="removePlanExercise" data-i="${i}">Quitar</button></div>`;
+  return html`<div class="d-flex gap-6 wrap mt-6"><button data-a="planSetMinus" data-i="${i}" aria-label="${'Una serie menos, ' + e.n}" class="tz">−</button><button data-a="planSetPlus" data-i="${i}" aria-label="${'Una serie más, ' + e.n}" class="tz">+</button>${restSelect(e)}${rangeSelect(e, i)}${link}<button data-a="openSwap" data-i="${i}">Cambiar</button><button data-a="removePlanExercise" data-i="${i}">Quitar</button></div>`;
 };
 /* un ejercicio: su anatomía, su nombre y cómo se hace (series, objetivo, descanso y, si tiene, tempo y RIR) */
 const overviewExercise = (d, i, editing) => {

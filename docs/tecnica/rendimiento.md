@@ -1,6 +1,7 @@
 # Rendimiento
 
-Cómo se mide el rendimiento de StrataFit y lo medido en la V1.0.2 (T-26, dentro de I-17), frente a la V1.0.1.
+Cómo se mide el rendimiento de StrataFit y lo medido en la V1.0.2 (T-26, dentro de I-17), frente a la V1.0.1, y en la V1.0.3,
+frente a la V1.0.2.
 
 ## Cómo se mide
 
@@ -12,6 +13,7 @@ Cómo se mide el rendimiento de StrataFit y lo medido en la V1.0.2 (T-26, dentro
   pantalla; mirándolo todo y, desde la V1.0.2, diciendo que solo cambió el núcleo (`saveState('core')`, I-10).
 - **Ver qué hay que subir**: lo que calcula la sincronización antes de hablar con Firebase (las huellas de cada elemento).
 - **Pintar cada pestaña**: lo que tarda `R()` en volver a pintar la pestaña (con `core/morph`, cambiando solo lo distinto).
+- **Abrir Registros** (desde la V1.0.3): la página más larga de la app, con una fila por entreno (700).
 
 No es una prueba que pase o falle: los números dependen del ordenador, así que solo valen para comparar dos compilaciones medidas
 seguidas en el mismo. Por eso las mide por turnos (A, B, A, B…) y da la mediana de las vueltas (`PERF_ROUNDS`, 3 si no se dice).
@@ -38,6 +40,39 @@ En resumen: lo que más se repite al usar la app (anotar agua o una comida, camb
 aunque haya años de datos, y escribir en IndexedDB ya no frena la pantalla; pintar sigue igual de rápido. A cambio, abrir la app
 tarda unos 12 ms más (en un iPhone, del orden de 50 ms) porque las partes se leen de IndexedDB, que no tiene el límite de unos
 5 MB de localStorage. Durante un entreno, marcar series guarda solo el entreno en curso (`workout/resume`), como antes.
+
+## Medido en la V1.0.3
+
+Medido el 13 de noviembre de 2026 en el mismo ordenador y con los mismos datos: mediana de 5 vueltas, alternando la V1.0.2 y la
+V1.0.3. La auditoría de la V1.0.3 ([informe](auditoria-1.0.3.md)) añadió cálculos (una sola regla para las marcas, la semana de
+Nutrición, la validación de los datos al arrancar), así que se midió para ver que nada fuera más lento, y con el perfil de CPU
+de Chromium se buscó en qué se iba el tiempo.
+
+| Medida | V1.0.2 | V1.0.3 | Diferencia |
+| --- | ---: | ---: | --- |
+| Primer pintado | 111 ms | 112 ms | Igual (en 20 aperturas alternas: 106 y 106 ms), con más datos validados al arrancar |
+| Guardar, mirándolo todo | 7,0 ms | 6,6 ms | Igual |
+| Guardar, diciendo qué cambió | 0,5 ms | 0,5 ms | Igual |
+| Ver qué hay que subir | 3,1 ms | 3,1 ms | Igual |
+| Pintar Workout | 1,0 ms | 1,0 ms | Igual |
+| Pintar Nutrición | 0,7 ms | 1,0 ms | +0,3 ms: la semana (siete barras y las medias) |
+| Pintar Dashboard | 6,1 ms | 4,3 ms | Un 30 % menos |
+| Pintar Perfil | 1,0 ms | 1,1 ms | Igual |
+| Abrir Registros (700 entrenos) | 115 ms | 35 ms | Más de 3 veces menos |
+
+Lo que se encontró con el perfil y se corrigió:
+
+- **Registros** tardaba 115 ms en abrirse con 700 entrenos (en un iPhone, del orden de medio segundo): casi dos tercios se iban
+  en escribir las fechas, porque `toLocaleDateString` crea un formato de fecha nuevo en cada llamada, y hay dos por entreno.
+  Ahora cada formato se crea una vez y se reutiliza (`fmtDate`, en `core/util`).
+- **Dashboard**: en cada pintado se calculaba el lunes de la semana de cada entreno guardado (para la racha), creando dos fechas
+  y un texto por entreno. El lunes de un día no cambia nunca: ahora se recuerda (`mondayKey`, en `core/calc`). Las fechas de la
+  línea de récords y de la gráfica usan también el formato reutilizado.
+
+El resultado que se pinta es el mismo carácter a carácter: `tests/samehtml.py` compara el HTML de las 47 pantallas antes y después,
+y `tests/calc.test.mjs` compara `fmtDate` con `toLocaleDateString` y `mondayKey` con la cuenta directa en todos los días de dos años.
+
+Además, al arrancar con datos nada da un salto en la pantalla (layout shift 0, que comprueba `tests/layout.py`).
 
 ## Qué se hizo
 

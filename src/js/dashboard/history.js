@@ -1,8 +1,8 @@
 /* ═══ dashboard/history ═══
    Registro de entrenos y calendario.
-   Define: calendarPage, logsPage, logSeries, dropSeries, logIndex, logText, logRight  · acciones/registros: 5
+   Define: MONTH_YEAR, WEEKDAY_DAY, calendarPage, logsPage, logSeries, dropSeries, logIndex, logText, logRight  · acciones/registros: 5
 */
-import { $, dayKey, round1, roundInt, X } from '../core/util.js';
+import { $, dayKey, fmtDate, fmtDateShort, round1, roundInt, X } from '../core/util.js';
 import { A } from '../core/registry.js';
 import { calMonthOffset, S, saveState, setCalMonthOffset } from '../core/state.js';
 import { confirmDialog, fullPage, pgHead, sheet } from '../core/ui.js';
@@ -10,6 +10,9 @@ import { R } from '../core/render.js';
 import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
 import { bestLift } from '../core/calc.js';
+/* «noviembre de 2026» y «jue, 12 nov» */
+const MONTH_YEAR = { month: 'long', year: 'numeric' };
+const WEEKDAY_DAY = { weekday: 'short', day: 'numeric', month: 'short' };
 export function calendarPage() {
   const b = new Date();
   const d = new Date(b.getFullYear(), b.getMonth() + calMonthOffset, 1);
@@ -21,7 +24,7 @@ export function calendarPage() {
     c += '<i></i>';
   for (let i = 1; i <= n; i++)
     c += html`<i class="${ds.has(dayKey(new Date(d.getFullYear(), d.getMonth(), i))) ? 'on' : ''}">${i}</i>`;
-  return html`<div class="row"><button data-a="calendarMonth" data-i="-1" aria-label="Mes anterior">‹</button><b>${raw(d.toLocaleDateString('es', { month: 'long', year: 'numeric' }))}</b><button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente">›</button></div><div class="cal mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
+  return html`<div class="row"><button data-a="calendarMonth" data-i="-1" aria-label="Mes anterior" class="tz">‹</button><b>${fmtDate(d, MONTH_YEAR)}</b><button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente" class="tz">›</button></div><div class="cal mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
 const logsPage = () => {
   const L = S.logs.map((l, i) => ({ l, i })).reverse();
@@ -32,13 +35,12 @@ const logsPage = () => {
   if (!L.length)
     return html`${raw(h)}<p class="mu mt-18">Aún no hay entrenos guardados. Se registran al pulsar Log out.</p>`;
   L.forEach(o => {
-    const d = new Date(o.l.d + 'T00:00:00');
-    const m = d.toLocaleDateString('es', { month: 'long', year: 'numeric' });
+    const m = fmtDateShort(o.l.d, MONTH_YEAR);
     if (m != last) {
       last = m;
       h += html`<div class="ph">${m}</div>`;
     }
-    h += html`<div class="it exr cur-pointer" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0"><span><b>${o.l.n}</b><br><small>${raw(d.toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' }))}${raw(logText(o.l))}</small></span><b>${raw(logRight(o.l))}</b></div>`;
+    h += html`<div class="it exr cur-pointer" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0"><span><b>${o.l.n}</b><br><small>${fmtDateShort(o.l.d, WEEKDAY_DAY)}${raw(logText(o.l))}</small></span><b>${raw(logRight(o.l))}</b></div>`;
   });
   return html`${raw(h)}<p class="mu fs-12 mt-14">Toca un registro para borrarlo.</p>`;
 };

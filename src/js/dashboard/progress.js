@@ -1,8 +1,8 @@
 /* ═══ dashboard/progress ═══
    Gráficas de progreso por ejercicio.
-   Define: progressState, dateShort, progressExercises, progressSeries, progressFmt, axisLabel, progressChart, progressBody, refreshProgress, progressCard, recordEvents, recordsTimeline  · acciones/registros: 3
+   Define: progressState, progressExercises, progressSeries, progressFmt, axisLabel, progressChart, progressBody, refreshProgress, progressCard, recordEvents, recordsTimeline  · acciones/registros: 3
 */
-import { $, round1, roundInt } from '../core/util.js';
+import { $, fmtDateShort, round1, roundInt } from '../core/util.js';
 import { bestSet, liftScore, measuredInReps } from '../core/calc.js';
 import { A, C } from '../core/registry.js';
 import { S } from '../core/state.js';
@@ -10,7 +10,6 @@ import { segmented } from '../core/ui.js';
 import { toDisplayWeight, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
 let progressState = { n: '', m: 'e', p: -1 };
-const dateShort = d => new Date(d + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short' });
 const progressExercises = () => Object.keys(S.exerciseHistory || {}).filter(n => {
   const h = S.exerciseHistory[n];
   return Array.isArray(h) && h.some(x => x.s.some(y => +y[1] > 0));
@@ -74,9 +73,9 @@ const progressChart = (pts, m, sel, inter) => {
     const y = yy(v);
     s += html`<line x1="${pl}" x2="${W0 - pr}" y1="${y}" y2="${y}" stroke="var(--ln)" stroke-width="1"/><text x="${pl - 6}" y="${y + 3.5}" text-anchor="end" class="pga">${raw(axisLabel(v))}</text>`;
   });
-  s += html`<text x="${pl}" y="${H0 - 6}" class="pga">${raw(dateShort(pts[0].d))}</text>`;
+  s += html`<text x="${pl}" y="${H0 - 6}" class="pga">${fmtDateShort(pts[0].d)}</text>`;
   if (pts.length > 1)
-    s += html`<text x="${W0 - pr}" y="${H0 - 6}" text-anchor="end" class="pga">${raw(dateShort(pts[pts.length - 1].d))}</text>`;
+    s += html`<text x="${W0 - pr}" y="${H0 - 6}" text-anchor="end" class="pga">${fmtDateShort(pts[pts.length - 1].d)}</text>`;
   if (pts.length > 1)
     s += html`<path d="${pts.map((p, i) => (i ? 'L' : 'M') + xx(i).toFixed(1) + ' ' + yy(toDisplayWeight(p.v)).toFixed(1)).join(' ')}" fill="none" stroke="var(--a2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   pts.forEach((p, i) => {
@@ -111,7 +110,7 @@ export const progressBody = (stat) => {
     return html`${raw(h)}<p class="mu m-10-0-0">Este ejercicio no tiene pesos registrados.</p>`;
   const sel = stat ? pts.length - 1 : (progressState.p >= 0 && progressState.p < pts.length ? progressState.p : pts.length - 1);
   const p = pts[sel];
-  h += html`<div class="pgt2"><span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="pgr">RÉCORD</em>' : '')}</span><small>${raw(ML[m])} · ${raw(dateShort(p.d))}</small></div>${progressChart(pts, m, sel, !stat)}`;
+  h += html`<div class="pgt2"><span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="pgr">RÉCORD</em>' : '')}</span><small>${raw(ML[m])} · ${fmtDateShort(p.d)}</small></div>${progressChart(pts, m, sel, !stat)}`;
   if (pts.length > 1) {
     const a = pts[0].v;
     const z = pts[pts.length - 1].v;
@@ -165,5 +164,5 @@ export const recordsTimeline = () => {
   const ev = recordEvents().slice(0, 8);
   if (!ev.length)
     return '';
-  return html`<div class="cd"><b>Línea de récords</b>${ev.map(o => html`<div class="it cols-1fr-auto"><span>${o.n}<br><small>${raw(dateShort(o.d))}</small></span><span class="ta-r"><b>${toDisplayWeight(o.w)} ${weightUnit()} × ${raw(o.r)}</b><br><small>1RM est. ${Math.round(toDisplayWeight(o.e) * 10) / 10} (+${Math.round(toDisplayWeight(o.up) * 10) / 10})</small></span></div>`)}</div>`;
+  return html`<div class="cd"><b>Línea de récords</b>${ev.map(o => html`<div class="it cols-1fr-auto"><span>${o.n}<br><small>${fmtDateShort(o.d)}</small></span><span class="ta-r"><b>${toDisplayWeight(o.w)} ${weightUnit()} × ${raw(o.r)}</b><br><small>1RM est. ${Math.round(toDisplayWeight(o.e) * 10) / 10} (+${Math.round(toDisplayWeight(o.up) * 10) / 10})</small></span></div>`)}</div>`;
 };

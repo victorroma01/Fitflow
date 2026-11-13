@@ -5,6 +5,8 @@
   · en el entreno en curso, a 390 y a 320 px de ancho, todo lo que se toca responde en al menos 44 × 44 px (el mínimo
     de Apple): se mide tocando de verdad (elementFromPoint) desde el centro hacia cada lado, así que cuenta la zona
     táctil ampliada aunque el botón se vea más pequeño, y falla si otro control se la quita,
+  · en el resto de pantallas, todo lo que se toca responde en al menos 24 × 24 px (el mínimo de WCAG 2.2 AA), medido igual,
+    en la ventana que esté encima (la hoja, el aviso, el menú o la pestaña); y se cuenta cuánto llega a 44 px,
   · cada hoja, página, aviso o menú abierto se anuncia como ventana (role="dialog" y aria-modal) con un nombre (I-06),
 y, aparte, que el foco va a cada hoja, página, aviso y menú al abrirlos y vuelve a lo que los abrió al cerrarlos, también
 cuando tocar un botón no le da el foco (como en Safari).
@@ -30,16 +32,19 @@ def rd(n):
 WORKOUT = ('go', 'go_rest', 'go_open')
 VIEWS = [(390, 844, list(SCR)), (320, 568, list(WORKOUT))]
 MIN = 44
+# fuera del entreno, lo mínimo que tiene que responder cualquier control (WCAG 2.2 AA, 2.5.8)
+FLOOR = 24
 # los fondos que cierran una hoja o el menú al tocar fuera no son controles: la hoja tiene su propio botón de cerrar
 BACKDROPS = '.bk, .mbk, .lvb'
-SCAN = """(min => {
-  const vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility != 'hidden' && s.display != 'none'; };
+SCAN = """((min, floor) => {
+  // (lo de dentro de un desplegable cerrado tiene tamaño pero no se pinta ni se toca: checkVisibility lo sabe)
+  const vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility != 'hidden' && s.display != 'none' && (!e.checkVisibility || e.checkVisibility()); };
   const txt = s => (s || '').replace(/\\s+/g, ' ').trim();
   const label = e => txt(e.getAttribute('aria-label')) || txt(e.getAttribute('title')) ||
     (e.getAttribute('aria-labelledby') || '').split(' ').map(i => txt((document.getElementById(i) || {}).textContent)).join(' ').trim();
   const named = s => /[\\p{L}\\p{N}]/u.test(s);
   const desc = e => e.outerHTML.replace(/\\s+/g, ' ').slice(0, 120);
-  const out = { botones: [], campos: [], clicables: [], pequeños: [], ventanas: [] };
+  const out = { botones: [], campos: [], clicables: [], pequeños: [], ventanas: [], diminutos: [], medidos: 0, de44: 0 };
   // hojas, páginas, avisos y menú: ventanas para los lectores de pantalla, con nombre (I-06)
   for (const w of document.querySelectorAll('#sh > .sp:not(.spu), #dg .dgc, #mn .msd, #f2w'))
     if (w.getAttribute('role') != 'dialog' || w.getAttribute('aria-modal') != 'true' || !named(label(w))) out.ventanas.push(desc(w));
@@ -70,6 +75,30 @@ SCAN = """(min => {
         out.pequeños.push(Math.round(r.width) + '×' + Math.round(r.height) + ' (toca en ' + w + '×' + h + ') ' + desc(e));
     }
     scrollTo({ top: 0, behavior: 'instant' });
+  }
+  if (floor) {
+    // en la ventana de encima, cada control (una casilla o un campo dentro de su <label> cuentan con él: tocar la etiqueta
+    // los activa): cuánto responde alrededor de su centro
+    const top = document.querySelector('#dg .dgc') || document.querySelector('#mn .msd') || document.querySelector('#f2w') || document.querySelector('#sh > .sp:not(.spu)') || document.querySelector('#app');
+    const seen = new Set();
+    for (let e of top.querySelectorAll('button, input:not([type=hidden]):not([type=file]), select, textarea, [role=button], [data-a], summary, a[href]')) {
+      if (!vis(e) || e.disabled || e.matches('""" + BACKDROPS + """') || e.parentElement.closest('button, [role=button], [role=img], a[href]')) continue;
+      const lab = e.matches('input, select') && e.closest('label');
+      if (lab) e = lab;
+      if (seen.has(e)) continue;
+      seen.add(e);
+      e.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+      const r = e.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const at = document.elementFromPoint(cx, cy);
+      // tapado ahora mismo por una barra fija (se alcanza desplazando): no se mide
+      if (!at || !(at == e || e.contains(at))) continue;
+      const reach = (dx, dy, lim) => { let k = 0; while (k < lim) { const h = document.elementFromPoint(cx + (k + 1) * dx, cy + (k + 1) * dy); if (!h || !(h == e || e.contains(h))) break; k++; } return k; };
+      const w = reach(-1, 0, r.width / 2 + 44) + reach(1, 0, r.width / 2 + 44) + 1, h = reach(0, -1, r.height / 2 + 44) + reach(0, 1, r.height / 2 + 44) + 1;
+      out.medidos++;
+      if (w >= 43 && h >= 43) out.de44++;
+      if (w < floor - 1 || h < floor - 1) out.diminutos.push(Math.round(r.width) + '×' + Math.round(r.height) + ' (toca en ' + w + '×' + h + ') ' + desc(e));
+    }
+    (top.id == 'app' ? window : top).scrollTo({ top: 0, behavior: 'instant' });
   }
   return out;
 })"""
@@ -165,6 +194,7 @@ def main(path, show):
     total = {}
     with sync_playwright() as p:
         b = launch(p)
+        measured = [0, 0]
         for w, h, screens in VIEWS:
             c = b.new_context(viewport={'width': w, 'height': h}, has_touch=True, is_mobile=True, color_scheme='dark', **context_opts(path))
             c.add_init_script(rd('init.js'))
@@ -187,7 +217,9 @@ def main(path, show):
                     pg.clock.run_for(800)
                     pg.evaluate(SCR[k])
                     pg.clock.run_for(400)
-                    r = pg.evaluate(SCAN + '(%d)' % (MIN if k in WORKOUT else 0))
+                    r = pg.evaluate(SCAN + '(%d, %d)' % (MIN if k in WORKOUT else 0, FLOOR))
+                    measured[0] += r.pop('medidos')
+                    measured[1] += r.pop('de44')
                     r['bloqueos de la CSP'] = pg.evaluate('window.__csp||[]')
                 except Exception as e:
                     print('  FALLA', k, 'no se pudo abrir:', str(e)[:100])
@@ -209,6 +241,8 @@ def main(path, show):
             c.close()
         fails += focus_checks(b, path)
         b.close()
+    print('\n  zonas táctiles: %d controles medidos · %d de menos de %d px (WCAG 2.2 AA) · %d (el %d %%) responden en 44 × 44 px o más'
+          % (measured[0], total.get('diminutos', 0), FLOOR, measured[1], round(measured[1] * 100 / max(1, measured[0]))))
     print('\n  botones sin nombre: %d · campos sin etiqueta: %d · clicables sin rol de botón: %d · zonas táctiles de menos de %d px en el entreno: %d · ventanas sin anunciar: %d'
           % (total.get('botones', 0), total.get('campos', 0), total.get('clicables', 0), MIN, total.get('pequeños', 0), total.get('ventanas', 0)))
     print('\n%s' % ('TODO CORRECTO' if not fails else 'FALLAN %d pantallas' % fails))

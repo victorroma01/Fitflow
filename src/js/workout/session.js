@@ -376,9 +376,20 @@ A.addSet = i => {
   a.push(k ? { r: m.r, w: m.w, ws: 1, ok: 0, k } : { r: m.r, w: m.w, ws: 1, ok: 0 });
   R();
 };
+/* «− Serie» quita la última; si ya estaba hecha, se puede deshacer */
 A.removeSet = i => {
-  W.sets[i].length > 1 && W.sets[i].pop();
+  const a = W.sets[i];
+  if (a.length < 2)
+    return;
+  const s = a.pop();
   R();
+  if (s.ok)
+    toast('Serie hecha quitada', () => {
+      if (W && W.sets[i] === a) {
+        a.push(s);
+        R();
+      }
+    });
 };
 A.adjustRest = i => {
   W.restEndsAt = i ? W.restEndsAt + i * 1e3 : 0;

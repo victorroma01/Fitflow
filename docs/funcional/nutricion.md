@@ -59,6 +59,9 @@ de barras; la imagen de la cámara no sale del móvil.
 Si reduces las comidas al día, lo anotado en las que ya no están se sigue viendo (como «Comida 4», «Comida 5»…) y cuenta en el
 total del día.
 
+La **✕** de un alimento lo quita de la comida sin preguntar; durante unos segundos, el aviso trae
+[«Deshacer»](experiencia.md#avisos-y-deshacer). Lo mismo al borrar un plato guardado de la Librería.
+
 ## La semana
 
 Al final de la página, **Esta semana** (o la semana del día que estés viendo):
@@ -74,3 +77,4 @@ Son las mismas reglas que usa el [análisis mensual](perfil-y-ajustes.md).
 
 Hay una plantilla para los días de entreno y otra para los de descanso. **Guardar día como plantilla** guarda las comidas del día;
 **Aplicar plantilla** rellena las comidas vacías de otro día del mismo tipo. Un **?** junto a cada botón explica qué hace.
+Guardar una plantilla sustituye a la que hubiera de ese tipo de día: el aviso trae «Deshacer» para recuperarla.

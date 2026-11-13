@@ -166,7 +166,8 @@ export const sheet = h => {
   }
 };
 export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'pr']]);
-document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt"></div>');
+/* (#tt, los avisos breves: una región que los lectores de pantalla leen al cambiar, sin quitar el foco de donde está) */
+document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt" role="status" aria-live="polite"></div>');
 export function dialog(t, p, b) {
   /* para los lectores de pantalla, una ventana que tapa la app (aria-modal) con su título */
   $('#dg').innerHTML = html`<div class="dgb"><div class="dgc" role="dialog" aria-modal="true" aria-labelledby="dgt"><h3 id="dgt" class="m-0-0-6">${raw(t)}</h3><p class="mu m-0-0-16 fs-14">${raw(p)}</p><div class="g2 ${['cols-1', 'cols-2', 'cols-3', 'cols-4'][b.length - 1] || ''}">${b.map(x => html`<button class="${x[2]}" data-a="dialogAnswer" data-v="${x[1]}">${raw(x[0])}</button>`)}</div></div></div>`;
