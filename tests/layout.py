@@ -50,22 +50,19 @@ SCAN = """(() => {
         if (s.content != 'none' && s.position == 'absolute' && !isNaN(rt) && r.right - rt > W + 1) who.push(desc(e) + ps + ' hasta ' + Math.round(r.right - rt));
       }
     }
-    // si no se ve a simple vista: se va ocultando cada hijo, de fuera adentro, hasta dar con el que la ensancha
+    // si no se ve a simple vista (algo que no tiene caja propia: el texto elegido de un select, que en WebKit cuenta como
+    // contenido que se sale): de fuera adentro, el hijo que más la estrecha. Primero recortando su contenido, que no mueve a
+    // los vecinos: lo que sobra está dentro de él. Si ninguno, ocultándolo: es él mismo (o, sin él, el resto cabe)
     if (!who.length) {
-      const wide = () => document.documentElement.scrollWidth > W + 1;
+      const width = () => document.documentElement.scrollWidth;
       const about = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return desc(e) + ' [' + Math.round(r.left) + ', ' + Math.round(r.right) + '] ' + s.position + ' ' + s.overflowX + (s.transform != 'none' ? ' ' + s.transform.slice(0, 30) : '') + (s.animationName != 'none' ? ' anim ' + s.animationName : '') + ' ancho ' + e.scrollWidth + '/' + e.clientWidth; };
+      const best = (node, prop, val) => { let pick = null, min = width(); for (const c of node.children) { const old = c.style[prop]; c.style[prop] = val; const w = width(); c.style[prop] = old; if (w < min) { min = w; pick = c; } } return pick; };
       let node = document.body;
       for (let depth = 0; depth < 14; depth++) {
-        let found = null;
-        for (const c of node.children) {
-          const old = c.style.display;
-          c.style.display = 'none';
-          const still = wide();
-          c.style.display = old;
-          if (!still) { found = c; break; }
-        }
+        const inside = best(node, 'overflow', 'hidden');
+        const found = inside || best(node, 'display', 'none');
         if (!found) break;
-        who.push(about(found));
+        who.push(about(found) + (inside ? '' : ' (al quitarlo)'));
         node = found;
       }
       who.splice(0, Math.max(0, who.length - 3));

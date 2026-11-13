@@ -1,10 +1,15 @@
 /* StrataFit · arranque instantáneo: abre al momento la última copia guardada y busca actualizaciones en segundo plano.
    build.py completa la lista de precarga con el código (js/…, nombres que cambian con cada versión) y las fotos (img/…).
    Un documento solo entra en la caché con todo su código ya guardado, también al instalarse (I-08): así la app abre igual sin
-   conexión. El código sale siempre de la caché, sin volver a pedirlo (I-09); el documento, las fotos y los iconos se revalidan. */
+   conexión. El código sale siempre de la caché, sin volver a pedirlo (I-09); el documento, las fotos y los iconos se revalidan.
+   Todo se guarda y se busca por su dirección sin parámetros (keyOf): hasta la V1.0.2, abrir la app con conexión desde un acceso
+   directo del icono (./?a=peso) dejaba otra copia del documento con esa dirección, que nadie actualizaba y que podía salir
+   antes que la buena: tras publicar una versión, la app seguía abriendo la vieja y, borrado su código, dejaba de arrancar. */
 const C='ff-app-2',PRE=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png','icon-dark-192.png'/*@@FILES@@*/];
 const abs=u=>new URL(u,self.registration.scope).href;
 const DOCS=['./','index.html'];
+/* la clave de algo en la caché: su dirección sin parámetros (?a=…, ?fresh=…) */
+const keyOf=u=>u.origin+u.pathname;
 self.addEventListener('install',e=>{e.waitUntil((async()=>{
   const c=await caches.open(C);
   /* primero todo menos el documento: el código, imprescindible; una foto o un icono que falle se guardará al pedirlo */
@@ -17,11 +22,12 @@ self.addEventListener('install',e=>{e.waitUntil((async()=>{
   for(const u of DOCS){const r=await fetch(new Request(u,{cache:'reload'}));if(!r.ok||r.redirected||!(await putDoc(c,abs(u),r)))throw new Error(u)}
   self.skipWaiting()
 })())});
-/* al activarse: fuera las cachés antiguas y el código de versiones anteriores (js/… que ya no está en la lista) */
+/* al activarse: fuera las cachés antiguas, el código de versiones anteriores (js/… que ya no está en la lista) y las copias
+   con parámetros que dejó el service worker anterior (un móvil que se quedó con una de ellas se arregla aquí) */
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{
   for(const k of await caches.keys())if(k!==C)await caches.delete(k);
   const c=await caches.open(C),keep=new Set(PRE.map(abs));
-  for(const r of await c.keys())if(/\/js\/[^/]+\.js$/.test(new URL(r.url).pathname)&&!keep.has(r.url))await c.delete(r);
+  for(const r of await c.keys())if(r.url.includes('?')||(/\/js\/[^/]+\.js$/.test(new URL(r.url).pathname)&&!keep.has(r.url)))await c.delete(r);
   await self.clients.claim()
 })())});
 const same=async(a,b)=>{const[x,y]=await Promise.all([a.arrayBuffer(),b.arrayBuffer()]);if(x.byteLength!==y.byteLength)return false;const p=new Uint8Array(x),q=new Uint8Array(y);for(let i=0;i<p.length;i++)if(p[i]!==q[i])return false;return true};
@@ -49,13 +55,14 @@ self.addEventListener('fetch',e=>{
   if(u.origin!==self.location.origin)return;
   /* version.json: siempre de la red (la app lo usa para saber si hay versión nueva) */
   if(/\/version\.json$/.test(u.pathname))return;
-  /* «Actualizar»: ?fresh=… pide la versión de la red y la guarda en la caché (con su código), sin el parámetro */
+  const key=keyOf(u);
+  /* «Actualizar»: ?fresh=… pide la versión de la red y la guarda en la caché (con su código) */
   if(u.searchParams.has('fresh')){
     changedAt=0;
     e.respondWith((async()=>{
-      const c=await caches.open(C),key=new URL(u.href);key.searchParams.delete('fresh');
-      try{const n=await fetch(u.href,{cache:'no-store',credentials:'same-origin'});if(n&&n.ok&&n.type==='basic'&&!n.redirected)await putDoc(c,key.href,n.clone());return n}
-      catch(_){return(await c.match(key.href,{ignoreSearch:true}))||Response.error()}
+      const c=await caches.open(C);
+      try{const n=await fetch(u.href,{cache:'no-store',credentials:'same-origin'});if(n&&n.ok&&n.type==='basic'&&!n.redirected)await putDoc(c,key,n.clone());return n}
+      catch(_){return(await c.match(key,{ignoreVary:true}))||Response.error()}
     })());
     return;
   }
@@ -63,10 +70,10 @@ self.addEventListener('fetch',e=>{
      pedirlo; si no está, de la red, y se guarda (I-09) */
   if(/\/js\/[^/]+\.js$/.test(u.pathname)){
     e.respondWith((async()=>{
-      const c=await caches.open(C),hit=await c.match(r,{ignoreSearch:true,ignoreVary:true});
+      const c=await caches.open(C),hit=await c.match(key,{ignoreVary:true});
       if(hit)return hit;
       const n=await fetch(r);
-      if(n&&n.ok&&n.type==='basic'&&!n.redirected)await c.put(r.url,n.clone());
+      if(n&&n.ok&&n.type==='basic'&&!n.redirected)await c.put(key,n.clone());
       return n;
     })());
     return;
@@ -75,16 +82,16 @@ self.addEventListener('fetch',e=>{
      respondWith y waitUntil se llaman ya, durante el evento (WebKit no admite waitUntil más tarde) */
   const work=(async()=>{
     const c=await caches.open(C);
-    const hit=await c.match(r,{ignoreSearch:true,ignoreVary:true});
+    const hit=await c.match(key,{ignoreVary:true});
     const old=hit?hit.clone():null;
     const net=fetch(r.url,{cache:'no-cache',credentials:'same-origin'}).then(async n=>{
       if(!(n&&n.ok&&n.type==='basic'))return n;
       if(n.redirected)return r.mode==='navigate'?Response.redirect(n.url,302):n;
-      if(!isDoc(u)){await c.put(r.url,n.clone());return n}
+      if(!isDoc(u)){await c.put(key,n.clone());return n}
       let changed=false;
       if(old){try{changed=!(await same(old,n.clone()))}catch(_){}}
-      if((changed||!old)&&!(await putDoc(c,r.url,n.clone())))return n;
-      if(!changed&&old)await c.put(r.url,n.clone());
+      if((changed||!old)&&!(await putDoc(c,key,n.clone())))return n;
+      if(!changed&&old)await c.put(key,n.clone());
       if(changed){changedAt=Date.now();await tell();}
       return n;
     });

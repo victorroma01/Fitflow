@@ -112,6 +112,17 @@ class FakeBackend(FakeFirebase):
         self.docs.pop(path, None)
 
 
+def offline_noise(text):
+    """¿Es el aviso del navegador de que una petición no llegó porque la prueba quitó la conexión? Cada motor lo dice a su manera:
+    Chromium y WebKit, «Failed to load resource»; Firefox, «Cross-Origin Request Blocked … (Reason: CORS request did not succeed)»."""
+    return 'ERR_INTERNET_DISCONNECTED' in text or 'Failed to load resource' in text or 'CORS request did not succeed' in text
+
+
+def brief(text):
+    """El principio y el final de un mensaje largo (en los de Firefox, el motivo va al final)."""
+    return text if len(text) <= 300 else text[:160] + ' … ' + text[-130:]
+
+
 def main(path):
     fb = EmuFirebase() if EMU else FakeBackend()
     fb.clear()
@@ -127,7 +138,7 @@ def main(path):
             fb.install(c)
             pg = c.new_page()
             pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200] + ' (tras «%s»)' % LAST[0]))
-            pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' and 'ERR_INTERNET_DISCONNECTED' not in m.text and 'Failed to load resource' not in m.text else None)
+            pg.on('console', lambda m: errs.append('CONSOLE ' + brief(m.text)) if m.type == 'error' and not offline_noise(m.text) else None)
             pg.goto(url)
             wait(pg, 'window.__ffok')
             return c, pg

@@ -13,55 +13,48 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 ## [1.0.3] — 2026-11-13
 
 ### Novedades
-- Nutrición, la semana: al final de la página, una barra por día con sus kcal frente a tu objetivo, la media de kcal y de
-  proteína de los días anotados y cuántos quedaron en objetivo. Al tocar un día, vas a él.
-- Dashboard: la tarjeta «Nutrición · 7 días», con la media de kcal y de proteína y los días en objetivo. Al tocarla, vas a
-  Nutrición.
-- Ejercicios propios: en su ficha de la librería puedes renombrarlos (con su historial, sus récords y sus notas) y eliminarlos.
-- Evolución del peso: el historial de tus pesajes. Al tocar uno, se borra.
+- Nutrición, la semana: una barra por día con sus kcal frente a tu objetivo, la media de kcal y de proteína y los días en
+  objetivo. En el Dashboard, la tarjeta «Nutrición · 7 días».
+- Ejercicios propios: desde su ficha puedes renombrarlos (con su historial, sus récords y sus notas) y eliminarlos.
+- Evolución del peso: el historial de tus pesajes, que se pueden borrar.
+- «Deshacer»: al quitar un alimento, un ejercicio del día, un plato guardado o una serie ya hecha, al reiniciar la semana y al
+  guardar una plantilla sobre otra, el aviso trae «Deshacer» durante unos segundos.
 
 ### Mejoras
-- Todo el texto se lee mejor: se ha medido el contraste de cada texto en cada pantalla, con los dos temas, el estilo Cristal y
-  todos los colores de acento, y se han ajustado los colores hasta que todos llegan. El texto gris es algo más claro en el tema
-  oscuro con Cristal, las hojas del tema claro ya no se ven grises y los botones principales son de un color más uniforme.
-- Lo que escribes se comprueba mejor: los gramos de un alimento, un alimento nuevo, tu peso, tu edad y tu altura, y las
-  repeticiones y el peso de una serie solo admiten valores posibles, y los decimales también se pueden escribir con coma.
-- Los nombres (de un día, un workout, un plato o un ejercicio nuevo) y las notas tienen un largo máximo, y no se quedan vacíos.
-- Peso sugerido: cada serie parte del peso que tuvo la última vez. Antes, si bajabas el peso de una serie a otra, la app
-  proponía el mayor en todas.
+- Todo el texto se lee mejor: se ha medido el contraste de cada texto, con los dos temas, el estilo Cristal y todos los
+  colores de acento, y se han ajustado los colores hasta que todos llegan.
+- Lo que escribes se comprueba: los gramos, tu peso, tu edad, tu altura y las repeticiones y el peso de una serie solo admiten
+  valores posibles (los decimales, también con coma). Los nombres y las notas tienen un largo máximo.
+- Peso sugerido: cada serie parte del peso que tuvo la última vez.
 - Al borrar un entreno en Registros se borran también sus series: los récords, las gráficas y la progresión se recalculan.
-- Al crear un ejercicio con el nombre de uno que ya existe, se añade ese en vez de duplicarlo.
-- «Atrás» en un workout que estás editando pregunta si lo descartas, y en un grupo de la librería vuelve a los grupos.
-- Si algo falla de forma inesperada, la app lo dice en vez de quedarse sin hacer nada.
-- «Deshacer»: al quitar un alimento de una comida, un ejercicio del día, un plato guardado o una serie ya hecha, al reiniciar la
-  semana y al guardar una plantilla sobre otra, el aviso trae «Deshacer» durante unos segundos.
-- Los botones pequeños (las flechas de semana, día y mes, − y +, ✕, las casillas y los desplegables) responden también
-  alrededor: es más fácil acertar con el dedo.
-- Lo que se descarga la primera vez que lo abres (temporizador WOD, exportar CSV, análisis mensual) dice «Cargando…» si tarda.
+- Los botones pequeños (flechas, − y +, ✕, casillas y desplegables) responden también alrededor: es más fácil acertar.
+- Los avisos caben en la pantalla, duran según su largo y no tapan lo que hay debajo. Si algo falla de forma inesperada, la
+  app lo dice, y si algo tarda en descargarse, dice «Cargando…».
 - Más rápida con muchos datos: Registros se abre más de tres veces antes con cientos de entrenos, y el Dashboard, un 30 % antes.
+- La copia automática del día se hace también al volver a la app sin haberla cerrado.
+- «Atrás» en un workout que estás editando pregunta si lo descartas, y en un grupo de la librería vuelve a los grupos.
 
 ### Correcciones
-- Nutrición: si reduces las comidas al día, lo anotado en las que ya no están se sigue viendo y contando. Antes desaparecía de
-  la lista y del total del día, aunque el Dashboard sí lo contaba.
-- Nutrición: el día después del cambio de hora de marzo, entre las 00:00 y la 01:00, «ayer» se saltaba un día.
-- Con las cargas en libras, el análisis mensual y su PDF dan el volumen y los récords en libras (seguían en toneladas y kg).
-- Dashboard: «Últimos 7 días» contaba un día de más de madrugada.
-- Los objetivos calculados nunca bajan de 800 kcal ni dan porcentajes imposibles con pesos muy altos.
-- La duración de un entreno guardado en pausa ya no cuenta la pausa.
-- Reanudar un entreno a medias después de cambiar los ejercicios de ese día: sigue con los que empezó. Antes las series iban a
-  otro ejercicio y el entreno no se podía guardar.
-- Cambiar un ejercicio por otro (Swap) a mitad: las series ya hechas se guardan en el ejercicio con el que las hiciste.
-- Récords: los ejercicios que se miden en metros o segundos con peso (paseo del granjero, trineo…) ya no salen con un 1RM
-  imposible, y una serie sin repeticiones, de más de 30 o un drop set no cuentan como marca.
-- Semana de descarga con mancuernas ligeras: el peso propuesto ya no sube. El calentamiento tampoco propone más peso que la serie.
-- El aviso «Nuevo récord» sale una vez, no en cada serie con ese peso.
-- Un workout que dejabas sin crear ya no se queda vacío en la lista, y un día sin ejercicios no ofrece empezar el entreno.
-- Cardio: los kilómetros totales se redondean bien.
-- Una copia de seguridad dañada o manipulada ya no puede dejar una pantalla en blanco ni colar texto donde va un número: lo que
-  no vale se descarta al abrir la app.
-- Los avisos largos se cortaban por los dos lados: ahora saltan de línea y duran más cuanto más largos son.
+- Actualizaciones: si alguna vez abriste la app con conexión desde un acceso directo del icono («Entreno de hoy», «Nutrición
+  de hoy» o «Registrar el peso»), al publicarse una versión la app seguía abriendo la anterior, con el aviso de versión nueva
+  una y otra vez, y podía dejar de arrancar. Ya no ocurre, y un móvil que se quedó así se arregla solo al abrirla con conexión.
+- Nutrición: al reducir las comidas al día, lo anotado en las que ya no están se sigue viendo y contando. Y «ayer» ya no se
+  salta un día tras el cambio de hora de marzo.
+- Entreno: la duración no cuenta las pausas. Reanudar un entreno a medias tras cambiar los ejercicios del día sigue con los
+  que empezó (antes no se podía guardar). Al cambiar un ejercicio por otro (Swap), las series hechas se quedan en el suyo.
+- Récords: los ejercicios que se miden en metros o segundos ya no salen con un 1RM imposible, y una serie sin repeticiones, de
+  más de 30 o un drop set no cuentan como marca. El aviso «Nuevo récord» sale una vez.
+- La semana de descarga y el calentamiento, con pesos ligeros, ya no proponen más peso que el normal.
+- Con las cargas en libras, el análisis mensual y su PDF van en libras.
+- Dashboard: «Últimos 7 días» contaba un día de más de madrugada, y los kilómetros de cardio se redondean bien.
+- Los objetivos calculados nunca bajan de 800 kcal ni dan porcentajes imposibles.
+- Un workout sin terminar de crear ya no se queda vacío en la lista, un día sin ejercicios no ofrece empezar y un ejercicio
+  nuevo con el nombre de otro no se duplica.
+- Una copia de seguridad dañada o manipulada ya no puede dejar una pantalla en blanco: lo que no vale se descarta al abrir.
 - En móviles estrechos, los grupos de la librería de ejercicios se salían por la derecha.
-- Si fallaba la descarga de una parte de la app (sin cobertura), no se podía volver a intentar sin cerrarla.
+- Si fallaba la descarga de una parte de la app, no se podía reintentar sin cerrarla. La lista de copias automáticas podía
+  fallar al volver a la app tras un rato en segundo plano.
+- Con VoiceOver, la página de Ajustes se quedaba sin nombre al cambiar un ajuste.
 
 ### Interno
 - Auditoría técnica de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): diagnóstico por áreas, lo corregido y lo pendiente.
@@ -92,6 +85,27 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Rendimiento medido frente a la V1.0.2 ([Rendimiento](docs/tecnica/rendimiento.md)): `fmtDate` (`core/util`) reutiliza los
   formatos de fecha y `mondayKey` (`core/calc`) recuerda el lunes de cada día. `tests/perf.py` mide también abrir Registros.
   `tests/samehtml.py` ya no cuenta como distinto lo que depende del momento (Diagnóstico, la burbuja de la barra).
+- El aviso breve no recoge los toques (`pointer-events`): con la letra de los ordenadores de GitHub, más ancha, tapaba el
+  título de la página y el gesto de volver no empezaba. `tests/browser.py`: `SF_FONT` pone otra letra en toda la app, para
+  repetir aquí lo que falla allí.
+- Fase 3. `core/idb` (IndexedDB con promesas, para `core/persist` y `system/snapshots`), `core/parts` (cómo se reparte el
+  estado en claves, sin estado, con `tests/parts.test.mjs`) y `cloud/docs` (qué va en cada documento de Firestore):
+  `core/persist` pasa de 681 a 565 líneas y `cloud/sync`, de 627 a 509. Vistas partidas en funciones con nombre
+  (`workout/day`, `profile/analysis`, `nutrition/goals`, `dashboard/reminder`); el análisis mensual y su PDF usan las mismas
+  frases. Lo repetido entre módulos, en un solo sitio (`appBusy`, `syncBusy`, `programName`, `startPlanFromWeekOne`,
+  `addOwnProgram`, `isPlan`, `mealList`, `readTextFile`, `saveBlob`, `dialogButtons`, `backRow`, `waitingView`…).
+- `tests/samehtml.py --mas`: 106 estados (las 47 pantallas y subpáginas, avisos y estados de edición), idénticos antes y
+  después de la fase 3.
+- Service worker (`static/sw.js`): todo se guarda y se busca por su dirección sin parámetros (`keyOf`). Antes, abrir
+  `./?a=peso` con conexión dejaba otra copia del documento con esa dirección, que no se actualizaba y salía antes que la buena
+  (la caché devuelve la primera que coincide sin mirar los parámetros). Al activarse, el service worker nuevo borra esas copias:
+  así se arreglan los móviles que venían de la V1.0.2 o anteriores. Lo encontró la prueba en Firefox, donde «sin conexión»
+  no corta las peticiones del service worker. `tests/deploy.py` (51 comprobaciones) abre un acceso directo con conexión y
+  actualiza desde el service worker anterior (`tests/sw-anterior.js`), con la caché HTTP caducada.
+- En WebKit, el texto de la opción elegida de un `select` cuenta como contenido que se sale si es más ancho que él: el
+  desplegable corto del entreno (Tempo) ensanchaba la página a 446 px en las pruebas con móviles de 320 a 430. `.psel` lo
+  recorta a lo ancho. `tests/layout.py` dice mejor quién ensancha la página (recorta cada hijo antes de ocultarlo).
+- `tests/cloud.py` reconoce cómo dice Firefox que una petición no llegó por falta de conexión.
 
 ## [1.0.2] — 2026-11-12
 

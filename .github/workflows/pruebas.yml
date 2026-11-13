@@ -69,6 +69,11 @@ jobs:
           npm install --no-audit --no-fund
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps webkit
+      # SONDA TEMPORAL (se quita en el siguiente cambio): qué hace que el texto de un select ensanche la página en WebKit
+      - name: Sonda (temporal)
+        env:
+          SF_BROWSER: webkit
+        run: python3 build.py > /dev/null && (python3 tests/_sonda.py dist/stratafit.html || true)
       # mismas pruebas con el motor de Safari; la app se sirve por HTTP, como en GitHub Pages (tests/browser.py)
       - name: Pruebas en WebKit
         env:
