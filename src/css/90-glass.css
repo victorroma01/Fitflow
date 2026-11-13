@@ -78,7 +78,7 @@ html.gl {
   --grim:inset 0 1.5px 0 var(--gh),inset 0 -1px 0 var(--gw),inset 0 26px 28px -26px rgba(255,255,255,calc(var(--gha)*.5));
 }
 html.gl[data-gm="1"] {
-  --mu:#b8b8c2;
+  --mu:#bebec8;
   --at:color-mix(in srgb,var(--a1) 60%,#fff);
   --ctx:#f794ad;
   --ptx:#9db2f7;
@@ -95,7 +95,7 @@ html.gl[data-gm="1"] {
   --s3:0.06;
 }
 html.gl[data-gm="2"] {
-  --mu:#b8b8c2;
+  --mu:#bebec8;
   --at:color-mix(in srgb,var(--a1) 60%,#fff);
   --ctx:#f794ad;
   --ptx:#9db2f7;
@@ -112,7 +112,7 @@ html.gl[data-gm="2"] {
   --s3:0.1;
 }
 html.gl[data-gm="3"] {
-  --mu:#d0d0d8;
+  --mu:#d6d6de;
   --at:color-mix(in srgb,var(--a1) 40%,#fff);
   --ctx:#fbb9c9;
   --ptx:#bccbfa;
@@ -186,7 +186,7 @@ html.gl[data-gm="3"] {
   }
   html.gl[data-gm="3"]:not([data-theme="dark"]) {
     --gsc:70,50,140;
-    --mu:#474751;
+    --mu:#404049;
     --at:var(--a3);
     --ctx:#8f3049;
     --ptx:#374b93;
@@ -258,7 +258,7 @@ html.gl[data-gm="2"][data-theme="light"] {
 }
 html.gl[data-gm="3"][data-theme="light"] {
   --gsc:70,50,140;
-  --mu:#474751;
+  --mu:#404049;
   --at:var(--a3);
   --ctx:#8f3049;
   --ptx:#374b93;

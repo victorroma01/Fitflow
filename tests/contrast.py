@@ -4,7 +4,8 @@ Por cada pantalla de tests/shots.py se hacen dos capturas, una normal y otra con
 fondo real de cada texto (color, degradado, foto, Cristal…) y la diferencia entre las dos dice si el texto se llega a pintar
 ahí. El color de la letra es el calculado por el navegador (con su opacidad). Un texto normal necesita 4,5:1 y uno grande
 (24 px, o 18,66 px en negrita) o un signo suelto que hace de icono (✓, ›, ✕…), 3:1. No cuentan los controles desactivados, lo que es solo decorativo (aria-hidden) ni los
-logotipos. Se recorre desplazando cada pantalla hasta el final.
+logotipos. Se recorre desplazando cada pantalla hasta el final; antes de medir se espera a que la pantalla se quede quieta, y
+lo que no llega se mide dos veces.
 
 Configuraciones: los dos temas con el estilo de serie en todas las pantallas; sin Cristal y con el Cristal suave y el intenso,
 y cada color de acento (y uno propio) en los dos temas, en las pantallas donde más se usan.
@@ -12,6 +13,7 @@ y cada color de acento (y uno propio) en los dos temas, en las pantallas donde m
   python3 tests/contrast.py dist/stratafit.html            (todo; falla si algún texto no llega)
   python3 tests/contrast.py dist/stratafit.html --list     (además, cada pareja de colores que no llega, con dónde sale)
   python3 tests/contrast.py dist/stratafit.html --only=claro --only="acento 4"     (solo las configuraciones con ese nombre)
+  python3 tests/contrast.py dist/stratafit.html --near     (además, lo que pasa por poco: conviene que no haya nada)
 """
 import io, os, re, sys
 from concurrent.futures import ProcessPoolExecutor
@@ -79,6 +81,22 @@ TEXTS = r"""() => {
   return out;
 }"""
 
+# la pantalla, quieta: tres vistazos seguidos (cada 60 ms) sin cambios en la página ni transiciones o animaciones en marcha. Con
+# vistazos y no con el reloj: la fecha de la prueba está fija
+QUIET = r"""() => new Promise(done => {
+  let changed = 0, calm = 0, looks = 0;
+  const mo = new MutationObserver(() => { changed = 1; });
+  mo.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+  const look = () => {
+    const moving = document.getAnimations().some(a => a.playState == 'running' && a.effect && a.effect.getComputedTiming().iterations !== Infinity);
+    calm = changed || moving ? 0 : calm + 1;
+    changed = 0;
+    if (calm >= 3 || ++looks > 50) { mo.disconnect(); done(looks); }
+    else setTimeout(look, 60);
+  };
+  setTimeout(look, 60);
+})"""
+
 # lo que se desplaza en la pantalla abierta (la ventana de arriba del todo), para recorrerla entera
 SCROLLER = r"""() => {
   const can = e => e && e.scrollHeight > e.clientHeight + 8 && /auto|scroll/.test(getComputedStyle(e).overflowY);
@@ -108,7 +126,13 @@ def hexc(c):
     return '#%02x%02x%02x' % tuple(int(round(float(v))) for v in c[:3])
 
 
-def measure(pg):
+def quiet(pg):
+    """Espera a que la pantalla se quede quieta: sin cambios en la página ni transiciones en marcha durante tres vistazos
+    seguidos (o 3 s). Sin esto, lo que aparece justo después de un toque (el descanso tras marcar una serie) se medía a medias."""
+    pg.evaluate(QUIET)
+
+
+def once(pg):
     """Los textos de lo que se ve ahora: [contraste, mínimo exigido, texto, elemento, letra, fondo]."""
     texts = pg.evaluate(TEXTS)
     a = np.asarray(Image.open(io.BytesIO(pg.screenshot(animations='disabled'))).convert('RGB'), dtype=float)
@@ -131,6 +155,22 @@ def measure(pg):
         need = 3.0 if t['size'] >= 24 or (t['size'] >= 18.66 and t['bold']) or SIGN.match(t['t']) else 4.5
         mid = np.median(bg, axis=0)
         out.append([float(np.percentile(r, 10)), need, t['t'], t['el'], hexc(np.asarray(t['c'][:3]) * t['c'][3] + mid * (1 - t['c'][3])), hexc(mid)])
+    return out
+
+
+def measure(pg):
+    """Mide lo que se ve, con la pantalla quieta. Si algún texto no llega, se mide otra vez: solo cuenta lo que falla las dos
+    (así una transición que aún no había terminado no da un fallo que no existe)."""
+    quiet(pg)
+    out = once(pg)
+    if any(r[0] < r[1] - .005 for r in out):
+        pg.wait_for_timeout(400)
+        quiet(pg)
+        again = {(r[2], r[3]): r for r in once(pg)}
+        for r in out:
+            o = again.get((r[2], r[3]))
+            if r[0] < r[1] - .005 and o:
+                r[0], r[4], r[5] = max(r[0], o[0]), o[4], o[5]
     return out
 
 
@@ -167,7 +207,7 @@ def run_configs(args):
     """Mide unas cuantas configuraciones (en su propio navegador: se reparten entre varios procesos)."""
     path, configs = args
     url = app_url(path)
-    bad, total, errs = {}, 0, []
+    bad, near, total, errs = {}, {}, 0, []
     with sync_playwright() as p:
         b = p.chromium.launch()
         for name, scheme, glass, accent, screens in configs:
@@ -196,13 +236,14 @@ def run_configs(args):
                     continue
                 total += len(found)
                 for r, need, text, el, fg, bg in found:
-                    if r < need - .005:
-                        d = bad.setdefault((fg, bg, el), [r, need, text, []])
+                    # (lo que no llega y, aparte, lo que pasa por menos de un 6 %: otra versión del navegador pinta algo distinto)
+                    if r < need * 1.06:
+                        d = (bad if r < need - .005 else near).setdefault((fg, bg, el), [r, need, text, []])
                         d[0] = min(d[0], r)
                         d[3].append('%s · %s' % (name, k))
             c.close()
         b.close()
-    return bad, total, errs
+    return bad, near, total, errs
 
 
 def all_configs(only=None):
@@ -216,7 +257,7 @@ def all_configs(only=None):
     return [c for c in configs if not only or any(o in c[0] for o in only)]
 
 
-def main(path, listing, only):
+def main(path, listing, only, close):
     configs = all_configs(only)
     # las configuraciones largas (todas las pantallas), partidas en trozos, para repartir el trabajo entre los procesos
     jobs = []
@@ -225,16 +266,22 @@ def main(path, listing, only):
             jobs.append((name, scheme, glass, accent, screens[i:i + 12]))
     n = max(1, min(4, os.cpu_count() or 1, len(jobs)))
     chunks = [jobs[i::n] for i in range(n)]
-    bad, total, errs = {}, 0, []
+    bad, near, total, errs = {}, {}, 0, []
     with ProcessPoolExecutor(max_workers=n) as ex:
-        for b, t, e in ex.map(run_configs, [(path, c) for c in chunks]):
+        for b, nr, t, e in ex.map(run_configs, [(path, c) for c in chunks]):
             total += t
             errs += e
-            for key, d in b.items():
-                o = bad.setdefault(key, [d[0], d[1], d[2], []])
-                o[0] = min(o[0], d[0])
-                o[3] += d[3]
+            for into, part in ((bad, b), (near, nr)):
+                for key, d in part.items():
+                    o = into.setdefault(key, [d[0], d[1], d[2], []])
+                    o[0] = min(o[0], d[0])
+                    o[3] += d[3]
     print('%d textos medidos en %d configuraciones' % (total, len(configs)))
+    if close:
+        print('Pasan por poco (menos de un 6 %% de margen): %d parejas' % len(near))
+        for (fg, bg, el), d in sorted(near.items(), key=lambda x: x[1][0] / x[1][1]):
+            w = sorted(set(d[3]))
+            print('  %.2f (pide %.1f)  %s sobre %s  %s  «%s»  %s%s' % (d[0], d[1], fg, bg, el, d[2], '; '.join(w[:3]), ' (+%d)' % (len(w) - 3) if len(w) > 3 else ''))
     rows = sorted(bad.items(), key=lambda x: x[1][0])
     for (fg, bg, el), d in (rows if listing else rows[:25]):
         w = sorted(set(d[3]))
@@ -251,4 +298,4 @@ def main(path, listing, only):
 
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
-    main(args[0] if args else os.path.join(HERE, '..', 'dist', 'stratafit.html'), '--list' in sys.argv, [a[7:] for a in sys.argv if a.startswith('--only=')])
+    main(args[0] if args else os.path.join(HERE, '..', 'dist', 'stratafit.html'), '--list' in sys.argv, [a[7:] for a in sys.argv if a.startswith('--only=')], '--near' in sys.argv)
