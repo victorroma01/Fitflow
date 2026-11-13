@@ -4,9 +4,9 @@
    Nutrición: lo que suma un alimento, una comida, un día o una semana, y los objetivos de kcal y macros a partir del gasto
    (Mifflin-St Jeor). Entreno: el volumen de una sesión y la mejor marca. Calendario: el lunes de una semana y los días de un
    periodo. Solo importa core/util (fechas y 1RM), que tampoco tiene estado.
-   Define: itemMacros, sumMacros, mealItems, dayItems, dayTotals, macroTargets, BIO_RANGES, ACTIVITY_FACTORS, energyNeeds, dietPlan, LOGGED_KCAL, GOAL_MARGIN, nutritionPeriod, sessionVolume, bestLift, weekMonday, countBetween
+   Define: itemMacros, sumMacros, mealItems, dayItems, dayTotals, macroTargets, BIO_RANGES, ACTIVITY_FACTORS, energyNeeds, dietPlan, LOGGED_KCAL, GOAL_MARGIN, nutritionPeriod, sessionVolume, bestLift, weekMonday, weekKeys, countBetween
 */
-import { est1RM } from './util.js';
+import { dayKey, est1RM } from './util.js';
 /* ── nutrición ─────────────────────────────────────────────────────────────────────────────────────────────────────── */
 /** Valores de un alimento anotado según sus gramos: siempre 6 números (kcal, hidratos, proteínas, grasas, fibra, sal), aunque
     los datos vengan dañados o de una copia manipulada; un alimento roto no puede impedir que se pinte Nutrición. */
@@ -104,6 +104,12 @@ export const weekMonday = d => {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
   return x;
+};
+/** Las claves (AAAA-MM-DD) de los siete días, de lunes a domingo, de la semana de `d`. Por calendario: el día del cambio de
+    hora tiene 23 o 25 h. */
+export const weekKeys = d => {
+  const m = weekMonday(d);
+  return [0, 1, 2, 3, 4, 5, 6].map(i => dayKey(new Date(m.getFullYear(), m.getMonth(), m.getDate() + i, 12)));
 };
 /** Cuántos registros ([{ d }]) tienen la fecha entre `from` y `to` (claves AAAA-MM-DD, las dos incluidas). */
 export const countBetween = (list, from, to) => list.filter(l => l && l.d >= from && l.d <= to).length;

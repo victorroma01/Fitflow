@@ -13,6 +13,7 @@ import { goalTargets } from './diet.js';
 import { dayType, templateCard } from './templates.js';
 import { html, raw } from '../core/html.js';
 import { itemMacros, mealItems, sumMacros } from '../core/calc.js';
+import { nutritionWeekCard } from './week.js';
 /* las clases del color de cada macro: el texto (c-ctx…: más oscuro en el tema claro) y la barra, con el de siempre */
 const MACRO_CLASSES = { c: ['c-ctx', 'bg-c'], p: ['c-ptx', 'bg-p'], g: ['c-gtx', 'bg-g'] };
 /* la cabecera del día: «‹ día ›», si es de entreno o de descanso y «Mi nutrición» */
@@ -60,7 +61,7 @@ export function nutritionBase(water) {
   for (let i = 0; i < n.n; i++)
     h += mealCard(m, i, mealName(i, n.n), mt[i], tg.map(v => v * w[i]));
   extra.forEach((i, x) => h += mealCard(m, i, 'Comida ' + (i + 1), mt[n.n + x], null));
-  return h;
+  return h + nutritionWeekCard();
 }
 /* — manejadores de esta función (registros A / C / U) — */
 A.nutritionDay = i => {

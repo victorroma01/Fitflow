@@ -10,9 +10,16 @@ aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en fr
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
-## [1.0.3] — 2026-11-12
+## [1.0.3] — 2026-11-13
+
+### Novedades
+- Nutrición, la semana: al final de la página, una barra por día con sus kcal frente a tu objetivo, la media de kcal y de
+  proteína de los días anotados y cuántos quedaron en objetivo. Al tocar un día, vas a él.
 
 ### Mejoras
+- Todo el texto se lee mejor: se ha medido el contraste de cada texto en cada pantalla, con los dos temas, el estilo Cristal y
+  todos los colores de acento, y se han ajustado los colores hasta que todos llegan. El texto gris es algo más claro en el tema
+  oscuro con Cristal, las hojas del tema claro ya no se ven grises y los botones principales son de un color más uniforme.
 - Lo que escribes se comprueba mejor: los gramos de un alimento, un alimento nuevo, tu peso, tu edad y tu altura, y las
   repeticiones y el peso de una serie solo admiten valores posibles, y los decimales también se pueden escribir con coma.
 - Los nombres (de un día, un workout, un plato o un ejercicio nuevo) y las notas tienen un largo máximo.
@@ -21,14 +28,21 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Nutrición: si reduces las comidas al día, lo anotado en las que ya no están se sigue viendo y contando. Antes desaparecía de
   la lista y del total del día, aunque el Dashboard sí lo contaba.
 - Nutrición: el día después del cambio de hora de marzo, entre las 00:00 y la 01:00, «ayer» se saltaba un día.
+- Con las cargas en libras, el análisis mensual y su PDF dan el volumen y los récords en libras (seguían en toneladas y kg).
 - Dashboard: «Últimos 7 días» contaba un día de más de madrugada.
 - Los objetivos calculados nunca bajan de 800 kcal ni dan porcentajes imposibles con pesos muy altos.
 
 ### Interno
 - Auditoría técnica de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): diagnóstico por áreas, lo corregido y lo pendiente.
-- `tests/calc.py`: las sumas de Nutrición, los objetivos (Mifflin-St Jeor), el volumen de un entreno (kg y lb), el 1RM estimado
-  y las fechas en los cambios de hora se comparan con la misma cuenta hecha aparte, con datos al azar; y la validación de lo
-  que se escribe. `typedNum` (`core/util`), `nutriDate` (`core/state`) y `BIO_RANGES` (`nutrition/diet`).
+- `core/calc`: los cálculos (sumas de nutrición, objetivos, volumen, mejor marca, semanas), en un módulo sin estado, con
+  `tests/calc.test.mjs` (21 pruebas sin navegador). El Dashboard, Nutrición y el análisis mensual suman con las mismas funciones.
+- `tests/calc.py`: las sumas de Nutrición, los objetivos (Mifflin-St Jeor), el volumen de un entreno (kg y lb), el 1RM estimado,
+  las fechas en los cambios de hora y la semana se comparan con la misma cuenta hecha aparte, con datos al azar; y la validación
+  de lo que se escribe. `typedNum` (`core/util`), `nutriDate` (`core/state`) y `BIO_RANGES` (`core/calc`).
+- `tests/contrast.py`: contraste de cada texto contra su fondo real (WCAG AA), 35.000 textos en 32 configuraciones. Colores de
+  texto por nivel de Cristal (`css/90-glass`), degradado del acento para lo que lleva texto (`--ag`) y acento acotado detrás del
+  texto (`--gmid`); un color propio elige el texto de encima con 4,5:1.
+- `tests/samehtml.py`: compara el HTML de las 47 pantallas entre dos compilaciones.
 
 ## [1.0.2] — 2026-11-12
 

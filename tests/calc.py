@@ -5,6 +5,8 @@ cuenta hecha aquí aparte, con datos al azar (siempre los mismos: semilla fija),
   reparto del día; coincide con las kcal de hoy del Dashboard; los gramos, un alimento nuevo, el peso y los datos biométricos
   solo admiten valores posibles; los objetivos calculados (Mifflin-St Jeor) cuadran y sus porcentajes suman 100.
 - Fechas: el día anterior y el siguiente van por calendario, también en los cambios de hora (zona Europe/Madrid).
+- La semana de Nutrición: días anotados, medias de kcal y proteína de los días terminados, días en objetivo, las barras y el
+  paso a un día al tocarlo.
 - Entreno: el volumen guardado es la suma de repeticiones × peso de las series hechas (en kg y en lb), el 1RM estimado es el
   de Epley, y una serie no admite números negativos.
 
@@ -208,6 +210,36 @@ def main(path):
             w = ev("Object.keys(S.water).includes(dayKey(new Date()))")
             check('el %s a las %s: ayer es el %s y mañana el %s, y lo de hoy se anota en hoy' % (when.strftime('%d/%m/%Y'), when.strftime('%H:%M'), prev, nxt), a == prev and z == nxt and w, '%s %s %s' % (a, z, w))
             c.close()
+        print('Semana de nutrición')
+        day = "(k,p)=>({0:[{n:'A',g:100,b:[k,0,p,0,0,0]}]})"
+        c, pg = device(datetime.datetime(2026, 11, 12, 10, 0))  # jueves
+        ev = pg.evaluate
+        ev("(()=>{const day=%s;S.nutritionGoals={k:1942,c:50,p:20,f:30,n:3};S.meals={'2026-11-09':day(1950,95),'2026-11-10':day(2300,120),'2026-11-12':day(492,30)};saveState();S.tab=1;R()})()" % day)
+        card = ev("document.querySelector('.nwk').innerText.replace(/\\n+/g,' | ')")
+        check('la semana: título, días anotados hasta ayer y las tres cifras', card.startswith('Esta semana | Hasta ayer, 2 de 3 días anotados | L | M | X | J | V | S | D | 2125 | kcal de media | Objetivo 1942 | 108 g | proteína de media | Objetivo 97 g | 1 de 2 | días en objetivo'), card)
+        said = ev("[...document.querySelectorAll('.nwd')].map(b=>b.getAttribute('aria-label'))")
+        check('cada día dice sus kcal y si está en objetivo (±10 %); hoy, lo que lleva', said == ['lunes 9: 1950 kcal, en objetivo', 'martes 10: 2300 kcal, fuera de objetivo', 'miércoles 11: sin anotar', 'jueves 12 (hoy): 492 kcal por ahora', 'viernes 13: sin anotar', 'sábado 14: sin anotar', 'domingo 15: sin anotar'], str(said))
+        look = ev("[...document.querySelectorAll('.nwd')].map(b=>[b.className,Math.round(parseFloat(b.querySelector('.nwt i').style.height)*10)/10])")
+        top = max(1942 * 1.25, 2300)
+        check('las barras: altura según las kcal, en objetivo con el color de acento y el día que se ve, marcado', look == [['nwd ok', round(1950 / top * 100, 1)], ['nwd on', round(2300 / top * 100, 1)], ['nwd', 0], ['nwd on sel', round(492 / top * 100, 1)], ['nwd', 0], ['nwd', 0], ['nwd', 0]] and abs(float(ev("document.querySelector('.nwl i').style.bottom").rstrip('%')) - 1942 / top * 100) < .01, str(look))
+        ev("document.querySelector('.nwd').click()")
+        check('al tocar un día, Nutrición pasa a ese día', ev("document.querySelector('.hd h1').textContent") == '9 nov' and '1950 / 1942 kcal' in ev("document.querySelector('.cd.pos-sticky').innerText") and ev("document.querySelector('.nwd.sel').getAttribute('aria-label')") == 'lunes 9: 1950 kcal, en objetivo' and ev("document.querySelector('.nwd.sel').getAttribute('aria-current')") == 'date')
+        ev('A.nutritionDay(-1)')
+        card = ev("document.querySelector('.nwk').innerText.replace(/\\n+/g,' | ')")
+        check('una semana pasada: su fecha, sus siete días y, sin comidas, lo dice', card.startswith('Semana del 2 nov | 0 de 7 días anotados') and 'Sin comidas anotadas' in card and ev("document.querySelector('.hd h1').textContent") == '8 nov', card)
+        ev('A.nutritionDay(9)')
+        card = ev("document.querySelector('.nwk').innerText.replace(/\\n+/g,' | ')")
+        check('una semana que no ha llegado', card.startswith('Semana del 16 nov | Aún no ha llegado'), card)
+        c.close()
+        c, pg = device(datetime.datetime(2026, 11, 9, 10, 0))  # lunes
+        ev = pg.evaluate
+        ev("(()=>{const day=%s;S.nutritionGoals={k:1942,c:50,p:20,f:30,n:3};S.meals={'2026-11-09':day(800,40),'2026-11-08':day(2000,100)};saveState();S.tab=1;R()})()" % day)
+        card = ev("document.querySelector('.nwk').innerText.replace(/\\n+/g,' | ')")
+        check('el lunes, la semana empieza hoy: las medias esperan a los días terminados', card.startswith('Esta semana | Empieza hoy') and 'Las medias de la semana salen con los días ya terminados' in card and 'kcal de media' not in card, card)
+        ev('A.nutritionDay(-1)')
+        card = ev("document.querySelector('.nwk').innerText.replace(/\\n+/g,' | ')")
+        check('y la semana anterior cuenta su domingo', card.startswith('Semana del 2 nov | 1 de 7 días anotados') and '2000 | kcal de media' in card and '1 de 1 | día en objetivo' in card, card)
+        c.close()
         check('sin errores de JS', not errs, str(errs[:3]))
         b.close()
     print()

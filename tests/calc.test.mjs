@@ -211,6 +211,20 @@ test('weekMonday: el lunes de la semana, también en fin de año y en los cambio
   assert.equal(C.weekMonday(new Date(2026, 10, 12, 15, 30)).getHours(), 0);
 });
 
+test('weekKeys: los siete días de lunes a domingo, también con un día de 23 o de 25 horas', () => {
+  assert.deepEqual(C.weekKeys(new Date(2026, 10, 12, 15)), ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14', '2026-11-15']);
+  assert.deepEqual(C.weekKeys(new Date(2026, 2, 29, 23, 30)), ['2026-03-23', '2026-03-24', '2026-03-25', '2026-03-26', '2026-03-27', '2026-03-28', '2026-03-29']);
+  assert.deepEqual(C.weekKeys(new Date(2026, 2, 30, 0, 30)), ['2026-03-30', '2026-03-31', '2026-04-01', '2026-04-02', '2026-04-03', '2026-04-04', '2026-04-05']);
+  assert.deepEqual(C.weekKeys(new Date(2026, 9, 25, 12)), ['2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24', '2026-10-25']);
+  assert.deepEqual(C.weekKeys(new Date(2027, 0, 1)), ['2026-12-28', '2026-12-29', '2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02', '2027-01-03']);
+  // todos los días de dos años caen en su semana, y cada semana tiene siete días distintos
+  for (let d = new Date(2026, 0, 1, 12); d.getFullYear() < 2028; d.setDate(d.getDate() + 1)) {
+    const w = C.weekKeys(d);
+    assert.equal(new Set(w).size, 7);
+    assert.equal(w.indexOf(U.dayKey(d)), (d.getDay() + 6) % 7);
+  }
+});
+
 test('countBetween: registros con la fecha dentro del periodo', () => {
   const logs = [{ d: '2026-11-05' }, { d: '2026-11-06' }, { d: '2026-11-12' }, { d: '2026-11-13' }, null, {}];
   assert.equal(C.countBetween(logs, '2026-11-06', '2026-11-12'), 2);

@@ -25,7 +25,7 @@ Página propia, ordenada por secciones. Cada fila abre su página, con «←» p
 | --- | --- |
 | Cuenta | **Cuenta** (usuario, tipo de cuenta, sincronización y Cambiar contraseña) y **Sincronización** (su estado; al tocarla, sincroniza). |
 | Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico; reducir animaciones), **Color de acento** y **Al abrir la app** ([abajo](#apariencia)). |
-| Entreno | **Unidades de carga** (kg o lb) y **Sonido y avisos** (sonidos del descanso, vibración y, en iPhone, el [globo en el icono](experiencia.md#globo-en-el-icono-iphone)). |
+| Entreno | **Unidades de carga** (kg o lb: cambia los pesos, los discos, el volumen y los récords, también en el análisis mensual y su PDF; el peso corporal sigue en kg) y **Sonido y avisos** (sonidos del descanso, vibración y, en iPhone, el [globo en el icono](experiencia.md#globo-en-el-icono-iphone)). |
 | Datos | **Copia de seguridad** y **Borrar todos los datos**. |
 | App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **El icono nuevo** (solo en un iPhone que aún tiene el icono de antes del logo nuevo: [cómo cambiarlo](experiencia.md#logo-e-icono)), **Ver el recorrido** (el de la [primera vez](experiencia.md#recorrido-de-la-primera-vez)), **Diagnóstico** (versión, dispositivo, lo que ocupa cada dato y dónde está, el espacio usado, errores registrados y el **tiempo de pintado**: lo que tarda en verse cada pantalla, para comparar, por ejemplo, un color de serie con uno propio) e **Informar de un fallo**. |
 | Ajustes avanzados | **Esfuerzo (RPE)**: registrar lo dura que ha sido cada serie, del 6 al 10. Viene desactivado; al activarlo, una ventana explica con dibujos la escala, cómo se marca y para qué lo usa la app (la semana de descarga y el análisis mensual). **¿Qué es el RPE?** la vuelve a enseñar. Desactivarlo no borra lo ya anotado. |
@@ -38,12 +38,14 @@ Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesió
 - **Color de acento**: el de los botones, la burbuja de las pestañas, las gráficas y los detalles de toda la app. Hay 11 de serie
   (Morado, Azul eléctrico, Azul oscuro, Verde oscuro, Amarillo, Rojo, Naranja, Rosa, Turquesa, Lima y Grafito) y **Personalizado**,
   que abre el selector de colores del móvil para elegir cualquiera. Con un color propio, la app calcula sus tonos (más claro y más
-  oscuro) y el color del texto encima, blanco o casi negro, para que todo se lea bien con el tema oscuro y con el claro; si el color
-  es muy oscuro o muy claro, lo ajusta un poco. Arriba, una **vista previa** enseña cómo quedan la cabecera de un día, un botón, los
+  oscuro) y el color del texto encima, blanco o casi negro, el que tenga contraste de sobra (4,5 a 1 o más), para que todo se lea
+  bien con el tema oscuro y con el claro; si el color es muy oscuro o muy claro, o se queda entre los dos, lo ajusta un poco. Arriba, una **vista previa** enseña cómo quedan la cabecera de un día, un botón, los
   chips, una barra y la barra de pestañas. Mientras eliges un color propio cambia solo la vista previa; el color pasa a toda la app
   cuando el selector se queda quieto. Sin elegir ninguno, la app usa **Azul eléctrico**, el del logo (hasta la V1.0.0, Morado).
 - **Tema y estilo**: tema claro, oscuro o automático (el del móvil); estilo Cristal (con tres intensidades) o Clásico; y **Reducir
   animaciones**, para que las páginas y ventanas aparezcan sin deslizarse (si el móvil tiene «Reducir movimiento», la app ya lo hace).
+  Con cualquier combinación de tema, estilo y color, todo texto tiene el contraste que pide la norma de accesibilidad (WCAG AA):
+  con Cristal, el texto gris es algo más claro en el tema oscuro y más oscuro en el claro, para leerse sobre el vidrio.
 - **Al abrir la app**: la pestaña con la que se abre StrataFit: la última que usaste (lo de siempre) o una fija (Workout, Nutrición,
   Dashboard o Perfil).
 

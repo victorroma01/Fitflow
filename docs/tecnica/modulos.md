@@ -4,7 +4,7 @@ Qué hace cada módulo de `src/js`, qué declara y cuántas acciones registra (`
 `node tools/modindex.js` a partir de la cabecera de cada módulo: no se edita a mano (`tests/run.sh` comprueba que está al día).
 
 Los módulos se cargan en el orden de los `import` de `src/js/main.js`. Los marcados «al usarlo» se descargan la primera vez
-que hacen falta (`core/lazy`). 120 módulos en total.
+que hacen falta (`core/lazy`). 121 módulos en total.
 
 ## core
 
@@ -13,7 +13,7 @@ Núcleo: estado, guardado, pintado, eventos, avisos y piezas comunes.
 | Módulo | Qué hace | Declara | Acciones |
 | --- | --- | --- | --- |
 | `core/util` | Utilidades puras (no importa nada): versión, selector $, escape HTML X, redondeos, fechas (dayKey) y formatos. | `APPV`, `FFDEP`, `$`, `X`, `safeImage`, `round1`, `roundInt`, `fmtMinSec`, `dayKey`, `est1RM`, `fmtDuration`, `clampInt`, `typedNum`, `clampNum`, `fmtClock`, `fmtDateShort`, `newId` | — |
-| `core/calc` | Los cálculos de la app, sin estado ni pantalla: cada función recibe los datos y devuelve números, así que se prueban sueltas (tests/calc.test.mjs, sin navegador) y valen igual para una pantalla, el análisis mensual o una estadística nueva. Nutrición: lo que suma un alimento, una comida, un día o una semana, y los objetivos de kcal y macros a partir del gasto (Mifflin-St Jeor). Entreno: el volumen de una sesión y la mejor marca. Calendario: el lunes de una semana y los días de un periodo. Solo importa core/util (fechas y 1RM), que tampoco tiene estado. | `itemMacros`, `sumMacros`, `mealItems`, `dayItems`, `dayTotals`, `macroTargets`, `BIO_RANGES`, `ACTIVITY_FACTORS`, `energyNeeds`, `dietPlan`, `LOGGED_KCAL`, `GOAL_MARGIN`, `nutritionPeriod`, `sessionVolume`, `bestLift`, `weekMonday`, `countBetween` | — |
+| `core/calc` | Los cálculos de la app, sin estado ni pantalla: cada función recibe los datos y devuelve números, así que se prueban sueltas (tests/calc.test.mjs, sin navegador) y valen igual para una pantalla, el análisis mensual o una estadística nueva. Nutrición: lo que suma un alimento, una comida, un día o una semana, y los objetivos de kcal y macros a partir del gasto (Mifflin-St Jeor). Entreno: el volumen de una sesión y la mejor marca. Calendario: el lunes de una semana y los días de un periodo. Solo importa core/util (fechas y 1RM), que tampoco tiene estado. | `itemMacros`, `sumMacros`, `mealItems`, `dayItems`, `dayTotals`, `macroTargets`, `BIO_RANGES`, `ACTIVITY_FACTORS`, `energyNeeds`, `dietPlan`, `LOGGED_KCAL`, `GOAL_MARGIN`, `nutritionPeriod`, `sessionVolume`, `bestLift`, `weekMonday`, `weekKeys`, `countBetween` | — |
 | `core/platform` | En qué sistema corre la app, según lo que dice el navegador: iPhone o iPad ('ios'), Android ('android') u otro ('otro'). No es un dato de la persona: solo sirve para lo que cambia de un sistema a otro (el «atrás» del sistema, core/back). | `deviceOS` | — |
 | `core/html` | Plantillas HTML seguras. html`<b>${nombre}</b>` escapa cada valor que se inserta (como X), así que un nombre escrito por el usuario, un alimento de Open Food Facts o un programa importado nunca se convierten en código. Se insertan tal cual solo lo que ya es HTML de la app: otra plantilla html`…`, una lista de ellas (el resultado de un map) o un valor marcado con raw(…) (textos con etiquetas hechos aquí…). Cada raw() es un sitio donde no se escapa: si recibe datos de fuera, hay que escaparlos antes con X. El resultado es un Html: se comporta como texto (se concatena, se asigna a innerHTML, se guarda en JSON). | `raw`, `part`, `html` | — |
 | `core/toast` | Aviso breve en la parte inferior de la pantalla. Va aparte de core/ui para que el guardado (core/persist) pueda avisar sin depender de la interfaz. | `toast` | — |
@@ -121,6 +121,7 @@ Nutrición: comidas, alimentos, objetivos, plantillas y agua.
 
 | Módulo | Qué hace | Declara | Acciones |
 | --- | --- | --- | --- |
+| `nutrition/week` | La semana en Nutrición (seguimiento semanal): las kcal de cada día frente al objetivo, la media de kcal y de proteína de los días anotados y cuántos quedaron en objetivo. Las cuentas son las de core/calc (nutritionPeriod), las mismas reglas que el análisis mensual: un día cuenta como anotado con más de 50 kcal y está en objetivo a ±10 % de las kcal. Es la semana del día que se está viendo; al tocar un día se va a él. Las medias no cuentan hoy, que aún no ha terminado. | `DAY_LETTERS`, `DAY_NAMES`, `dayNumber`, `weekDayColumn`, `weekFigures`, `nutritionWeekCard` | 1 |
 | `nutrition/home` | Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones. | `MACRO_CLASSES`, `nutritionDayHead`, `nutritionTotals`, `macroBar`, `mealItemRow`, `mealButtons`, `mealCard`, `mealName`, `nutritionBase` | 2 |
 | `nutrition/diet` | Cálculo de gasto energético (TDEE), tipos de dieta y objetivos de kcal y macros. | `DIET_TYPES`, `ACTIVITY_LEVELS`, `GOAL_LABELS`, `GOAL_DIET`, `tdee`, `goalTargets`, `dietIndex`, `applyDiet`, `cleanGoals` | — |
 | `nutrition/water` | Registro de agua diaria. | `waterGoal`, `waterCard`, `nutritionTab` | 1 |

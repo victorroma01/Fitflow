@@ -69,6 +69,7 @@ import './programs/levels.js';
 import './programs/manager.js';
 import './programs/rotation.js';
 import './programs/share.js';
+import './nutrition/week.js';
 import './nutrition/home.js';
 import './nutrition/diet.js';
 import './nutrition/water.js';
