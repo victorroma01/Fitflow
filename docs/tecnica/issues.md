@@ -20,7 +20,7 @@ el rendimiento medido (T-26, [Rendimiento](rendimiento.md)). Lo que no se ha hec
 dentro de cada dato (R3), que obligaría a migrar los datos de las cuentas, las copias y los códigos de programa.
 
 **Estado tras la V1.0.3** (en la rama `desarrollo-1.0.3`, sin publicar): la [auditoría técnica](auditoria-1.0.3.md) de la V1.0.2
-encontró y corrigió 42 errores, que llevan su propia numeración (N1, E1, SW1…) y no están en esta lista. De los de aquí: I-13
+encontró y corrigió 43 errores, que llevan su propia numeración (N1, E1, SW1…) y no están en esta lista. De los de aquí: I-13
 volvió a salir una vez, en un guion aparte de la prueba, y sigue sin reproducirse a voluntad; I-05 e I-01 siguen como estaban.
 
 ## Resumen

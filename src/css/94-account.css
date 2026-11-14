@@ -170,7 +170,9 @@
   font-size:12px;
 }
 /* el sello de reCAPTCHA (cloud/appcheck, con App Check activado) taparía la barra de pestañas: no se enseña y, a cambio, el
-   inicio de sesión y Privacidad lo dicen, como piden sus condiciones */
+   inicio de sesión y Privacidad lo dicen, como piden sus condiciones. reCAPTCHA lo coloca con estilos en línea, que la CSP
+   de la app no admite: sin ellos quedaría al final de la página, ocupando sitio; aquí se saca de ella */
 .grecaptcha-badge {
+  position:fixed!important;
   visibility:hidden!important;
 }

@@ -46,6 +46,8 @@ run python3 tests/storage.py dist/stratafit.html
 run python3 tests/calc.py dist/stratafit.html
 run python3 tests/dashboard.py dist/stratafit.html
 run python3 tests/render.py dist/stratafit.html
+# la app con App Check configurado con valores de prueba y su CSP (dist/appcheck/): la usa tests/cloud.py
+run python3 build.py --appcheck
 run python3 tests/cloud.py dist/stratafit.html
 run python3 tests/deploy.py dist/app
 echo

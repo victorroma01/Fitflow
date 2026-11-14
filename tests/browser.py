@@ -12,7 +12,7 @@ La app lee de IndexedDB los entrenos, el historial y las comidas antes de pintar
 (core/persist, I-04). Por eso, en todas las pruebas, page.goto y page.reload esperan antes a que lo guardado quede escrito
 (savesDone) y, después, a que la app termine de arrancar (window.__ffready). En otras páginas no esperan nada.
 """
-import os, json, threading, functools, http.server
+import os, re, json, threading, functools, http.server
 from playwright.sync_api import Page, Browser
 
 ENGINE = os.environ.get('SF_BROWSER', 'chromium')
@@ -81,14 +81,43 @@ GECKO_TEXT_JS = """(() => { const d = Object.getOwnPropertyDescriptor(HTMLElemen
     get() { const t = d.get.call(this); return t || this.id != 'sh' ? t : [...this.children].map(c => d.get.call(c)).filter(Boolean).join('\\n'); } }); })()"""
 
 
+# reCAPTCHA Enterprise de prueba. Con App Check configurado (cloud/config), la app carga reCAPTCHA de Google antes de hablar con
+# Firebase: en las pruebas no se sale a internet, y lo contesta esto. Hace lo que el de verdad pide a la CSP de la app (build.py):
+# trae su código de gstatic, pone su sello (sin estilo propio: la CSP de la app no admite estilos en línea) con su marco dentro
+# y avisa a su servidor. Deja en window.__rc con qué clave y acción se le pidió el último token.
+RECAPTCHA = re.compile(r'^https://(www\.google\.com|recaptcha\.google\.com|www\.gstatic\.com)/recaptcha/')
+RECAPTCHA_JS = """(function(){var loaded=null;
+window.grecaptcha={enterprise:{
+ ready:function(f){loaded=loaded||new Promise(function(res){var s=document.createElement('script');s.src='https://www.gstatic.com/recaptcha/releases/prueba/recaptcha__es.js';s.onload=s.onerror=res;document.head.appendChild(s)});loaded.then(f)},
+ execute:function(key,o){window.__rc=[key,o&&o.action];
+  if(!document.querySelector('.grecaptcha-badge')){var d=document.createElement('div');d.className='grecaptcha-badge';var fr=document.createElement('iframe');fr.src='https://www.google.com/recaptcha/enterprise/anchor?k='+encodeURIComponent(key);fr.width=256;fr.height=60;d.appendChild(fr);document.body.appendChild(d)}
+  var tok=function(){return 'rc-tok'};
+  return fetch('https://www.google.com/recaptcha/enterprise/clr?k='+encodeURIComponent(key),{method:'POST',body:'x'}).then(tok,tok)}}};
+})();"""
+
+
+def _recaptcha(route):
+    """Contesta a reCAPTCHA de prueba: su script, el código que trae de gstatic, su marco y sus avisos."""
+    u = route.request.url
+    if '/enterprise.js' in u:
+        return route.fulfill(content_type='application/javascript', body=RECAPTCHA_JS)
+    if u.endswith('.js'):
+        return route.fulfill(content_type='application/javascript', body='/* reCAPTCHA de prueba */')
+    if '/anchor' in u:
+        return route.fulfill(content_type='text/html', body='<!doctype html><title>reCAPTCHA de prueba</title>')
+    return route.fulfill(content_type='text/plain', body='ok', headers={'access-control-allow-origin': '*'})
+
+
 def _with_setup(make):
-    """browser.new_context que prepara cada página del contexto: con SF_FONT, pone esa letra; en Firefox, lee bien el texto de las hojas."""
+    """browser.new_context que prepara cada página del contexto: con SF_FONT, pone esa letra; en Firefox, lee bien el texto de las
+    hojas; y reCAPTCHA, siempre el de prueba."""
     def run(self, *a, **k):
         c = make(self, *a, **k)
         if FONT:
             c.add_init_script(FONT_JS)
         if ENGINE == 'firefox':
             c.add_init_script(GECKO_TEXT_JS)
+        c.route(RECAPTCHA, _recaptcha)
         return c
     return run
 

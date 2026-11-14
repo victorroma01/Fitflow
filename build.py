@@ -251,7 +251,7 @@ def run_esbuild(args, stdin=None):
     return r.stdout
 
 
-def stage(generated, deploy, emu=False):
+def stage(generated, deploy, emu=False, appcheck=False):
     """Copia src/js a una carpeta temporal con los moldes generados (data/media, data/release) y, en el paquete, FFDEP = 1."""
     # siempre la misma carpeta: esbuild tiene en cuenta las rutas al calcular los nombres de los archivos, y así salen iguales
     st = os.path.join(DIST, '.stage')
@@ -274,6 +274,12 @@ def stage(generated, deploy, emu=False):
             t = t.replace(a, b)
         # el emulador no tiene App Check: sin él, aunque esté configurado para la app publicada
         t = re.sub(r"export const APP_CHECK = \{[^}]*\};", "export const APP_CHECK = { siteKey: '', appId: '' };", t)
+        write(p, t)
+    if appcheck:
+        p = os.path.join(st, 'cloud', 'config.js')
+        t, n = re.subn(r"export const APP_CHECK = \{[^}]*\};", "export const APP_CHECK = { siteKey: '%s', appId: '%s' };" % APPCHECK_TEST, read(p))
+        if n != 1:
+            die('cloud/config.js debe declarar una vez «export const APP_CHECK = { … };»')
         write(p, t)
     if deploy:
         p = os.path.join(st, 'core', 'util.js')
@@ -373,10 +379,13 @@ def template_scripts(tpl):
 
 
 # App Check (I-05, cloud/appcheck): solo si cloud/config trae su clave, la CSP admite el script y el marco de reCAPTCHA
-# Enterprise y el cambio de tokens en App Check
+# Enterprise, sus propias peticiones (lo que piden sus preguntas frecuentes para una CSP sin «nonce») y el cambio de tokens
+# en App Check
 APPCHECK_SCRIPT = 'https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/'
 APPCHECK_FRAME = 'https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/'
-APPCHECK_CONNECT = 'https://content-firebaseappcheck.googleapis.com'
+APPCHECK_CONNECT = 'https://content-firebaseappcheck.googleapis.com https://www.google.com/recaptcha/'
+# la configuración de prueba de «--appcheck» (no existe en Firebase: reCAPTCHA y App Check van simulados en tests/cloud.py)
+APPCHECK_TEST = ('clave-de-prueba', '1:1234:web:abcd')
 
 
 def app_check_on():
@@ -392,15 +401,15 @@ def sha256(s):
     return "'sha256-%s'" % base64.b64encode(hashlib.sha256(s.encode('utf-8')).digest()).decode()
 
 
-def csp_meta(scripts, css, files, emu=False):
+def csp_meta(scripts, css, files, emu=False, appcheck=None):
     """<meta> con la CSP: la huella de cada <script> en línea (`scripts`, su texto exacto) y de la hoja de estilo en línea
     (`css`) y, con `files`, el código de la web. Sin estilos en línea (I-14): ni style="…" ni otros <style>; lo que cambia con
-    un dato se pone desde el código (core/dynstyle)."""
+    un dato se pone desde el código (core/dynstyle). `appcheck`: con App Check o sin él, diga lo que diga cloud/config."""
     if any('\r' in s or '\0' in s for s in scripts):
         # el navegador los cambia al leer la página (\r\n → \n): la huella ya no coincidiría y el <script> no se ejecutaría
         die('\\r o \\0 dentro de un <script>')
     sha = [sha256(s) for s in scripts]
-    ac = app_check_on() and not emu
+    ac = (app_check_on() if appcheck is None else appcheck) and not emu
     pol = ["default-src 'self'", ' '.join(['script-src'] + (["'self'"] if files else []) + sha + ([APPCHECK_SCRIPT] if ac else [])), "style-src 'self' " + sha256(css),
            "img-src 'self' data: blob:", "media-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self' " + CSP_CONNECT + (' %s %s' % (EMU_AUTH, EMU_FIRESTORE) if emu else '') + (' ' + APPCHECK_CONNECT if ac else ''),
            # el archivo único no trae manifiesto: system/updates genera uno en un blob: (el paquete usa el estático)
@@ -410,10 +419,10 @@ def csp_meta(scripts, css, files, emu=False):
     return '<meta http-equiv="Content-Security-Policy" content="%s">' % '; '.join(pol)
 
 
-def page(tpl, css, js, emu=False):
+def page(tpl, css, js, emu=False, appcheck=None):
     """Archivo único: todo en línea, con la CSP que admite justo sus dos <script> (el de arranque y el código)."""
     sc = ['\n' + js if s == '\n@@JS@@' else s for s in template_scripts(tpl)]
-    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, css, False, emu), 1)
+    h = tpl.replace('<title>StrataFit</title>', '<title>StrataFit</title>\n' + csp_meta(sc, css, False, emu, appcheck), 1)
     # replace con texto literal: el código puede contener barras invertidas
     return h.replace('@@CSS@@', css).replace('@@JS@@', js)
 
@@ -469,6 +478,7 @@ def main():
     ap.add_argument('--check', action='store_true', help='comprobaciones estáticas adicionales (tools/check.js, necesita node + typescript)')
     ap.add_argument('--only', choices=['app', 'single'])
     ap.add_argument('--emulador', action='store_true', help='solo el archivo único, en dist/emu/, conectado al emulador de Firebase (pruebas)')
+    ap.add_argument('--appcheck', action='store_true', help='solo el archivo único, en dist/appcheck/, con App Check configurado con valores de prueba y su CSP (pruebas)')
     ap.add_argument('--version', action='store_true', help='escribe la versión de la app y termina')
     ap.add_argument('--notes', action='store_true', help='escribe las notas de la versión (CHANGELOG.md) y termina')
     a = ap.parse_args()
@@ -496,6 +506,16 @@ def main():
         os.makedirs(os.path.join(DIST, 'emu'), exist_ok=True)
         write(os.path.join(DIST, 'emu', 'stratafit.html'), page(tpl, css, js, emu=True))
         print('  dist/emu/stratafit.html  (archivo único con el emulador de Firebase: %s y %s)' % (EMU_AUTH, EMU_FIRESTORE))
+        return
+    if a.appcheck:
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False, appcheck=True)
+        try:
+            js = bundle_single(st)
+        finally:
+            shutil.rmtree(st, ignore_errors=True)
+        os.makedirs(os.path.join(DIST, 'appcheck'), exist_ok=True)
+        write(os.path.join(DIST, 'appcheck', 'stratafit.html'), page(tpl, css, js, appcheck=True))
+        print('  dist/appcheck/stratafit.html  (archivo único con App Check configurado con valores de prueba)')
         return
     if a.only != 'app':
         st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False)

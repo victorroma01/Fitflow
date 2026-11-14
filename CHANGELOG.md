@@ -114,6 +114,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   desplegable corto del entreno (Tempo) ensanchaba la página a 446 px en las pruebas con móviles de 320 a 430. `.psel` lo
   recorta a lo ancho. `tests/layout.py` dice mejor quién ensancha la página (recorta cada hijo antes de ocultarlo).
 - `tests/cloud.py` reconoce cómo dice Firefox que una petición no llegó por falta de conexión.
+- App Check (I-05), listo para activarse en cuanto estén sus dos valores de la consola: la CSP abre también las peticiones
+  propias de reCAPTCHA (lo piden sus preguntas frecuentes, y faltaba); entrar y sincronizar esperan su token 8 s como mucho y
+  siguen sin él si reCAPTCHA falla, tarda o no hay conexión (antes podían quedarse esperando); el fallo se anota una vez en
+  Diagnóstico; y el sello de reCAPTCHA no ocupa sitio. `tests/cloud.py` (111 comprobaciones) lo prueba sobre una compilación
+  con App Check y su CSP de verdad (`build.py --appcheck`), con un reCAPTCHA de prueba para todas las pruebas
+  (`tests/browser.py`). La batería entera pasa también con App Check configurado.
 
 ## [1.0.2] — 2026-11-12
 

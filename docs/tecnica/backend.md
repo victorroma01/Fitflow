@@ -116,7 +116,8 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
 - La clave de administrador (cuenta de servicio) solo existe como secreto de GitHub, `FIREBASE_SERVICE_ACCOUNT`: nunca en el código,
   en el registro ni en el chat. `.gitignore` excluye cualquier archivo de clave.
 - La CSP (`build.py`) abre solo `identitytoolkit`, `securetoken` y `firestore.googleapis.com`, además de Open Food Facts (y, con
-  App Check activado, reCAPTCHA Enterprise y `content-firebaseappcheck.googleapis.com`). No admite estilos en línea (I-14).
+  App Check activado, reCAPTCHA Enterprise: su código, su marco y sus propias peticiones, como piden sus preguntas frecuentes; y
+  `content-firebaseappcheck.googleapis.com`). No admite estilos en línea (I-14).
 - Lo que llega de la nube pasa por `core/repair` antes de pintarse, y todo se escapa al pintar (`core/html`).
 - El token de sesión se renueva una vez en cada apertura: un rol nuevo vale al volver a abrir la app. Al cambiar la contraseña,
   Firebase cierra las demás sesiones; la app lo avisa y deja volver a entrar sin perder lo del móvil.
@@ -126,21 +127,34 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
   **apagado** mientras `APP_CHECK` (`cloud/config`) esté vacío: entonces ni se carga reCAPTCHA ni la CSP lo admite. Al activarlo,
   la CSP abre el script y el marco de reCAPTCHA y el cambio de tokens, y Privacidad y el inicio de sesión lo dicen (su sello no se
   ve). reCAPTCHA es de Google y usa datos técnicos del navegador: activarlo es decisión del propietario.
+  reCAPTCHA es un servidor más del que depende entrar y sincronizar, así que nada se queda esperándolo: una petición a Firebase
+  espera su token 8 segundos como mucho y, si no llega (reCAPTCHA bloqueado, sin responder, o sin conexión), sale sin él; durante
+  el minuto siguiente las demás ya no esperan. Antes de exigir App Check en la consola, una petición sin token vale igual. Un
+  fallo que no sea de conexión (una clave mal puesta, por ejemplo) queda anotado una vez en Ajustes → Diagnóstico, como «App
+  Check». Los servicios de verdad no se pueden usar fuera de la dirección de la app: `tests/cloud.py` lo prueba con reCAPTCHA y
+  App Check simulados sobre una compilación con su CSP de verdad (`python3 build.py --appcheck`); que funciona con los de
+  Google se ve en la consola (paso 4).
 
 ### Activar App Check
 
-1. **Clave de reCAPTCHA Enterprise.** En la consola de Google Cloud, con el proyecto de Firebase (`stratafit-960ec`): *Seguridad →
-   reCAPTCHA* (activa la API si lo pide) → *Crear clave*: tipo *Sitio web*, dominio `victorroma01.github.io`, sin la casilla «No
-   soy un robot» (por puntuación). No hace falta facturación: sin ella, App Check usa los umbrales 0,1-0,9 de diez en diez, y hay
-   una cuota gratuita de evaluaciones al mes (cada token nuevo, una; la app pide uno por hora de uso).
+1. **Clave de reCAPTCHA Enterprise.** En la consola de Google Cloud, con el proyecto de Firebase (`stratafit-960ec`), la página de
+   reCAPTCHA, que ahora se llama *Fraud Defense* (<https://console.cloud.google.com/security/recaptcha>; activa la API si lo
+   pide) → *Crear clave*: plataforma *Sitio web*, dominio `victorroma01.github.io`, sin marcar «Usar desafío de casilla de
+   verificación» (App Check necesita una clave por puntuación, invisible). No hace falta facturación: sin ella hay cuatro
+   umbrales de puntuación (0,1, 0,3, 0,7 y 0,9) en vez de once, y 10.000 evaluaciones gratis al mes (cada token nuevo, una; la
+   app pide uno al abrirse con sesión y otro por cada hora que siga abierta).
 2. **Registrar la app web.** En la consola de Firebase: *Configuración del proyecto → General → Tus apps*; si no hay una app web,
-   *Añadir app → Web* (sin Hosting). Anota su *ID de app* (`1:…:web:…`). Después, *App Check → Apps* → esa app → *reCAPTCHA
-   Enterprise* → pega la clave de sitio → *Guardar* (la duración del token, la de serie: 1 hora).
+   *Añadir app → Web* (sin Hosting). Anota su *ID de app* (`1:…:web:…`). Después, *Seguridad → App Check → Apps* → esa app →
+   *reCAPTCHA Enterprise* → pega la clave de sitio → *Guardar* (la duración del token, la de serie: 1 hora). Todavía **no** se
+   pulsa *Aplicar* en ningún servicio.
 3. **Poner los dos valores en la app**: `APP_CHECK = { siteKey: '…', appId: '1:…:web:…' }` en `src/js/cloud/config.js` (no son
-   secretos) y publicar la versión.
-4. **Mirar antes de exigir.** En *App Check → APIs*, para *Cloud Firestore* y *Authentication*, las peticiones verificadas frente a
-   las que no. Cuando casi todas estén verificadas (unos días, con todos los móviles ya actualizados), *Aplicar* en cada una.
-   Desde ese momento, una app sin App Check (una versión vieja o un programa) ya no puede usarlas.
+   secretos) y publicar la versión. Con ellos, la compilación abre la CSP a reCAPTCHA sola, y las pruebas usan un reCAPTCHA de
+   prueba (`tests/browser.py`): no salen a internet.
+4. **Mirar antes de exigir.** En *Seguridad → App Check → APIs*, para *Cloud Firestore* y *Authentication* (esta, en beta), las
+   peticiones verificadas frente a las que no. Si con la versión nueva en los móviles no aparecen peticiones verificadas, algo
+   está mal puesto: Ajustes → Diagnóstico lo dice en la app («App Check»). Cuando casi todas estén verificadas (unos días, con
+   todos los móviles ya actualizados), *Aplicar* en cada una; tarda hasta 15 minutos en valer. Desde ese momento, una app sin
+   App Check (una versión vieja o un programa) ya no puede usarlas.
 5. **Alertas de uso** (opcional): en Google Cloud, *Monitoring → Alertas → Crear política* con la métrica de escrituras de
    documentos de Firestore (por ejemplo, más de 15.000 en un día: el límite del plan Spark es 20.000) y aviso por correo.
 
