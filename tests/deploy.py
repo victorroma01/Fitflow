@@ -73,24 +73,19 @@ def skipped(name):
 
 def reload(pg, notes):
     """Recarga la página. Si la recarga falla con un error interno de WebKit, o se queda sin terminar (de vez en cuando, en la
-    integración continua de GitHub, una recarga con service worker no llega a «load» en Chromium), o Firefox la rechaza por
-    estar sin conexión antes de que llegue al service worker (una de cada ocho veces en GitHub, justo tras quitar la conexión),
-    se vuelve a abrir la misma dirección una vez y se anota, para que la prueba siga y se vea el resto; si vuelve a fallar,
-    falla la prueba. Si se queda sin terminar, enseña las últimas peticiones que llegaron al servidor, para ver si la recarga
-    llegó a pedir la página (I-13)."""
+    integración continua de GitHub, una recarga con service worker no llega a «load» en Chromium), se vuelve a abrir la misma
+    dirección una vez y se anota, para que la prueba siga y se vea el resto; si vuelve a fallar, falla la prueba. Si se queda sin
+    terminar, enseña las últimas peticiones que llegaron al servidor, para ver si la recarga llegó a pedir la página (I-13)."""
     try:
         pg.reload()
     except Exception as e:
         stuck = 'Timeout' in type(e).__name__ or 'Timeout' in str(e)[:60]
-        refused = ENGINE == 'firefox' and 'NS_ERROR_OFFLINE' in str(e)
-        if not stuck and not refused and (ENGINE != 'webkit' or 'internal error' not in str(e)):
+        if not stuck and (ENGINE != 'webkit' or 'internal error' not in str(e)):
             raise
-        notes.append(('recarga sin terminar en 30 s' if stuck else 'recarga sin conexión rechazada por Firefox' if refused else 'recarga con error interno de WebKit') + ' en ' + pg.url[-30:])
+        notes.append(('recarga sin terminar en 30 s' if stuck else 'recarga con error interno de WebKit') + ' en ' + pg.url[-30:])
         print('   (%s: se vuelve a abrir la dirección)' % notes[-1])
         if stuck:
             print('   últimas peticiones al servidor (desde el arranque de la prueba): ' + ' · '.join(list(REQLOG)[-10:]))
-        if refused:
-            pg.wait_for_timeout(500)
         pg.goto(pg.url)
 
 

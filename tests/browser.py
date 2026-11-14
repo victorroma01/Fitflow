@@ -81,10 +81,28 @@ GECKO_TEXT_JS = """(() => { const d = Object.getOwnPropertyDescriptor(HTMLElemen
     get() { const t = d.get.call(this); return t || this.id != 'sh' ? t : [...this.children].map(c => d.get.call(c)).filter(Boolean).join('\\n'); } }); })()"""
 
 
-# reCAPTCHA Enterprise de prueba. Con App Check configurado (cloud/config), la app carga reCAPTCHA de Google antes de hablar con
-# Firebase: en las pruebas no se sale a internet, y lo contesta esto. Hace lo que el de verdad pide a la CSP de la app (build.py):
-# trae su código de gstatic, pone su sello (sin estilo propio: la CSP de la app no admite estilos en línea) con su marco dentro
-# y avisa a su servidor. Deja en window.__rc con qué clave y acción se le pidió el último token.
+# reCAPTCHA Enterprise en las pruebas. Con App Check configurado (cloud/config), la app carga reCAPTCHA de Google antes de hablar
+# con Firebase, y en las pruebas no se sale a internet. Hay dos sustitutos:
+#  · RECAPTCHA_INIT, en todas las páginas: cuando la app va a añadir el <script> de reCAPTCHA, no se añade; se le da uno de
+#    mentira y se le avisa de que ha cargado. Y el cambio de su token por el de App Check falla como sin conexión, salvo que la
+#    prueba traiga su Firebase de prueba (window.__sfNet). Sin rutas de Playwright: en Firefox, un contexto con rutas ya no
+#    abre sin conexión una página que sirve su service worker (tests/deploy.py).
+#  · recaptcha_route, para la prueba de App Check (tests/cloud.py, que lo pide con window.__sfRecaptchaNet y c.route(RECAPTCHA,
+#    recaptcha_route)): el <script> se pide de verdad y lo contesta esta ruta con un reCAPTCHA que hace lo que el de Google le
+#    pide a la CSP de la app (build.py): trae su código de gstatic, pone su sello (sin estilo propio: la CSP no admite estilos en
+#    línea) con su marco dentro y avisa a su servidor.
+# Los dos dejan en window.__rc con qué clave y acción se pidió el último token.
+RECAPTCHA_INIT = """(function(){try{
+var add=Node.prototype.appendChild;
+Node.prototype.appendChild=function(n){
+ if(!window.__sfRecaptchaNet&&n&&n.tagName==='SCRIPT'&&/^https:\\/\\/www\\.google\\.com\\/recaptcha\\//.test(n.src||'')){
+  window.grecaptcha={enterprise:{ready:function(f){f()},execute:function(k,o){window.__rc=[k,o&&o.action];return Promise.resolve('rc-tok')}}};
+  Promise.resolve().then(function(){if(n.onload)n.onload()});
+  return n}
+ return add.apply(this,arguments)};
+var f=window.fetch;
+if(f)window.fetch=function(u){if(!window.__sfNet&&/content-firebaseappcheck\\.googleapis\\.com/.test(String(u&&u.url||u)))return Promise.reject(new TypeError('Failed to fetch'));return f.apply(this,arguments)};
+}catch(e){}})();"""
 RECAPTCHA = re.compile(r'^https://(www\.google\.com|recaptcha\.google\.com|www\.gstatic\.com)/recaptcha/')
 RECAPTCHA_JS = """(function(){var loaded=null;
 window.grecaptcha={enterprise:{
@@ -96,7 +114,7 @@ window.grecaptcha={enterprise:{
 })();"""
 
 
-def _recaptcha(route):
+def recaptcha_route(route):
     """Contesta a reCAPTCHA de prueba: su script, el código que trae de gstatic, su marco y sus avisos."""
     u = route.request.url
     if '/enterprise.js' in u:
@@ -110,14 +128,14 @@ def _recaptcha(route):
 
 def _with_setup(make):
     """browser.new_context que prepara cada página del contexto: con SF_FONT, pone esa letra; en Firefox, lee bien el texto de las
-    hojas; y reCAPTCHA, siempre el de prueba."""
+    hojas; y reCAPTCHA, siempre de prueba."""
     def run(self, *a, **k):
         c = make(self, *a, **k)
         if FONT:
             c.add_init_script(FONT_JS)
         if ENGINE == 'firefox':
             c.add_init_script(GECKO_TEXT_JS)
-        c.route(RECAPTCHA, _recaptcha)
+        c.add_init_script(RECAPTCHA_INIT)
         return c
     return run
 

@@ -9,7 +9,7 @@ Con el emulador, la contraseña temporal la crea el script de verdad (tools/admi
 """
 import os, re, sys, json, time, base64, subprocess, urllib.request
 from playwright.sync_api import sync_playwright
-from browser import launch, app_url, context_opts
+from browser import launch, app_url, context_opts, RECAPTCHA, recaptcha_route
 from fakefb import FakeFirebase
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -320,8 +320,10 @@ def main(path):
         if not EMU:
             def phone(file):
                 c = b.new_context(viewport={'width': 390, 'height': 844}, **context_opts(file))
-                c.add_init_script('window.__sfNoSession=1;window.__sfNet=1;')
+                # (el <script> de reCAPTCHA se pide de verdad, para que pase por la CSP de la app, y lo contesta el de prueba)
+                c.add_init_script('window.__sfNoSession=1;window.__sfNet=1;window.__sfRecaptchaNet=1;')
                 c.add_init_script(INIT)
+                c.route(RECAPTCHA, recaptcha_route)
                 fb.install(c)
                 pg = c.new_page()
                 heads = []
