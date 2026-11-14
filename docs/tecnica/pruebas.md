@@ -71,7 +71,9 @@ librería de terceros); si encuentra una vulnerabilidad alta o crítica, deja un
 **Probar en Firefox** pasa la misma batería con el motor Gecko: es informativo (no detiene la publicación), porque la app se usa
 instalada en iPhone (Safari) y en Android (Chrome), y sirve para saber si algo depende de un solo motor. Ya sirvió: en Firefox,
 «sin conexión» no corta las peticiones del service worker, y así salió el fallo de las actualizaciones tras abrir un acceso
-directo ([auditoría](auditoria-1.0.3.md), SW1), que con los otros dos motores no se veía.
+directo ([auditoría](auditoria-1.0.3.md), SW1), que con los otros dos motores no se veía. Una rareza suya al escribir pruebas:
+un contexto de Playwright con rutas (`route`) no abre sin conexión una página que sirve su service worker; por eso lo que
+todas las pruebas necesitan simulado (reCAPTCHA) va en un guion de inicio y no en una ruta (`tests/browser.py`).
 
 Los ordenadores de GitHub no tienen la letra de este entorno: la suya (DejaVu Sans) es más ancha. Si algo falla allí y no aquí,
 `SF_FONT="DejaVu Sans" python3 tests/….py` lo repite aquí. Y WebKit y Firefox solo están allí: un fallo de uno de esos motores se
