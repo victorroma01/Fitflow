@@ -80,6 +80,8 @@ def main(path, shots=None):
                     return
                 pg.wait_for_timeout(100)
 
+        # (las capturas de las comprobaciones de lo pintado van con caret='initial': para esconder el cursor de texto, Playwright
+        # mete una hoja de estilos en la página, y la política de seguridad de la app la rechaza con un aviso en WebKit)
         def settled():
             """Espera a que la hoja termine de entrar: sus animaciones van con el reloj de verdad, y una captura a medias sale
             desplazada o medio transparente."""
@@ -219,19 +221,19 @@ def main(path, shots=None):
         # lo pintado de verdad (también en Safari y Firefox): los músculos que trabajan en rojo y naranja, el resto del
         # cuerpo en su gris azulado; y, de frente, los brazos abiertos del todo, con las mancuernas en los extremos
         settled()
-        red, orange, slate, _, _ = painted(pg.locator('#sh .fgs').screenshot())
+        red, orange, slate, _, _ = painted(pg.locator('#sh .fgs').screenshot(caret='initial'))
         print('        pintado (rojo, naranja, gris azulado): sentadilla %.4f %.4f %.4f' % (red, orange, slate))
         check('sentadilla: se ven los músculos principales, los secundarios y el resto del cuerpo', red > .009 and orange > .004 and slate > .012, '%.4f %.4f %.4f' % (red, orange, slate))
         how('Elevaciones laterales')
         settled()
-        ini = painted(pg.locator('#sh .fgs figure').nth(0).screenshot())
-        fin = painted(pg.locator('#sh .fgs figure').nth(1).screenshot())
+        ini = painted(pg.locator('#sh .fgs figure').nth(0).screenshot(caret='initial'))
+        fin = painted(pg.locator('#sh .fgs figure').nth(1).screenshot(caret='initial'))
         print('        pintado: elevaciones, inicio %s · final %s' % (' '.join('%.4f' % v if isinstance(v, float) else str(v) for v in ini), ' '.join('%.4f' % v if isinstance(v, float) else str(v) for v in fin)))
         check('elevaciones: se ven el deltoides, los secundarios y el cuerpo', fin[0] > .0015 and fin[1] > .002 and fin[2] > .015, str(fin))
         check('elevaciones: al final, las mancuernas están en los extremos; al inicio, no', fin[3] > 12 and fin[4] > 12 and ini[3] < 4 and ini[4] < 4, str([ini, fin]))
         how('Press banca')
         settled()
-        red, orange, slate, _, _ = painted(pg.locator('#sh .fgs figure').nth(1).screenshot())
+        red, orange, slate, _, _ = painted(pg.locator('#sh .fgs figure').nth(1).screenshot(caret='initial'))
         print('        pintado: press banca %.4f %.4f %.4f' % (red, orange, slate))
         check('press banca: se ven el pectoral, los secundarios y el cuerpo', red > .0008 and orange > .0008 and slate > .018, '%.4f %.4f %.4f' % (red, orange, slate))
         ev("A.closeSheet()")
@@ -243,7 +245,7 @@ def main(path, shots=None):
         pg.fill('#sh input', 'sentadilla')
         pg.clock.run_for(500)
         settled()
-        red, orange, _, _, _ = painted(pg.locator('#sh .exr .exth').first.screenshot())
+        red, orange, _, _, _ = painted(pg.locator('#sh .exr .exth').first.screenshot(caret='initial'))
         print('        pintado: miniatura de la sentadilla %.4f %.4f' % (red, orange))
         check('miniatura de la sentadilla: los músculos en color', red > .01 and orange > .004, '%.4f %.4f' % (red, orange))
         ev("A.closeSheet()")
