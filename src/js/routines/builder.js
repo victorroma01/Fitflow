@@ -14,7 +14,7 @@ import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, 
 import { REST_OPTIONS, restDefault } from '../workout/rest.js';
 import { imagePicker, routineImage } from '../workout/images.js';
 import { MAX_SETS } from '../workout/targets.js';
-import { exAnatomy } from '../extras/anatomy.js';
+import { exPicture } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 export let routineState = { i: -1, k: 1, sel: [], q: '' };
 const BLOCK_KINDS = ['', 'Suelto', 'Superserie', 'Triserie'];
@@ -29,7 +29,7 @@ const routineListPage = () => routineList();
 const routineBlock = (block, j) => {
   const letter = String.fromCharCode(65 + j);
   const kind = block.ex.length > 1 ? html`<b class="c-wnx">${raw(BLOCK_KINDS[block.ex.length])} · 10 s</b>` : '';
-  const exercises = block.ex.map(n => html`<div class="ovx"><div class="th">${exAnatomy(n, 64)}</div><b class="fx-1">${n}</b></div>`);
+  const exercises = block.ex.map(n => html`<div class="ovx"><div class="th">${exPicture(n, 64)}</div><b class="fx-1">${n}</b></div>`);
   const sets = html`<span><button data-a="routineBlockSets" data-i="${j}" data-v="-1" aria-label="${'Una serie menos, serie ' + letter}">−</button> ${raw(block.s)} series <button data-a="routineBlockSets" data-i="${j}" data-v="1" aria-label="${'Una serie más, serie ' + letter}">+</button></span>`;
   const rest = html`<select data-c="routineBlockReps" data-i="${j}" aria-label="${'Descanso, serie ' + letter}" class="w-auto">${REST_OPTIONS.map(v => html`<option value="${v}"${v == block.r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))}</option>`)}</select>`;
   return html`<div class="row mt-16"><b class="mu">SERIE ${raw(letter)}</b>${kind}<button data-a="routineBlockDelete" data-i="${j}" class="p-4-10">Quitar</button></div>${exercises}<div class="row mt-6">${sets}${rest}</div>`;

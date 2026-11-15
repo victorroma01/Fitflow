@@ -22,7 +22,7 @@ import { TECHNIQUES } from '../data/techniques.js';
 import { progressBody } from '../dashboard/progress.js';
 import { fromDisplayWeight, toDisplayWeight, weightUnit } from '../profile/units.js';
 import { buzz } from '../profile/feedback.js';
-import { exAnatomy } from '../extras/anatomy.js';
+import { exPicture } from '../extras/anatomy.js';
 import { rpeOn } from './rpe.js';
 import { html, raw } from '../core/html.js';
 import { elapsedMs, liftScore } from '../core/calc.js';
@@ -216,7 +216,7 @@ const anLiveOn = i => {
 };
 const exThumb = (n, i) => {
   const on = anLiveOn(i);
-  const s = exAnatomy(n, 64);
+  const s = exPicture(n, 64);
   /* al tocar la imagen, cómo se hace el ejercicio (F-14: library/howto) */
   const at = ' data-a="exerciseHowTo" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Cómo se hace: ' + X(n) + '"';
   return html`<div class="th${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;

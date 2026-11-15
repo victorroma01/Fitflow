@@ -13,7 +13,7 @@ import { restOf, restSelect } from './rest.js';
 import { dayMinutes, rangeSelect, rirOf, targetText, tempoOf, unitOf } from './targets.js';
 import { isDeloadWeek } from './deload.js';
 import { coverStyle } from './images.js';
-import { exAnatomy } from '../extras/anatomy.js';
+import { exPicture } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 /* la cabecera: «‹ Atrás» y «Editar» (o «Listo» al editar) */
 const overviewHead = editing => html`<div class="hd"><button data-a="overviewBack">‹ Atrás</button><button data-a="overviewEdit">${editing ? 'Listo' : 'Editar'}</button></div>`;
@@ -35,7 +35,7 @@ const overviewExercise = (d, i, editing) => {
   const e = d.ex[i];
   const tempo = unitOf(e) ? '' : html`<br>Tempo ${raw(tempoOf(e))} · RIR ${rirOf(e)}`;
   const details = html`${raw(e.s)} series · ${raw(targetText(e))} · Descanso ${raw(fmtMinSec(inSuperset(i) ? 10 : restOf(e)))}${tempo}`;
-  return html`<div class="ovx"><div class="th">${exAnatomy(e.n, 64)}</div><div class="fx-1 minw-0"><b>${e.n}</b><div class="mu fs-13">${details}</div>${editing ? overviewEditButtons(d, e, i) : ''}</div></div>`;
+  return html`<div class="ovx"><div class="th">${exPicture(e.n, 64)}</div><div class="fx-1 minw-0"><b>${e.n}</b><div class="mu fs-13">${details}</div>${editing ? overviewEditButtons(d, e, i) : ''}</div></div>`;
 };
 /* un bloque del día (serie A, B…), con su tipo si junta varios ejercicios, y sus ejercicios */
 const overviewBlock = (d, k, n, editing) => {

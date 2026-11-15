@@ -1,9 +1,14 @@
 /* ═══ extras/anatomy ═══
    Mapa muscular dibujado en SVG.
-   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exAnatomy, exAnatomyFull
+   La imagen de un ejercicio (exPicture, exMotion) es el modelo haciéndolo si tiene postura (data/figposes, muestra de la
+   V1.1: extras/figure) y, si no, sus músculos en el mapa.
+   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, exPicture, exMotion, exMusclesSmall
 */
 import { groupOf } from '../data/library.js';
 import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
+import { FIG_POSES } from '../data/figposes.js';
+import { figureStage, figureSvg } from './figure.js';
+import { sideRegions } from './rig.js';
 import { groupIcon } from '../core/icons.js';
 import { exAll } from '../library/model.js';
 import { html, raw } from '../core/html.js';
@@ -73,13 +78,18 @@ const regionsBox = (v, regs) => {
   }
   return bx.toFixed(0) + ' ' + by.toFixed(0) + ' ' + z.toFixed(0) + ' ' + z.toFixed(0);
 };
+/** Lo que trabaja un ejercicio: sus músculos [principales, secundarios] o, si no los tiene, los de su grupo. */
+const exWork = e => {
+  const a = GROUP_ANATOMY[e ? groupOf(e) : ''];
+  const has = e && e.p && e.p.length;
+  return [has ? e.p : (a ? a[1] : []), has ? (e.s || []) : (a ? a[2] : [])];
+};
 export const exAnatomy = (n, s) => {
   const e = exAll().find(x => x.n == n);
   const g = e ? groupOf(e) : '';
   const a = GROUP_ANATOMY[g];
   const has = e && e.p && e.p.length;
-  const P = has ? e.p : (a ? a[1] : []);
-  const S = has ? (e.s || []) : (a ? a[2] : []);
+  const [P, S] = exWork(e);
   if (!a && !has)
     return groupIcon(g || 'Propio', s);
   const f = regionsFor(P, 'F').length;
@@ -93,12 +103,38 @@ export const exAnatomy = (n, s) => {
   return anatomySvg(v, P, S, box, s);
 };
 export const exAnatomyFull = e => {
-  const has = e && e.p && e.p.length;
-  const g = e ? groupOf(e) : '';
-  const a = GROUP_ANATOMY[g];
-  const P = has ? e.p : (a ? a[1] : []);
-  const S = has ? (e.s || []) : (a ? a[2] : []);
+  const [P, S] = exWork(e);
   if (!P.length && !S.length)
     return '';
   return html`<div class="anf"><div>${anatomySvg('F', P, S, '0 0 200 410', 132, 271)}<small>Frontal</small></div><div>${anatomySvg('B', P, S, '0 0 200 410', 132, 271)}<small>Posterior</small></div><div class="anl"><span><i class="bg-grad-red"></i>Principal</span><span><i class="bg-grad-amber"></i>Secundario</span></div></div>`;
+};
+/** Las regiones [principales, secundarias] que se pintan en la figura f de un ejercicio, según su vista. */
+const figRegions = (f, e) => {
+  const [P, S] = exWork(e);
+  const of = cs => f.v == 'F' ? regionsFor(cs, 'F') : sideRegions(cs);
+  const p = of(P);
+  return [p, of(S).filter(k => !p.includes(k))];
+};
+/** La imagen pequeña de un ejercicio (s×s px): el modelo haciéndolo, si tiene postura; si no, sus músculos en el mapa. */
+export const exPicture = (n, s) => {
+  const f = FIG_POSES[n];
+  if (!f)
+    return exAnatomy(n, s);
+  const [p, q] = figRegions(f, exAll().find(x => x.n == n));
+  return figureSvg(f, p, q, s);
+};
+/** La figura grande de un ejercicio, que se mueve entre el inicio y el final (still: las dos posturas quietas); '' si no tiene postura. */
+export const exMotion = (n, still) => {
+  const f = FIG_POSES[n];
+  if (!f)
+    return '';
+  const [p, q] = figRegions(f, exAll().find(x => x.n == n));
+  return figureStage(f, p, q, still);
+};
+/** Los músculos de un ejercicio en pequeño, de frente y de espaldas; '' si no hay datos. */
+export const exMusclesSmall = n => {
+  const [P, S] = exWork(exAll().find(x => x.n == n));
+  if (!regionsFor(P.concat(S), 'F').length && !regionsFor(P.concat(S), 'B').length)
+    return '';
+  return html`<span class="hwf" aria-hidden="true">${anatomySvg('F', P, S, '0 0 200 410', 40, 82)}${anatomySvg('B', P, S, '0 0 200 410', 40, 82)}</span>`;
 };
