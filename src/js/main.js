@@ -104,6 +104,8 @@ import './system/welcome.js';
 import './system/tour.js';
 import './extras/rig.js';
 import './extras/figure.js';
+import './extras/gear.js';
+import './extras/moves.js';
 import './extras/anatomy.js';
 import './extras/summary.js';
 import './extras/stagnation.js';

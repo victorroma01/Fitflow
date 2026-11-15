@@ -1,13 +1,13 @@
 /* ═══ extras/anatomy ═══
    Mapa muscular dibujado en SVG.
-   La imagen de un ejercicio (exPicture, exMotion) es el modelo haciéndolo si tiene postura (data/figposes, muestra de la
-   V1.1: extras/figure) y, si no, sus músculos en el mapa.
+   La imagen de un ejercicio (exPicture, exMotion) es el modelo haciéndolo (extras/moves pone la postura y extras/figure
+   la pinta); los ejercicios propios, que no tienen postura, enseñan sus músculos en el mapa.
    Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, exPicture, exMotion, exMusclesSmall
 */
 import { groupOf } from '../data/library.js';
 import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
-import { FIG_POSES } from '../data/figposes.js';
 import { figureStage, figureSvg } from './figure.js';
+import { figPose } from './moves.js';
 import { sideRegions } from './rig.js';
 import { groupIcon } from '../core/icons.js';
 import { exAll } from '../library/model.js';
@@ -111,13 +111,13 @@ export const exAnatomyFull = e => {
 /** Las regiones [principales, secundarias] que se pintan en la figura f de un ejercicio, según su vista. */
 const figRegions = (f, e) => {
   const [P, S] = exWork(e);
-  const of = cs => f.v == 'F' ? regionsFor(cs, 'F') : sideRegions(cs);
+  const of = cs => f.v == 'S' ? sideRegions(cs) : regionsFor(cs, f.v);
   const p = of(P);
   return [p, of(S).filter(k => !p.includes(k))];
 };
 /** La imagen pequeña de un ejercicio (s×s px): el modelo haciéndolo, si tiene postura; si no, sus músculos en el mapa. */
 export const exPicture = (n, s) => {
-  const f = FIG_POSES[n];
+  const f = figPose(n);
   if (!f)
     return exAnatomy(n, s);
   const [p, q] = figRegions(f, exAll().find(x => x.n == n));
@@ -125,7 +125,7 @@ export const exPicture = (n, s) => {
 };
 /** La figura grande de un ejercicio, que se mueve entre el inicio y el final (still: las dos posturas quietas); '' si no tiene postura. */
 export const exMotion = (n, still) => {
-  const f = FIG_POSES[n];
+  const f = figPose(n);
   if (!f)
     return '';
   const [p, q] = figRegions(f, exAll().find(x => x.n == n));
