@@ -19,6 +19,7 @@ python -m playwright install chromium webkit
 | `python3 build.py --emulador` | Solo el archivo único, en `dist/emu/`, conectado al emulador de Firebase de este ordenador (pruebas de la nube). |
 | `python3 build.py --appcheck` | Solo el archivo único, en `dist/appcheck/`, con App Check configurado con valores de prueba y la CSP que eso abre (lo usa `tests/cloud.py`). |
 | `npm run format` | Formatea JS y CSS, pone al día la línea «Define:» de cada módulo y el [mapa de módulos](modulos.md). |
+| `node tools/figure.js` | Rehace `src/js/data/figure.js` (el modelo de perfil de las [figuras de ejercicio](figuras.md)) a partir de los puntos del dibujo. |
 | `bash tests/run.sh` | Formato, reglas, mapa de módulos y todas las pruebas. |
 | `bash tests/compare.sh vieja.html nueva.html` | Compara el comportamiento y la imagen de dos compilaciones. |
 | `npx firebase emulators:exec --only auth,firestore --project demo-stratafit "node --test tests/rules.test.mjs"` | Prueba las reglas de Firestore con el emulador (necesita Java y `npm install --no-save firebase-tools@15`). |

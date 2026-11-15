@@ -14,6 +14,7 @@ import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, worko
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
+import { FIG_POSES } from '../data/figposes.js';
 import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, overviewMode, S, saveState, setOverviewMode, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
@@ -73,6 +74,7 @@ const DEBUG_NAMES = {
   exAll: [() => exAll],
   exSearchText: [() => exSearchText],
   FFDEP: [() => FFDEP],
+  FIG_POSES: [() => FIG_POSES],
   flushState: [() => flushState],
   FOOD_GROUPS: [() => FOOD_GROUPS],
   FOODS_SRC: [() => FOODS_SRC],

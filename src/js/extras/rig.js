@@ -143,13 +143,14 @@ const f1 = n => {
   return s.endsWith('.0') ? s.slice(0, -2) : s;
 };
 const move = t => 'translate(' + f1(t.w[0]) + ' ' + f1(t.w[1]) + ') rotate(' + f1(t.a) + ')' + (t.k && t.k != 1 ? ' scale(1 ' + (Math.round(t.k * 1e3) / 1e3) + ')' : '') + ' translate(' + f1(-t.r[0]) + ' ' + f1(-t.r[1]) + ')';
-/* orden de pintado del perfil, de atrás adelante: [capa, pieza o material] */
+/* orden de pintado del perfil, de atrás adelante: las piezas (con x, las del lado de atrás) y el material; plate y bar son lo
+   que va en el puño de atrás y en el de delante (el disco y la punta de la barra, o las dos mancuernas) */
 const SIDE_ORDER = ['plate', 'xFT', 'xSH', 'xTH', 'bench', 'xFA', 'xUA', 'xHA', 'T', 'HD', 'FT', 'SH', 'TH', 'HP', 'FA', 'UA', 'HA', 'bar'];
 /** Capas de una figura de perfil en la postura p: [{ k: capa, t: transformación o '' }], en el orden de pintado. */
 const sideLayers = (def, p) => {
   const o = sidePose(p);
   const has = k => (def.props || []).some(x => x[0] == k);
-  return SIDE_ORDER.filter(k => k == 'plate' || k == 'bar' ? has('bar') : k == 'bench' ? has('bench') : true).map(k => ({
+  return SIDE_ORDER.filter(k => k == 'plate' || k == 'bar' ? has('bar') || has('db') : k == 'bench' ? has('bench') : true).map(k => ({
     k,
     t: k == 'plate' ? 'translate(' + f1(o.G[0]) + ' ' + f1(o.G[1]) + ')' : k == 'bar' ? 'translate(' + f1(o.g[0]) + ' ' + f1(o.g[1]) + ')' : k == 'bench' ? '' : move(o[k]),
   }));
@@ -188,6 +189,8 @@ const framePoints = (def, p) => {
   });
   if (prop('bar'))
     ps.push(['xarm', o.G, prop('bar')[1] + 1]);
+  if (prop('db'))
+    ps.push(['arm', o.g, 13], ['xarm', o.G, 13]);
   if (prop('bench'))
     ps.push(['bench', [prop('bench')[1], prop('bench')[3]], 0], ['bench', [prop('bench')[2], 402], 0]);
   return ps;
