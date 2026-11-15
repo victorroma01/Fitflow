@@ -30,7 +30,9 @@ LAYERS = "[...document.querySelectorAll('#sh svg[data-fig] > g')].map(g => g.get
 
 def painted(png):
     """Qué hay pintado en una captura: fracción de píxeles rojos (músculo principal), naranjas (secundario) y del gris azulado
-    de los músculos en reposo, y cuántos píxeles claros (el material) hay en el quinto izquierdo y en el derecho."""
+    de los músculos en reposo, y cuántos píxeles claros (el material) hay en el quinto izquierdo y en el derecho. Los
+    umbrales de las comprobaciones son menos de la mitad de lo medido en Chromium (queda en el registro), para que el
+    suavizado de otro motor no las haga fallar; si no se pinta la figura, todo sale a cero."""
     a = np.asarray(Image.open(io.BytesIO(png)).convert('RGB')).astype(int)
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     n = r.size
@@ -77,6 +79,15 @@ def main(path, shots=None):
                 if ev("!!document.querySelector('#sh .hwp')"):
                     return
                 pg.wait_for_timeout(100)
+
+        def settled():
+            """Espera a que la hoja termine de entrar: sus animaciones van con el reloj de verdad, y una captura a medias sale
+            desplazada o medio transparente."""
+            for _ in range(60):
+                if ev("!document.getAnimations || document.getAnimations().every(a=>a.playState!='running')"):
+                    break
+                pg.wait_for_timeout(50)
+            pg.wait_for_timeout(150)
 
         check('arranca', ev('!!window.__ffok'))
         ev("S.reduceMotion=0;saveState()")
@@ -207,16 +218,22 @@ def main(path, shots=None):
         shot('quieta')
         # lo pintado de verdad (también en Safari y Firefox): los músculos que trabajan en rojo y naranja, el resto del
         # cuerpo en su gris azulado; y, de frente, los brazos abiertos del todo, con las mancuernas en los extremos
+        settled()
         red, orange, slate, _, _ = painted(pg.locator('#sh .fgs').screenshot())
-        check('sentadilla: se ven los músculos principales, los secundarios y el resto del cuerpo', red > .012 and orange > .004 and slate > .02, '%.4f %.4f %.4f' % (red, orange, slate))
+        print('        pintado (rojo, naranja, gris azulado): sentadilla %.4f %.4f %.4f' % (red, orange, slate))
+        check('sentadilla: se ven los músculos principales, los secundarios y el resto del cuerpo', red > .009 and orange > .004 and slate > .012, '%.4f %.4f %.4f' % (red, orange, slate))
         how('Elevaciones laterales')
+        settled()
         ini = painted(pg.locator('#sh .fgs figure').nth(0).screenshot())
         fin = painted(pg.locator('#sh .fgs figure').nth(1).screenshot())
-        check('elevaciones: se ven el deltoides, los secundarios y el cuerpo', fin[0] > .002 and fin[1] > .002 and fin[2] > .02, str(fin))
+        print('        pintado: elevaciones, inicio %s · final %s' % (' '.join('%.4f' % v if isinstance(v, float) else str(v) for v in ini), ' '.join('%.4f' % v if isinstance(v, float) else str(v) for v in fin)))
+        check('elevaciones: se ven el deltoides, los secundarios y el cuerpo', fin[0] > .0015 and fin[1] > .002 and fin[2] > .015, str(fin))
         check('elevaciones: al final, las mancuernas están en los extremos; al inicio, no', fin[3] > 12 and fin[4] > 12 and ini[3] < 4 and ini[4] < 4, str([ini, fin]))
         how('Press banca')
+        settled()
         red, orange, slate, _, _ = painted(pg.locator('#sh .fgs figure').nth(1).screenshot())
-        check('press banca: se ven el pectoral, los secundarios y el cuerpo', red > .001 and orange > .001 and slate > .02, '%.4f %.4f %.4f' % (red, orange, slate))
+        print('        pintado: press banca %.4f %.4f %.4f' % (red, orange, slate))
+        check('press banca: se ven el pectoral, los secundarios y el cuerpo', red > .0008 and orange > .0008 and slate > .018, '%.4f %.4f %.4f' % (red, orange, slate))
         ev("A.closeSheet()")
         ev("S.reduceMotion=0;saveState()")
         pg.clock.run_for(200)
@@ -225,8 +242,10 @@ def main(path, shots=None):
         pg.clock.run_for(300)
         pg.fill('#sh input', 'sentadilla')
         pg.clock.run_for(500)
+        settled()
         red, orange, _, _, _ = painted(pg.locator('#sh .exr .exth').first.screenshot())
-        check('miniatura de la sentadilla: los músculos en color', red > .02 and orange > .005, '%.4f %.4f' % (red, orange))
+        print('        pintado: miniatura de la sentadilla %.4f %.4f' % (red, orange))
+        check('miniatura de la sentadilla: los músculos en color', red > .01 and orange > .004, '%.4f %.4f' % (red, orange))
         ev("A.closeSheet()")
         pg.clock.run_for(200)
 
