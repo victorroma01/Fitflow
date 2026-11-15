@@ -75,7 +75,6 @@ const dumbbell = i => {
 };
 /** El contenido de una capa: la pieza en reposo y, encima, sus músculos trabajados (P en rojo, S en naranja). */
 const layer = (def, k, P, S, big) => {
-  const z = big ? 'b' : 's';
   const prop = n => (def.props || []).find(x => x[0] == n);
   if (k == 'plate')
     return prop('bar') ? plate(prop('bar')[1], big) : dbFar(0, 0);
@@ -83,17 +82,17 @@ const layer = (def, k, P, S, big) => {
     return prop('bar') ? raw(BAR) : dbNear(0, 0);
   if (k == 'bench')
     return bench(prop('bench')[1], prop('bench')[2], prop('bench')[3], big);
+  /* la mano que agarra algo va en puño */
+  const hand = prop('bar') || prop('db') ? 'HG' : 'HA';
   if (k[0] == 'x')
-    return html`<use href="#fq${k == 'xHA' ? 'HG' : k.slice(1)}" fill="${big ? SIL_FAR : SIL_SMALL_FAR}"${raw(big ? RIM : EDGE_SMALL)}/>`;
-  const lit = cs => cs.map(c => P.includes(c) ? use((big ? 'fr' : 'fp') + c, 1) : S.includes(c) ? use((big ? 'fr' : 'fp') + c, 2) : '');
-  if (def.v == 'F') {
-    if (k == 'B')
-      return html`<use href="#f${z}B"/>${Object.keys(AN_R.F).filter(c => !FRONT_ARM.regions.includes(c)).map(c => P.includes(c) ? use((big ? 'r' : 'p') + 'F' + c, 1) : S.includes(c) ? use((big ? 'r' : 'p') + 'F' + c, 2) : '')}`;
-    const i = k[1];
-    return html`<use href="#f${z}${k}"/>${FRONT_ARM.regions.map(c => P.includes(c) ? use((big ? 'fr' : 'fp') + c + i, 1) : S.includes(c) ? use((big ? 'fr' : 'fp') + c + i, 2) : '')}${prop('db') ? dumbbell(+i) : ''}`;
-  }
-  const piece = k == 'HA' ? 'HG' : k;
-  return html`<use href="#f${z}${piece}"/>${lit(Object.keys(FG_P[piece][2]))}`;
+    return html`<use href="#fq${k == 'xHA' ? hand : k.slice(1)}" fill="${big ? SIL_FAR : SIL_SMALL_FAR}"${raw(big ? RIM : EDGE_SMALL)}/>`;
+  /* la pieza base en reposo y, de sus regiones cs, las que trabajan; id da el nombre de cada región en <defs> */
+  const piece = (base, cs, id) => html`<use href="#f${big ? 'b' : 's'}${base}"/>${cs.map(c => P.includes(c) ? use(id(c), 1) : S.includes(c) ? use(id(c), 2) : '')}`;
+  const own = big ? 'fr' : 'fp';
+  if (def.v == 'F')
+    return k == 'B' ? piece('B', Object.keys(AN_R.F).filter(c => !FRONT_ARM.regions.includes(c)), c => (big ? 'r' : 'p') + 'F' + c) : html`${piece(k, FRONT_ARM.regions, c => own + c + k[1])}${prop('db') ? dumbbell(+k[1]) : ''}`;
+  const base = k == 'HA' ? hand : k;
+  return piece(base, Object.keys(FG_P[base][2]), c => own + c);
 };
 const groups = (def, P, S, t, big) => rigLayers(def, t).map(l => html`<g${raw(l.t ? ' transform="' + l.t + '"' : '')}>${layer(def, l.k, P, S, big)}</g>`);
 const boxText = b => b.map(n => Math.round(n)).join(' ');

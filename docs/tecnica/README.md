@@ -15,7 +15,7 @@ ver la [documentación funcional](../funcional/README.md).
 | [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en la V1.0.2 frente a la V1.0.1 (T-26). |
 | [Auditoría de la V1.0.3](auditoria-1.0.3.md) | Auditoría técnica completa de la V1.0.2: diagnóstico por áreas, lo corregido en la V1.0.3, lo pendiente y las recomendaciones. |
 | [Informe de issues](issues.md) | Lo encontrado en la revisión final (M8, T-22): lo corregido y lo que queda abierto, con su prioridad, el orden recomendado y su coste en puntos función. |
-| [Figuras de ejercicio (muestra)](figuras.md) | El modelo anatómico haciendo cada ejercicio: muestra con siete ejercicios en la rama `muestra-figuras`, pendiente de aprobar. Cómo está hecho, cómo se escribe una postura y lo que falta. |
+| [Figuras de ejercicio (muestra)](figuras.md) | El modelo anatómico haciendo cada ejercicio: muestra con siete ejercicios en la rama `desarrollo-figuras`, pendiente de aprobar. Cómo está hecho, cómo se escribe una postura y lo que falta. |
 | [Versiones de prueba](versiones-de-prueba.md) | Historial de la serie 1.19 – 1.24, anterior a la V1.0.0. |
 
 ## Cómo está hecha

@@ -3,7 +3,9 @@ imagen, la hoja nueva: figura grande que se mueve, músculos en pequeño a la iz
 
   python3 tests/figures.py dist/stratafit.html [carpeta_capturas]
 """
-import os, sys, datetime
+import io, os, sys, datetime
+import numpy as np
+from PIL import Image
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts
 
@@ -24,6 +26,20 @@ VARIANTS = ['Press banca mancuernas', 'Sentadilla frontal', 'Curl con mancuernas
 IS_FIGURE = "(el => !!el && !!el.querySelector('use[href^=\"#fs\"],use[href^=\"#fb\"]'))"
 # las transformaciones de las capas de la figura grande, tal como están ahora
 LAYERS = "[...document.querySelectorAll('#sh svg[data-fig] > g')].map(g => g.getAttribute('transform') || '').join('|')"
+
+
+def painted(png):
+    """Qué hay pintado en una captura: fracción de píxeles rojos (músculo principal), naranjas (secundario) y del gris azulado
+    de los músculos en reposo, y cuántos píxeles claros (el material) hay en el quinto izquierdo y en el derecho."""
+    a = np.asarray(Image.open(io.BytesIO(png)).convert('RGB')).astype(int)
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    n = r.size
+    red = ((r > 190) & (g < 120) & (b < 130)).sum() / n
+    orange = ((r > 215) & (g > 130) & (g < 215) & (b < 120)).sum() / n
+    slate = ((r > 62) & (r < 112) & (g > 68) & (g < 120) & (b > 95) & (b < 150) & (b - r > 18)).sum() / n
+    light = (abs(r - 154) < 28) & (abs(g - 161) < 28) & (abs(b - 186) < 28)
+    w = a.shape[1]
+    return red, orange, slate, int(light[:, :w // 5].sum()), int(light[:, -(w // 5):].sum())
 
 
 def check(name, cond, info=''):
@@ -189,8 +205,29 @@ def main(path, shots=None):
         two = ev("[...document.querySelectorAll('#sh .fgs.two svg')].map(s=>[...s.querySelectorAll(':scope > g')].map(g=>g.getAttribute('transform')).join('|'))")
         check('reducir animaciones: las dos posturas son distintas', len(two) == 2 and two[0] != two[1])
         shot('quieta')
+        # lo pintado de verdad (también en Safari y Firefox): los músculos que trabajan en rojo y naranja, el resto del
+        # cuerpo en su gris azulado; y, de frente, los brazos abiertos del todo, con las mancuernas en los extremos
+        red, orange, slate, _, _ = painted(pg.locator('#sh .fgs').screenshot())
+        check('sentadilla: se ven los músculos principales, los secundarios y el resto del cuerpo', red > .012 and orange > .004 and slate > .02, '%.4f %.4f %.4f' % (red, orange, slate))
+        how('Elevaciones laterales')
+        ini = painted(pg.locator('#sh .fgs figure').nth(0).screenshot())
+        fin = painted(pg.locator('#sh .fgs figure').nth(1).screenshot())
+        check('elevaciones: se ven el deltoides, los secundarios y el cuerpo', fin[0] > .002 and fin[1] > .002 and fin[2] > .02, str(fin))
+        check('elevaciones: al final, las mancuernas están en los extremos; al inicio, no', fin[3] > 12 and fin[4] > 12 and ini[3] < 4 and ini[4] < 4, str([ini, fin]))
+        how('Press banca')
+        red, orange, slate, _, _ = painted(pg.locator('#sh .fgs figure').nth(1).screenshot())
+        check('press banca: se ven el pectoral, los secundarios y el cuerpo', red > .001 and orange > .001 and slate > .02, '%.4f %.4f %.4f' % (red, orange, slate))
         ev("A.closeSheet()")
         ev("S.reduceMotion=0;saveState()")
+        pg.clock.run_for(200)
+        # y en pequeño: el pictograma de la sentadilla, con sus músculos en color
+        ev("A.openLibrary()")
+        pg.clock.run_for(300)
+        pg.fill('#sh input', 'sentadilla')
+        pg.clock.run_for(500)
+        red, orange, _, _, _ = painted(pg.locator('#sh .exr .exth').first.screenshot())
+        check('miniatura de la sentadilla: los músculos en color', red > .02 and orange > .005, '%.4f %.4f' % (red, orange))
+        ev("A.closeSheet()")
         pg.clock.run_for(200)
 
         # entreno: la miniatura es la figura y abre la hoja

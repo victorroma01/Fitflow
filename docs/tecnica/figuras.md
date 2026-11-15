@@ -1,6 +1,6 @@
 # Figuras de ejercicio (muestra)
 
-El modelo anatómico haciendo cada ejercicio. **Es una muestra**, en la rama `muestra-figuras`: no forma parte de la V1.0.3 y no
+El modelo anatómico haciendo cada ejercicio. **Es una muestra**, en la rama `desarrollo-figuras`: no forma parte de la V1.0.3 y no
 se publica sin el visto bueno del propietario. Tiene siete ejercicios: cuatro (Press banca, Sentadilla, Curl bíceps barra y
 Elevaciones laterales) y tres variantes suyas (Press banca mancuernas, Sentadilla frontal y Curl con mancuernas).
 
@@ -84,10 +84,11 @@ Con el modelo de perfil entero, el motor y las siete posturas, el código que se
   capas y ninguna sin sitio; en la sentadilla los pies no se mueven y la barra queda sobre ellos; en el press, el puño está
   donde se le pide, la barra va en línea recta y el codo, bajo el puño; en el curl, el codo no se adelanta; las variantes
   comparten la postura; y el encuadre de la miniatura.
-- `tests/figures.py` (110 comprobaciones, en navegador): las miniaturas de la lista, la ficha y el entreno; la hoja de cada
+- `tests/figures.py` (115 comprobaciones, en navegador): las miniaturas de la lista, la ficha y el entreno; la hoja de cada
   ejercicio (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios
-  ciclos); a 320 y a 768 px de ancho; «Reducir animaciones»; que un ejercicio con figura no enseña su foto; y que los
-  ejercicios sin postura siguen como antes.
+  ciclos); a 320 y a 768 px de ancho; «Reducir animaciones»; lo pintado de verdad (los músculos que trabajan en rojo y naranja, el resto
+  del cuerpo, y las mancuernas en los extremos con los brazos abiertos), que es lo que comprueba el dibujo en Safari y Firefox;
+  que un ejercicio con figura no enseña su foto; y que los ejercicios sin postura siguen como antes.
 - `node tools/figure.js --check`: `data/figure.js` está al día con los puntos del dibujo.
 
 ## Lo que falta
