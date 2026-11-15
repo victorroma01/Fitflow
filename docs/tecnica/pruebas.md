@@ -82,6 +82,11 @@ Los ordenadores de GitHub no tienen la letra de este entorno: la suya (DejaVu Sa
 `SF_FONT="DejaVu Sans" python3 tests/….py` lo repite aquí. Y WebKit y Firefox solo están allí: un fallo de uno de esos motores se
 lee en el registro del trabajo (las pruebas dicen qué ven al fallar).
 
+Una rareza de WebKit al escribir pruebas: en cada captura (`screenshot`), Playwright mete y quita una hoja de estilos vacía para
+acompasar las animaciones, y la política de seguridad de la app la rechaza con un aviso en la consola. Una prueba que capture en
+WebKit y vigile la consola tiene que descartar ese aviso mientras captura (`capture` en `tests/figures.py`); por lo mismo, las
+demás solo capturan si se les pide una carpeta de capturas.
+
 ## En los móviles de verdad (T-06)
 
 Las pruebas automáticas pasan en el motor de Android (Chrome) y en el del iPhone (Safari, WebKit), pero hay cosas que solo hace el
