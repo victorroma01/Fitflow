@@ -205,14 +205,14 @@ La V1.0.3 se publica cuando estén todas y el propietario lo confirme; hasta ent
 
 | | Qué | Por qué no está hecho |
 | --- | --- | --- |
-| 1 | Publicar la V1.0.3 (fusionar la rama en `main` y etiquetar). | Lo confirma el propietario. Antes, la [lista de comprobación](pruebas.md#en-los-móviles-de-verdad-t-06) en los móviles. |
+| 1 | Publicar la V1.0.3 (fusionar la rama en `main` y etiquetar). | Lo confirma el propietario, que lo deja para más adelante (15-11-2026) junto con los puntos 4 y 8. Antes, la [lista de la V1.0.3 en su iPhone](pruebas.md#la-v103-en-un-iphone-pendiente). |
 | 2 | Cada alimento enseña sus valores redondeados y el total se redondea aparte: la suma de lo que se ve puede diferir en 1. | Es lo correcto (redondear la suma, no sumar redondeos), pero no se explica en la app. |
 | 3 | Los logros de volumen («Mueve 10 toneladas») siguen en toneladas con las cargas en libras. | A propósito: es su nombre y su meta; el volumen del Dashboard y del análisis sí va en libras. |
 | 4 | App Check (I-05): el propietario ha decidido activarlo. Faltan sus dos valores de la consola (la clave de reCAPTCHA y el ID de la app web) y, con la versión ya en los móviles, comprobar en la consola que las peticiones salen verificadas antes de exigirlo. | reCAPTCHA y App Check de verdad solo funcionan desde la dirección de la app: aquí se prueban simulados. |
 | 5 | Prueba en un Android de verdad (I-01) y con VoiceOver en un iPhone. | No hay dispositivos en este entorno. |
 | 6 | Editar una serie de un entreno ya guardado (hoy se borra el entreno entero con sus series). | Función nueva: cambia el historial, los récords y la sincronización; mejor en una versión propia. |
 | 7 | «Log out», el botón que guarda el entreno, puede confundirse con cerrar la sesión de la cuenta. | Es un cambio de nombre visible en la pantalla principal del entreno: decisión del propietario. |
-| 8 | Alertas de Dependabot, desactivadas en el repositorio. | Ajuste del repositorio (Settings → Code security): paso del propietario. |
+| 8 | Alertas de Dependabot, desactivadas en el repositorio. | Ajuste del repositorio (Settings → Security and quality → Advanced Security → Dependabot alerts → Enable): paso del propietario, que lo deja para más adelante. Avisan por correo de fallos de seguridad conocidos en las herramientas de compilar y probar; la app publicada no lleva librerías de terceros. |
 | 9 | Las filas de la lista de alimentos miden 35 px de alto: cumplen el mínimo de accesibilidad (24 px), no los 44 px que recomienda Apple. | Subirlas a 44 px deja ver menos alimentos por pantalla (de unos 14 a 11): es un cambio de diseño, decisión del propietario. |
 | 10 | Quedan 24 líneas de más de 800 caracteres en las vistas. | Son texto de la app o dibujos SVG en una sola línea: partirlas no las hace más claras. |
 | 11 | `tests/deploy.py`: de tarde en tarde, una recarga con service worker no termina en Chromium (I-13); la prueba vuelve a abrir la dirección y lo anota. | Sin reproducir a voluntad: salió una vez en esta auditoría, en un guion aparte. No se ha visto en la app de verdad. |

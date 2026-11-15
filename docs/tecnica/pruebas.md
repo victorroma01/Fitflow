@@ -98,3 +98,33 @@ calendario. Antes de publicar la versión se repasan con la app instalada desde 
 | Recordatorio de pesaje (F-25): el aviso «Día de pesarse» al abrir la app; «Añadir al calendario del móvil» abre el evento en Calendario con su repetición y su aviso a las 9:00 | ☐ | ☐ |
 | Descargas (F-26, F-30): «Descargar PDF» del análisis mensual y «Guardar archivo» de la copia abren «Compartir» (en iPhone, «Guardar en Archivos») y el archivo se abre bien; cancelar no da error | ☐ | ☐ |
 | Personalización: un color de serie y uno propio con el selector del sistema; «Reducir animaciones»; «Al abrir la app» con otra pestaña, al cerrar la app del todo y volverla a abrir | ☐ | ☐ |
+
+### La V1.0.3 en un iPhone (pendiente)
+
+El propietario la pasará en su iPhone; la dejó para más adelante (15-11-2026), junto con activar App Check y las alertas de
+Dependabot. Un Android de verdad no hay: el caso de los accesos directos del icono está probado con el paquete real de la
+V1.0.2 en Chromium.
+
+**Antes de publicar, con la V1.0.2 instalada**
+
+1. Modelo de iPhone y versión de iOS (con iOS 15, el arreglo de L2 no se aplica).
+2. En un entreno, en un ejercicio, «Tempo» → la opción más larga («3/1/X/0 · Pausa abajo y subida explosiva»). Arrastrar la
+   pantalla hacia la izquierda: ¿se mueve de lado y deja un hueco a la derecha? (dice si L2 se veía en un iPhone). Después,
+   devolver el tempo que tenía, porque se guarda en el programa, y «Salir y descartar».
+3. Apuntar «Entrenos totales» del Dashboard y guardar una copia (Ajustes → Copia de seguridad → Guardar archivo).
+
+**Al publicar la V1.0.3** (antes no se puede instalar en el móvil)
+
+4. Abrir con conexión: sale la tarjeta «Versión 1.0.3»; «Actualizar»; en Perfil pone V1.0.3.
+5. Los mismos «Entrenos totales», las comidas de hoy y el último peso.
+6. Cerrar del todo y abrir: sigue en 1.0.3 y no repite la tarjeta. En modo avión también abre.
+7. Repetir el punto 2: ya no debe moverse. Marcar una serie, dejar correr el descanso, terminar y guardar.
+8. Quitar un alimento de una comida: el aviso sale arriba con «Deshacer», no lo tapa la isla o el notch, y «Deshacer» lo devuelve.
+9. Nutrición enseña la semana, y el Dashboard, «Nutrición · 7 días».
+10. Dashboard → Evolución del peso → Historial: borrar un pesaje y deshacerlo.
+11. Librería: crear un ejercicio propio, renombrarlo y eliminarlo.
+12. Descargas: el PDF del análisis mensual, «Guardar archivo» de la copia y el CSV abren «Compartir» y el archivo se abre bien.
+13. Ajustes → Copia de seguridad: sale la lista de «Copias automáticas en este móvil», también al volver tras un rato con la app
+    en segundo plano.
+14. Con el tema y el color del propietario, ¿algún texto que cueste leer?
+15. Si entra App Check: entrar y sincronizar van como siempre, y en Ajustes → Diagnóstico no hay errores «App Check».
