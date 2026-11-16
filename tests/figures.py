@@ -211,7 +211,10 @@ def main(path, shots=None):
                 frame()
                 frame()
                 forced = max(forced, ev(SEEN + ".filter(r => !" + IS_FIGURE + "(r)).length"))
+            frame()
+            frame()
             print('        (informativo, %s) con un fotograma forzado tras cada deslizamiento: filas a la vista sin figura, %d como mucho; huecos al final, %d' % (ENGINE, forced, ev(HOLES)))
+            check('al deslizarla, con fotogramas, quien vigila la página pone todas las figuras sin esperar a las tandas', ev(HOLES) == 0, 'huecos al final: %d' % ev(HOLES))
         # y, se deslice o no, las que faltan se ponen solas por tandas: en poco más de un segundo no queda ninguna
         ev(open_group)
         before = ev(HOLES)
