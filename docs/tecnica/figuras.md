@@ -123,8 +123,8 @@ cabecera de `extras/rig.js`; `extras/gear.js` tiene lo que se repite.
 ## Lo que pesa
 
 No hay imágenes: son trazados. Con los dos modelos, el motor, el material y las 551 posturas, el código que se descarga al
-arrancar pasa de 444 a 558 KB (de 168 a 208 KB comprimido, que es lo que viaja): **40 KB más**. A cambio se van las 28
-fotos, 321 KB: una instalación nueva descarga **unos 280 KB menos**, y el archivo único baja de 1.446 a 1.133 KB.
+arrancar pasa de 444 a 559 KB (de 168 a 208 KB comprimido, que es lo que viaja): **40 KB más**. A cambio se van las 28
+fotos, 321 KB: una instalación nueva descarga **unos 280 KB menos**, y el archivo único baja de 1.446 a 1.134 KB.
 
 Para que no se note:
 
@@ -134,8 +134,8 @@ Para que no se note:
   la ficha piden la misma (`exPicture`).
 - **Una lista larga no pinta de golpe todas sus figuras.** Las doce primeras filas, que son las que se ven, la llevan; las
   demás, un hueco del mismo tamaño (`exPictureLater`), que se cambia por la figura en cuanto la fila se acerca a lo que se
-  ve (700 px antes: un `IntersectionObserver` sobre la página que se desliza) y, pase lo que pase, por tandas de seis cada
-  60 ms desde un momento después de pintarse la lista: en medio segundo, una lista de 64 está completa. En el equipo de
+  ve (700 px antes: un `IntersectionObserver` sobre la página que se desliza) y, pase lo que pase, por tandas de ocho cada
+  40 ms desde un momento después de pintarse la lista: en medio segundo, una lista de 64 está completa. En el equipo de
   pruebas, volver a abrir el grupo más grande de la librería o escribir una letra en el buscador cuesta la mitad que antes
   (de unos 40 a unos 20 ms hasta que se ve), y abrirlo por primera vez, tres cuartos.
 - La figura grande solo se mueve mientras está en pantalla, cambiando la colocación de sus capas en cada fotograma (unas

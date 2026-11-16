@@ -12,6 +12,7 @@ import { sideRegions } from './rig.js';
 import { groupIcon } from '../core/icons.js';
 import { exAll } from '../library/model.js';
 import { html, raw } from '../core/html.js';
+import { logError } from '../core/errors.js';
 document.body.insertAdjacentHTML('afterbegin', '<svg width="0" height="0" class="pos-abs"><defs><linearGradient id="gB" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#a7adba"/><stop offset=".6" stop-color="#6b7080"/><stop offset="1" stop-color="#3b3f4b"/></linearGradient><linearGradient id="gR" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#d11f3a"/><stop offset="1" stop-color="#7d0d21"/></linearGradient><linearGradient id="gO" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ffb26b"/><stop offset="1" stop-color="#b8501a"/></linearGradient><pattern id="fb" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><rect width="1" height="2.2" fill="#000" opacity=".3"/></pattern><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>');
 (function () {
   const pat = (id, r) => html`<pattern id="${id}" width="4" height="4" patternUnits="userSpaceOnUse"${raw(r ? ' patternTransform="rotate(' + r + ')"' : '')}><line x1="0" y1="0" x2="0" y2="4" stroke="#000" stroke-opacity=".26" stroke-width=".55"/></pattern>`;
@@ -148,16 +149,23 @@ export const exPicture = (n, s) => {
 /* cuánto antes de verse se pinta una fila, por arriba y por abajo */
 const LATER_MARGIN = '700px 0px';
 /* las tandas: cuántas figuras, cada cuántos ms, y lo que espera la primera */
-const LATER_BATCH = 6;
-const LATER_EVERY = 60;
-const LATER_FIRST = 200;
+const LATER_BATCH = 8;
+const LATER_EVERY = 40;
+const LATER_FIRST = 150;
 /* quien vigila las filas de cada página que se desliza (el .sp de la hoja; fuera de una hoja, la ventana) y las filas que
    ya vigila */
 const laterWatchers = new WeakMap();
 const laterWatched = new WeakSet();
-/* pone la figura en los huecos de una fila (o en un hueco suelto) */
+/* pone la figura en los huecos de una fila (o en un hueco suelto). Si una no se pudiera pintar, su hueco deja de serlo: se
+   queda vacío y no se vuelve a intentar en cada tanda */
 const fillLater = el => (el.matches('svg[data-pic]') ? [el] : [...el.querySelectorAll('svg[data-pic]')]).forEach(hole => {
-  hole.outerHTML = exPicture(hole.dataset.pic, +hole.getAttribute('width'));
+  try {
+    hole.outerHTML = exPicture(hole.dataset.pic, +hole.getAttribute('width'));
+  }
+  catch (e) {
+    hole.removeAttribute('data-pic');
+    logError('figura de una lista', e);
+  }
 });
 /* la tanda siguiente: los primeros huecos que queden en la hoja; si quedan más, se cita para otra */
 let laterTimer = 0;

@@ -195,6 +195,17 @@ def main(path, shots=None):
             check('al deslizarla, cada fila que se ve tiene su figura sin esperar a su tanda, y al llegar abajo no queda ninguna', worst == 0 and left == 0, 'sin figura a la vista: %d; huecos al final: %d' % (worst, left))
         else:
             print('        (informativo, %s) al deslizar con el reloj parado: filas a la vista sin figura, %d como mucho; huecos al final, %d' % (ENGINE, worst, left))
+            # ¿y si se le obliga a pintar un fotograma tras cada deslizamiento (una captura)? Dice si quien vigila avisa
+            # cuando hay fotogramas, que en un móvil los hay siempre
+            ev(open_group)
+            forced = 0
+            for y in range(600, 14000, 600):
+                ev("document.querySelector('#sh .sp').scrollTop = %d" % y)
+                pg.screenshot(clip={'x': 0, 'y': 0, 'width': 8, 'height': 8})
+                pg.wait_for_timeout(60)
+                pg.screenshot(clip={'x': 0, 'y': 0, 'width': 8, 'height': 8})
+                forced = max(forced, ev(SEEN + ".filter(r => !" + IS_FIGURE + "(r)).length"))
+            print('        (informativo, %s) con un fotograma forzado tras cada deslizamiento: filas a la vista sin figura, %d como mucho; huecos al final, %d' % (ENGINE, forced, ev(HOLES)))
         # y, se deslice o no, las que faltan se ponen solas por tandas: en poco más de un segundo no queda ninguna
         ev(open_group)
         before = ev(HOLES)
