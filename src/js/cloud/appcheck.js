@@ -25,7 +25,8 @@ const SCRIPT_WAIT = 15e3;
 let noWaitUntil = 0;
 /* el último fallo anotado: el mismo no se anota en cada petición */
 let lastFailure = '';
-/* el script de reCAPTCHA Enterprise, una sola vez (si falla o no llega a tiempo, se reintenta en la próxima petición) */
+/* el script de reCAPTCHA Enterprise, una sola vez (si falla o no llega a tiempo, se reintenta en la próxima petición). Que
+   no cargue (sin conexión, un bloqueador) es lo normal de vez en cuando: la pantalla de error de index.html no lo cuenta */
 let scriptLoad = null;
 const loadRecaptcha = () => scriptLoad || (scriptLoad = new Promise((res, rej) => {
   const s = document.createElement('script');
@@ -42,6 +43,8 @@ const loadRecaptcha = () => scriptLoad || (scriptLoad = new Promise((res, rej) =
   setTimeout(() => rej(new Error('reCAPTCHA no respondió')), SCRIPT_WAIT);
   document.head.appendChild(s);
 }).catch(e => {
+  /* el intento fallido no se queda en la página: sin conexión se repite en cada sincronización */
+  document.querySelectorAll('script[src^="https://www.google.com/recaptcha/enterprise.js"]').forEach(x => x.remove());
   scriptLoad = null;
   throw e;
 }));

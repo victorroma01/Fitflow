@@ -131,7 +131,10 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
   espera su token 8 segundos como mucho y, si no llega (reCAPTCHA bloqueado, sin responder, o sin conexión), sale sin él; durante
   el minuto siguiente las demás ya no esperan. Antes de exigir App Check en la consola, una petición sin token vale igual. Un
   fallo que no sea de conexión (una clave mal puesta, por ejemplo) queda anotado una vez en Ajustes → Diagnóstico, como «App
-  Check». Los servicios de verdad no se pueden usar fuera de la dirección de la app: `tests/cloud.py` lo prueba con reCAPTCHA y
+  Check». Que el script de reCAPTCHA no cargue tampoco es un fallo de arranque: la pantalla «StrataFit no ha podido iniciarse»
+  (`src/index.html`) solo cuenta el código de la propia app. La V1.0.3 se publicó contando cualquier script, y con el móvil en
+  modo avión esa pantalla tapaba la app, que seguía funcionando debajo; se corrigió el mismo día, y `tests/deploy.py` y
+  `tests/cloud.py` lo reproducen. Los servicios de verdad no se pueden usar fuera de la dirección de la app: `tests/cloud.py` lo prueba con reCAPTCHA y
   App Check simulados sobre una compilación con su CSP de verdad (`python3 build.py --appcheck`); que funciona con los de
   Google se ve en la consola (paso 4).
 

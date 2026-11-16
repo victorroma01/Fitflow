@@ -128,6 +128,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   Diagnóstico; y el sello de reCAPTCHA no ocupa sitio. `tests/cloud.py` (111 comprobaciones) lo prueba sobre una compilación
   con App Check y su CSP de verdad (`build.py --appcheck`), con un reCAPTCHA de prueba para todas las pruebas
   (`tests/browser.py`). La batería entera pasa también con App Check configurado.
+- App Check, activado con sus dos valores (`cloud/config`). Que reCAPTCHA no cargue (sin conexión, un bloqueador) no es un fallo
+  de arranque: la pantalla de error de `src/index.html` solo cuenta el código de la propia app. Recién publicada la V1.0.3
+  contaba cualquier script, y en modo avión salía «StrataFit no ha podido iniciarse» sobre la app, que funcionaba debajo;
+  corregido el mismo día, sin cambiar el número de versión. Las pruebas usaban un reCAPTCHA simulado que nunca fallaba al
+  cargar: `tests/browser.py` tiene ahora uno que falla (`__sfRecaptchaFail`), `tests/deploy.py` abre con él el paquete con
+  conexión y en modo avión, y `tests/cloud.py` comprueba que la pantalla de error no sale con reCAPTCHA bloqueado.
 - Figuras de ejercicio ([Figuras](docs/tecnica/figuras.md)): modelo articulado de perfil, de frente y de espaldas (`extras/rig`,
   `data/figure`, que genera `tools/figure.js`), material (`extras/gear`), 82 familias de movimiento (`extras/moves`) y la tabla
   de qué familia y qué variantes lleva cada ejercicio (`data/figposes`); el dibujo y el movimiento, en `extras/figure`. El codo

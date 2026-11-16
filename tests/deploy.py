@@ -455,6 +455,53 @@ def main(app):
                     c4.close()
                 else:
                     skipped('instalación con un trozo de código que falla')
+                # App Check con reCAPTCHA fuera de alcance. Con App Check configurado, la app pide reCAPTCHA a Google antes de
+                # sincronizar; sin conexión (o con un bloqueador) no le llega, y sigue sin él. No es un fallo de arranque: la
+                # pantalla «StrataFit no ha podido iniciarse» es solo para el código de la propia app. La V1.0.3 se publicó (el
+                # 16-11-2026) contando como tal cualquier script que no cargara, y con el móvil en modo avión salía esa pantalla.
+                c5 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
+                c5.add_init_script('window.__sfRecaptchaFail=1')
+                c5.add_init_script(INIT)
+                p5 = c5.new_page()
+                p5.goto(url)
+                tried = "(window.__rcFail|0)"
+                broke = "!!document.getElementById('ffe')"
+
+                def asked(page):
+                    """Espera a que la app haya pedido reCAPTCHA (lo hace al sincronizar, justo después de pintarse)."""
+                    for _ in range(30):
+                        if page.evaluate(tried):
+                            break
+                        page.wait_for_timeout(100)
+                    page.wait_for_timeout(300)
+                    return page.evaluate(tried)
+                if p5.evaluate('appCheckOn()'):
+                    n5 = asked(p5)
+                    check('con App Check, si reCAPTCHA no carga, la app abre igual: no es un fallo de arranque', n5 >= 1 and p5.evaluate('!!window.__ffok') and not p5.evaluate(broke), 'pedido %d veces; pantalla de error: %s' % (n5, p5.evaluate(broke)))
+                    if SW:
+                        p5.evaluate("navigator.serviceWorker.ready.then(()=>1)")
+                        for _ in range(20):
+                            p5.reload()
+                            p5.wait_for_timeout(800)
+                            if p5.evaluate("!!navigator.serviceWorker.controller"):
+                                break
+                        c5.set_offline(True)
+                        p5.reload()
+                        p5.wait_for_load_state('load')
+                        n5 = asked(p5)
+                        check('y en modo avión también: abre sin conexión y sin la pantalla de error', p5.evaluate('!!window.__ffok') and not p5.evaluate(broke) and p5.evaluate("document.querySelector('#app').innerText.length>50"), 'pedido %d veces; pantalla de error: %s' % (n5, p5.evaluate(broke)))
+                        c5.set_offline(False)
+                        p5.reload()
+                        p5.wait_for_load_state('load')
+                    else:
+                        skipped('App Check sin conexión')
+                else:
+                    print('  (App Check no está configurado en cloud/config: no se comprueba qué pasa si reCAPTCHA no carga)')
+                # y lo contrario: si lo que no carga es código de la app, sí se dice, al momento
+                p5.evaluate("(() => { const s = document.createElement('script'); s.src = 'js/no-existe.js'; document.head.appendChild(s); })()")
+                p5.wait_for_timeout(1000)
+                check('si lo que no carga es código de la propia app, sí sale la pantalla de error, con su «Reintentar»', p5.evaluate(broke) and 'No se ha podido cargar la app' in p5.evaluate("document.getElementById('ffem').textContent") and p5.evaluate("!!document.getElementById('ffe1')"))
+                c5.close()
                 # app instalada: compartir copia de seguridad
                 c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
                 c2.add_init_script(INIT)
