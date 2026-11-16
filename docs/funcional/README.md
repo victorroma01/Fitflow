@@ -59,8 +59,8 @@ correcciones de una auditoría técnica completa.
 
 La **V1.0.31** y la **V1.0.32**, la publicada, son las dos revisiones de la V1.0.3. La primera rehace las figuras del remo, el
 SkiErg, el saco de boxeo, la bici de aire y la comba tras probarlas en un iPhone; la segunda llama «Guardar entreno» al botón
-que guarda el entreno, que antes ponía «Log out», y cambia por dentro cómo se identifica cada cuenta: la app pide
-[volver a entrar](cuenta.md) una vez, con el usuario y la contraseña de siempre, sin perder nada. No son otra versión: la app
+que guarda el entreno, que antes ponía «Log out», pone detrás del inicio de sesión la foto de un gimnasio y cambia por dentro cómo se identifica cada cuenta, sin que
+haya que hacer nada. No son otra versión: la app
 enseña sus arreglos en la misma tarjeta que las novedades de la V1.0.3. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md).
 
 <br clear="right">

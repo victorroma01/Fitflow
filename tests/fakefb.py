@@ -63,13 +63,18 @@ class FakeFirebase:
         """Deja la cuenta como las de antes de la V1.0.32, con el dominio anterior: una que aún no se ha pasado."""
         self.users[user.lower() + '@' + OLD_DOMAIN] = self.users.pop(self._email(user))
 
-    def move_accounts(self):
+    def move_accounts(self, keep=True):
         """Lo que hace tools/admin/dominio.mjs: cada cuenta del dominio anterior pasa al de ahora, con su uid, su contraseña y
-        su rol, y sus sesiones se cierran (Firebase lo hace al cambiar el correo). Devuelve cuántas ha pasado."""
+        su rol. Firebase da por caducadas sus sesiones al cambiar el correo; con `keep` («aplicar») se les devuelve la validez
+        que tenían y siguen abiertas, y sin él («aplicar-todo», cuando no se pueden conservar) se cierran. Devuelve cuántas ha
+        pasado."""
         old = [e for e in self.users if e.endswith('@' + OLD_DOMAIN)]
         for e in old:
             u = self.users.pop(e)
+            before = u['valid_after']
             u['valid_after'] = self._now()
+            if keep:
+                u['valid_after'] = before
             self.users[e.split('@')[0] + '@' + DOMAIN] = u
         return len(old)
 

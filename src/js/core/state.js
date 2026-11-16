@@ -67,18 +67,21 @@ export let addState = null;
 export const setAddState = v => {
   addState = v;
 };
-export const applyTheme = () => {
-  S.theme ? document.documentElement.dataset.theme = S.theme : document.documentElement.removeAttribute('data-theme');
+/** Pone el tema de la app: el elegido en Ajustes (S.theme: 'light', 'dark' o '', el del móvil) o, con `only`, ese sin mirar
+  el elegido (el inicio de sesión va siempre en oscuro, sobre su foto: account/login). */
+export const applyTheme = (only) => {
+  const theme = only || S.theme;
+  theme ? document.documentElement.dataset.theme = theme : document.documentElement.removeAttribute('data-theme');
   /* color de la barra del sistema (theme-color). Las dos etiquetas de la página siguen el tema del móvil; con un tema
      elegido a mano va delante otra sin media (vale la primera que encaja) con el fondo de ese tema; en automático se quita */
   const m = document.querySelector('meta[name="theme-color"]:not([media])');
-  if (!S.theme) {
+  if (!theme) {
     m && m.remove();
     return;
   }
   const t = m || document.createElement('meta');
   t.name = 'theme-color';
-  t.content = S.theme == 'light' ? '#f3f3f7' : '#0b0b0d';
+  t.content = theme == 'light' ? '#f3f3f7' : '#0b0b0d';
   m || document.head.insertBefore(t, document.querySelector('meta[name="theme-color"]'));
 };
 export let overviewMode = 0;

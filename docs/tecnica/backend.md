@@ -176,7 +176,7 @@ Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run wor
 | Asignar rol | `admin-rol.yml` | Usuario y rol (admin o usuario). Vale la próxima vez que esa persona abra la app. |
 | Desplegar reglas | `firebase-reglas.yml` | Reglas de Firestore (`tools/admin/reglas.mjs`, con la API de reglas de Firebase; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Al publicar, `pruebas.yml` lo llama tras las pruebas si cambian las reglas o el flujo, y la app no se publica hasta que termina bien (T-24). También a mano, desde `main`. |
 | Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuántas cuentas hay, cuántas tienen el correo técnico con el dominio de ahora y cuántas con el anterior, y el acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
-| Pasar las cuentas al dominio nuevo | `admin-dominio.yml` | `simulacro` o `aplicar` ([El dominio de las cuentas](#el-dominio-de-las-cuentas)). Solo desde `main`. No escribe usuarios ni correos, solo recuentos: el registro es público. |
+| Pasar las cuentas al dominio nuevo | `admin-dominio.yml` | `simulacro`, `aplicar` (solo si nadie lo va a notar) o `aplicar-todo` ([El dominio de las cuentas](#el-dominio-de-las-cuentas)). Solo desde `main`. No escribe usuarios ni correos, solo recuentos: el registro es público. |
 
 Los flujos manuales solo aparecen en Actions cuando están en `main`.
 
@@ -187,37 +187,63 @@ nada. Hasta la V1.0.31 el dominio fue `stratafit.app`; desde la V1.0.32 es `stra
 proyecto de Firebase, que es de la app y no tiene buzones. Las cuentas que ya existían se pasan de uno a otro sin que cambie
 nada más: el mismo identificador (uid), la misma contraseña, el mismo rol y los mismos datos.
 
+**Publicar la V1.0.32 no cambia nada para nadie**: las cuentas siguen como estaban y la app entra con ellas igual. Lo único
+que podría notarse es el paso de las cuentas, y está hecho para que no se note.
+
 | Pieza | Durante el cambio |
 | --- | --- |
 | La app (`cloud/auth`, `cloud/config`) | Registra con el dominio de ahora. Al entrar prueba el de ahora y, si no hay tal cuenta, el anterior: una cuenta que aún no se ha pasado entra igual, con su usuario y su contraseña. |
 | Las reglas (`firestore.rules`) | Admiten los dos (`techUser`, `ownName`), y ninguno que solo se les parezca. |
 | `tools/admin` | «Restablecer contraseña» y «Asignar rol» buscan la cuenta con los dos (`findUser`). «Comprobar Firebase» dice cuántas hay con cada uno. |
-| «Pasar las cuentas al dominio nuevo» (`tools/admin/dominio.mjs`, `cuentas.mjs`) | Cambia el correo de cada cuenta que sigue con el anterior. Antes comprueba que las reglas publicadas ya admiten el de ahora y ensaya con una cuenta de prueba, que crea, pasa y borra: si algo de eso falla, no toca ninguna. |
+| «Pasar las cuentas al dominio nuevo» (`tools/admin/dominio.mjs`, `cuentas.mjs`) | Cambia el correo de cada cuenta que sigue con el anterior, conservando sus sesiones abiertas. Antes comprueba que las reglas publicadas ya admiten el de ahora y ensaya con una cuenta de prueba: si algo de eso falla, no toca ninguna. |
+
+### Las sesiones abiertas
+
+Firebase da por caducadas las sesiones de una cuenta cuando cambia su correo: apunta el momento en «válidas desde»
+(`validSince`, que firebase-admin enseña como `tokensValidAfterTime`) y ya no renueva las que se abrieron antes. Dejado así,
+cada móvil tendría que volver a entrar, y uno con una versión anterior a la 1.0.32, que no conoce el dominio nuevo, no podría
+hasta actualizar.
+
+Por eso, al pasar una cuenta se le devuelve ese dato a su valor de antes (`moveOne`): va en la misma petición que cambia el
+correo y, si Firebase no lo respeta ahí, en otra justo después; al final se lee la cuenta para comprobarlo. Las sesiones que
+valían siguen valiendo, las que ya no valían siguen sin valer y el móvil no nota nada: sigue sincronizando, ahora con el
+correo nuevo, tenga la versión que tenga.
+
+Como esto depende de cómo se porte Firebase de verdad, **antes de tocar ninguna cuenta se ensaya** con una de prueba
+(`rehearse`): se crea con el dominio anterior, entra por la API pública como entraría un móvil, se pasa como las de verdad y se
+intenta renovar su sesión. El resumen lo dice en «Las sesiones abiertas se conservan». La cuenta de prueba se borra; su nombre
+tiene más de 20 caracteres, así que no puede ser la de ningún usuario ni entrar en nada.
 
 ### Pasar las cuentas
 
-Se hace una vez, con la V1.0.32 ya publicada (al publicarse, las reglas nuevas se despliegan antes que la app):
+Con la V1.0.32 ya publicada (al publicarse, las reglas nuevas se despliegan antes que la app). En GitHub, Actions → **Pasar
+las cuentas al dominio nuevo** → *Run workflow*, con uno de estos modos:
 
-1. Actualizar la app en el móvil del admin y comprobar que entra y sincroniza como siempre.
-2. En GitHub, Actions → **Pasar las cuentas al dominio nuevo** → *Run workflow* → `simulacro`. No cambia ninguna cuenta. En el
-   resumen tienen que salir «Reglas de Firestore publicadas: Correcto», «Ensayo con una cuenta de prueba: Correcto» y cuántas
-   quedan «Por pasar».
-3. Lo mismo con `aplicar`. En el resumen: «Pasadas ahora», las del paso anterior, y «Quedan en el dominio anterior: 0».
-4. Firebase cierra las sesiones de una cuenta cuando cambia su correo. En cada móvil sale **Tu sesión ha caducado**: «Entrar» y
-   la contraseña de siempre. Lo que haya en el móvil se conserva y se sube al entrar.
-5. Un móvil con una versión anterior a la 1.0.32 no conoce el dominio nuevo y, una vez pasada su cuenta, no puede volver a
-   entrar: primero **Actualizar** (la tarjeta de versión nueva sale al abrir la app con conexión) y después entrar.
-6. «Comprobar Firebase» confirma el final: «Dominio de las cuentas», todas con el de ahora.
+| Modo | Qué hace |
+| --- | --- |
+| `simulacro` | No cambia ninguna cuenta. Comprueba las reglas publicadas, hace el ensayo y cuenta. El resumen dice si las sesiones se conservan y cuántas cuentas quedan «Por pasar». |
+| `aplicar` | Pasa las cuentas **solo si el ensayo dice que las sesiones se conservan**. Si no, no pasa ninguna y lo dice. |
+| `aplicar-todo` | Las pasa aunque las sesiones no se conserven: en cada móvil sale **Tu sesión ha caducado** y hay que volver a entrar una vez, con la contraseña de siempre (lo que haya en el móvil se conserva y se sube al entrar). Un móvil con una versión anterior a la 1.0.32 tiene que actualizar antes. |
+
+1. `simulacro`. Tienen que salir «Reglas de Firestore publicadas: Correcto», «Ensayo con una cuenta de prueba: Correcto» y
+   «Las sesiones abiertas se conservan: Sí».
+2. `aplicar`. En el resumen: «Pasadas ahora», las que había por pasar, y «Quedan en el dominio anterior: 0». Nadie tiene que
+   hacer nada.
+3. «Comprobar Firebase» confirma el final: «Dominio de las cuentas», todas con el de ahora.
 
 Se puede lanzar las veces que haga falta: las cuentas ya pasadas no se tocan. Lo que puede salir en el resumen:
 
+- **Las sesiones abiertas se conservan: No** (o «Sin comprobar»): Firebase no deja devolver la validez de las sesiones, o no se
+  ha podido entrar con la cuenta de prueba (por ejemplo, con App Check exigido: el ensayo no lleva su token). `aplicar` no pasa
+  ninguna. Queda decidir entre dejarlas como están o pasarlas con `aplicar-todo`, avisando antes a quien use la app.
 - **Las reglas publicadas aún no aceptan el dominio nuevo**: la versión no está publicada, o el despliegue de las reglas falló
   (Actions → «Pruebas», el trabajo «Desplegar reglas de Firestore»). No se pasa ninguna cuenta.
 - **Con el usuario ya ocupado en el dominio nuevo**: alguien se registró con ese nombre entre la publicación y el paso. Esa
   cuenta no se pasa sola (sigue entrando con el dominio anterior); el resumen da su identificador para decidir en la consola de
   Firebase (Authentication → Usuarios) cuál de las dos se queda, borrar la otra y volver a lanzarlo.
-- **La cuenta de prueba no se ha podido borrar**: se borra a mano en la consola, por el identificador que da el resumen. Su
-  nombre tiene más de 20 caracteres, así que no puede ser la de ningún usuario ni entrar en nada.
+- **Pasadas, pero con la sesión cerrada**: en esas cuentas no se pudo devolver la validez; en sus móviles hay que volver a
+  entrar una vez.
+- **La cuenta de prueba no se ha podido borrar**: se borra a mano en la consola, por el identificador que da el resumen.
 
 ### Después
 

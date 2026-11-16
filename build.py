@@ -22,6 +22,7 @@ Estructura (todo vive en src/):
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
                           (la revisión de una versión enseña sus arreglos junto con las novedades de la que revisa)
   src/img/day/            portadas de los días (.jpg) y order.txt
+  src/img/login/          fondo del inicio de sesión (fondo.webp, que prepara tools/fondo.py)
   static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
 
 Las dos variantes solo se diferencian en:
@@ -105,10 +106,12 @@ def list_lines(p):
 
 
 BRAND_LOGOS = ('claro', 'oscuro')
+LOGIN_PHOTO = 'img/login/fondo.webp'
 
 
 def media():
-    """Lee src/img: las portadas de día (order.txt) y el logo. Devuelve la lista de fotos y los enlaces."""
+    """Lee src/img: las portadas de día (order.txt), el logo y el fondo del inicio de sesión. Devuelve la lista de fotos y los
+    enlaces."""
     files, day = [], []
     for k in list_lines(os.path.join(IMG, 'day', 'order.txt')):
         p = os.path.join(IMG, 'day', k + '.jpg')
@@ -122,6 +125,11 @@ def media():
         if not os.path.isfile(p):
             die('falta el logo %s (python3 tools/marca.py)' % p)
         files.append(('img/brand/logo-%s.webp' % k, p))
+    # el fondo del inicio de sesión (account/login, F-33): ya desenfocado y en gris (tools/fondo.py)
+    p = os.path.join(SRC, *LOGIN_PHOTO.split('/'))
+    if not os.path.isfile(p):
+        die('falta el fondo del inicio de sesión %s (python3 tools/fondo.py foto.jpg)' % p)
+    files.append((LOGIN_PHOTO, p))
     used = {os.path.basename(p) for _, p in files}
     for f in sorted(os.listdir(os.path.join(IMG, 'day'))):
         if f.endswith('.jpg') and f not in used:
@@ -140,6 +148,7 @@ def media_js(m, inline):
     obj = {
         'day': {k: url('img/day/%s.jpg' % k, src['img/day/%s.jpg' % k]) for k in m['day']},
         'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
+        'login': url(LOGIN_PHOTO, src[LOGIN_PHOTO]),
     }
     return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 

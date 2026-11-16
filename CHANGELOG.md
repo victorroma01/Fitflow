@@ -31,12 +31,17 @@ línea.
 ### Interno
 - Entreno: el botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out», que suena a cerrar la sesión de la
   cuenta), también en los textos que lo nombran.
+- Inicio de sesión (F-33, T-18, que estaba pospuesto): detrás va la foto de un gimnasio visto desde arriba, del propietario,
+  en gris y desenfocada, a media luz. La pantalla va siempre en oscuro, también su tarjeta, tenga el móvil el tema que tenga,
+  y cada texto suelto lleva su propio velo para leerse también sobre la parte clara de la foto. Al repositorio y a la app solo
+  llega la versión desenfocada (`tools/fondo.py`), en la que no se reconoce a nadie.
 - Cuentas: el correo técnico de cada cuenta, que nadie ve, pasa a ser `usuario@stratafit-960ec.firebaseapp.com`, con el dominio
   del propio proyecto de Firebase. La app registra con él y entra con él o, si la cuenta aún no se ha pasado, con el anterior
-  (`cloud/auth`); las reglas de Firestore admiten los dos mientras tanto. Las cuentas se pasan desde GitHub Actions («Pasar
-  las cuentas al dominio nuevo», `tools/admin/dominio.mjs`): primero un simulacro, que ensaya con una cuenta de prueba, y
-  después de verdad. Cada cuenta conserva su identificador, su contraseña, su rol y sus datos, y en cada móvil hay que volver
-  a entrar una vez ([cómo](docs/tecnica/backend.md#el-dominio-de-las-cuentas)). «Restablecer contraseña» y «Asignar rol»
+  (`cloud/auth`); las reglas de Firestore admiten los dos mientras tanto. Publicar la versión no cambia nada para nadie. Las
+  cuentas se pasan desde GitHub Actions («Pasar las cuentas al dominio nuevo», `tools/admin/dominio.mjs`) conservando sus
+  sesiones abiertas: Firebase las da por caducadas al cambiar el correo, y al pasar cada cuenta se le devuelve la validez que
+  tenían. Antes de tocar ninguna se ensaya con una cuenta de prueba, que dice si de verdad se conservan; «aplicar» solo las
+  pasa si es así ([cómo](docs/tecnica/backend.md#el-dominio-de-las-cuentas)). «Restablecer contraseña» y «Asignar rol»
   encuentran la cuenta con cualquiera de los dos, y «Comprobar Firebase» dice cuántas quedan por pasar.
 - Cerrar sesión con un guardado todavía en marcha ya no deja en el móvil el núcleo escrito con sus partes borradas
   (`core/persist`: un guardado pedido antes de borrar el estado ya no escribe nada). Antes, la siguiente apertura se quedaba
@@ -45,9 +50,10 @@ línea.
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.
-- Pruebas: `tests/dominio.test.mjs` (el paso de las cuentas, con una Authentication de mentira), `tests/cloud.py` (una cuenta
-  con el dominio anterior entra, se pasa y su móvil vuelve a entrar sin perder nada), `tests/rules.test.mjs` (los dos
-  dominios, y ninguno que solo se parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.
+- Pruebas: `tests/login.py` (el fondo del inicio de sesión a diez tamaños, con el contraste de cada texto),
+  `tests/dominio.test.mjs` (el paso de las cuentas, con una Authentication de mentira), `tests/cloud.py` (una cuenta con el
+  dominio anterior entra, se pasa y su sesión sigue abierta), `tests/rules.test.mjs` (los dos dominios, y ninguno que solo se
+  parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.
 - Documentación: la V1.0.31 comprobada en el iPhone del propietario, las versiones 1.0.3 y 1.0.31 en la documentación
   funcional y el estado de App Check (en marcha, sin exigir); el pendiente 7 de la auditoría (el nombre de «Log out»), hecho.
 

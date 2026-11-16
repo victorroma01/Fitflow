@@ -1,7 +1,8 @@
 # Pasar las cuentas de StrataFit al dominio nuevo de su correo técnico (Actions → Pasar las cuentas al dominio nuevo → Run
 # workflow). Cada cuenta conserva su identificador, su contraseña, su rol y sus datos; solo cambia el correo técnico, que
-# nadie ve. Primero «simulacro», que ensaya con una cuenta de prueba y cuenta cuántas pasaría sin cambiar ninguna; después
-# «aplicar». Al pasarlas, Firebase cierra las sesiones abiertas: en cada móvil hay que volver a entrar una vez.
+# nadie ve. Primero «simulacro», que ensaya con una cuenta de prueba, cuenta cuántas pasaría sin cambiar ninguna y dice si
+# las sesiones abiertas se conservan. «aplicar» las pasa solo si se conservan (nadie tiene que volver a entrar);
+# «aplicar-todo», aunque haya que volver a entrar una vez en cada móvil.
 # El registro es público: no escribe usuarios ni correos, solo recuentos. Usa la cuenta de servicio de Firebase, que solo
 # existe como secreto del repositorio (FIREBASE_SERVICE_ACCOUNT). Código: tools/admin/dominio.mjs.
 name: Pasar las cuentas al dominio nuevo
@@ -10,13 +11,14 @@ on:
   workflow_dispatch:
     inputs:
       modo:
-        description: «simulacro» ensaya y cuenta, sin cambiar ninguna cuenta; «aplicar» las pasa
+        description: «simulacro» no cambia nada; «aplicar» las pasa solo si nadie lo nota; «aplicar-todo», aunque haya que volver a entrar
         required: true
         type: choice
         default: simulacro
         options:
           - simulacro
           - aplicar
+          - aplicar-todo
 
 permissions:
   contents: read

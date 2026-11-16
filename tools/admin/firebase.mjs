@@ -11,6 +11,10 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { OLD_TECH_DOMAIN, TECH_DOMAIN } from './cuentas.mjs';
 
 export const PROJECT = 'stratafit-960ec';
+/** La clave web del proyecto (la de cloud/config; no es secreta) y la dirección de la app publicada, que es desde donde vale:
+    para hacer desde aquí lo que hace un móvil (entrar y renovar la sesión), en el ensayo de tools/admin/dominio.mjs. */
+export const API_KEY = 'AIzaSyC_KSQkQPwNjw7dDMRZ9ALzpZ3ikTUw4P4';
+export const APP_URL = 'https://victorroma01.github.io/Fitflow/';
 export const EMULATOR = !!(process.env.FIREBASE_AUTH_EMULATOR_HOST && process.env.FIRESTORE_EMULATOR_HOST);
 
 /** Termina con un mensaje claro (en GitHub Actions, como anotación de error). */
@@ -83,3 +87,38 @@ export async function liveRules(app) {
   const rs = await google('https://firebaserules.googleapis.com/v1/' + rel.rulesetName);
   return { source: ((rs.source && rs.source.files) || []).map(f => f.content).join('\n'), when: String(rel.updateTime || rel.createTime).slice(0, 10) };
 }
+
+/** Lo que el paso de las cuentas (tools/admin/cuentas.mjs) necesita además de firebase-admin:
+    · update(uid, campos): cambiar una cuenta con la API de administración de Authentication (el correo y desde cuándo valen
+      sus sesiones, validSince, que firebase-admin no deja poner a un valor elegido);
+    · signIn(correo, contraseña) y refresh(token): entrar y renovar la sesión por la API pública, como hace la app en un móvil,
+      para el ensayo con la cuenta de prueba;
+    · pause(): esperar a que pase el segundo (las sesiones se dan por caducadas con precisión de segundos).
+    Los errores llevan en `code` el código de Firebase (TOKEN_EXPIRED, INVALID_EMAIL…), sin el mensaje. Con el emulador, sus
+    direcciones y su acceso de administrador («owner»). */
+export async function authIo(app) {
+  const host = EMULATOR ? 'http://' + process.env.FIREBASE_AUTH_EMULATOR_HOST + '/' : 'https://';
+  const project = EMULATOR ? 'demo-stratafit' : PROJECT;
+  const key = EMULATOR ? 'emulador' : API_KEY;
+  const admin = EMULATOR ? 'owner' : (await app.options.credential.getAccessToken()).access_token;
+  const call = async (url, headers, body) => {
+    const r = await fetch(url, { method: 'POST', headers, body });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const e = j.error || {};
+      const first = String(e.message || '').split(/[\s:]/)[0];
+      throw Object.assign(new Error('HTTP ' + r.status), { code: /^[A-Z][A-Z0-9_]{2,}$/.test(first) ? first : e.status || 'HTTP_' + r.status });
+    }
+    return j;
+  };
+  const json = { 'Content-Type': 'application/json' };
+  /* la clave web solo vale para peticiones que llegan desde la app publicada: se dice de dónde, como hace el navegador */
+  const web = { Referer: APP_URL, Origin: new URL(APP_URL).origin };
+  return {
+    update: (uid, fields) => call(host + 'identitytoolkit.googleapis.com/v1/projects/' + project + '/accounts:update', { ...json, Authorization: 'Bearer ' + admin }, JSON.stringify({ localId: uid, ...fields })),
+    signIn: (email, password) => call(host + 'identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + key, { ...json, ...web }, JSON.stringify({ email, password, returnSecureToken: true })),
+    refresh: token => call(host + 'securetoken.googleapis.com/v1/token?key=' + key, { 'Content-Type': 'application/x-www-form-urlencoded', ...web }, 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(token)),
+    pause: () => new Promise(r => setTimeout(r, 2100))
+  };
+}
+

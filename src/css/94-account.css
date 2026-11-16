@@ -1,4 +1,4 @@
-/* ═══ css/94-account ═══ Cuenta: inicio de sesión y registro (fondo oscuro provisional hasta la imagen de M7), «Cerrar sesión» en Ajustes, datos de la cuenta en Perfil y Administración */
+/* ═══ css/94-account ═══ Cuenta: inicio de sesión y registro (siempre en oscuro, sobre la foto de un gimnasio: F-33), «Cerrar sesión» en Ajustes, datos de la cuenta en Perfil y Administración */
 .lgw {
   position:relative;
   min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
@@ -11,12 +11,28 @@
   justify-content:center;
   color:#f4f4f6;
 }
+/* el fondo: la foto (ya en gris y desenfocada: tools/fondo.py), a toda la pantalla, y encima un velo que la deja a la mitad
+   de luz, como en el diseño, y algo más oscura abajo, donde va el texto pequeño. Sin la foto (no ha cargado aún) queda el
+   degradado oscuro de siempre */
+.lgbg {
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:0% 40%;
+  background:radial-gradient(120% 70% at 50% 0%,#24242c 0%,#121216 55%,#0b0b0d 100%);
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
 .lgw::before {
   content:"";
   position:fixed;
   inset:0;
   z-index:-1;
-  background:radial-gradient(120% 70% at 50% 0%,#24242c 0%,#121216 55%,#0b0b0d 100%);
+  background:linear-gradient(180deg,rgba(6,7,10,.5) 0%,rgba(6,7,10,.5) 62%,rgba(6,7,10,.66) 100%);
 }
 .lgbr {
   text-align:center;
@@ -30,8 +46,14 @@
 .lgs {
   margin:6px 0 22px;
   text-align:center;
-  color:#a3a3ae;
   font-size:14.5px;
+}
+/* el texto que va suelto sobre la foto lleva detrás su propio velo, difuminado: donde la foto es clara (la pared) se sigue
+   leyendo, esté donde esté según el tamaño de la pantalla; sobre lo oscuro no se nota */
+.lgs,.lgn,.lgv,button.lgl {
+  border-radius:14px;
+  background:rgba(6,7,10,.36);
+  box-shadow:0 0 16px 10px rgba(6,7,10,.36);
 }
 .lgc {
   display:grid;
@@ -87,17 +109,16 @@
   margin:16px 4px 6px;
   text-align:center;
   font-size:13px;
-  color:#a3a3ae;
+  color:#d6d6de;
 }
 .lgl {
   align-self:center;
   border:0;
   background:none;
   padding:10px 14px;
-  font-size:13.5px;
-  color:#c9c9d3;
-  text-decoration:underline;
-  text-underline-offset:3px;
+  font-size:14.5px;
+  font-weight:700;
+  color:#dcdce2;
 }
 .lgv {
   margin-top:10px;
@@ -105,7 +126,7 @@
   font-size:11.5px;
   font-weight:800;
   letter-spacing:.08em;
-  color:#6f6f7b;
+  color:#cfcfd8;
 }
 /* filas de datos de la cuenta y de Administración: sin raya encima de la primera */
 .acl>.it:first-child {

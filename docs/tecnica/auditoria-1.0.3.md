@@ -192,7 +192,8 @@ La V1.0.3 se publicó el 16-11-2026, con todas hechas y la confirmación del pro
 ([resultado](pruebas.md#la-v103-en-el-iphone-del-propietario)). Esa prueba encontró un fallo que las automáticas no veían (sin
 conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la
 V1.0.31, publicada también ese día y comprobada en el mismo iPhone. La segunda, la V1.0.32, cierra el pendiente 7 (el nombre
-del botón que guarda el entreno) y pasa las cuentas al [dominio del proyecto](backend.md#el-dominio-de-las-cuentas).
+del botón que guarda el entreno), pasa las cuentas al [dominio del proyecto](backend.md#el-dominio-de-las-cuentas) y pone el
+fondo del inicio de sesión (F-33), que estaba pospuesto.
 
 | Fase | Estado | Hecho | Falta |
 | --- | --- | --- | --- |

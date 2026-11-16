@@ -6,7 +6,8 @@ Lo que hace que StrataFit se maneje como una app del móvil, en iPhone y en Andr
 ## Logo e icono
 
 El logo de StrataFit tiene dos versiones, para el tema claro y para el oscuro. Dentro de la app (la bienvenida) sale el del tema que
-ves; el inicio de sesión, que siempre es oscuro, lleva el oscuro. El icono de la pantalla de inicio es el del tema claro: el móvil lo
+ves; el inicio de sesión, que siempre es oscuro (también su tarjeta, tenga el móvil el tema que tenga) y va sobre la foto de un
+gimnasio visto desde arriba, en gris y desenfocada, lleva el oscuro. El icono de la pantalla de inicio es el del tema claro: el móvil lo
 fija al instalar la app y no cambia con el tema.
 
 Con la app ya instalada antes de la V1.0.1, el icono nuevo llega así:

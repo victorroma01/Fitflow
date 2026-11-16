@@ -89,14 +89,16 @@ class EmuFirebase:
         return self._tool('rol.mjs', user, 'usuario')[0] == 0
 
     def dry_run(self):
-        """El simulacro de pasar las cuentas: (¿ha ido bien?, cuántas dice que quedan por pasar)."""
+        """El simulacro de pasar las cuentas: (¿ha ido bien?, cuántas dice que quedan por pasar, ¿dice que las sesiones
+        abiertas se conservan?)."""
         code, out = self._tool('dominio.mjs', 'simulacro')
         m = re.search(r'Por pasar \| (\d+)', out)
-        return code == 0, int(m.group(1)) if m else -1
+        return code == 0, int(m.group(1)) if m else -1, bool(re.search(r'Las sesiones abiertas se conservan \| Sí', out))
 
-    def move_accounts(self):
-        """Pasa las cuentas con el script de verdad (tools/admin/dominio.mjs). Devuelve cuántas ha pasado."""
-        code, out = self._tool('dominio.mjs', 'aplicar')
+    def move_accounts(self, keep=True):
+        """Pasa las cuentas con el script de verdad (tools/admin/dominio.mjs): «aplicar», que solo las pasa si las sesiones se
+        conservan, o, sin `keep`, «aplicar-todo». Devuelve cuántas ha pasado."""
+        code, out = self._tool('dominio.mjs', 'aplicar' if keep else 'aplicar-todo')
         if code:
             raise RuntimeError(out)
         m = re.search(r'Pasadas ahora \| (\d+)', out)
@@ -643,7 +645,8 @@ def main(path):
         check('«Entregada» la borra de Administración', temp not in p4.inner_text('#sh'))
 
         # ── el dominio de las cuentas (V1.0.32): se registran con el del proyecto de Firebase. Una de antes, con el dominio
-        #    anterior, entra igual; cuando se pasa (tools/admin/dominio.mjs), su móvil vuelve a entrar una vez y no pierde nada ──
+        #    anterior, entra igual; cuando se pasa (tools/admin/dominio.mjs), su sesión sigue abierta y el móvil no nota nada. Si
+        #    las sesiones no se pudieran conservar, vuelve a entrar una vez y no pierde nada ──
         c6, p6 = device()
         login(p6, 'Dora_7', 'clave-dora-7', new=True)
         wait(p6, "!!document.getElementById('wlc')", 30000)
@@ -670,7 +673,7 @@ def main(path):
             # (con los scripts de verdad de tools/admin, contra el emulador)
             check('«Asignar rol» y «Restablecer contraseña» encuentran una cuenta que sigue con el dominio anterior', fb.tool_finds('Dora_7'))
             dry = fb.dry_run()
-            check('el simulacro va bien, dice que queda una por pasar y no la pasa', dry == (True, 1) and fb.domain_of('Dora_7') == OLD_DOMAIN, str(dry))
+            check('el simulacro va bien, dice que queda una por pasar y que las sesiones se conservan, y no la pasa', dry == (True, 1, True) and fb.domain_of('Dora_7') == OLD_DOMAIN, str(dry))
         # un entreno hecho antes de que la cuenta se pase, sin subir todavía
         p6.evaluate("stopSync();S.logs.push({d:'2026-11-05',n:'Pierna',v:5200,s:18,m:60,q:8});saveState();flushState()")
         moved = fb.move_accounts()
@@ -679,17 +682,28 @@ def main(path):
         p6.reload()
         wait(p6, 'window.__ffok')
         st = sync(p6)
+        check('la sesión del móvil sigue abierta: ni aviso ni contraseña, y lo que no se había subido llega a la nube',
+              st == 'ok' and p6.evaluate("!document.querySelector('#dg [data-v=reloginShow]') && !account.x") and p6.evaluate('account.uid') == dora and p6.evaluate('S.logs.length') == 2
+              and len(fb.part('users/%s/logs/2026' % dora) or []) == 2, '%s %s' % (st, p6.evaluate('S.logs.length')))
+        check('y sigue sincronizando después, ya con el dominio de ahora', sync(p6) == 'ok' and fb.domain_of('Dora_7') == DOMAIN)
+        # si las sesiones no se pudieran conservar («aplicar-todo»): el móvil vuelve a entrar una vez, con la contraseña de siempre
+        fb.to_old_domain('Dora_7')
+        p6.evaluate("stopSync();S.logs.push({d:'2026-11-06',n:'Hombro',v:2800,s:12,m:45,q:7});saveState();flushState()")
+        moved = fb.move_accounts(keep=False)
+        p6.reload()
+        wait(p6, 'window.__ffok')
+        st = sync(p6)
         if not EMU:
-            check('al pasarse la cuenta, la sesión de su móvil caduca y la app lo avisa', st == 'dead' and p6.evaluate("!!document.querySelector('#dg [data-v=reloginShow]')"), st)
+            check('sin poder conservarlas, la sesión de su móvil caduca y la app lo avisa', moved == 1 and st == 'dead' and p6.evaluate("!!document.querySelector('#dg [data-v=reloginShow]')"), '%s %s' % (moved, st))
         if st == 'dead':
             wait(p6, "!!document.querySelector('#dg [data-v=reloginShow]')")
-            check('con lo hecho todavía en el móvil', p6.evaluate('S.logs.length') == 2, str(p6.evaluate('S.logs.length')))
+            check('con lo hecho todavía en el móvil', p6.evaluate('S.logs.length') == 3, str(p6.evaluate('S.logs.length')))
             p6.evaluate("document.querySelector('#dg [data-v=reloginShow]').click()")
             p6.fill('#lrp', 'clave-dora-7')
             p6.click('[data-a=reloginSubmit]')
             wait(p6, "!document.querySelector('#sh #lrp')", 15000)
         check('se vuelve a entrar con la contraseña de siempre y lo que no se había subido llega a la nube',
-              p6.evaluate('account.uid') == dora and p6.evaluate('S.logs.length') == 2 and sync(p6) == 'ok' and len(fb.part('users/%s/logs/2026' % dora) or []) == 2,
+              p6.evaluate('account.uid') == dora and p6.evaluate('S.logs.length') == 3 and sync(p6) == 'ok' and len(fb.part('users/%s/logs/2026' % dora) or []) == 3 and fb.domain_of('Dora_7') == DOMAIN,
               '%s %s' % (p6.evaluate('S.logs.length'), len(fb.part('users/%s/logs/2026' % dora) or [])))
         p6.evaluate('S.tab=3;R();A.openSettings()')
         check('el correo técnico no aparece en la app, ni con el dominio de ahora ni con el anterior', '@' + DOMAIN not in p6.content() and '@' + OLD_DOMAIN not in p6.content() and 'firebaseapp' not in p6.inner_text('body'))
