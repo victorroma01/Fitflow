@@ -92,9 +92,17 @@ GECKO_TEXT_JS = """(() => { const d = Object.getOwnPropertyDescriptor(HTMLElemen
 #    pide a la CSP de la app (build.py): trae su código de gstatic, pone su sello (sin estilo propio: la CSP no admite estilos en
 #    línea) con su marco dentro y avisa a su servidor.
 # Los dos dejan en window.__rc con qué clave y acción se pidió el último token.
+#  · Y un tercero, para cuando reCAPTCHA no llega (sin conexión, un bloqueador): con window.__sfRecaptchaFail, el <script> se
+#    añade a la página sin su dirección (no sale a internet) y recibe el mismo evento «error» que si no hubiera cargado, que
+#    es lo que ven la app y la pantalla de error de index.html. window.__rcFail cuenta las veces. Sin rutas, como el primero.
 RECAPTCHA_INIT = """(function(){try{
 var add=Node.prototype.appendChild;
 Node.prototype.appendChild=function(n){
+ if(window.__sfRecaptchaFail&&n&&n.tagName==='SCRIPT'&&/^https:\\/\\/www\\.google\\.com\\/recaptcha\\//.test(n.src||'')){
+  var u=n.src;n.removeAttribute('src');Object.defineProperty(n,'src',{get:function(){return u},configurable:true});
+  add.call(this,n);window.__rcFail=(window.__rcFail||0)+1;
+  Promise.resolve().then(function(){n.dispatchEvent(new Event('error'))});
+  return n}
  if(!window.__sfRecaptchaNet&&n&&n.tagName==='SCRIPT'&&/^https:\\/\\/www\\.google\\.com\\/recaptcha\\//.test(n.src||'')){
   window.grecaptcha={enterprise:{ready:function(f){f()},execute:function(k,o){window.__rc=[k,o&&o.action];return Promise.resolve('rc-tok')}}};
   Promise.resolve().then(function(){if(n.onload)n.onload()});

@@ -332,6 +332,9 @@ def main(path):
                 wait(pg, 'window.__ffok')
                 return c, pg, heads
 
+            # ¿ha salido la pantalla «StrataFit no ha podido iniciarse» (index.html)? Tapa la app, que sigue funcionando debajo
+            BROKE = "!!document.getElementById('ffe')"
+
             def noted(pg):
                 """Lo que App Check ha anotado en Diagnóstico."""
                 return [x['m'] for x in pg.evaluate('errorLog()') if x['w'] == 'App Check']
@@ -389,7 +392,7 @@ def main(path):
                 pa.reload()
                 wait(pa, 'window.__ffok')
                 sync(pa)
-                check('sin conexión, la app abre igual y App Check no anota nada', pa.evaluate('S.logs.length') >= 0 and noted(pa) == [], str(noted(pa)))
+                check('sin conexión, la app abre igual y App Check no anota nada', pa.evaluate('S.logs.length') >= 0 and noted(pa) == [] and not pa.evaluate(BROKE), str([noted(pa), pa.evaluate(BROKE)]))
                 fb.set_offline(ca, False)
 
                 # reCAPTCHA bloqueado (un bloqueador de contenido, una red que lo corta): la app sigue, sin token
@@ -400,6 +403,9 @@ def main(path):
                 del sent[:]
                 st = [sync(pa), sync(pa)]
                 check('con reCAPTCHA bloqueado, la app sincroniza igual, sin token', st == ['ok', 'ok'] and len(sent) > 2 and all(h is None for h in sent), str([st, sent[:4]]))
+                # (la V1.0.3 se publicó tomando por fallo de arranque cualquier script que no cargara: la app seguía debajo,
+                # sincronizando, y encima salía «StrataFit no ha podido iniciarse»)
+                check('y no lo toma por un fallo de arranque: la pantalla de error no sale', not pa.evaluate(BROKE) and pa.evaluate("!document.querySelector('script[src*=\"recaptcha/enterprise.js\"]')"), str(pa.evaluate(BROKE)))
                 check('y lo anota en Diagnóstico una sola vez, no en cada petición', noted(pa) == ['reCAPTCHA no cargó'], str(noted(pa)))
                 ca.unroute(script)
 
@@ -417,6 +423,7 @@ def main(path):
                 second = time.time() - t0
                 check('si reCAPTCHA no responde, la sincronización lo espera unos segundos y sigue sin token', st == 'ok' and first < 14 and len(sent) > 0 and all(h is None for h in sent), '%s en %.1f s · %s' % (st, first, sent[:4]))
                 check('y las peticiones siguientes ya no esperan', st2 == 'ok' and second < 3, '%s en %.1f s' % (st2, second))
+                check('tampoco entonces sale la pantalla de error de arranque', not pa.evaluate(BROKE))
                 # (las peticiones que se dejaron sin contestar se cortan antes de cerrar)
                 for r in held:
                     try:
