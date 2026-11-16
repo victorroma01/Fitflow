@@ -189,14 +189,21 @@ def main(path, shots=None):
         ev(open_group)
         first = ev("(rows => [rows.length, rows.slice(0, 8).every(r => " + IS_FIGURE + "(r)), " + HOLES + "])(" + ROWS + ")")
         check('lista larga: las primeras filas llevan su figura al abrirla y las que no se ven esperan', first[0] > 40 and first[1] and first[2] > first[0] // 2, str(first))
-        check('y el hueco ocupa lo mismo que la figura', ev("(h => h.getAttribute('width') == '48' && h.getBoundingClientRect().width == 48)(document.querySelector('#sh svg[data-pic]'))"))
+        # (su tamaño de estilo, no el de su caja en pantalla: mientras la fila entra con su animación, la caja sale con
+        # decimales de más o de menos, 47,999996 o 48,000004)
+        check('y el hueco ocupa lo mismo que la figura', ev("(h => h.getAttribute('width') == '48' && getComputedStyle(h).width == '48px' && getComputedStyle(h).height == '48px' && Math.abs(h.getBoundingClientRect().width - 48) < .01)(document.querySelector('#sh svg[data-pic]'))"))
         # al deslizarla, cada fila que se acerca a lo que se ve recibe su figura. Depende de que el navegador pinte
         # fotogramas: sin pantalla, WebKit y Firefox no lo hacen a su ritmo, así que ahí solo se anota lo que pasa
         worst = 0
         for y in range(600, 14000, 600):
             ev("document.querySelector('#sh .sp').scrollTop = %d" % y)
-            pg.wait_for_timeout(120)
-            worst = max(worst, ev(SEEN + ".filter(r => !" + IS_FIGURE + "(r)).length"))
+            # lo normal es que llegue en el fotograma siguiente; en un equipo cargado se le da hasta segundo y medio
+            for _ in range(15 if ENGINE == 'chromium' else 2):
+                pg.wait_for_timeout(100)
+                bare = ev(SEEN + ".filter(r => !" + IS_FIGURE + "(r)).length")
+                if not bare:
+                    break
+            worst = max(worst, bare)
         left = ev(HOLES)
         if ENGINE == 'chromium':
             check('al deslizarla, cada fila que se ve tiene su figura sin esperar a su tanda, y al llegar abajo no queda ninguna', worst == 0 and left == 0, 'sin figura a la vista: %d; huecos al final: %d' % (worst, left))
@@ -211,8 +218,10 @@ def main(path, shots=None):
                 frame()
                 frame()
                 forced = max(forced, ev(SEEN + ".filter(r => !" + IS_FIGURE + "(r)).length"))
-            frame()
-            frame()
+            for _ in range(10):
+                frame()
+                if not ev(HOLES):
+                    break
             print('        (informativo, %s) con un fotograma forzado tras cada deslizamiento: filas a la vista sin figura, %d como mucho; huecos al final, %d' % (ENGINE, forced, ev(HOLES)))
             check('al deslizarla, con fotogramas, quien vigila la página pone todas las figuras sin esperar a las tandas', ev(HOLES) == 0, 'huecos al final: %d' % ev(HOLES))
         # y, se deslice o no, las que faltan se ponen solas por tandas: en poco más de un segundo no queda ninguna
