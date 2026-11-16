@@ -13,6 +13,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 ## [1.0.3] — 2026-11-13
 
 ### Novedades
+- Los ejercicios se ven: cada uno de los 551 ejercicios de la librería tiene su figura haciéndolo, con los músculos que
+  trabajan en color y con su máquina, su polea o su material. Al tocarla, «Cómo se hace» la enseña en grande y en movimiento,
+  del inicio al final del gesto; con «Reducir animaciones», las posturas quietas.
 - Nutrición, la semana: una barra por día con sus kcal frente a tu objetivo, la media de kcal y de proteína y los días en
   objetivo. En el Dashboard, la tarjeta «Nutrición · 7 días».
 - Ejercicios propios: desde su ficha puedes renombrarlos (con su historial, sus récords y sus notas) y eliminarlos.
@@ -33,6 +36,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Más rápida con muchos datos: Registros se abre más de tres veces antes con cientos de entrenos, y el Dashboard, un 30 % antes.
 - La copia automática del día se hace también al volver a la app sin haberla cerrado.
 - «Atrás» en un workout que estás editando pregunta si lo descartas, y en un grupo de la librería vuelve a los grupos.
+- Las fotos de ejercicio dejan su sitio a las figuras: la app descarga unos 285 KB menos al instalarse.
 
 ### Correcciones
 - Actualizaciones: si alguna vez abriste la app con conexión desde un acceso directo del icono («Entreno de hoy», «Nutrición
@@ -120,6 +124,13 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   Diagnóstico; y el sello de reCAPTCHA no ocupa sitio. `tests/cloud.py` (111 comprobaciones) lo prueba sobre una compilación
   con App Check y su CSP de verdad (`build.py --appcheck`), con un reCAPTCHA de prueba para todas las pruebas
   (`tests/browser.py`). La batería entera pasa también con App Check configurado.
+- Figuras de ejercicio ([Figuras](docs/tecnica/figuras.md)): modelo articulado de perfil, de frente y de espaldas (`extras/rig`,
+  `data/figure`, que genera `tools/figure.js`), material (`extras/gear`), 82 familias de movimiento (`extras/moves`) y la tabla
+  de qué familia y qué variantes lleva cada ejercicio (`data/figposes`); el dibujo y el movimiento, en `extras/figure`. El codo
+  y la rodilla doblan siempre hacia su lado y el brazo se ve en escorzo antes que cerrar el codo más de su tope.
+- Fuera `library/photo`, las 28 fotos (`src/img/ex`), su CSS y `tests/photos.py`; los otros nombres de búsqueda pasan a
+  `data/aliases`. `tests/rig.test.mjs` (21 pruebas: figura, piezas, articulaciones dentro de su recorrido, manos y pies en su
+  sitio, suelo y continuidad, en los 551 ejercicios) y `tests/figures.py` (133 comprobaciones en navegador).
 
 ## [1.0.2] — 2026-11-12
 

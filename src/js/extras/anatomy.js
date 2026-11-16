@@ -2,7 +2,7 @@
    Mapa muscular dibujado en SVG.
    La imagen de un ejercicio (exPicture, exMotion) es el modelo haciéndolo (extras/moves pone la postura y extras/figure
    la pinta); los ejercicios propios, que no tienen postura, enseñan sus músculos en el mapa.
-   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, exPicture, exMotion, exMusclesSmall
+   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, pictures, PICTURES_MAX, exPicture, exMotion, exMusclesSmall
 */
 import { groupOf } from '../data/library.js';
 import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
@@ -115,13 +115,23 @@ const figRegions = (f, e) => {
   const p = of(P);
   return [p, of(S).filter(k => !p.includes(k))];
 };
-/** La imagen pequeña de un ejercicio (s×s px): el modelo haciéndolo, si tiene postura; si no, sus músculos en el mapa. */
+/* las miniaturas ya pintadas, por ejercicio y tamaño: la figura de un ejercicio de la librería no cambia, y las listas y el
+   entreno piden la misma una y otra vez. Si se juntan demasiadas, se empieza de nuevo */
+const pictures = new Map();
+const PICTURES_MAX = 400;
+/** La imagen pequeña de un ejercicio (s×s px): el modelo haciéndolo; en uno propio, que no tiene postura, sus músculos en el mapa. */
 export const exPicture = (n, s) => {
   const f = figPose(n);
   if (!f)
     return exAnatomy(n, s);
-  const [p, q] = figRegions(f, exAll().find(x => x.n == n));
-  return figureSvg(f, p, q, s);
+  const key = n + '|' + s;
+  if (!pictures.has(key)) {
+    if (pictures.size >= PICTURES_MAX)
+      pictures.clear();
+    const [p, q] = figRegions(f, exAll().find(x => x.n == n));
+    pictures.set(key, figureSvg(f, p, q, s));
+  }
+  return pictures.get(key);
 };
 /** La figura grande de un ejercicio, que se mueve entre el inicio y el final (still: las dos posturas quietas); '' si no tiene postura. */
 export const exMotion = (n, still) => {

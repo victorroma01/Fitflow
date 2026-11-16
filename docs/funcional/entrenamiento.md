@@ -117,8 +117,10 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
   en el ejercicio con el que las hiciste) y **Discos** (el icono del disco), que calcula qué discos poner en cada lado de la
   barra. Van en dos filas (Tips, Notas, Tempo y Descanso; Historial, Swap y Discos), todos con la
   misma altura.
-- **Cómo se hace**: al tocar la imagen del ejercicio (la foto o la figura) se abre su ejecución paso a paso, también propia de
-  cada ejercicio, con un enlace a su ficha.
+- **Cómo se hace**: la imagen de cada ejercicio es una figura haciéndolo, con los músculos que trabajan en color. Al tocarla
+  se abre su ejecución: arriba, la figura en grande, que repite el gesto del inicio al final (con «Reducir animaciones», las
+  posturas quietas, una junto a otra); debajo, los músculos principales y secundarios y el texto paso a paso, propio de cada
+  ejercicio, con un enlace a su ficha.
 - Al terminar, un **resumen** con el volumen, los récords y las series, que se puede compartir como imagen. La duración no
   cuenta las pausas. Un entreno a medias se puede reanudar al volver a abrir la app: sigue con los ejercicios con los que
   empezó, aunque entre tanto hayas cambiado ese día del plan, y el tiempo con la app cerrada no cuenta.
@@ -129,7 +131,7 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 
 ## Librería de ejercicios
 
-Más de 550 ejercicios con su mapa muscular, fotos y filtros por grupo muscular y por equipo. La búsqueda ignora las tildes y entiende
+Más de 550 ejercicios, cada uno con su figura haciéndolo y su mapa muscular, y filtros por grupo muscular y por equipo. La búsqueda ignora las tildes y entiende
 nombres habituales. La ficha de cada ejercicio trae su **consejo** y, al tocar su imagen, **cómo se hace**. Desde la ficha se añade
 al día con «+ Al día».
 

@@ -15,7 +15,7 @@ ver la [documentación funcional](../funcional/README.md).
 | [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en la V1.0.2 frente a la V1.0.1 (T-26). |
 | [Auditoría de la V1.0.3](auditoria-1.0.3.md) | Auditoría técnica completa de la V1.0.2: diagnóstico por áreas, lo corregido en la V1.0.3, lo pendiente y las recomendaciones. |
 | [Informe de issues](issues.md) | Lo encontrado en la revisión final (M8, T-22): lo corregido y lo que queda abierto, con su prioridad, el orden recomendado y su coste en puntos función. |
-| [Figuras de ejercicio (muestra)](figuras.md) | El modelo anatómico haciendo cada ejercicio: muestra con siete ejercicios en la rama `desarrollo-figuras`, pendiente de aprobar. Cómo está hecho, cómo se escribe una postura y lo que falta. |
+| [Figuras de ejercicio](figuras.md) | El modelo anatómico haciendo cada uno de los 551 ejercicios, en lugar de fotos: cómo está hecho, cómo se escribe una postura, cómo se añade un ejercicio, lo que pesa y cómo se prueba. |
 | [Versiones de prueba](versiones-de-prueba.md) | Historial de la serie 1.19 – 1.24, anterior a la V1.0.0. |
 
 ## Cómo está hecha
@@ -32,7 +32,7 @@ flowchart LR
   subgraph fuente["src/ · código fuente"]
     JS["js/ · módulos ES<br/>(entrada: main.js)"]
     CSS["css/ · trozos NN-nombre.css"]
-    IMG["img/ · portadas y<br/>fotos de ejercicio"]
+    IMG["img/ · portadas<br/>de día y logo"]
   end
   CL["CHANGELOG.md<br/>(novedades de cada versión)"]
   B(["build.py + esbuild"])
@@ -107,8 +107,8 @@ el que usan la mayoría de las pruebas.
 │   │   ├── core/           utilidades, plantillas, estado, guardado, pintado, eventos, avisos, hojas, ayudas «?», barra de
 │   │   │                   pestañas, gestos (deslizar para volver), «atrás» y arranque
 │   │   ├── data/           ejercicios, programas, alimentos, fotos (media), novedades (release), anatomía, niveles y las
-│   │   │                   figuras de ejercicio (el modelo de perfil y las posturas)
-│   │   ├── library/        modelo de ejercicios, fotos, filtros, librería, cambio de ejercicio y selector
+│   │   │                   figuras de ejercicio (el modelo de perfil y la tabla de posturas)
+│   │   ├── library/        modelo de ejercicios, filtros, librería, cómo se hace, cambio de ejercicio y selector
 │   │   ├── routines/       workouts personalizados
 │   │   ├── workout/        pestaña Workout y entreno en curso (series, descansos, progresión, discos, descarga…)
 │   │   ├── programs/       crear programa, niveles, gestor y compartir por código
@@ -118,11 +118,11 @@ el que usan la mayoría de las pruebas.
 │   │   ├── system/         archivos, copias de seguridad, diagnóstico, actualizaciones, informe de fallos, PDF, bienvenida de
 │   │   │                   una cuenta nueva, recorrido de la primera vez e integración con el móvil (accesos directos y globo)
 │   │   ├── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros, medallas, CSV, anatomía y
-│   │   │                   figuras de ejercicio (el modelo articulado y su dibujo)
+│   │   │                   figuras de ejercicio (el modelo articulado, el material, las familias de movimiento y su dibujo)
 │   │   ├── cloud/          Firebase por REST: configuración, peticiones, sesión, cuentas, Firestore, fusión y sincronización
 │   │   └── account/        inicio de sesión y registro, la cuenta en Ajustes y Administración
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
-│   └── img/                day/ (portadas, order.txt), ex/ (fotos de ejercicio, map.txt) y brand/ (el logo: fuentes y
+│   └── img/                day/ (portadas, order.txt) y brand/ (el logo: fuentes y
 │                           lo que genera tools/marca.py)
 ├── static/                 sw.js (plantilla), manifiesto, iconos de la app y de los accesos directos (tools/marca.py)
 ├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py ·

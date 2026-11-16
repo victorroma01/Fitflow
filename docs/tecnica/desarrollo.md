@@ -58,11 +58,12 @@ python -m playwright install chromium webkit
 ## Fotos
 
 - Portadas de día: `src/img/day/<clave>.jpg` y su orden en `src/img/day/order.txt`.
-- Fotos de ejercicio: `src/img/ex/<clave>.webp` (sin textos, unos 480 px de ancho) y su línea en `src/img/ex/map.txt`:
-  `clave | ejercicios que la usan | otros nombres para buscarlo`.
 
 `build.py` las convierte en el módulo `data/media`: en el paquete son archivos que el service worker guarda para usar sin conexión; en
 el archivo único van incrustadas.
+
+Los ejercicios no llevan foto: su imagen es una [figura](figuras.md), que es código. Los otros nombres con los que se busca
+un ejercicio están en `src/js/data/aliases.js`.
 
 ## Reglas de calidad
 

@@ -925,9 +925,9 @@ const MOVES = {
     }
     const a = Object.assign({}, base, { sh: 82, el: 90, ha: -90 });
     if (has(f, 'saw'))
-      return fig(a, { x: 44, sh: 96, el: 76 }, [mat(20, 420)], 'b', 1, { fist: 1 });
+      return fig(a, { x: 44, sh: 96, el: 76 }, [mat(20, 420)], 'b', 1, { fist: 1, whole: 1 });
     if (has(f, 'walk'))
-      return fig(a, { far: { sh: 110, el: 60 } }, [mat(20, 420)], 'b', 1, { fist: 1 });
+      return fig(a, { far: { sh: 110, el: 60 } }, [mat(20, 420)], 'b', 1, { fist: 1, whole: 1 });
     return fig(a, {}, [mat(20, 420)], 'b', 0, { hold: 1, fist: 1 });
   },
   /** Plancha lateral, de frente: el cuerpo de lado, recto, sobre el antebrazo. */
