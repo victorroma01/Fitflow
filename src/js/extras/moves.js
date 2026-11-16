@@ -645,8 +645,9 @@ const MOVES = {
       gear = [beam([232, 14, 232, 398], 7, 'b'), beam([212, 399.5, 252, 399.5], 5, 'b'), ['C', 'b', 224, 372, 6.5, 5], ['link', 'f', [224, 372], 'g', 1.3, 3, 'h']];
     }
     else if (has(f, 'machine')) {
-      a = { arm: 14, elb: 70 };
-      b = { arm: 82, elb: 70 };
+      /* los codos doblados, con los antebrazos hacia quien mira: de frente se ven en escorzo */
+      a = { arm: 14, elb: 0, kF: .34 };
+      b = { arm: 82, elb: 0, kF: .34 };
       gear = [['R', 'b', 100, 150, 64, 190, 0, 1], ['on', 'f', 'U0', ['R', '', 34, 132, 16, 30, 8, 1]], ['on', 'f', 'U1', ['R', '', 166, 132, 16, 30, -8, 1]]];
     }
     else if (has(f, 'band'))
@@ -732,7 +733,9 @@ const MOVES = {
     }
     const low = has(f, 'low');
     const a = { arm: low ? 30 : 84, elb: low ? -8 : -14, kU: 1 };
-    const b = { arm: low ? 62 : 26, kU: .72, kF: .8, elb: low ? -30 : -34 };
+    /* las manos acaban juntas por delante: abajo, ante el abdomen (polea alta); a media altura, ante el pecho; y arriba,
+       ante la cara (polea baja). Los brazos, hacia quien mira, se ven en escorzo */
+    const b = low ? { arm: 60, elb: -150, kU: .5, kF: .8 } : has(f, 'mid') ? { arm: 40, elb: -110, kU: .6, kF: .8 } : { arm: 10, elb: -76, kU: .8, kF: .86 };
     if (has(f, 'one'))
       a.r = b.r = { arm: 8, elb: 0, kU: 1, kF: 1 };
     const gear = has(f, 'band') ? [['link', 'b', [-40, 120], 'g', 2.2, 4, ''], ['link', 'b', [240, 120], 'G', 2.2, 4, '']] : sideTowers(low ? 372 : has(f, 'mid') ? 130 : 44);
@@ -1323,6 +1326,8 @@ const MOVES = {
   /** Abducción y aducción de cadera, de frente: sentado en la máquina, de pie en la polea o con banda, o tumbado de lado. */
   hipOpen: f => {
     const adduct = has(f, 'adduct');
+    /* la abducción trabaja el glúteo, que se ve de espaldas; la aducción, los aductores, que se ven de frente */
+    const view = adduct ? 'F' : 'B';
     if (has(f, 'machine') || has(f, 'ball')) {
       /* sentado: los muslos, hacia quien mira, se abren o se cierran contra las almohadillas */
       const closed = { leg: has(f, 'ball') ? 18 : 6, knee: has(f, 'ball') ? -18 : -6, kT: .42, arm: 10, elb: 14 };
@@ -1331,18 +1336,18 @@ const MOVES = {
       const gear = has(f, 'ball') ? [['R', 'b', 100, 262, 96, 12, 0, 1], ['L', 'b', 'M100 268V398M72 399.5H128', 6, 0], ['C', 'f', 100, 262, 17, 7]] : [['R', 'b', 100, 150, 64, 190, 0, 1], ['R', 'b', 100, 262, 96, 12, 0, 1], ['L', 'b', 'M100 268V398M72 399.5H128', 6, 0], ['on', 'f', 'T0', ['R', '', 79 - 15 * side, 286, 9, 34, 0, 1]], ['on', 'f', 'T1', ['R', '', 121 + 15 * side, 286, 9, 34, 0, 1]]];
       if (has(f, 'ball'))
         return front(open.leg ? Object.assign({}, closed, { leg: 24, knee: -24 }) : closed, { leg: 14, knee: -14 }, gear, 'b', 1, { whole: 1 });
-      return front(adduct ? open : closed, adduct ? closed : open, gear, 'b', 1, { whole: 1 });
+      return front(adduct ? open : closed, adduct ? closed : open, gear, 'b', 1, { whole: 1, v: view });
     }
     if (has(f, 'side')) {
       /* tumbado de lado: sube la pierna de arriba */
       const a = { rot: -90, y: 150, arm: 150, elb: -100, leg: 0, r: { arm: 14, elb: 30, leg: 0 } };
-      return front(a, { r: { arm: 14, elb: 30, leg: 38 } }, [['R', 'b', 100, 388, 300, 6, 0, 6]], 'b', 1, { nofloor: 1, whole: 1 });
+      return front(a, { r: { arm: 14, elb: 30, leg: 38 } }, [['R', 'b', 100, 388, 300, 6, 0, 6]], 'b', 1, { nofloor: 1, whole: 1, v: view });
     }
     /* de pie: una pierna se abre (o se cruza por delante de la otra) contra la polea o la banda */
     const a = { arm: 40, elb: 20, leg: 2, r: { arm: 8, elb: 0, leg: adduct ? 34 : 2 } };
     const b = { r: { arm: 8, elb: 0, leg: adduct ? -6 : 34 } };
     const gear = has(f, 'band') ? [['link', 'f', ['S0', 79, 372], ['S1', 121, 372], 3, 4, '']] : adduct ? [beam([262, 14, 262, 398], 7, 'b'), beam([242, 399.5, 282, 399.5], 5, 'b'), ['C', 'b', 254, 376, 6.5, 5], ['link', 'b', [254, 376], ['S1', 124, 380], 1.3, 3, 's'], beam([-30, 120, -30, 398], 6, 'b')] : [beam([-30, 14, -30, 398], 7, 'b'), beam([-50, 399.5, -10, 399.5], 5, 'b'), ['C', 'b', -22, 376, 6.5, 5], ['link', 'b', [-22, 376], ['S1', 124, 380], 1.3, 3, 's']];
-    return front(a, b, gear, 'b', 1, { whole: 1 });
+    return front(a, b, gear, 'b', 1, { whole: 1, v: view });
   },
 };
 /* las figuras ya calculadas */
