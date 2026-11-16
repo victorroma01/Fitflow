@@ -7,7 +7,7 @@
      músculos en reposo, y lo que trabaja en color.
    - figureStage: la figura grande de la hoja «Cómo se hace», que se mueve entre el inicio y el final (playFigures); con
      «Reducir animaciones» (o si el móvil lo pide), las dos posturas quietas, una junto a otra.
-   Define: FIG_FILL, SIL, SIL_FAR, SIL_SMALL, SIL_SMALL_FAR, EDGE_SMALL, RIM, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, figureSvg, STAGE_MOMENTS, FLOOR_LINE, figureStage, BEAT, beatAt, playing, playFigures
+   Define: FIG_FILL, SIL, SIL_FAR, SIL_SMALL, SIL_SMALL_FAR, EDGE_SMALL, RIM, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, figureSvg, STAGE_MOMENTS, STAGE_WIDEST, FLOOR_LINE, figureStage, BEAT, beatAt, playing, playFigures
 */
 import { AN_PA, AN_R } from '../data/anatomy.js';
 import { FG_P, FG_PA } from '../data/figure.js';
@@ -205,6 +205,9 @@ export const figureSvg = (def, P, S, s) => {
 };
 /* los momentos del gesto que tiene que abarcar el encuadre de la figura grande */
 const STAGE_MOMENTS = [0, .25, .5, .75, 1];
+/* lo más apaisado que llega a ser el recuadro de la figura grande (ancho entre alto): una plancha o un press tumbado no
+   dejan media hoja vacía */
+const STAGE_WIDEST = 1.6;
 const FLOOR_LINE = '<path d="M-999 402.6H1999" stroke="#fff" stroke-opacity=".13" stroke-width="1.2"/>';
 /** La figura grande: se mueve del inicio al final y vuelta (playFigures); quieta (still), las posturas del gesto con su
     rótulo: inicio y final y, si pasa por una postura intermedia, también esa. Una postura que se mantiene (hold) es una
@@ -214,13 +217,13 @@ export const figureStage = (def, P, S, still) => {
   const floor = def.nofloor ? '' : FLOOR_LINE;
   const all = rigBox(def, STAGE_MOMENTS);
   if (def.hold)
-    return html`<div class="fgs"><svg viewBox="${boxText(fit(all, Math.min(1.3, Math.max(1, all[2] / all[3]))))}" role="img" aria-label="La postura que se mantiene">${raw(floor)}${groups(def, P, S, 0, 1)}</svg></div>`;
+    return html`<div class="fgs"><svg viewBox="${boxText(fit(all, Math.min(STAGE_WIDEST, Math.max(1, all[2] / all[3]))))}" role="img" aria-label="La postura que se mantiene">${raw(floor)}${groups(def, P, S, 0, 1)}</svg></div>`;
   if (still) {
     const stops = def.m ? [[0, 'Inicio', 'Postura de inicio'], [.5, 'Paso', 'Postura intermedia'], [1, 'Final', 'Postura final']] : [[0, 'Inicio', 'Postura de inicio'], [1, 'Final', 'Postura final']];
     const box = boxText(fit(all, Math.min(1.15, Math.max(.55, all[2] / all[3]))));
     return html`<div class="fgs two">${stops.map(([t, name, label]) => html`<figure><svg viewBox="${box}" role="img" aria-label="${label}">${raw(floor)}${groups(def, P, S, t, 1)}</svg><figcaption>${name}</figcaption></figure>`)}</div>`;
   }
-  return html`<div class="fgs"><svg viewBox="${boxText(fit(all, Math.min(1.3, Math.max(1, all[2] / all[3]))))}" data-fig="${JSON.stringify(def)}" role="img" aria-label="El movimiento, del inicio al final">${raw(floor)}${groups(def, P, S, 0, 1)}</svg></div>`;
+  return html`<div class="fgs"><svg viewBox="${boxText(fit(all, Math.min(STAGE_WIDEST, Math.max(1, all[2] / all[3]))))}" data-fig="${JSON.stringify(def)}" role="img" aria-label="El movimiento, del inicio al final">${raw(floor)}${groups(def, P, S, 0, 1)}</svg></div>`;
 };
 /* lo que dura cada parte del gesto (ms): el esfuerzo, la vuelta (más lenta) y la pausa en cada extremo */
 const BEAT = { effort: 1100, release: 1700, hold: 420 };

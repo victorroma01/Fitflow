@@ -389,8 +389,12 @@ const framePoints = (def, t) => {
           if (j % 2)
             put([all[j - 1], n], q[0] == 'L' ? q[3] / 2 : 0);
         });
-      else if (q[0] == 'R')
-        put([q[2], q[3]], Math.hypot(q[4], q[5]) / 2);
+      else if (q[0] == 'R') {
+        /* las cuatro esquinas de la almohadilla, con su giro */
+        const c = Math.cos((q[6] || 0) * RAD);
+        const n = Math.sin((q[6] || 0) * RAD);
+        [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([i, j]) => put([q[2] + i * q[4] / 2 * c - j * q[5] / 2 * n, q[3] + i * q[4] / 2 * n + j * q[5] / 2 * c], 1));
+      }
       else if (q[0] == 'C')
         put([q[2], q[3]], q[4]);
       else if (q[0] == 'S') {
