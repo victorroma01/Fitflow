@@ -2,7 +2,7 @@
    Mapa muscular dibujado en SVG.
    La imagen de un ejercicio (exPicture, exMotion) es el modelo haciéndolo (extras/moves pone la postura y extras/figure
    la pinta); los ejercicios propios, que no tienen postura, enseñan sus músculos en el mapa.
-   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, pictures, PICTURES_MAX, exHasFigure, exPicture, LATER_MARGIN, laterWatchers, laterWatched, fillLater, watchLater, exPictureLater, exMotion, exMusclesSmall
+   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, pictures, PICTURES_MAX, exHasFigure, exPicture, LATER_MARGIN, LATER_BATCH, LATER_EVERY, LATER_FIRST, laterWatchers, laterWatched, fillLater, laterTimer, fillBatch, watchLater, exPictureLater, exMotion, exMusclesSmall
 */
 import { groupOf } from '../data/library.js';
 import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
@@ -139,45 +139,66 @@ export const exPicture = (n, s) => {
 };
 /* ── las imágenes que esperan ──────────────────────────────────────────────────────────────────────────────────────────
    Una lista larga (un grupo de la librería, el buscador, «Añadir ejercicio», Swap) no pinta de golpe sus sesenta u ochenta
-   figuras: solo las de las primeras filas. Las demás llevan un hueco del mismo tamaño con el nombre del ejercicio
-   (exPictureLater), que se cambia por la figura cuando la fila se acerca a lo que se ve. Así la lista se abre, y se filtra
-   al escribir, en la tercera parte del tiempo, y la página lleva la quinta parte de nodos. */
+   figuras: solo las de las primeras filas, que son las que se ven. Las demás llevan un hueco del mismo tamaño con el nombre
+   del ejercicio (exPictureLater), que se cambia por la figura de dos maneras:
+   - en cuanto la fila se acerca a lo que se ve (quien vigila la página que se desliza avisa: IntersectionObserver);
+   - y, pase lo que pase, por tandas pequeñas, de arriba abajo, desde un momento después de pintarse la lista: en medio
+     segundo una lista de 64 está completa, sin que nadie haya tenido que esperarla.
+   Así abrir la lista, y filtrarla al escribir, cuesta la mitad. */
 /* cuánto antes de verse se pinta una fila, por arriba y por abajo */
 const LATER_MARGIN = '700px 0px';
+/* las tandas: cuántas figuras, cada cuántos ms, y lo que espera la primera */
+const LATER_BATCH = 6;
+const LATER_EVERY = 60;
+const LATER_FIRST = 200;
 /* quien vigila las filas de cada página que se desliza (el .sp de la hoja; fuera de una hoja, la ventana) y las filas que
    ya vigila */
 const laterWatchers = new WeakMap();
 const laterWatched = new WeakSet();
-/* pone la figura en los huecos de una fila (o de un hueco suelto) */
+/* pone la figura en los huecos de una fila (o en un hueco suelto) */
 const fillLater = el => (el.matches('svg[data-pic]') ? [el] : [...el.querySelectorAll('svg[data-pic]')]).forEach(hole => {
   hole.outerHTML = exPicture(hole.dataset.pic, +hole.getAttribute('width'));
 });
-/* vigila los huecos nuevos de root: cada uno se pinta cuando su fila se acerca a lo que se ve */
-const watchLater = root => root.querySelectorAll('svg[data-pic]').forEach(hole => {
-  const row = hole.closest('.exr') || hole;
-  if (laterWatched.has(row))
+/* la tanda siguiente: los primeros huecos que queden en la hoja; si quedan más, se cita para otra */
+let laterTimer = 0;
+const fillBatch = () => {
+  const holes = document.querySelectorAll('#sh svg[data-pic]');
+  for (let k = 0; k < holes.length && k < LATER_BATCH; k++)
+    fillLater(holes[k]);
+  laterTimer = holes.length > LATER_BATCH ? setTimeout(fillBatch, LATER_EVERY) : 0;
+};
+/* con huecos nuevos en root: se vigila su fila, para pintarla cuando se acerque a lo que se ve, y se ponen en marcha las
+   tandas si no lo estaban */
+const watchLater = root => {
+  const holes = root.querySelectorAll('svg[data-pic]');
+  if (!holes.length)
     return;
-  laterWatched.add(row);
-  if (typeof IntersectionObserver == 'undefined') {
-    fillLater(row);
+  if (!laterTimer)
+    laterTimer = setTimeout(fillBatch, LATER_FIRST);
+  if (typeof IntersectionObserver == 'undefined')
     return;
-  }
-  const page = hole.closest('.sp') || document.documentElement;
-  let watcher = laterWatchers.get(page);
-  if (!watcher) {
-    watcher = new IntersectionObserver((entries, w) => entries.forEach(en => {
-      if (!en.isIntersecting)
-        return;
-      w.unobserve(en.target);
-      fillLater(en.target);
-    }), { root: page == document.documentElement ? null : page, rootMargin: LATER_MARGIN });
-    laterWatchers.set(page, watcher);
-  }
-  watcher.observe(row);
-});
-/** El sitio de la imagen pequeña de un ejercicio en una fila que aún no se ve: se pinta sola cuando la fila se acerca. */
+  holes.forEach(hole => {
+    const row = hole.closest('.exr') || hole;
+    if (laterWatched.has(row))
+      return;
+    laterWatched.add(row);
+    const page = hole.closest('.sp') || document.documentElement;
+    let watcher = laterWatchers.get(page);
+    if (!watcher) {
+      watcher = new IntersectionObserver((entries, w) => entries.forEach(en => {
+        if (!en.isIntersecting)
+          return;
+        w.unobserve(en.target);
+        fillLater(en.target);
+      }), { root: page == document.documentElement ? null : page, rootMargin: LATER_MARGIN });
+      laterWatchers.set(page, watcher);
+    }
+    watcher.observe(row);
+  });
+};
+/** El sitio de la imagen pequeña de un ejercicio en una fila que aún no se ve: se pinta sola al acercarse o al poco rato. */
 export const exPictureLater = (n, s) => html`<svg width="${s}" height="${s}" data-pic="${n}" aria-hidden="true" focusable="false"></svg>`;
-/* las listas largas van en la hoja (#sh): cada vez que se pinta algo en ella, se vigilan sus huecos */
+/* las listas largas van en la hoja (#sh): cada vez que se pinta algo en ella, se miran sus huecos */
 if (document.getElementById('sh') && typeof MutationObserver != 'undefined')
   new MutationObserver(() => watchLater(document.getElementById('sh'))).observe(document.getElementById('sh'), { childList: true, subtree: true });
 /** La figura grande de un ejercicio, que se mueve entre el inicio y el final (still: las dos posturas quietas); '' si no tiene postura. */

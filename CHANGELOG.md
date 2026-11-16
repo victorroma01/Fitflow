@@ -38,7 +38,8 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - «Atrás» en un workout que estás editando pregunta si lo descartas, y en un grupo de la librería vuelve a los grupos.
 - Las fotos de ejercicio dejan su sitio a las figuras: la app descarga unos 280 KB menos al instalarse.
 - Registros va del día más reciente al más antiguo, también si apuntas un cardio con la fecha de otro día.
-- Entreno: la figura de cada ejercicio queda arriba, junto a su nombre.
+- Entreno: la figura de cada ejercicio queda arriba, junto a su nombre, y «RIR 1-2», «Descanso 3:00» o «Tempo 3/0/1/0» ya
+  no se parten entre dos líneas.
 - Evolución del peso: las fechas de la gráfica se leen («28 sept», «oct 2026»).
 
 ### Correcciones
@@ -140,11 +141,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Fuera `library/photo`, las 28 fotos (`src/img/ex`), su CSS y `tests/photos.py`; los otros nombres de búsqueda pasan a
   `data/aliases`. `tests/rig.test.mjs` (31 pruebas: figura, piezas, articulaciones dentro de su recorrido, manos y pies en su
   sitio, suelo, continuidad, guías, palancas, equilibrio, barras que no atraviesan el cuerpo y ciclos sin costuras, en los 551
-  ejercicios) y `tests/figures.py` (144 comprobaciones en navegador).
+  ejercicios) y `tests/figures.py` (145 comprobaciones en navegador).
 - Listas con figuras: la figura quieta de cada ejercicio se calcula una vez para todos los tamaños, y una lista larga (un
   grupo de la librería, el buscador, «Añadir ejercicio», Swap) solo pinta las de las primeras filas; las demás llevan un hueco
-  que se rellena al acercarse a la pantalla (`exPictureLater`, con `IntersectionObserver`). El grupo de 64 ejercicios abre
-  con unos 1.300 nodos en vez de 3.000. La figura grande no calcula nada durante la pausa de cada extremo del gesto.
+  que se rellena al acercarse a la pantalla (`exPictureLater`, con `IntersectionObserver`) y, en cualquier caso, por tandas
+  en el medio segundo siguiente. Abrir de nuevo el grupo de 64 ejercicios o escribir en el buscador cuesta la mitad. La
+  figura grande no calcula nada durante la pausa de cada extremo del gesto.
 - Repaso de la app (47 pantallas en claro, oscuro, móvil pequeño y tableta): en el análisis mensual y su PDF la línea del
   plan ya no tacha la cifra de una semana; la ficha de un ejercicio propio dice «Toca la imagen»; en una tableta, la cabecera
   fija del entreno (Cristal) lleva las esquinas redondeadas.

@@ -8,7 +8,7 @@ import io, os, sys, datetime
 import numpy as np
 from PIL import Image
 from playwright.sync_api import sync_playwright
-from browser import launch, app_url, context_opts
+from browser import launch, app_url, context_opts, ENGINE
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -171,28 +171,44 @@ def main(path, shots=None):
         check('lista: un ejercicio con mancuernas lleva mancuernas', ev("(g=>g.querySelectorAll('polygon').length == 3 && g.querySelectorAll('circle').length == 0)([...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent=='Curl con mancuernas').querySelector('.exth svg'))"))
         check('en las listas no queda ninguna insignia de foto', ev("!document.querySelector('.phi')"))
         shot('lista')
-        # una lista larga no pinta de golpe todas sus figuras: las primeras filas la llevan y las demás esperan a acercarse
-        # a lo que se ve (un hueco del mismo tamaño); al deslizar, ninguna fila que se vea se queda sin la suya
+        # una lista larga no pinta de golpe todas sus figuras: las primeras filas la llevan y las demás esperan (un hueco del
+        # mismo tamaño) a acercarse a lo que se ve o, pase lo que pase, a su tanda
         ROWS = "[...document.querySelectorAll('#sh .exr')]"
         SEEN = ROWS + ".filter(r => { const b = r.getBoundingClientRect(); return b.bottom > 0 && b.top < innerHeight; })"
-        ev("A.openLibrary();[...document.querySelectorAll('#sh [data-a=libraryGroup]')].find(b => /Espalda/.test(b.textContent)).click()")
-        first = ev("(rows => [rows.length, rows.slice(0, 8).every(r => " + IS_FIGURE + "(r)), document.querySelectorAll('#sh svg[data-pic]').length])(" + ROWS + ")")
+        HOLES = "document.querySelectorAll('#sh svg[data-pic]').length"
+        open_group = "A.openLibrary();[...document.querySelectorAll('#sh [data-a=libraryGroup]')].find(b => /Espalda/.test(b.textContent)).click()"
+        # con el reloj de la página parado, las tandas no corren: lo que se ponga es cosa de quien vigila la página
+        pg.clock.pause_at(datetime.datetime.fromtimestamp(ev("Date.now()") / 1000 + 1))
+        ev(open_group)
+        first = ev("(rows => [rows.length, rows.slice(0, 8).every(r => " + IS_FIGURE + "(r)), " + HOLES + "])(" + ROWS + ")")
         check('lista larga: las primeras filas llevan su figura al abrirla y las que no se ven esperan', first[0] > 40 and first[1] and first[2] > first[0] // 2, str(first))
         check('y el hueco ocupa lo mismo que la figura', ev("(h => h.getAttribute('width') == '48' && h.getBoundingClientRect().width == 48)(document.querySelector('#sh svg[data-pic]'))"))
+        # al deslizarla, cada fila que se acerca a lo que se ve recibe su figura. Depende de que el navegador pinte
+        # fotogramas: sin pantalla, WebKit y Firefox no lo hacen a su ritmo, así que ahí solo se anota lo que pasa
         worst = 0
         for y in range(600, 14000, 600):
             ev("document.querySelector('#sh .sp').scrollTop = %d" % y)
             pg.wait_for_timeout(120)
             worst = max(worst, ev(SEEN + ".filter(r => !" + IS_FIGURE + "(r)).length"))
-        left = ev("document.querySelectorAll('#sh svg[data-pic]').length")
-        check('al deslizarla, cada fila que se ve tiene su figura, y al llegar abajo no queda ninguna esperando', worst == 0 and left == 0, 'sin figura a la vista: %d; huecos al final: %d' % (worst, left))
+        left = ev(HOLES)
+        if ENGINE == 'chromium':
+            check('al deslizarla, cada fila que se ve tiene su figura sin esperar a su tanda, y al llegar abajo no queda ninguna', worst == 0 and left == 0, 'sin figura a la vista: %d; huecos al final: %d' % (worst, left))
+        else:
+            print('        (informativo, %s) al deslizar con el reloj parado: filas a la vista sin figura, %d como mucho; huecos al final, %d' % (ENGINE, worst, left))
+        # y, se deslice o no, las que faltan se ponen solas por tandas: en poco más de un segundo no queda ninguna
+        ev(open_group)
+        before = ev(HOLES)
+        pg.clock.run_for(250)
+        some = ev(HOLES)
+        pg.clock.run_for(1200)
+        check('sin tocar la lista, las figuras que faltan se ponen solas por tandas', before > 40 and 0 < some < before and ev(HOLES) == 0 and ev(ROWS + ".every(r => " + IS_FIGURE + "(r))"), 'huecos: %d, %d, %d' % (before, some, ev(HOLES)))
+        pg.clock.resume()
         # al escribir en el buscador la lista se pinta de nuevo: lo que se ve lleva figura sin esperar a nada
         ev("A.openLibrary()")
         pg.fill('#sh input', 'press')
         check('buscador: lo que se ve lleva su figura nada más escribir', ev("(rows => rows.length > 0 && rows.every(r => " + IS_FIGURE + "(r)))(" + SEEN + ")"))
         ev("A.closeSheet()")
         pg.clock.run_for(300)
-
         # ficha: la figura pequeña junto al nombre abre la hoja; ya no hay foto
         i = ev("exAll().findIndex(e=>e.n=='Elevaciones laterales')")
         ev("A.exerciseDetail(%d)" % i)

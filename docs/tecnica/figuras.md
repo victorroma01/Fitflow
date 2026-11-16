@@ -132,11 +132,12 @@ Para que no se note:
 - Una miniatura lleva lo justo: la capa que no pinta nada no sale y la que es una sola pieza va sin grupo.
 - La figura quieta de cada ejercicio se calcula una vez y vale para todos los tamaños: la lista, el Overview, el entreno y
   la ficha piden la misma (`exPicture`).
-- **Una lista larga no pinta de golpe todas sus figuras.** Las doce primeras filas la llevan; las demás, un hueco del mismo
-  tamaño (`exPictureLater`), que se cambia por la figura cuando la fila se acerca a lo que se ve (700 px antes, con un
-  `IntersectionObserver` sobre la página que se desliza). El grupo más grande de la librería (64 ejercicios) se abre con
-  unos 1.300 nodos en vez de 3.000; en el equipo de pruebas, volver a abrirlo o escribir una letra en el buscador cuesta
-  la mitad que antes (de unos 40 a unos 20 ms hasta que se ve), y abrirlo por primera vez, tres cuartos.
+- **Una lista larga no pinta de golpe todas sus figuras.** Las doce primeras filas, que son las que se ven, la llevan; las
+  demás, un hueco del mismo tamaño (`exPictureLater`), que se cambia por la figura en cuanto la fila se acerca a lo que se
+  ve (700 px antes: un `IntersectionObserver` sobre la página que se desliza) y, pase lo que pase, por tandas de seis cada
+  60 ms desde un momento después de pintarse la lista: en medio segundo, una lista de 64 está completa. En el equipo de
+  pruebas, volver a abrir el grupo más grande de la librería o escribir una letra en el buscador cuesta la mitad que antes
+  (de unos 40 a unos 20 ms hasta que se ve), y abrirlo por primera vez, tres cuartos.
 - La figura grande solo se mueve mientras está en pantalla, cambiando la colocación de sus capas en cada fotograma (unas
   3 décimas de milisegundo); en la pausa de cada extremo no se calcula nada.
 
@@ -158,12 +159,12 @@ pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el
   recto; en la escaladora los peldaños bajan con el pie que apoya; en la sentadilla los pies no se mueven; en el press la barra sube casi recta y el cuerpo no se mueve del banco; en el curl solo se
   cierra el codo; colgado de la barra, las manos no se mueven de ella y los pies no tocan el suelo; en el remo el codo va
   hacia atrás; y el cable del jalón acaba en la mano.
-- `tests/figures.py` (144 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
+- `tests/figures.py` (145 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
   piezas, el nombre y el texto, sin fotos); las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
   (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios ciclos);
   las posturas que se mantienen; los ciclos, que no se detienen en ningún momento, y los peldaños de la escaladora, que se
-  deslizan; una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla, sin dejar ninguna
-  fila a la vista sin la suya; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
+  deslizan; una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla (en Chromium; sin
+  pantalla, WebKit y Firefox no pintan fotogramas a su ritmo y ahí solo se anota) y, en cualquier caso, por tandas; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
   verdad (los músculos que trabajan en rojo y naranja, el resto del cuerpo, las mancuernas en los extremos con los brazos
   abiertos, el deltoides posterior de espaldas), que es lo que comprueba el dibujo en Safari y Firefox; y que un ejercicio
   propio sigue con sus músculos.
