@@ -36,7 +36,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Más rápida con muchos datos: Registros se abre más de tres veces antes con cientos de entrenos, y el Dashboard, un 30 % antes.
 - La copia automática del día se hace también al volver a la app sin haberla cerrado.
 - «Atrás» en un workout que estás editando pregunta si lo descartas, y en un grupo de la librería vuelve a los grupos.
-- Las fotos de ejercicio dejan su sitio a las figuras: la app descarga unos 285 KB menos al instalarse.
+- Las fotos de ejercicio dejan su sitio a las figuras: la app descarga unos 280 KB menos al instalarse.
 
 ### Correcciones
 - Actualizaciones: si alguna vez abriste la app con conexión desde un acceso directo del icono («Entreno de hoy», «Nutrición
@@ -127,10 +127,13 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Figuras de ejercicio ([Figuras](docs/tecnica/figuras.md)): modelo articulado de perfil, de frente y de espaldas (`extras/rig`,
   `data/figure`, que genera `tools/figure.js`), material (`extras/gear`), 82 familias de movimiento (`extras/moves`) y la tabla
   de qué familia y qué variantes lleva cada ejercicio (`data/figposes`); el dibujo y el movimiento, en `extras/figure`. El codo
-  y la rodilla doblan siempre hacia su lado y el brazo se ve en escorzo antes que cerrar el codo más de su tope.
+  y la rodilla doblan siempre hacia su lado y el brazo se ve en escorzo antes que cerrar el codo más de su tope. Las máquinas
+  se mueven como máquinas (en la Smith la barra va por su guía; las palancas giran sobre su eje sin cambiar de largo: `gl`), en
+  los pesos muertos la barra sube pegada a las piernas, quien se inclina echa la cadera atrás, en las dominadas el cuerpo sube
+  recto y en las zancadas el paso se da por el aire.
 - Fuera `library/photo`, las 28 fotos (`src/img/ex`), su CSS y `tests/photos.py`; los otros nombres de búsqueda pasan a
-  `data/aliases`. `tests/rig.test.mjs` (21 pruebas: figura, piezas, articulaciones dentro de su recorrido, manos y pies en su
-  sitio, suelo y continuidad, en los 551 ejercicios) y `tests/figures.py` (133 comprobaciones en navegador).
+  `data/aliases`. `tests/rig.test.mjs` (29 pruebas: figura, piezas, articulaciones dentro de su recorrido, manos y pies en su
+  sitio, suelo, continuidad, guías, palancas, equilibrio y barras que no atraviesan el cuerpo, en los 551 ejercicios) y `tests/figures.py` (133 comprobaciones en navegador).
 
 ## [1.0.2] — 2026-11-12
 

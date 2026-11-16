@@ -17,8 +17,10 @@
      shy, shx  el hombro sube (encogimientos) o va hacia delante
    o diciendo dónde van la mano o el tobillo, y el modelo calcula el codo o la rodilla:
      grip   [x, y] del puño, en coordenadas del tórax en reposo (va con él)     gw  [x, y] del puño en la imagen
+     gl     [x, y, largo, ángulo]: el puño en el extremo de una palanca que gira sobre (x, y) en la imagen. Al repartir
+            el gesto cambia el ángulo y no el largo: el puño va por un arco y la palanca de la máquina no se estira
      palm   [x, y] de la muñeca en la imagen, con la mano abierta apoyada (flexiones, planchas)
-     fa     con grip, gw o palm: ángulo del antebrazo con el tórax (90 = hacia delante). El codo va bajo el puño y el
+     fa     con grip, gw, gl o palm: ángulo del antebrazo con el tórax (90 = hacia delante). El codo va bajo el puño y el
             brazo se ve tan corto como haga falta, que es lo que pasa cuando el codo apunta hacia quien mira
      foot   [x, y] del tobillo en la imagen
      kU, kF, kT, kS  escorzo del brazo, el antebrazo, el muslo y la pierna (1 = se ven enteros)
@@ -43,7 +45,7 @@
                         a y b son 'g' o 'G' (los puños), [x, y] (fijo) o [pieza, x, y]
      aim a b prim       una pieza rígida con el origen en a y el eje x apuntando a b (un neumático que se voltea)
      bar radio · db modo · kb modo · ball radio · bag · disc   lo que se lleva en las manos
-   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, held, propLayers, SIDE_BODY, FRONT_BODY, rigPose, solve, rigLayers, rigFrame, numbers, framePoints, rigBox, poseSpot, SIDE_REGIONS, sideRegions
+   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, held, propLayers, SIDE_BODY, FRONT_BODY, rigPose, solve, rigLayers, rigFrame, pathPoints, framePoints, rigBox, poseSpot, SIDE_REGIONS, sideRegions
 */
 import { FG_J, FG_P } from '../data/figure.js';
 /** Un grado, en radianes. */
@@ -144,7 +146,7 @@ const sidePose = p => {
     let kF = q.kF || 1;
     let aU;
     let aF;
-    const goal = q.palm || q.gw || (q.grip ? place(TX, q.grip) : null);
+    const goal = q.palm || q.gw || (q.gl ? [q.gl[0] + q.gl[2] * Math.cos(q.gl[3] * RAD), q.gl[1] + q.gl[2] * Math.sin(q.gl[3] * RAD)] : q.grip ? place(TX, q.grip) : null);
     /* el codo, si lo fija el ángulo del antebrazo (fa) */
     let e = null;
     if (goal) {
@@ -345,7 +347,34 @@ export const rigLayers = (def, t) => {
 };
 /** Solo las transformaciones, en el mismo orden que rigLayers (para mover una figura ya pintada). */
 export const rigFrame = (def, t) => rigLayers(def, t).map(l => l.t);
-const numbers = d => (String(d).match(/-?\d+(\.\d+)?/g) || []).map(Number);
+/* los puntos por los que pasa un trazo de SVG (M L H V Q T C S, en absoluto o en relativo; de las curvas, también los de
+   control): lo que ocupa una pieza del material */
+const pathPoints = d => {
+  const out = [];
+  let x = 0;
+  let y = 0;
+  String(d).replace(/([a-zA-Z])([^a-zA-Z]*)/g, (all, c, args) => {
+    const n = (args.match(/-?\d*\.?\d+/g) || []).map(Number);
+    const rel = c == c.toLowerCase();
+    const cmd = c.toUpperCase();
+    if (cmd == 'H')
+      n.forEach(v => out.push([x = rel ? x + v : v, y]));
+    else if (cmd == 'V')
+      n.forEach(v => out.push([x, y = rel ? y + v : v]));
+    else {
+      /* cada tramo acaba en su último par de números, y de ahí sale el siguiente */
+      const pairs = cmd == 'C' ? 3 : cmd == 'Q' || cmd == 'S' ? 2 : 1;
+      for (let i = 0; i + 1 < n.length; i += 2) {
+        const p = [rel ? x + n[i] : n[i], rel ? y + n[i + 1] : n[i + 1]];
+        out.push(p);
+        if ((i / 2) % pairs == pairs - 1)
+          [x, y] = p;
+      }
+    }
+    return all;
+  });
+  return out;
+};
 /* puntos que marcan lo que ocupa la figura en una postura: [parte, punto, margen]. Las partes son lo que se mueve junto:
    la cabeza, el cuerpo, cada brazo (con lo que lleva) y cada pierna, y el material fijo */
 const framePoints = (def, t) => {
@@ -364,16 +393,23 @@ const framePoints = (def, t) => {
     });
   }
   else {
-    [[102, 6], [84, 26], [122, 30]].forEach(q => add('head', place(o.HD, q), 1));
-    [[127, 96], [74, 96]].forEach(q => add('body', place(o.TX, q), 1));
-    [[69.5, 207], [122, 180]].forEach(q => add('body', place(o.PV, q), 1));
+    /* la cabeza, redonda, ocupa lo mismo mire adonde mire; del tronco, lo que más sobresale por delante y por detrás */
+    add('head', place(o.HD, [103, 27]), 21.5);
+    [[127, 96], [74, 96], [75, 60], [127, 122]].forEach(q => add('body', place(o.TX, q), 1));
+    [[69.5, 190], [72, 222], [112, 226], [124, 165]].forEach(q => add('body', place(o.PV, q), 1));
     [['', o.UA, o.g], ['x', o.xUA, o.G]].forEach(([x, u, g]) => {
       add(x + 'arm', u.w, 16);
       add(x + 'arm', place(u, J.el), 12);
       add(x + 'arm', g, 10);
+      /* la mano abierta llega más lejos que el puño: hasta la punta de los dedos */
+      if (!def.fist)
+        add(x + 'arm', place(o[x + 'HA'], [100, 246]), 4);
     });
     [['', o.TH, o.FT], ['x', o.xTH, o.xFT]].forEach(([x, th, f]) => {
       add(x + 'leg', place(th, J.knee), 16);
+      /* el muslo, por delante y por detrás */
+      add(x + 'leg', place(th, [121, 236]), 2);
+      add(x + 'leg', place(th, [77, 244]), 2);
       add(x + 'leg', place(f, [137, 402]), 0);
       add(x + 'leg', place(f, [83, 402]), 0);
     });
@@ -385,10 +421,7 @@ const framePoints = (def, t) => {
     const prim = (q, to) => {
       const put = (pt, m) => add(gear, to ? place(to, pt) : pt, m, to);
       if (q[0] == 'L' || q[0] == 'P')
-        numbers(q[2]).forEach((n, j, all) => {
-          if (j % 2)
-            put([all[j - 1], n], q[0] == 'L' ? q[3] / 2 : 0);
-        });
+        pathPoints(q[2]).forEach(pt => put(pt, q[0] == 'L' ? q[3] / 2 : 0));
       else if (q[0] == 'R') {
         /* las cuatro esquinas de la almohadilla, con su giro */
         const c = Math.cos((q[6] || 0) * RAD);

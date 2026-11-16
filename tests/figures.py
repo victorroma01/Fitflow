@@ -141,9 +141,16 @@ def main(path, shots=None):
             else if (uses.some(h => !document.querySelector(h))) bad.push(e.n + ': usa ' + uses.find(h => !document.querySelector(h)));
             else if (!!st.querySelector('svg[data-fig]') == held) bad.push(e.n + (held ? ': se mantiene y se mueve' : ': no se mueve'));
             else if (document.querySelector('#sh .hwt').textContent != e.n || document.querySelector('#sh .hwp').innerText.length < 80) bad.push(e.n + ': el nombre o el texto');
-            else if (document.querySelector('#sh img')) bad.push(e.n + ': lleva una foto'); }
+            else if (document.querySelector('#sh img')) bad.push(e.n + ': lleva una foto');
+            // de perfil, ninguna pieza del cuerpo ni del material se sale del recuadro (se cortaría en el borde); en
+            // unidades del dibujo, con el margen de lo que una pieza girada abulta de más en su caja
+            else if (figPose(e.n).v == 'S') { let over = 0;
+              st.querySelectorAll('svg').forEach(svg => { const box = svg.getBoundingClientRect(), k = svg.viewBox.baseVal.width / box.width;
+                svg.querySelectorAll('use').forEach(u => { const r = u.getBoundingClientRect();
+                  if (r.width || r.height) over = Math.max(over, (box.left - r.left) * k, (r.right - box.right) * k, (box.top - r.top) * k, (r.bottom - box.bottom) * k); }); });
+              if (over > 4) bad.push(e.n + ': se corta ' + Math.round(over) + ' en el borde'); } }
           return bad; })()""")
-        check('las 551 hojas llevan la figura grande, el nombre y el texto, y ninguna foto', not bad, str(bad[:6]))
+        check('las 551 hojas llevan la figura grande y entera, el nombre y el texto, y ninguna foto', not bad, str(bad[:6]))
         ev("A.closeSheet()")
         pg.clock.run_for(300)
 

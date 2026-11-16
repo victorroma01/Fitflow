@@ -3,8 +3,10 @@
 //   node --test tests/rig.test.mjs
 // Se comprueba lo que se ve en cada uno de los ejercicios de la librería: que tiene figura, que nada sale sin sitio, que
 // los codos y las rodillas doblan hacia donde doblan, que ninguna articulación pasa de lo que un cuerpo puede hacer, que
-// las manos y los pies llegan a su agarre o a su apoyo, que nada se hunde en el suelo y que el gesto no da saltos; y, en
-// unos cuantos ejercicios conocidos, que lo que tiene que estar quieto lo está y el peso va por donde debe.
+// las manos y los pies llegan a su agarre o a su apoyo, que nada se hunde en el suelo y que el gesto no da saltos; que las
+// máquinas se mueven como máquinas (la barra de la Smith no se sale de su guía y las palancas no se estiran), que quien
+// está de pie no se caería (el peso cae sobre los pies) y que la barra no atraviesa el cuerpo; y, en unos cuantos
+// ejercicios conocidos, que lo que tiene que estar quieto lo está y el peso va por donde debe.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, appendFileSync } from 'node:fs';
@@ -194,7 +196,8 @@ test('las manos y los pies llegan a donde se les pide', () => {
           if (d > 3.5 && !worst.has(what))
             worst.set(what, what + (x ? ' de atrás' : '') + ' se queda a ' + Math.round(d) + ' px en t=' + t);
         };
-        const goal = q.palm || q.gw || (q.grip ? R.poseSpot(pose, ['TX', q.grip[0], q.grip[1]]) : null);
+        const lever = q.gl ? [q.gl[0] + q.gl[2] * Math.cos(q.gl[3] * Math.PI / 180), q.gl[1] + q.gl[2] * Math.sin(q.gl[3] * Math.PI / 180)] : null;
+        const goal = q.palm || q.gw || lever || (q.grip ? R.poseSpot(pose, ['TX', q.grip[0], q.grip[1]]) : null);
         if (goal)
           miss('la mano' + x, q.palm ? R.poseSpot(pose, [x + 'FA', 99.5, 207]) : R.poseSpot(pose, x ? 'G' : 'g'), goal);
         if (q.foot)
@@ -271,6 +274,13 @@ test('el encuadre: la figura grande cabe entera y la miniatura enseña la cabeza
       bad.push(n + ': la miniatura de una postura que se mantiene está recortada');
   }
   fails(bad, 'encuadres');
+  // el material dibujado con trazos H y V (el pie de un asiento) cuenta por donde pasa de verdad: una figura de frente,
+  // sentada en su máquina, queda centrada en su recuadro y este llega hasta el suelo
+  for (const n of ['Pec deck', 'Abducción en máquina', 'Aducción en máquina']) {
+    const box = R.rigBox(figPose(n), [0, .5, 1]);
+    near(box[0] + box[2] / 2, 100, 3, n + ': el centro del recuadro');
+    assert.ok(box[1] + box[3] > 398, n + ': el recuadro llega al suelo');
+  }
 });
 
 test('una postura intermedia es el medio del gesto', () => {
@@ -325,6 +335,184 @@ test('colgado de la barra: las manos no se mueven de ella y el cuerpo sube', () 
   assert.ok(spot(def, 0, ['HD', 100, 4])[1] - spot(def, 1, ['HD', 100, 4])[1] > 80, 'la cabeza sube');
   // y la barra está lo bastante alta para que, colgado, los pies no lleguen al suelo
   assert.ok(spot(def, 0, ['FT', 128, 401.5])[1] < 402, 'los pies tocan el suelo');
+});
+
+test('en la Smith la barra no se sale de su guía', () => {
+  // la guía es un tramo vertical fino del armazón; la barra va en los puños y, en todo el gesto, sigue en su vertical
+  const bad = [];
+  let seen = 0;
+  for (const { spec, n, def } of FIGURES) {
+    if (!/\bsmith\b/.test(spec))
+      continue;
+    seen++;
+    const rail = def.props.find(p => p[0] == 'L' && p[3] == 4 && p[4] == 3);
+    if (!rail) {
+      bad.push(n + ': sin guía');
+      continue;
+    }
+    const x = Number(/-?[\d.]+/.exec(rail[2])[0]);
+    const off = Math.max(...STEPS.map(t => Math.abs(spot(def, t, 'g')[0] - x)));
+    if (off > 6)
+      bad.push(n + ': la barra se aparta ' + Math.round(off) + ' px de la guía');
+  }
+  assert.ok(seen >= 12, 'ejercicios en Smith: ' + seen);
+  fails(bad, 'barras fuera de su guía');
+});
+
+test('las palancas de las máquinas no se estiran', () => {
+  // una pieza gruesa que une un punto fijo con el puño o con una parte del cuerpo es una palanca o una barra rígida: mide
+  // lo mismo en todo el gesto (los cables y las gomas, más finos, sí cambian de largo)
+  const bad = [];
+  let seen = 0;
+  for (const { n, def } of FIGURES) {
+    if (def.v != 'S')
+      continue;
+    for (const p of def.props) {
+      if (p[0] != 'link' || p[4] < 3.5)
+        continue;
+      seen++;
+      const len = STEPS.map(t => {
+        const [a, b] = [p[2], p[3]].map(e => Array.isArray(e) && e.length == 2 ? e : spot(def, t, e));
+        return Math.hypot(a[0] - b[0], a[1] - b[1]);
+      });
+      if (Math.max(...len) / Math.min(...len) > 1.08)
+        bad.push(n + ': de ' + Math.round(Math.min(...len)) + ' a ' + Math.round(Math.max(...len)) + ' px');
+    }
+  }
+  assert.ok(seen >= 30, 'palancas: ' + seen);
+  fails(bad, 'palancas que cambian de largo');
+});
+
+test('el puño en el extremo de una palanca va por su arco', () => {
+  // con gl el gesto reparte el ángulo de la palanca, no la posición del puño: a medio camino sigue a su distancia del eje
+  const def = { v: 'S', a: { lean: 0, hip: 0, knee: 0, gl: [160, 20, 120, 150] }, b: { gl: [160, 20, 120, 100] }, props: [] };
+  for (const t of STEPS) {
+    const g = spot(def, t, 'g');
+    near(Math.hypot(g[0] - 160, g[1] - 20), 120, .01, 'la distancia al eje en t=' + t);
+  }
+  const mid = spot(def, .5, 'g');
+  near(mid[0], 160 + 120 * Math.cos(125 * Math.PI / 180), .01, 'a medio camino, en x');
+  near(mid[1], 20 + 120 * Math.sin(125 * Math.PI / 180), .01, 'a medio camino, en y');
+});
+
+test('de pie, el peso cae sobre los pies', () => {
+  // quien se inclina hacia delante con una barra echa la cadera atrás: si no, se cae. Con unas masas aproximadas de cada
+  // parte del cuerpo y de lo que lleva en las manos, el centro de gravedad no sale del apoyo de los pies (del talón a la
+  // punta) en ninguna figura que se sostenga solo sobre ellos
+  const SUPPORTED = ['burpee', 'pushup', 'plank', 'crawl', 'inchworm', 'trxCurl', 'boxJump', 'sideJump', 'jumpRope', 'run', 'sled', 'carry', 'gait', 'tire', 'kbell', 'medBall', 'oly', 'wallBall', 'ropes', 'boxing', 'muscleUp', 'handstand'];
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const bad = [];
+  let seen = 0;
+  for (const { spec, n, def } of FIGURES) {
+    const words = spec.split(' ');
+    const a = def.a;
+    if (def.v != 'S' || SUPPORTED.includes(words[0]) || /\b(jump|trx|inverted|rings|deficit)\b/.test(spec))
+      continue;
+    // se apoya en algo más que los pies: sentado, tumbado, colgado, con una mano en el suelo o en un banco, o en una máquina
+    if ((a.at && !['ankle', 'toe', 'grip'].includes(a.at)) || (a.at == 'grip' && !a.foot) || a.palm || (a.far && a.far.palm) || def.props.some(p => (p[0] == 'R' && p[4] > 40) || p[0] == 'S'))
+      continue;
+    seen++;
+    const bar = def.props.find(p => p[0] == 'bar');
+    const load = bar ? (bar[2] >= 26 ? .6 : .15) : def.props.some(p => ['db', 'kb', 'disc', 'ball', 'bag'].includes(p[0])) ? .2 : 0;
+    let worst = 0;
+    // los pies que pisan el suelo en un momento del gesto
+    const standing = t => ['', 'x'].map(x => [spot(def, t, [x + 'FT', 78, 401]), spot(def, t, [x + 'FT', 128, 401.5])]).filter(f => Math.max(f[0][1], f[1][1]) > 392);
+    const least = Math.min(standing(0).length, standing(1).length);
+    for (const t of [0, .25, .5, .75, 1]) {
+      const at = s => spot(def, t, s);
+      const hip = at(['PV', 99, 196]);
+      const waist = at(['PV', 96, 152]);
+      const sh = at(['UA', 99, 82]);
+      const parts = [[.08, at(['HD', 100, 30])], [.35, mid(sh, waist)], [.12, mid(waist, hip)]];
+      for (const x of ['', 'x']) {
+        const knee = at([x + 'TH', 101, 297]);
+        const el = at([x + 'UA', 99, 150]);
+        const g = at(x ? 'G' : 'g');
+        parts.push([.1, mid(hip, knee)], [.06, mid(knee, at([x + 'SH', 97, 385]))], [.03, mid(sh, el)], [.02, mid(el, g)], [load / 2, g]);
+      }
+      const cg = parts.reduce((s, q) => s + q[0] * q[1][0], 0) / parts.reduce((s, q) => s + q[0], 0);
+      // con un pie en el aire a mitad de un paso no hay equilibrio que mirar: se está cayendo hacia el pie que va a pisar
+      const feet = standing(t);
+      if (!feet.length || feet.length < least)
+        continue;
+      const lo = Math.min(...feet.map(f => Math.min(f[0][0], f[1][0])));
+      const hi = Math.max(...feet.map(f => Math.max(f[0][0], f[1][0])));
+      worst = Math.max(worst, cg - hi, lo - cg);
+    }
+    if (worst > 12)
+      bad.push(n + ': el centro de gravedad queda ' + Math.round(worst) + ' px fuera de los pies');
+  }
+  assert.ok(seen >= 80, 'figuras de pie: ' + seen);
+  fails(bad, 'figuras que se caerían');
+});
+
+test('la barra no atraviesa la cabeza ni las piernas', () => {
+  // la barra es recta: si su centro (los puños) pasa por dentro de la cabeza, de un muslo o de una espinilla, los atraviesa.
+  // En un peso muerto roza las espinillas y en una arrancada pasa pegada a la cara: de ahí el margen
+  const toSegment = (p, a, b) => {
+    const d = [b[0] - a[0], b[1] - a[1]];
+    const k = Math.max(0, Math.min(1, ((p[0] - a[0]) * d[0] + (p[1] - a[1]) * d[1]) / (d[0] * d[0] + d[1] * d[1] || 1)));
+    return Math.hypot(p[0] - a[0] - d[0] * k, p[1] - a[1] - d[1] * k);
+  };
+  const bad = [];
+  let seen = 0;
+  for (const { n, def } of FIGURES) {
+    if (def.v != 'S' || !def.props.some(p => p[0] == 'bar'))
+      continue;
+    seen++;
+    let worst = null;
+    for (const t of STEPS) {
+      const at = s => spot(def, t, s);
+      const g = at('g');
+      const head = at(['HD', 100, 34]);
+      const parts = [['la cabeza', Math.hypot(g[0] - head[0], g[1] - head[1]), 20, 10]];
+      for (const x of ['', 'x'])
+        parts.push(['un muslo', toSegment(g, at(['PV', 99, 206]), at([x + 'TH', 101, 287])), 11, 6], ['una espinilla', toSegment(g, at([x + 'SH', 101, 300]), at([x + 'SH', 97, 380])), 8, 6]);
+      for (const [what, d, r, slack] of parts)
+        if (r - d > slack && (!worst || r - d > worst[0]))
+          worst = [r - d, what, t];
+    }
+    if (worst)
+      bad.push(n + ': la barra pasa ' + Math.round(worst[0]) + ' px por dentro de ' + worst[1] + ' en t=' + worst[2]);
+  }
+  assert.ok(seen >= 50, 'ejercicios con barra: ' + seen);
+  fails(bad, 'barras que atraviesan el cuerpo');
+});
+
+test('peso muerto: la barra sube pegada a las piernas y las rodillas no se doblan dos veces', () => {
+  for (const n of ['Peso muerto', 'Peso muerto rumano', 'Peso muerto con piernas rígidas']) {
+    const def = figPose(n);
+    const xs = STEPS.map(t => spot(def, t, 'g')[0]);
+    assert.ok(Math.max(...xs) - Math.min(...xs) < 20, n + ': la barra se mueve de lado ' + Math.round(Math.max(...xs) - Math.min(...xs)) + ' px');
+    // y va por delante del tobillo, sobre el pie, no por delante de la punta
+    assert.ok(Math.min(...xs) > 97 && Math.max(...xs) < 140, n + ': la barra, de ' + Math.round(Math.min(...xs)) + ' a ' + Math.round(Math.max(...xs)));
+  }
+  // del suelo arriba, la cadera no deja de subir: si bajara a medio camino, las rodillas se doblarían para volver a estirarse
+  const hips = STEPS.map(t => spot(figPose('Peso muerto'), t, ['PV', 99, 196])[1]);
+  hips.forEach((y, i) => assert.ok(!i || y <= hips[i - 1] + .5, 'la cadera baja en t=' + STEPS[i]));
+});
+
+test('zancada: el pie que da el paso va por el aire y el otro no se mueve', () => {
+  // [ejercicio, el pie que da el paso, el que se queda]
+  for (const [n, step, stay] of [['Zancada caminando', '', 'x'], ['Zancada atrás', 'x', '']]) {
+    const def = figPose(n);
+    const sole = (t, x) => Math.max(spot(def, t, [x + 'FT', 78, 401])[1], spot(def, t, [x + 'FT', 128, 401.5])[1]);
+    // (el lado de atrás se dibuja unos píxeles más arriba)
+    assert.ok(sole(.5, step) < 392, n + ': a medio paso el pie sigue en el suelo (' + Math.round(sole(.5, step)) + ')');
+    assert.ok(sole(0, step) > 396 && sole(1, step) > 396, n + ': el pie del paso empieza y acaba en el suelo');
+    const toe = STEPS.map(t => spot(def, t, [stay + 'FT', 128, 401.5]));
+    for (const q of toe)
+      near(q[0], toe[0][0], 6, n + ': la punta del pie que se queda, en x');
+  }
+});
+
+test('dominadas: el cuerpo sube recto', () => {
+  const def = figPose('Dominadas');
+  const hip = STEPS.map(t => spot(def, t, ['PV', 99, 196]));
+  const [a, b] = [hip[0], hip[hip.length - 1]];
+  hip.forEach((q, i) => near(q[0], a[0] + (b[0] - a[0]) * (q[1] - a[1]) / (b[1] - a[1]), 4, 'la cadera se aparta de la recta en t=' + STEPS[i]));
+  // y el codo va por delante, no por detrás de la espalda
+  assert.ok(spot(def, .5, ['UA', 99, 150])[0] > spot(def, .5, ['UA', 99, 82])[0], 'el codo queda detrás del hombro');
 });
 
 test('remo: el codo va hacia atrás, por encima de la espalda', () => {

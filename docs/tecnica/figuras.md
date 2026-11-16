@@ -58,6 +58,7 @@ Con ángulos en grados, como los diría un entrenador (0 = de pie y recto). De p
 | `ft` o `ank` | El pie: su ángulo con el suelo (apoyado, de puntillas) o, con `ank`, la flexión del tobillo, cuando el pie va con la pierna (una pierna en el aire). |
 | `sh`, `el`, `wr` | Brazo hacia delante, flexión de codo y de muñeca. `shy`, `shx`: el hombro sube o se adelanta. |
 | `grip`, `gw`, `palm` | En vez de `sh` y `el`: dónde va el puño (`grip`, en coordenadas del tórax, se mueve con él; `gw`, en la imagen) o la muñeca con la mano apoyada (`palm`). El codo lo calcula el modelo. |
+| `gl` | El puño en el extremo de una palanca: `[x, y, largo, ángulo]`, con el eje en (x, y) de la imagen. A lo largo del gesto cambia el ángulo y no el largo: el puño va por un arco. |
 | `fa` | Con lo anterior, el ángulo del antebrazo con el tórax. El codo queda bajo el puño y el brazo se ve tan corto como haga falta: es lo que pasa cuando el codo apunta hacia quien mira (un press de banca). |
 | `foot` | En vez de `hip` y `knee`: dónde va el tobillo. La rodilla la calcula el modelo. |
 | `kU`, `kF`, `kT`, `kS` | Escorzo del brazo, el antebrazo, el muslo y la pierna (1 = se ven enteros). |
@@ -74,6 +75,21 @@ barra sube recta en un press porque lo que se reparte es el punto del puño.
 El modelo cuida solo dos cosas que de otro modo habría que vigilar en cada postura: el **codo y la rodilla doblan siempre
 hacia su lado** y, si la mano queda tan cerca del hombro que el codo tendría que cerrarse más de lo que da de sí, el brazo
 se dibuja en escorzo (con el codo hacia quien mira) lo justo para que quede en su tope.
+
+### Lo que un gesto tiene que cumplir
+
+Repartir ángulos entre dos posturas no basta para que una máquina se mueva como una máquina ni para que alguien de pie no
+se caiga. `extras/moves.js` tiene una ayuda para cada caso, y `tests/rig.test.mjs` lo comprueba en todas las figuras:
+
+| Regla | Cómo se escribe |
+| --- | --- |
+| **En una Smith la barra solo sube y baja por su guía.** | `railGrips`: si el tronco no se mueve (un press, un remo, un curl), los puños de las dos posturas van por la misma vertical de la imagen. `railBody`: si se mueve el cuerpo entero (una sentadilla, una zancada), el cuerpo cuelga del puño, que va por esa vertical, y las piernas llegan a los pies, que no se mueven del suelo. En la Smith no se avanza: la zancada se hace con un pie delante y otro detrás. |
+| **Las palancas no se estiran.** | `leverGrips` y `leverFrom` dejan el puño en el arco de su palanca (`gl`), con el eje donde lo tendría la máquina o donde está (la punta de la barra del remo en T o del press landmine). Si lo que mueve la palanca es otra parte del cuerpo, `pivotAt` pone el eje a la misma distancia del principio y del final, o la pieza va unida al cuerpo (`on`) y gira con él sobre su articulación (el pullover, el crunch, la extensión de cadera). |
+| **El peso sube y baja pegado a las piernas.** | En los pesos muertos las posturas se escriben con el cuerpo colgando de la barra (`railBody`, sin guía): la cadera se va atrás, los brazos quedan algo hacia las piernas y la barra va por delante del tobillo, sobre el pie. Entre ellas se reparte dónde está la cadera, para que las rodillas no se doblen dos veces. Desde el suelo son dos tiempos, con una postura intermedia a la altura de las rodillas: hasta ahí suben la cadera y los hombros a la vez y las rodillas se van atrás para dejar paso a la barra. |
+| **La barra no atraviesa el cuerpo.** | En el press militar sale de la parte alta del pecho y pasa por delante de la cara, con la barbilla atrás; en los levantamientos olímpicos la cabeza se echa atrás cuando la barra va de los hombros a arriba. |
+| **Un paso se da por el aire.** | En las zancadas hay una postura intermedia con el pie que da el paso levantado; el otro no se mueve del suelo (el de atrás, sobre su punta, gira sobre ella). |
+| **Quien se inclina no se cae.** | `bentOver(lean)`: de pie con el tronco inclinado, la cadera se va atrás lo justo para que los hombros, y el peso que cuelga de ellos, queden sobre los pies (remos, pájaros, patadas de tríceps). |
+| **Colgado, el cuerpo sube recto.** | En las dominadas lo que se reparte es dónde está la cadera, y los brazos llegan a la barra: con los ángulos del hombro y el codo el cuerpo se iría hacia atrás a medio camino. |
 
 El material es una lista de piezas, cada una en su plano (detrás de todo, entre el lado de atrás y el cuerpo, o delante):
 trazos, rellenos, almohadillas, círculos y placas, fijos o unidos a una pieza del cuerpo (`on`); una barra recta entre dos
@@ -93,8 +109,8 @@ cabecera de `extras/rig.js`; `extras/gear.js` tiene lo que se repite.
 ## Lo que pesa
 
 No hay imágenes: son trazados. Con los dos modelos, el motor, el material y las 551 posturas, el código que se descarga al
-arrancar pasa de 444 a 549 KB (de 168 a 204 KB comprimido): **36 KB más**. A cambio se van las 28 fotos, 321 KB: una
-instalación nueva descarga **unos 285 KB menos**, y el archivo único baja de 1.446 a 1.124 KB.
+arrancar pasa de 444 a 554 KB (de 168 a 206 KB comprimido): **38 KB más**. A cambio se van las 28 fotos, 321 KB: una
+instalación nueva descarga **unos 280 KB menos**, y el archivo único baja de 1.446 a 1.129 KB.
 
 Para que no se note:
 
@@ -110,11 +126,16 @@ pintado: 96 y 94 ms).
 
 ## Pruebas
 
-- `tests/rig.test.mjs` (21 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
+- `tests/rig.test.mjs` (29 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
   gesto: cada uno tiene figura; las figuras están bien escritas; ninguna pieza sale sin sitio; los codos y las rodillas doblan
   hacia donde doblan; **ninguna articulación pasa de lo que un cuerpo puede hacer** (cintura, cuello, hombro, codo, muñeca,
   cadera, rodilla y tobillo; de frente, brazos y piernas); **las manos y los pies llegan a donde se les pide** (el agarre, el
-  pedal, el suelo); nada se hunde en el suelo; el gesto no da saltos; y el encuadre. Además, en ejercicios conocidos: en la
+  pedal, el suelo); nada se hunde en el suelo; el gesto no da saltos; **en la Smith la barra no se sale de su guía**; **las
+  palancas de las máquinas no cambian de largo**; **de pie, el peso cae sobre los pies** (con unas masas aproximadas de cada
+  parte del cuerpo y de lo que lleva en las manos); **la barra no atraviesa la cabeza ni las piernas**; y el encuadre,
+  centrado y entero. Además, en ejercicios conocidos: en el peso muerto la barra sube pegada a las piernas y la cadera no
+  deja de subir; en la zancada el pie que da el paso va por el aire y el otro no se mueve; en las dominadas el cuerpo sube
+  recto; en la
   sentadilla los pies no se mueven; en el press la barra sube casi recta y el cuerpo no se mueve del banco; en el curl solo se
   cierra el codo; colgado de la barra, las manos no se mueven de ella y los pies no tocan el suelo; en el remo el codo va
   hacia atrás; y el cable del jalón acaba en la mano.
@@ -136,5 +157,7 @@ comprueba aparte, en `tests/figures.py`.
   reparto, no una captura de movimiento.
 - En los ejercicios de cuerpo completo (CrossFit, Hyrox, funcional) la librería marca casi todos los músculos como
   principales, y así sale la figura: toda en rojo.
+- En la arrancada, la barra pasa pegada a la cara al meterse el cuerpo debajo: de perfil, su centro roza la silueta de la
+  cabeza durante un instante.
 - Lo que solo se entiende desde arriba o en tres cuartos (el Pallof press, la abducción sentada) se ha resuelto de frente o
   de espaldas, con los brazos o los muslos en escorzo.
