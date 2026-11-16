@@ -4,7 +4,7 @@
    a: postura de inicio, b: lo que cambia en la del final, props: material, up: qué extremo es el final del esfuerzo,
    at: momento del gesto que se pinta en la miniatura, hold: si es una postura que se mantiene }. La tabla de qué familia
    y qué variantes lleva cada ejercicio está en data/figposes; cómo se escribe una postura, en extras/rig.
-   Define: has, REST, ANGLES, complete, figure, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, railGrips, railBody, leverFrom, leverGrips, pivotAt, bentOver, SUPINE, LIFT, gait, treadmill, sledAt, MOVES, made, figPose
+   Define: has, REST, ANGLES, complete, figure, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, railGrips, railBody, leverFrom, leverGrips, pivotAt, bentOver, SUPINE, LIFT, gait, treadmill, sledAt, STRIDE, MOVES, made, figPose
 */
 import { FIG_POSES } from '../data/figposes.js';
 import { RAD, poseSpot } from './rig.js';
@@ -129,12 +129,23 @@ const LIFT = {
   catch: { lean: 10, neck: -6, hip: 42, knee: 44 },
   tall: { lean: -4, neck: 2, hip: -2, knee: 0 },
 };
-/** Dos zancadas alternas: lo que hacen una pierna y el brazo contrario en el inicio lo hacen los otros en el final. */
-const gait = (base, legA, legB, armA, armB, props, more) => fig(Object.assign({}, base, legA, armB, { far: Object.assign({}, legB, armA) }), Object.assign({}, legB, armA, { far: Object.assign({}, legA, armB) }), props, 'b', 0, Object.assign({ whole: 1 }, more));
+/* Andar o correr: media zancada, que se repite sin parar con los lados cambiados (cada una dura cycle ms). legA es la
+   pierna de delante y legB la de atrás; a medio camino (mid) la que apoya pasa bajo la cadera y la otra vuelve por el
+   aire, doblada. Los brazos van al revés que las piernas. */
+const gait = (base, legA, legB, mid, armA, armB, props, more) => {
+  const half = {};
+  Object.keys(armA).forEach(k => {
+    half[k] = (armA[k] + armB[k]) / 2;
+  });
+  const m = Object.assign({}, mid[0], half, { far: Object.assign({}, mid[1], half) });
+  return fig(Object.assign({}, base, legA, armB, { far: Object.assign({}, legB, armA) }), Object.assign({}, legB, armA, { far: Object.assign({}, legA, armB) }), props, 'b', 0, Object.assign({ whole: 1, m, via: 1 }, more));
+};
 /* la cinta de correr: tapiz, base, columna y consola */
 const treadmill = () => [['R', 'b', 110, 409, 260, 10, 0, 6], beam([-20, 421, 250, 421], 5, 'b'), beam([236, 404, 256, 248], 5, 'b'), pad(254, 242, 42, 10, -28), beam([240, 296, 186, 296], 4, 'b')];
 /* el trineo, cargado, con sus postes: x es donde empieza */
 const sledAt = x => [['R', 'b', x + 60, 393, 124, 9, 0, 6], beam([x + 20, 388, x + 20, 250], 5, 'b'), beam([x + 100, 388, x + 100, 300], 5, 'b'), ['R', 'b', x + 100, 352, 46, 10, 0, 5], ['R', 'b', x + 100, 364, 46, 10, 0, 5], ['R', 'b', x + 100, 376, 46, 10, 0, 5]];
+/* a media zancada: [la pierna que apoya, bajo la cadera; la que vuelve por el aire, doblada] */
+const STRIDE = { walk: [{ hip: 10, knee: 16, ft: 0 }, { hip: 20, knee: 58, ft: 6 }], run: [{ hip: 36, knee: 52, ft: 0 }, { hip: 22, knee: 100, ft: 52 }] };
 /** Las familias de movimiento: nombre → función que recibe las variantes y devuelve la figura. */
 const MOVES = {
   /* ── empuje: press de banca (plano, inclinado, declinado, en el suelo), de hombro, flexiones y fondos ── */
@@ -351,7 +362,7 @@ const MOVES = {
     const held = has(f, 'bar') || has(f, 'smith') ? [['bar', 0, 34]] : has(f, 'goblet') ? [has(f, 'kb') ? ['kb', 0, 0] : ['db', 0, 4]] : has(f, 'bag') ? [['on', 'f', 'TX', ['R', '', 86, 62, 56, 22, 0, 7]]] : has(f, 'none') ? [] : [has(f, 'kb') ? ['kb', 0, 2] : ['db', 0, 0]];
     /* el paso: a medio camino el pie que lo da va por el aire (hacia delante, con la rodilla arriba y el cuerpo aún
        alto; hacia atrás, mientras el cuerpo empieza a bajar) y el otro no se mueve del suelo */
-    const step = bulgarian || has(f, 'smith') ? {} : forward ? { m: { x: 31, y: 373 - drop * .6, lean: 4, neck: -3, hip: 46, knee: 70, ft: -8, far: { foot: onToes(drop ? 30 : 24), ft: drop ? 30 : 24 } } } : { m: { lean: 4, neck: -4, hip: 34, knee: 34, far: { foot: [44, 356], ft: 40 } } };
+    const step = bulgarian || has(f, 'smith') ? {} : forward ? { m: { x: 31, y: 373 - drop * .6, lean: 4, neck: -3, hip: 46, knee: 70, ft: -8, far: { foot: onToes(drop ? 30 : 24), ft: drop ? 30 : 24 } }, via: 1 } : { m: { lean: 4, neck: -4, hip: 34, knee: 34, far: { foot: [44, 356], ft: 40 } }, via: 1 };
     return fig(a, b, gear.concat(held), 'a', 1, step);
   },
   /** Subir a un cajón: el pie de delante arriba; la otra pierna empuja desde el suelo y acaba junto a él. */
@@ -412,7 +423,7 @@ const MOVES = {
       /* desde el suelo son dos tiempos: hasta las rodillas suben la cadera y los hombros a la vez, con la espalda casi
          igual de inclinada y las rodillas yéndose atrás para dejar paso a la barra; desde ahí, la cadera va adelante */
       if (fromFloor && !has(f, 'rack'))
-        more = { m: { y: 292 + feet - 385, lean: has(f, 'sumo') ? 52 : 64, neck: -30, sh: (has(f, 'sumo') ? 52 : 64) - 15 } };
+        more = { m: { y: 292 + feet - 385, lean: has(f, 'sumo') ? 52 : 64, neck: -30, sh: (has(f, 'sumo') ? 52 : 64) - 15 }, via: 1 };
       /* con el peso libre, entre esas posturas lo que se reparte es dónde está la cadera: colgando de la barra, la
          cadera bajaría a medio camino y las rodillas se doblarían para volver a estirarse */
       if (!has(f, 'smith')) {
@@ -1045,7 +1056,7 @@ const MOVES = {
     if (has(f, 'vup'))
       return fig({ at: 'hip', x: 200, y: 376, lean: -90, neck: 0, hip: 0, knee: 0, ank: -24, sh: 178, el: 4 }, { lean: -42, waist: 14, hip: 96, knee: 6, sh: 96, neck: 6 }, [mat(0, 400)], 'b', 1);
     if (has(f, 'bike'))
-      return fig(Object.assign({}, SUPINE, { foot: null, lean: -84, waist: 26, neck: 16, hip: 104, knee: 100, ft: -70, grip: [106, 30], kF: .5, far: { foot: null, hip: 30, knee: 8, ft: -70 } }), { hip: 30, knee: 8, far: { foot: null, hip: 104, knee: 100, ft: -70 } }, [mat(0, 340)], 'b', 1);
+      return fig(Object.assign({}, SUPINE, { foot: null, lean: -84, waist: 26, neck: 16, hip: 104, knee: 100, ft: -70, grip: [106, 30], kF: .5, far: { foot: null, hip: 30, knee: 8, ft: -70 } }), { hip: 30, knee: 8, far: { foot: null, hip: 104, knee: 100, ft: -70 } }, [mat(0, 340)], 'b', 1, { cycle: 900 });
     if (has(f, 'ball')) {
       const a = { at: 'hip', x: 170, y: 300, lean: -100, neck: 0, foot: [262, 385], grip: [106, 30], kF: .5 };
       return fig(a, { waist: 44, neck: 14 }, [wheel(160, 352, 50, 'm', 7)], 'b', 1);
@@ -1083,7 +1094,7 @@ const MOVES = {
         const tuck = { hip: 140, knee: 140, ft: 70 };
         /* a medio cambio, con un saltito, las dos piernas van a medias y la cadera sube lo justo para que pasen */
         const half = { hip: 96, knee: 134, ft: 76 };
-        return fig(Object.assign({}, a, { at: 'hip', x: hip[0], y: hip[1] - 10, lean: 76 }, back, { far: tuck }), Object.assign({}, tuck, { far: back }), [mat(20, 420)], 'b', 1, { whole: 1, m: Object.assign({}, half, { far: half }) });
+        return fig(Object.assign({}, a, { at: 'hip', x: hip[0], y: hip[1] - 10, lean: 76 }, back, { far: tuck }), Object.assign({}, tuck, { far: back }), [mat(20, 420)], 'b', 1, { whole: 1, m: Object.assign({}, half, { far: half }), via: 1, cycle: 480 });
       }
       return fig(a, {}, [mat(20, 420)], 'b', 0, { hold: 1 });
     }
@@ -1139,7 +1150,7 @@ const MOVES = {
       /* andando con la carga: en las manos, ante el pecho, abrazada o al hombro */
       const arms = has(f, 'rack') ? { grip: [122, 80], kF: .6 } : has(f, 'hug') ? { grip: [130, 120], kF: .8 } : has(f, 'shoulder') ? { grip: [100, 60], kF: .6 } : { sh: 3, el: 3 };
       const load = has(f, 'bag') ? (has(f, 'shoulder') ? [['on', 'f', 'TX', ['R', '', 92, 60, 60, 24, 0, 7]]] : [['bag', 'f']]) : [has(f, 'kb') ? ['kb', 0, has(f, 'rack') ? 0 : 2] : ['db', 0, 0]];
-      return gait(Object.assign({ at: 'hip', x: 110, y: 199, lean: 4, neck: -2 }, arms), { hip: 28, knee: 8, ft: -14 }, { hip: -16, knee: 14, ft: 28 }, {}, {}, load, { fist: 1 });
+      return gait(Object.assign({ at: 'hip', x: 110, y: 199, lean: 4, neck: -2 }, arms), { hip: 28, knee: 8, ft: -14 }, { hip: -16, knee: 14, ft: 28 }, STRIDE.walk, {}, {}, load, { fist: 1, cycle: 700 });
     }
     return fig({ lean: 0, neck: 0, hip: 0, knee: 0, sh: 2, el: 3 }, {}, has(f, 'pinch') ? [['disc', 'f']] : [['db', 0, 0]], 'b', 0, { hold: 1, fist: 1 });
   },
@@ -1156,8 +1167,9 @@ const MOVES = {
     const over = q => pose(q, upGrip(q.lean, 136 * wide - 2), wide);
     const end = has(f, 'snatch') || has(f, 'cj') ? over : rack;
     const first = has(f, 'hang') ? LIFT.hang : db ? LIFT.deep : LIFT.floor;
-    /* el tirón, a medio camino: el cuerpo estirado y la barra a la altura del pecho, con los codos arriba */
-    const pull = pose(Object.assign({}, LIFT.tall, { neck: -12 }), has(f, 'snatch') ? [140, 114] : [132, 112], .55, .5);
+    /* el tirón, a medio camino: el cuerpo estirado y los codos arriba, con la barra a la altura del pecho o, en la
+       arrancada, ya ante la frente: de ahí pasa por encima de la cabeza, no a través de ella */
+    const pull = has(f, 'snatch') ? pose(Object.assign({}, LIFT.tall, { neck: -12 }), [129, 8], .6, .62) : pose(Object.assign({}, LIFT.tall, { neck: -12 }), [132, 112], .55, .5);
     /* de los hombros a arriba la barra pasa por delante de la cara: la cabeza se echa atrás para dejarle sitio */
     const back = q => Object.assign({}, q, { neck: -14 });
     /* con la barra arriba se recibe con el tronco derecho, debajo de ella */
@@ -1326,7 +1338,7 @@ const MOVES = {
       gear = treadmill();
     if (has(f, 'pack'))
       gear.push(['on', 'm', 'TX', ['R', '', 64, 112, 26, 64, 0, 6]]);
-    return gait(base, front, back, fore, aft, gear, has(f, 'treadmill') ? { nofloor: 1 } : {});
+    return gait(base, front, back, walk ? STRIDE.walk : STRIDE.run, fore, aft, gear, Object.assign({ cycle: walk ? 640 : 430 }, has(f, 'treadmill') ? { nofloor: 1 } : {}));
   },
   /** Bicicleta: estática, de aire (con los brazos) o de carretera. */
   bike: f => {
@@ -1352,11 +1364,11 @@ const MOVES = {
       else
         gear.push(beam([hub[0] - 8, hub[1] - 30, 214, 192], 5, 'b'), beam([200, 182, 224, 190], 5, 'b'));
     }
-    /* media vuelta de pedales: el pie de delante baja por delante del eje y el otro sube por detrás (repartiendo solo
-       el principio y el final, bajarían y subirían en línea recta, como en un escalón) */
+    /* media vuelta de pedales, y otra media con los pies cambiados: el pie de arriba baja por delante del eje y el otro
+       sube por detrás (repartiendo solo el principio y el final, bajarían y subirían en línea recta, como en un escalón) */
     const half = air ? { gl: [206, 316, 140, -92] } : { gw: hands };
     const m = Object.assign({ foot: ped(0), far: Object.assign({ foot: ped(180), ft: 8 }, half) }, half);
-    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m });
+    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m, via: 1, cycle: 760 });
   },
   /** Elíptica: de pie en los pedales, los brazos y las piernas se alternan. */
   elliptical: () => {
@@ -1365,16 +1377,22 @@ const MOVES = {
     const a = { at: 'hip', x: 112, y: 186, lean: 8, neck: -4, foot: fore, ft: -6, gw: [150, 190], far: { foot: aft, ft: 24, gw: [180, 172] } };
     const b = { foot: aft, ft: 24, gw: [180, 172], far: { foot: fore, ft: -6, gw: [150, 190] } };
     const gear = [['C', 'b', 28, 350, 42, 0], ['C', 'b', 28, 350, 5, 2], beam([0, 399.5, 262, 399.5], 5, 'b'), ['aim', 'b', ['xFT', 104, 406], [28, 350], ['L', '', 'M0 0H100', 5, 0], 6], ['aim', 'b', ['FT', 104, 406], [28, 350], ['L', '', 'M0 0H100', 5, 0], 6], ['aim', 'b', ['xFT', 104, 406], [28, 350], ['C', '', 100, 0, 3.4, 2], 6], ['aim', 'b', ['FT', 104, 406], [28, 350], ['C', '', 100, 0, 3.4, 2], 6], ['on', 'b', 'xFT', ['R', '', 104, 405, 34, 6, 0, 2]], ['on', 'f', 'FT', ['R', '', 104, 405, 34, 6, 0, 2]], beam([216, 398, 216, 152], 6, 'b'), pad(216, 146, 34, 12, -20), lever(216, 320, 'G', '', 'b'), lever(216, 320, 'g', 'b', 'f')];
-    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1 });
+    /* el pie de delante va atrás por abajo y el otro vuelve por arriba: entre los dos dan la vuelta a la elipse */
+    const m = { foot: [115, 370], ft: 9, gw: [165, 181], far: { foot: [115, 346], ft: 9, gw: [165, 181] } };
+    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m, via: 1, cycle: 880 });
   },
-  /** Escaladora: los pies suben peldaños que bajan, con las manos en las barandillas. */
+  /** Escaladora: los peldaños bajan sin parar y los pies suben por ellos, con las manos en las barandillas. */
   stairs: () => {
-    const high = [152, 318];
-    const low = [102, 368];
-    const a = { at: 'hip', x: 112, y: 182, lean: 10, neck: -4, foot: high, ft: 0, gw: [176, 190], far: { foot: low, ft: 0 } };
+    /* cada peldaño mide 62 de fondo y 44 de alto; el tobillo, con el pie entero en el de arriba y en el de abajo */
+    const high = [138, 297];
+    const low = [76, 341];
+    const a = { at: 'hip', x: 112, y: 160, lean: 8, neck: -4, foot: high, ft: 0, gw: [158, 168], far: { foot: low, ft: 0 } };
     const b = { foot: low, far: { foot: high, ft: 0 } };
-    const gear = [['P', 'b', 'M72 385H124V335H176V285H236V402H72Z', 6], beam([150, 204, 250, 154], 4, 'b'), beam([250, 154, 250, 284], 5, 'b'), pad(254, 150, 34, 12, -24)];
-    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1 });
+    /* el pie que apoya baja con su peldaño; el otro primero sube y luego va adelante, a posarse en el peldaño que llega */
+    const m = { foot: [107, 319], far: { foot: [92, 274], ft: 22 } };
+    /* los peldaños se deslizan uno entero en cada medio gesto: salen de la carcasa de delante y se meten en la base */
+    const gear = [['slide', 'b', [-62, 44], ['L', '', 'M310 226H248V270H186V314H124V358H62', 5, 0]], ['R', 'b', 64, 379, 150, 46, 0, 6], ['R', 'b', 280, 296, 84, 212, 0, 6], beam([252, 138, 128, 178], 4, 'b'), beam([252, 138, 252, 192], 5, 'b'), pad(266, 132, 40, 12, -24)];
+    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m, via: 1, cycle: 1000 });
   },
   /** Remo en ergómetro: de recogido, con los brazos estirados, a las piernas estiradas y el asa en el abdomen. */
   rower: () => {
@@ -1405,13 +1423,19 @@ const MOVES = {
     const aft = [6, 374];
     const a = { at: 'hip', x: 110, y: 256, lean: 52, neck: -30, foot: fore, ft: 0, gw: [306, 262], far: { foot: aft, ft: 52 } };
     const b = { foot: aft, ft: 52, far: { foot: fore, ft: 0 } };
-    return fig(a, b, sledAt(286), 'b', 0, { fist: 1, whole: 1 });
+    /* el pie que empuja va atrás por el suelo; el otro vuelve adelante por el aire */
+    const m = { foot: [76, 380], ft: 26, far: { foot: [84, 358], ft: 40 } };
+    return fig(a, b, sledAt(286), 'b', 0, { fist: 1, whole: 1, m, via: 1, cycle: 820 });
   },
   /** Natación: a crol, los brazos se alternan y las piernas baten. */
   swim: () => {
-    const a = { at: 'hip', x: 150, y: 250, lean: 86, neck: -34, hip: 6, knee: 10, ft: 84, sh: 178, el: 4, far: { hip: -8, knee: 4, ft: 84, sh: 10, el: 14 } };
-    const b = { hip: -8, knee: 4, sh: 10, el: 14, far: { hip: 6, knee: 10, ft: 84, sh: 178, el: 4 } };
-    return fig(a, b, [['L', 'f', 'M-90 236q15 -7 30 0t30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0', 2.4, 4], ['L', 'b', 'M-90 262q15 -7 30 0t30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0', 1.6, 4]], 'b', 0, { nofloor: 1, whole: 1 });
+    const a = { at: 'hip', x: 150, y: 250, lean: 86, neck: -34, hip: 6, knee: 10, ft: 84, sh: 178, el: 4, kU: .8, far: { hip: -8, knee: 4, ft: 84, sh: 10, el: 14, kU: 1 } };
+    /* el brazo de atrás acaba delante dando la vuelta por encima (−182 es el mismo sitio que 178) */
+    const b = { hip: -8, knee: 4, sh: 10, el: 14, kU: 1, far: { hip: 6, knee: 10, ft: 84, sh: -182, el: 4, kU: .8 } };
+    /* a media brazada: el que tira apunta al fondo; el que vuelve pasa sobre la espalda con el codo alto, y de perfil
+       se ve en escorzo, porque va por fuera */
+    const m = { hip: -1, knee: 7, sh: 94, el: 30, kU: 1, far: { hip: -1, knee: 7, ft: 84, sh: -86, el: 76, kU: .5 } };
+    return fig(a, b, [['L', 'f', 'M-90 236q15 -7 30 0t30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0', 2.4, 4], ['L', 'b', 'M-90 262q15 -7 30 0t30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0', 1.6, 4]], 'b', 0, { nofloor: 1, whole: 1, m, via: 1, cycle: 1000 });
   },
   /** Saco de boxeo: de la guardia al directo con el brazo de delante. */
   boxing: () => {
@@ -1425,11 +1449,12 @@ const MOVES = {
     if (has(f, 'crab')) {
       const a = { at: 'hip', x: 150, y: 334, lean: -62, neck: 24, foot: [252, 385], ft: 0, palm: [26, 398], far: { foot: [224, 385], ft: 0, palm: [52, 398] } };
       const b = { foot: [224, 385], palm: [52, 398], far: { foot: [252, 385], ft: 0, palm: [26, 398] } };
-      return fig(a, b, [], 'b', 0, { whole: 1 });
+      return fig(a, b, [], 'b', 0, { whole: 1, m: { foot: [238, 385], palm: [39, 398], far: { foot: [238, 368], ft: 0, palm: [39, 398] } }, via: 1, cycle: 800 });
     }
     const a = { at: 'hip', x: 170, y: 296, lean: 84, neck: -34, foot: [108, 380], ft: 70, palm: [306, 398], far: { foot: [66, 380], ft: 70, palm: [268, 398] } };
     const b = { foot: [66, 380], palm: [268, 398], far: { foot: [108, 380], ft: 70, palm: [306, 398] } };
-    return fig(a, b, [], 'b', 0, { whole: 1 });
+    /* la mano y el pie que avanzan van por el aire; los otros no se mueven del suelo */
+    return fig(a, b, [], 'b', 0, { whole: 1, m: { foot: [87, 380], palm: [287, 398], far: { foot: [87, 364], ft: 70, palm: [287, 382] } }, via: 1, cycle: 800 });
   },
   /** Dead bug: boca arriba, se alejan un brazo y la pierna contraria y vuelven. */
   deadBug: () => {
@@ -1449,7 +1474,7 @@ const MOVES = {
   ropes: () => {
     const a = { lean: 22, neck: -10, hip: 56, knee: 54, grip: [190, 60], far: { grip: [176, 150] } };
     const b = { grip: [176, 150], far: { grip: [190, 60] } };
-    return fig(a, b, [['link', 'b', [420, 398], 'G', 3.4, 3, ''], ['link', 'f', [420, 398], 'g', 3.4, 3, ''], ['R', 'b', 424, 392, 14, 16, 0, 6]], 'b', 0, { fist: 1 });
+    return fig(a, b, [['link', 'b', [420, 398], 'G', 3.4, 3, ''], ['link', 'f', [420, 398], 'g', 3.4, 3, ''], ['R', 'b', 424, 392, 14, 16, 0, 6]], 'b', 0, { fist: 1, cycle: 400 });
   },
   /** Balón medicinal: golpearlo contra el suelo, lanzarlo de pecho o lanzarlo girando el tronco contra la pared. */
   medBall: f => {

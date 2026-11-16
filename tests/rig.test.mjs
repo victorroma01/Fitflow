@@ -78,7 +78,7 @@ test('las figuras están bien escritas', () => {
     keysIn(n, 'el final', def.b, def.a);
     keysIn(n, 'la postura intermedia', def.m, def.a);
     for (const p of def.props || [])
-      if (!['L', 'P', 'R', 'C', 'S', 'on', 'link', 'aim', 'bar', 'db', 'kb', 'ball', 'bag', 'disc'].includes(p[0]))
+      if (!['L', 'P', 'R', 'C', 'S', 'on', 'slide', 'link', 'aim', 'bar', 'db', 'kb', 'ball', 'bag', 'disc'].includes(p[0]))
         bad.push(n + ': material ' + p[0]);
   }
   fails(bad, 'figuras mal escritas');
@@ -448,7 +448,7 @@ test('de pie, el peso cae sobre los pies', () => {
 
 test('la barra no atraviesa la cabeza ni las piernas', () => {
   // la barra es recta: si su centro (los puños) pasa por dentro de la cabeza, de un muslo o de una espinilla, los atraviesa.
-  // En un peso muerto roza las espinillas y en una arrancada pasa pegada a la cara: de ahí el margen
+  // En un peso muerto roza las espinillas y en un jerk pasa pegada a la cara: de ahí el margen
   const toSegment = (p, a, b) => {
     const d = [b[0] - a[0], b[1] - a[1]];
     const k = Math.max(0, Math.min(1, ((p[0] - a[0]) * d[0] + (p[1] - a[1]) * d[1]) / (d[0] * d[0] + d[1] * d[1] || 1)));
@@ -465,7 +465,7 @@ test('la barra no atraviesa la cabeza ni las piernas', () => {
       const at = s => spot(def, t, s);
       const g = at('g');
       const head = at(['HD', 100, 34]);
-      const parts = [['la cabeza', Math.hypot(g[0] - head[0], g[1] - head[1]), 20, 10]];
+      const parts = [['la cabeza', Math.hypot(g[0] - head[0], g[1] - head[1]), 20, 7]];
       for (const x of ['', 'x'])
         parts.push(['un muslo', toSegment(g, at(['PV', 99, 206]), at([x + 'TH', 101, 287])), 11, 6], ['una espinilla', toSegment(g, at([x + 'SH', 101, 300]), at([x + 'SH', 97, 380])), 8, 6]);
       for (const [what, d, r, slack] of parts)
@@ -513,6 +513,55 @@ test('dominadas: el cuerpo sube recto', () => {
   hip.forEach((q, i) => near(q[0], a[0] + (b[0] - a[0]) * (q[1] - a[1]) / (b[1] - a[1]), 4, 'la cadera se aparta de la recta en t=' + STEPS[i]));
   // y el codo va por delante, no por detrás de la espalda
   assert.ok(spot(def, .5, ['UA', 99, 150])[0] > spot(def, .5, ['UA', 99, 82])[0], 'el codo queda detrás del hombro');
+});
+
+test('un ciclo no tiene costuras: acaba como empieza, con los lados cambiados', () => {
+  // correr, pedalear o subir peldaños es el mismo medio gesto dos veces, la segunda con los lados cambiados (de 1 a 2): el
+  // cuerpo no puede dar un salto ni al pasar de una mitad a otra ni al volver a empezar
+  const bad = [];
+  let seen = 0;
+  const body = def => R.rigLayers(def, 0).map(l => l.k).filter(k => !/^p\d/.test(k));
+  for (const { n, def } of FIGURES) {
+    if (!def.cycle)
+      continue;
+    seen++;
+    if (def.v != 'S')
+      bad.push(n + ': un ciclo va de perfil');
+    for (const [before, after] of [[1 - 1e-6, 1], [2 - 1e-6, 0]]) {
+      const [p, q] = [layersAt(def, before), layersAt(def, after)];
+      for (const k of body(def)) {
+        const [a, b] = [placed(p[k]), placed(q[k])];
+        if (a && b && (Math.hypot(a[0] - b[0], a[1] - b[1]) > .5 || Math.abs(norm(a[2] - b[2])) > .5))
+          bad.push(n + ': ' + k + ' salta al pasar por t=' + after);
+      }
+    }
+    // y la segunda mitad es la primera con los lados cambiados: la pierna de delante hace lo que hizo la de atrás (que
+    // se dibuja unos píxeles desplazada)
+    for (const t of [.2, .5, .8]) {
+      const [a, b] = [spot(def, t, ['xSH', 97, 385]), spot(def, t + 1, ['SH', 97, 385])];
+      near(Math.hypot(a[0] - 3 - b[0], a[1] + 3.5 - b[1]), 0, .01, n + ': el tobillo en t=' + (t + 1));
+    }
+  }
+  assert.ok(seen >= 20, 'ciclos: ' + seen);
+  fails(bad, 'ciclos con costuras');
+});
+
+test('escaladora: los peldaños bajan con el pie que apoya y el otro pisa el que llega', () => {
+  const def = figPose('Escaladora');
+  const slide = def.props.find(p => p[0] == 'slide');
+  assert.ok(slide, 'los peldaños no se deslizan');
+  // el pie que apoya se mueve lo mismo que los peldaños, así que no resbala sobre el suyo
+  const from = spot(def, 0, ['SH', 97, 385]);
+  for (const t of [.25, .5, .75, .999]) {
+    const at = spot(def, t, ['SH', 97, 385]);
+    near(at[0], from[0] + slide[2][0] * t, .01, 'el pie que apoya, en x, en t=' + t);
+    near(at[1], from[1] + slide[2][1] * t, .01, 'el pie que apoya, en y, en t=' + t);
+  }
+  // el otro acaba donde empezó el primero, un peldaño entero más arriba que donde estaba, y a medio camino va por el aire
+  const [start, mid, end] = [0, .5, .999].map(t => spot(def, t, ['xSH', 97, 385]));
+  near(end[0], from[0] + 3, .2, 'el pie que sube acaba en x');
+  near(end[1], from[1] - 3.5, .2, 'el pie que sube acaba en y');
+  assert.ok(mid[1] < Math.min(start[1], end[1]) - 15, 'el pie que sube no se levanta: ' + mid.map(Math.round));
 });
 
 test('remo: el codo va hacia atrás, por encima de la espalda', () => {

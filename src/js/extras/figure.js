@@ -146,7 +146,7 @@ const gear = (def, k, big) => {
     const t = tone(pr[5], big);
     return html`<path d="M0 0H1" stroke="${t[1]}" stroke-width="${big ? pr[4] : Math.max(pr[4], 1.8)}" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
-  if (pr[0] == 'on')
+  if (pr[0] == 'on' || pr[0] == 'slide')
     return prim(pr[3], big);
   if (pr[0] == 'aim')
     return prim(pr[4], big);
@@ -209,17 +209,19 @@ const STAGE_MOMENTS = [0, .25, .5, .75, 1];
    dejan media hoja vacía */
 const STAGE_WIDEST = 1.6;
 const FLOOR_LINE = '<path d="M-999 402.6H1999" stroke="#fff" stroke-opacity=".13" stroke-width="1.2"/>';
-/** La figura grande: se mueve del inicio al final y vuelta (playFigures); quieta (still), las posturas del gesto con su
-    rótulo: inicio y final y, si pasa por una postura intermedia, también esa. Una postura que se mantiene (hold) es una
-    sola figura, quieta. */
+/** La figura grande: se mueve del inicio al final y vuelta, o sin parar si es un ciclo (playFigures); quieta (still), las
+    posturas del gesto con su rótulo: inicio y final y, si pasa por una postura intermedia que es un tiempo del ejercicio,
+    también esa. Una postura que se mantiene (hold) es una sola figura, quieta. */
 export const figureStage = (def, P, S, still) => {
   needDefs();
   const floor = def.nofloor ? '' : FLOOR_LINE;
-  const all = rigBox(def, STAGE_MOMENTS);
+  /* un ciclo ocupa lo mismo en su segunda mitad, con los lados cambiados; por si acaso, se mira también */
+  const all = rigBox(def, def.cycle ? STAGE_MOMENTS.concat(STAGE_MOMENTS.map(t => t + 1)) : STAGE_MOMENTS);
   if (def.hold)
     return html`<div class="fgs"><svg viewBox="${boxText(fit(all, Math.min(STAGE_WIDEST, Math.max(1, all[2] / all[3]))))}" role="img" aria-label="La postura que se mantiene">${raw(floor)}${groups(def, P, S, 0, 1)}</svg></div>`;
   if (still) {
-    const stops = def.m ? [[0, 'Inicio', 'Postura de inicio'], [.5, 'Paso', 'Postura intermedia'], [1, 'Final', 'Postura final']] : [[0, 'Inicio', 'Postura de inicio'], [1, 'Final', 'Postura final']];
+    /* la postura intermedia solo se enseña si es un tiempo del ejercicio, no si está para guiar el camino (via) */
+    const stops = def.m && !def.via ? [[0, 'Inicio', 'Postura de inicio'], [.5, 'Paso', 'Postura intermedia'], [1, 'Final', 'Postura final']] : [[0, 'Inicio', 'Postura de inicio'], [1, 'Final', 'Postura final']];
     const box = boxText(fit(all, Math.min(1.15, Math.max(.55, all[2] / all[3]))));
     return html`<div class="fgs two">${stops.map(([t, name, label]) => html`<figure><svg viewBox="${box}" role="img" aria-label="${label}">${raw(floor)}${groups(def, P, S, t, 1)}</svg><figcaption>${name}</figcaption></figure>`)}</div>`;
   }
@@ -260,7 +262,8 @@ const playFigures = root => {
         return;
       }
       t0 = t0 || now;
-      rigFrame(def, beatAt(now - t0, def.up, def.m)).forEach((t, i) => {
+      /* un ciclo no para ni vuelve atrás: cada cycle ms hace medio gesto, y el siguiente con los lados cambiados */
+      rigFrame(def, def.cycle ? (now - t0) / def.cycle % 2 : beatAt(now - t0, def.up, def.m && !def.via)).forEach((t, i) => {
         if (t)
           gs[i].setAttribute('transform', t);
       });

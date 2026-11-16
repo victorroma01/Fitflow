@@ -214,6 +214,20 @@ def main(path, shots=None):
             pg.clock.run_for(8000)
             check('hoja de «%s»: y sigue en su sitio tras varios ciclos' % n, 'NaN' not in ev(LAYERS) and ev("document.querySelectorAll('#sh svg[data-fig] > g').length") >= 3)
             shot('hoja_' + n.split()[0].lower())
+        # un ciclo (pedalear, subir peldaños, correr) no para ni vuelve atrás: en dos ciclos y medio no hay dos momentos
+        # seguidos iguales, y a mitad de ciclo las piernas han cambiado los papeles
+        for n, half in [('Bicicleta', 760), ('Escaladora', 1000), ('Carrera 1 km', 430)]:
+            how(n)
+            seen = [ev(LAYERS)]
+            for _ in range(24):
+                pg.clock.run_for(half * 5 // 24)
+                seen.append(ev(LAYERS))
+            check('hoja de «%s»: no se detiene en ningún momento del ciclo' % n, all(a != b for a, b in zip(seen, seen[1:])) and 'NaN' not in ''.join(seen))
+        how('Escaladora')
+        steps = "document.querySelector('#sh svg[data-fig] > g').getAttribute('transform')"
+        s0 = ev(steps)
+        pg.clock.run_for(300)
+        check('escaladora: los peldaños se deslizan', ev(steps) != s0 and ev(steps).startswith('translate('), '%s → %s' % (s0, ev(steps)))
         # una postura que se mantiene: una sola figura, quieta
         for n in HELD:
             how(n)
@@ -274,6 +288,11 @@ def main(path, shots=None):
         red, orange, slate, _, _ = painted(capture(pg.locator('#sh .fgs figure').nth(1)))
         print('        pintado: pájaros en máquina, de espaldas %.4f %.4f %.4f' % (red, orange, slate))
         check('pájaros en máquina: de espaldas se ve el deltoides posterior', red > .0006 and slate > .012, '%.4f %.4f %.4f' % (red, orange, slate))
+        # si la postura intermedia solo está para guiar el camino (el paso de una zancada, las rodillas de un peso muerto,
+        # la media vuelta de un pedal), se enseñan dos, como siempre
+        for n in ['Peso muerto', 'Zancadas', 'Bicicleta']:
+            how(n)
+            check('reducir animaciones, «%s»: dos posturas, «Inicio» y «Final»' % n, ev("[...document.querySelectorAll('#sh .fgs.two figcaption')].map(x=>x.textContent).join() == 'Inicio,Final' && new Set([...document.querySelectorAll('#sh .fgs.two svg')].map(s=>s.innerHTML)).size == 2"))
         # con postura intermedia: tres posturas; la que se mantiene: una, sin rótulo
         for n in THREE:
             how(n)

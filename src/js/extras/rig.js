@@ -35,6 +35,12 @@
      arm, elb  apertura del brazo y giro del antebrazo      leg, knee  apertura de la pierna y giro de la pierna
      kU, kF, kT, kS  escorzos      shy  el hombro sube      rot, x, y  giro y sitio del cuerpo entero (tumbado de lado)
 
+   Una figura es { v, a, b, m, props, … }: va de la postura a a la b (de b solo se escribe lo que cambia) pasando, si
+   la lleva, por la intermedia m a medio camino. m es un tiempo del ejercicio (un burpee: de pie, en cuclillas, en
+   plancha) salvo que la figura diga via: entonces solo guía el camino (el pie que da un paso va por el aire) y ni se
+   enseña quieta ni alarga el compás. Con cycle: ms, el gesto es medio ciclo (media zancada, media vuelta de pedales)
+   que se repite sin parar ni volver atrás, cada vez con los lados cambiados: el momento t va entonces de 0 a 2.
+
    El material de una figura es una lista de piezas [tipo, hueco, …]. El hueco dice dónde se pinta: 'b' detrás de todo,
    'm' entre el lado de atrás y el cuerpo (bancos, asientos) o 'f' delante. Tipos:
      L d ancho tono · P d tono · R x y ancho alto giro tono · C x y radio tono · S x y ancho alto
@@ -44,8 +50,10 @@
      link a b ancho tono remate   una barra recta de a hasta b (un cable de polea, la palanca de una máquina, una goma);
                         a y b son 'g' o 'G' (los puños), [x, y] (fijo) o [pieza, x, y]
      aim a b prim       una pieza rígida con el origen en a y el eje x apuntando a b (un neumático que se voltea)
+     slide [dx, dy] prim  una de las fijas que se desliza (dx, dy) a lo largo del gesto, a velocidad constante (los
+                        peldaños de una escaladora, que en un ciclo vuelven a empezar)
      bar radio · db modo · kb modo · ball radio · bag · disc   lo que se lleva en las manos
-   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, held, propLayers, SIDE_BODY, FRONT_BODY, rigPose, solve, rigLayers, rigFrame, pathPoints, framePoints, rigBox, poseSpot, SIDE_REGIONS, sideRegions
+   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, held, propLayers, SIDE_BODY, FRONT_BODY, SIDE_KEYS, otherSide, rigPose, solve, rigLayers, rigFrame, pathPoints, framePoints, rigBox, poseSpot, SIDE_REGIONS, sideRegions
 */
 import { FG_J, FG_P } from '../data/figure.js';
 /** Un grado, en radianes. */
@@ -306,6 +314,9 @@ const propLayers = (pr, i, o) => {
     return [{ k: k + 'f', s: slot || 'f', t: type == 'disc' && o.HA ? held(o.HA, o.g) : at(o.g) }];
   if (type == 'on')
     return [{ k, s: slot, t: move(o[pr[2]]) }];
+  /* lo que se desliza a lo largo del gesto (los peldaños de una escaladora), a velocidad constante */
+  if (type == 'slide')
+    return [{ k, s: slot, t: at([pr[2][0] * o.t, pr[2][1] * o.t]) }];
   if (type == 'aim') {
     const a = spot(o, pr[2]);
     return [{ k, s: slot, t: at(a) + ' rotate(' + f1(angle(sub(spot(o, pr[3]), a))) + ')' }];
@@ -325,9 +336,25 @@ const propLayers = (pr, i, o) => {
    material del hueco 'm'; las siluetas del tronco (s) van antes que sus músculos (i), para que no los tapen en la cintura */
 const SIDE_BODY = [[['xFT', 'xFT'], ['xSH', 'xSH'], ['xTH', 'xTH'], ['xFA', 'xFA'], ['xUA', 'xUA'], ['xHA', 'xHA']], [['PVs', 'PV'], ['TXs', 'TX'], ['PVi', 'PV'], ['TXi', 'TX'], ['HD', 'HD'], ['FT', 'FT'], ['SH', 'SH'], ['TH', 'TH'], ['HP', 'HP'], ['FA', 'FA'], ['UA', 'UA'], ['HA', 'HA']]];
 const FRONT_BODY = [[], [['T0', 'T0'], ['S0', 'S0'], ['T1', 'T1'], ['S1', 'S1'], ['B', 'B'], ['U0', 'U0'], ['F0', 'F0'], ['U1', 'U1'], ['F1', 'F1']]];
+/* lo que en una postura de perfil es de un lado del cuerpo (una pierna y un brazo) */
+const SIDE_KEYS = ['hip', 'knee', 'ank', 'ft', 'foot', 'kT', 'kS', 'kb', 'sh', 'el', 'wr', 'ha', 'grip', 'gw', 'gl', 'palm', 'fa', 'kU', 'kF', 'eb', 'shy', 'shx'];
+/* La misma postura de perfil con los lados cambiados: lo que hacía el de delante lo hace el de atrás, y al revés. Lo que
+   un lado no tiene se queda en null, para que no lo herede del otro. */
+const otherSide = p => {
+  const far = Object.assign({}, p, p.far);
+  const q = Object.assign({}, p, { far: {} });
+  SIDE_KEYS.forEach(k => {
+    q[k] = far[k] == null ? null : far[k];
+    q.far[k] = p[k] == null ? null : p[k];
+  });
+  return q;
+};
 /** La postura de la figura en el momento t (0 = inicio, 1 = final). Si la figura lleva una postura intermedia (m), el
     gesto pasa por ella a medio camino: de pie → en cuclillas → en plancha, en un burpee. */
 const rigPose = (def, t) => {
+  /* un ciclo (correr, pedalear) es el mismo medio gesto dos veces, la segunda con los lados cambiados: de 1 a 2 */
+  if (def.cycle && t >= 1)
+    return otherSide(rigPose(def, t % 2 - 1));
   const end = Object.assign({}, def.a, def.b);
   if (!def.m)
     return mix(def.a, end, t);
@@ -339,6 +366,7 @@ const solve = (def, t) => def.v == 'S' ? sidePose(rigPose(def, t)) : frontPose(r
 /** Capas de la figura en el momento t, en el orden de pintado: [{ k: capa, t: transformación o '' }]. */
 export const rigLayers = (def, t) => {
   const o = solve(def, t);
+  o.t = def.cycle ? t % 1 : t;
   const body = def.v == 'S' ? SIDE_BODY : FRONT_BODY;
   const gear = (def.props || []).reduce((all, pr, i) => all.concat(propLayers(pr, i, o)), []);
   const part = ks => ks.map(([k, piece]) => ({ k, t: move(o[piece]) }));
@@ -449,6 +477,8 @@ const framePoints = (def, t) => {
       add('arm', o.g, type == 'ball' ? pr[2] : 16);
     else if (type == 'on')
       prim(pr[3], o[pr[2]]);
+    else if (type == 'slide')
+      prim(pr[3], { r: [0, 0], w: [pr[2][0] * (def.cycle ? t % 1 : t), pr[2][1] * (def.cycle ? t % 1 : t)], a: 0 });
     else if (type == 'link' || type == 'aim') {
       add(gear, spot(o, pr[2]), type == 'aim' ? pr[5] || 20 : 2);
       add(gear, spot(o, pr[3]), type == 'aim' ? pr[5] || 20 : 2);
