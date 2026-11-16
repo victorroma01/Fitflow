@@ -8,9 +8,9 @@ import { A, U } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { weekMonday } from '../dashboard/home.js';
 import { checkAchievements } from './achievements.js';
 import { html, raw } from '../core/html.js';
+import { kmTotal, mondayKey, weekMonday } from '../core/calc.js';
 const CARDIO_TYPES = [['run', 'Carrera'], ['walk', 'Caminata'], ['bike', 'Bici'], ['row', 'Remo'], ['swim', 'Natación'], ['ell', 'Elíptica'], ['oth', 'Otro']];
 let cardioState = { t: 'run' };
 export const cardioLabel = t => (CARDIO_TYPES.find(x => x[0] == t) || CARDIO_TYPES[6])[1];
@@ -98,13 +98,13 @@ export function cardioCard() {
     const wk = k => dayKey(new Date(m0.getFullYear(), m0.getMonth(), m0.getDate() - 7 * k));
     const W4 = [3, 2, 1, 0].map(k => {
       const key = wk(k);
-      const a = L.filter(l => dayKey(weekMonday(new Date(l.d + 'T12:00:00'))) == key);
-      return { k, n: a.length, km: a.reduce((s, l) => s + (+l.c.km || 0), 0), sec: a.reduce((s, l) => s + (+l.c.sec || 0), 0) };
+      const a = L.filter(l => mondayKey(l.d) == key);
+      return { k, n: a.length, km: kmTotal(a.map(l => l.c.km)), sec: a.reduce((s, l) => s + (+l.c.sec || 0), 0) };
     });
     const cur = W4[3];
     const mx = Math.max(1, ...W4.map(w => w.km || w.sec / 600));
-    const tot = L.reduce((s, l) => s + (+l.c.km || 0), 0);
-    return html`<div class="cd"><div class="row"><b>Cardio</b><small>${round1(tot)} km en total</small></div><div class="f2cs"><div><b>${round1(cur.km)}</b><small>km esta semana</small></div><div><b>${raw(fmtClock(cur.sec))}</b><small>tiempo</small></div><div><b>${raw(cur.n)}</b><small>${cur.n == 1 ? 'sesión' : 'sesiones'}</small></div></div><div class="f2bars">${W4.map(w => html`<div><i data-style="height:${Math.max(4, Math.round((w.km || w.sec / 600) / mx * 56))}px"></i><small>${raw(w.k ? '−' + w.k + ' sem' : 'Ahora')}</small></div>`)}</div></div>`;
+    const tot = kmTotal(L.map(l => l.c.km));
+    return html`<div class="cd"><div class="row"><b>Cardio</b><small>${tot} km en total</small></div><div class="f2cs"><div><b>${cur.km}</b><small>km esta semana</small></div><div><b>${raw(fmtClock(cur.sec))}</b><small>tiempo</small></div><div><b>${raw(cur.n)}</b><small>${cur.n == 1 ? 'sesión' : 'sesiones'}</small></div></div><div class="f2bars">${W4.map(w => html`<div><i data-style="height:${Math.max(4, Math.round((w.km || w.sec / 600) / mx * 56))}px"></i><small>${raw(w.k ? '−' + w.k + ' sem' : 'Ahora')}</small></div>`)}</div></div>`;
   }
   catch (e) {
     return '';

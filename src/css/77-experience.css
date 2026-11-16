@@ -55,7 +55,7 @@
 .acpb {
   padding:8px 16px;
   border-radius:12px;
-  background:linear-gradient(135deg,var(--a1),var(--a2));
+  background:var(--ag);
   color:var(--ft);
   font-size:14px;
   font-weight:700;
@@ -160,7 +160,7 @@ nav.nbon button.on,html.gl nav.nbon button.on {
 }
 html.gl .nbb::before {
   border-radius:26px;
-  background:linear-gradient(180deg,color-mix(in srgb,var(--a1) 62%,transparent),color-mix(in srgb,var(--a2) 86%,transparent));
+  background:linear-gradient(180deg,var(--a2),var(--age,var(--a2)));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 4px 14px color-mix(in srgb,var(--a2) 45%,transparent);
 }
 /* arrastrando, la burbuja va con el dedo, sin transición (core/tabbar la mueve en cada movimiento) */
@@ -201,7 +201,7 @@ nav.trlv {
   height:60px;
   margin:4px auto 12px;
   border-radius:20px;
-  background:linear-gradient(135deg,var(--a1),var(--a2));
+  background:var(--ag);
   color:var(--ft);
 }
 .trw h3 {

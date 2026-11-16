@@ -2,14 +2,14 @@
    «Mi nutrición» (el icono de cuchillo y tenedor de Nutrición): kcal del día en un anillo con el reparto de macros, peso,
    objetivo (tipo de dieta), actividad y comidas al día; ajustar los objetivos a mano o recalcularlos con tus datos.
    Mientras estén a mano (S.nutritionGoals.man), cambiar el peso o la actividad no los pisa (nutrition/diet, applyDiet).
-   Define: ringSvg, macroCell, goalSelect, goalsRing, goalsFields, myNutritionPage, refreshGoals, manualPage, manualValues  · acciones/registros: 9
+   Define: ringSvg, macroCell, goalSelect, goalsRing, goalRow, goalsFields, myNutritionPage, refreshGoals, manualPage, manualValues  · acciones/registros: 9
 */
 import { $, clampInt, clampNum, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C, U } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { fullPage, pgHead, sheet } from '../core/ui.js';
+import { backRow, fullPage, pgHead, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { ACTIVITY_LEVELS, applyDiet, DIET_TYPES, dietIndex, goalTargets, tdee } from './diet.js';
 import { html, raw } from '../core/html.js';
@@ -35,8 +35,17 @@ const macroCell = (label, percent, grams, color) => html`<div class="mnq"><small
 const goalSelect = (change, label, options, current) => html`<select data-c="${change}" aria-label="${label}">${options.map((x, i) => html`<option value="${i}"${i == current ? ' selected' : ''}>${x}</option>`)}</select>`;
 /* el anillo con las kcal del día y los tres macros */
 const goalsRing = (goals, targets) => html`<div class="mnr"><div class="mnk">${ringSvg(goals)}<div class="mnc"><b>${roundInt(goals.k)}</b><small>kcal</small></div></div><div class="mnx">${macroCell('Hidratos', goals.c, targets[1], 'c-ctx')}${macroCell('Proteínas', goals.p, targets[2], 'c-ptx')}${macroCell('Grasas', goals.f, targets[3], 'c-gtx')}</div></div>`;
+/* una fila con desplegable: su nombre, lo elegido (y, tras ello, `extra`) y el desplegable, que va encima, transparente */
+const goalRow = (label, value, select, extra = '') => html`<div class="mnw"><span>${label}</span><span class="mnv" aria-hidden="true"><b>${value}</b>${extra}${icon('chr', 16)}</span>${select}</div>`;
 /* lo que cambia los objetivos: peso, tipo de dieta (con la diferencia con el gasto), actividad y comidas al día */
-const goalsFields = (goals, diet, activity, diff) => html`<div class="mnl"><label class="mnw"><span>Peso</span><span class="mnv"><input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="goalsWeight" value="${S.biometrics.w || ''}" placeholder="—" aria-label="Peso en kg"> kg</span></label><div class="mnw"><span>Objetivo</span><span class="mnv" aria-hidden="true"><b>${raw(DIET_TYPES[diet][0])}</b>${raw(diff == null ? '' : html`<i class="mnd">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`)}${icon('chr', 16)}</span>${goalSelect('goalsDiet', 'Objetivo: tipo de dieta', DIET_TYPES.map(d => d[0]), diet)}</div><div class="mnw"><span>Actividad</span><span class="mnv" aria-hidden="true"><b>${raw(ACTIVITY_LEVELS[activity][0])}</b>${icon('chr', 16)}</span>${goalSelect('goalsActivity', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1]), activity)}</div><div class="mnw"><span>Comidas al día</span><span class="mnv" aria-hidden="true"><b>${goals.n}</b>${icon('chr', 16)}</span>${goalSelect('goalsMeals', 'Comidas al día', [2, 3, 4, 5, 6, 7, 8].map(String), goals.n - 2)}</div></div>`;
+const goalsFields = (goals, diet, activity, diff) => {
+  const weight = html`<label class="mnw"><span>Peso</span><span class="mnv"><input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="goalsWeight" value="${S.biometrics.w || ''}" placeholder="—" aria-label="Peso en kg"> kg</span></label>`;
+  const gap = diff == null ? '' : html`<i class="mnd">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`;
+  const dietRow = goalRow('Objetivo', raw(DIET_TYPES[diet][0]), goalSelect('goalsDiet', 'Objetivo: tipo de dieta', DIET_TYPES.map(d => d[0]), diet), gap);
+  const activityRow = goalRow('Actividad', raw(ACTIVITY_LEVELS[activity][0]), goalSelect('goalsActivity', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1]), activity));
+  const mealsRow = goalRow('Comidas al día', goals.n, goalSelect('goalsMeals', 'Comidas al día', [2, 3, 4, 5, 6, 7, 8].map(String), goals.n - 2));
+  return html`<div class="mnl">${weight}${dietRow}${activityRow}${mealsRow}</div>`;
+};
 /* «Mi nutrición»: los objetivos del día, de dónde salen (según el plan, a mano o por defecto) y lo que los cambia */
 function myNutritionPage() {
   const goals = S.nutritionGoals;
@@ -47,7 +56,7 @@ function myNutritionPage() {
   const mode = goals.man ? 'A mano' : spend ? 'Según tu plan' : 'Por defecto';
   const diff = spend ? roundInt(goals.k - spend.td) : null;
   const note = spend ? DIET_TYPES[diet][4] + '. Gasto diario estimado: ' + roundInt(spend.td) + ' kcal (metabolismo basal ' + roundInt(spend.bm) + ' kcal).' : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.';
-  return html`<div id="mny"><div class="row"><button data-a="closeSheet" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div><div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div>${goalsRing(goals, targets)}${goalsFields(goals, diet, activity, diff)}<p class="mu mnp">${raw(note)}</p><div class="h-120"></div><div class="sb mnb"><button data-a="openManualGoals">Ajustar a mano</button><button class="pr" data-a="goalsRecalculate">Recalcular con mis datos</button></div></div>`;
+  return html`<div id="mny">${backRow()}<div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div>${goalsRing(goals, targets)}${goalsFields(goals, diet, activity, diff)}<p class="mu mnp">${raw(note)}</p><div class="h-120"></div><div class="sb mnb"><button data-a="openManualGoals">Ajustar a mano</button><button class="pr" data-a="goalsRecalculate">Recalcular con mis datos</button></div></div>`;
 }
 /** Vuelve a pintar la página abierta («Mi nutrición» o «Ajustar a mano») y la pestaña de detrás. */
 const refreshGoals = () => {

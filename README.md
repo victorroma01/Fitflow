@@ -18,7 +18,7 @@
 <p align="center">
   <img src="docs/img/workout.jpg" width="160" alt="Pestaña Workout">
   <img src="docs/img/sesion.jpg" width="160" alt="Entreno en curso">
-  <img src="docs/img/ficha.jpg" width="160" alt="Ficha de ejercicio con foto">
+  <img src="docs/img/figura.jpg" width="160" alt="Cómo se hace: la figura del ejercicio">
   <img src="docs/img/nutricion.jpg" width="160" alt="Nutrición">
   <img src="docs/img/dashboard.jpg" width="160" alt="Dashboard">
 </p>
@@ -27,7 +27,8 @@
 
 ## Estado
 
-La versión publicada es la **V1.0.2** (12 de noviembre de 2026). Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` y se
+La versión publicada es la **V1.0.2** (12 de noviembre de 2026); la **V1.0.3** (auditoría técnica y figuras de ejercicio) está en la rama
+`desarrollo-1.0.3`. Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` y se
 publica solo con la confirmación del propietario. Los requisitos de cada versión se siguen en GitHub, por milestones:
 
 | Milestone | Contenido |
@@ -37,13 +38,14 @@ publica solo con la confirmación del propietario. Los requisitos de cada versi�
 | M8 · Cierre | Publicación de la V1.0.0 ([informe de issues](docs/tecnica/issues.md)); queda la prueba en un Android de verdad. |
 | **V1.0.1 · Correcciones y mejoras** | Lo encontrado al probar la V1.0.0 en el iPhone y las mejoras pedidas: bienvenida y datos de una cuenta nueva, empezar sin programa, logo nuevo, paso al día siguiente, RPE opcional, Nutri-Score, «Mis alimentos», recuento de iPhone y Android. Publicado. |
 | **V1.0.2 · Código y técnica** | Código más claro (nombres que se entienden y vistas partidas), datos en IndexedDB con sitio para años de uso y guardado más rápido, aviso de espacio, sin estilos en línea, App Check preparado, VoiceOver, service worker más robusto y aviso del icono nuevo en el iPhone. Publicado; App Check (I-05), pendiente de activarlo en la consola. |
+| **V1.0.3 · Auditoría técnica y figuras** | Auditoría completa de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): 43 errores corregidos (uno crítico: tras abrir un acceso directo del icono, una versión nueva podía dejar la app sin arrancar); el modelo anatómico haciendo cada uno de los 551 ejercicios, en movimiento, en lugar de las fotos ([figuras](docs/tecnica/figuras.md)); la semana en Nutrición, ejercicios propios, historial de pesajes, «Deshacer», contraste AA en todo el texto, validación de lo que se escribe, código reorganizado y más pruebas, también en WebKit y en Firefox. En la rama `desarrollo-1.0.3`, sin publicar hasta que el propietario lo confirme. |
 | App móvil · Ideas futuras | Lo que necesita una app de tienda (vibración en iPhone, recordatorio directo al calendario y notificaciones) y las interfaces de entrenador y nutricionista. Sin fecha. |
 
 ## Qué hace
 
 | Área | Funciones |
 | --- | --- |
-| **Workout** | Programas listos en tres niveles (entre ellos Push Pull Leg y Full Body en ciclo y Glúteo y pierna), recomendados según el sexo; programas propios (guiados o con tus workouts) y compartidos por código; 10 técnicas de intensidad; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida, discos y RPE opcional; paso solo al día siguiente; semana de descarga y rotación de ejercicios; librería de más de 550 ejercicios, cada uno con su consejo y su ejecución; WOD y cardio. |
+| **Workout** | Programas listos en tres niveles (entre ellos Push Pull Leg y Full Body en ciclo y Glúteo y pierna), recomendados según el sexo; programas propios (guiados o con tus workouts) y compartidos por código; 10 técnicas de intensidad; entreno guiado serie a serie con descansos, tempo, calentamiento, progresión sugerida, discos y RPE opcional; paso solo al día siguiente; semana de descarga y rotación de ejercicios; librería de más de 550 ejercicios, cada uno con su figura haciéndolo, su consejo y su ejecución; WOD y cardio. |
 | **Nutrición** | Comidas del día con macros, día de entreno o de descanso según tu rutina, «Mi nutrición» (objetivos según tu gasto o a mano), agua, plantillas, 495 alimentos por grupos, búsqueda en Open Food Facts y escáner de códigos de barras, con Nutri-Score; «Mis alimentos» con lo buscado o escaneado. |
 | **Dashboard** | Entrenos, volumen, rachas, récords, progreso por ejercicio, calendario y peso corporal. |
 | **Perfil** | Plan, medidas, logros con medallas, exportación a CSV, datos biométricos y Ajustes (cuenta, apariencia con color propio, unidades, sonido, copia de seguridad, actualizaciones, diagnóstico e informe de fallos). |

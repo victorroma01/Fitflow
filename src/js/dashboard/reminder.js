@@ -17,7 +17,7 @@ import { dialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { signedIn } from '../cloud/session.js';
 import { downloadFile } from '../system/files.js';
-import { html, raw } from '../core/html.js';
+import { html } from '../core/html.js';
 /** Intervalos de la lista: [cantidad, unidad, texto]. */
 const WEIGH_STEPS = [[2, 'w', '2 semanas'], [4, 'w', '4 semanas'], [1, 'm', '1 mes'], [5, 'w', '5 semanas']];
 /** Unidades de «Otro»: [singular, plural, máximo]. */
@@ -73,7 +73,12 @@ export const reminderCard = () => {
   const nx = weighNext();
   const u = WEIGH_UNITS[r.u];
   const other = cur < 0 ? html`<div class="g2 wro"><input type="number" inputmode="numeric" min="1" max="${u[2]}" value="${r.n}" data-c="weighReminderEvery" aria-label="Cada cuántos"><select data-c="weighReminderUnit" aria-label="Unidad">${Object.keys(WEIGH_UNITS).map(k => html`<option value="${k}"${k == r.u ? ' selected' : ''}>${WEIGH_UNITS[k][1]}</option>`)}</select></div>` : '';
-  return html`<div class="cd wrc"><label class="srk"><input type="checkbox" data-c="weighReminderToggle" checked> Recordatorio de pesaje</label><div class="wrs" role="radiogroup" aria-label="Cada cuánto">${WEIGH_STEPS.map((x, i) => html`<button class="chip${i == cur ? ' on' : ''}" data-a="weighReminderInterval" data-i="${i}" role="radio" aria-checked="${i == cur ? 'true' : 'false'}">${x[2]}</button>`)}<button class="chip${cur < 0 ? ' on' : ''}" data-a="weighReminderInterval" data-i="-1" role="radio" aria-checked="${cur < 0 ? 'true' : 'false'}">Otro</button></div>${raw(other)}<p class="wrt">${nx ? html`Próximo aviso: <b>${fmtDateShort(nx, { weekday: 'long', day: 'numeric', month: 'long' })}</b>` : ''} · cada ${weighEvery(r)}</p><button data-a="weighReminderCalendar" class="wrk">${icon('cal', 18)} Añadir al calendario del móvil</button><small class="mu wrt">Así te avisa también con la app cerrada. Si cambias el intervalo, vuelve a añadirlo.</small></div>`;
+  /* un intervalo para elegir: `i` es su sitio en WEIGH_STEPS (-1, «Otro») */
+  const step = (i, label) => html`<button class="chip${i == cur ? ' on' : ''}" data-a="weighReminderInterval" data-i="${i}" role="radio" aria-checked="${i == cur ? 'true' : 'false'}">${label}</button>`;
+  const steps = html`<div class="wrs" role="radiogroup" aria-label="Cada cuánto">${WEIGH_STEPS.map((x, i) => step(i, x[2]))}${step(-1, 'Otro')}</div>`;
+  const next = html`<p class="wrt">${nx ? html`Próximo aviso: <b>${fmtDateShort(nx, { weekday: 'long', day: 'numeric', month: 'long' })}</b>` : ''} · cada ${weighEvery(r)}</p>`;
+  const calendar = html`<button data-a="weighReminderCalendar" class="wrk">${icon('cal', 18)} Añadir al calendario del móvil</button><small class="mu wrt">Así te avisa también con la app cerrada. Si cambias el intervalo, vuelve a añadirlo.</small>`;
+  return html`<div class="cd wrc"><label class="srk"><input type="checkbox" data-c="weighReminderToggle" checked> Recordatorio de pesaje</label>${steps}${other}${next}${calendar}</div>`;
 };
 /** Al abrir la app o volver a ella: si toca pesarse, lo dice una vez al día, nunca en mitad de un entreno ni encima de otra
     ventana (la tarjeta del Dashboard sigue ahí). */

@@ -1,9 +1,10 @@
 /* ═══ system/backup ═══
    Copias de seguridad, restauración y avisos.
-   Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, cleanProfile, parseBackup, backupDate, askRestore, preRestore, preCopy, savePre, restoreBackup, backupFileCard, backupContents, backupText, backupSnapshots, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
+   Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, parseBackup, backupDate, askRestore, preRestore, preCopy, savePre, restoreBackup, backupFileCard, backupContents, backupText, backupSnapshots, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
 */
 import { stateToStored } from '../core/schema.js';
-import { $, APPV, safeImage, X } from '../core/util.js';
+import { cleanProfile, isPlan } from '../core/repair.js';
+import { $, APPV, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -13,7 +14,7 @@ import { flushState, S, saveState } from '../core/state.js';
 import { confirmDialog, pgHead, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
-import { downloadFile } from './files.js';
+import { downloadFile, readTextFile } from './files.js';
 import { cloudBackupCard } from '../cloud/backup.js';
 import { fillSnapshots } from './snapshots.js';
 import { html, raw } from '../core/html.js';
@@ -67,24 +68,6 @@ export const buildBackup = () => {
   return JSON.stringify(Object.assign({ _sf: { app: 'StrataFit', fmt: BACKUP_FORMAT, ver: APPV, at: new Date().toISOString(), wip: wip || undefined, sum: backupRows(s, wip) } }, s));
 };
 const BACKUP_ERRORS = { vacio: 'El archivo está vacío', prog: 'Eso es un código de programa, no una copia: impórtalo en Programas', grande: 'El archivo es demasiado grande para ser una copia de StrataFit', formato: 'El archivo no es una copia válida de StrataFit', plan: 'La copia está dañada: no tiene un programa de entrenamiento válido' };
-/** Perfil de una copia o de los datos guardados: textos como texto y la foto solo si es una imagen válida (safeImage).
-    Devuelve cuántos campos se han quitado. */
-/** Deja en el perfil solo lo que la app guarda: la foto, si es una imagen válida, y cuándo se dio el consentimiento para
-  subirla (`pc`). El nombre, el email y el teléfono de la serie de prueba se borran sin contarlos como daño: la V1.0.0 no
-  guarda datos personales (F-35). Devuelve cuántos datos estaban dañados. */
-export const cleanProfile = pf => {
-  if (!pf || typeof pf != 'object')
-    return 0;
-  let n = 0;
-  for (const k of Object.keys(pf)) {
-    if (k == 'img' && safeImage(pf.img) || k == 'pc' && +pf.pc > 0)
-      continue;
-    if (k == 'img' || k == 'pc')
-      n++;
-    delete pf[k];
-  }
-  return n;
-};
 export const parseBackup = txt => {
   txt = String(txt || '').trim();
   if (!txt)
@@ -106,7 +89,7 @@ export const parseBackup = txt => {
     throw 'formato';
   const meta = O_(o._sf) ? o._sf : null;
   delete o._sf;
-  if (!A_(o.plan) || !o.plan.length || !o.plan.every(d => d && typeof d.n == 'string' && A_(d.ex) && d.ex.every(e => e && typeof e.n == 'string' && +e.s > 0)))
+  if (!isPlan(o.plan))
     throw 'plan';
   let fix = 0;
   const L1 = ['logs', 'cr', 'cx', 'cf', 'lib', 'cp', 'wl', 'ms'];
@@ -281,21 +264,7 @@ A.backupUndo = async () => {
   lockSaves();
   reloadApp();
 };
-C.backupImportFile = e => {
-  const f = e.files && e.files[0];
-  if (!f)
-    return;
-  if (f.size > 4e7) {
-    toast(BACKUP_ERRORS.grande);
-    e.value = '';
-    return;
-  }
-  const r = new FileReader();
-  r.onload = () => askRestore(String(r.result));
-  r.onerror = () => toast('No se pudo leer el archivo');
-  r.readAsText(f);
-  e.value = '';
-};
+C.backupImportFile = e => readTextFile(e, askRestore, 4e7, BACKUP_ERRORS.grande);
 A.backupRestoreText = () => {
   const e = $('#bk');
   askRestore(e ? e.value : '');

@@ -23,8 +23,8 @@ El icono de cuchillo y tenedor, junto al día, abre **Mi nutrición**:
 
 ## Comidas
 
-Cada comida del día (desayuno, comida, cena… según las comidas al día) enseña sus alimentos con los gramos, sus macros frente a su
-parte del objetivo y cuatro botones:
+Cada comida del día (desayuno, comida, cena… según las comidas al día) enseña sus alimentos con los gramos (de 0,1 a 5.000, con
+coma o con punto), sus macros frente a su parte del objetivo y cuatro botones:
 
 | Botón | Qué hace |
 | --- | --- |
@@ -56,7 +56,25 @@ de barras; la imagen de la cámara no sale del móvil.
   servicio saturado (prueba en un minuto), tarda demasiado, sin resultados o productos sin datos nutricionales, con
   **Reintentar**. Los productos ya escaneados funcionan sin conexión.
 
+Si reduces las comidas al día, lo anotado en las que ya no están se sigue viendo (como «Comida 4», «Comida 5»…) y cuenta en el
+total del día.
+
+La **✕** de un alimento lo quita de la comida sin preguntar; durante unos segundos, el aviso trae
+[«Deshacer»](experiencia.md#avisos-y-deshacer). Lo mismo al borrar un plato guardado de la Librería.
+
+## La semana
+
+Al final de la página, **Esta semana** (o la semana del día que estés viendo):
+
+- Una barra por día, de lunes a domingo, con sus kcal frente a tu objetivo (la línea de puntos). En el color de acento, los días
+  **en objetivo** (a ±10 % de tus kcal); en gris, los anotados fuera de objetivo. Al tocar un día, vas a él.
+- **Kcal de media** y **proteína de media** de los días anotados (uno cuenta con más de 50 kcal), junto a tu objetivo, y cuántos
+  días quedaron **en objetivo**. Hoy no entra en las medias hasta que termina: a medio anotar, las bajaría sin motivo.
+
+Son las mismas reglas que usa el [análisis mensual](perfil-y-ajustes.md).
+
 ## Plantillas
 
 Hay una plantilla para los días de entreno y otra para los de descanso. **Guardar día como plantilla** guarda las comidas del día;
 **Aplicar plantilla** rellena las comidas vacías de otro día del mismo tipo. Un **?** junto a cada botón explica qué hace.
+Guardar una plantilla sustituye a la que hubiera de ese tipo de día: el aviso trae «Deshacer» para recuperarla.

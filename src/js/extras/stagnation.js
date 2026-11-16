@@ -2,7 +2,8 @@
    Detección de estancamiento.
    Define: stagnation, stagnationCard, STAGNATION_TIPS, bestSetText  · acciones/registros: 2
 */
-import { est1RM, fmtDateShort, round1 } from '../core/util.js';
+import { fmtDateShort, round1 } from '../core/util.js';
+import { bestSet, measuredInReps } from '../core/calc.js';
 import { A } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
 import { sheet } from '../core/ui.js';
@@ -19,26 +20,15 @@ function stagnation() {
   const now = Date.now();
   const hide = S.stagnationDismissed || {};
   Object.keys(h).forEach(n => {
-    if (!inPlan.has(n))
+    if (!inPlan.has(n) || !measuredInReps(n))
       return;
     if (hide[n] && now - hide[n] < 14 * 864e5)
       return;
     const L = Array.isArray(h[n]) ? h[n] : [];
+    /* la mejor serie de cada sesión por 1RM estimado (core/calc: las mismas series que cuentan para los récords) */
     const ses = L.slice(0, 12).map(x => {
-      let m = 0;
-      let b = null;
-      (x && Array.isArray(x.s) ? x.s : []).forEach(q => {
-        const w = +q[1] || 0;
-        const r = +q[0] || 0;
-        if (w > 0 && r > 0) {
-          const v = est1RM(w, r);
-          if (v > m) {
-            m = v;
-            b = [r, w];
-          }
-        }
-      });
-      return { d: x && x.d, e: m, b };
+      const b = bestSet(x);
+      return { d: x && x.d, e: b ? b.e : 0, b: b ? [b.r, b.w] : null };
     }).filter(s => s.e > 0);
     if (ses.length < 4)
       return;

@@ -10,7 +10,7 @@ import { errorLog } from '../core/errors.js';
 import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { fullPage, pgHead } from '../core/ui.js';
+import { fullPage, pgHead, sheetDialog } from '../core/ui.js';
 import { morph } from '../core/morph.js';
 import { accentNow, accentSwatches, glassCard, glassMode, motionCard, themeSegment } from './appearance.js';
 import { startTabCard, startTabName } from '../core/tabbar.js';
@@ -97,6 +97,8 @@ export const settingsSync = () => {
     return;
   }
   morph(p, settingsPage(settingsSub));
+  /* el título recién pintado vuelve a dar nombre a la ventana (su id lo pone core/ui, no la plantilla) */
+  sheetDialog(p, 0);
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.openSettings = () => {

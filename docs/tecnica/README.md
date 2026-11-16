@@ -13,7 +13,9 @@ ver la [documentación funcional](../funcional/README.md).
 | [Desarrollo](desarrollo.md) | Requisitos, comandos, cómo añadir una función, reglas de calidad y cómo se publica una versión. |
 | [Pruebas](pruebas.md) | Qué comprueba cada prueba, en qué navegadores y cuándo se pasan. |
 | [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en la V1.0.2 frente a la V1.0.1 (T-26). |
+| [Auditoría de la V1.0.3](auditoria-1.0.3.md) | Auditoría técnica completa de la V1.0.2: diagnóstico por áreas, lo corregido en la V1.0.3, lo pendiente y las recomendaciones. |
 | [Informe de issues](issues.md) | Lo encontrado en la revisión final (M8, T-22): lo corregido y lo que queda abierto, con su prioridad, el orden recomendado y su coste en puntos función. |
+| [Figuras de ejercicio](figuras.md) | El modelo anatómico haciendo cada uno de los 551 ejercicios, en lugar de fotos: cómo está hecho, cómo se escribe una postura, cómo se añade un ejercicio, lo que pesa y cómo se prueba. |
 | [Versiones de prueba](versiones-de-prueba.md) | Historial de la serie 1.19 – 1.24, anterior a la V1.0.0. |
 
 ## Cómo está hecha
@@ -30,7 +32,7 @@ flowchart LR
   subgraph fuente["src/ · código fuente"]
     JS["js/ · módulos ES<br/>(entrada: main.js)"]
     CSS["css/ · trozos NN-nombre.css"]
-    IMG["img/ · portadas y<br/>fotos de ejercicio"]
+    IMG["img/ · portadas<br/>de día y logo"]
   end
   CL["CHANGELOG.md<br/>(novedades de cada versión)"]
   B(["build.py + esbuild"])
@@ -52,7 +54,8 @@ el que usan la mayoría de las pruebas.
 ## Principios del código
 
 - **Estado único `S`**, guardado con `saveState()`; el entreno en curso es `W` y `R()` pinta la pantalla. Se guarda por partes
-  (`core/persist`): solo se escribe lo que cambia y todos los guardados de una acción se agrupan en uno.
+  (`core/persist`): solo se escribe lo que cambia y todos los guardados de una acción se agrupan en uno. Cómo se reparte en
+  claves lo dice `core/parts` (sin estado, con pruebas sin navegador) y a IndexedDB se llega por `core/idb`.
 - **Eventos delegados**: el HTML lleva `data-a`, `data-c` o `data-u` y un único listener (`core/events`) llama al manejador
   `A.nombre`, `C.nombre` o `U.nombre`, escrito junto a la función que lo usa.
 - **HTML seguro por defecto**: las pantallas se escriben con plantillas ``html`…${valor}…` `` (`core/html`), que escapan cada valor
@@ -68,7 +71,7 @@ el que usan la mayoría de las pruebas.
 - **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
   exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
 - **Persistencia solo a través de `Store`** (`core/store`) y de `core/persist`. Ninguna otra parte toca `localStorage` ni las partes
-  del estado en IndexedDB, y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`).
+  del estado en IndexedDB (las copias automáticas, `system/snapshots`, tienen su propia base, también con `core/idb`), y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`).
 - **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
   `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Ajustes → Diagnóstico; un `catch` vacío solo se
@@ -103,8 +106,9 @@ el que usan la mayoría de las pruebas.
 │   │   ├── main.js         punto de entrada: importa los módulos en orden de carga
 │   │   ├── core/           utilidades, plantillas, estado, guardado, pintado, eventos, avisos, hojas, ayudas «?», barra de
 │   │   │                   pestañas, gestos (deslizar para volver), «atrás» y arranque
-│   │   ├── data/           ejercicios, programas, alimentos, fotos (media), novedades (release), anatomía y niveles
-│   │   ├── library/        modelo de ejercicios, fotos, filtros, librería, cambio de ejercicio y selector
+│   │   ├── data/           ejercicios, programas, alimentos, fotos (media), novedades (release), anatomía, niveles y las
+│   │   │                   figuras de ejercicio (el modelo de perfil y la tabla de posturas)
+│   │   ├── library/        modelo de ejercicios, filtros, librería, cómo se hace, cambio de ejercicio y selector
 │   │   ├── routines/       workouts personalizados
 │   │   ├── workout/        pestaña Workout y entreno en curso (series, descansos, progresión, discos, descarga…)
 │   │   ├── programs/       crear programa, niveles, gestor y compartir por código
@@ -113,15 +117,16 @@ el que usan la mayoría de las pruebas.
 │   │   ├── profile/        Perfil, página de Ajustes, apariencia, unidades, sonido y vibración
 │   │   ├── system/         archivos, copias de seguridad, diagnóstico, actualizaciones, informe de fallos, PDF, bienvenida de
 │   │   │                   una cuenta nueva, recorrido de la primera vez e integración con el móvil (accesos directos y globo)
-│   │   ├── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros, medallas, CSV y anatomía
+│   │   ├── extras/         WOD, resumen, estancamiento, cardio, medidas, alimentos en línea, logros, medallas, CSV, anatomía y
+│   │   │                   figuras de ejercicio (el modelo articulado, el material, las familias de movimiento y su dibujo)
 │   │   ├── cloud/          Firebase por REST: configuración, peticiones, sesión, cuentas, Firestore, fusión y sincronización
 │   │   └── account/        inicio de sesión y registro, la cuenta en Ajustes y Administración
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
-│   └── img/                day/ (portadas, order.txt), ex/ (fotos de ejercicio, map.txt) y brand/ (el logo: fuentes y
+│   └── img/                day/ (portadas, order.txt) y brand/ (el logo: fuentes y
 │                           lo que genera tools/marca.py)
 ├── static/                 sw.js (plantilla), manifiesto, iconos de la app y de los accesos directos (tools/marca.py)
 ├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py ·
-│                           marca.py (logo e iconos)
+│                           marca.py (logo e iconos) · figure.js (el dibujo del modelo de perfil)
 │   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar)
 ├── tests/                  pruebas, run.sh y compare.sh
 ├── docs/

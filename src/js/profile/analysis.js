@@ -8,25 +8,26 @@
      medias o no cumplido; gráfica de las kcal de cada día.
    - Otros datos: medidas que cambian, logros conseguidos y agua. Y una conclusión en frases cortas.
    Se carga al usarlo (core/lazy).
-   Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, dayKcal, nutritionStats, otherStats, monthStats, conclusions, svgBars, svgLine, svgKcal, kpi, delta, analysisPage, analysisPdf  · acciones/registros: 3
+   Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, nutritionStats, otherStats, monthStats, sessionsText, setsText, planText, shouldText, weightChange, goalNote, weightDelta, conclusions, overPlan, svgBars, svgLine, svgKcal, kpi, delta, monthBar, kpiGrid, trainingCard, weightCard, nutritionCard, otherCard, conclusionCard, analysisPage, analysisPdf  · acciones/registros: 3
 */
-import { APPV, dayKey, est1RM, fmtDateShort } from '../core/util.js';
+import { APPV, dayKey, fmtDateShort } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { fullPage, pgHead, sheet } from '../core/ui.js';
 import { acctName } from '../cloud/session.js';
-import { itemMacros, sumMacros } from '../nutrition/home.js';
 import { GOAL_LABELS } from '../nutrition/diet.js';
 import { sessionsPerWeek } from '../workout/week.js';
-import { MEASURES } from '../extras/measures.js';
+import { measureList, MEASURES } from '../extras/measures.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { accentNow } from './appearance.js';
+import { toDisplayWeight, usesLb, weightUnit } from './units.js';
 import { analysisFrom } from './home.js';
 import { downloadFile } from '../system/files.js';
 import { loadPdf } from '../core/lazy.js';
 import { html, raw } from '../core/html.js';
+import { liftScore, measuredInReps, nutritionPeriod } from '../core/calc.js';
 const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 /* hacia dónde debería ir el peso con cada objetivo (GOAL_LABELS: Definir, Mantenimiento, Volumen, Recomposición) */
 const KIND_OK = ['baja', 'estable', 'sube', 'estable'];
@@ -36,6 +37,11 @@ const monthName = ym => MONTHS[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 /** Número en español: coma decimal y `d` decimales como mucho. */
 const fmtN = (v, d = 0) => (+v || 0).toLocaleString('es', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+/* las cargas, en la unidad elegida en Ajustes (profile/units): un peso, en kg o en lb, y un volumen, en toneladas o en miles
+   de libras. El peso corporal va siempre en kg */
+const loadNum = v => usesLb() ? toDisplayWeight(v) : v;
+const volNum = v => loadNum(v) / 1000;
+const volUnit = () => usesLb() ? ' k lb' : ' t';
 /** [primer día, último día (hoy si es el mes en curso), si está en curso, días que lleva]. */
 const monthRange = ym => {
   const [y, m] = ym.split('-').map(Number);
@@ -82,21 +88,15 @@ const weekRows = (a, b) => {
   }
   return out;
 };
-/** Mejor 1RM estimado de unas entradas del historial (sin las filas extra: drop set y rest-pause). */
-const bestE1 = E => {
-  let m = 0;
-  for (const e of E)
-    for (const s of Array.isArray(e.s) ? e.s : [])
-      if (Array.isArray(s) && !s[3] && +s[1] > 0 && +s[0] >= 1 && +s[0] <= 30)
-        m = Math.max(m, est1RM(+s[1], +s[0]));
-  return m;
-};
+/** Mejor 1RM estimado de unas entradas del historial (core/calc: las series que cuentan para las marcas). */
+const bestE1 = E => E.reduce((m, e) => Math.max(m, ...(Array.isArray(e.s) ? e.s : []).map(liftScore)), 0);
 /** Ejercicios del mes: récords (mejor 1RM estimado que antes del mes) y los de más volumen. */
 const exerciseStats = (a, b) => {
   const rec = [];
   const vol = [];
   for (const [n, h] of Object.entries(S.exerciseHistory || {})) {
-    if (!Array.isArray(h))
+    /* los que se miden en tiempo o distancia no tienen 1RM ni volumen (en «32 kg × 200 m», los 200 no son repeticiones) */
+    if (!Array.isArray(h) || !measuredInReps(n))
       continue;
     const inM = h.filter(e => e && typeof e.d == 'string' && e.d >= a && e.d <= b);
     if (!inM.length)
@@ -124,47 +124,33 @@ const weightStats = (a, b) => {
   const tr = Math.abs(d) < .3 ? 'estable' : d > 0 ? 'sube' : 'baja';
   return { pts: inM, before, d, tr, goal, ok: goal >= 0 ? KIND_OK[goal] == tr : null, last: inM[inM.length - 1].w };
 };
-/** kcal y proteína del día `k`. */
-const dayKcal = k => {
-  const v = sumMacros((S.meals[k] && typeof S.meals[k] == 'object' ? Object.values(S.meals[k]).flat() : []).map(itemMacros));
-  return [v[0], v[2]];
-};
+/** Las comidas del mes frente al objetivo (core/calc: nutritionPeriod) y el agua de media. */
 const nutritionStats = (a, b) => {
   const tk = +S.nutritionGoals.k || 0;
   const tp = tk * (+S.nutritionGoals.p || 0) / 400;
-  const days = [];
-  let ok = 0;
-  let sk = 0;
-  let sp = 0;
-  let logged = 0;
+  const keys = [];
+  for (let t = new Date(a + 'T12:00:00'); dayKey(t) <= b; t.setDate(t.getDate() + 1))
+    keys.push(dayKey(t));
+  const period = nutritionPeriod(S.meals, keys, tk);
+  const { logged, ok } = period;
+  const days = period.days.map(d => d.on ? d.v[0] : 0);
   let wat = 0;
   let wd = 0;
-  for (let t = new Date(a + 'T12:00:00'); dayKey(t) <= b; t.setDate(t.getDate() + 1)) {
-    const k = dayKey(t);
-    const [kc, pr] = dayKcal(k);
-    const on = kc > 50;
-    if (on) {
-      logged++;
-      sk += kc;
-      sp += pr;
-      if (tk && Math.abs(kc - tk) <= tk * .1)
-        ok++;
-    }
-    days.push(on ? kc : 0);
+  for (const k of keys) {
     const w = S.water && +S.water[k];
     if (w > 0) {
       wat += w;
       wd++;
     }
   }
-  const ak = logged ? sk / logged : 0;
-  const ap = logged ? sp / logged : 0;
+  const ak = period.avg[0];
+  const ap = period.avg[2];
   const adh = logged ? ok / logged : 0;
   const verdict = logged < 3 ? '' : adh >= .7 ? 'Cumplido' : adh >= .4 ? 'A medias' : 'No cumplido';
   return { tk, tp, days, logged, ok, ak, ap, adh, verdict, side: !logged || !tk ? '' : ak > tk * 1.1 ? 'te pasas' : ak < tk * .9 ? 'te quedas corto' : '', water: wd ? wat / wd : 0 };
 };
 const otherStats = (a, b) => {
-  const L = (Array.isArray(S.measures) ? S.measures : []).filter(m => m && typeof m.d == 'string' && m.v && typeof m.v == 'object').sort((x, y) => x.d < y.d ? -1 : 1);
+  const L = measureList().sort((x, y) => x.d < y.d ? -1 : 1);
   const ms = [];
   for (const [k, name] of MEASURES) {
     const inM = L.filter(m => m.d >= a && m.d <= b && +m.v[k] > 0);
@@ -187,6 +173,21 @@ const monthStats = ym => {
   const t = trainStats(a, b);
   return { ym, a, b, open, nd, t, pt: trainStats(pa, pb), plan, weeks: weekRows(a, b), pwk: (pw[0] + pw[1]) / 2, ex: exerciseStats(a, b), w: weightStats(a, b), nu: nutritionStats(a, b), o: otherStats(a, b) };
 };
+/* — frases que dicen lo mismo en la pantalla y en el PDF — */
+/* «3 entrenos de fuerza, 1 WOD, 2 sesiones de cardio (10,5 km) en 5 días» */
+const sessionsText = t => t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza') + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? ', ' + t.nc + (t.nc == 1 ? ' sesión' : ' sesiones') + ' de cardio' + (t.km ? ' (' + fmtN(t.km, 1) + ' km)' : '') : '') + ' en ' + t.days + (t.days == 1 ? ' día' : ' días');
+/* «120 series · esfuerzo medio 7,8» */
+const setsText = t => fmtN(t.sets) + ' series' + (t.rpe ? ' · esfuerzo medio ' + fmtN(t.rpe, 1) : '');
+/* «Tu plan marca unos 4 entrenos por semana: has hecho el 75 % de lo previsto hasta hoy.» */
+const planText = m => 'Tu plan marca unos ' + fmtN(m.pwk, 1) + ' entrenos por semana: has hecho el ' + Math.round((m.t.ns + m.t.nw) / m.plan * 100) + ' % de lo previsto' + (m.open ? ' hasta hoy' : '') + '.';
+/* lo que debería hacer el peso con el objetivo elegido: «debería mantenerse», «debería bajar» o «debería subir» */
+const shouldText = w => KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : 'debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir');
+/* «Baja 1,2 kg» o «Estable» */
+const weightChange = w => cap(w.tr) + (w.tr == 'estable' ? '' : ' ' + fmtN(Math.abs(w.d), 1) + ' kg');
+/* « · objetivo Definir: va bien» o « · objetivo Definir: debería bajar» ('' sin objetivo) */
+const goalNote = w => w.goal >= 0 ? ' · objetivo ' + GOAL_LABELS[w.goal] + (w.ok ? ': va bien' : ': ' + shouldText(w)) : '';
+/* el cambio de peso del mes, con su signo: «+1,2 kg», «−0,8 kg» o «—» si no hay pesajes */
+const weightDelta = w => w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg';
 /** La conclusión del mes, en frases cortas (para la pantalla y el PDF). */
 const conclusions = m => {
   const out = [];
@@ -204,7 +205,7 @@ const conclusions = m => {
     out.push('Has mejorado tu marca en ' + m.ex.rec.length + (m.ex.rec.length == 1 ? ' ejercicio' : ' ejercicios') + '; el que más, ' + m.ex.rec[0].n + ' (+' + fmtN(m.ex.rec[0].g * 100) + ' %).');
   const w = m.w;
   if (w.d != null)
-    out.push(w.tr == 'estable' ? 'Tu peso se mantiene estable' + (w.goal >= 0 ? (w.ok ? ', como buscas con tu objetivo (' + GOAL_LABELS[w.goal] + ').' : '; con tu objetivo (' + GOAL_LABELS[w.goal] + ') debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir') + ' poco a poco.') : '.') : 'Tu peso ' + w.tr + ' ' + fmtN(Math.abs(w.d), 1) + ' kg' + (w.goal >= 0 ? (w.ok ? ', como buscas con tu objetivo (' + GOAL_LABELS[w.goal] + ').' : '; con tu objetivo (' + GOAL_LABELS[w.goal] + ') ' + (KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : 'debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir')) + ': revisa las calorías.') : '.'));
+    out.push(w.tr == 'estable' ? 'Tu peso se mantiene estable' + (w.goal >= 0 ? (w.ok ? ', como buscas con tu objetivo (' + GOAL_LABELS[w.goal] + ').' : '; con tu objetivo (' + GOAL_LABELS[w.goal] + ') debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir') + ' poco a poco.') : '.') : 'Tu peso ' + w.tr + ' ' + fmtN(Math.abs(w.d), 1) + ' kg' + (w.goal >= 0 ? (w.ok ? ', como buscas con tu objetivo (' + GOAL_LABELS[w.goal] + ').' : '; con tu objetivo (' + GOAL_LABELS[w.goal] + ') ' + shouldText(w) + ': revisa las calorías.') : '.'));
   else
     out.push('No has registrado tu peso este mes: pésate cada 2-4 semanas para ver cómo cambia.');
   const n = m.nu;
@@ -217,13 +218,17 @@ const conclusions = m => {
   return out;
 };
 /* ── gráficas de la pantalla (SVG) ─────────────────────────────────────────────────────────────────────────────────── */
+/** La línea de base del número de una barra: `base`, o justo encima de la línea del plan (en `line`) si esta lo tacharía
+    (cuando la semana queda un poco por debajo de lo que marca el plan). `cap` es el alto de la cifra. */
+const overPlan = (base, line, cap) => line != null && line > base - cap - 2 && line < base + 2 ? line - 4 : base;
 /** Barras de entrenos por semana, con la línea de lo que marca el plan. */
 const svgBars = m => {
   const R = m.weeks;
   const mx = Math.max(1, m.pwk, ...R.map(r => r[1]));
   const bw = 280 / R.length;
   const y = v => 96 - v / mx * 80;
-  return html`<svg viewBox="0 0 320 124" class="anc" role="img" aria-label="Entrenos por semana">${R.map((r, i) => html`<rect x="${(24 + i * bw + bw * .18).toFixed(1)}" y="${y(r[1]).toFixed(1)}" width="${(bw * .64).toFixed(1)}" height="${(96 - y(r[1])).toFixed(1)}" rx="5" fill="var(--a2)"/><text x="${(24 + i * bw + bw / 2).toFixed(1)}" y="${(y(r[1]) - 5).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">${r[1]}</text><text x="${(24 + i * bw + bw / 2).toFixed(1)}" y="114" text-anchor="middle" font-size="9.5" fill="var(--mu)">${r[0]}</text>`)}${raw(m.pwk > 0 ? html`<line x1="24" x2="304" y1="${y(m.pwk).toFixed(1)}" y2="${y(m.pwk).toFixed(1)}" stroke="var(--mu)" stroke-dasharray="4 4" stroke-width="1"/><text x="304" y="${(y(m.pwk) - 4).toFixed(1)}" font-size="9" text-anchor="end" fill="var(--mu)">plan</text>` : '')}<line x1="20" x2="308" y1="96" y2="96" stroke="var(--ln)"/></svg>`;
+  const plan = m.pwk > 0 ? y(m.pwk) : null;
+  return html`<svg viewBox="0 0 320 124" class="anc" role="img" aria-label="Entrenos por semana">${R.map((r, i) => html`<rect x="${(24 + i * bw + bw * .18).toFixed(1)}" y="${y(r[1]).toFixed(1)}" width="${(bw * .64).toFixed(1)}" height="${(96 - y(r[1])).toFixed(1)}" rx="5" fill="var(--a2)"/><text x="${(24 + i * bw + bw / 2).toFixed(1)}" y="${overPlan(y(r[1]) - 5, plan, 8).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">${r[1]}</text><text x="${(24 + i * bw + bw / 2).toFixed(1)}" y="114" text-anchor="middle" font-size="9.5" fill="var(--mu)">${r[0]}</text>`)}${raw(m.pwk > 0 ? html`<line x1="24" x2="304" y1="${y(m.pwk).toFixed(1)}" y2="${y(m.pwk).toFixed(1)}" stroke="var(--mu)" stroke-dasharray="4 4" stroke-width="1"/><text x="304" y="${(y(m.pwk) - 4).toFixed(1)}" font-size="9" text-anchor="end" fill="var(--mu)">plan</text>` : '')}<line x1="20" x2="308" y1="96" y2="96" stroke="var(--ln)"/></svg>`;
 };
 /** Línea del peso del mes (desde el último pesaje anterior, si lo hay). */
 const svgLine = m => {
@@ -250,6 +255,40 @@ const svgKcal = m => {
 /** Cifra de la cabecera: [texto, valor, comparación, clase de color]. */
 const kpi = (l, v, s, c) => html`<div class="ank"><small>${l}</small><b>${v}</b>${s ? html`<small class="${c || ''}">${s}</small>` : ''}</div>`;
 const delta = (v, p, u, d = 0) => !p && !v ? '' : (v - p > 0 ? '+' : v - p < 0 ? '−' : '±') + fmtN(Math.abs(v - p), d) + (u || '') + ' vs. mes anterior';
+/* — las partes de la página, de arriba abajo — */
+/* el mes que se ve, con las flechas al anterior y al siguiente (`i`: su sitio entre los `count` meses con datos; `f`: el
+   primer día con datos, si cae dentro del mes) */
+const monthBar = (m, i, count, f) => html`<div class="anm"><button data-a="analysisMonth" data-i="-1" aria-label="Mes anterior"${i > 0 ? '' : ' disabled'}>‹</button><div><b>${cap(monthName(anaYm))}</b><small class="mu">${m.open ? 'del 1 al ' + m.nd + ' (en curso)' : 'del 1 al ' + m.nd}${f && f > m.a ? ' · desde el ' + +f.slice(8, 10) : ''}</small></div><button data-a="analysisMonth" data-i="1" aria-label="Mes siguiente"${i < count - 1 ? '' : ' disabled'}>›</button></div>`;
+/* las seis cifras del mes: entrenos, tiempo, volumen, récords, peso y alimentación */
+const kpiGrid = m => {
+  const t = m.t;
+  const w = m.w;
+  const n = m.nu;
+  const ex = m.ex;
+  const hm = Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0');
+  return html`<div class="ankg">${kpi('Entrenos', String(t.n), delta(t.n, m.pt.n), t.n >= m.pt.n ? 'up' : 'dn')}${kpi('Tiempo', hm, '')}${kpi('Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1), t.vol >= m.pt.vol ? 'up' : 'dn')}${kpi('Récords', String(ex.rec.length), ex.rec.length ? 'mejor 1RM estimado' : '')}${kpi('Peso', weightDelta(w), w.d == null ? 'sin pesajes' : w.tr, w.ok == null ? '' : w.ok ? 'up' : 'dn')}${kpi('Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días', '')}</div>`;
+};
+/* entrenamientos: el resumen, las barras por semana, lo cumplido del plan, los récords del mes y los ejercicios con más volumen */
+const trainingCard = m => {
+  const t = m.t;
+  const ex = m.ex;
+  return html`<div class="cd ans"><b class="anh">Entrenamientos</b><p>${t.n ? sessionsText(t) + '. ' + setsText(t) + '.' : 'Sin entrenos registrados este mes.'}</p>${raw(svgBars(m))}${m.plan > 0 ? html`<p class="mu">${planText(m)}</p>` : ''}${ex.rec.length ? html`<div class="anr"><small>Récords del mes (1RM estimado)</small>${ex.rec.slice(0, 4).map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(loadNum(r.p))} → ${fmtN(loadNum(r.m))} ${weightUnit()} <span class="up">+${fmtN(r.g * 100)} %</span></b></div>`)}</div>` : ''}${ex.vol.length ? html`<div class="anr"><small>Más volumen</small>${ex.vol.map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(volNum(r.v), 1)}${volUnit()}</b></div>`)}</div>` : ''}</div>`;
+};
+/* peso corporal: el cambio del mes frente al objetivo y su gráfica */
+const weightCard = m => {
+  const w = m.w;
+  return html`<div class="cd ans"><b class="anh">Peso corporal</b>${w.d == null ? html`<p class="mu">No hay pesajes este mes. En Dashboard → Evolución del peso puedes registrarlo y activar un recordatorio.</p>` : html`<p><b class="an${w.tr == 'estable' ? 'e' : w.ok ? 'o' : 'x'}">${weightChange(w)}</b>${goalNote(w)}</p>${raw(svgLine(m))}`}</div>`;
+};
+/* alimentación: el veredicto, las medias de kcal y proteína frente al objetivo y las kcal de cada día */
+const nutritionCard = m => {
+  const n = m.nu;
+  const vc = n.verdict == 'Cumplido' ? 'ok' : n.verdict == 'A medias' ? 'seen' : n.verdict ? 'bad' : 'off';
+  return html`<div class="cd ans"><b class="anh">Alimentación</b><p><span class="rps ${vc}">${n.verdict || 'Sin datos suficientes'}</span></p>${n.logged ? html`<div class="g2 ann"><div><small>kcal de media</small><b>${fmtN(n.ak)}</b><small class="mu">objetivo ${fmtN(n.tk)}</small></div><div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="mu">objetivo ${fmtN(n.tp)} g</small></div></div><p class="mu">${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? ' · de media ' + n.side : ''}.${n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''}</p>${raw(svgKcal(m))}<div class="anlg"><span><i class="bg-x2ecc71"></i>en objetivo</span><span><i class="bg-xf59e0b"></i>por encima</span><span><i class="bg-x4da3ff"></i>por debajo</span></div>` : html`<p class="mu">No hay comidas registradas este mes.</p>`}</div>`;
+};
+/* otros datos: las medidas que han cambiado y los logros conseguidos ('' si no hay ni unas ni otros) */
+const otherCard = m => m.o.ms.length || m.o.ach.length ? html`<div class="cd ans"><b class="anh">Otros datos</b>${m.o.ms.length ? html`<div class="anr"><small>Medidas</small>${m.o.ms.map(([k, d]) => html`<div class="row"><span>${k}</span><b>${d > 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)} cm</b></div>`)}</div>` : ''}${m.o.ach.length ? html`<div class="anr"><small>Logros conseguidos</small><p>${m.o.ach.join(' · ')}</p></div>` : ''}</div>` : '';
+/* la conclusión del mes, en frases */
+const conclusionCard = m => html`<div class="cd ans"><b class="anh">Conclusión</b><ul class="anu">${conclusions(m).map(c => html`<li>${c}</li>`)}</ul></div>`;
 const analysisPage = () => {
   const [f, from] = analysisFrom();
   const today = dayKey(new Date());
@@ -259,20 +298,13 @@ const analysisPage = () => {
   if (!L.includes(anaYm))
     anaYm = new Date().getDate() <= 7 && L.length > 1 ? L[L.length - 2] : L[L.length - 1];
   const m = monthStats(anaYm);
-  const t = m.t;
-  const i = L.indexOf(anaYm);
-  const hm = Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0');
-  const w = m.w;
-  const n = m.nu;
-  const ex = m.ex;
-  const vc = n.verdict == 'Cumplido' ? 'ok' : n.verdict == 'A medias' ? 'seen' : n.verdict ? 'bad' : 'off';
-  return html`<div id="anp">${pgHead('Análisis mensual')}<div class="anm"><button data-a="analysisMonth" data-i="-1" aria-label="Mes anterior"${i > 0 ? '' : ' disabled'}>‹</button><div><b>${cap(monthName(anaYm))}</b><small class="mu">${m.open ? 'del 1 al ' + m.nd + ' (en curso)' : 'del 1 al ' + m.nd}${f && f > m.a ? ' · desde el ' + +f.slice(8, 10) : ''}</small></div><button data-a="analysisMonth" data-i="1" aria-label="Mes siguiente"${i < L.length - 1 ? '' : ' disabled'}>›</button></div>
-<div class="ankg">${kpi('Entrenos', String(t.n), delta(t.n, m.pt.n), t.n >= m.pt.n ? 'up' : 'dn')}${kpi('Tiempo', hm, '')}${kpi('Volumen', fmtN(t.vol / 1000, 1) + ' t', delta(t.vol / 1000, m.pt.vol / 1000, ' t', 1), t.vol >= m.pt.vol ? 'up' : 'dn')}${kpi('Récords', String(ex.rec.length), ex.rec.length ? 'mejor 1RM estimado' : '')}${kpi('Peso', w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg', w.d == null ? 'sin pesajes' : w.tr, w.ok == null ? '' : w.ok ? 'up' : 'dn')}${kpi('Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días', '')}</div>
-<div class="cd ans"><b class="anh">Entrenamientos</b><p>${t.n ? (t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza')) + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? ', ' + t.nc + (t.nc == 1 ? ' sesión' : ' sesiones') + ' de cardio' + (t.km ? ' (' + fmtN(t.km, 1) + ' km)' : '') : '') + ' en ' + t.days + (t.days == 1 ? ' día' : ' días') + '. ' + fmtN(t.sets) + ' series' + (t.rpe ? ' · esfuerzo medio ' + fmtN(t.rpe, 1) : '') + '.' : 'Sin entrenos registrados este mes.'}</p>${raw(svgBars(m))}${m.plan > 0 ? html`<p class="mu">Tu plan marca unos ${fmtN(m.pwk, 1)} entrenos por semana: has hecho el ${Math.round((t.ns + t.nw) / m.plan * 100)} % de lo previsto${m.open ? ' hasta hoy' : ''}.</p>` : ''}${ex.rec.length ? html`<div class="anr"><small>Récords del mes (1RM estimado)</small>${ex.rec.slice(0, 4).map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(r.p)} → ${fmtN(r.m)} kg <span class="up">+${fmtN(r.g * 100)} %</span></b></div>`)}</div>` : ''}${ex.vol.length ? html`<div class="anr"><small>Más volumen</small>${ex.vol.map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(r.v / 1000, 1)} t</b></div>`)}</div>` : ''}</div>
-<div class="cd ans"><b class="anh">Peso corporal</b>${w.d == null ? html`<p class="mu">No hay pesajes este mes. En Dashboard → Evolución del peso puedes registrarlo y activar un recordatorio.</p>` : html`<p><b class="an${w.tr == 'estable' ? 'e' : w.ok ? 'o' : 'x'}">${cap(w.tr)}${w.tr == 'estable' ? '' : ' ' + fmtN(Math.abs(w.d), 1) + ' kg'}</b>${w.goal >= 0 ? ' · objetivo ' + GOAL_LABELS[w.goal] + (w.ok ? ': va bien' : ': ' + (KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : 'debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'))) : ''}</p>${raw(svgLine(m))}`}</div>
-<div class="cd ans"><b class="anh">Alimentación</b><p><span class="rps ${vc}">${n.verdict || 'Sin datos suficientes'}</span></p>${n.logged ? html`<div class="g2 ann"><div><small>kcal de media</small><b>${fmtN(n.ak)}</b><small class="mu">objetivo ${fmtN(n.tk)}</small></div><div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="mu">objetivo ${fmtN(n.tp)} g</small></div></div><p class="mu">${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? ' · de media ' + n.side : ''}.${n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''}</p>${raw(svgKcal(m))}<div class="anlg"><span><i class="bg-x2ecc71"></i>en objetivo</span><span><i class="bg-xf59e0b"></i>por encima</span><span><i class="bg-x4da3ff"></i>por debajo</span></div>` : html`<p class="mu">No hay comidas registradas este mes.</p>`}</div>
-${m.o.ms.length || m.o.ach.length ? html`<div class="cd ans"><b class="anh">Otros datos</b>${m.o.ms.length ? html`<div class="anr"><small>Medidas</small>${m.o.ms.map(([k, d]) => html`<div class="row"><span>${k}</span><b>${d > 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)} cm</b></div>`)}</div>` : ''}${m.o.ach.length ? html`<div class="anr"><small>Logros conseguidos</small><p>${m.o.ach.join(' · ')}</p></div>` : ''}</div>` : ''}
-<div class="cd ans"><b class="anh">Conclusión</b><ul class="anu">${conclusions(m).map(c => html`<li>${c}</li>`)}</ul></div><div class="h-96"></div><div class="sb"><button class="pr w-full p-15 r-16 fs-16" data-a="analysisDownloadPdf">Descargar PDF</button></div></div>`;
+  return html`<div id="anp">${pgHead('Análisis mensual')}${monthBar(m, L.indexOf(anaYm), L.length, f)}
+${kpiGrid(m)}
+${trainingCard(m)}
+${weightCard(m)}
+${nutritionCard(m)}
+${otherCard(m)}
+${conclusionCard(m)}<div class="h-96"></div><div class="sb"><button class="pr w-full p-15 r-16 fs-16" data-a="analysisDownloadPdf">Descargar PDF</button></div></div>`;
 };
 /* ── el PDF (T-15) ─────────────────────────────────────────────────────────────────────────────────────────────────── */
 const analysisPdf = async (ym) => {
@@ -320,7 +352,7 @@ const analysisPdf = async (ym) => {
   d.text(X0 + WD - 18, 68, 'STRATAFIT', { size: 11, bold: true, color: [255, 255, 255], align: 'right' });
   y = 128;
   /* cifras */
-  const tiles = [['Entrenos', String(t.n), delta(t.n, m.pt.n)], ['Tiempo', Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0') + ' min', ''], ['Volumen', fmtN(t.vol / 1000, 1) + ' t', delta(t.vol / 1000, m.pt.vol / 1000, ' t', 1)], ['Récords', String(m.ex.rec.length), m.ex.rec.length ? 'mejor 1RM estimado' : ''], ['Peso', w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg', w.d == null ? 'sin pesajes' : w.tr], ['Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días registrados']];
+  const tiles = [['Entrenos', String(t.n), delta(t.n, m.pt.n)], ['Tiempo', Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0') + ' min', ''], ['Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1)], ['Récords', String(m.ex.rec.length), m.ex.rec.length ? 'mejor 1RM estimado' : ''], ['Peso', weightDelta(w), w.d == null ? 'sin pesajes' : w.tr], ['Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días registrados']];
   const tw = (WD - 20) / 3;
   tiles.forEach((x, i) => {
     const tx = X0 + i % 3 * (tw + 10);
@@ -334,7 +366,7 @@ const analysisPdf = async (ym) => {
   y += 136;
   /* entrenamientos */
   section('Entrenamientos');
-  para(t.n ? t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza') + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? ', ' + t.nc + (t.nc == 1 ? ' sesión' : ' sesiones') + ' de cardio' + (t.km ? ' (' + fmtN(t.km, 1) + ' km)' : '') : '') + ' en ' + t.days + (t.days == 1 ? ' día' : ' días') + ' · ' + fmtN(t.sets) + ' series' + (t.rpe ? ' · esfuerzo medio ' + fmtN(t.rpe, 1) : '') + '.' : 'Sin entrenos registrados este mes.');
+  para(t.n ? sessionsText(t) + ' · ' + setsText(t) + '.' : 'Sin entrenos registrados este mes.');
   need(130);
   {
     const R = m.weeks;
@@ -348,7 +380,7 @@ const analysisPdf = async (ym) => {
       const bx = X0 + 20 + i * bw + bw * .2;
       if (r[1])
         d.rect(bx, yy(r[1]), bw * .6, top + ch - yy(r[1]), { fill: ac, r: 3 });
-      d.text(bx + bw * .3, yy(r[1]) - 4, String(r[1]), { size: 9, bold: true, align: 'center', color: INK });
+      d.text(bx + bw * .3, overPlan(yy(r[1]) - 4, m.pwk > 0 ? yy(m.pwk) : null, 6.5), String(r[1]), { size: 9, bold: true, align: 'center', color: INK });
       d.text(bx + bw * .3, top + ch + 13, 'días ' + r[0], { size: 8, align: 'center', color: MU });
     });
     if (m.pwk > 0) {
@@ -358,7 +390,7 @@ const analysisPdf = async (ym) => {
     y = top + ch + 24;
   }
   if (m.plan > 0)
-    para('Tu plan marca unos ' + fmtN(m.pwk, 1) + ' entrenos por semana: has hecho el ' + Math.round((t.ns + t.nw) / m.plan * 100) + ' % de lo previsto' + (m.open ? ' hasta hoy' : '') + '.', { color: MU, size: 9.5 });
+    para(planText(m), { color: MU, size: 9.5 });
   const rows = (head, list) => {
     if (!list.length)
       return;
@@ -374,14 +406,14 @@ const analysisPdf = async (ym) => {
       y += 18;
     }
   };
-  rows('Récords del mes (1RM estimado)', m.ex.rec.slice(0, 6).map(r => [r.n, 'de ' + fmtN(r.p) + ' a ' + fmtN(r.m) + ' kg (+' + fmtN(r.g * 100) + ' %)']));
-  rows('Más volumen', m.ex.vol.map(r => [r.n, fmtN(r.v / 1000, 1) + ' t']));
+  rows('Récords del mes (1RM estimado)', m.ex.rec.slice(0, 6).map(r => [r.n, 'de ' + fmtN(loadNum(r.p)) + ' a ' + fmtN(loadNum(r.m)) + ' ' + weightUnit() + ' (+' + fmtN(r.g * 100) + ' %)']));
+  rows('Más volumen', m.ex.vol.map(r => [r.n, fmtN(volNum(r.v), 1) + volUnit()]));
   /* peso */
   section('Peso corporal');
   if (w.d == null)
     para('No hay pesajes este mes.', { color: MU });
   else {
-    para(cap(w.tr) + (w.tr == 'estable' ? '' : ' ' + fmtN(Math.abs(w.d), 1) + ' kg') + (w.goal >= 0 ? ' · objetivo ' + GOAL_LABELS[w.goal] + (w.ok ? ': va bien' : ': ' + (KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : 'debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'))) : '') + ' · último: ' + fmtN(w.last, 1) + ' kg.', { bold: true });
+    para(weightChange(w) + goalNote(w) + ' · último: ' + fmtN(w.last, 1) + ' kg.', { bold: true });
     need(120);
     const P = (w.before ? [{ d: m.a, w: w.before.w, pre: 1 }] : []).concat(w.pts);
     const v = P.map(p => p.w);

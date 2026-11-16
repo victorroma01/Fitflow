@@ -25,11 +25,20 @@ class FakeFirebase:
         self.docs = {}           # ruta → {'fields': {...}, 'updateTime': '...'}
         self.off = set()        # contextos (móviles) sin red
         self.calls = []          # (método, ruta corta) de cada petición, para las comprobaciones
+        self.exchanges = []      # (dirección, cuerpo) de cada token de reCAPTCHA cambiado por uno de App Check
         self._t = 0
 
     # ── utilidades de prueba ───────────────────────────────────────────────────────────────────────────────────────────
     def install(self, ctx):
         ctx.route(re.compile(r'https://(identitytoolkit|securetoken|firestore)\.googleapis\.com/.*'), lambda r: self._handle(r, ctx))
+        ctx.route(re.compile(r'https://content-firebaseappcheck\.googleapis\.com/.*'), lambda r: self._app_check(r, ctx))
+
+    def _app_check(self, route, ctx=None):
+        """App Check de prueba: cambia el token de reCAPTCHA por el suyo, que vale una hora."""
+        if ctx in self.off:
+            return route.abort('internetdisconnected')
+        self.exchanges.append((route.request.url, route.request.post_data or ''))
+        route.fulfill(content_type='application/json', body='{"token":"ac-tok","ttl":"3600s"}', headers={'access-control-allow-origin': '*'})
 
     def set_offline(self, ctx, on):
         """Sin red en ese móvil (los demás siguen con ella)."""

@@ -28,7 +28,10 @@ export const warmupHtml = (e, i) => {
   if (wl >= bar * 3)
     st.push([bar, 10]);
   st.push([rd(wl * .5), 8], [rd(wl * .7), 5], [rd(wl * .85), 2]);
-  st = st.filter((x, k) => !k || x[0] != st[k - 1][0]);
+  /* sin repetir pesos y siempre por debajo del de trabajo (con menos que la barra, no hay aproximación que proponer) */
+  st = st.filter((x, k) => (!k || x[0] != st[k - 1][0]) && x[0] < wl);
+  if (!st.length)
+    return '<div class="mu fs-12">Calentamiento: movilidad y un par de series ligeras antes de la primera serie</div>';
   W.warmupsDone = W.warmupsDone || {};
   return html`<div class="wup"><span>Calentamiento</span>${st.map((x, k) => html`<button class="chip${W.warmupsDone[i + '_' + k] ? ' on' : ''}" data-a="toggleWarmupSet" data-i="${i}" data-k="${k}">${x[1]} × ${x[0]} ${weightUnit()}</button>`)}</div>`;
 };

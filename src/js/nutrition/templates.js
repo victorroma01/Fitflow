@@ -5,15 +5,15 @@
 import { $, dayKey, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
-import { addState, nutriDayOffset, S, saveState, setAddState } from '../core/state.js';
+import { addState, mealList, S, saveState, setAddState, nutriDate } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { HELP, helpDot } from '../core/help.js';
 import { R } from '../core/render.js';
-import { itemMacros, mealItems, sumMacros } from './home.js';
 import { addSheet } from './add.js';
 import { planIndex, weekOffset } from '../workout/week.js';
 import { html, raw } from '../core/html.js';
-const nutriDayKey = () => dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+import { mealItems, dayTotals } from '../core/calc.js';
+const nutriDayKey = () => dayKey(nutriDate());
 /** Día del plan que toca en la fecha `k` (AAAA-MM-DD): la semana de entreno va de lunes a domingo y, en un ciclo que no es
     de 7 días (workout/week), las semanas de antes o de después siguen el ciclo desde la semana actual. */
 const planDayOf = k => {
@@ -50,7 +50,7 @@ export const templateCard = k => {
   const has = tp && Object.keys(tp).some(i => Array.isArray(tp[i]) && tp[i].length);
   let kc = '';
   if (has)
-    kc = roundInt(sumMacros(Object.keys(tp).flatMap(i => Array.isArray(tp[i]) ? tp[i] : []).map(itemMacros))[0]);
+    kc = roundInt(dayTotals(tp)[0]);
   return html`<details class="cd"><summary>Plantillas · día de ${raw(nm)}</summary><p class="mu tpw">${why}</p><div class="g2 mt-10"><div class="hqw"><button data-a="templateApply">Aplicar plantilla</button>${helpDot('tpa', 'Qué hace «Aplicar plantilla»')}</div><div class="hqw"><button data-a="templateSave">Guardar día como plantilla</button>${helpDot('tps', 'Qué hace «Guardar día como plantilla»')}</div></div><small class="mu d-block mt-8">${raw(has ? 'Plantilla de ' + nm + ' guardada · ' + kc + ' kcal. Solo se rellenan las comidas vacías.' : 'Todavía no tienes plantilla de día de ' + nm + '. Rellena el día y pulsa Guardar.')}</small></details>`;
 };
 A.templateSave = () => {
@@ -71,10 +71,16 @@ A.templateSave = () => {
     return;
   }
   S.mealTemplates = S.mealTemplates || {};
+  /* si ya había una plantilla de este tipo de día, la nueva la sustituye: se puede deshacer */
+  const before = S.mealTemplates[t];
   S.mealTemplates[t] = o;
   saveState();
   R();
-  toast('Plantilla de ' + (t == 't' ? 'entreno' : 'descanso') + ' guardada');
+  toast('Plantilla de ' + (t == 't' ? 'entreno' : 'descanso') + ' guardada', before && (() => {
+    S.mealTemplates[t] = before;
+    saveState();
+    R();
+  }));
 };
 A.templateApply = () => {
   const k = nutriDayKey();
@@ -104,7 +110,7 @@ A.templateApply = () => {
 const habitGrams = f => Math.min(5000, Math.max(0, Math.round(+(f && f.g) || 0))) || 100;
 export const habitsCard = m => {
   const l = Object.keys(S.frequentFoods || {}).map(n => [n, S.frequentFoods[n]]).filter(x => x[1] && x[1].c > 0 && Array.isArray(x[1].b)).sort((a, b) => b[1].c - a[1].c || (b[1].t || 0) - (a[1].t || 0)).slice(0, 8);
-  const yk = dayKey(new Date(Date.now() + (nutriDayOffset - 1) * 864e5));
+  const yk = dayKey(nutriDate(-1));
   const ys = (S.meals[yk] || {})[m] || [];
   if (!l.length && !ys.length)
     return '';
@@ -116,8 +122,7 @@ A.frequentAdd = (i, b) => {
   if (!f || !addState || !Array.isArray(f.b))
     return;
   const k = nutriDayKey();
-  (S.meals[k] = S.meals[k] || {});
-  (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push({ n, g: habitGrams(f), b: [0, 1, 2, 3, 4, 5].map(j => +f.b[j] || 0) });
+  mealList(k, addState.m).push({ n, g: habitGrams(f), b: [0, 1, 2, 3, 4, 5].map(j => +f.b[j] || 0) });
   f.c = (+f.c || 0) + 1;
   f.t = Date.now();
   saveState();
@@ -128,13 +133,12 @@ A.frequentAdd = (i, b) => {
 A.copyYesterday = () => {
   if (!addState)
     return;
-  const yk = dayKey(new Date(Date.now() + (nutriDayOffset - 1) * 864e5));
+  const yk = dayKey(nutriDate(-1));
   const ys = (S.meals[yk] || {})[addState.m] || [];
   if (!ys.length)
     return;
   const k = nutriDayKey();
-  (S.meals[k] = S.meals[k] || {});
-  (S.meals[k][addState.m] = S.meals[k][addState.m] || []).push(...ys.map(x => ({ ...x })));
+  mealList(k, addState.m).push(...ys.map(x => ({ ...x })));
   saveState();
   sheet();
   R();
@@ -143,10 +147,10 @@ A.copyYesterday = () => {
 /* — manejadores de esta función (registros A / C / U) — */
 A.saveDishAsk = (i, b) => {
   setAddState({ m: i });
-  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" aria-label="Nombre del plato" value="${b.dataset.n}"><button class="pr w-full mt-10" data-a="saveDish">Guardar</button>`);
+  sheet(html`<h3>Guardar plato en la librería</h3><input id="pn" maxlength="80" aria-label="Nombre del plato" value="${b.dataset.n}"><button class="pr w-full mt-10" data-a="saveDish">Guardar</button>`);
 };
 A.saveDish = () => {
-  const k = dayKey(new Date(Date.now() + nutriDayOffset * 864e5));
+  const k = dayKey(nutriDate());
   const it = ((S.meals[k] || {})[addState.m] || []).map(x => ({ ...x }));
   const n = $('#pn').value.trim() || 'Plato';
   if (it.length) {
@@ -155,8 +159,17 @@ A.saveDish = () => {
   }
   sheet();
 };
+/* borrar un plato guardado no pregunta: se puede deshacer */
 A.libraryDishDelete = i => {
-  S.savedDishes.splice(i, 1);
+  if (!S.savedDishes[i])
+    return;
+  const [dish] = S.savedDishes.splice(i, 1);
   saveState();
   sheet(addSheet());
+  toast('Plato «' + dish.n + '» borrado', () => {
+    S.savedDishes.splice(i, 0, dish);
+    saveState();
+    if ($('#sh .sp'))
+      sheet(addSheet());
+  });
 };

@@ -39,7 +39,7 @@ h1,h2,h3 {
 }
 .wkc .wkd .on i {
   border-color:transparent;
-  background:linear-gradient(135deg,var(--a1),var(--a2));
+  background:var(--ag);
   box-shadow:0 4px 12px color-mix(in srgb,var(--a2) 40%,transparent);
 }
 .wkc .wkd .on i::after {

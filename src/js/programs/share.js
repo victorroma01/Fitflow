@@ -2,16 +2,17 @@
    Compartir e importar programas mediante código.
    Define: cleanPlan, programCode, parseImport, ensureExercises, shareState, sharePage, importProgram  · acciones/registros: 7
 */
-import { $, X } from '../core/util.js';
+import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
-import { EXERCISES, PROGRAM_NAMES } from '../data/library.js';
+import { EXERCISES } from '../data/library.js';
 import { DAY_PHOTOS } from '../data/photos.js';
 import { TECH_CODES } from '../data/techniques.js';
-import { S, saveState } from '../core/state.js';
-import { dialog, pgHead, sheet, sheetToTop } from '../core/ui.js';
-import { progDraft, restDay } from './create.js';
-import { cleanText, copyText, downloadFile, fromBase64, toBase64 } from '../system/files.js';
+import { S } from '../core/state.js';
+import { pgHead, sheet, sheetToTop } from '../core/ui.js';
+import { addOwnProgram, progDraft, restDay } from './create.js';
+import { programName } from './levels.js';
+import { cleanText, copyText, downloadFile, fromBase64, readTextFile, toBase64 } from '../system/files.js';
 import { html } from '../core/html.js';
 /** Plan válido a partir de lo importado: una semana de 7 días o un ciclo de hasta 14 (workout/week), con lo que se conoce. */
 const cleanPlan = pl => {
@@ -93,7 +94,7 @@ A.sharePlan = () => {
     return;
   }
   try {
-    shareState = { n: S.ownProgramIndex >= 0 && S.ownPrograms[S.ownProgramIndex] ? S.ownPrograms[S.ownProgramIndex].n : PROGRAM_NAMES[S.program], plan: S.plan, back: 'openPrograms' };
+    shareState = { n: programName(), plan: S.plan, back: 'openPrograms' };
     sheet(sharePage());
     sheetToTop();
   }
@@ -134,11 +135,7 @@ const importProgram = t => {
     const plan = cleanPlan(o.plan);
     const nm = (typeof o.n == 'string' && cleanText(o.n, 60)) || 'Programa importado';
     ensureExercises(plan);
-    S.ownPrograms.push({ n: nm, plan, t: Date.now(), src: 'import', d: 'Programa importado' });
-    progDraft.k = S.ownPrograms.length - 1;
-    saveState();
-    A.openPrograms();
-    dialog('Programa importado', '«' + X(nm) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'pr']]);
+    addOwnProgram({ n: nm, plan, t: Date.now(), src: 'import', d: 'Programa importado' }, 'Programa importado');
   }
   catch (x) {
     const e = $('#ipe');
@@ -152,13 +149,4 @@ A.importCode = () => {
   const e = $('#ipc');
   importProgram(e ? e.value : '');
 };
-C.importFile = e => {
-  const f = e.files && e.files[0];
-  if (!f)
-    return;
-  const r = new FileReader();
-  r.onload = () => importProgram(String(r.result));
-  r.onerror = () => toast('No se pudo leer el archivo');
-  r.readAsText(f);
-  e.value = '';
-};
+C.importFile = e => readTextFile(e, importProgram);

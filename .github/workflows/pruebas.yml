@@ -36,6 +36,11 @@ jobs:
           npm install --no-audit --no-fund
           pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
+      # avisos de seguridad conocidos de las dependencias de desarrollo (la app publicada no lleva ninguna librería: solo se usan
+      # para compilar y probar). No detiene la publicación, pero queda anotado en la ejecución para revisarlo
+      - name: Avisos de seguridad de las dependencias (npm audit)
+        run: |
+          npm audit --audit-level=high || echo "::warning title=npm audit::Hay avisos de seguridad altos o críticos en las dependencias de desarrollo (esbuild, acorn o typescript): revísalos con npm audit"
       - name: Formato, compilación, reglas y pruebas
         run: bash tests/run.sh
       # con «Deploy from a branch» lo publicado es la copia de la raíz: tiene que ser la app que sale de este código
@@ -68,6 +73,32 @@ jobs:
       - name: Pruebas en WebKit
         env:
           SF_BROWSER: webkit
+        run: bash tests/run.sh
+
+  # informativo: las mismas pruebas con el motor de Firefox (Gecko). No detiene la publicación: quien usa la app está en Safari
+  # (iPhone) o en Chrome (Android), que son los dos trabajos de arriba; sirve para saber si algo depende de un solo motor
+  firefox:
+    name: Probar en Firefox (informativo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          package-manager-cache: false
+          node-version: 22
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Dependencias
+        run: |
+          npm install --no-audit --no-fund
+          pip install -r tests/requirements.txt
+          python -m playwright install --with-deps firefox
+      - name: Pruebas en Firefox
+        env:
+          SF_BROWSER: firefox
         run: bash tests/run.sh
 
   # cuentas y nube: las reglas de Firestore (tests/rules.test.mjs) y la app con el emulador de Firebase (tests/cloud.py), con

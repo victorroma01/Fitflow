@@ -17,7 +17,9 @@ python -m playwright install chromium webkit
 | `python3 build.py` | Compila `dist/app/` (lo que se publica) y `dist/stratafit.html` (archivo único). |
 | `python3 build.py --check` | Además pasa las reglas de `tools/check.js`. |
 | `python3 build.py --emulador` | Solo el archivo único, en `dist/emu/`, conectado al emulador de Firebase de este ordenador (pruebas de la nube). |
+| `python3 build.py --appcheck` | Solo el archivo único, en `dist/appcheck/`, con App Check configurado con valores de prueba y la CSP que eso abre (lo usa `tests/cloud.py`). |
 | `npm run format` | Formatea JS y CSS, pone al día la línea «Define:» de cada módulo y el [mapa de módulos](modulos.md). |
+| `node tools/figure.js` | Rehace `src/js/data/figure.js` (el modelo de perfil de las [figuras de ejercicio](figuras.md)) a partir de los puntos del dibujo. |
 | `bash tests/run.sh` | Formato, reglas, mapa de módulos y todas las pruebas. |
 | `bash tests/compare.sh vieja.html nueva.html` | Compara el comportamiento y la imagen de dos compilaciones. |
 | `npx firebase emulators:exec --only auth,firestore --project demo-stratafit "node --test tests/rules.test.mjs"` | Prueba las reglas de Firestore con el emulador (necesita Java y `npm install --no-save firebase-tools@15`). |
@@ -33,7 +35,7 @@ python -m playwright install chromium webkit
 2. Impórtalo en `src/js/main.js` antes de `core/boot.js`. Si es algo poco usado, en lugar de eso cárgalo desde `core/lazy`.
 3. Si guarda datos nuevos, documenta la clave en [estado.md](estado.md), valídala en `core/repair` (al arrancar y tras cada
    sincronización) y decide dónde va: con la cuenta (se sincroniza sola, en `data/core`), en el perfil (preferencias: `PREF_KEYS`
-   de `cloud/sync` y `firestore.rules`) o solo en el dispositivo (`LOCAL_ONLY` de `cloud/sync`).
+   de `cloud/docs` y `firestore.rules`) o solo en el dispositivo (`LOCAL_ONLY` de `cloud/docs`).
 4. Si cambia lo que se guarda en Firestore (un documento o un campo nuevo), cambia también `firestore.rules` y su prueba,
    `tests/rules.test.mjs`.
 5. Si el usuario lo ve, descríbelo en la [documentación funcional](../funcional/README.md).
@@ -56,11 +58,12 @@ python -m playwright install chromium webkit
 ## Fotos
 
 - Portadas de día: `src/img/day/<clave>.jpg` y su orden en `src/img/day/order.txt`.
-- Fotos de ejercicio: `src/img/ex/<clave>.webp` (sin textos, unos 480 px de ancho) y su línea en `src/img/ex/map.txt`:
-  `clave | ejercicios que la usan | otros nombres para buscarlo`.
 
 `build.py` las convierte en el módulo `data/media`: en el paquete son archivos que el service worker guarda para usar sin conexión; en
 el archivo único van incrustadas.
+
+Los ejercicios no llevan foto: su imagen es una [figura](figuras.md), que es código. Los otros nombres con los que se busca
+un ejercicio están en `src/js/data/aliases.js`.
 
 ## Reglas de calidad
 
@@ -147,6 +150,25 @@ redondeadas ni sombra). `python3 tools/marca.py` genera el icono de la app (el c
 pestaña del navegador con el tema oscuro, los iconos de los accesos directos (con los iconos de la app, en blanco sobre el azul del
 logo) y el logo dentro de la app (`src/img/brand/logo-*.webp`, que `build.py` mete en `data/media` y usa `core/brand`). Con un logo
 nuevo, se cambian las dos fuentes y se lanza de nuevo.
+
+### Cómo llega una versión al móvil (service worker)
+
+`static/sw.js` guarda la app en el móvil y la abre desde ahí, sin esperar a la red. Sus reglas, que `tests/deploy.py` comprueba:
+
+- **Abrir**: sirve el documento guardado y, mientras, pide el de la red. Si ha cambiado, lo guarda con todo su código (nunca un
+  documento sin su código, I-08) y avisa a la página, que enseña «Versión nueva» si el número es mayor. «Actualizar» pide la
+  versión de la red (`?fresh=…`) y recarga.
+- **Una copia por dirección**: todo se guarda y se busca por su dirección sin parámetros (`keyOf`). `./?a=peso` (un acceso
+  directo del icono) y `./` son el mismo documento. Antes cada dirección dejaba su copia, y una vieja podía salir antes que la
+  buena (SW1 de la [auditoría](auditoria-1.0.3.md)).
+- **El código** (`js/…`, con nombres que cambian en cada versión) sale siempre de la caché. Al activarse una versión se conserva
+  el código de la anterior (lo anota en `codigo-actual.json`, dentro de la caché) y se borra el de antes: la página que siga
+  abierta con la versión anterior aún puede cargar lo que no había usado.
+- **Al activarse** también borra las cachés antiguas y cualquier copia guardada con parámetros (las del service worker de
+  hasta la V1.0.2): así se arregla solo un móvil que se quedó con una.
+
+Si cambia el service worker, la prueba tiene que seguir actualizando desde el anterior publicado: `tests/sw-anterior.js` es el
+de hasta la V1.0.2; al cambiar el de la V1.0.3, se añade este como otro punto de partida.
 
 ### Paso de la 1.24.0 a la 1.0.0
 

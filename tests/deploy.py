@@ -1,6 +1,8 @@
 """Prueba del paquete instalable (dist/app) servido por HTTP: cabecera fija, manifiesto, service worker,
 arranque sin conexión, aviso de versión nueva (con una versión nueva publicada de verdad: otro código con otros nombres
 de archivo), código que se carga al usarlo, copia de seguridad desde la app instalada y aviso de «Añadir a inicio».
+Y la actualización de un móvil que viene del service worker anterior (tests/sw-anterior.js, el de hasta la V1.0.2) con la
+copia del documento que este dejaba al abrir con conexión un acceso directo del icono (from_previous).
 
   python3 tests/deploy.py dist/app
 Requiere:  pip install playwright  &&  playwright install chromium
@@ -27,6 +29,17 @@ FAIL = set()
 # y las últimas peticiones, con su momento, para ver dónde se queda una recarga que no termina (I-13)
 REQLOG = collections.deque(maxlen=40)
 T0 = time.time()
+# la cabecera Cache-Control del servidor. Como GitHub Pages (10 minutos): el service worker debe saltarse la caché HTTP. Con
+# 'no-cache', como si ya hubiera caducado: lo normal días después de instalar la app
+CACHE = ['max-age=600']
+HERE = os.path.dirname(os.path.abspath(__file__))
+# las copias del documento guardadas con parámetros en su dirección (no debe haber ninguna: static/sw.js, keyOf)
+STRAY = "caches.open('ff-app-2').then(c=>c.keys()).then(k=>k.map(r=>r.url.replace(location.origin,'')).filter(u=>u.includes('?')))"
+# el temporizador WOD (código que se carga al usarlo) abierto en su hoja; «AMRAP» sale también en la pestaña Workout
+WOD_OPEN = "/Temporizador WOD/.test(document.querySelector('#sh').innerText)"
+# los archivos de código (js/…) que hay en la caché, y los de la versión activa según la nota del service worker (CODE)
+CODE_FILES = "caches.open('ff-app-2').then(c=>c.keys()).then(k=>k.map(r=>r.url.split('/').pop()).filter(u=>/\\.js$/.test(u)))"
+CODE_NOTE = "caches.open('ff-app-2').then(c=>c.match('codigo-actual.json')).then(r=>r?r.text():'[]').then(t=>{try{return JSON.parse(t)}catch(e){return []}}).then(l=>l.map(u=>u.split('/').pop()))"
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -40,7 +53,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().do_GET()
 
     def end_headers(self):
-        self.send_header('Cache-Control', 'max-age=600')  # como GitHub Pages: el SW debe saltarse la caché HTTP
+        self.send_header('Cache-Control', CACHE[0])
         super().end_headers()
 
     def log_message(self, *a):
@@ -92,6 +105,90 @@ def deploy(orig, dest, ver=None, suffix=''):
     for f in ('index.html', 'sw.js'):
         open(os.path.join(dest, f), 'w', encoding='utf-8').write(fix(open(os.path.join(orig, f), encoding='utf-8').read()))
     return v0
+
+
+def from_previous(b, orig, log):
+    """Un móvil que viene del service worker anterior (tests/sw-anterior.js: el de hasta la V1.0.2) y abrió con conexión un acceso
+    directo del icono: en su caché quedó otra copia del documento, con la dirección ./?a=peso, que aquel service worker no
+    actualizaba y servía antes que la buena. Al publicarse una versión, la app seguía abriendo la vieja (con el aviso de versión
+    nueva otra vez) y, en cuanto el service worker nuevo borraba el código viejo, dejaba de arrancar. Ahora el service worker
+    nuevo borra esa copia al activarse y busca el documento por su dirección sin parámetros: la versión nueva llega y arranca.
+    Con la caché HTTP caducada (CACHE), que es como está el móvil días después de instalar: el código viejo ya no sale de ella."""
+    site = tempfile.mkdtemp(prefix='sf_prev_')
+    dest = os.path.join(site, 'fitflow')
+    shutil.copytree(orig, dest)
+    # el service worker anterior, con la lista de precarga de esta compilación
+    pre = re.search(r'PRE=\[(.*?)\];', open(os.path.join(orig, 'sw.js'), encoding='utf-8').read()).group(1)
+    old_sw = re.sub(r'PRE=\[.*?\];', lambda m: 'PRE=[' + pre + '];', open(os.path.join(HERE, 'sw-anterior.js'), encoding='utf-8').read(), count=1)
+    open(os.path.join(dest, 'sw.js'), 'w', encoding='utf-8').write(old_sw)
+    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(Handler, directory=site))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = 'http://localhost:%d/fitflow/' % srv.server_address[1]
+    CACHE[0] = 'no-cache'
+    c = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, color_scheme='dark')
+    c.add_init_script(INIT)
+    pg = c.new_page()
+    ev = pg.evaluate
+    # la versión que se ve, o que la app no arranca
+    state = "typeof APPV=='undefined'||document.getElementById('ffe')?'no arranca':APPV+(document.getElementById('upd')?' con aviso':'')"
+    try:
+        pg.goto(url)
+        pg.wait_for_timeout(1500)
+        reload(pg, log)
+        pg.wait_for_timeout(800)
+        v0 = ev('APPV')
+        pg.goto(url + '?a=peso')
+        pg.wait_for_timeout(1200)
+        pg.goto(url)
+        pg.wait_for_timeout(800)
+        check('(el service worker anterior dejaba otra copia de la app al abrir un acceso directo con conexión)', ev(STRAY) == ['/fitflow/?a=peso'], str(ev(STRAY)))
+        # se publica una versión nueva, con el service worker de ahora; el código viejo desaparece del servidor
+        deploy(orig, dest, '9.9.9', '-999')
+        vj = os.path.join(dest, 'version.json')
+        before = json.loads(open(vj, encoding='utf-8').read())
+        e = {'version': '9.9.9', 'date': '2026-12-01', 'sections': [{'title': 'Novedades', 'items': ['Prueba de novedades']}]}
+        open(vj, 'w', encoding='utf-8').write(json.dumps(dict(e, history=[e, before])))
+        reload(pg, log)
+        pg.wait_for_load_state('load')
+        try:
+            pg.wait_for_selector('#upd.update .updk', timeout=10000)
+        except Exception:
+            pass
+        check('viniendo del service worker anterior: abre la versión guardada y avisa de la nueva', ev(state) == v0 + ' con aviso', ev(state))
+        # el service worker nuevo se instala (descarga todo) y, al activarse, borra la copia vieja
+        for _ in range(60):
+            if not ev(STRAY):
+                break
+            pg.wait_for_timeout(300)
+        check('el service worker nuevo borra la copia vieja al activarse', ev(STRAY) == [], str(ev(STRAY)))
+        # la página abierta sigue siendo la de la versión anterior, y su código ya no está en el servidor: lo que aún no había
+        # usado (el temporizador WOD) tiene que salir de la caché, que conserva el código de la versión anterior
+        ev('A.openWod()')
+        for _ in range(20):
+            if ev(WOD_OPEN):
+                break
+            pg.wait_for_timeout(250)
+        check('con la versión nueva ya activa, la página abierta de la anterior aún carga lo que no había usado (WOD)', ev(WOD_OPEN) and ev('APPV') == v0,
+              ev("document.querySelector('#tt')?document.querySelector('#tt').innerText.slice(0,120):''"))
+        ev("sheet()")
+        if ev("!!document.querySelector('#upd .upb')"):
+            with pg.expect_navigation():
+                pg.click('#upd .upb')
+            pg.wait_for_load_state('load')
+            pg.wait_for_timeout(1200)
+        check('«Actualizar» carga la versión nueva (antes: seguía la vieja, con el aviso otra vez)', ev(state) == '9.9.9', ev(state))
+        seen = []
+        for _ in range(2):
+            reload(pg, log)
+            pg.wait_for_load_state('load')
+            pg.wait_for_timeout(1200)
+            seen.append(ev(state))
+        check('y sigue abriendo en las siguientes aperturas (antes: «StrataFit no ha podido iniciarse»)', seen == ['9.9.9', '9.9.9'] and ev(STRAY) == [], str(seen))
+    finally:
+        CACHE[0] = 'max-age=600'
+        c.close()
+        srv.shutdown()
+        shutil.rmtree(site, ignore_errors=True)
 
 
 def main(app):
@@ -174,13 +271,20 @@ def main(app):
                     check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
                     ev('A.openWod()')
                     pg.wait_for_timeout(300)
-                    check('sin conexión también abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
+                    check('sin conexión también abre lo que se carga al usarlo (WOD)', ev(WOD_OPEN))
                     c.set_offline(False)
+                    # con conexión, otro acceso directo: abre su pantalla y no deja en la caché otra copia del documento con esa
+                    # dirección (./?a=comida), que nadie actualizaría (static/sw.js: todo se guarda sin parámetros)
+                    pg.goto(pg.url.split('?')[0] + '?a=comida')
+                    pg.wait_for_timeout(1200)
+                    check('con conexión, un acceso directo del icono (?a=comida) abre su pantalla', ev("S.tab===1&&location.search===''"))
+                    ev("S.tab=0;R();saveState()")
+                    check('y no deja en la caché otra copia de la app con esa dirección', ev(STRAY) == [], str(ev(STRAY)))
                 else:
                     skipped('sin conexión')
                     ev('A.openWod()')
                     pg.wait_for_timeout(300)
-                    check('abre lo que se carga al usarlo (WOD)', ev("/AMRAP/.test(document.body.innerText)"))
+                    check('abre lo que se carga al usarlo (WOD)', ev(WOD_OPEN))
                 reload(pg, log)
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(800)
@@ -203,6 +307,10 @@ def main(app):
 
                 # versión nueva publicada: la app abre la copia guardada al momento y avisa con la tarjeta de novedades
                 v0 = ev('APPV')
+                if SW:
+                    # (con la nota del código ilegible: el service worker nuevo conserva entonces todo el código guardado, y
+                    # la vuelve a escribir)
+                    ev("caches.open('ff-app-2').then(c=>c.put('codigo-actual.json',new Response('{')))")
                 publish('9.9.9', ['Prueba de novedades'])
                 if SW:
                     reload(pg, log)
@@ -225,6 +333,16 @@ def main(app):
                 check('tarjeta negra con letra blanca', bool(card) and card['bg'] == 'rgb(0, 0, 0)' and card['fg'] == 'rgb(255, 255, 255)', str(card and (card['bg'], card['fg'])))
                 a1 = ev("(()=>{const d=document.createElement('i');d.style.color=getComputedStyle(document.documentElement).getPropertyValue('--a1');document.body.appendChild(d);const c=getComputedStyle(d).color;d.remove();return c})()")
                 check('botón Actualizar del color del tema, letra negra y mayúsculas', bool(card) and card['bbg'] == a1 and card['bfg'] == 'rgb(0, 0, 0)' and card['label'] == 'ACTUALIZAR', str(card and (card['bbg'], a1, card['bfg'], card['label'])))
+                if SW:
+                    # el service worker de la versión nueva se activa con la página de la anterior aún abierta: guarda el código
+                    # nuevo y conserva el de la versión anterior, por si esa página carga algo que aún no había usado
+                    old_code = sorted(os.listdir(os.path.join(orig, 'js')))
+                    for _ in range(60):
+                        if any(f.endswith('-999.js') for f in ev(CODE_NOTE)):
+                            break
+                        pg.wait_for_timeout(300)
+                    have = ev(CODE_FILES)
+                    check('al activarse la versión nueva, el código de la anterior se conserva', all(f in have for f in old_code) and any(f.endswith('-999.js') for f in have), str(sorted(have)[:4]))
                 with pg.expect_navigation():
                     pg.click('#upd .upb')
                 pg.wait_for_load_state('load')
@@ -303,6 +421,13 @@ def main(app):
                     check('una corrección con el mismo número de versión llega en la siguiente apertura, sin aviso ni novedades',
                           ev('APPV') == v0 and '-mismo.js' in now_js and not same_popup and ev("!document.getElementById('upd')") and ev('!!window.__ffok'),
                           str([ev('APPV'), now_js[:90], same_popup]))
+                    # el código guardado no crece sin fin: queda el de esta versión y el de la anterior; el de la 9.9.9, ya no
+                    for _ in range(40):
+                        if any(f.endswith('-mismo.js') for f in ev(CODE_NOTE)) and not any(f.endswith('-999.js') for f in ev(CODE_FILES)):
+                            break
+                        pg.wait_for_timeout(300)
+                    have = ev(CODE_FILES)
+                    check('y el código de dos versiones atrás se borra', not any(f.endswith('-999.js') for f in have) and any(f.endswith('-mismo.js') for f in have), str(sorted(have)[:6]))
                     deploy(orig, os.path.join(site, 'fitflow'))
                 else:
                     skipped('corrección con el mismo número de versión')
@@ -359,6 +484,10 @@ def main(app):
                 p3.evaluate("S.tab=3;saveState();R();A.openSettings()")
                 check('en el navegador: aviso de «Añadir a pantalla de inicio» en Ajustes', p3.evaluate("/Añadir a pantalla de inicio/.test(document.body.innerText)"))
                 check('sin errores de JS', not errs and not e2, str((errs + e2)[:3]))
+                if SW:
+                    from_previous(b, orig, log)
+                else:
+                    skipped('actualización desde el service worker anterior')
             except Exception:
                 print('  FALLA excepción; últimas navegaciones y errores:', ' | '.join(log[-8:] + errs[-4:]))
                 raise

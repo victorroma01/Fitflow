@@ -331,7 +331,7 @@ def main(path):
 
         print('Reloj del WOD (F-22 a F-24)')
         # lo que falta del anillo, en % (100: vacío); el trazo mide 2π · 54
-        ring = lambda: float(ev("document.querySelector('#f2rp').style.strokeDashoffset||'-1'")) / (2 * 3.14159265 * 54) * 100
+        ring = lambda: ev("parseFloat(document.querySelector('#f2rp').style.strokeDashoffset||'-1')") / (2 * 3.14159265 * 54) * 100
         ph = lambda: ev("(o=>o?o.dataset.ph:'')(document.querySelector('#f2w'))")
         ev("S.wodConfig={m:'amrap',a:3,pre:10};A.openWod()")
         run()

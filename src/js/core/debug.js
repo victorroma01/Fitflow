@@ -8,12 +8,16 @@
 import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { mealsPart, partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
+import { partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
+import { mealsPart } from './parts.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
-import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
-import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, S, saveState, setW, setWeightView, W, weightView } from './state.js';
+import { EX_ALIASES } from '../data/aliases.js';
+import { FIG_POSES } from '../data/figposes.js';
+import { figPose } from '../extras/moves.js';
+import { exPicture } from '../extras/anatomy.js';
+import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, overviewMode, S, saveState, setOverviewMode, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
@@ -32,7 +36,8 @@ import { medalSvg } from '../extras/medals.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
 import { dayInfo } from '../nutrition/templates.js';
-import { tdee } from '../nutrition/diet.js';
+import { applyDiet, tdee } from '../nutrition/diet.js';
+import { bestOf } from '../workout/finish.js';
 import { account } from '../cloud/session.js';
 import { APP_CHECK } from '../cloud/config.js';
 import { appCheckOn } from '../cloud/appcheck.js';
@@ -66,11 +71,13 @@ const DEBUG_NAMES = {
   deviceOS: [() => deviceOS],
   dialog: [() => dialog],
   errorLog: [() => errorLog],
-  EX_PHOTO_KEY: [() => EX_PHOTO_KEY],
-  EX_PHOTOS: [() => EX_PHOTOS],
+  EX_ALIASES: [() => EX_ALIASES],
   exAll: [() => exAll],
+  exPicture: [() => exPicture],
   exSearchText: [() => exSearchText],
   FFDEP: [() => FFDEP],
+  FIG_POSES: [() => FIG_POSES],
+  figPose: [() => figPose],
   flushState: [() => flushState],
   FOOD_GROUPS: [() => FOOD_GROUPS],
   FOODS_SRC: [() => FOODS_SRC],
@@ -115,11 +122,14 @@ const DEBUG_NAMES = {
   syncState: [() => syncState],
   takeSnapshot: [() => takeSnapshot],
   tdee: [() => tdee],
+  applyDiet: [() => applyDiet],
+  bestOf: [() => bestOf],
   tourCheck: [() => tourCheck],
   U: [() => U],
   updatesOn: [() => updatesOn],
   W: [() => W, setW],
   weightView: [() => weightView, setWeightView],
+  overviewMode: [() => overviewMode, setOverviewMode],
   SCHEMA_TABLES: [() => SCHEMA_TABLES],
   stateFromStored: [() => stateFromStored],
   stateToStored: [() => stateToStored],

@@ -1,13 +1,12 @@
 /* ═══ library/model ═══
    Modelo de ejercicios: lista completa, músculos, filas y orden.
-   Define: groupOfName, overlapCount, exAll, exOrder, exMuscles, exSearchText, exSubtitle, exMusclesHtml, exCellHtml, exRowHtml, exCompare, categoryOf
+   Define: groupOfName, overlapCount, exAll, exOrder, exMuscles, exSearchText, exSubtitle, exMusclesHtml, ROWS_WITH_PICTURE, exCellHtml, exRowHtml, exCompare, categoryOf
 */
 import { X } from '../core/util.js';
 import { EXERCISES, groupOf, GROUPS, MUSCLES } from '../data/library.js';
-import { EX_ALIASES } from '../data/photos.js';
+import { EX_ALIASES } from '../data/aliases.js';
 import { S } from '../core/state.js';
-import { exBadge } from './photo.js';
-import { exAnatomy } from '../extras/anatomy.js';
+import { exPicture, exPictureLater } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 export const groupOfName = n => {
   const e = EXERCISES.concat(S.customExercises).find(x => x.n == n);
@@ -23,7 +22,12 @@ export const exSearchText = e => {
 };
 const exSubtitle = e => X((e.q || 'Personalizado') + (e.t && e.t != 'Otros' ? ' · ' + e.t : ''));
 const exMusclesHtml = e => (exMuscles(e, 'p').length ? html`<small class="c-at">Principal: ${exMuscles(e, 'p').join(', ')}</small>` : '') + (exMuscles(e, 's').length ? html`<br><small class="mu">Secundarios: ${exMuscles(e, 's').join(', ')}</small>` : '');
-export const exCellHtml = e => html`<i class="exth">${exAnatomy(e.n, 48)}${raw(exBadge(e.n))}</i><span class="ext"><b>${e.n}</b><br><small>${raw(exSubtitle(e))}</small><br>${raw(exMusclesHtml(e))}</span>`;
-export const exRowHtml = (o, btn, act) => html`<div class="it exr"><span class="exc" data-a="${act || 'exerciseDetail'}" data-i="${o.i}">${exCellHtml(o.e)}</span>${raw(btn)}</div>`;
+/* las filas de una lista que llevan su figura desde el principio: las que se ven al abrirla, con algo de margen. Las
+   siguientes la reciben al acercarse a la pantalla (extras/anatomy, exPictureLater) */
+const ROWS_WITH_PICTURE = 12;
+/** La celda de un ejercicio en una lista: su imagen, nombre, material y músculos. `row`, el puesto de la fila en la lista
+    (si no se dice, lleva la imagen desde el principio). */
+export const exCellHtml = (e, row) => html`<i class="exth">${row >= ROWS_WITH_PICTURE ? exPictureLater(e.n, 48) : exPicture(e.n, 48)}</i><span class="ext"><b>${e.n}</b><br><small>${raw(exSubtitle(e))}</small><br>${raw(exMusclesHtml(e))}</span>`;
+export const exRowHtml = (o, btn, act, row) => html`<div class="it exr"><span class="exc" data-a="${act || 'exerciseDetail'}" data-i="${o.i}">${exCellHtml(o.e, row)}</span>${raw(btn)}</div>`;
 export const exCompare = (a, b) => GROUPS.indexOf(groupOf(a)) - GROUPS.indexOf(groupOf(b)) || exOrder(a) - exOrder(b);
 export const categoryOf = g => ['CrossFit', 'Hyrox', 'Funcional', 'Cardio'].includes(g) ? g : 'Culturismo';

@@ -5,7 +5,7 @@
    Mientras APP_CHECK (cloud/config) esté vacío, no hace nada: ni carga reCAPTCHA ni envía cabecera, y la CSP no lo admite
    (build.py). Los pasos para activarlo, en docs/tecnica/backend.md. reCAPTCHA pone su sello en la página: lo tapa la regla
    .grecaptcha-badge (css/94-account) y, a cambio, el inicio de sesión y Privacidad lo dicen (appCheckOn).
-   Define: EXCHANGE_URL, appCheckOn, token, expires, pending, scriptLoad, loadRecaptcha, freshToken, appCheckToken
+   Define: EXCHANGE_URL, appCheckOn, token, expires, pending, TOKEN_WAIT, SCRIPT_WAIT, noWaitUntil, lastFailure, scriptLoad, loadRecaptcha, freshToken, tokenFailed, appCheckToken
 */
 import { APP_CHECK, FIREBASE } from './config.js';
 import { fetchJson } from './net.js';
@@ -17,7 +17,15 @@ export const appCheckOn = () => !!(APP_CHECK.siteKey && APP_CHECK.appId);
 let token = '';
 let expires = 0;
 let pending = null;
-/* el script de reCAPTCHA Enterprise, una sola vez (si falla, se reintenta en la próxima petición) */
+/* lo más que una petición a Firebase espera por su token y lo más que se espera a que cargue reCAPTCHA (ms). reCAPTCHA es de
+   otro servidor: si tarda o no responde (sin cobertura, un bloqueador), entrar y sincronizar no pueden quedarse esperándolo */
+const TOKEN_WAIT = 8e3;
+const SCRIPT_WAIT = 15e3;
+/* tras una espera agotada, hasta cuándo las peticiones salen sin esperar otra vez (ms) */
+let noWaitUntil = 0;
+/* el último fallo anotado: el mismo no se anota en cada petición */
+let lastFailure = '';
+/* el script de reCAPTCHA Enterprise, una sola vez (si falla o no llega a tiempo, se reintenta en la próxima petición) */
 let scriptLoad = null;
 const loadRecaptcha = () => scriptLoad || (scriptLoad = new Promise((res, rej) => {
   const s = document.createElement('script');
@@ -31,6 +39,7 @@ const loadRecaptcha = () => scriptLoad || (scriptLoad = new Promise((res, rej) =
       rej(new Error('reCAPTCHA no está'));
   };
   s.onerror = () => rej(new Error('reCAPTCHA no cargó'));
+  setTimeout(() => rej(new Error('reCAPTCHA no respondió')), SCRIPT_WAIT);
   document.head.appendChild(s);
 }).catch(e => {
   scriptLoad = null;
@@ -43,10 +52,20 @@ const freshToken = async () => {
   const j = await fetchJson(EXCHANGE_URL + FIREBASE.projectId + '/apps/' + APP_CHECK.appId + ':exchangeRecaptchaEnterpriseToken?key=' + FIREBASE.apiKey, { method: 'POST', body: { recaptcha_enterprise_token: r } });
   token = String(j.token || '');
   expires = Date.now() + (parseFloat(j.ttl) || 3600) * 1e3;
+  lastFailure = '';
   return token || null;
 };
-/** El token de App Check para una petición a Firebase, o null si App Check no está configurado o no se pudo conseguir (la
-  petición va sin él: si Firebase ya lo exige, la rechaza y se reintenta con la sincronización de siempre). */
+/* un fallo al conseguir el token se anota en Diagnóstico (una clave mal puesta se ve ahí), salvo que sea por no haber
+   conexión, que no es un fallo, y sin repetir el mismo en cada petición */
+const tokenFailed = e => {
+  const m = String(e && e.message || e);
+  if (navigator.onLine === false || e && e.code == 'NETWORK' || m == lastFailure)
+    return;
+  lastFailure = m;
+  logError('App Check', e);
+};
+/** El token de App Check para una petición a Firebase, o null si App Check no está configurado o no se pudo conseguir a
+  tiempo (la petición va sin él: si Firebase ya lo exige, la rechaza y se reintenta con la sincronización de siempre). */
 export const appCheckToken = async () => {
   if (!appCheckOn())
     return null;
@@ -54,10 +73,19 @@ export const appCheckToken = async () => {
     return token;
   if (!pending)
     pending = freshToken().catch(e => {
-      logError('App Check', e);
+      tokenFailed(e);
       return null;
     }).finally(() => {
       pending = null;
     });
-  return pending;
+  if (Date.now() < noWaitUntil)
+    return null;
+  let late;
+  const waited = await Promise.race([pending, new Promise(res => {
+      late = setTimeout(res, TOKEN_WAIT, undefined);
+    })]);
+  clearTimeout(late);
+  if (waited === undefined)
+    noWaitUntil = Date.now() + 6e4;
+  return waited || null;
 };

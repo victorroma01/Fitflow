@@ -28,10 +28,14 @@ const swapExercise = (i, b) => {
     }));
   else
     ch(d[i]);
+  /* en un entreno en curso: las series sin hacer toman el peso del ejercicio nuevo; las ya hechas se quedan con el nombre
+     del ejercicio con el que se hicieron (s.n), que es al que van al guardar (workout/finish) */
   if (W && W.sets[i])
     W.sets[i].forEach(s => {
       if (!s.ok)
         s.w = S.lastWeights[nn] || '';
+      else if (!s.n)
+        s.n = old;
     });
   saveState();
   sheet();
@@ -63,6 +67,11 @@ A.swapUndo = i => {
   W.sets[i].forEach(s => {
     if (!s.ok)
       s.w = S.lastWeights[o] || '';
+    /* las hechas con el ejercicio que se deshace se quedan con su nombre; las que eran del original vuelven a ser suyas */
+    else if (!s.n)
+      s.n = c;
+    else if (s.n == o)
+      delete s.n;
   });
   prefillSets(S.plan[S.selectedDay].ex[i], W.sets[i]);
   saveState();
@@ -103,10 +112,12 @@ export const swapBody = () => {
   const l = cand.filter(e => equipMatch(swapState.eq, e));
   const T = swapTiers(c, l);
   let h = equipDropdown('sw', swapState.eq, eqs, cand);
+  /* el puesto de cada fila en la lista entera, que sigue de un apartado al siguiente */
+  let row = 0;
   T.forEach(t => {
     if (!t[1].length)
       return;
-    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}"><span class="exc">${exCellHtml(e)}</span><small class="mu">Elegir ›</small></div>`)}`;
+    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}"><span class="exc">${exCellHtml(e, row++)}</span><small class="mu">Elegir ›</small></div>`)}`;
   });
   return h || '<p class="mu">No hay alternativas con esos filtros.</p>';
 };

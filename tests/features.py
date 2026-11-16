@@ -209,7 +209,7 @@ def main(path):
         check('la copia de seguridad abierta desde Ajustes tiene «←» a Ajustes', ev("!!document.querySelector('#sh [data-a=openSettings]')"))
         ev("A.openSettings();A.openSettingsPage(0,{dataset:{v:'legal'}})")
         run()
-        check('el aviso legal lleva el copyright y el aviso de salud', all(s in ev("document.querySelector('#sh').innerText") for s in ('Rodriguez Mazuelas', 'no sustituyen el consejo')))
+        check('el aviso legal lleva el copyright y el aviso de salud', all(s in ev("document.querySelector('#sh').innerText") for s in ('Rodriguez Mazuelas', 'no sustituyen el consejo')), repr(ev("document.querySelector('#sh').innerText")[:300]))
         check('y dice que el uso gratuito es durante la fase de pruebas, con riesgo de perder datos (I-29)', all(s in ev("document.querySelector('#sh').innerText") for s in ('Uso personal y gratuito durante la fase de pruebas', 'existe el riesgo de pérdida total o parcial de datos')))
         ev("A.closeSheet()")
 

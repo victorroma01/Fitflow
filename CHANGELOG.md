@@ -10,6 +10,147 @@ aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en fr
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.3] — 2026-11-16
+
+### Novedades
+- Los ejercicios se ven: cada uno de los 551 ejercicios de la librería tiene su figura haciéndolo, con los músculos que
+  trabajan en color y con su máquina, su polea o su material. Al tocarla, «Cómo se hace» la enseña en grande y en movimiento,
+  del inicio al final del gesto; con «Reducir animaciones», las posturas quietas.
+- Nutrición, la semana: una barra por día con sus kcal frente a tu objetivo, la media de kcal y de proteína y los días en
+  objetivo. En el Dashboard, la tarjeta «Nutrición · 7 días».
+- Ejercicios propios: desde su ficha puedes renombrarlos (con su historial, sus récords y sus notas) y eliminarlos.
+- Evolución del peso: el historial de tus pesajes, que se pueden borrar.
+- «Deshacer»: al quitar un alimento, un ejercicio del día, un plato guardado o una serie ya hecha, al reiniciar la semana y al
+  guardar una plantilla sobre otra, el aviso trae «Deshacer» durante unos segundos.
+
+### Mejoras
+- Todo el texto se lee mejor: se ha medido el contraste de cada texto, con los dos temas, el estilo Cristal y todos los
+  colores de acento, y se han ajustado los colores hasta que todos llegan.
+- Lo que escribes se comprueba: los gramos, tu peso, tu edad, tu altura y las repeticiones y el peso de una serie solo admiten
+  valores posibles (los decimales, también con coma). Los nombres y las notas tienen un largo máximo.
+- Peso sugerido: cada serie parte del peso que tuvo la última vez.
+- Al borrar un entreno en Registros se borran también sus series: los récords, las gráficas y la progresión se recalculan.
+- Los botones pequeños (flechas, − y +, ✕, casillas y desplegables) responden también alrededor: es más fácil acertar.
+- Los avisos caben en la pantalla, duran según su largo y no tapan lo que hay debajo. Si algo falla de forma inesperada, la
+  app lo dice, y si algo tarda en descargarse, dice «Cargando…».
+- Más rápida con muchos datos: Registros se abre más de tres veces antes con cientos de entrenos, y el Dashboard, un 30 % antes.
+- La copia automática del día se hace también al volver a la app sin haberla cerrado.
+- «Atrás» en un workout que estás editando pregunta si lo descartas, y en un grupo de la librería vuelve a los grupos.
+- Las fotos de ejercicio dejan su sitio a las figuras: la app descarga unos 280 KB menos al instalarse.
+- Registros va del día más reciente al más antiguo, también si apuntas un cardio con la fecha de otro día.
+- Entreno: la figura de cada ejercicio queda arriba, junto a su nombre, y «RIR 1-2», «Descanso 3:00» o «Tempo 3/0/1/0» ya
+  no se parten entre dos líneas.
+- Evolución del peso: las fechas de la gráfica se leen («28 sept», «oct 2026»).
+
+### Correcciones
+- Actualizaciones: si alguna vez abriste la app con conexión desde un acceso directo del icono («Entreno de hoy», «Nutrición
+  de hoy» o «Registrar el peso»), al publicarse una versión la app seguía abriendo la anterior, con el aviso de versión nueva
+  una y otra vez, y podía dejar de arrancar. Ya no ocurre, y un móvil que se quedó así se arregla solo al abrirla con conexión.
+- Con una versión nueva ya descargada, si cerrabas el aviso o estabas en mitad de un entreno, lo que se descarga al usarlo (el
+  temporizador WOD, los consejos de un ejercicio, el análisis mensual, el PDF, el CSV, la búsqueda de alimentos en internet y
+  el escáner) no se abría hasta actualizar.
+- Nutrición: al reducir las comidas al día, lo anotado en las que ya no están se sigue viendo y contando. Y «ayer» ya no se
+  salta un día tras el cambio de hora de marzo.
+- Entreno: la duración no cuenta las pausas. Reanudar un entreno a medias tras cambiar los ejercicios del día sigue con los
+  que empezó (antes no se podía guardar). Al cambiar un ejercicio por otro (Swap), las series hechas se quedan en el suyo.
+- Récords: los ejercicios que se miden en metros o segundos ya no salen con un 1RM imposible, y una serie sin repeticiones, de
+  más de 30 o un drop set no cuentan como marca. El aviso «Nuevo récord» sale una vez.
+- La semana de descarga y el calentamiento, con pesos ligeros, ya no proponen más peso que el normal.
+- Con las cargas en libras, el análisis mensual y su PDF van en libras.
+- Dashboard: «Últimos 7 días» contaba un día de más de madrugada, y los kilómetros de cardio se redondean bien.
+- Los objetivos calculados nunca bajan de 800 kcal ni dan porcentajes imposibles.
+- Un workout sin terminar de crear ya no se queda vacío en la lista, un día sin ejercicios no ofrece empezar y un ejercicio
+  nuevo con el nombre de otro no se duplica.
+- Una copia de seguridad dañada o manipulada ya no puede dejar una pantalla en blanco: lo que no vale se descarta al abrir.
+- En móviles estrechos, los grupos de la librería de ejercicios se salían por la derecha.
+- Si fallaba la descarga de una parte de la app, no se podía reintentar sin cerrarla. La lista de copias automáticas podía
+  fallar al volver a la app tras un rato en segundo plano.
+- Con VoiceOver, la página de Ajustes se quedaba sin nombre al cambiar un ajuste.
+
+### Interno
+- Auditoría técnica de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): diagnóstico por áreas, lo corregido y lo pendiente.
+- `core/calc`: los cálculos (sumas de nutrición, objetivos, volumen, mejor marca, semanas), en un módulo sin estado, con
+  `tests/calc.test.mjs` (21 pruebas sin navegador). El Dashboard, Nutrición y el análisis mensual suman con las mismas funciones.
+- `tests/calc.py`: las sumas de Nutrición, los objetivos (Mifflin-St Jeor), el volumen de un entreno (kg y lb), el 1RM estimado,
+  las fechas en los cambios de hora y la semana se comparan con la misma cuenta hecha aparte, con datos al azar; y la validación
+  de lo que se escribe. `typedNum` (`core/util`), `nutriDate` (`core/state`) y `BIO_RANGES` (`core/calc`).
+- `tests/contrast.py`: contraste de cada texto contra su fondo real (WCAG AA), 35.000 textos en 32 configuraciones. Colores de
+  texto por nivel de Cristal (`css/90-glass`), degradado del acento para lo que lleva texto (`--ag`) y acento acotado detrás del
+  texto (`--gmid`); un color propio elige el texto de encima con 4,5:1.
+- `tests/samehtml.py`: compara el HTML de las 47 pantallas entre dos compilaciones.
+- Fases 4 y 5 de la auditoría. `core/calc` reúne también las reglas del entreno: en qué se mide un ejercicio, qué serie cuenta
+  para las marcas (`liftScore`, una sola regla para récords, gráficas, estancamiento, análisis y resumen), la duración sin
+  pausas y la progresión (`progressionRule`, `nextWeight`, `deloadWeight`, `dropSetWeight`), con 13 pruebas sueltas más (34).
+- `library/custom` (ejercicios propios). Cada entreno y sus series llevan la misma marca (`t`), para borrarlos juntos.
+- `core/repair` valida más al arrancar: cada dato de los ejercicios del plan, las fechas y los números de entrenos, historial,
+  récords, pesajes y medidas, y la forma de los workouts propios. `tests/security.py` restaura una copia manipulada entera.
+- `tests/training.py` (76 comprobaciones del entreno) y `tests/dashboard.py` (39: cada cifra del Dashboard, los CSV y la copia
+  de seguridad, frente a cuentas hechas aparte con cinco meses de datos al azar).
+- Fases 6 y 7. `core/toast`: aviso con «Deshacer» y región `aria-live`. `core/lazy` (`lazyLoad`): «Cargando…» y reintento
+  tras un fallo de descarga (Chrome guarda el fallo de un `import()` mientras dura la página: se reintenta con otra URL).
+  Zonas táctiles con pseudo-elementos (`css/97-touch-targets`, clase `tz`): no cambian el dibujo de la pantalla.
+- `tests/layout.py` (47 pantallas en 5 tamaños, de 320 a 1280 px: sin desbordes ni textos cortados, y sin saltos al arrancar),
+  `tests/ux.py` (26 comprobaciones: avisos, deshacer, «atrás», cargas con mala cobertura) y `tests/a11y.py` mide la zona que
+  responde de cada control, con la pantalla quieta (ninguno por debajo de 24 × 24 px; antes, 10).
+- Integración continua: `npm audit` en cada subida (avisa, no detiene) y las pruebas también en Firefox (informativo).
+- Rendimiento medido frente a la V1.0.2 ([Rendimiento](docs/tecnica/rendimiento.md)): `fmtDate` (`core/util`) reutiliza los
+  formatos de fecha y `mondayKey` (`core/calc`) recuerda el lunes de cada día. `tests/perf.py` mide también abrir Registros.
+  `tests/samehtml.py` ya no cuenta como distinto lo que depende del momento (Diagnóstico, la burbuja de la barra).
+- El aviso breve no recoge los toques (`pointer-events`): con la letra de los ordenadores de GitHub, más ancha, tapaba el
+  título de la página y el gesto de volver no empezaba. `tests/browser.py`: `SF_FONT` pone otra letra en toda la app, para
+  repetir aquí lo que falla allí.
+- Fase 3. `core/idb` (IndexedDB con promesas, para `core/persist` y `system/snapshots`), `core/parts` (cómo se reparte el
+  estado en claves, sin estado, con `tests/parts.test.mjs`) y `cloud/docs` (qué va en cada documento de Firestore):
+  `core/persist` pasa de 681 a 565 líneas y `cloud/sync`, de 627 a 509. Vistas partidas en funciones con nombre
+  (`workout/day`, `profile/analysis`, `nutrition/goals`, `dashboard/reminder`); el análisis mensual y su PDF usan las mismas
+  frases. Lo repetido entre módulos, en un solo sitio (`appBusy`, `syncBusy`, `programName`, `startPlanFromWeekOne`,
+  `addOwnProgram`, `isPlan`, `mealList`, `readTextFile`, `saveBlob`, `dialogButtons`, `backRow`, `waitingView`…).
+- `tests/samehtml.py --mas`: 106 estados (las 47 pantallas y subpáginas, avisos y estados de edición), idénticos antes y
+  después de la fase 3.
+- Service worker (`static/sw.js`): todo se guarda y se busca por su dirección sin parámetros (`keyOf`). Antes, abrir
+  `./?a=peso` con conexión dejaba otra copia del documento con esa dirección, que no se actualizaba y salía antes que la buena
+  (la caché devuelve la primera que coincide sin mirar los parámetros). Al activarse, el service worker nuevo borra esas copias:
+  así se arreglan los móviles que venían de la V1.0.2 o anteriores. Lo encontró la prueba en Firefox, donde «sin conexión»
+  no corta las peticiones del service worker. `tests/deploy.py` (54 comprobaciones) abre un acceso directo con conexión y
+  actualiza desde el service worker anterior (`tests/sw-anterior.js`), con la caché HTTP caducada.
+- El service worker conserva el código de la versión anterior hasta la siguiente actualización (anota en la caché cuál es
+  el de cada versión, `codigo-actual.json`): antes lo borraba al activarse, y la página aún abierta de esa versión ya no
+  podía cargar lo que no había usado. La limpieza de la activación no la deja a medias si algo falla (sin espacio, o con la
+  nota ilegible). Las dos comprobaciones del WOD de `tests/deploy.py` miraban toda la página, donde «AMRAP» sale siempre: ahora
+  miran la hoja.
+- En WebKit, el texto de la opción elegida de un `select` cuenta como contenido que se sale si es más ancho que él: el
+  desplegable corto del entreno (Tempo) ensanchaba la página a 446 px en las pruebas con móviles de 320 a 430. `.psel` lo
+  recorta a lo ancho. `tests/layout.py` dice mejor quién ensancha la página (recorta cada hijo antes de ocultarlo).
+- `tests/cloud.py` reconoce cómo dice Firefox que una petición no llegó por falta de conexión.
+- App Check (I-05), listo para activarse en cuanto estén sus dos valores de la consola: la CSP abre también las peticiones
+  propias de reCAPTCHA (lo piden sus preguntas frecuentes, y faltaba); entrar y sincronizar esperan su token 8 s como mucho y
+  siguen sin él si reCAPTCHA falla, tarda o no hay conexión (antes podían quedarse esperando); el fallo se anota una vez en
+  Diagnóstico; y el sello de reCAPTCHA no ocupa sitio. `tests/cloud.py` (111 comprobaciones) lo prueba sobre una compilación
+  con App Check y su CSP de verdad (`build.py --appcheck`), con un reCAPTCHA de prueba para todas las pruebas
+  (`tests/browser.py`). La batería entera pasa también con App Check configurado.
+- Figuras de ejercicio ([Figuras](docs/tecnica/figuras.md)): modelo articulado de perfil, de frente y de espaldas (`extras/rig`,
+  `data/figure`, que genera `tools/figure.js`), material (`extras/gear`), 82 familias de movimiento (`extras/moves`) y la tabla
+  de qué familia y qué variantes lleva cada ejercicio (`data/figposes`); el dibujo y el movimiento, en `extras/figure`. El codo
+  y la rodilla doblan siempre hacia su lado y el brazo se ve en escorzo antes que cerrar el codo más de su tope. Las máquinas
+  se mueven como máquinas (en la Smith la barra va por su guía; las palancas giran sobre su eje sin cambiar de largo: `gl`), en
+  los pesos muertos la barra sube pegada a las piernas, quien se inclina echa la cadera atrás, en las dominadas el cuerpo sube
+  recto y en las zancadas el paso se da por el aire. Lo que es un ciclo (correr, andar, pedalear, la elíptica, la escaladora,
+  nadar, el trineo, los gateos, las cuerdas) se escribe como medio ciclo que se repite sin parar con los lados cambiados
+  (`cycle`); una postura intermedia puede ser solo el camino (`via`) y no una fase que se enseñe; y una pieza del material
+  puede deslizarse con el gesto (`slide`: los peldaños de la escaladora).
+- Fuera `library/photo`, las 28 fotos (`src/img/ex`), su CSS y `tests/photos.py`; los otros nombres de búsqueda pasan a
+  `data/aliases`. `tests/rig.test.mjs` (31 pruebas: figura, piezas, articulaciones dentro de su recorrido, manos y pies en su
+  sitio, suelo, continuidad, guías, palancas, equilibrio, barras que no atraviesan el cuerpo y ciclos sin costuras, en los 551
+  ejercicios) y `tests/figures.py` (145 comprobaciones en navegador).
+- Listas con figuras: la figura quieta de cada ejercicio se calcula una vez para todos los tamaños, y una lista larga (un
+  grupo de la librería, el buscador, «Añadir ejercicio», Swap) solo pinta las de las primeras filas; las demás llevan un hueco
+  que se rellena al acercarse a la pantalla (`exPictureLater`, con `IntersectionObserver`) y, en cualquier caso, por tandas
+  en el medio segundo siguiente. Abrir de nuevo el grupo de 64 ejercicios o escribir en el buscador cuesta la mitad. La
+  figura grande no calcula nada durante la pausa de cada extremo del gesto.
+- Repaso de la app (47 pantallas en claro, oscuro, móvil pequeño y tableta): en el análisis mensual y su PDF la línea del
+  plan ya no tacha la cifra de una semana; la ficha de un ejercicio propio dice «Toca la imagen»; en una tableta, la cabecera
+  fija del entreno (Cristal) lleva las esquinas redondeadas.
+
 ## [1.0.2] — 2026-11-12
 
 ### Novedades

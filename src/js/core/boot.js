@@ -4,11 +4,12 @@
    sesión, empieza a sincronizar con Firebase (cloud/sync). Si esos datos no se pudieron leer, no se guarda ni se sincroniza
    nada (con la mitad de los datos, la nube creería que se borró el resto) y se avisa, con «Reintentar» y, con sesión, «Bajar
    de mi cuenta». window.__ffready se cumple al terminar el arranque; window.__ffok vale 1 desde el primer pintado.
-   Define: lostDialog, start  · acciones/registros: 3
+   Define: RESTORE_HINT, lostDialog, start  · acciones/registros: 3
 */
 import { $, fmtDuration, fmtMinSec, roundInt } from './util.js';
 import { Store } from './store.js';
-import { logError } from './errors.js';
+import { logError, setErrorNotice } from './errors.js';
+import { toast } from './toast.js';
 import { dropSavedState, loadParts, partsLost, reloadApp, stateRecovered } from './persist.js';
 import { A } from './registry.js';
 import { applyTheme, S, saveState, W } from './state.js';
@@ -23,7 +24,7 @@ import { applyAccent } from '../profile/appearance.js';
 import { beep, buzz } from '../profile/feedback.js';
 import { isStandalone } from '../system/files.js';
 import { plural } from '../system/backup.js';
-import { takeSnapshot } from '../system/snapshots.js';
+import { startSnapshots } from '../system/snapshots.js';
 import { showWhatsNew, whatsNewDue } from '../system/updates.js';
 import { checkAchievements } from '../extras/achievements.js';
 import { html, raw } from './html.js';
@@ -31,11 +32,13 @@ import { applyStartTab, buildTabbar } from './tabbar.js';
 import { launchAction } from '../system/phone.js';
 import { tourCheck } from '../system/tour.js';
 import { iconNoticeCheck } from '../system/iconnotice.js';
-import { repairState } from './repair.js';
+import { cleanDay, repairState } from './repair.js';
 import { signedIn } from '../cloud/session.js';
 import { startSync } from '../cloud/sync.js';
 import { spaceCheck } from '../system/space.js';
 /* los datos de este móvil no se pudieron leer (core/persist: partsLost): nada se guarda ni se sincroniza hasta que se lean */
+/* cómo recuperar los datos, en los avisos de datos dañados */
+const RESTORE_HINT = 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.';
 const lostDialog = () => dialog('No se pudieron leer tus datos', 'Tus entrenos y comidas de este móvil no se han podido leer. Para no perder nada, la app no guardará ni sincronizará hasta que se puedan leer: prueba a cerrarla y abrirla de nuevo.' + (signedIn() ? ' Si sigue igual, puedes bajar otra vez los datos de tu cuenta (lo que no se hubiera sincronizado se perderá).' : ''), signedIn() ? [['Bajar de mi cuenta', 'partsFromCloudAsk', ''], ['Reintentar', 'partsRetry', 'pr']] : [['Reintentar', 'partsRetry', 'pr']]);
 A.partsRetry = () => location.reload();
 A.partsFromCloudAsk = () => confirmDialog('¿Bajar los datos de tu cuenta?', 'Se borran los datos de este móvil y se bajan otra vez los de tu cuenta. Lo que no se hubiera sincronizado se perderá.', 'partsFromCloud', 'Bajar');
@@ -50,6 +53,8 @@ A.partsFromCloud = () => {
   }
   reloadApp();
 };
+/* un error inesperado no se queda en silencio: se dice, y dónde contarlo si se repite (system/report) */
+setErrorNotice(() => toast('Algo ha fallado. Si se repite, cuéntalo en Ajustes → Informar de un fallo.'));
 const start = () => {
   repairState();
   applyTheme();
@@ -97,6 +102,8 @@ const start = () => {
     }
   }, 200);
   restorePlanBackup();
+  /* un workout propio sin bloques es uno que se empezó a crear y se dejó a medias (cerrando la app): no se queda en la lista */
+  S.routines = S.routines.filter(r => r.bl.length);
   S.plan.forEach(d => {
     if (!d.cu && d.img)
       delete d.img;
@@ -109,11 +116,12 @@ const start = () => {
   }
   (() => {
     const z = pendingResume;
-    let ok = !!(z && z.W && z.d && Array.isArray(z.W.x) && Date.now() - z.t < 864e5 && z.W.x.length == z.d.ex.length);
-    if (ok && !z.pb) {
-      const c = S.plan[z.sel];
-      ok = !!c && c.ex.length == z.d.ex.length && c.ex.every((x, i) => x.n == z.d.ex[i].n);
-    }
+    /* el entreno a medias vale si está entero y es de las últimas 24 h. Si el día del plan ha cambiado desde entonces, se
+       reanuda con los ejercicios con los que se empezó (workout/resume) */
+    const ok = !!(z && z.W && z.d && typeof z.d.n == 'string' && Array.isArray(z.d.ex) && z.d.ex.every(e => e && typeof e.n == 'string') && Array.isArray(z.W.x) && z.W.x.every(Array.isArray) && Date.now() - z.t < 864e5 && z.W.x.length == z.d.ex.length);
+    /* y su día, con cada dato del tipo que toca (puede venir de una copia de seguridad) */
+    if (ok)
+      cleanDay(z.d);
     if (!ok) {
       setPendingResume(null);
       try {
@@ -175,13 +183,13 @@ const start = () => {
   }
   /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
   if (stateRecovered == 1)
-    setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.', [['Entendido', 'doNothing', 'pr']]), 600);
+    setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + RESTORE_HINT, [['Entendido', 'doNothing', 'pr']]), 600);
   else if (stateRecovered == 2)
-    setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.', [['Entendido', 'doNothing', 'pr']]), 600);
+    setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. ' + RESTORE_HINT, [['Entendido', 'doNothing', 'pr']]), 600);
   /* lo arreglado al arrancar se guarda (solo se escribe lo que cambió: core/persist) */
   setTimeout(saveState, 1000);
   if (signedIn()) {
-    setTimeout(() => takeSnapshot().catch(e => logError('copia automática', e)), 4000);
+    startSnapshots();
     if (whatsNewDue())
       setTimeout(showWhatsNew, 900);
     /* «Día de pesarse» (F-25), tras las novedades: si estas salen, el aviso espera a la próxima vez que se vuelva a la app */

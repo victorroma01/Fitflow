@@ -2,13 +2,11 @@
    Aviso de espacio (I-04): cuánto ocupa lo que la app guarda en el móvil frente a lo que el navegador le deja (localStorage,
    unos 5 MB; IndexedDB y lo demás, según navigator.storage.estimate) y, si lo más lleno pasa del 80 %, un aviso, como mucho
    una vez a la semana, para hacer una copia y liberar espacio antes de que deje de guardarse. Diagnóstico enseña el uso.
-   Define: LS_LIMIT, SPACE_WARN, SPACE_EVERY, lastSpace, spaceUse, mb, spaceText, spaceTries, spaceBusy, spaceCheck
+   Define: LS_LIMIT, SPACE_WARN, SPACE_EVERY, lastSpace, spaceUse, mb, spaceText, spaceTries, spaceCheck
 */
-import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
-import { W } from '../core/state.js';
-import { dialog } from '../core/ui.js';
+import { appBusy, dialog } from '../core/ui.js';
 /** Caracteres que admite localStorage, por lo bajo: unos 5 MB, y cada carácter ocupa 2 bytes (UTF-16). */
 const LS_LIMIT = 2.5e6;
 /** A partir de qué parte usada se avisa. */
@@ -50,8 +48,6 @@ const mb = n => (n / 1048576).toLocaleString('es-ES', { maximumFractionDigits: n
 export const spaceText = u => !u ? '' : 'localStorage ' + mb(u.ls * 2) + ' de unos ' + mb(LS_LIMIT * 2) + ' (' + Math.round(u.ls / LS_LIMIT * 100) + ' %)' + (u.quota ? ' · IndexedDB y caché ' + mb(u.usage) + ' de ' + mb(u.quota) + ' (' + Math.round(u.usage / u.quota * 100) + ' %)' : '');
 /* intentos de enseñar el aviso mientras la app está ocupada (cada 30 s) */
 let spaceTries = 0;
-/* ¿Hay algo delante (un entreno, una ventana, el recorrido…)? */
-const spaceBusy = () => !!(W || document.visibilityState == 'hidden' || $('#lgw') || $('#wlc') || $('#tour') || $('#upd') || $('#f2w') || $('#sh').firstChild || $('#dg').firstChild || $('#mn').firstChild);
 /** Al arrancar (core/boot): mide y, si queda poco espacio y hace una semana que no se avisa, avisa cuando la app esté libre. */
 export const spaceCheck = async () => {
   try {
@@ -62,7 +58,7 @@ export const spaceCheck = async () => {
       spaceTries = 0;
       return;
     }
-    if (spaceBusy()) {
+    if (appBusy()) {
       if (++spaceTries <= 20)
         setTimeout(spaceCheck, 30000);
       return;

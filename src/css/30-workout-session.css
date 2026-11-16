@@ -44,6 +44,19 @@
   align-items:center;
   margin:10px 0 8px;
 }
+/* la imagen y el botón de plegar van arriba, como en el Overview: si el texto ocupa más que la imagen (con el calentamiento
+   y la sugerencia), no se quedan flotando a media altura, lejos del nombre */
+.xh>.th {
+  align-self:flex-start;
+}
+.xh>.fdb {
+  align-self:flex-start;
+  margin-top:18px;
+}
+.xs.fd .xh>.fdb {
+  align-self:center;
+  margin-top:0;
+}
 .sl {
   font-size:13px;
   font-weight:800;
@@ -67,7 +80,7 @@
   border-radius:12px;
 }
 .r2.cur {
-  background:color-mix(in srgb,var(--a2) 14%,transparent);
+  background:color-mix(in srgb,var(--gmid) 14%,transparent);
   box-shadow:inset 3px 0 0 var(--a2);
 }
 .r2 input {

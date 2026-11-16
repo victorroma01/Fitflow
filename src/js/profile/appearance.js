@@ -1,7 +1,7 @@
 /* ═══ profile/appearance ═══
    Apariencia (F-31): tema, color de acento (los de serie o uno elegido a mano, con sus tonos y el color del texto calculados para
    que se lea bien), estilo Cristal y reducir animaciones. lookSync deja en <html> las clases del estilo en cada R().
-   Define: ACCENTS, DEFAULT_ACCENT, HEX, hexRgb, rgbHex, rgbHsl, hslRgb, luminance, customAccentLast, customAccent, accentNow, setAccentVars, accentApplied, applyAccent, accentPreview, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, motionCard, lookSync, ACCENT_SETTLE_MS, accentPick, accentFrame, accentTimer, previewAccent, commitAccent, pickAccent  · acciones/registros: 7
+   Define: ACCENTS, DEFAULT_ACCENT, HEX, hexRgb, rgbHex, rgbHsl, hslRgb, luminance, toneBetween, GLOW_MAX_DARK, GLOW_MIN_LIGHT, DARK_TONE_MAX, customAccentLast, customAccent, accentNow, setAccentVars, accentApplied, applyAccent, accentPreview, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, motionCard, lookSync, ACCENT_SETTLE_MS, accentPick, accentFrame, accentTimer, previewAccent, commitAccent, pickAccent  · acciones/registros: 7
 */
 import { $ } from '../core/util.js';
 import { logError } from '../core/errors.js';
@@ -10,8 +10,9 @@ import { applyTheme, S, saveState } from '../core/state.js';
 import { R } from '../core/render.js';
 import { html, raw } from '../core/html.js';
 /** Colores de serie: [nombre, claro (a1), principal (a2), oscuro (a3), texto sobre el principal (ft)]. El orden no cambia
-  (S.accent es la posición); los nuevos van al final. */
-export const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#6e5300', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#e8590c', '#702a05', '#fff'], ['Rosa', '#ff8fc8', '#d6337f', '#6b1440', '#fff'], ['Turquesa', '#4fd6cf', '#0d8a85', '#064a47', '#fff'], ['Lima', '#c8ee62', '#8cc61b', '#3f5c06', '#142000'], ['Grafito', '#b9bdc9', '#5b6170', '#2a2e37', '#fff']];
+  (S.accent es la posición); los nuevos van al final. El texto de encima (ft) tiene un contraste de 4,5 o más con el principal
+  (WCAG AA) y el oscuro es lo bastante oscuro para que el texto gris se lea sobre su brillo de fondo (tests/contrast.py). */
+export const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#523e00', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#c64c0a', '#702a05', '#fff'], ['Rosa', '#ff8fc8', '#d6337f', '#6b1440', '#fff'], ['Turquesa', '#4fd6cf', '#0c817c', '#064a47', '#fff'], ['Lima', '#c8ee62', '#8cc61b', '#2f4505', '#142000'], ['Grafito', '#b9bdc9', '#5b6170', '#2a2e37', '#fff']];
 /** El color con el que empieza la app, mientras no se elija otro: Azul eléctrico, el del logo (F-40; hasta la V1.0.0, Morado). */
 const DEFAULT_ACCENT = 1;
 /** Un color #rrggbb (el de «Personalizado», S.accentColor). */
@@ -42,18 +43,43 @@ const luminance = c => c.reduce((s, v, i) => {
   const x = v / 255;
   return s + [.2126, .7152, .0722][i] * (x <= .03928 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4);
 }, 0);
+/* el color `hex` oscurecido (hacia el negro) o aclarado (hacia el blanco) lo justo para que su luminancia quede entre lo y hi */
+const toneBetween = (hex, lo, hi) => {
+  let c = hexRgb(hex);
+  for (let i = 0; i < 80 && luminance(c) > hi; i++)
+    c = c.map(v => v * .96);
+  for (let i = 0; i < 80 && luminance(c) < lo; i++)
+    c = c.map(v => v + (255 - v) * .04);
+  return rgbHex(c);
+};
+/** Hasta dónde puede brillar el color de acento detrás del texto (el brillo de fondo del estilo Cristal y la fila de la serie en
+  curso): en el tema oscuro, algo menos que el azul de serie tal cual; en el claro, no menos que él. Con un amarillo o un lima
+  tal cual, el texto gris de encima no llegaba al contraste (tests/contrast.py). */
+const GLOW_MAX_DARK = .13;
+const GLOW_MIN_LIGHT = .165;
+/* el tono oscuro de un color propio, como mucho así de claro: encima va texto blanco (la cabecera del día) */
+const DARK_TONE_MAX = .06;
 /* el último color propio calculado: [#rrggbb, sus tonos]. Se pide en cada pintado (Ajustes, análisis…) y casi siempre es el mismo */
 let customAccentLast = ['', null];
 /** Los tonos de un color elegido a mano, como los de serie. El principal es ese color, aclarado u oscurecido solo si hace falta
-  para que se vea sobre el fondo oscuro y sobre el claro; el texto encima, blanco si se lee bien y, si no, casi negro. */
+  para que se vea sobre el fondo oscuro y sobre el claro, o para que el texto de encima se lea. */
 export const customAccent = hex => {
   if (customAccentLast[0] == hex)
     return customAccentLast[1];
   const [h, s, l] = rgbHsl(hexRgb(hex));
-  const m = Math.min(.62, Math.max(.3, l));
-  const a2 = hslRgb(h, s, m);
-  const ft = 1.05 / (luminance(a2) + .05) >= 3.2 ? '#fff' : rgbHex(hslRgb(h, s * .5, .07));
-  const tones = ['Personalizado', rgbHex(hslRgb(h, s, Math.min(.84, m + .18))), rgbHex(a2), rgbHex(hslRgb(h, s * .8, Math.max(.1, m - .24))), ft];
+  let m = Math.min(.62, Math.max(.3, l));
+  let a2 = hslRgb(h, s, m);
+  /* el texto de encima, blanco o casi negro: el que tenga un contraste de 4,5 o más (WCAG AA). Un color que se queda entre
+     los dos se oscurece un poco, hasta que el blanco se lea */
+  const dark = hslRgb(h, s * .5, .07);
+  const onWhite = c => 1.05 / (luminance(c) + .05);
+  const onDark = c => (luminance(c) + .05) / (luminance(dark) + .05);
+  while (onWhite(a2) < 4.5 && onDark(a2) < 4.5 && m > .2) {
+    m -= .01;
+    a2 = hslRgb(h, s, m);
+  }
+  const ft = onWhite(a2) >= 4.5 ? '#fff' : rgbHex(dark);
+  const tones = ['Personalizado', rgbHex(hslRgb(h, s, Math.min(.84, m + .18))), rgbHex(a2), toneBetween(rgbHex(hslRgb(h, s * .8, Math.max(.1, m - .24))), 0, DARK_TONE_MAX), ft];
   customAccentLast = [hex, tones];
   return tones;
 };
@@ -66,6 +92,12 @@ const setAccentVars = (el, a) => {
   el.style.setProperty('--a3', a[3]);
   el.style.setProperty('--ft', a[4]);
   el.style.setProperty('--ac', a[2]);
+  /* el final del degradado de lo que lleva texto encima (--ag): hacia el tono oscuro si el texto es blanco y hacia el claro si
+     es oscuro, para que el contraste nunca baje del que tiene con el tono principal */
+  const to = hexRgb(a[4] == '#fff' ? a[3] : a[1]);
+  el.style.setProperty('--age', rgbHex(hexRgb(a[2]).map((v, i) => v * .8 + to[i] * .2)));
+  el.style.setProperty('--gd2', toneBetween(a[2], 0, GLOW_MAX_DARK));
+  el.style.setProperty('--gl2', toneBetween(a[2], GLOW_MIN_LIGHT, 1));
 };
 /* los tonos que tiene puestos la app: cambiarlos obliga a pintarla entera, así que solo se tocan si son otros */
 let accentApplied = '';

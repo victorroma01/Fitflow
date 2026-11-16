@@ -50,12 +50,16 @@ html.gl .xtl .psel {
   padding:6px 9px;
   vertical-align:middle;
 }
-/* desplegable corto: se ve su nombre; el select va encima, transparente, y abre la lista de siempre */
+/* desplegable corto: se ve su nombre; el select va encima, transparente, y abre la lista de siempre. El texto de la opción
+   elegida («2/2/2/0 · Pausa en la contracción») es más ancho que el select: en WebKit cuenta como contenido que se sale y
+   ensanchaba la página del entreno (446 px en un móvil de 320). Se recorta a lo ancho; a lo alto no, porque el select
+   sobresale 2 px por arriba y por abajo para que la zona táctil llegue a 44 (css/97-touch-targets) */
 .psel {
   position:relative;
   display:inline-flex;
   align-items:center;
   gap:5px;
+  overflow-x:clip;
   min-height:44px;
   margin:0;
   padding:0 12px;

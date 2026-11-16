@@ -1,6 +1,9 @@
 """Navegador y dirección de la app para las pruebas.
 
 Motor: variable de entorno SF_BROWSER = chromium (por defecto) | webkit (el motor de Safari, el del iPhone) | firefox.
+Letra: SF_FONT="DejaVu Sans" pone esa letra en toda la app. El ancho de los textos cambia de un sistema a otro (San Francisco
+en el iPhone, Roboto en Android, DejaVu en los ordenadores de GitHub, que es de las más anchas) y nada debe depender de él:
+sirve para repetir aquí lo que falla allí.
 Dirección: todo se sirve por HTTP desde su carpeta, como en GitHub Pages: el paquete (dist/app, con sw.js al lado), porque
 sus módulos ES no cargan desde file://, y también el archivo único (con file://, WebKit no guarda datos, y Chromium a veces
 abre la página recargada con el almacenamiento vacío). SF_HTTP=0 abre el archivo único como archivo, con Chromium.
@@ -9,11 +12,14 @@ La app lee de IndexedDB los entrenos, el historial y las comidas antes de pintar
 (core/persist, I-04). Por eso, en todas las pruebas, page.goto y page.reload esperan antes a que lo guardado quede escrito
 (savesDone) y, después, a que la app termine de arrancar (window.__ffready). En otras páginas no esperan nada.
 """
-import os, threading, functools, http.server
-from playwright.sync_api import Page
+import os, re, json, threading, functools, http.server
+from playwright.sync_api import Page, Browser
 
 ENGINE = os.environ.get('SF_BROWSER', 'chromium')
 HTTP = os.environ.get('SF_HTTP', '1') != '0' or ENGINE != 'chromium'
+FONT = os.environ.get('SF_FONT', '')
+# la letra pedida, puesta con una hoja de estilo creada desde el código (la CSP de la app no deja añadir una etiqueta <style>)
+FONT_JS = "addEventListener('DOMContentLoaded',()=>{try{const s=new CSSStyleSheet();s.replaceSync(%s);document.adoptedStyleSheets=[...document.adoptedStyleSheets,s]}catch(e){}})" % json.dumps('*{font-family:"%s" !important}' % FONT)
 
 
 def launch(p, sound=False):
@@ -67,7 +73,88 @@ def _settled(nav):
     return run
 
 
+# Firefox (Gecko) da '' al leer innerText de #sh, la capa de las hojas y páginas: mide 0 de alto y su contenido va con posición
+# fija. Las páginas de dentro (.sp) sí lo dan. Como las pruebas leen «lo que se ve en la hoja» con #sh, en Firefox se lee de sus
+# hijos. La app no usa innerText: es solo cómo miran las pruebas.
+GECKO_TEXT_JS = """(() => { const d = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerText');
+  Object.defineProperty(HTMLElement.prototype, 'innerText', { configurable: true, set(v) { d.set.call(this, v); },
+    get() { const t = d.get.call(this); return t || this.id != 'sh' ? t : [...this.children].map(c => d.get.call(c)).filter(Boolean).join('\\n'); } }); })()"""
+
+
+# reCAPTCHA Enterprise en las pruebas. Con App Check configurado (cloud/config), la app carga reCAPTCHA de Google antes de hablar
+# con Firebase, y en las pruebas no se sale a internet. Hay dos sustitutos:
+#  · RECAPTCHA_INIT, en todas las páginas: cuando la app va a añadir el <script> de reCAPTCHA, no se añade; se le da uno de
+#    mentira y se le avisa de que ha cargado. Y el cambio de su token por el de App Check falla como sin conexión, salvo que la
+#    prueba traiga su Firebase de prueba (window.__sfNet). Sin rutas de Playwright: en Firefox, un contexto con rutas ya no
+#    abre sin conexión una página que sirve su service worker (tests/deploy.py).
+#  · recaptcha_route, para la prueba de App Check (tests/cloud.py, que lo pide con window.__sfRecaptchaNet y c.route(RECAPTCHA,
+#    recaptcha_route)): el <script> se pide de verdad y lo contesta esta ruta con un reCAPTCHA que hace lo que el de Google le
+#    pide a la CSP de la app (build.py): trae su código de gstatic, pone su sello (sin estilo propio: la CSP no admite estilos en
+#    línea) con su marco dentro y avisa a su servidor.
+# Los dos dejan en window.__rc con qué clave y acción se pidió el último token.
+RECAPTCHA_INIT = """(function(){try{
+var add=Node.prototype.appendChild;
+Node.prototype.appendChild=function(n){
+ if(!window.__sfRecaptchaNet&&n&&n.tagName==='SCRIPT'&&/^https:\\/\\/www\\.google\\.com\\/recaptcha\\//.test(n.src||'')){
+  window.grecaptcha={enterprise:{ready:function(f){f()},execute:function(k,o){window.__rc=[k,o&&o.action];return Promise.resolve('rc-tok')}}};
+  Promise.resolve().then(function(){if(n.onload)n.onload()});
+  return n}
+ return add.apply(this,arguments)};
+var f=window.fetch;
+if(f)window.fetch=function(u){if(!window.__sfNet&&/content-firebaseappcheck\\.googleapis\\.com/.test(String(u&&u.url||u)))return Promise.reject(new TypeError('Failed to fetch'));return f.apply(this,arguments)};
+}catch(e){}})();"""
+RECAPTCHA = re.compile(r'^https://(www\.google\.com|recaptcha\.google\.com|www\.gstatic\.com)/recaptcha/')
+RECAPTCHA_JS = """(function(){var loaded=null;
+window.grecaptcha={enterprise:{
+ ready:function(f){loaded=loaded||new Promise(function(res){var s=document.createElement('script');s.src='https://www.gstatic.com/recaptcha/releases/prueba/recaptcha__es.js';s.onload=s.onerror=res;document.head.appendChild(s)});loaded.then(f)},
+ execute:function(key,o){window.__rc=[key,o&&o.action];
+  if(!document.querySelector('.grecaptcha-badge')){var d=document.createElement('div');d.className='grecaptcha-badge';var fr=document.createElement('iframe');fr.src='https://www.google.com/recaptcha/enterprise/anchor?k='+encodeURIComponent(key);fr.width=256;fr.height=60;d.appendChild(fr);document.body.appendChild(d)}
+  var tok=function(){return 'rc-tok'};
+  return fetch('https://www.google.com/recaptcha/enterprise/clr?k='+encodeURIComponent(key),{method:'POST',body:'x'}).then(tok,tok)}}};
+})();"""
+
+
+def recaptcha_route(route):
+    """Contesta a reCAPTCHA de prueba: su script, el código que trae de gstatic, su marco y sus avisos."""
+    u = route.request.url
+    if '/enterprise.js' in u:
+        return route.fulfill(content_type='application/javascript', body=RECAPTCHA_JS)
+    if u.endswith('.js'):
+        return route.fulfill(content_type='application/javascript', body='/* reCAPTCHA de prueba */')
+    if '/anchor' in u:
+        return route.fulfill(content_type='text/html', body='<!doctype html><title>reCAPTCHA de prueba</title>')
+    return route.fulfill(content_type='text/plain', body='ok', headers={'access-control-allow-origin': '*'})
+
+
+def _with_setup(make):
+    """browser.new_context que prepara cada página del contexto: con SF_FONT, pone esa letra; en Firefox, lee bien el texto de las
+    hojas; y reCAPTCHA, siempre de prueba."""
+    def run(self, *a, **k):
+        c = make(self, *a, **k)
+        if FONT:
+            c.add_init_script(FONT_JS)
+        if ENGINE == 'firefox':
+            c.add_init_script(GECKO_TEXT_JS)
+        c.add_init_script(RECAPTCHA_INIT)
+        return c
+    return run
+
+
+def _page_text(self, selector, **k):
+    """page.inner_text en Firefox: Playwright lo lee en un contexto aparte, donde no vale el arreglo de GECKO_TEXT_JS (y el texto
+    de #sh sale vacío o a medias). Se lee en la página, esperando a que el elemento exista como hace Playwright."""
+    for _ in range(50):
+        r = self.evaluate("s => { const e = document.querySelector(s); return e ? [e.innerText] : null; }", selector)
+        if r:
+            return r[0]
+        self.wait_for_timeout(100)
+    raise AssertionError('no existe ' + selector)
+
+
 if not getattr(Page, '_ff_settled', False):
     Page.goto = _settled(Page.goto)
     Page.reload = _settled(Page.reload)
+    Browser.new_context = _with_setup(Browser.new_context)
+    if ENGINE == 'firefox':
+        Page.inner_text = _page_text
     Page._ff_settled = True

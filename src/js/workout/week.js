@@ -5,9 +5,10 @@
      empieza donde acabó la 1, y así hasta que el ciclo vuelve a cuadrar con la semana.
    S.selectedWeekday es el día elegido de la semana (0-6) y S.selectedDay, el día del plan que le toca: el resto de la app usa S.plan[S.selectedDay].
    Lo marcado como hecho va por semana y día de la semana (S.doneDays['semana-día']).
-   Define: planIndex, isCycle, WEEK, trainingDays, gcd, sessionsPerWeek, perWeekText, syncSel, advanceDay, monday, weekOffset
+   Define: planIndex, isCycle, WEEK, trainingDays, gcd, sessionsPerWeek, perWeekText, syncSel, advanceDay, weekOffset
 */
 import { S } from '../core/state.js';
+import { weekMonday } from '../core/calc.js';
 /** Índice en `pl` del día `j` (0-6) de la semana `wk`. */
 export const planIndex = (j, wk = S.week, pl = S.plan) => pl.length == 7 ? j : ((Math.max(1, wk) - 1) * 7 + j) % pl.length;
 /** ¿El plan es un ciclo de otra longitud que la semana? */
@@ -57,10 +58,5 @@ export const advanceDay = () => {
   }
   syncSel();
 };
-const monday = d => {
-  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  x.setDate(x.getDate() - (x.getDay() + 6) % 7);
-  return x;
-};
 /** Semanas de calendario entre la de hoy y la de la fecha `t` (negativo si es de una semana anterior). */
-export const weekOffset = t => Math.round((monday(t) - monday(new Date())) / 6048e5);
+export const weekOffset = t => Math.round((weekMonday(t) - weekMonday(new Date())) / 6048e5);

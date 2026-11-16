@@ -1,15 +1,16 @@
 /* ═══ workout/progression ═══
    Sugerencias de progresión y autorrelleno de series.
-   Define: EXTRA_ROW, setText, stepUp, deloadWeight, prefillSets, suggestAfter, progressionOf, suggestionBox, lastTimeLine  · acciones/registros: 1
+   Define: EXTRA_ROW, setText, stepUp, deloadOf, prefillSets, suggestAfter, progressionOf, differsFromSuggested, suggestionBox, lastTimeLine  · acciones/registros: 1
 */
 import { A } from '../core/registry.js';
 import { S, W } from '../core/state.js';
 import { R } from '../core/render.js';
-import { lastHistory, pyramidReps, roundHalf, targetRange, unitOf, weightStep } from './targets.js';
+import { lastHistory, pyramidReps, targetRange, unitOf, weightStep } from './targets.js';
 import { dropWeight } from './technique.js';
 import { isDeloadWeek } from './deload.js';
-import { fromDisplayWeight, toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
+import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
+import { deloadWeight, nextWeight, progressionRule, stepUpWeight } from '../core/calc.js';
 /* filas extra de una técnica en el historial (s[3]): 1 drop set, 2 rest-pause */
 const EXTRA_ROW = { 1: ' (drop)', 2: ' (rest-pause)' };
 export const setText = (e, s) => {
@@ -18,12 +19,13 @@ export const setText = (e, s) => {
   const x = (EXTRA_ROW[s[3]] || '') + (+s[2] > 0 ? ' @' + s[2] : '');
   return U ? s[0] + ' ' + U + (s[1] > 0 ? ' · ' + w + ' ' + weightUnit() : '') + x : s[0] + ' × ' + w + ' ' + weightUnit() + x;
 };
-/** Peso un escalón más alto (2,5 kg, o 5 en los básicos de pierna; 5 o 10 lb). */
-const stepUp = (w, e) => usesLb() ? fromDisplayWeight(Math.round((toDisplayWeight(w) + (weightStep(e) == 5 ? 10 : 5)) / 2.5) * 2.5) : roundHalf(w + weightStep(e));
-/** Peso de la semana de descarga: el 65 % del normal, redondeado a lo que se puede cargar (2,5 kg o 5 lb). */
-const deloadWeight = w => usesLb() ? fromDisplayWeight(Math.max(5, Math.round(toDisplayWeight(w) * .65 / 5) * 5)) : Math.max(1, Math.round(w * .65 / 2.5) * 2.5);
+/** Peso un escalón más alto (2,5 kg, o 5 en los básicos de pierna; 5 o 10 lb): core/calc. */
+const stepUp = (w, e) => stepUpWeight(w, weightStep(e), usesLb());
+/** Peso de la semana de descarga: el 65 % del normal, redondeado a lo que se puede cargar (core/calc). */
+const deloadOf = w => deloadWeight(w, usesLb());
 /** Repeticiones y peso de cada serie según la última vez, la progresión, la técnica (pirámide, myo-reps) y la semana de
-    descarga (65 % del peso y 2 repeticiones menos, mismas series). Las filas extra (drop set, rest-pause) siguen a su serie. */
+    descarga (65 % del peso y 2 repeticiones menos, mismas series). Cada serie parte del peso que tuvo la última vez: si se
+    bajó o se subió de una serie a otra, se respeta. Las filas extra (drop set, rest-pause) siguen a su serie. */
 export function prefillSets(e, a) {
   const h = lastHistory(e);
   const hs = h ? h.s.filter(x => !x[3]) : [];
@@ -53,8 +55,9 @@ export function prefillSets(e, a) {
         w = up ? stepUp(l[1], e) : l[1];
     }
     else if (P) {
-      if (P.nw > 0)
-        w = P.nw;
+      const base = l && l[1] > 0 ? +l[1] : P.w;
+      if (base > 0)
+        w = nextWeight(P, base, weightStep(e), usesLb());
       r = P.up || P.dn ? lo : Math.min(hi, (+l[0] || lo - 1) + 1);
     }
     else if (l && l[1] > 0)
@@ -65,7 +68,7 @@ export function prefillSets(e, a) {
       if (!U)
         r = Math.max(1, r - 2);
       if (+w > 0)
-        w = deloadWeight(+w);
+        w = deloadOf(+w);
     }
     q.r = r;
     q.w = w;
@@ -109,63 +112,49 @@ export const suggestAfter = (e, a, j) => {
     q.ws = 1;
   }
 };
+/** Qué toca en el ejercicio `e` según su última sesión (core/calc: progressionRule), o null si no tiene historial o se mide en
+    tiempo o distancia. */
 function progressionOf(e) {
   const h = lastHistory(e);
   if (!h || !h.s.length || unitOf(e))
     return null;
-  const ss = h.s.filter(x => !x[3]);
-  if (!ss.length)
-    return null;
-  const r = targetRange(e);
-  const lo = r[0];
-  const hi = r[1];
-  const w = Math.max(...ss.map(x => +x[1] || 0));
-  const rp = ss.map(x => +x[2] || 0).filter(x => x > 0);
-  const ra = rp.length ? rp.reduce((a, b) => a + b, 0) / rp.length : 0;
-  const full = w > 0 && ss.every(x => x[0] >= hi && x[1] > 0);
-  const low = !full && w > 0 && ss.every(x => x[0] < lo && x[1] > 0);
-  const dl = W ? !!W.deload : isDeloadWeek(S.week);
-  let up = full;
-  let dn = low;
-  let why = '';
-  if (up && ra >= 9.5) {
-    up = false;
-    why = 'rpe';
-  }
-  if (dl) {
-    up = false;
-    dn = false;
-    why = 'dl';
-  }
-  const nw = up ? stepUp(w, e) : !dn ? w : usesLb() ? fromDisplayWeight(Math.round(toDisplayWeight(w) * .92 / 5) * 5) : roundHalf(w * .92);
-  return { lo, hi, w, up, dn, nw, ra, why, r: +ss[0][0] || 0 };
+  return progressionRule(h.s, targetRange(e), { step: weightStep(e), lb: usesLb(), deload: W ? !!W.deload : isDeloadWeek(S.week) });
 }
+/* ¿alguna serie sin hacer lleva otro peso que el sugerido? (entonces se ofrece «Aplicar») */
+const differsFromSuggested = (e, a) => {
+  const copy = a.map(q => ({ ...q }));
+  prefillSets(e, copy);
+  return a.some((q, j) => !q.ok && !q.t && Math.abs((+q.w || 0) - (+copy[j].w || 0)) > 1e-6);
+};
 const suggestionBox = (e, i, P) => {
   if (!W || !W.sets[i])
     return '';
   const u = weightUnit();
-  const dif = W.sets[i].some(s => !s.ok && !s.t) && P && W.sets[i].some(s => !s.ok && !s.t && Math.abs((+s.w || 0) - (W.deload ? deloadWeight(P.nw) : P.nw)) > 1e-6);
-  const ap = dif ? html`<button class="chip" data-a="applySuggestion" data-i="${i}">Aplicar</button>` : '';
-  /* semana de descarga: lo de esta semana y, entre paréntesis, lo normal */
+  const ap = P && differsFromSuggested(e, W.sets[i]) ? html`<button class="chip" data-a="applySuggestion" data-i="${i}">Aplicar</button>` : '';
+  /* semana de descarga: lo de esta semana y, entre paréntesis, lo normal (con pesos distintos entre series, en general) */
   if (W.deload) {
     if (!P || unitOf(e))
       return html`<div class="sgb dlsg"><span><b>Descarga</b> · peso al 65 % y 2 repeticiones menos en cada serie</span></div>`;
+    if (!P.even)
+      return html`<div class="sgb dlsg"><span><b>Descarga</b> · peso al 65 % y 2 repeticiones menos en cada serie</span>${ap}</div>`;
     const r = P.up || P.dn ? P.lo : Math.min(P.hi, (P.r || P.lo - 1) + 1);
-    return html`<div class="sgb dlsg"><span><b>Descarga</b> · ${raw(toDisplayWeight(deloadWeight(P.nw)) + ' ' + u + ' × ' + Math.max(1, r - 2))} en cada serie (normal: ${raw(toDisplayWeight(P.nw) + ' ' + u + ' × ' + r)})</span>${ap}</div>`;
+    return html`<div class="sgb dlsg"><span><b>Descarga</b> · ${raw(toDisplayWeight(deloadOf(P.nw)) + ' ' + u + ' × ' + Math.max(1, r - 2))} en cada serie (normal: ${raw(toDisplayWeight(P.nw) + ' ' + u + ' × ' + r)})</span>${ap}</div>`;
   }
   if (!P)
     return '';
   const wv = toDisplayWeight(P.w);
   const nv = toDisplayWeight(P.nw);
+  const rpe = 'RPE ' + (Math.round(P.ra * 10) / 10) + ' la última vez';
   let t;
+  /* con el mismo peso en todas las series, el peso que toca; con pesos distintos, lo que cambia en cada una */
   if (P.up)
-    t = 'sube a ' + nv + ' ' + u + ' (hiciste ' + P.hi + ' reps en todas)';
+    t = (P.even ? 'sube a ' + nv + ' ' + u : 'sube ' + (usesLb() ? (weightStep(e) == 5 ? 10 : 5) : weightStep(e)) + ' ' + u + ' en cada serie') + ' (hiciste ' + P.hi + ' reps en todas)';
   else if (P.dn)
-    t = 'baja a ' + nv + ' ' + u + ' (no llegaste a ' + P.lo + ' reps)';
+    t = (P.even ? 'baja a ' + nv + ' ' + u : 'baja un 8 % en cada serie') + ' (no llegaste a ' + P.lo + ' reps)';
   else if (P.why == 'rpe')
-    t = 'mantén ' + wv + ' ' + u + ' (RPE ' + (Math.round(P.ra * 10) / 10) + ' la última vez)';
+    t = P.even ? 'mantén ' + wv + ' ' + u + ' (' + rpe + ')' : 'mantén el peso de cada serie (' + rpe + ')';
   else
-    t = 'mantén ' + wv + ' ' + u + ' y busca 1 rep más hasta ' + P.hi;
+    t = (P.even ? 'mantén ' + wv + ' ' + u : 'mantén el peso de cada serie') + ' y busca 1 rep más hasta ' + P.hi;
   /* pirámide: cada serie lleva su peso (sube en cada una) */
   if (/^PIR/.test(e.tk || ''))
     t = 'pirámide: sube el peso en cada serie' + (W.sets[i].some(s => !s.t && +s.w > 0) ? '' : ' (empieza con uno que te permita 12 repeticiones)');

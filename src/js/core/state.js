@@ -1,6 +1,6 @@
 /* ═══ core/state ═══
    Estado global S (se guarda con saveState: core/persist), sesión en curso W, tema y banderas de interfaz.
-   Define: freshState, S, markNewAccount, resetState, saveState, flushState, W, setW, nutriDayOffset, setNutriDayOffset, calMonthOffset, setCalMonthOffset, weekView, setWeekView, addState, setAddState, applyTheme, overviewMode, setOverviewMode, weightView, setWeightView, wodRun, setWodRun
+   Define: freshState, S, markNewAccount, resetState, saveState, flushState, W, setW, nutriDayOffset, nutriDate, profileSex, mealList, setNutriDayOffset, calMonthOffset, setCalMonthOffset, weekView, setWeekView, addState, setAddState, applyTheme, overviewMode, setOverviewMode, weightView, setWeightView, wodRun, setWodRun
 */
 import { loadSavedState, scheduleWrite, writeState } from './persist.js';
 import { parseProgram } from '../data/library.js';
@@ -35,6 +35,19 @@ export const setW = v => {
   W = v;
 };
 export let nutriDayOffset = 0;
+/** El día que enseña Nutrición (a mediodía), `extra` días después (-1: el anterior). Por calendario y no sumando 24 h: el día
+    del cambio de hora tiene 23 o 25 h, y sumando horas «ayer» se saltaba un día entre las 00:00 y la 01:00 del día siguiente. */
+export const nutriDate = (extra = 0) => {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + nutriDayOffset + extra, 12);
+};
+/** El sexo dicho en el perfil ('M' o 'F'), o '' si no se ha dicho. */
+export const profileSex = () => S.biometrics && (S.biometrics.sex == 'M' || S.biometrics.sex == 'F') ? S.biometrics.sex : '';
+/** Los alimentos de la comida `m` del día `k`: la lista de S, que se crea si aún no existe, para añadirle o devolverle uno. */
+export const mealList = (k, m) => {
+  const day = S.meals[k] = S.meals[k] || {};
+  return day[m] = day[m] || [];
+};
 /** Cambia `nutriDayOffset` desde otros módulos (un módulo no puede asignar una variable importada). */
 export const setNutriDayOffset = v => {
   nutriDayOffset = v;

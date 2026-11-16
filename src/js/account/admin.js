@@ -5,7 +5,7 @@
    - Cuentas: usuario, sexo, sistema del último móvil y fecha de alta de cada cuenta (nunca sus entrenos, comidas, medidas ni
      foto), y cuántas usan iPhone, Android u otro sistema (T-28; las que aún no han abierto la V1.0.1, «sin dato»).
    - Arriba, el enlace a Fallos y sugerencias (account/reports), con cuántos hay pendientes.
-   Define: adminState, adminDate, OS_NAMES, osName, osCounts, adminView, loadAdmin  · acciones/registros: 5
+   Define: adminState, adminDate, OS_NAMES, osName, osCounts, waitingView, adminView, loadAdmin  · acciones/registros: 5
 */
 import { $ } from '../core/util.js';
 import { logError } from '../core/errors.js';
@@ -26,13 +26,21 @@ const osCounts = users => {
   users.forEach(d => n[OS_NAMES[d.data.os] ? d.data.os : 'no']++);
   return html`<div class="cd aos" aria-label="Cuentas por sistema del móvil">${Object.keys(OS_NAMES).map(k => html`<div><b>${raw(n[k])}</b><small>${raw(OS_NAMES[k])}</small></div>`)}<div><b>${raw(n.no)}</b><small>Sin dato</small></div></div>`;
 };
+/** Lo que enseña una página de administración mientras pide sus datos (`s.st`: 'load') o si no llegan ('err', con `s.err`);
+    '' cuando ya los tiene. `failed`: «No se ha podido cargar»; `retry`: la acción que los vuelve a pedir. */
+export const waitingView = (s, failed, retry) => {
+  if (s.st == 'load')
+    return html`<p class="mu m-14-2">Cargando…</p>`;
+  if (s.st == 'err')
+    return html`<p class="mu m-14-2">${failed} (${s.err}). Comprueba la conexión.</p><button data-a="${retry}" class="w-full">Reintentar</button>`;
+  return '';
+};
 const adminView = () => {
   const s = adminState;
   const head = html`${pgHead('Administración')}<div id="adm"></div>`;
-  if (s.st == 'load')
-    return html`${raw(head)}<p class="mu m-14-2">Cargando…</p>`;
-  if (s.st == 'err')
-    return html`${raw(head)}<p class="mu m-14-2">No se ha podido cargar (${s.err}). Comprueba la conexión.</p><button data-a="openAdmin" class="w-full">Reintentar</button>`;
+  const waiting = waitingView(s, 'No se ha podido cargar', 'openAdmin');
+  if (waiting)
+    return html`${head}${waiting}`;
   const pw = s.inbox.length ? s.inbox.map(d => {
     const h = Math.max(1, Math.round((+d.data.exp - Date.now()) / 36e5));
     const on = s.show == d.id;

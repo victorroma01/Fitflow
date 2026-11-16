@@ -8,12 +8,13 @@ import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { icon } from '../core/icons.js';
 import { fullPage, pgHead } from '../core/ui.js';
-import { itemMacros, mealName } from '../nutrition/home.js';
+import { mealName } from '../nutrition/home.js';
 import { downloadFile } from '../system/files.js';
 import { cardioLabel, cardioLogs, cardioPace } from './cardio.js';
 import { measureList, MEASURES } from './measures.js';
 import { setLabel } from '../workout/technique.js';
 import { html, raw } from '../core/html.js';
+import { itemMacros } from '../core/calc.js';
 const csvCell = v => {
   if (v == null)
     return '';

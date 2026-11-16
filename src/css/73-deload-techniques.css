@@ -184,7 +184,7 @@ button.dlp,#dg .pr.dlp {
 /* técnica de la serie (F-02): la abreviatura en lugar de WRK */
 .r2 .wk2.tq {
   color:#fff;
-  background:linear-gradient(180deg,#a875ff,#7c4ddb);
+  background:linear-gradient(180deg,#8450ec,#6a3bcf);
   border-color:transparent;
 }
 /* técnica de cada ejercicio en la vista del programa */
@@ -237,23 +237,6 @@ button.dlp,#dg .pr.dlp {
   font-size:13.5px;
   line-height:1.45;
   margin:0 2px 8px;
-}
-.exhw {
-  position:relative;
-  cursor:pointer;
-}
-.hwh {
-  position:absolute;
-  right:10px;
-  bottom:10px;
-  padding:5px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-  color:#fff;
-  background:rgba(0,0,0,.55);
-  -webkit-backdrop-filter:blur(8px);
-  backdrop-filter:blur(8px);
 }
 .hwh2 {
   margin:-2px 2px 6px;

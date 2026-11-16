@@ -3,18 +3,17 @@
    «Borrar todos los datos». La foto de perfil se sube a la cuenta solo con consentimiento (pf.pc: cuándo se dio).
    Define: pfSummary, profileHead, bioSex, bioNumber, bioChoices, bioCard, planCard, firstUseDay, analysisFrom, analysisLine, profileTab  · acciones/registros: 8
 */
-import { APPV, dayKey, fmtDateShort, roundInt, safeImage } from '../core/util.js';
+import { APPV, clampInt, dayKey, fmtDateShort, roundInt, safeImage, typedNum } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { clearSavedState, reloadApp } from '../core/persist.js';
 import { A, C } from '../core/registry.js';
-import { PROGRAM_NAMES } from '../data/library.js';
 import { S, saveState } from '../core/state.js';
 import { toast } from '../core/toast.js';
 import { icon } from '../core/icons.js';
 import { confirmDialog, dialog, linkRow } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
-import { currentCustomProgram, levelsActive, levelTag, programRow } from '../programs/levels.js';
+import { levelsActive, levelTag, programName, programRow } from '../programs/levels.js';
 import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { acctName, isAdmin, signedIn } from '../cloud/session.js';
@@ -23,6 +22,7 @@ import { wipeCloudBackup } from '../cloud/backup.js';
 import { reportsLine } from '../system/report.js';
 import { html, raw } from '../core/html.js';
 import { perWeekText } from '../workout/week.js';
+import { BIO_RANGES } from '../core/calc.js';
 /* cabecera de un desplegable de Perfil con su icono y una línea que dice qué hay dentro, como las filas de Medidas o Logros */
 const pfSummary = (ic, t, s) => html`<summary class="pfs">${icon(ic, 30)}<span><b>${raw(t)}</b><br><small>${s}</small></span></summary>`;
 function profileHead() {
@@ -67,8 +67,7 @@ const planCard = () => {
   /* sin programa elegido (cuenta nueva; I-24) */
   if (S.noProgram)
     return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', 'Aún sin programa')}<p class="mu m-10-0-0 fs-14">Elige uno de los predefinidos o crea el tuyo.</p><button class="pr w-full mt-12" data-a="openPrograms">Seleccionar programa</button></details>`;
-  const p = currentCustomProgram();
-  const nm = p ? p.n : PROGRAM_NAMES[S.program];
+  const nm = programName();
   return html`<details class="cd">${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}<div class="mt-10">${programRow(nm, levelsActive() ? levelTag(S.level) : '')}</div><button data-a="openPrograms" class="w-full mt-12">Cambiar programa o nivel</button></details>`;
 };
 /** Primer día con datos (entrenos, comidas, peso o medidas), o '' si aún no hay ninguno. */
@@ -105,7 +104,20 @@ export function profileTab() {
 /* — manejadores de esta función (registros A / C / U) — */
 C.bioField = e => {
   const k = e.dataset.i;
-  S.biometrics[k] = e.value;
+  /* edad, altura y peso, solo entre valores posibles (los de la bienvenida); la actividad y el objetivo, de su lista */
+  if (BIO_RANGES[k]) {
+    const v = typedNum(e.value);
+    if (!(v >= BIO_RANGES[k][0] && v <= BIO_RANGES[k][1])) {
+      toast('Escribe un valor entre ' + BIO_RANGES[k][0] + ' y ' + BIO_RANGES[k][1]);
+      R();
+      return;
+    }
+    S.biometrics[k] = String(v);
+  }
+  else if (k == 'act' || k == 'goal')
+    S.biometrics[k] = String(clampInt(e.value, 0, k == 'act' ? 4 : 3, 1));
+  else
+    S.biometrics[k] = e.value;
   if (k == 'goal')
     S.nutritionGoals.dt = GOAL_DIET[+e.value];
   /* elegir el objetivo físico es elegir un plan: recalcula aunque las kcal estuvieran a mano; el resto de datos, no */

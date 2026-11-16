@@ -1,8 +1,9 @@
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitFromName, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, lastHistory, weightStep, roundHalf, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
+   Define: repClass, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
 */
 import { fmtMinSec } from '../core/util.js';
+import { unitFromName } from '../core/calc.js';
 import { C } from '../core/registry.js';
 import { groupOf } from '../data/library.js';
 import { S, saveState, W } from '../core/state.js';
@@ -14,20 +15,6 @@ import { warmupHtml } from './warmup.js';
 import { html, raw } from '../core/html.js';
 import { isCycle } from './week.js';
 const repClass = n => /sentadilla|press banca|peso muerto|press militar|remo con barra|dominadas|fondos|hip thrust|prensa/i.test(n) ? 8 : /curl|extensi|elevaciones|aperturas|pájaros|gemelo|patada|abducci|face pull|crunch|encogimientos|muñeca/i.test(n) ? 12 : 10;
-export const unitFromName = n => {
-  const m = String(n).match(/(\d+(?:[.,]\d+)?)\s*(km|m)\b/i);
-  if (m) {
-    const v = +m[1].replace(',', '.') * (m[2].toLowerCase() == 'km' ? 1000 : 1);
-    return { u: 'm', rg: [v, v] };
-  }
-  if (/^(Carrera continua|Rodaje|Trote|Bicicleta|Cinta|Elíptica|Caminata|Remo continuo|Natación)/i.test(n)) {
-    const z = /largo/i.test(n) ? 60 : /zona 2|suave/i.test(n) ? 45 : /Tabata|intervalos/i.test(n) ? 20 : 30;
-    return { u: 'min', rg: [z, z] };
-  }
-  if (/Plancha|Hollow hold|Dead hang|Wall sit|Farmers hold/i.test(n))
-    return { u: 's', rg: [40, 40] };
-  return null;
-};
 export const unitOf = e => {
   if (e.u)
     return e.u;
@@ -70,9 +57,10 @@ export const tempoOf = e => {
     return '3/0/1/0';
   return '2/0/2/0';
 };
+/** Series que admite un ejercicio, como mucho (en un día del plan y en un workout propio). */
+export const MAX_SETS = 20;
 export const lastHistory = e => ((S.exerciseHistory || {})[e.n] || [])[0];
 export const weightStep = e => /Sentadilla|Peso muerto|Prensa|Hip thrust|Hack/i.test(e.n) ? 5 : 2.5;
-export const roundHalf = x => Math.round(x * 2) / 2;
 export const fixUnits = nn => {
   const nd = unitFromName(nn);
   S.plan.forEach(dy => dy.ex.forEach(e => {
@@ -147,18 +135,29 @@ export const planLine = e => {
     return e.s + ' × ' + targetText(e) + ' en bloques de 2-3';
   return e.s + ' × ' + targetText(e) + (TECH_TAIL[a] || '');
 };
+/* un dato con su nombre («RIR 1-2», «Descanso 3:00»), que no se parte entre dos líneas. Con dot, lleva pegado el punto que
+   lo separa del siguiente: si la línea se parte ahí, el punto se queda al final de la primera y no al principio de la otra */
+const together = (t, dot) => html`<span class="ws-nowrap">${t}${dot ? ' ·' : ''}</span>${dot ? ' ' : ''}`;
+/* un texto que sí puede partirse, seguido de otro dato: el punto va pegado a su última palabra */
+const thenDot = t => {
+  const k = t.lastIndexOf(' ') + 1;
+  return html`${t.slice(0, k)}${together(t.slice(k), 1)}`;
+};
 export const targetLine = (e, i) => {
   const U = unitOf(e);
   const dl = !!(W && W.deload);
+  /* la segunda línea: el descanso y el tempo, cada uno [lo que puede partirse, lo que va junto] */
   const p = [];
-  if (e.s > 1)
-    p.push(inSuperset(i) ? '10 s al siguiente' : (blockEnd(S.plan[S.selectedDay], i) ? 'Descanso de la ronda ' : 'Descanso ') + fmtMinSec(restAt(S.plan[S.selectedDay], i)));
+  if (e.s > 1) {
+    const rest = fmtMinSec(restAt(S.plan[S.selectedDay], i));
+    p.push(inSuperset(i) ? ['', '10 s al siguiente'] : blockEnd(S.plan[S.selectedDay], i) ? ['Descanso de la ', 'ronda ' + rest] : ['', 'Descanso ' + rest]);
+  }
   if (!U)
-    p.push('Tempo ' + tempoOf(e));
+    p.push(['', 'Tempo ' + tempoOf(e)]);
   /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */
   const [a, b] = targetRange(e).map(x => Math.max(1, x - 2));
-  const ob = dl && !U ? e.s + ' × ' + (a == b ? a : a + '-' + b) + ' reps · RIR 3-4' : planLine(e) + (U ? '' : ' · RIR ' + rirOf(e));
-  return html`<div class="mu">Objetivo: ${ob}</div>${p.length ? html`<div class="mu">${raw(p.join(' · '))}</div>` : ''}${raw(warmupHtml(e, i))}`;
+  const ob = U ? planLine(e) : dl ? html`${thenDot(e.s + ' × ' + (a == b ? a : a + '-' + b) + ' reps')}${together('RIR 3-4')}` : html`${thenDot(planLine(e))}${together('RIR ' + rirOf(e))}`;
+  return html`<div class="mu">Objetivo: ${ob}</div>${p.length ? html`<div class="mu">${p.map(([head, pair], k) => html`${head}${together(pair, k < p.length - 1)}`)}</div>` : ''}${raw(warmupHtml(e, i))}`;
 };
 const RANGE_OPTIONS = ['3-5', '5-8', '6-10', '8-10', '8-12', '10-12', '10-15', '12-15', '15-20'];
 export const rangeSelect = (e, i) => {

@@ -1,15 +1,14 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: foldPassed, sessionHeader, setRow, restRunning, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 18
+   Define: foldPassed, sessionHeader, setRow, restRunning, doneBefore, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 18
 */
-import { $, fmtDuration, fmtMinSec, round1, roundInt, X } from '../core/util.js';
+import { $, clampNum, fmtDuration, fmtMinSec, round1, roundInt, typedNum, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
 import { S, setOverviewMode, setW, W } from '../core/state.js';
 import { icon } from '../core/icons.js';
 import { dialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { exBadge } from '../library/photo.js';
 import { restorePlanBackup } from '../routines/builder.js';
 import { blockBadge, dayBlocks, exToolsHtml } from './day.js';
 import { targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from './targets.js';
@@ -22,9 +21,10 @@ import { TECHNIQUES } from '../data/techniques.js';
 import { progressBody } from '../dashboard/progress.js';
 import { fromDisplayWeight, toDisplayWeight, weightUnit } from '../profile/units.js';
 import { buzz } from '../profile/feedback.js';
-import { exAnatomy } from '../extras/anatomy.js';
+import { exPicture } from '../extras/anatomy.js';
 import { rpeOn } from './rpe.js';
 import { html, raw } from '../core/html.js';
+import { elapsedMs, liftScore } from '../core/calc.js';
 /* al pasar a otro ejercicio, el que toca se despliega y el anterior, si ya está completo, se pliega */
 const foldPassed = current => {
   if (!current || W.lastCurrent === current[0])
@@ -38,7 +38,7 @@ const foldPassed = current => {
 };
 /* la cabecera que se queda arriba: cronómetro, serie en curso y descanso (o pausa), la barra de progreso y lo que viene */
 const sessionHeader = (day, current, done, total) => {
-  const elapsed = roundInt(((W.pausedAt || Date.now()) - W.startedAt) / 1000);
+  const elapsed = roundInt(elapsedMs(W.startedAt, W.pausedAt, Date.now()) / 1000);
   return html`<div class="wsk"><div class="hd"><b class="fs-22" id="tm">${raw(fmtDuration(elapsed))}</b><span>Serie ${Math.min(done + 1, total)}/${total}</span><span class="mu minw-60 ta-r">${W.pausedAt ? 'En pausa' : restPill()}</span></div><div class="bar h-5 m-10-0"><i class="bg-a2" data-style="width:${done / total * 100}%"></i></div>${raw(nextUpBar(day, current))}</div>`;
 };
 /* la fila de una serie: número, etiqueta de la técnica, repeticiones, peso (o un guion si el ejercicio no lleva), descanso y «hecha» */
@@ -50,8 +50,13 @@ const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
 };
 /* el descanso en marcha, bajo la serie que lo lanzó: −15 s, la cuenta atrás con «Saltar» y +15 s */
 const restRunning = (exIndex, setIndex) => W.restEndsAt && W.restAfter && W.restAfter[0] == exIndex && W.restAfter[1] == setIndex ? html`<div class="rr"><button data-a="adjustRest" data-i="-15">−15s</button><span>Descanso<br><b id="rt">${raw(fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000))))}</b><br><small data-a="adjustRest" data-i="0" role="button" tabindex="0" class="cur-pointer td-u">Saltar</small></span><button data-a="adjustRest" data-i="15">+15s</button></div>` : '';
+/* las series ya hechas con otro ejercicio antes de cambiarlo por este (Swap): se guardan en el historial de aquel */
+const doneBefore = exIndex => {
+  const names = [...new Set(W.sets[exIndex].filter(s => s.ok && s.n).map(s => s.n))];
+  return names.length ? html`<div class="mu fs-12">Las series ya hechas se guardan en ${names.map(n => '«' + n + '»').join(' y ')}</div>` : '';
+};
 /* la cabecera de un ejercicio: foto o figura, nombre, objetivo, la última vez y, si se cambió con Swap, desde cuál */
-const exerciseHead = (exercise, exIndex) => html`<div class="xh">${exThumb(exercise.n, exIndex)}<div class="minw-0"><b class="fs-18">${exercise.n}</b>${targetLine(exercise, exIndex)}${lastTimeLine(exercise, exIndex)}${exercise.o ? html`<div class="mu fs-12">Cambiado desde: ${exercise.o} · <u data-a="swapUndo" data-i="${exIndex}" role="button" tabindex="0" class="cur-pointer">Deshacer</u></div>` : ''}</div>${foldButton(exIndex)}</div>`;
+const exerciseHead = (exercise, exIndex) => html`<div class="xh">${exThumb(exercise.n, exIndex)}<div class="minw-0"><b class="fs-18">${exercise.n}</b>${targetLine(exercise, exIndex)}${lastTimeLine(exercise, exIndex)}${exercise.o ? html`<div class="mu fs-12">Cambiado desde: ${exercise.o} · <u data-a="swapUndo" data-i="${exIndex}" role="button" tabindex="0" class="cur-pointer">Deshacer</u></div>` : ''}${doneBefore(exIndex)}</div>${foldButton(exIndex)}</div>`;
 /* la segunda fila de herramientas: Historial, Swap y, con barra, Discos */
 const exerciseTools2 = (exercise, exIndex) => html`<div class="xtl"><button class="chip" data-a="exerciseHistory" data-i="${exIndex}">Historial</button><button class="chip" data-a="openSwap" data-i="${exIndex}">${icon('swp', 15)} Swap</button>${usesBarbell(exercise.n) ? html`<button class="chip ic" data-a="openPlates" data-i="${exIndex}" aria-label="${'Discos, ' + exercise.n}">${icon('plate', 18)}</button>` : ''}</div>`;
 /* un ejercicio del entreno: su bloque (superserie…), cabecera, herramientas, las series con su descanso y RPE, y ± serie.
@@ -86,9 +91,13 @@ A.exerciseHistory = i => {
   const n = E.n;
   const h = (S.exerciseHistory || {})[n] || [];
   const all = h.flatMap(x => x.s);
-  const bw = all.length ? Math.max(...all.map(s => s[1])) : 0;
-  const rm = all.length ? Math.max(...all.map(s => s[1] * (1 + s[0] / 30))) : 0;
-  sheet(html`<h3>${n}</h3>${raw(h.length ? (bw && !unitOf(E) ? html`<div class="g2"><div class="cd"><small>Mejor peso</small><br><b class="fs-20">${toDisplayWeight(bw)} ${weightUnit()}</b></div><div class="cd"><small>1RM estimado</small><br><b class="fs-20">${round1(toDisplayWeight(rm))} ${weightUnit()}</b></div></div>` : '') + (h.length > 1 && !unitOf(E) ? html`<div class="pgs">${raw(progressBody(n))}</div>` : '') + h.slice(0, 12).map(x => html`<div class="it cols-1fr"><b>${raw(x.d)}</b><small>${raw(x.s.map(s => setText(E, s)).join(' · '))}</small></div>`).join('') : '<p class="mu">Aún no hay registros de este ejercicio. Se guardan al pulsar Log out.</p>')}`);
+  /* el mejor peso y el mejor 1RM estimado, con las series que cuentan para las marcas (core/calc) */
+  const bw = Math.max(0, ...all.map(s => +s[1] || 0));
+  const rm = Math.max(0, ...all.map(liftScore));
+  const best = bw && !unitOf(E) ? html`<div class="g2"><div class="cd"><small>Mejor peso</small><br><b class="fs-20">${toDisplayWeight(bw)} ${weightUnit()}</b></div><div class="cd"><small>1RM estimado</small><br><b class="fs-20">${rm ? round1(toDisplayWeight(rm)) + ' ' + weightUnit() : '—'}</b></div></div>` : '';
+  const chart = h.length > 1 && !unitOf(E) ? html`<div class="pgs">${raw(progressBody(n))}</div>` : '';
+  const list = h.slice(0, 12).map(x => html`<div class="it cols-1fr"><b>${raw(x.d)}</b><small>${raw(x.s.map(s => setText(E, s)).join(' · '))}</small></div>`).join('');
+  sheet(html`<h3>${n}</h3>${raw(h.length ? best + chart + list : '<p class="mu">Aún no hay registros de este ejercicio. Se guardan al pulsar Log out.</p>')}`);
 };
 A.togglePause = () => {
   if (W.pausedAt) {
@@ -206,10 +215,10 @@ const anLiveOn = i => {
 };
 const exThumb = (n, i) => {
   const on = anLiveOn(i);
-  const s = exAnatomy(n, 64);
+  const s = exPicture(n, 64);
   /* al tocar la imagen, cómo se hace el ejercicio (F-14: library/howto) */
   const at = ' data-a="exerciseHowTo" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Cómo se hace: ' + X(n) + '"';
-  return html`<div class="th${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
+  return html`<div class="th${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}</div>`;
 };
 const restPill = () => W && W.restEndsAt ? html`<button class="wsr" data-a="scrollToRest" aria-label="Ir al descanso">Descanso <b id="rt2">${raw(fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000))))}</b></button>` : '';
 A.scrollToRest = () => {
@@ -224,9 +233,12 @@ A.toggleSetDone = (i, b) => {
   const s = W.sets[i][+b.dataset.j];
   if (s && s.ok) {
     buzz(30);
+    /* récord de peso: más que nunca en el historial y más que en las otras series ya hechas hoy (así avisa una vez, no en
+       cada serie con ese peso) */
     const h = (S.exerciseHistory || {})[e.n] || [];
-    const bw = Math.max(0, ...h.flatMap(x => x.s.map(y => y[1])));
-    if (s.w > 0 && bw > 0 && s.w > bw)
+    const before = Math.max(0, ...h.flatMap(x => x.s.map(y => +y[1] || 0)), ...W.sets[i].filter(x => x !== s && x.ok && !x.n).map(x => +x.w || 0));
+    const hadHistory = h.some(x => x.s.some(y => +y[1] > 0));
+    if (s.w > 0 && hadHistory && s.w > before)
       toast('Nuevo récord en ' + e.n + ': ' + toDisplayWeight(s.w) + ' ' + weightUnit());
     /* era la última que faltaba: en vez del descanso, la ventana de guardar el entreno, como con «Siguiente serie» (I-28) */
     if (W.sets.every(a => a.every(x => x.ok))) {
@@ -253,8 +265,11 @@ A.goToNextSet = () => {
   }
 };
 A.startWorkout = () => {
-  setOverviewMode(0);
   const d = S.plan[S.selectedDay];
+  /* un día sin ejercicios (se quitaron todos en el Overview) no tiene nada que empezar */
+  if (!d.ex.length)
+    return;
+  setOverviewMode(0);
   setW({ startedAt: Date.now(), restEndsAt: 0, openPanels: {}, sets: d.ex.map(e => Array.from({ length: e.s }, () => ({ r: 10, w: S.lastWeights[e.n] || '', ok: 0 }))) });
   /* semana de descarga (F-18): mismas series con el 65 % del peso, 2 repeticiones menos y sin técnicas de intensidad */
   if (isDeloadWeek(S.week))
@@ -360,9 +375,20 @@ A.addSet = i => {
   a.push(k ? { r: m.r, w: m.w, ws: 1, ok: 0, k } : { r: m.r, w: m.w, ws: 1, ok: 0 });
   R();
 };
+/* «− Serie» quita la última; si ya estaba hecha, se puede deshacer */
 A.removeSet = i => {
-  W.sets[i].length > 1 && W.sets[i].pop();
+  const a = W.sets[i];
+  if (a.length < 2)
+    return;
+  const s = a.pop();
   R();
+  if (s.ok)
+    toast('Serie hecha quitada', () => {
+      if (W && W.sets[i] === a) {
+        a.push(s);
+        R();
+      }
+    });
 };
 A.adjustRest = i => {
   W.restEndsAt = i ? W.restEndsAt + i * 1e3 : 0;
@@ -371,11 +397,13 @@ A.adjustRest = i => {
   if (!i)
     restEnded();
 };
-C.setReps = (e, i, j) => W.sets[i][j].r = +e.value;
+/* lo anotado en una serie nunca es negativo ni disparatado (hasta 100.000: los metros de una distancia), ni el peso pasa de
+   2.000 en la unidad elegida: descuadraría el volumen, los récords y la progresión */
+C.setReps = (e, i, j) => W.sets[i][j].r = clampNum(typedNum(e.value), 0, 1e5, 0);
 /* el peso escrito pasa como sugerido a las series siguientes (F-10) */
 C.setWeight = (e, i, j) => {
   const a = W.sets[i];
-  a[j].w = fromDisplayWeight(+e.value);
+  a[j].w = fromDisplayWeight(clampNum(typedNum(e.value), 0, 2000, 0));
   a[j].ws = 0;
   suggestAfter(S.plan[S.selectedDay].ex[i], a, j);
   R();

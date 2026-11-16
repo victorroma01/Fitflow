@@ -9,14 +9,15 @@ import { segmented } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { setPlateBar, setPlateTotal } from '../workout/plates.js';
 import { html } from '../core/html.js';
+import { kgToLb, lbToKg } from '../core/calc.js';
 export const weightUnit = () => S.units == 'lb' ? 'lb' : 'kg';
 export const toDisplayWeight = v => {
   v = +v || 0;
-  return S.units == 'lb' ? Math.round(v * 2.20462 * 10) / 10 : Math.round(v * 100) / 100;
+  return S.units == 'lb' ? kgToLb(v) : Math.round(v * 100) / 100;
 };
 export const fromDisplayWeight = v => {
   v = +v || 0;
-  return S.units == 'lb' ? Math.round(v / 2.20462 * 100) / 100 : v;
+  return S.units == 'lb' ? lbToKg(v) : v;
 };
 export const volumeText = (v, d) => {
   const x = (S.units == 'lb' ? toDisplayWeight(v) : v) / 1000;
