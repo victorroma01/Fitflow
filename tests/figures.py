@@ -95,6 +95,13 @@ def main(path, shots=None):
             errs[n:] = [e for e in errs[n:] if 'Refused to apply a stylesheet' not in e]
             return png
 
+        def frame():
+            """Obliga al navegador a pintar un fotograma (con una captura mínima), descartando el mismo aviso que capture."""
+            n = len(errs)
+            pg.screenshot(clip={'x': 0, 'y': 0, 'width': 8, 'height': 8})
+            pg.wait_for_timeout(80)
+            errs[n:] = [e for e in errs[n:] if 'Refused to apply a stylesheet' not in e]
+
         def settled():
             """Espera a que la hoja termine de entrar: sus animaciones van con el reloj de verdad, y una captura a medias sale
             desplazada o medio transparente."""
@@ -201,9 +208,8 @@ def main(path, shots=None):
             forced = 0
             for y in range(600, 14000, 600):
                 ev("document.querySelector('#sh .sp').scrollTop = %d" % y)
-                pg.screenshot(clip={'x': 0, 'y': 0, 'width': 8, 'height': 8})
-                pg.wait_for_timeout(60)
-                pg.screenshot(clip={'x': 0, 'y': 0, 'width': 8, 'height': 8})
+                frame()
+                frame()
                 forced = max(forced, ev(SEEN + ".filter(r => !" + IS_FIGURE + "(r)).length"))
             print('        (informativo, %s) con un fotograma forzado tras cada deslizamiento: filas a la vista sin figura, %d como mucho; huecos al final, %d' % (ENGINE, forced, ev(HOLES)))
         # y, se deslice o no, las que faltan se ponen solas por tandas: en poco más de un segundo no queda ninguna

@@ -163,8 +163,9 @@ pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el
   piezas, el nombre y el texto, sin fotos); las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
   (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios ciclos);
   las posturas que se mantienen; los ciclos, que no se detienen en ningún momento, y los peldaños de la escaladora, que se
-  deslizan; una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla (en Chromium; sin
-  pantalla, WebKit y Firefox no pintan fotogramas a su ritmo y ahí solo se anota) y, en cualquier caso, por tandas; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
+  deslizan; una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla (se exige en
+  Chromium; en Firefox y WebKit se anota: WebKit sin pantalla no pinta fotogramas a su ritmo y solo las pone si se le
+  obliga a pintar uno con una captura, que es lo que se comprueba) y, en cualquier caso, por tandas; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
   verdad (los músculos que trabajan en rojo y naranja, el resto del cuerpo, las mancuernas en los extremos con los brazos
   abiertos, el deltoides posterior de espaldas), que es lo que comprueba el dibujo en Safari y Firefox; y que un ejercicio
   propio sigue con sus músculos.
