@@ -43,7 +43,7 @@
                         a y b son 'g' o 'G' (los puños), [x, y] (fijo) o [pieza, x, y]
      aim a b prim       una pieza rígida con el origen en a y el eje x apuntando a b (un neumático que se voltea)
      bar radio · db modo · kb modo · ball radio · bag · disc   lo que se lleva en las manos
-   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, propLayers, SIDE_BODY, FRONT_BODY, rigPose, solve, rigLayers, rigFrame, numbers, framePoints, rigBox, poseSpot, SIDE_REGIONS, sideRegions
+   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, held, propLayers, SIDE_BODY, FRONT_BODY, rigPose, solve, rigLayers, rigFrame, numbers, framePoints, rigBox, poseSpot, SIDE_REGIONS, sideRegions
 */
 import { FG_J, FG_P } from '../data/figure.js';
 /** Un grado, en radianes. */
@@ -100,6 +100,8 @@ const J = FG_J;
 const FAR_SHIFT = [3, -3.5];
 /* lo más corto que se llega a ver el brazo cuando apunta hacia quien mira */
 const MIN_FORESHORTEN = .3;
+/* lo más que se cierra un codo: el ángulo que queda entre el brazo y el antebrazo no baja de esto (grados) */
+const ELBOW_MIN = 30;
 /* la altura del suelo */
 const FLOOR = 402;
 const f1 = n => {
@@ -139,7 +141,7 @@ const sidePose = p => {
     const sh = place(TX, [J.sh[0] + (q.shx || 0), J.sh[1] - (q.shy || 0)]);
     const rest = J.el[1] - J.sh[1];
     let kU = q.kU || 1;
-    const kF = q.kF || 1;
+    let kF = q.kF || 1;
     let aU;
     let aF;
     const goal = q.palm || q.gw || (q.grip ? place(TX, q.grip) : null);
@@ -148,7 +150,7 @@ const sidePose = p => {
     if (goal) {
       /* del codo al puño o, con la mano apoyada, a la muñeca */
       const end = q.palm ? J.wr : J.grip;
-      const d2 = [end[0] - J.el[0], (end[1] - J.el[1]) * kF];
+      let d2 = [end[0] - J.el[0], (end[1] - J.el[1]) * kF];
       e = q.fa == null ? null : sub(goal, rot(d2, aX - q.fa));
       const len = e ? Math.hypot(e[0] - sh[0], e[1] - sh[1]) : 0;
       if (e && len <= rest) {
@@ -159,6 +161,18 @@ const sidePose = p => {
       }
       else {
         e = null;
+        /* la mano, tan cerca del hombro que el codo tendría que cerrarse más de lo que da de sí: el brazo y el antebrazo
+           se ven en escorzo, con el codo hacia quien mira, lo justo para que el codo quede en su tope */
+        const reach = Math.hypot(goal[0] - sh[0], goal[1] - sh[1]);
+        const l1 = rest * kU;
+        const l2 = Math.hypot(d2[0], d2[1]);
+        const least = Math.sqrt(l1 * l1 + l2 * l2 - 2 * l1 * l2 * Math.cos(ELBOW_MIN * RAD));
+        if (reach < least) {
+          const f = Math.max(MIN_FORESHORTEN, reach / least);
+          kU *= f;
+          kF *= f;
+          d2 = [d2[0], (end[1] - J.el[1]) * kF];
+        }
         [aU, aF] = limb(sh, goal, [0, rest * kU], d2, q.eb || 1);
       }
     }
@@ -168,7 +182,8 @@ const sidePose = p => {
     }
     const UA = { r: J.sh, w: sh, a: aU, k: kU };
     const FA = { r: J.el, w: e || place(UA, J.el), a: aF, k: kF };
-    return { UA, FA, HA: { r: J.wr, w: place(FA, J.wr), a: q.ha != null ? q.ha : q.palm ? -90 : aF - (q.wr || 0) } };
+    /* la mano va con el escorzo del antebrazo: así el puño queda justo donde se le pide */
+    return { UA, FA, HA: { r: J.wr, w: place(FA, J.wr), a: q.ha != null ? q.ha : q.palm ? -90 : aF - (q.wr || 0), k: kF } };
   };
   /* la cadera: en su sitio o donde la deje lo que queda quieto */
   const fixed = p.at || 'ankle';
@@ -268,6 +283,8 @@ const spot = (o, s) => {
   return o.out ? o.out(q) : q;
 };
 const at = q => 'translate(' + f1(q[0]) + ' ' + f1(q[1]) + ')';
+/* lo que gira con la mano: en el puño g y con el giro de la mano, sin su escorzo */
+const held = (hand, g) => move({ r: J.grip, w: g, a: hand.a });
 /** Las capas de la pieza de material número i en una postura: [{ k: nombre, s: hueco, t: transformación o '' }]. */
 const propLayers = (pr, i, o) => {
   const k = 'p' + i;
@@ -279,12 +296,12 @@ const propLayers = (pr, i, o) => {
        4 una, vertical (copa); la kettlebell: 0 cuelga del puño, 1 sigue al brazo, 2 dos, una en cada mano */
     const turns = type == 'db' ? pr[2] == 2 || pr[2] == 3 : pr[2] == 1;
     const both = type == 'db' ? !pr[2] || pr[2] == 2 : pr[2] == 2;
-    const near = { k: k + 'f', s: 'f', t: turns && o.HA ? move(o.HA) : at(o.g) };
+    const near = { k: k + 'f', s: 'f', t: turns && o.HA ? held(o.HA, o.g) : at(o.g) };
     /* de frente, las dos manos están delante */
-    return both ? [{ k: k + 'b', s: o.out ? 'f' : 'b', t: turns && o.xHA ? move(o.xHA) : at(o.G) }, near] : [near];
+    return both ? [{ k: k + 'b', s: o.out ? 'f' : 'b', t: turns && o.xHA ? held(o.xHA, o.G) : at(o.G) }, near] : [near];
   }
   if (type == 'ball' || type == 'bag' || type == 'disc')
-    return [{ k: k + 'f', s: slot || 'f', t: type == 'disc' && o.HA ? move(o.HA) : at(o.g) }];
+    return [{ k: k + 'f', s: slot || 'f', t: type == 'disc' && o.HA ? held(o.HA, o.g) : at(o.g) }];
   if (type == 'on')
     return [{ k, s: slot, t: move(o[pr[2]]) }];
   if (type == 'aim') {

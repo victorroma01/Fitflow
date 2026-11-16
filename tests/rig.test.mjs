@@ -2,7 +2,8 @@
 // las familias de movimiento (extras/moves) y la tabla de posturas (data/figposes).
 //   node --test tests/rig.test.mjs
 // Se comprueba lo que se ve en cada uno de los ejercicios de la librería: que tiene figura, que nada sale sin sitio, que
-// los codos y las rodillas doblan hacia donde doblan, que nada se hunde en el suelo y que el gesto no da saltos; y, en
+// los codos y las rodillas doblan hacia donde doblan, que ninguna articulación pasa de lo que un cuerpo puede hacer, que
+// las manos y los pies llegan a su agarre o a su apoyo, que nada se hunde en el suelo y que el gesto no da saltos; y, en
 // unos cuantos ejercicios conocidos, que lo que tiene que estar quieto lo está y el peso va por donde debe.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -123,6 +124,87 @@ test('los codos y las rodillas doblan hacia donde doblan', () => {
     }
   }
   fails(bad, 'articulaciones del revés');
+});
+
+test('cada articulación se queda dentro de lo que un cuerpo puede hacer', () => {
+  // de perfil: la cintura, el cuello, la cadera, la rodilla, el tobillo, el codo, la muñeca y el hombro, en grados, en todo
+  // el gesto. El brazo que se dibuja en escorzo (hacia quien mira) no se mide: de perfil no enseña su ángulo de verdad
+  const LIMITS = { 'la cintura': [-40, 55], 'el cuello': [-50, 48], 'la cadera': [-40, 152], 'la rodilla': [-6, 162], 'el tobillo': [-48, 78], 'el codo': [-6, 162], 'la muñeca': [-100, 100] };
+  const bad = [];
+  for (const { n, def } of FIGURES) {
+    const worst = new Map();
+    const range = (what, v, t, lim) => {
+      if ((v < lim[0] || v > lim[1]) && !worst.has(what))
+        worst.set(what, what + ' a ' + Math.round(v) + '° en t=' + t);
+    };
+    for (const t of STEPS) {
+      const o = Object.fromEntries(R.rigLayers(def, t).map(l => [l.k, (placed(l.t) || [])[2]]));
+      const pose = R.rigPose(def, t);
+      if (def.v == 'S') {
+        range('la cintura', norm(o.TXs - o.PVs), t, LIMITS['la cintura']);
+        range('el cuello', norm(o.HD - o.TXs), t, LIMITS['el cuello']);
+        for (const x of ['', 'x']) {
+          const q = x && pose.far ? Object.assign({}, pose, pose.far) : pose;
+          const side = x ? ' (lado de atrás)' : '';
+          range('la cadera' + side, norm(o.PVs - o[x + 'TH']), t, LIMITS['la cadera']);
+          range('la rodilla' + side, norm(o[x + 'SH'] - o[x + 'TH']), t, LIMITS['la rodilla']);
+          range('el tobillo' + side, norm(o[x + 'FT'] - o[x + 'SH']), t, LIMITS['el tobillo']);
+          if ((q.kU || 1) >= .75 && q.fa == null) {
+            range('el codo' + side, norm(o[x + 'UA'] - o[x + 'FA']), t, LIMITS['el codo']);
+            // el hombro: de −90 (el brazo hacia atrás) a 215 (arriba y algo más); de 215 a 270 no llega nadie
+            const sh = ((o.TXs - o[x + 'UA']) % 360 + 360) % 360;
+            range('el hombro' + side, sh > 215 && sh < 270 ? sh : 0, t, [0, 0]);
+          }
+          // la comba va unida a la mano y es ella la que da la vuelta, no la muñeca
+          if (!(def.props || []).some(p => p[0] == 'on' && p[2] == 'HA' && p[3][0] == 'L'))
+            range('la muñeca' + side, norm(o[x + 'FA'] - o[x + 'HA']), t, LIMITS['la muñeca']);
+        }
+      } else
+        for (const i of [0, 1]) {
+          const m = i ? -1 : 1;
+          const side = i ? ' (derecho)' : ' (izquierdo)';
+          range('el brazo' + side, m * o['U' + i], t, [-40, 190]);
+          range('el antebrazo' + side, norm(m * (o['F' + i] - o['U' + i])), t, [-165, 165]);
+          range('la pierna' + side, m * o['T' + i], t, [-40, 95]);
+          range('la rodilla' + side, norm(m * (o['S' + i] - o['T' + i])), t, [-150, 40]);
+        }
+    }
+    if (worst.size)
+      bad.push(n + ': ' + [...worst.values()].join(', '));
+  }
+  fails(bad, 'articulaciones fuera de su recorrido');
+});
+
+test('las manos y los pies llegan a donde se les pide', () => {
+  // si la postura dice dónde va el puño, la muñeca apoyada o el tobillo, el brazo o la pierna tienen que alcanzarlo: si
+  // no, la mano queda en el aire, lejos de la barra o del suelo. El lado de atrás se dibuja algo desplazado
+  const FAR = [3, -3.5];
+  const bad = [];
+  for (const { n, def } of FIGURES) {
+    if (def.v != 'S')
+      continue;
+    const worst = new Map();
+    for (const t of STEPS) {
+      const pose = R.rigPose(def, t);
+      for (const x of ['', 'x']) {
+        const q = x && pose.far ? Object.assign({}, pose, pose.far) : pose;
+        const off = x ? FAR : [0, 0];
+        const miss = (what, got, goal) => {
+          const d = Math.hypot(got[0] - off[0] - goal[0], got[1] - off[1] - goal[1]);
+          if (d > 3.5 && !worst.has(what))
+            worst.set(what, what + (x ? ' de atrás' : '') + ' se queda a ' + Math.round(d) + ' px en t=' + t);
+        };
+        const goal = q.palm || q.gw || (q.grip ? R.poseSpot(pose, ['TX', q.grip[0], q.grip[1]]) : null);
+        if (goal)
+          miss('la mano' + x, q.palm ? R.poseSpot(pose, [x + 'FA', 99.5, 207]) : R.poseSpot(pose, x ? 'G' : 'g'), goal);
+        if (q.foot)
+          miss('el pie' + x, R.poseSpot(pose, [x + 'SH', 97, 385]), q.foot);
+      }
+    }
+    if (worst.size)
+      bad.push(n + ': ' + [...worst.values()].join(', '));
+  }
+  fails(bad, 'manos o pies que no llegan');
 });
 
 test('nada se hunde en el suelo', () => {
