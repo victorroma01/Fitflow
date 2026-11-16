@@ -4,14 +4,37 @@
    a: postura de inicio, b: lo que cambia en la del final, props: material, up: qué extremo es el final del esfuerzo,
    at: momento del gesto que se pinta en la miniatura, hold: si es una postura que se mantiene }. La tabla de qué familia
    y qué variantes lleva cada ejercicio está en data/figposes; cómo se escribe una postura, en extras/rig.
-   Define: has, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, SUPINE, LIFT, gait, treadmill, sledAt, MOVES, made, figPose
+   Define: has, REST, ANGLES, complete, figure, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, SUPINE, LIFT, gait, treadmill, sledAt, MOVES, made, figPose
 */
 import { FIG_POSES } from '../data/figposes.js';
 import { RAD, poseSpot } from './rig.js';
 import { beam, bench, box, cable, dipBars, flatBench, lever, mat, pad, pullBar, ringsAt, smith, stackAt, tower, wall, wheel } from './gear.js';
 const has = (f, w) => f.includes(w);
+/* lo que vale una medida de la postura cuando no se dice: los escorzos, 1; los ángulos y los desplazamientos, 0 */
+const REST = { kU: 1, kF: 1, kT: 1, kS: 1 };
+const ANGLES = ['lean', 'waist', 'neck', 'hip', 'knee', 'ft', 'sh', 'el', 'wr', 'shy', 'shx', 'arm', 'elb', 'leg', 'rot'];
+/** Completa la postura de inicio con lo que las demás (el final, la intermedia) cambian sin que ella lo diga: el gesto
+    solo reparte lo que está en las dos. side es lo del otro lado del cuerpo (far, de perfil; r, de frente), que cuando no
+    dice algo hace lo mismo que el lado de delante. */
+const complete = (a, b, side) => {
+  const rest = k => k in REST ? REST[k] : ANGLES.includes(k) || (side && (k == 'x' || k == 'y')) ? 0 : null;
+  Object.keys(b || {}).forEach(k => {
+    if (k == 'far' || k == 'r') {
+      a[k] = Object.assign({}, a[k]);
+      Object.keys(b[k]).forEach(j => {
+        if (!(j in a[k]) && (j in a || rest(j) != null))
+          a[k][j] = j in a ? a[j] : rest(j);
+      });
+    }
+    else if (!(k in a) && rest(k) != null)
+      a[k] = rest(k);
+  });
+  return a;
+};
+/* una figura: la vista, las posturas (el inicio, completado con lo que cambian las demás) y el material */
+const figure = (v, a, b, props, up, at, more) => Object.assign({ v, a: complete(complete(Object.assign({}, a), b, v != 'S'), more && more.m, v != 'S'), b, props: (props || []).filter(Boolean), up: up || 'b', at: at == null ? 1 : at }, more);
 /** Una figura de perfil. */
-const fig = (a, b, props, up, at, more) => Object.assign({ v: 'S', a, b, props: (props || []).filter(Boolean), up: up || 'b', at: at == null ? 1 : at }, more);
+const fig = (a, b, props, up, at, more) => figure('S', a, b, props, up, at, more);
 const add = (p, d) => [p[0] + d[0], p[1] + d[1]];
 const turn = (v, a) => {
   const c = Math.cos(a * Math.PI / 180);
@@ -29,8 +52,8 @@ const SEAT = { at: 'hip', x: 96, y: 288, foot: [193, 385] };
 const upGrip = (lean, len) => add(SH, turn([2, -(len || 134)], -lean));
 /* el puño colgando en vertical bajo el hombro, visto desde un tórax inclinado lean grados */
 const downGrip = (lean, len) => add(SH, turn([1, len || 136], -lean));
-/* una figura de frente */
-const front = (a, b, props, up, at, more) => Object.assign({ v: 'F', a, b, props: (props || []).filter(Boolean), up: up || 'b', at: at == null ? 1 : at }, more);
+/** Una figura de frente (o, con v: 'B' en more, de espaldas). */
+const front = (a, b, props, up, at, more) => figure(more && more.v || 'F', a, b, props, up, at, more);
 /* torres de polea a los dos lados de una figura de frente, con la polea a la altura y, y sus cables a las manos */
 const sideTowers = (y, cross) => [beam([-64, 14, -64, 398], 7, 'b'), beam([264, 14, 264, 398], 7, 'b'), beam([-84, 399.5, -44, 399.5], 5, 'b'), beam([244, 399.5, 284, 399.5], 5, 'b'), ['C', 'b', -56, y, 6.5, 5], ['C', 'b', 256, y, 6.5, 5], ['link', 'b', [-56, y], cross ? 'G' : 'g', 1.3, 3, 'h'], ['link', 'b', [256, y], cross ? 'g' : 'G', 1.3, 3, 'h']];
 /* el banco predicador: una almohadilla inclinada bajo el brazo, con su pie */
@@ -187,7 +210,7 @@ const MOVES = {
     const a = Object.assign({}, top, arms, has(f, 'sumo') ? { kT: .86 } : {});
     const b = Object.assign({}, low, more);
     if (has(f, 'jump'))
-      return fig(Object.assign({}, low, { lean: 30, hip: 96, knee: 92 }, { sh: -20, el: 20 }), { lean: 2, hip: 0, knee: 0, y: 352, ft: 42, sh: 150, el: 10, neck: -4 }, [], 'b', 0);
+      return fig(Object.assign({}, low, { y: 385, lean: 30, hip: 96, knee: 92 }, { sh: -20, el: 20 }), { lean: 2, hip: 0, knee: 0, y: 352, ft: 42, sh: 150, el: 10, neck: -4 }, [], 'b', 0);
     if (has(f, 'smith'))
       gear = gear.concat(smith(poseSpot(a, 'g')[0] + 3));
     if (has(f, 'box')) {
@@ -1095,7 +1118,7 @@ const MOVES = {
     }
     /* de espaldas a la pared, los talones apoyados en ella */
     const a = { at: 'hip', x: 150, y: 152, lean: 178, neck: -22, hip: 0, knee: 0, ft: 190, palm: [146, 398], ha: 90 };
-    return fig(a, { y: 218, neck: -44 }, [wall(184, -90)], 'a', has(f, 'hold') ? 0 : .5, has(f, 'hold') ? { hold: 1 } : {});
+    return fig(a, has(f, 'hold') ? {} : { y: 218, neck: -44 }, [wall(184, -90)], 'a', has(f, 'hold') ? 0 : .5, has(f, 'hold') ? { hold: 1 } : {});
   },
   /* ── carrera, marcha y máquinas de cardio ── */
   /** Carrera y marcha, al aire libre o en la cinta. */

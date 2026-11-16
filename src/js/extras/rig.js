@@ -411,7 +411,7 @@ export const rigBox = (def, ts, focus) => {
   const end = framePoints(def, 1);
   const moves = new Set(framePoints(def, 0).filter((q, i) => Math.hypot(q[1][0] - end[i][1][0], q[1][1] - end[i][1][1]) >= 3).map(q => q[0]));
   /* sin recorte si se mueve el cuerpo entero, si no se mueve nada (una postura que se mantiene) o si la figura lo pide */
-  const crop = focus && !def.whole && moves.size && !moves.has('body');
+  const crop = focus && !def.whole && !def.hold && moves.size && !moves.has('body');
   let x0 = 1e9;
   let y0 = 1e9;
   let x1 = -1e9;

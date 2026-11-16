@@ -21,7 +21,6 @@ Estructura (todo vive en src/):
   src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
   src/img/day/            portadas de los días (.jpg) y order.txt
-  src/img/ex/             fotos de ejercicio (.webp) y map.txt
   static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
 
 Las dos variantes solo se diferencian en:
@@ -107,32 +106,14 @@ BRAND_LOGOS = ('claro', 'oscuro')
 
 
 def media():
-    """Lee src/img: portadas de día (order.txt) y fotos de ejercicio (map.txt). Devuelve la lista de fotos y los enlaces."""
-    files, day, ex, ex_for, ex_alias = [], [], [], {}, {}
+    """Lee src/img: las portadas de día (order.txt) y el logo. Devuelve la lista de fotos y los enlaces."""
+    files, day = [], []
     for k in list_lines(os.path.join(IMG, 'day', 'order.txt')):
         p = os.path.join(IMG, 'day', k + '.jpg')
         if not os.path.isfile(p):
             die('falta la portada ' + p)
         day.append(k)
         files.append(('img/day/' + k + '.jpg', p))
-    for n, l in enumerate(list_lines(os.path.join(IMG, 'ex', 'map.txt')), 1):
-        parts = [x.strip() for x in l.split('|')]
-        if len(parts) != 3 or not parts[0] or not parts[1]:
-            die('src/img/ex/map.txt: formato «clave | ejercicios | otros nombres» (línea %d de datos)' % n)
-        key, names, alts = parts[0], [x.strip() for x in parts[1].split(';') if x.strip()], [x.strip() for x in parts[2].split(';') if x.strip()]
-        p = os.path.join(IMG, 'ex', key + '.webp')
-        if not os.path.isfile(p):
-            die('falta la foto ' + p)
-        if key in ex:
-            die('clave repetida en map.txt: ' + key)
-        ex.append(key)
-        files.append(('img/ex/' + key + '.webp', p))
-        for nm in names:
-            if nm in ex_for:
-                die('el ejercicio «%s» tiene dos fotos en map.txt' % nm)
-            ex_for[nm] = key
-            if alts:
-                ex_alias[nm] = ' '.join(alts)
     # el logo dentro de la app (core/brand): claro y oscuro. Las fuentes (fuente-*.png) no se publican: son de tools/marca.py
     for k in BRAND_LOGOS:
         p = os.path.join(IMG, 'brand', 'logo-%s.webp' % k)
@@ -140,11 +121,10 @@ def media():
             die('falta el logo %s (python3 tools/marca.py)' % p)
         files.append(('img/brand/logo-%s.webp' % k, p))
     used = {os.path.basename(p) for _, p in files}
-    for sub, ext in (('day', '.jpg'), ('ex', '.webp')):
-        for f in sorted(os.listdir(os.path.join(IMG, sub))):
-            if f.endswith(ext) and f not in used:
-                print('  aviso: src/img/%s/%s no está en su lista y no se usa' % (sub, f))
-    return {'files': files, 'day': day, 'ex': ex, 'exFor': ex_for, 'exAlias': ex_alias}
+    for f in sorted(os.listdir(os.path.join(IMG, 'day'))):
+        if f.endswith('.jpg') and f not in used:
+            print('  aviso: src/img/day/%s no está en su lista y no se usa' % f)
+    return {'files': files, 'day': day}
 
 
 def media_js(m, inline):
@@ -157,9 +137,6 @@ def media_js(m, inline):
     src = dict(m['files'])
     obj = {
         'day': {k: url('img/day/%s.jpg' % k, src['img/day/%s.jpg' % k]) for k in m['day']},
-        'ex': {k: url('img/ex/%s.webp' % k, src['img/ex/%s.webp' % k]) for k in m['ex']},
-        'exFor': m['exFor'],
-        'exAlias': m['exAlias'],
         'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
     }
     return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
@@ -553,8 +530,8 @@ def main():
         later = sum(os.path.getsize(os.path.join(out, f)) for f in js_files) - start
         print('  dist/app/            index.html %d bytes + js/ (%d KB al arrancar, %d KB al usarlo, %d archivos) + sw.js, version.json, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
             os.path.getsize(os.path.join(out, 'index.html')), start // 1024, later // 1024, len(js_files), len(m['files']), size // 1024))
-    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas y %d fotos de ejercicio' % (
-        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day']), len(m['ex'])))
+    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas de día' % (
+        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day'])))
     if a.check:
         tool = os.path.join(ROOT, 'tools', 'check.js')
         if not os.path.isfile(tool):

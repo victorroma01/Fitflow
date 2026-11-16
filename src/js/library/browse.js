@@ -8,7 +8,6 @@ import { groupLabel, groupOf, GROUPS } from '../data/library.js';
 import { groupIcon } from '../core/icons.js';
 import { fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText } from './model.js';
-import { exHero } from './photo.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
 import { exTip, withExInfo } from './howto.js';
 import { customTools, isCustomExercise } from './custom.js';
@@ -56,7 +55,7 @@ A.libraryGroup = (i, b) => {
   sheetToTop();
 };
 /* la ficha de un ejercicio: nombre, etiquetas (grupo, material y tipo) y su figura, que abre cómo se hace si no hay foto */
-const exDetailHead = (e, g, ph, tap) => '<div class="row ai-start m-6-0-4"><div class="fx-1 minw-0"><h2 class="m-0-0-8 ls-n0_02em">' + X(e.n) + '</h2><div class="exchips">' + [groupLabel(g), e.q, e.t && e.t != 'Otros' ? e.t : ''].filter(Boolean).map(x => html`<span class="tg mr-6 fs-12 p-4-9">${x}</span>`).join('') + '</div></div><span class="anb w-72 h-72 fx-none"' + (ph ? '' : tap) + '>' + exPicture(e.n, 72) + '</span></div>' + (ph ? '' : '<p class="mu hwh2">Toca la figura para ver cómo se hace.</p>');
+const exDetailHead = (e, g, tap) => '<div class="row ai-start m-6-0-4"><div class="fx-1 minw-0"><h2 class="m-0-0-8 ls-n0_02em">' + X(e.n) + '</h2><div class="exchips">' + [groupLabel(g), e.q, e.t && e.t != 'Otros' ? e.t : ''].filter(Boolean).map(x => html`<span class="tg mr-6 fs-12 p-4-9">${x}</span>`).join('') + '</div></div><span class="anb w-72 h-72 fx-none"' + tap + '>' + exPicture(e.n, 72) + '</span></div><p class="mu hwh2">Toca la figura para ver cómo se hace.</p>';
 /* los músculos principales y, si los hay, los secundarios */
 const exDetailMuscles = e => '<h4 class="ph">Músculos principales</h4>' + (exMuscles(e, 'p').map(m => html`<span class="mc on">${m}</span>`).join('') || '<small class="mu">Sin datos</small>') + (exMuscles(e, 's').length ? html`<h4 class="ph">Músculos secundarios</h4>${exMuscles(e, 's').map(m => html`<span class="mc">${m}</span>`)}` : '');
 /* su consejo, tu mejor marca y las variantes del mismo grupo y tipo, cada una con «+ Al día» */
@@ -67,10 +66,9 @@ const exDetailHtml = (i, nav, w) => {
   const g = groupOf(e);
   const pr = bestOf(e.n);
   const vr = w ? [] : all.map((x, j) => ({ e: x, i: j })).filter(o => o.e !== e && groupOf(o.e) == g && o.e.t == e.t && e.t != 'Otros');
-  /* la imagen (la foto o, si no hay, la figura) abre cómo se hace el ejercicio (F-14) */
+  /* la figura abre cómo se hace el ejercicio (F-14) */
   const tap = html` data-a="exerciseHowTo" data-n="${e.n}"${raw(w ? '' : ' data-i="' + i + '"')} role="button" tabindex="0" aria-label="Cómo se hace: ${e.n}"`;
-  const ph = exHero(e.n);
-  return nav + (ph ? html`<div class="exhw"${tap}>${ph}<span class="hwh">Cómo se hace</span></div>` : '') + exDetailHead(e, g, ph, tap) + exAnatomyFull(e) + exDetailMuscles(e) + exDetailExtras(e, pr, vr) + (!w && isCustomExercise(e.n) ? customTools(i) : '') + '<div class="h-20"></div>';
+  return nav + exDetailHead(e, g, tap) + exAnatomyFull(e) + exDetailMuscles(e) + exDetailExtras(e, pr, vr) + (!w && isCustomExercise(e.n) ? customTools(i) : '') + '<div class="h-20"></div>';
 };
 A.exerciseDetail = i => {
   if (!exAll()[i])

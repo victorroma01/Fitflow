@@ -1,5 +1,6 @@
-"""Prueba de las figuras de ejercicio (muestra de la V1.1): el modelo haciendo el ejercicio en las miniaturas y, al tocar la
-imagen, la hoja nueva: figura grande que se mueve, músculos en pequeño a la izquierda con sus nombres, y el texto.
+"""Prueba de las figuras de ejercicio: el modelo haciendo cada ejercicio de la librería, en las miniaturas y, al tocar la
+imagen, en la hoja «Cómo se hace»: figura grande que se mueve, músculos en pequeño a la izquierda con sus nombres, y el
+texto. Los 551 ejercicios se abren uno a uno; unos cuantos, de cada clase de figura, se miran con detalle.
 
   python3 tests/figures.py dist/stratafit.html [carpeta_capturas]
 """
@@ -19,9 +20,12 @@ def rd(n):
 
 INIT = rd('init.js')
 fails = []
-SAMPLE = ['Press banca', 'Sentadilla', 'Curl bíceps barra', 'Elevaciones laterales']
-# tres variantes suyas: la misma postura con otro material (mancuernas) u otro apoyo de la barra (por delante)
-VARIANTS = ['Press banca mancuernas', 'Sentadilla frontal', 'Curl con mancuernas']
+# uno de cada clase de figura: de perfil con barra, con mancuernas, en máquina y en polea; de frente y de espaldas; con
+# postura intermedia; de cardio
+MOVING = ['Press banca', 'Sentadilla', 'Curl con mancuernas', 'Jalón al pecho', 'Remo en polea baja', 'Elevaciones laterales', 'Pájaros en máquina', 'Abducción en máquina', 'Clean & jerk', 'Burpees', 'Bicicleta']
+# con postura intermedia (tres posturas quietas) y que se mantienen (una sola, quieta)
+THREE = ['Clean & jerk', 'Burpees']
+HELD = ['Plancha', 'Pino contra la pared']
 # la figura de un ejercicio se reconoce por sus piezas (<use href="#fs…"> en pequeño, "#fb…" en grande)
 IS_FIGURE = "(el => !!el && !!el.querySelector('use[href^=\"#fs\"],use[href^=\"#fb\"]'))"
 # las transformaciones de las capas de la figura grande, tal como están ahora
@@ -101,35 +105,68 @@ def main(path, shots=None):
             pg.wait_for_timeout(150)
 
         check('arranca', ev('!!window.__ffok'))
-        ev("S.reduceMotion=0;saveState()")
+        ev("S.reduceMotion=0;S.customExercises=[{n:'Mi ejercicio',c:'Culturismo',g:'Propio',t:'Personalizado',p:['ps'],s:['tr'],q:'Otro'}];saveState()")
 
-        # datos: los cuatro ejercicios de la muestra y sus tres variantes existen y tienen postura
-        check('los ejercicios de la muestra tienen postura', sorted(ev('Object.keys(FIG_POSES)')) == sorted(SAMPLE + VARIANTS), str(ev('Object.keys(FIG_POSES)')))
-        miss = ev("Object.keys(FIG_POSES).filter(n=>!exAll().some(e=>e.n==n))")
-        check('todos los ejercicios con postura existen en la biblioteca', not miss, str(miss))
-        # las piezas de los dos modelos están definidas una vez, y todo lo que una figura usa existe
-        check('las piezas del modelo están en la página', ev("['fbT','fsT','fbUA','fqHG','fbB','fbA0','fbA1','fcB','frBI','frDL0','gSm'].every(i=>!!document.getElementById(i))"))
+        # datos: todos los ejercicios de la librería tienen su figura; uno propio, no
+        n_lib = ev("exAll().length - S.customExercises.length")
+        check('la librería tiene sus 551 ejercicios', n_lib == 551, str(n_lib))
+        miss = ev("exAll().filter(e=>!figPose(e.n)).map(e=>e.n)")
+        check('todos los ejercicios de la librería tienen figura, y el propio no', miss == ['Mi ejercicio'], str(miss[:8]))
+        check('cada postura de la tabla es de un ejercicio que existe', ev("Object.keys(FIG_POSES).every(n=>exAll().some(e=>e.n==n))"))
 
-        # librería: en las listas, la miniatura es el modelo haciendo el ejercicio; los demás siguen con el mapa muscular
+        # las miniaturas de todos: el modelo, sin piezas que no existan y sin nada fuera de sitio
+        bad = ev("""(() => { const bad = []; const box = document.createElement('div');
+          exAll().forEach(e => { if (!figPose(e.n)) return; box.innerHTML = String(exPicture(e.n, 64));
+            const uses = [...box.querySelectorAll('use')].map(u => u.getAttribute('href'));
+            if (!uses.some(h => /^#f[sb]/.test(h))) bad.push(e.n + ': no es la figura');
+            else if (/NaN|undefined/.test(box.innerHTML)) bad.push(e.n + ': fuera de sitio');
+            else if (uses.some(h => !document.querySelector(h))) bad.push(e.n + ': usa ' + uses.find(h => !document.querySelector(h)));
+            else if (!/^-?\\d+ -?\\d+ \\d+ \\d+$/.test(box.querySelector('svg').getAttribute('viewBox'))) bad.push(e.n + ': encuadre'); });
+          return bad; })()""")
+        check('las 551 miniaturas son la figura del ejercicio, enteras', not bad, str(bad[:6]))
+        check('las piezas de los modelos están en la página, una sola vez', ev("['fbTXs','fsTXs','fbPVi','fbUA','fqHG','fbFB','fbBB','fbFU0','fbBU1','fcB','frBI','frFDL0','frBDP1','gSm'].every(i=>document.querySelectorAll('[id=\"'+i+'\"]').length==1)"),
+              str(ev("['fbTXs','fsTXs','fbPVi','fbUA','fqHG','fbFB','fbBB','fbFU0','fbBU1','fcB','frBI','frFDL0','frBDP1','gSm'].filter(i=>document.querySelectorAll('[id=\"'+i+'\"]').length!=1)")))
+
+        # la hoja «Cómo se hace» de todos: cada una con su figura grande, entera
+        bad = ev("""(async () => { const bad = []; const wait = ms => new Promise(r => setTimeout(r, ms));
+          for (const e of exAll()) { if (!figPose(e.n)) continue;
+            const old = document.querySelector('#sh .fgs'); if (old) old.remove();
+            A.exerciseHowTo(0, { dataset: { n: e.n } });
+            let st = null;
+            for (let i = 0; i < 100 && !(st = document.querySelector('#sh .fgs')); i++) await wait(10);
+            if (!st) { bad.push(e.n + ': sin figura'); continue; }
+            const uses = [...st.querySelectorAll('use')].map(u => u.getAttribute('href'));
+            const held = !!figPose(e.n).hold;
+            if (/NaN|undefined/.test(st.innerHTML)) bad.push(e.n + ': fuera de sitio');
+            else if (uses.some(h => !document.querySelector(h))) bad.push(e.n + ': usa ' + uses.find(h => !document.querySelector(h)));
+            else if (!!st.querySelector('svg[data-fig]') == held) bad.push(e.n + (held ? ': se mantiene y se mueve' : ': no se mueve'));
+            else if (document.querySelector('#sh .hwt').textContent != e.n || document.querySelector('#sh .hwp').innerText.length < 80) bad.push(e.n + ': el nombre o el texto');
+            else if (document.querySelector('#sh img')) bad.push(e.n + ': lleva una foto'); }
+          return bad; })()""")
+        check('las 551 hojas llevan la figura grande, el nombre y el texto, y ninguna foto', not bad, str(bad[:6]))
+        ev("A.closeSheet()")
+        pg.clock.run_for(300)
+
+        # librería: en las listas, la miniatura es el modelo haciendo el ejercicio; la de uno propio, sus músculos
         ev("A.openLibrary()")
         pg.clock.run_for(300)
-        for q, n in [('press banca', 'Press banca'), ('press banca', 'Press banca mancuernas'), ('sentadilla', 'Sentadilla'), ('sentadilla', 'Sentadilla frontal'), ('curl bíceps', 'Curl bíceps barra'),
-                     ('curl con mancuernas', 'Curl con mancuernas'), ('elevaciones laterales', 'Elevaciones laterales')]:
+        for q, n in [('press banca', 'Press banca'), ('sentadilla', 'Sentadilla frontal'), ('jalón', 'Jalón al pecho'), ('elevaciones laterales', 'Elevaciones laterales'), ('burpee', 'Burpees')]:
             pg.fill('#sh input', q)
             pg.clock.run_for(500)
             row = "[...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent==%r)" % n
             check('lista: «%s» lleva su figura' % n, ev(IS_FIGURE + "(" + row + ")"))
-            broken = ev("(r=>[...r.querySelectorAll('use')].map(u=>u.getAttribute('href')).filter(h=>!document.querySelector(h)))(" + row + ")")
-            check('lista: «%s» no usa piezas que no existen' % n, not broken, str(broken))
-        check('lista: los demás siguen con sus músculos', ev("(r=>!!r && !" + IS_FIGURE + "(r) && !!r.querySelector('.exth svg'))([...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent!='Elevaciones laterales'))"))
-        # las mancuernas de las variantes: dos hexágonos (la de delante y la de atrás) y ninguna barra
+        pg.fill('#sh input', 'mi ejercicio')
+        pg.clock.run_for(500)
+        check('lista: un ejercicio propio sigue con sus músculos', ev("(r=>!!r && !" + IS_FIGURE + "(r) && !!r.querySelector('.exth svg'))([...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent=='Mi ejercicio'))"))
+        # las mancuernas: dos hexágonos (la de delante y la de atrás) y ninguna barra
         pg.fill('#sh input', 'curl con mancuernas')
         pg.clock.run_for(500)
-        check('lista: la variante con mancuernas lleva mancuernas', ev("(g=>g.querySelectorAll('polygon').length == 3 && g.querySelectorAll('circle').length == 0)([...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent=='Curl con mancuernas').querySelector('.exth svg'))"))
+        check('lista: un ejercicio con mancuernas lleva mancuernas', ev("(g=>g.querySelectorAll('polygon').length == 3 && g.querySelectorAll('circle').length == 0)([...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent=='Curl con mancuernas').querySelector('.exth svg'))"))
+        check('en las listas no queda ninguna insignia de foto', ev("!document.querySelector('.phi')"))
         shot('lista')
 
-        # ficha: la figura pequeña junto al nombre abre la hoja
-        i = ev("exAll().findIndex(e=>e.n=='Press banca')")
+        # ficha: la figura pequeña junto al nombre abre la hoja; ya no hay foto
+        i = ev("exAll().findIndex(e=>e.n=='Elevaciones laterales')")
         ev("A.exerciseDetail(%d)" % i)
         pg.clock.run_for(300)
         for _ in range(30):
@@ -138,6 +175,7 @@ def main(path, shots=None):
             pg.wait_for_timeout(100)
         check('ficha: la figura del ejercicio, junto al nombre, se puede tocar', ev(IS_FIGURE + "(document.querySelector('#sh .anb[data-a=exerciseHowTo]'))"))
         check('ficha: el mapa muscular sigue', ev("document.querySelectorAll('#sh .anf svg').length == 2"))
+        check('ficha: sin foto', ev("!document.querySelector('#sh .exph') && !document.querySelector('#sh img')"))
         shot('ficha')
         ev("document.querySelector('#sh .anb[data-a=exerciseHowTo]').click()")
         pg.clock.run_for(300)
@@ -149,19 +187,16 @@ def main(path, shots=None):
         ev("A.closeSheet()")
         pg.clock.run_for(200)
 
-        # la hoja de cada ejercicio de la muestra: figura grande, músculos en pequeño a la izquierda, nombre y texto, en ese orden
-        # (la última es «Elevaciones laterales», que en la app tiene foto)
-        for n in VARIANTS + SAMPLE:
+        # la hoja, con detalle, de un ejercicio de cada clase: figura grande, músculos en pequeño a la izquierda, nombre y
+        # texto, en ese orden; y la figura se mueve
+        for n in MOVING:
             how(n)
             check('hoja de «%s»: la figura grande' % n, ev("!!document.querySelector('#sh .fgs svg[data-fig]') && " + IS_FIGURE + "(document.querySelector('#sh .fgs'))"))
             check('hoja de «%s»: los músculos en pequeño, de frente y de espaldas' % n, ev("document.querySelectorAll('#sh .hwm .hwf svg').length == 2"))
-            check('hoja de «%s»: el nombre y los músculos con su nombre' % n, ev("document.querySelector('#sh .hwm .hwt').textContent == %r && document.querySelectorAll('#sh .hwm .hwl').length == 2 && /^Principal /.test(document.querySelector('#sh .hwl').textContent)" % n))
+            check('hoja de «%s»: el nombre y los músculos con su nombre' % n, ev("document.querySelector('#sh .hwm .hwt').textContent == %r && document.querySelectorAll('#sh .hwm .hwl').length >= 1 && /^Principal /.test(document.querySelector('#sh .hwl').textContent)" % n))
             order = ev("""(() => { const y = s => document.querySelector('#sh ' + s).getBoundingClientRect(); const f = y('.fgs'), m = y('.hwf'), t = y('.hwm .hwt'), p = y('.hwp');
               return [f.bottom <= m.top + 1, m.bottom <= p.top + 1, m.right <= t.left + 1, m.left - f.left < 2, f.width > 300 && f.height > 200, m.width < 110]; })()""")
             check('hoja de «%s»: figura arriba, músculos debajo a la izquierda, texto después' % n, all(order), str(order))
-            check('hoja de «%s»: el texto de cómo se hace' % n, ev("document.querySelector('#sh .hwp').innerText.length > 80"))
-            broken = ev("[...document.querySelectorAll('#sh use')].map(u=>u.getAttribute('href')).filter(h=>!document.querySelector(h))")
-            check('hoja de «%s»: no usa piezas que no existen' % n, not broken, str(broken[:4]))
             fits = ev("(() => { const s = document.querySelector('#sh .sp'); return s.scrollWidth <= s.clientWidth + 1; })()")
             check('hoja de «%s»: no se sale de ancho' % n, fits)
             # se mueve: del inicio al final y vuelta
@@ -172,33 +207,22 @@ def main(path, shots=None):
             pg.clock.run_for(8000)
             check('hoja de «%s»: y sigue en su sitio tras varios ciclos' % n, 'NaN' not in ev(LAYERS) and ev("document.querySelectorAll('#sh svg[data-fig] > g').length") >= 3)
             shot('hoja_' + n.split()[0].lower())
-        # las imágenes realistas: un ejercicio con figura ya no enseña su foto, ni en la hoja, ni en la lista, ni en la ficha
-        check('«Elevaciones laterales» tiene foto en la app', ev("!!EX_PHOTO_KEY['Elevaciones laterales']"))
-        check('con figura, la foto realista no sale en la hoja', ev("!document.querySelector('#sh .exph') && !document.querySelector('#sh img')"))
+        # una postura que se mantiene: una sola figura, quieta
+        for n in HELD:
+            how(n)
+            check('hoja de «%s»: una sola figura, que no se mueve' % n, ev("!document.querySelector('#sh svg[data-fig]') && document.querySelectorAll('#sh .fgs svg').length == 1 && " + IS_FIGURE + "(document.querySelector('#sh .fgs')) && !document.querySelector('#sh .fgs figcaption')"))
+        shot('hoja_quieta')
+        # un ejercicio propio: sus músculos, como antes
+        how('Mi ejercicio')
+        check('ejercicio propio: sus músculos, sin figura', ev("!!document.querySelector('#sh .hwa svg') && !document.querySelector('#sh .fgs') && document.querySelector('#sh .hwt').textContent == 'Mi ejercicio'"), str(ev("document.querySelector('#sh .sp').innerHTML.slice(0,200)")))
         ev("A.closeSheet()")
         pg.clock.run_for(300)
-        check('al cerrar la hoja no queda ninguna figura', ev("!document.querySelector('svg[data-fig]')"))
-        ev("A.openLibrary()")
-        pg.clock.run_for(300)
-        pg.fill('#sh input', 'elevaciones laterales')
-        pg.clock.run_for(500)
-        row = "[...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent=='Elevaciones laterales')"
-        check('con figura, la miniatura no lleva la insignia de foto', ev("!" + row + ".querySelector('.phi')"))
-        ev("A.exerciseDetail(%d)" % ev("exAll().findIndex(e=>e.n=='Elevaciones laterales')"))
-        pg.clock.run_for(300)
-        for _ in range(30):
-            if ev("!!document.querySelector('#sh .anb')"):
-                break
-            pg.wait_for_timeout(100)
-        check('con figura, la ficha no lleva la foto y su figura abre la hoja', ev("!document.querySelector('#sh .exph') && " + IS_FIGURE + "(document.querySelector('#sh .anb[data-a=exerciseHowTo]'))"))
-        shot('ficha_sin_foto')
-        ev("A.closeSheet()")
-        pg.clock.run_for(200)
+        check('al cerrar la hoja no queda ninguna figura moviéndose', ev("!document.querySelector('svg[data-fig]')"))
 
         # en un móvil estrecho y en una tableta, la hoja no se sale de ancho y la figura no pasa de su alto
         for w, h in [(320, 568), (768, 1024)]:
             pg.set_viewport_size({'width': w, 'height': h})
-            for n in SAMPLE:
+            for n in ['Press banca', 'Sentadilla', 'Elevaciones laterales', 'Remo en polea baja', 'Burpees', 'Dominadas']:
                 how(n)
                 box = ev("""(() => { const s = document.querySelector('#sh .sp'), f = document.querySelector('#sh .fgs svg').getBoundingClientRect(), t = document.querySelector('#sh .hwm').getBoundingClientRect();
                   return [s.scrollWidth <= s.clientWidth + 1, f.height <= 341 && f.height > 150, f.right <= s.getBoundingClientRect().right + 1, t.right <= s.getBoundingClientRect().right + 1]; })()""")
@@ -209,15 +233,7 @@ def main(path, shots=None):
             pg.clock.run_for(200)
         pg.set_viewport_size({'width': 390, 'height': 844})
 
-        # un ejercicio aún sin postura: como antes (con foto, la foto y los músculos en pequeño; sin foto, sus músculos)
-        how('Hip thrust')
-        check('sin postura y con foto: la foto arriba y los músculos en pequeño', ev("!!document.querySelector('#sh .exph img.f') && !document.querySelector('#sh .fgs') && document.querySelectorAll('#sh .hwm .hwf svg').length == 2"))
-        how('Press militar')
-        check('sin postura ni foto: sus músculos, como antes', ev("!!document.querySelector('#sh .hwa svg') && !document.querySelector('#sh .fgs') && !document.querySelector('#sh .hwm') && document.querySelector('#sh .hwt').textContent == 'Press militar'"), str(ev("document.querySelector('#sh .sp').innerHTML.slice(0,200)")))
-        ev("A.closeSheet()")
-        pg.clock.run_for(200)
-
-        # con «Reducir animaciones»: las dos posturas quietas, con su rótulo
+        # con «Reducir animaciones»: las posturas quietas, con su rótulo
         ev("S.reduceMotion=1;saveState()")
         how('Sentadilla')
         check('reducir animaciones: dos posturas quietas, «Inicio» y «Final»', ev("!document.querySelector('#sh svg[data-fig]') && [...document.querySelectorAll('#sh .fgs.two figcaption')].map(x=>x.textContent).join() == 'Inicio,Final' && document.querySelectorAll('#sh .fgs.two svg').length == 2"))
@@ -245,6 +261,21 @@ def main(path, shots=None):
         red, orange, slate, _, _ = painted(capture(pg.locator('#sh .fgs figure').nth(1)))
         print('        pintado: press banca %.4f %.4f %.4f' % (red, orange, slate))
         check('press banca: se ven el pectoral, los secundarios y el cuerpo', red > .0008 and orange > .0008 and slate > .018, '%.4f %.4f %.4f' % (red, orange, slate))
+        # de espaldas: el deltoides posterior, que de frente no se ve
+        how('Pájaros en máquina')
+        settled()
+        red, orange, slate, _, _ = painted(capture(pg.locator('#sh .fgs figure').nth(1)))
+        print('        pintado: pájaros en máquina, de espaldas %.4f %.4f %.4f' % (red, orange, slate))
+        check('pájaros en máquina: de espaldas se ve el deltoides posterior', red > .0006 and slate > .012, '%.4f %.4f %.4f' % (red, orange, slate))
+        # con postura intermedia: tres posturas; la que se mantiene: una, sin rótulo
+        for n in THREE:
+            how(n)
+            check('reducir animaciones, «%s»: tres posturas, «Inicio», «Paso» y «Final»' % n, ev("[...document.querySelectorAll('#sh .fgs.two figcaption')].map(x=>x.textContent).join() == 'Inicio,Paso,Final' && new Set([...document.querySelectorAll('#sh .fgs.two svg')].map(s=>s.innerHTML)).size == 3"))
+            fits = ev("(() => { const s = document.querySelector('#sh .sp'); return s.scrollWidth <= s.clientWidth + 1; })()")
+            check('reducir animaciones, «%s»: las tres caben a lo ancho' % n, fits)
+        shot('tres')
+        how('Plancha')
+        check('reducir animaciones: una postura que se mantiene sigue siendo una sola figura', ev("document.querySelectorAll('#sh .fgs svg').length == 1 && !document.querySelector('#sh .fgs figcaption')"))
         ev("A.closeSheet()")
         ev("S.reduceMotion=0;saveState()")
         pg.clock.run_for(200)
@@ -261,13 +292,12 @@ def main(path, shots=None):
         pg.clock.run_for(200)
 
         # entreno: la miniatura es la figura y abre la hoja
-        d = ev("S.plan.findIndex(d=>d.ex.some(e=>FIG_POSES[e.n]))")
-        check('el programa por defecto tiene un ejercicio de la muestra', d >= 0, str(d))
-        ev("S.tab=0;S.selectedWeekday=%d;S.selectedDay=%d;R()" % (max(d, 0), max(d, 0)))
+        ev("S.tab=0;S.selectedWeekday=0;S.selectedDay=0;R()")
         ev("A.startWorkout()")
         pg.clock.run_for(400)
-        sel = "document.querySelector('.xs .th[data-a=exerciseHowTo][data-n=\"'+S.plan[S.selectedDay].ex.find(e=>FIG_POSES[e.n]).n+'\"]')"
+        sel = "document.querySelector('.xs .th[data-a=exerciseHowTo]')"
         check('entreno: la miniatura es el modelo haciendo el ejercicio', ev(IS_FIGURE + "(" + sel + ")"))
+        check('entreno: todas las miniaturas son figuras', ev("[...document.querySelectorAll('.xs .th[data-a=exerciseHowTo]')].every(" + IS_FIGURE + ")"))
         size = ev("(r=>[Math.round(r.width),Math.round(r.height)])(" + sel + ".querySelector('svg').getBoundingClientRect())")
         check('entreno: la miniatura cabe en su recuadro', size == [64, 64], str(size))
         shot('entreno')
@@ -277,7 +307,14 @@ def main(path, shots=None):
             if ev("!!document.querySelector('#sh .hwp')"):
                 break
             pg.wait_for_timeout(100)
-        check('entreno: al tocarla se abre la hoja con la figura grande', ev("!!document.querySelector('#sh .fgs svg[data-fig]')"))
+        check('entreno: al tocarla se abre la hoja con la figura grande y el texto', ev("!!document.querySelector('#sh .fgs svg') && document.querySelector('#sh .hwp').innerText.length > 80"))
+        ev("document.querySelector('#sh [data-a=exerciseDetailByName]').click()")
+        pg.clock.run_for(400)
+        for _ in range(30):
+            if ev("!!document.querySelector('#sh .anf')"):
+                break
+            pg.wait_for_timeout(100)
+        check('entreno: desde la hoja se abre la ficha, sin «+ Al día» ni variantes', ev("!!document.querySelector('#sh .anf') && !document.querySelector('#sh [data-a=libraryAddToDay]')"))
         check('el entreno sigue en marcha', ev('!!W'))
         ev("A.closeSheet()")
         pg.clock.run_for(200)

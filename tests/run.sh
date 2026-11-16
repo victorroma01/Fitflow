@@ -29,7 +29,6 @@ run node --test --test-reporter=dot tests/parts.test.mjs
 run node --test --test-reporter=dot tests/rig.test.mjs
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
-run python3 tests/photos.py dist/stratafit.html
 run python3 tests/figures.py dist/stratafit.html
 run python3 tests/security.py dist/stratafit.html
 run python3 tests/a11y.py dist/stratafit.html

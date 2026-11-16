@@ -13,7 +13,7 @@ import { mealsPart } from './parts.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
 import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
-import { EX_PHOTO_KEY, EX_PHOTOS } from '../data/photos.js';
+import { EX_ALIASES } from '../data/aliases.js';
 import { FIG_POSES } from '../data/figposes.js';
 import { figPose } from '../extras/moves.js';
 import { exPicture } from '../extras/anatomy.js';
@@ -71,8 +71,7 @@ const DEBUG_NAMES = {
   deviceOS: [() => deviceOS],
   dialog: [() => dialog],
   errorLog: [() => errorLog],
-  EX_PHOTO_KEY: [() => EX_PHOTO_KEY],
-  EX_PHOTOS: [() => EX_PHOTOS],
+  EX_ALIASES: [() => EX_ALIASES],
   exAll: [() => exAll],
   exPicture: [() => exPicture],
   exSearchText: [() => exSearchText],

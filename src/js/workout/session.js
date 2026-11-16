@@ -9,7 +9,6 @@ import { S, setOverviewMode, setW, W } from '../core/state.js';
 import { icon } from '../core/icons.js';
 import { dialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { exBadge } from '../library/photo.js';
 import { restorePlanBackup } from '../routines/builder.js';
 import { blockBadge, dayBlocks, exToolsHtml } from './day.js';
 import { targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from './targets.js';
@@ -219,7 +218,7 @@ const exThumb = (n, i) => {
   const s = exPicture(n, 64);
   /* al tocar la imagen, cómo se hace el ejercicio (F-14: library/howto) */
   const at = ' data-a="exerciseHowTo" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Cómo se hace: ' + X(n) + '"';
-  return html`<div class="th${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}${raw(exBadge(n))}</div>`;
+  return html`<div class="th${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}</div>`;
 };
 const restPill = () => W && W.restEndsAt ? html`<button class="wsr" data-a="scrollToRest" aria-label="Ir al descanso">Descanso <b id="rt2">${raw(fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000))))}</b></button>` : '';
 A.scrollToRest = () => {
