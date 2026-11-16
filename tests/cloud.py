@@ -534,7 +534,14 @@ def main(path):
         check('un usuario con código se ve como texto (nada se ejecuta)', p4.evaluate("!document.querySelector('#sh img') && document.querySelector('#sh').innerText.includes('<img src=x')"))
         check('la contraseña temporal sale oculta hasta pulsar «Ver»', temp not in txt and 'Ana_1' in txt)
         p4.click('#sh [data-a=adminToggleSection]')
-        check('«Ver» la enseña', temp in p4.inner_text('#sh'))
+        # (el cambio es inmediato. Falló una vez en Firefox, en GitHub, sin dejar rastro: ahora se le da un momento y, si no
+        # sale, se anota lo que enseña la tarjeta)
+        try:
+            wait(p4, "document.querySelector('#sh .adk').textContent != '••••••••••••'", 2000)
+        except AssertionError:
+            pass
+        card = p4.evaluate("(()=>{const k=document.querySelector('#sh .adp');return k?k.innerText.replace(/\\s+/g,' '):'no hay tarjeta de contraseña temporal'})()")
+        check('«Ver» la enseña', temp in p4.inner_text('#sh'), 'la tarjeta: ' + card.replace(temp, '(la contraseña)'))
 
         # ── entrar con la contraseña temporal (en un móvil nuevo): hay que elegir una nueva ──
         n_logs = p2.evaluate('S.logs.length')
