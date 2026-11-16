@@ -20,17 +20,36 @@ def rd(n):
 fails = []
 
 
-def notes_items():
-    """Cuántos cambios tiene la nota de la versión actual: los de Novedades, Mejoras y Correcciones de la primera entrada de
-    CHANGELOG.md (Interno no se enseña)."""
-    entry = re.split(r'^## ', open(os.path.join(HERE, '..', 'CHANGELOG.md'), encoding='utf-8').read(), flags=re.M)[1]
-    n, shown = 0, False
-    for l in entry.splitlines():
-        if l.startswith('### '):
-            shown = l[4:].strip() in ('Novedades', 'Mejoras', 'Correcciones')
-        elif shown and l.startswith('- '):
-            n += 1
-    return n
+def note_expected():
+    """Lo que tiene que enseñar la nota de la versión actual, según CHANGELOG.md: los títulos de sus apartados y cuántos
+    cambios (Interno no se enseña). Si la primera entrada es la revisión de otra versión («Revisión de la [X.Y.Z]» antes de su
+    primer apartado), la nota lleva los apartados de la revisión y, debajo, los de esa versión (y los de sus revisiones
+    anteriores), cada uno con el número de la suya."""
+    entries = re.split(r'^## ', open(os.path.join(HERE, '..', 'CHANGELOG.md'), encoding='utf-8').read(), flags=re.M)[1:]
+
+    def parts(entry):
+        lines = entry.splitlines()
+        ver, base, secs, cur, head = re.match(r'\[([\d.]+)\]', lines[0]).group(1), None, [], None, True
+        for l in lines[1:]:
+            if l.startswith('### '):
+                head, cur = False, ([l[4:].strip(), 0] if l[4:].strip() in ('Novedades', 'Mejoras', 'Correcciones') else None)
+                if cur:
+                    secs.append(cur)
+            elif head and re.match(r'Revisión de la \[([\d.]+)\]', l):
+                base = re.match(r'Revisión de la \[([\d.]+)\]', l).group(1)
+            elif cur and l.startswith('- '):
+                cur[1] += 1
+        return ver, base, [x for x in secs if x[1]]
+
+    first = parts(entries[0])
+    if not first[1]:
+        return [t for t, n in first[2]], sum(n for t, n in first[2])
+    chain = [first]
+    for e in entries[1:]:
+        chain.append(parts(e))
+        if chain[-1][0] == first[1]:
+            break
+    return ['%s de la %s' % (t, v) for v, b, secs in chain for t, n in secs], sum(n for v, b, secs in chain for t, n in secs)
 
 
 def check(name, cond, info=''):
@@ -220,7 +239,15 @@ def main(path):
         run()
         sec = ev("[...document.querySelectorAll('.rnp .ups')].map(x=>x.textContent)")
         items = ev("document.querySelectorAll('.rnp li').length")
-        check('enseña la nota de la última versión, con todos sus cambios', 'Versión ' + ev("APPV") in txt('.rnp') and sec[:1] in (['Novedades'], ['Mejoras'], ['Correcciones']) and items == notes_items(), str(sec) + ' %d de %d' % (items, notes_items()))
+        titles, count = note_expected()
+        check('enseña la nota de la última versión, con todos sus cambios', 'Versión ' + ev("APPV") in txt('.rnp') and sec == titles and items == count and count > 0, str(sec) + ' %d de %d' % (items, count))
+        # una revisión (1.0.31 de la 1.0.3) enseña primero lo suyo y después lo de la versión que revisa, cada apartado con
+        # el número de la suya
+        if any(' de la ' in t for t in titles):
+            check('y, al ser una revisión, primero lo que arregla ella y después lo de la versión que revisa', sec[0].endswith(' de la ' + ev("APPV")) and not sec[-1].endswith(' de la ' + ev("APPV")), str(sec))
+        # el aviso de versión nueva compara los números uno a uno: una revisión es posterior a su versión, pero también a la
+        # siguiente de una cifra, así que lo que venga después tiene que llevar un número mayor
+        check('para el aviso, la 1.0.31 es posterior a la 1.0.3, y la 1.0.32 y la 1.1.0, a la 1.0.31; la 1.0.4, no', ev("isNewerVersion('1.0.31','1.0.3') && isNewerVersion('1.0.32','1.0.31') && isNewerVersion('1.1.0','1.0.31') && !isNewerVersion('1.0.4','1.0.31') && !isNewerVersion('1.0.31','1.0.31')"))
         lk = ev("(b=>{const s=getComputedStyle(b);return [b.innerText,s.textDecorationLine,parseFloat(s.fontSize),s.color==getComputedStyle(document.querySelector('.rnp small.mu')||b).color,b.getBoundingClientRect().top>document.querySelector('.rnp').getBoundingClientRect().bottom]})(document.querySelector('.rnc .lnk'))")
         check('debajo, «Cerrar» pequeño, gris y subrayado', lk[0] == 'Cerrar' and 'underline' in lk[1] and lk[2] <= 14 and lk[3] and lk[4], str(lk))
         ev("document.querySelector('.rnc .lnk').click()")

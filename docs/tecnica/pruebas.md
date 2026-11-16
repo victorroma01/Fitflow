@@ -19,6 +19,7 @@ antes de pintar y las guarda sin esperar (I-04), `page.goto` y `page.reload` esp
 | `tools/modindex.js --check` | Que el [mapa de módulos](modulos.md) está al día. |
 | `tools/figure.js --check` | Que `data/figure.js` (el modelo de perfil de las [figuras](figuras.md)) está al día con los puntos del dibujo. |
 | `tools/check.js` | Sintaxis, importaciones, orden de carga, identificadores sin declarar, duplicados, acciones sin manejador, botones sin nombre, código muerto y CSS sin usar ([reglas](desarrollo.md#reglas-de-calidad)). |
+| `tests/changelog.py` | Cómo lee `build.py` el [historial de cambios](../../CHANGELOG.md) y compone la tarjeta de cada versión, sin navegador: los apartados que ve el usuario, las revisiones (la 1.0.31 enseña lo que arregla y, debajo, lo de la 1.0.3, que ya no sale aparte), lo que detiene la compilación y el historial de verdad. |
 | `tests/merge.test.mjs` | La fusión de datos entre dispositivos (`cloud/merge`), sin navegador: cada lado gana lo suyo, comidas e historial se juntan, lo borrado se borra. |
 | `tests/exinfo.test.mjs` | El catálogo de ejercicios (T-05), sin navegador: cada ejercicio de la librería tiene su consejo y su ejecución, y no hay dos iguales ni parecidos (más de la mitad de las secuencias de tres palabras en común), ni un consejo igual a una ejecución. |
 | `tests/calc.test.mjs` | Los cálculos (`core/calc` y lo que usa de `core/util`), sin navegador: lo que suma un alimento, un día y un periodo, los objetivos (Mifflin-St Jeor y el reparto de macros, con 5.000 casos al azar), el volumen de una sesión, la mejor marca, el lunes de una semana y las fechas en los cambios de hora, y lo que escribe el usuario (`typedNum`). También las reglas del entreno: en qué se mide un ejercicio, qué serie cuenta para las marcas (de 1 a 30 repeticiones, sin drop sets), la duración sin pausas, la progresión (3.000 sesiones al azar: sube, baja o mantiene, y cada serie parte de su peso), la descarga y el drop set (nunca más que el peso normal) y la suma de kilómetros. Y lo que se reutiliza para ir más rápido: el lunes de cada día (`mondayKey`) y los formatos de fecha (`fmtDate`), iguales a la cuenta directa en todos los días de dos años. |
@@ -122,7 +123,7 @@ no hay: el caso de los accesos directos del icono está probado con el paquete r
 | 15 | Bien: con App Check configurado, entrar y sincronizar van como siempre y Diagnóstico no enseña errores «App Check». |
 | 16-19, 22, 23 | Bien. |
 | 20 | Funciona. Al lanzar la lista muy deprisa, hacia abajo o hacia arriba, se ve unas milésimas la zona aún sin pintar, en negro, antes de que salgan las filas. No se ha tocado: ver [lo que queda fuera](figuras.md#lo-que-queda-fuera). |
-| 21 | Los ciclos, bien; **el remo, la comba, el saco de boxeo, el SkiErg y la bici de aire había que pulirlos**: es la V1.0.4 ([figuras](figuras.md)). |
+| 21 | Los ciclos, bien; **el remo, la comba, el saco de boxeo, el SkiErg y la bici de aire había que pulirlos**: es la revisión V1.0.31 ([figuras](figuras.md)). |
 
 App Check quedó configurado ese día (la clave de reCAPTCHA Enterprise y la app web registrada en Firebase) y **sin exigir**: falta
 mirar en la consola que las peticiones salen verificadas ([cómo](backend.md#activar-app-check)). Las alertas de Dependabot están
@@ -170,9 +171,10 @@ activadas en el repositorio.
 22. En un entreno, la figura del ejercicio queda arriba, junto al nombre, también con el calentamiento desplegado.
 23. Registros: los entrenos van del más reciente al más antiguo y cada mes sale una vez.
 
-**Al publicar la V1.0.4** (pendiente)
+**Al publicar la V1.0.31**, la revisión con esos arreglos (publicada el 16-11-2026; pendiente de pasar en el iPhone)
 
-24. Sale la tarjeta «Versión 1.0.4» y, tras «Actualizar», Perfil pone V1.0.4.
+24. Abrir con conexión: sale la tarjeta «Versión 1.0.31», que enseña primero «Correcciones de la 1.0.31» y, al deslizarla,
+    lo de la 1.0.3; «Actualizar»; en Perfil pone V1.0.31.
 25. Remo 1000 m: la palada va seguida, sin pararse; primero las piernas, después el tronco y al final los brazos, y el asiento
     corre por su guía.
 26. SkiErg 1000 m y Saco de boxeo: las asas bajan por delante del cuerpo hasta los muslos; en el saco, guardia, directo y

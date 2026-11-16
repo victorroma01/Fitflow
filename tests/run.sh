@@ -26,6 +26,7 @@ run node tools/format_css.js --check
 run node tools/modindex.js --check
 run node tools/figure.js --check
 run python3 build.py --check
+run python3 tests/changelog.py
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs

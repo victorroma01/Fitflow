@@ -27,8 +27,8 @@
 
 ## Estado
 
-La versión publicada es la **V1.0.3** (16 de noviembre de 2026); la **V1.0.4** (cinco figuras rehechas tras probar la V1.0.3 en el
-iPhone) está en la rama `desarrollo-1.0.4`. Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` y se
+La versión publicada es la **V1.0.31** (16 de noviembre de 2026), la primera revisión de la V1.0.3: lo que salió al probarla en el
+iPhone. Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` y se
 publica solo con la confirmación del propietario. Los requisitos de cada versión se siguen en GitHub, por milestones:
 
 | Milestone | Contenido |
@@ -39,7 +39,7 @@ publica solo con la confirmación del propietario. Los requisitos de cada versi�
 | **V1.0.1 · Correcciones y mejoras** | Lo encontrado al probar la V1.0.0 en el iPhone y las mejoras pedidas: bienvenida y datos de una cuenta nueva, empezar sin programa, logo nuevo, paso al día siguiente, RPE opcional, Nutri-Score, «Mis alimentos», recuento de iPhone y Android. Publicado. |
 | **V1.0.2 · Código y técnica** | Código más claro (nombres que se entienden y vistas partidas), datos en IndexedDB con sitio para años de uso y guardado más rápido, aviso de espacio, sin estilos en línea, App Check preparado, VoiceOver, service worker más robusto y aviso del icono nuevo en el iPhone. Publicado; App Check (I-05), pendiente de activarlo en la consola. |
 | **V1.0.3 · Auditoría técnica y figuras** | Auditoría completa de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): 43 errores corregidos (uno crítico: tras abrir un acceso directo del icono, una versión nueva podía dejar la app sin arrancar); el modelo anatómico haciendo cada uno de los 551 ejercicios, en movimiento, en lugar de las fotos ([figuras](docs/tecnica/figuras.md)); la semana en Nutrición, ejercicios propios, historial de pesajes, «Deshacer», contraste AA en todo el texto, validación de lo que se escribe, código reorganizado y más pruebas, también en WebKit y en Firefox. Publicado, con App Check configurado (aún sin exigir) y probado por el propietario en su iPhone ([resultado](docs/tecnica/pruebas.md#la-v103-en-el-iphone-del-propietario)). |
-| **V1.0.4 · Figuras pulidas** | Lo que salió de esa prueba: las figuras del remo, el SkiErg, el saco de boxeo, la bici de aire y la comba, rehechas (la palada con su orden, la cuerda que da la vuelta, los golpes desde la guardia) y moviéndose seguido, sin pausa en los extremos. En la rama `desarrollo-1.0.4`, sin publicar hasta que el propietario lo confirme. |
+| **V1.0.31 · Revisión de la V1.0.3** | Lo que salió de esa prueba: las figuras del remo, el SkiErg, el saco de boxeo, la bici de aire y la comba, rehechas (la palada con su orden, la cuerda que da la vuelta, los golpes desde la guardia) y moviéndose seguido, sin pausa en los extremos. No es otra versión: la app enseña sus arreglos en la misma tarjeta que las novedades de la V1.0.3 ([cómo se numera una revisión](CHANGELOG.md)). Publicado. |
 | App móvil · Ideas futuras | Lo que necesita una app de tienda (vibración en iPhone, recordatorio directo al calendario y notificaciones) y las interfaces de entrenador y nutricionista. Sin fecha. |
 
 ## Qué hace

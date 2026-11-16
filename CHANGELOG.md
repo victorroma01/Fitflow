@@ -7,24 +7,34 @@ Cada versión se divide en **Novedades**, **Mejoras**, **Correcciones** e **Inte
 aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en frases cortas); **Interno** es solo para desarrollo.
 `build.py` lee este archivo: la versión de `APPV` debe tener aquí su entrada o la compilación se detiene.
 
+Una **revisión** arregla una versión ya publicada sin ser otra: lleva su número con una cifra más (la 1.0.31 es la primera
+revisión de la 1.0.3) y, antes de su primer apartado, una línea que empieza por «Revisión de la [1.0.3]». La app enseña entonces
+una sola tarjeta: los apartados de la revisión y, debajo, los de la versión que revisa, cada uno con el número de la suya
+(«Correcciones de la 1.0.31», «Novedades de la 1.0.3»). Para el aviso de versión nueva los números se comparan uno a uno, así que
+1.0.31 es posterior a 1.0.3, pero también a 1.0.4: lo que venga después de una revisión tiene que llevar un número mayor que
+ella (1.0.32, 1.1.0…).
+
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
-## [1.0.4] — 2026-11-16
+## [1.0.31] — 2026-11-16
 
-### Mejoras
-- Remo, SkiErg, saco de boxeo, bici de aire y comba: sus figuras se han rehecho. Al remar, primero empujan las piernas,
-  después va el tronco y al final tiran los brazos, y el asiento corre por su guía. En el SkiErg las asas bajan por delante
-  del cuerpo hasta los muslos. En el saco: guardia, directo y cruzado. En la bici de aire los brazos van y vienen con sus
-  palancas. En la comba la cuerda da la vuelta entera y pasa bajo los pies en cada salto (dos veces en los double unders).
-- Esos gestos ya no se paran al final de cada repetición: van seguidos, como se hacen.
-- La comba de boxeo tiene su propia figura: un pie y después el otro.
-- Con «Reducir animaciones», la comba enseña dos posturas: «Inicio» y «Salto».
+Revisión de la [1.0.3]: arregla lo que salió al probarla en un iPhone. No es otra versión, así que la app enseña sus arreglos
+en la misma tarjeta que las novedades de la 1.0.3, cada apartado con el número de la suya.
 
 ### Correcciones
-- En el saco de boxeo, el pie de delante quedaba por debajo de la línea del suelo.
-- Al correr, gatear o empujar el trineo, la figura grande salía más pequeña de lo que cabía en su recuadro.
-- En los burpees, una parte de la figura se salía un momento del recuadro.
+- Sin conexión: la app vuelve a abrir en modo avión (salía «StrataFit no ha podido iniciarse»). Se corrigió el mismo día en
+  que salió la 1.0.3.
+- Remo: la palada va seguida y con su orden (primero las piernas, después el tronco y al final los brazos; al revés a la
+  vuelta), y el asiento corre por su guía.
+- SkiErg: las asas bajan por delante del cuerpo hasta los muslos, sin pararse arriba ni abajo.
+- Saco de boxeo: guardia, directo y cruzado, con los pies en el suelo (el de delante quedaba hundido en él).
+- Assault bike: los brazos van y vienen con sus palancas, con mucho más recorrido.
+- Comba y double unders: la cuerda da la vuelta entera y pasa bajo los pies en cada salto (dos veces en los double unders);
+  con «Reducir animaciones», enseña «Inicio» y «Salto».
+- Comba boxeo: tiene su propia figura, un pie y después el otro.
+- Burpees, correr, gatear y empujar el trineo: la figura grande ya no se sale un momento de su recuadro ni sale más pequeña
+  de lo que cabe.
 
 ### Interno
 - Motor de las figuras (`extras/rig`, `extras/figure`): `flow` (un gesto que va y vuelve sin pausa en los extremos), `hop` (la
@@ -38,6 +48,11 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   a 188 comprobaciones (los gestos seguidos no se paran y vuelven a su sitio, la cuerda gira una o dos vueltas por salto, y
   las posturas quietas de un salto).
 - `tests/run.sh`: cada prueba tiene un tiempo máximo (15 minutos): una que se quede colgada se para y falla con su nombre.
+- Revisiones (`build.py`, `cards`): una entrada de este historial puede ser la revisión de otra. Su tarjeta (el aviso de
+  versión nueva, las novedades y Ajustes) es la de la versión que revisa con lo suyo delante, y `version.json` ya no lleva
+  aparte la versión revisada. El número es el de esa versión con una cifra más, que para el aviso es mayor que cualquier
+  1.0.x de una cifra: tras la 1.0.31 no puede venir una 1.0.4. `tests/changelog.py` (21 comprobaciones) y la nota de Ajustes
+  en `tests/followup.py`.
 - Documentación: el resultado de la lista de la V1.0.3 en el iPhone del propietario ([pruebas](docs/tecnica/pruebas.md)) y el
   estado de App Check y de las alertas de Dependabot.
 

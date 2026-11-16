@@ -1,7 +1,7 @@
 # Figuras de ejercicio
 
 El modelo anatómico haciendo cada uno de los 551 ejercicios de la librería. Sustituye a las fotos realistas, que ya no existen.
-Llegó con la V1.0.3. La V1.0.4 rehace cinco gestos tras probarla el propietario en su iPhone (el remo, el SkiErg, el saco de
+Llegó con la V1.0.3. Su primera revisión, la V1.0.31, rehace cinco gestos tras probarla el propietario en su iPhone (el remo, el SkiErg, el saco de
 boxeo, la bici de aire y la comba) y añade al motor lo que les hacía falta: gestos seguidos, saltos y piezas que giran.
 
 ## Qué se ve
@@ -143,7 +143,7 @@ cabecera de `extras/rig.js`; `extras/gear.js` tiene lo que se repite.
 No hay imágenes: son trazados. Con los dos modelos, el motor, el material y las 551 posturas, el código que se descarga al
 arrancar pasó, en la V1.0.3, de 444 a 559 KB (de 168 a 208 KB comprimido, que es lo que viaja): **40 KB más**. A cambio se
 fueron las 28 fotos, 321 KB: una instalación nueva descarga **unos 280 KB menos**, y el archivo único bajó de 1.446 a
-1.134 KB. Lo añadido en la V1.0.4 pesa 1,6 KB (minificado).
+1.134 KB. Lo añadido en la V1.0.31 pesa 1,6 KB (minificado).
 
 Para que no se note:
 
@@ -180,7 +180,7 @@ pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el
   deja de subir; en la zancada el pie que da el paso va por el aire y el otro no se mueve; en las dominadas el cuerpo sube
   recto; en la escaladora los peldaños bajan con el pie que apoya; en la sentadilla los pies no se mueven; en el press la barra sube casi recta y el cuerpo no se mueve del banco; en el curl solo se
   cierra el codo; colgado de la barra, las manos no se mueven de ella y los pies no tocan el suelo; en el remo el codo va
-  hacia atrás; y el cable del jalón acaba en la mano. Y los cinco gestos de la V1.0.4: **en el remo en ergómetro** van primero
+  hacia atrás; y el cable del jalón acaba en la mano. Y los cinco gestos de la V1.0.31: **en el remo en ergómetro** van primero
   las piernas, después el tronco y al final los brazos, el asa pasa por encima de las rodillas y el asiento va con la cadera
   sin girar; **en el SkiErg** las asas bajan separadas del cuerpo y acaban junto a las caderas; **en el saco** los pies no se
   mueven del suelo y cada puño llega al saco, a la altura del hombro, desde la guardia; **en la bici de aire** cada puño va

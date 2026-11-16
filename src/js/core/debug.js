@@ -30,7 +30,7 @@ import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { spaceCheck, spaceUse } from '../system/space.js';
-import { updatesOn } from '../system/updates.js';
+import { isNewerVersion, updatesOn } from '../system/updates.js';
 import { showSummary } from '../extras/summary.js';
 import { medalSvg } from '../extras/medals.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
@@ -136,7 +136,8 @@ const DEBUG_NAMES = {
   workoutFromStored: [() => workoutFromStored],
   workoutToStored: [() => workoutToStored],
   iconNoticeApplies: [() => iconNoticeApplies],
-  iconNoticeCheck: [() => iconNoticeCheck]
+  iconNoticeCheck: [() => iconNoticeCheck],
+  isNewerVersion: [() => isNewerVersion]
 };
 for (const k in DEBUG_NAMES)
   Object.defineProperty(window, k, { get: DEBUG_NAMES[k][0], set: DEBUG_NAMES[k][1], configurable: true });
