@@ -1425,8 +1425,8 @@ const MOVES = {
     return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m, via: 1, cycle: 1000 });
   },
   /** Remo en ergómetro. La palada tiene su orden: primero empujan las piernas, con los brazos estirados; después el tronco
-      se echa atrás y, al final, tiran los brazos hasta el abdomen. A la vuelta, al revés: brazos, tronco y piernas. El
-      asiento va con la cadera por su guía. */
+      se echa atrás y, al final, tiran los brazos hasta la base del esternón. A la vuelta, al revés: brazos, tronco y
+      piernas. El asiento va con la cadera por su guía. */
   rower: () => {
     const a = { at: 'hip', x: 146, y: 338, lean: 20, neck: -10, foot: [262, 350], ft: -44, grip: [232, 118] };
     /* las piernas casi estiradas y el tronco ya vertical, con los brazos aún estirados: el asa pasa por encima de las rodillas */
