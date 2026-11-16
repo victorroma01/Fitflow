@@ -130,10 +130,14 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   y la rodilla doblan siempre hacia su lado y el brazo se ve en escorzo antes que cerrar el codo más de su tope. Las máquinas
   se mueven como máquinas (en la Smith la barra va por su guía; las palancas giran sobre su eje sin cambiar de largo: `gl`), en
   los pesos muertos la barra sube pegada a las piernas, quien se inclina echa la cadera atrás, en las dominadas el cuerpo sube
-  recto y en las zancadas el paso se da por el aire.
+  recto y en las zancadas el paso se da por el aire. Lo que es un ciclo (correr, andar, pedalear, la elíptica, la escaladora,
+  nadar, el trineo, los gateos, las cuerdas) se escribe como medio ciclo que se repite sin parar con los lados cambiados
+  (`cycle`); una postura intermedia puede ser solo el camino (`via`) y no una fase que se enseñe; y una pieza del material
+  puede deslizarse con el gesto (`slide`: los peldaños de la escaladora).
 - Fuera `library/photo`, las 28 fotos (`src/img/ex`), su CSS y `tests/photos.py`; los otros nombres de búsqueda pasan a
-  `data/aliases`. `tests/rig.test.mjs` (29 pruebas: figura, piezas, articulaciones dentro de su recorrido, manos y pies en su
-  sitio, suelo, continuidad, guías, palancas, equilibrio y barras que no atraviesan el cuerpo, en los 551 ejercicios) y `tests/figures.py` (133 comprobaciones en navegador).
+  `data/aliases`. `tests/rig.test.mjs` (31 pruebas: figura, piezas, articulaciones dentro de su recorrido, manos y pies en su
+  sitio, suelo, continuidad, guías, palancas, equilibrio, barras que no atraviesan el cuerpo y ciclos sin costuras, en los 551
+  ejercicios) y `tests/figures.py` (140 comprobaciones en navegador).
 
 ## [1.0.2] — 2026-11-12
 

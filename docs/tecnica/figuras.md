@@ -1,7 +1,7 @@
 # Figuras de ejercicio
 
 El modelo anatómico haciendo cada uno de los 551 ejercicios de la librería. Sustituye a las fotos realistas, que ya no existen.
-Está en la rama `desarrollo-figuras` y no se publica sin el visto bueno del propietario.
+Va en la V1.0.3 (rama `desarrollo-1.0.3`), que no se publica sin el visto bueno del propietario.
 
 ## Qué se ve
 
@@ -15,9 +15,13 @@ Está en la rama `desarrollo-figuras` y no se publica sin el visto bueno del pro
 - Las **máquinas y las poleas** van dibujadas con lo que las hace reconocibles: el banco o el asiento, la torre, el cable con
   su agarre, las placas, las guías, la plataforma. El cable y la palanca siguen a la mano.
 - Los gestos de **varias fases** (una cargada, un burpee, un muscle-up, la levantada turca) pasan por una postura intermedia.
+- Lo que es un **ciclo** (andar, correr, pedalear, la elíptica, la escaladora, nadar, empujar el trineo, gatear, las cuerdas)
+  no va y vuelve: sigue sin parar, y las piernas y los brazos se turnan. La pierna que apoya pasa bajo la cadera mientras la
+  otra vuelve por el aire; en la escaladora, los peldaños bajan con el pie que los pisa.
 - Una **postura que se mantiene** (una plancha, el pino, colgarse de la barra) es una sola figura, quieta.
 - Con **«Reducir animaciones»** (Ajustes) o si el móvil pide menos movimiento, la figura no se mueve: salen las posturas del
-  gesto una junto a otra, con su rótulo («Inicio» y «Final» y, si la hay, «Paso»).
+  gesto una junto a otra, con su rótulo: «Inicio» y «Final» y, si el ejercicio tiene una fase intermedia, «Paso». Una
+  intermedia que solo guía el camino (el paso de una zancada, la media vuelta de un pedal) no se enseña.
 - Un **ejercicio propio** no tiene postura: se ve como siempre, con sus músculos en el mapa.
 
 Hay 416 figuras distintas: los ejercicios que se hacen igual (un curl con barra recta o con barra Z, las series de carrera)
@@ -72,6 +76,14 @@ La postura del final (`b`) y la intermedia (`m`) solo dicen lo que cambia respec
 ángulos y los puntos se reparten: los pies no se mueven en una sentadilla porque el tobillo es lo que queda quieto, y la
 barra sube recta en un press porque lo que se reparte es el punto del puño.
 
+Dos datos de la figura dicen cómo se recorre el gesto:
+
+- `via: 1`: la intermedia solo guía el camino (la barra rodea las rodillas, el pie da el paso por el aire). No es una fase
+  del ejercicio: ni se enseña quieta ni alarga el compás.
+- `cycle: ms`: el gesto es medio ciclo, que dura esos milisegundos y se repite sin pausa ni vuelta atrás, cada vez con los
+  lados cambiados (lo que hacía la pierna de delante lo hace la de atrás). Solo se escribe una zancada, una pedalada o una
+  brazada; la otra mitad sale sola, y el final de una es exactamente el principio de la siguiente.
+
 El modelo cuida solo dos cosas que de otro modo habría que vigilar en cada postura: el **codo y la rodilla doblan siempre
 hacia su lado** y, si la mano queda tan cerca del hombro que el codo tendría que cerrarse más de lo que da de sí, el brazo
 se dibuja en escorzo (con el codo hacia quien mira) lo justo para que quede en su tope.
@@ -86,15 +98,17 @@ se caiga. `extras/moves.js` tiene una ayuda para cada caso, y `tests/rig.test.mj
 | **En una Smith la barra solo sube y baja por su guía.** | `railGrips`: si el tronco no se mueve (un press, un remo, un curl), los puños de las dos posturas van por la misma vertical de la imagen. `railBody`: si se mueve el cuerpo entero (una sentadilla, una zancada), el cuerpo cuelga del puño, que va por esa vertical, y las piernas llegan a los pies, que no se mueven del suelo. En la Smith no se avanza: la zancada se hace con un pie delante y otro detrás. |
 | **Las palancas no se estiran.** | `leverGrips` y `leverFrom` dejan el puño en el arco de su palanca (`gl`), con el eje donde lo tendría la máquina o donde está (la punta de la barra del remo en T o del press landmine). Si lo que mueve la palanca es otra parte del cuerpo, `pivotAt` pone el eje a la misma distancia del principio y del final, o la pieza va unida al cuerpo (`on`) y gira con él sobre su articulación (el pullover, el crunch, la extensión de cadera). |
 | **El peso sube y baja pegado a las piernas.** | En los pesos muertos las posturas se escriben con el cuerpo colgando de la barra (`railBody`, sin guía): la cadera se va atrás, los brazos quedan algo hacia las piernas y la barra va por delante del tobillo, sobre el pie. Entre ellas se reparte dónde está la cadera, para que las rodillas no se doblen dos veces. Desde el suelo son dos tiempos, con una postura intermedia a la altura de las rodillas: hasta ahí suben la cadera y los hombros a la vez y las rodillas se van atrás para dejar paso a la barra. |
-| **La barra no atraviesa el cuerpo.** | En el press militar sale de la parte alta del pecho y pasa por delante de la cara, con la barbilla atrás; en los levantamientos olímpicos la cabeza se echa atrás cuando la barra va de los hombros a arriba. |
+| **La barra no atraviesa el cuerpo.** | En el press militar sale de la parte alta del pecho y pasa por delante de la cara, con la barbilla atrás; en los levantamientos olímpicos la cabeza se echa atrás cuando la barra va de los hombros a arriba, y en la arrancada la barra pasa ante la frente antes de quedar sobre la cabeza. |
 | **Un paso se da por el aire, y un pedal da la vuelta.** | En las zancadas hay una postura intermedia con el pie que da el paso levantado; el otro no se mueve del suelo (el de atrás, sobre su punta, gira sobre ella). En las bicis, la intermedia lleva los pedales en horizontal: el pie baja por delante del eje y el otro sube por detrás. |
+| **Un ciclo no tiene costuras.** | Con `cycle`, la intermedia es el cruce: la pierna que apoya, bajo la cadera, y la que vuelve, recogida y en el aire (`gait` lo escribe para andar y correr). En la escaladora los peldaños son una pieza que se desliza (`slide`) justo lo que mide un peldaño en medio ciclo, así que el pie baja con el suyo y el otro pisa el que llega. En crol, un brazo tira bajo el agua y el otro vuelve por encima. |
 | **Quien se inclina no se cae.** | `bentOver(lean)`: de pie con el tronco inclinado, la cadera se va atrás lo justo para que los hombros, y el peso que cuelga de ellos, queden sobre los pies (remos, pájaros, patadas de tríceps). |
 | **Colgado, el cuerpo sube recto.** | En las dominadas lo que se reparte es dónde está la cadera, y los brazos llegan a la barra: con los ángulos del hombro y el codo el cuerpo se iría hacia atrás a medio camino. |
 
 El material es una lista de piezas, cada una en su plano (detrás de todo, entre el lado de atrás y el cuerpo, o delante):
 trazos, rellenos, almohadillas, círculos y placas, fijos o unidos a una pieza del cuerpo (`on`); una barra recta entre dos
 puntos que pueden moverse (`link`: un cable, una palanca, una goma); una pieza rígida que apunta a un punto (`aim`: el
-neumático que se voltea); y lo que se lleva en las manos (`bar`, `db`, `kb`, `ball`, `bag`, `disc`). Está explicado en la
+neumático que se voltea); una que se desliza con el gesto (`slide`: los peldaños de la escaladora); y lo que se lleva en las
+manos (`bar`, `db`, `kb`, `ball`, `bag`, `disc`). Está explicado en la
 cabecera de `extras/rig.js`; `extras/gear.js` tiene lo que se repite.
 
 ### Añadir un ejercicio o una variante
@@ -126,23 +140,24 @@ pintado: 96 y 94 ms).
 
 ## Pruebas
 
-- `tests/rig.test.mjs` (29 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
+- `tests/rig.test.mjs` (31 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
   gesto: cada uno tiene figura; las figuras están bien escritas; ninguna pieza sale sin sitio; los codos y las rodillas doblan
   hacia donde doblan; **ninguna articulación pasa de lo que un cuerpo puede hacer** (cintura, cuello, hombro, codo, muñeca,
   cadera, rodilla y tobillo; de frente, brazos y piernas); **las manos y los pies llegan a donde se les pide** (el agarre, el
   pedal, el suelo); nada se hunde en el suelo; el gesto no da saltos; **en la Smith la barra no se sale de su guía**; **las
   palancas de las máquinas no cambian de largo**; **de pie, el peso cae sobre los pies** (con unas masas aproximadas de cada
-  parte del cuerpo y de lo que lleva en las manos); **la barra no atraviesa la cabeza ni las piernas**; y el encuadre,
+  parte del cuerpo y de lo que lleva en las manos); **la barra no atraviesa la cabeza ni las piernas**; **un ciclo no tiene
+  costuras** (al acabar medio ciclo, cada pieza está donde empieza el siguiente, con los lados cambiados); y el encuadre,
   centrado y entero. Además, en ejercicios conocidos: en el peso muerto la barra sube pegada a las piernas y la cadera no
   deja de subir; en la zancada el pie que da el paso va por el aire y el otro no se mueve; en las dominadas el cuerpo sube
-  recto; en la
-  sentadilla los pies no se mueven; en el press la barra sube casi recta y el cuerpo no se mueve del banco; en el curl solo se
+  recto; en la escaladora los peldaños bajan con el pie que apoya; en la sentadilla los pies no se mueven; en el press la barra sube casi recta y el cuerpo no se mueve del banco; en el curl solo se
   cierra el codo; colgado de la barra, las manos no se mueven de ella y los pies no tocan el suelo; en el remo el codo va
   hacia atrás; y el cable del jalón acaba en la mano.
-- `tests/figures.py` (133 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
+- `tests/figures.py` (140 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
   piezas, el nombre y el texto, sin fotos); las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
   (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios ciclos);
-  las posturas que se mantienen; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
+  las posturas que se mantienen; los ciclos, que no se detienen en ningún momento, y los peldaños de la escaladora, que se
+  deslizan; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
   verdad (los músculos que trabajan en rojo y naranja, el resto del cuerpo, las mancuernas en los extremos con los brazos
   abiertos, el deltoides posterior de espaldas), que es lo que comprueba el dibujo en Safari y Firefox; y que un ejercicio
   propio sigue con sus músculos.
@@ -157,7 +172,5 @@ comprueba aparte, en `tests/figures.py`.
   reparto, no una captura de movimiento.
 - En los ejercicios de cuerpo completo (CrossFit, Hyrox, funcional) la librería marca casi todos los músculos como
   principales, y así sale la figura: toda en rojo.
-- En la arrancada, la barra pasa pegada a la cara al meterse el cuerpo debajo: de perfil, su centro roza la silueta de la
-  cabeza durante un instante.
 - Lo que solo se entiende desde arriba o en tres cuartos (el Pallof press, la abducción sentada) se ha resuelto de frente o
   de espaldas, con los brazos o los muslos en escorzo.

@@ -288,6 +288,16 @@ def main(path):
         want = [str(len(logs)), round1(volume / 1000) + ' t', round1(sum(l['m'] for l in logs) / 60) + ' h']
         check('registros: entrenos, volumen y tiempo totales', got == want, '%s ≠ %s' % (got, want))
         check('y una fila por registro', ev("document.querySelectorAll('#sh [data-a=logDeleteAsk]').length") == len(logs))
+        # un cardio apuntado hoy con fecha de hace dos meses va a su sitio, no arriba del todo, y su mes no sale dos veces
+        n_logs = ev("S.logs.length")
+        ev("S.logs.push({d: dayKey(new Date(Date.now() - 62 * 864e5)), n: 'Cardio · Carrera', v: 0, s: 0, m: 30, q: 0, k: 'c', x: '5 km', c: {t: 'run', km: 5, sec: 1800}}); A.openLogs()")
+        run()
+        days = ev("[...document.querySelectorAll('#sh [data-a=logDeleteAsk]')].map(r => S.logs[+r.dataset.i].d)")
+        months = ev("[...document.querySelectorAll('#sh .ph')].map(h => h.textContent)")
+        check('registros: del día más reciente al más antiguo, aunque uno se apunte con fecha de otro día', days == sorted(days, reverse=True) and len(days) == n_logs + 1, str(days[:4]))
+        check('y cada mes sale una sola vez', len(months) == len(set(months)) and len(months) > 0, str(months))
+        ev("S.logs.pop(); saveState(); A.openLogs()")
+        run()
 
         print('Nutrición de los 7 días anteriores')
         dash()

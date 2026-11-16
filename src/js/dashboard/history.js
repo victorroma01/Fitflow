@@ -27,7 +27,9 @@ export function calendarPage() {
   return html`<div class="row"><button data-a="calendarMonth" data-i="-1" aria-label="Mes anterior" class="tz">‹</button><b>${fmtDate(d, MONTH_YEAR)}</b><button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente" class="tz">›</button></div><div class="cal mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
 const logsPage = () => {
-  const L = S.logs.map((l, i) => ({ l, i })).reverse();
+  /* del día más reciente al más antiguo y, dentro de un día, el último que se guardó primero: un cardio se puede apuntar con
+     la fecha de otro día, y no por guardarse el último es el más reciente */
+  const L = S.logs.map((l, i) => ({ l, i })).reverse().sort((a, b) => a.l.d < b.l.d ? 1 : a.l.d > b.l.d ? -1 : 0);
   const tv = S.logs.reduce((s, l) => s + l.v, 0);
   const tm = S.logs.reduce((s, l) => s + (+l.m || 0), 0);
   let h = html`${pgHead('Registros')}<div class="g2 cols-3 gap-8"><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${S.logs.length}</b><br><small>Entrenos</small></div><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${raw(volumeText(tv, 1))}</b><br><small>Volumen</small></div><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${round1(tm / 60)} h</b><br><small>Tiempo</small></div></div>`;

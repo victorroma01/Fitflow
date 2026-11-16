@@ -13,7 +13,7 @@ import { exTip, withExInfo } from './howto.js';
 import { customTools, isCustomExercise } from './custom.js';
 import { bestOf } from '../workout/finish.js';
 import { toDisplayWeight, weightUnit } from '../profile/units.js';
-import { exAnatomyFull, exPicture } from '../extras/anatomy.js';
+import { exAnatomyFull, exHasFigure, exPicture } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 export let libState = { g: '', q: '' };
 export function libBody() {
@@ -54,8 +54,9 @@ A.libraryGroup = (i, b) => {
   sheet(libPage());
   sheetToTop();
 };
-/* la ficha de un ejercicio: nombre, etiquetas (grupo, material y tipo) y su figura, que abre cómo se hace si no hay foto */
-const exDetailHead = (e, g, tap) => '<div class="row ai-start m-6-0-4"><div class="fx-1 minw-0"><h2 class="m-0-0-8 ls-n0_02em">' + X(e.n) + '</h2><div class="exchips">' + [groupLabel(g), e.q, e.t && e.t != 'Otros' ? e.t : ''].filter(Boolean).map(x => html`<span class="tg mr-6 fs-12 p-4-9">${x}</span>`).join('') + '</div></div><span class="anb w-72 h-72 fx-none"' + tap + '>' + exPicture(e.n, 72) + '</span></div><p class="mu hwh2">Toca la figura para ver cómo se hace.</p>';
+/* la ficha de un ejercicio: nombre, etiquetas (grupo, material y tipo) y su imagen, que abre cómo se hace: la figura
+   haciéndolo o, en uno propio, que no tiene, sus músculos o el icono de su grupo */
+const exDetailHead = (e, g, tap) => '<div class="row ai-start m-6-0-4"><div class="fx-1 minw-0"><h2 class="m-0-0-8 ls-n0_02em">' + X(e.n) + '</h2><div class="exchips">' + [groupLabel(g), e.q, e.t && e.t != 'Otros' ? e.t : ''].filter(Boolean).map(x => html`<span class="tg mr-6 fs-12 p-4-9">${x}</span>`).join('') + '</div></div><span class="anb w-72 h-72 fx-none"' + tap + '>' + exPicture(e.n, 72) + '</span></div><p class="mu hwh2">Toca la ' + (exHasFigure(e.n) ? 'figura' : 'imagen') + ' para ver cómo se hace.</p>';
 /* los músculos principales y, si los hay, los secundarios */
 const exDetailMuscles = e => '<h4 class="ph">Músculos principales</h4>' + (exMuscles(e, 'p').map(m => html`<span class="mc on">${m}</span>`).join('') || '<small class="mu">Sin datos</small>') + (exMuscles(e, 's').length ? html`<h4 class="ph">Músculos secundarios</h4>${exMuscles(e, 's').map(m => html`<span class="mc">${m}</span>`)}` : '');
 /* su consejo, tu mejor marca y las variantes del mismo grupo y tipo, cada una con «+ Al día» */

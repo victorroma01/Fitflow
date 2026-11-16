@@ -8,7 +8,7 @@
      medias o no cumplido; gráfica de las kcal de cada día.
    - Otros datos: medidas que cambian, logros conseguidos y agua. Y una conclusión en frases cortas.
    Se carga al usarlo (core/lazy).
-   Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, nutritionStats, otherStats, monthStats, sessionsText, setsText, planText, shouldText, weightChange, goalNote, weightDelta, conclusions, svgBars, svgLine, svgKcal, kpi, delta, monthBar, kpiGrid, trainingCard, weightCard, nutritionCard, otherCard, conclusionCard, analysisPage, analysisPdf  · acciones/registros: 3
+   Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, nutritionStats, otherStats, monthStats, sessionsText, setsText, planText, shouldText, weightChange, goalNote, weightDelta, conclusions, overPlan, svgBars, svgLine, svgKcal, kpi, delta, monthBar, kpiGrid, trainingCard, weightCard, nutritionCard, otherCard, conclusionCard, analysisPage, analysisPdf  · acciones/registros: 3
 */
 import { APPV, dayKey, fmtDateShort } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -218,13 +218,17 @@ const conclusions = m => {
   return out;
 };
 /* ── gráficas de la pantalla (SVG) ─────────────────────────────────────────────────────────────────────────────────── */
+/** La línea de base del número de una barra: `base`, o justo encima de la línea del plan (en `line`) si esta lo tacharía
+    (cuando la semana queda un poco por debajo de lo que marca el plan). `cap` es el alto de la cifra. */
+const overPlan = (base, line, cap) => line != null && line > base - cap - 2 && line < base + 2 ? line - 4 : base;
 /** Barras de entrenos por semana, con la línea de lo que marca el plan. */
 const svgBars = m => {
   const R = m.weeks;
   const mx = Math.max(1, m.pwk, ...R.map(r => r[1]));
   const bw = 280 / R.length;
   const y = v => 96 - v / mx * 80;
-  return html`<svg viewBox="0 0 320 124" class="anc" role="img" aria-label="Entrenos por semana">${R.map((r, i) => html`<rect x="${(24 + i * bw + bw * .18).toFixed(1)}" y="${y(r[1]).toFixed(1)}" width="${(bw * .64).toFixed(1)}" height="${(96 - y(r[1])).toFixed(1)}" rx="5" fill="var(--a2)"/><text x="${(24 + i * bw + bw / 2).toFixed(1)}" y="${(y(r[1]) - 5).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">${r[1]}</text><text x="${(24 + i * bw + bw / 2).toFixed(1)}" y="114" text-anchor="middle" font-size="9.5" fill="var(--mu)">${r[0]}</text>`)}${raw(m.pwk > 0 ? html`<line x1="24" x2="304" y1="${y(m.pwk).toFixed(1)}" y2="${y(m.pwk).toFixed(1)}" stroke="var(--mu)" stroke-dasharray="4 4" stroke-width="1"/><text x="304" y="${(y(m.pwk) - 4).toFixed(1)}" font-size="9" text-anchor="end" fill="var(--mu)">plan</text>` : '')}<line x1="20" x2="308" y1="96" y2="96" stroke="var(--ln)"/></svg>`;
+  const plan = m.pwk > 0 ? y(m.pwk) : null;
+  return html`<svg viewBox="0 0 320 124" class="anc" role="img" aria-label="Entrenos por semana">${R.map((r, i) => html`<rect x="${(24 + i * bw + bw * .18).toFixed(1)}" y="${y(r[1]).toFixed(1)}" width="${(bw * .64).toFixed(1)}" height="${(96 - y(r[1])).toFixed(1)}" rx="5" fill="var(--a2)"/><text x="${(24 + i * bw + bw / 2).toFixed(1)}" y="${overPlan(y(r[1]) - 5, plan, 8).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">${r[1]}</text><text x="${(24 + i * bw + bw / 2).toFixed(1)}" y="114" text-anchor="middle" font-size="9.5" fill="var(--mu)">${r[0]}</text>`)}${raw(m.pwk > 0 ? html`<line x1="24" x2="304" y1="${y(m.pwk).toFixed(1)}" y2="${y(m.pwk).toFixed(1)}" stroke="var(--mu)" stroke-dasharray="4 4" stroke-width="1"/><text x="304" y="${(y(m.pwk) - 4).toFixed(1)}" font-size="9" text-anchor="end" fill="var(--mu)">plan</text>` : '')}<line x1="20" x2="308" y1="96" y2="96" stroke="var(--ln)"/></svg>`;
 };
 /** Línea del peso del mes (desde el último pesaje anterior, si lo hay). */
 const svgLine = m => {
@@ -376,7 +380,7 @@ const analysisPdf = async (ym) => {
       const bx = X0 + 20 + i * bw + bw * .2;
       if (r[1])
         d.rect(bx, yy(r[1]), bw * .6, top + ch - yy(r[1]), { fill: ac, r: 3 });
-      d.text(bx + bw * .3, yy(r[1]) - 4, String(r[1]), { size: 9, bold: true, align: 'center', color: INK });
+      d.text(bx + bw * .3, overPlan(yy(r[1]) - 4, m.pwk > 0 ? yy(m.pwk) : null, 6.5), String(r[1]), { size: 9, bold: true, align: 'center', color: INK });
       d.text(bx + bw * .3, top + ch + 13, 'días ' + r[0], { size: 8, align: 'center', color: MU });
     });
     if (m.pwk > 0) {

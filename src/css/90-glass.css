@@ -345,6 +345,16 @@ html.gl .wsk {
   backdrop-filter:blur(var(--bw)) saturate(var(--sa));
   box-shadow:0 1px 0 var(--gb);
 }
+/* en una pantalla más ancha que la columna (tableta, ordenador) la cabecera fija del entreno no va de lado a lado: es una
+   pieza, con las esquinas de abajo redondeadas y sin el fundido de debajo, que es recto */
+@media(min-width:600px) {
+  html.gl .wsk {
+    border-radius:0 0 20px 20px;
+  }
+  html.gl .wsk::after {
+    display:none;
+  }
+}
 html.gl .sp {
   background:color-mix(in srgb,var(--bg) var(--ps),transparent);
   -webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));

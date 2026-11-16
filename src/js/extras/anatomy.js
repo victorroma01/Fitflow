@@ -2,7 +2,7 @@
    Mapa muscular dibujado en SVG.
    La imagen de un ejercicio (exPicture, exMotion) es el modelo haciéndolo (extras/moves pone la postura y extras/figure
    la pinta); los ejercicios propios, que no tienen postura, enseñan sus músculos en el mapa.
-   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, pictures, PICTURES_MAX, exPicture, exMotion, exMusclesSmall
+   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, pictures, PICTURES_MAX, exHasFigure, exPicture, exMotion, exMusclesSmall
 */
 import { groupOf } from '../data/library.js';
 import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
@@ -119,6 +119,8 @@ const figRegions = (f, e) => {
    entreno piden la misma una y otra vez. Si se juntan demasiadas, se empieza de nuevo */
 const pictures = new Map();
 const PICTURES_MAX = 400;
+/** Si un ejercicio tiene figura (los de la librería; uno propio, no). */
+export const exHasFigure = n => !!figPose(n);
 /** La imagen pequeña de un ejercicio (s×s px): el modelo haciéndolo; en uno propio, que no tiene postura, sus músculos en el mapa. */
 export const exPicture = (n, s) => {
   const f = figPose(n);

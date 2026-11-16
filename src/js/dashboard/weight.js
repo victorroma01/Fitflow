@@ -1,6 +1,6 @@
 /* ═══ dashboard/weight ═══
    Peso corporal y gráfica; debajo de «Registrar peso», el recordatorio de pesaje (dashboard/reminder).
-   Define: weekKey, bmiLabel, weightEntry, weightChart, weightSummary, weightHistory, weightLogSorted, weightPage, weightDeleting  · acciones/registros: 6
+   Define: weekKey, bmiLabel, weightEntry, periodName, weightChart, weightSummary, weightHistory, weightLogSorted, weightPage, weightDeleting  · acciones/registros: 6
 */
 import { $, dayKey, fmtDateShort, roundInt, typedNum } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -19,6 +19,8 @@ const weekKey = s => {
 const bmiLabel = v => v < 18.5 ? 'Delgadez' : v < 25 ? 'Peso correcto' : v < 30 ? 'Sobrepeso moderado' : 'Sobrepeso extremo';
 /* registrar un peso: kg y fecha */
 const weightEntry = () => html`<div class="cd"><div class="g2"><input id="wv" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="Peso (kg)" aria-label="Peso"><input id="wd" type="date" value="${dayKey(new Date)}" max="${dayKey(new Date)}" aria-label="Fecha"></div><button class="pr w-full mt-8" data-a="weightAdd">Registrar peso</button></div>`;
+/* cómo se llama en el eje una semana (por su lunes), un mes o un año: «28 sept», «oct 2026», «2026» */
+const periodName = (k, range) => range == 2 ? k : range == 1 ? fmtDateShort(k + '-01', { month: 'short', year: 'numeric' }) : fmtDateShort(k);
 /* la gráfica: el último peso de cada semana, mes o año (las 12 últimas, o 5 años), con su valor encima de cada punto */
 const weightChart = (log, range) => {
   const periodOf = d => range == 2 ? d.slice(0, 4) : range == 1 ? d.slice(0, 7) : weekKey(d);
@@ -29,7 +31,7 @@ const weightChart = (log, range) => {
   const lo = Math.min(...values) - 1;
   const hi = Math.max(...values) + 1;
   const points = values.map((y, i) => [periods.length > 1 ? 20 + i * 280 / (periods.length - 1) : 160, 130 - (y - lo) / (hi - lo) * 110]);
-  const chart = values.length ? html`<svg viewBox="0 0 320 160" width="100%" class="mt-10"><polyline fill="none" stroke="var(--a2)" stroke-width="2.5" stroke-linejoin="round" points="${points.map(p => p.join(',')).join(' ')}"/>${points.map((p, i) => html`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="var(--a1)"/><text x="${p[0]}" y="${p[1] - 8}" font-size="9" text-anchor="middle" fill="var(--mu)">${values[i]}</text>`)}<text x="4" y="154" font-size="9" fill="var(--mu)">${periods[0]}</text><text x="316" y="154" font-size="9" text-anchor="end" fill="var(--mu)">${periods[periods.length - 1]}</text></svg>` : '<p class="mu">Registra tu peso para ver la gráfica.</p>';
+  const chart = values.length ? html`<svg viewBox="0 0 320 160" width="100%" class="mt-10"><polyline fill="none" stroke="var(--a2)" stroke-width="2.5" stroke-linejoin="round" points="${points.map(p => p.join(',')).join(' ')}"/>${points.map((p, i) => html`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="var(--a1)"/><text x="${p[0]}" y="${p[1] - 8}" font-size="9" text-anchor="middle" fill="var(--mu)">${values[i]}</text>`)}<text x="4" y="154" font-size="9" fill="var(--mu)">${periodName(periods[0], range)}</text><text x="316" y="154" font-size="9" text-anchor="end" fill="var(--mu)">${periodName(periods[periods.length - 1], range)}</text></svg>` : '<p class="mu">Registra tu peso para ver la gráfica.</p>';
   return html`<div class="cd"><div>${['Semanas', 'Meses', 'Años'].map((x, i) => html`<button class="chip${range == i ? ' on' : ''}" data-a="weightRange" data-i="${i}">${raw(x)}</button>`)}</div>${raw(chart)}</div>`;
 };
 /* el peso actual, lo más ganado y perdido desde el primero y el IMC con su clasificación (OMS), si hay altura */
