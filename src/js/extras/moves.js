@@ -1352,7 +1352,11 @@ const MOVES = {
       else
         gear.push(beam([hub[0] - 8, hub[1] - 30, 214, 192], 5, 'b'), beam([200, 182, 224, 190], 5, 'b'));
     }
-    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1 });
+    /* media vuelta de pedales: el pie de delante baja por delante del eje y el otro sube por detrás (repartiendo solo
+       el principio y el final, bajarían y subirían en línea recta, como en un escalón) */
+    const half = air ? { gl: [206, 316, 140, -92] } : { gw: hands };
+    const m = Object.assign({ foot: ped(0), far: Object.assign({ foot: ped(180), ft: 8 }, half) }, half);
+    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m });
   },
   /** Elíptica: de pie en los pedales, los brazos y las piernas se alternan. */
   elliptical: () => {
