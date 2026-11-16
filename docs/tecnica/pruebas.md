@@ -135,3 +135,13 @@ V1.0.2 en Chromium.
     en segundo plano.
 14. Con el tema y el color del propietario, ¿algún texto que cueste leer?
 15. Si entra App Check: entrar y sincronizar van como siempre, y en Ajustes → Diagnóstico no hay errores «App Check».
+
+**Las figuras de ejercicio** (si salen en la misma actualización; en Safari de iPhone solo las ha visto la integración continua)
+
+16. En un entreno y en la librería, cada ejercicio lleva su figura en la miniatura; ninguno lleva foto.
+17. Tocar la figura de un ejercicio de máquina o de polea (Jalón al pecho, Prensa, Cruce de poleas): la figura grande se mueve
+    con soltura, del inicio al final y vuelta, y el cable sigue a la mano.
+18. Uno de varias fases (Burpees, Clean & jerk) y uno que se mantiene (Plancha): el primero pasa por su postura intermedia y
+    el segundo se queda quieto.
+19. Ajustes → «Reducir animaciones»: en la misma hoja salen las posturas quietas, con su rótulo.
+20. Al deslizar deprisa una lista larga de la librería (Espalda, 64 ejercicios), ¿va fluida?
