@@ -7,7 +7,7 @@
      músculos en reposo, y lo que trabaja en color.
    - figureStage: la figura grande de la hoja «Cómo se hace», que se mueve entre el inicio y el final (playFigures); con
      «Reducir animaciones» (o si el móvil lo pide), las dos posturas quietas, una junto a otra.
-   Define: FIG_FILL, SIL, SIL_FAR, SIL_SMALL, SIL_SMALL_FAR, EDGE_SMALL, RIM, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, boxText, fit, figureSvg, STAGE_MOMENTS, FLOOR_LINE, figureStage, BEAT, beatAt, playing, playFigures
+   Define: FIG_FILL, SIL, SIL_FAR, SIL_SMALL, SIL_SMALL_FAR, EDGE_SMALL, RIM, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, figureSvg, STAGE_MOMENTS, FLOOR_LINE, figureStage, BEAT, beatAt, playing, playFigures
 */
 import { AN_PA, AN_R } from '../data/anatomy.js';
 import { FG_P, FG_PA } from '../data/figure.js';
@@ -179,6 +179,17 @@ const layer = (def, k, P, S, big) => {
   return html`<use href="#f${z}${base}"/>${lit(Object.keys(FG_P[base][2]), c => own + c)}`;
 };
 const groups = (def, P, S, t, big) => rigLayers(def, t).map(l => html`<g${raw(l.t ? ' transform="' + l.t + '"' : '')}>${layer(def, l.k, P, S, big)}</g>`);
+/* lo mismo, para una figura que no se va a mover, con lo justo: la capa que no pinta nada no sale y la que es una sola pieza
+   lleva su sitio en la propia pieza, sin grupo. Una lista con sesenta miniaturas ocupa así un tercio menos */
+const ONE_USE = /^<use [^>]*\/>$/;
+const flat = (def, P, S, t, big) => rigLayers(def, t).map(l => {
+  const inner = String(layer(def, l.k, P, S, big));
+  if (!inner)
+    return '';
+  if (!l.t)
+    return raw(inner);
+  return raw(ONE_USE.test(inner) ? '<use transform="' + l.t + '" ' + inner.slice(5) : '<g transform="' + l.t + '">' + inner + '</g>');
+});
 const boxText = b => b.map(n => Math.round(n)).join(' ');
 /** La caja de b, ampliada desde su centro hasta la proporción ancho/alto pedida (y, como poco, min de lado). */
 const fit = (b, ratio, min) => {
@@ -190,7 +201,7 @@ const fit = (b, ratio, min) => {
 export const figureSvg = (def, P, S, s) => {
   needDefs();
   const t = def.at == null ? 1 : def.at;
-  return html`<svg viewBox="${boxText(fit(def.box || rigBox(def, [t], 1), 1, 170))}" width="${s}" height="${s}" aria-hidden="true" focusable="false">${groups(def, P, S, t, s > 80)}</svg>`;
+  return html`<svg viewBox="${boxText(fit(def.box || rigBox(def, [t], 1), 1, 170))}" width="${s}" height="${s}" aria-hidden="true" focusable="false">${flat(def, P, S, t, s > 80)}</svg>`;
 };
 /* los momentos del gesto que tiene que abarcar el encuadre de la figura grande */
 const STAGE_MOMENTS = [0, .25, .5, .75, 1];
@@ -255,6 +266,11 @@ const playFigures = root => {
     requestAnimationFrame(step);
   });
 };
+/* las piezas se preparan en un rato libre tras arrancar, para que la primera lista con figuras no tenga que esperarlas */
+if (typeof requestIdleCallback == 'function')
+  requestIdleCallback(needDefs, { timeout: 4000 });
+else
+  setTimeout(needDefs, 1500);
 /* las figuras grandes van en la hoja (#sh): cada vez que se pinta algo en ella, las que haya se ponen en marcha */
 if ($('#sh') && typeof MutationObserver != 'undefined')
   new MutationObserver(() => playFigures($('#sh'))).observe($('#sh'), { childList: true, subtree: true });

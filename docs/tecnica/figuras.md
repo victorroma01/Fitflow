@@ -96,8 +96,17 @@ No hay imágenes: son trazados. Con los dos modelos, el motor, el material y las
 arrancar pasa de 444 a 549 KB (de 168 a 204 KB comprimido): **36 KB más**. A cambio se van las 28 fotos, 321 KB: una
 instalación nueva descarga **unos 285 KB menos**, y el archivo único baja de 1.446 a 1.124 KB.
 
-Las miniaturas se guardan una vez pintadas (por ejercicio y tamaño), así que una lista o el entreno no las recalculan al
-repintarse. En el equipo de pruebas, calcular las 551 de una vez lleva menos de una décima de segundo.
+Para que no se note:
+
+- Las piezas de los dos modelos se preparan en un rato libre tras arrancar, no cuando hace falta la primera figura.
+- Una miniatura lleva lo justo: la capa que no pinta nada no sale y la que es una sola pieza va sin grupo. El grupo más grande
+  de la librería (64 ejercicios) ocupa unos 3.000 nodos.
+- Las miniaturas se guardan una vez pintadas (por ejercicio y tamaño), así que una lista o el entreno no las recalculan al
+  repintarse. En el equipo de pruebas, calcular las 551 de una vez lleva menos de una décima de segundo.
+- La figura grande solo se mueve mientras está en pantalla, cambiando la colocación de sus capas en cada fotograma.
+
+Medido con `tests/perf.py` frente a la compilación sin figuras, el arranque y el pintado de las pestañas no cambian (primer
+pintado: 96 y 94 ms).
 
 ## Pruebas
 
