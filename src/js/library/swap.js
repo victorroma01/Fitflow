@@ -112,10 +112,12 @@ export const swapBody = () => {
   const l = cand.filter(e => equipMatch(swapState.eq, e));
   const T = swapTiers(c, l);
   let h = equipDropdown('sw', swapState.eq, eqs, cand);
+  /* el puesto de cada fila en la lista entera, que sigue de un apartado al siguiente */
+  let row = 0;
   T.forEach(t => {
     if (!t[1].length)
       return;
-    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}"><span class="exc">${exCellHtml(e)}</span><small class="mu">Elegir ›</small></div>`)}`;
+    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}"><span class="exc">${exCellHtml(e, row++)}</span><small class="mu">Elegir ›</small></div>`)}`;
   });
   return h || '<p class="mu">No hay alternativas con esos filtros.</p>';
 };

@@ -23,7 +23,7 @@ antes de pintar y las guarda sin esperar (I-04), `page.goto` y `page.reload` esp
 | `tests/parts.test.mjs` | Cómo se reparte lo guardado en claves (`core/parts`), sin navegador: qué va en el núcleo y qué en cada parte, las comidas por meses, que partir y volver a juntar deja el estado igual, y que una parte dañada o que falta no se da por buena. |
 | `tests/rig.test.mjs` | Las [figuras de ejercicio](figuras.md) sin navegador, en los 551 ejercicios y en todo el gesto: cada uno tiene figura, nada sale sin sitio, los codos y las rodillas doblan hacia su lado, ninguna articulación pasa de lo que un cuerpo puede hacer, las manos y los pies llegan a su agarre o a su apoyo, nada se hunde en el suelo, el gesto no da saltos, en la Smith la barra no se sale de su guía, las palancas de las máquinas no cambian de largo, de pie el peso cae sobre los pies, la barra no atraviesa el cuerpo y los ciclos (correr, pedalear, la escaladora) no tienen costuras; y, en ejercicios conocidos, que los pies no se mueven en la sentadilla, la barra sube casi recta en el press y el cable acaba en la mano. |
 | `tests/smoke.py` | Arranque, pestañas, entreno completo, comidas, hojas, actualizaciones, política de seguridad y persistencia, en el archivo único y en el paquete. |
-| `tests/figures.py` | Las [figuras de ejercicio](figuras.md) en la app: las 551 miniaturas y las 551 hojas «Cómo se hace», una a una; la figura en la lista, la ficha y el entreno; la hoja con detalle (figura grande arriba, músculos en pequeño a la izquierda, texto después), que la figura se mueve, las posturas que se mantienen, los ciclos que no se detienen, a 320 y 768 px, «Reducir animaciones» con dos y con tres posturas, lo pintado de verdad, que no queda ninguna foto y que un ejercicio propio sigue con sus músculos. |
+| `tests/figures.py` | Las [figuras de ejercicio](figuras.md) en la app: las 551 miniaturas y las 551 hojas «Cómo se hace», una a una; la figura en la lista, la ficha y el entreno; la hoja con detalle (figura grande arriba, músculos en pequeño a la izquierda, texto después), que la figura se mueve, las posturas que se mantienen, los ciclos que no se detienen, una lista larga que pone sus figuras al deslizarla, a 320 y 768 px, «Reducir animaciones» con dos y con tres posturas, lo pintado de verdad, que no queda ninguna foto y que un ejercicio propio sigue con sus músculos. |
 | `tests/security.py` | Nombres, foto de perfil y datos con HTML malicioso en 47 pantallas, también desde una copia manipulada: no debe ejecutarse nada, ni siquiera sin la CSP; y con la CSP, que lo inyectado no se ejecuta ni conecta con otros sitios. Y una copia de seguridad manipulada entera (código HTML en cada texto, en lugar de cada número y en claves nuevas, con todos los tipos de datos): la app arranca y ninguna de sus 65 pantallas y avisos lo ejecuta ni falla. |
 | `tests/a11y.py` | Accesibilidad en 47 pantallas: botones con nombre, campos con etiqueta, lo que se toca anunciado como botón, cada hoja, página, aviso o menú anunciado como ventana con nombre y la zona táctil de cada control, medida tocando y con la pantalla quieta (cuenta la zona que responde, aunque el botón se vea más pequeño, y falla si otro control se la quita): en el entreno (a 390 y 320 px), 44 × 44 px; en el resto, ninguno por debajo de 24 × 24 px (WCAG 2.2 AA), y dice cuántos llegan a 44 (el 39 % de 1.865; el 85 % sin las filas de la lista de alimentos, que son más de la mitad). Aparte, que el foco va a cada ventana al abrirla y vuelve a lo que la abrió al cerrarla, también cuando tocar un botón no le da el foco, como en Safari (I-06). También, que la CSP no bloquea nada de la app. |
 | `tests/layout.py` | Tamaños de pantalla (auditoría de la V1.0.3): las 47 pantallas a 320 × 568 (iPhone SE), 360 × 740, 430 × 932, 768 × 1024 (tableta) y 1280 × 800 (portátil). En cada una, la página y la ventana de encima no se desplazan en horizontal, nada visible se sale por un lado y ningún texto queda cortado sin puntos suspensivos; en pantallas grandes, el contenido va en una columna centrada. En Chromium, además, que al arrancar con datos nada da un salto (layout shift). Si la página sale más ancha que la pantalla, dice quién la ensancha, también cuando no tiene caja propia (en WebKit, el texto elegido de un `select` cuenta como contenido que se sale): recorta el contenido de cada hijo, de fuera adentro, y se queda con el que más la estrecha. |
@@ -126,7 +126,9 @@ V1.0.2 en Chromium.
 5. Los mismos «Entrenos totales», las comidas de hoy y el último peso.
 6. Cerrar del todo y abrir: sigue en 1.0.3 y no repite la tarjeta. En modo avión también abre.
 7. Repetir el punto 2: ya no debe moverse. Marcar una serie, dejar correr el descanso, terminar y guardar.
-8. Quitar un alimento de una comida: el aviso sale arriba con «Deshacer», no lo tapa la isla o el notch, y «Deshacer» lo devuelve.
+8. Quitar un alimento de una comida: el aviso sale arriba con «Deshacer», no lo tapa la isla o el notch, se lee bien aunque
+   quede sobre el título «Hoy» (con Cristal es translúcido: el desenfoque de detrás solo se ve en un móvil de verdad) y
+   «Deshacer» lo devuelve.
 9. Nutrición enseña la semana, y el Dashboard, «Nutrición · 7 días».
 10. Dashboard → Evolución del peso → Historial: borrar un pesaje y deshacerlo.
 11. Librería: crear un ejercicio propio, renombrarlo y eliminarlo.
@@ -136,12 +138,18 @@ V1.0.2 en Chromium.
 14. Con el tema y el color del propietario, ¿algún texto que cueste leer?
 15. Si entra App Check: entrar y sincronizar van como siempre, y en Ajustes → Diagnóstico no hay errores «App Check».
 
-**Las figuras de ejercicio** (si salen en la misma actualización; en Safari de iPhone solo las ha visto la integración continua)
+**Las figuras de ejercicio** (salen en la misma actualización; en Safari de iPhone solo las ha visto la integración continua)
 
 16. En un entreno y en la librería, cada ejercicio lleva su figura en la miniatura; ninguno lleva foto.
 17. Tocar la figura de un ejercicio de máquina o de polea (Jalón al pecho, Prensa, Cruce de poleas): la figura grande se mueve
     con soltura, del inicio al final y vuelta, y el cable sigue a la mano.
 18. Uno de varias fases (Burpees, Clean & jerk) y uno que se mantiene (Plancha): el primero pasa por su postura intermedia y
     el segundo se queda quieto.
-19. Ajustes → «Reducir animaciones»: en la misma hoja salen las posturas quietas, con su rótulo.
-20. Al deslizar deprisa una lista larga de la librería (Espalda, 64 ejercicios), ¿va fluida?
+19. Ajustes → «Reducir animaciones»: en la misma hoja salen las posturas quietas, con su rótulo (dos en un peso muerto o
+    una zancada; tres en un burpee).
+20. Al deslizar deprisa una lista larga de la librería (Espalda, 64 ejercicios), ¿va fluida? Las figuras de las filas de
+    abajo se ponen al acercarse: ¿llega a verse alguna fila con el recuadro vacío?
+21. Uno que no para (Bicicleta, Escaladora, Carrera 1 km): gira o da pasos seguido, sin pausa ni vuelta atrás, y en la
+    escaladora los peldaños bajan con el pie.
+22. En un entreno, la figura del ejercicio queda arriba, junto al nombre, también con el calentamiento desplegado.
+23. Registros: los entrenos van del más reciente al más antiguo y cada mes sale una vez.

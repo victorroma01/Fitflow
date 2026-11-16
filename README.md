@@ -27,7 +27,7 @@
 
 ## Estado
 
-La versión publicada es la **V1.0.2** (12 de noviembre de 2026); la **V1.0.3** (auditoría técnica) está en la rama
+La versión publicada es la **V1.0.2** (12 de noviembre de 2026); la **V1.0.3** (auditoría técnica y figuras de ejercicio) está en la rama
 `desarrollo-1.0.3`. Cada versión se desarrolla en su rama `desarrollo-X.Y.Z` y se
 publica solo con la confirmación del propietario. Los requisitos de cada versión se siguen en GitHub, por milestones:
 
@@ -38,7 +38,7 @@ publica solo con la confirmación del propietario. Los requisitos de cada versi�
 | M8 · Cierre | Publicación de la V1.0.0 ([informe de issues](docs/tecnica/issues.md)); queda la prueba en un Android de verdad. |
 | **V1.0.1 · Correcciones y mejoras** | Lo encontrado al probar la V1.0.0 en el iPhone y las mejoras pedidas: bienvenida y datos de una cuenta nueva, empezar sin programa, logo nuevo, paso al día siguiente, RPE opcional, Nutri-Score, «Mis alimentos», recuento de iPhone y Android. Publicado. |
 | **V1.0.2 · Código y técnica** | Código más claro (nombres que se entienden y vistas partidas), datos en IndexedDB con sitio para años de uso y guardado más rápido, aviso de espacio, sin estilos en línea, App Check preparado, VoiceOver, service worker más robusto y aviso del icono nuevo en el iPhone. Publicado; App Check (I-05), pendiente de activarlo en la consola. |
-| **V1.0.3 · Auditoría técnica** | Auditoría completa de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): 43 errores corregidos (uno crítico: tras abrir un acceso directo del icono, una versión nueva podía dejar la app sin arrancar), la semana en Nutrición, ejercicios propios, historial de pesajes, «Deshacer», contraste AA en todo el texto, validación de lo que se escribe, código reorganizado y más pruebas, también en WebKit y en Firefox. En la rama `desarrollo-1.0.3`, sin publicar hasta que el propietario lo confirme. |
+| **V1.0.3 · Auditoría técnica y figuras** | Auditoría completa de la V1.0.2 ([informe](docs/tecnica/auditoria-1.0.3.md)): 43 errores corregidos (uno crítico: tras abrir un acceso directo del icono, una versión nueva podía dejar la app sin arrancar); el modelo anatómico haciendo cada uno de los 551 ejercicios, en movimiento, en lugar de las fotos ([figuras](docs/tecnica/figuras.md)); la semana en Nutrición, ejercicios propios, historial de pesajes, «Deshacer», contraste AA en todo el texto, validación de lo que se escribe, código reorganizado y más pruebas, también en WebKit y en Firefox. En la rama `desarrollo-1.0.3`, sin publicar hasta que el propietario lo confirme. |
 | App móvil · Ideas futuras | Lo que necesita una app de tienda (vibración en iPhone, recordatorio directo al calendario y notificaciones) y las interfaces de entrenador y nutricionista. Sin fecha. |
 
 ## Qué hace

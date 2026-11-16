@@ -27,13 +27,13 @@ export function libBody() {
   const l = base.filter(o => equipMatch(eq, o.e)).sort((a, b) => q ? exCompare(a.e, b.e) : exOrder(a.e) - exOrder(b.e)).slice(0, q ? 80 : 500);
   let h = '';
   let last = null;
-  l.forEach(o => {
+  l.forEach((o, row) => {
     const key = q ? groupLabel(groupOf(o.e)) : o.e.t;
     if (key !== last) {
       last = key;
       h += html`<div class="ph">${key || ''}</div>`;
     }
-    h += exRowHtml(o, html`<button data-a="libraryAddToDay" data-i="${o.i}">+ Al día</button>`);
+    h += exRowHtml(o, html`<button data-a="libraryAddToDay" data-i="${o.i}">+ Al día</button>`, '', row);
   });
   return (g && !q ? html`<div class="row m-8-0-0"><button data-a="libraryGroup" data-v="" data-back="1">‹ Grupos</button><b>${groupLabel(g)} <span class="mu fw-400">· ${base.length}</span></b>${groupIcon(g, 60)}</div>` : '') + equipDropdown('lb', eq, equipIn(base.map(o => o.e)), base.map(o => o.e)) + (h || '<p class="mu">Sin resultados.</p>');
 }

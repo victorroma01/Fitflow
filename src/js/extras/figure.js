@@ -3,11 +3,11 @@
    piezas de data/figure (perfil) y de data/anatomy (de frente), y los músculos del ejercicio en rojo y naranja, como el
    mapa muscular. Las piezas se definen una vez (<defs>, la primera vez que hace falta una figura) y cada figura solo las
    coloca, así que una lista llena de miniaturas apenas pesa.
-   - figureSvg: la figura quieta, en un momento del gesto (miniaturas). En pequeño es un pictograma: la silueta, sin los
-     músculos en reposo, y lo que trabaja en color.
+   - figureStill y figureSvg: la figura quieta, en un momento del gesto (miniaturas). En pequeño es un pictograma: la
+     silueta, sin los músculos en reposo, y lo que trabaja en color.
    - figureStage: la figura grande de la hoja «Cómo se hace», que se mueve entre el inicio y el final (playFigures); con
      «Reducir animaciones» (o si el móvil lo pide), las dos posturas quietas, una junto a otra.
-   Define: FIG_FILL, SIL, SIL_FAR, SIL_SMALL, SIL_SMALL_FAR, EDGE_SMALL, RIM, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, figureSvg, STAGE_MOMENTS, STAGE_WIDEST, FLOOR_LINE, figureStage, BEAT, beatAt, playing, playFigures
+   Define: FIG_FILL, SIL, SIL_FAR, SIL_SMALL, SIL_SMALL_FAR, EDGE_SMALL, RIM, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, figureStill, figureSvg, STAGE_MOMENTS, STAGE_WIDEST, FLOOR_LINE, figureStage, BEAT, beatAt, playing, playFigures
 */
 import { AN_PA, AN_R } from '../data/anatomy.js';
 import { FG_P, FG_PA } from '../data/figure.js';
@@ -197,12 +197,16 @@ const fit = (b, ratio, min) => {
   const h = Math.max(b[3], b[2] / ratio, (min || 0) / ratio);
   return [b[0] - (w - b[2]) / 2, b[1] - (h - b[3]) / 2, w, h];
 };
-/** Figura quieta de s×s px en el momento def.at del gesto; P y S son las regiones del modelo que trabajan. */
-export const figureSvg = (def, P, S, s) => {
+/** La figura quieta en el momento def.at del gesto, aún sin tamaño: [encuadre, contenido]. P y S son las regiones del modelo
+    que trabajan; big, con todos los músculos (si no, es un pictograma). Es lo que cuesta calcular, y vale para cualquier
+    tamaño. */
+export const figureStill = (def, P, S, big) => {
   needDefs();
   const t = def.at == null ? 1 : def.at;
-  return html`<svg viewBox="${boxText(fit(def.box || rigBox(def, [t], 1), 1, 170))}" width="${s}" height="${s}" aria-hidden="true" focusable="false">${flat(def, P, S, t, s > 80)}</svg>`;
+  return [boxText(fit(def.box || rigBox(def, [t], 1), 1, 170)), flat(def, P, S, t, big).join('')];
 };
+/** Esa figura (figureStill) como imagen de s×s px. */
+export const figureSvg = (still, s) => html`<svg viewBox="${still[0]}" width="${s}" height="${s}" aria-hidden="true" focusable="false">${raw(still[1])}</svg>`;
 /* los momentos del gesto que tiene que abarcar el encuadre de la figura grande */
 const STAGE_MOMENTS = [0, .25, .5, .75, 1];
 /* lo más apaisado que llega a ser el recuadro de la figura grande (ancho entre alto): una plancha o un press tumbado no
@@ -256,6 +260,7 @@ const playFigures = root => {
     const def = JSON.parse(svg.dataset.fig);
     const gs = [...svg.children].filter(g => g.tagName == 'g');
     let t0 = 0;
+    let last = -1;
     const step = now => {
       if (!svg.isConnected) {
         playing.delete(svg);
@@ -263,10 +268,15 @@ const playFigures = root => {
       }
       t0 = t0 || now;
       /* un ciclo no para ni vuelve atrás: cada cycle ms hace medio gesto, y el siguiente con los lados cambiados */
-      rigFrame(def, def.cycle ? (now - t0) / def.cycle % 2 : beatAt(now - t0, def.up, def.m && !def.via)).forEach((t, i) => {
-        if (t)
-          gs[i].setAttribute('transform', t);
-      });
+      const at = def.cycle ? (now - t0) / def.cycle % 2 : beatAt(now - t0, def.up, def.m && !def.via);
+      /* en la pausa de cada extremo la figura no se mueve: no hay nada que calcular ni que tocar en la página */
+      if (at !== last) {
+        last = at;
+        rigFrame(def, at).forEach((t, i) => {
+          if (t)
+            gs[i].setAttribute('transform', t);
+        });
+      }
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);

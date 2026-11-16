@@ -37,7 +37,7 @@ comparten figura.
 | `src/js/extras/gear.js` | El **material**: bancos, torres de polea, cables, placas, guías, barras de dominadas y paralelas, cajones, esterillas, paredes. |
 | `src/js/extras/rig.js` | El **modelo articulado**: dada una postura, dónde va cada pieza del cuerpo y del material. Sin estado ni pantalla. |
 | `src/js/extras/figure.js` | El **dibujo**: define las piezas una vez (`<defs>`, la primera vez que hace falta una figura) y cada figura solo las coloca (`<use>`), así que una lista llena de miniaturas apenas pesa. Pinta la figura quieta, la grande, y la mueve. |
-| `src/js/extras/anatomy.js` | `exPicture` (la imagen pequeña de un ejercicio, que se guarda una vez pintada), `exMotion` (la grande) y `exMusclesSmall` (los músculos en pequeño). |
+| `src/js/extras/anatomy.js` | `exPicture` (la imagen pequeña de un ejercicio, que se calcula una vez), `exPictureLater` (su hueco en una fila que aún no se ve), `exMotion` (la grande) y `exMusclesSmall` (los músculos en pequeño). |
 | `src/js/library/howto.js` | La hoja. |
 
 Hay **dos modelos**, con los mismos colores, degradados y rayado que el mapa muscular:
@@ -123,20 +123,25 @@ cabecera de `extras/rig.js`; `extras/gear.js` tiene lo que se repite.
 ## Lo que pesa
 
 No hay imágenes: son trazados. Con los dos modelos, el motor, el material y las 551 posturas, el código que se descarga al
-arrancar pasa de 444 a 554 KB (de 168 a 206 KB comprimido): **38 KB más**. A cambio se van las 28 fotos, 321 KB: una
-instalación nueva descarga **unos 280 KB menos**, y el archivo único baja de 1.446 a 1.129 KB.
+arrancar pasa de 444 a 558 KB (de 168 a 208 KB comprimido, que es lo que viaja): **40 KB más**. A cambio se van las 28
+fotos, 321 KB: una instalación nueva descarga **unos 280 KB menos**, y el archivo único baja de 1.446 a 1.133 KB.
 
 Para que no se note:
 
 - Las piezas de los dos modelos se preparan en un rato libre tras arrancar, no cuando hace falta la primera figura.
-- Una miniatura lleva lo justo: la capa que no pinta nada no sale y la que es una sola pieza va sin grupo. El grupo más grande
-  de la librería (64 ejercicios) ocupa unos 3.000 nodos.
-- Las miniaturas se guardan una vez pintadas (por ejercicio y tamaño), así que una lista o el entreno no las recalculan al
-  repintarse. En el equipo de pruebas, calcular las 551 de una vez lleva menos de una décima de segundo.
-- La figura grande solo se mueve mientras está en pantalla, cambiando la colocación de sus capas en cada fotograma.
+- Una miniatura lleva lo justo: la capa que no pinta nada no sale y la que es una sola pieza va sin grupo.
+- La figura quieta de cada ejercicio se calcula una vez y vale para todos los tamaños: la lista, el Overview, el entreno y
+  la ficha piden la misma (`exPicture`).
+- **Una lista larga no pinta de golpe todas sus figuras.** Las doce primeras filas la llevan; las demás, un hueco del mismo
+  tamaño (`exPictureLater`), que se cambia por la figura cuando la fila se acerca a lo que se ve (700 px antes, con un
+  `IntersectionObserver` sobre la página que se desliza). El grupo más grande de la librería (64 ejercicios) se abre con
+  unos 1.300 nodos en vez de 3.000; en el equipo de pruebas, volver a abrirlo o escribir una letra en el buscador cuesta
+  la mitad que antes (de unos 40 a unos 20 ms hasta que se ve), y abrirlo por primera vez, tres cuartos.
+- La figura grande solo se mueve mientras está en pantalla, cambiando la colocación de sus capas en cada fotograma (unas
+  3 décimas de milisegundo); en la pausa de cada extremo no se calcula nada.
 
 Medido con `tests/perf.py` frente a la compilación sin figuras, el arranque y el pintado de las pestañas no cambian (primer
-pintado: 96 y 94 ms).
+pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el entreno, las listas y las hojas.
 
 ## Pruebas
 
@@ -153,11 +158,12 @@ pintado: 96 y 94 ms).
   recto; en la escaladora los peldaños bajan con el pie que apoya; en la sentadilla los pies no se mueven; en el press la barra sube casi recta y el cuerpo no se mueve del banco; en el curl solo se
   cierra el codo; colgado de la barra, las manos no se mueven de ella y los pies no tocan el suelo; en el remo el codo va
   hacia atrás; y el cable del jalón acaba en la mano.
-- `tests/figures.py` (140 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
+- `tests/figures.py` (144 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
   piezas, el nombre y el texto, sin fotos); las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
   (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios ciclos);
   las posturas que se mantienen; los ciclos, que no se detienen en ningún momento, y los peldaños de la escaladora, que se
-  deslizan; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
+  deslizan; una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla, sin dejar ninguna
+  fila a la vista sin la suya; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
   verdad (los músculos que trabajan en rojo y naranja, el resto del cuerpo, las mancuernas en los extremos con los brazos
   abiertos, el deltoides posterior de espaldas), que es lo que comprueba el dibujo en Safari y Firefox; y que un ejercicio
   propio sigue con sus músculos.

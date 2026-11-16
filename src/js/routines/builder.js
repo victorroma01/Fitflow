@@ -22,7 +22,7 @@ export const routineExRows = () => {
   const q = routineState.q.toLowerCase().trim();
   const bq = exAll().filter(e => !q || exSearchText(e).includes(q));
   const base = bq.filter(e => groupMatch(routineState.gs, e));
-  return filterRow(groupDropdown('crg', routineState.gs, bq), equipDropdown('cr', routineState.eq, equipIn(base), base, 1)) + base.filter(e => equipMatch(routineState.eq, e)).sort(exCompare).slice(0, 100).map(e => html`<div class="it exr cur-pointer" data-a="routinePickExercise" data-n="${e.n}"><span class="exc">${exCellHtml(e)}</span><small class="mu">Añadir +</small></div>`).join('') || '<p class="mu">Sin resultados.</p>';
+  return filterRow(groupDropdown('crg', routineState.gs, bq), equipDropdown('cr', routineState.eq, equipIn(base), base, 1)) + base.filter(e => equipMatch(routineState.eq, e)).sort(exCompare).slice(0, 100).map((e, row) => html`<div class="it exr cur-pointer" data-a="routinePickExercise" data-n="${e.n}"><span class="exc">${exCellHtml(e, row)}</span><small class="mu">Añadir +</small></div>`).join('') || '<p class="mu">Sin resultados.</p>';
 };
 const routineListPage = () => routineList();
 /* un bloque del workout (A, B, C…): si es superserie o triserie, sus ejercicios, las series (− +) y el descanso */

@@ -2,11 +2,11 @@
    Mapa muscular dibujado en SVG.
    La imagen de un ejercicio (exPicture, exMotion) es el modelo haciéndolo (extras/moves pone la postura y extras/figure
    la pinta); los ejercicios propios, que no tienen postura, enseñan sus músculos en el mapa.
-   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, pictures, PICTURES_MAX, exHasFigure, exPicture, exMotion, exMusclesSmall
+   Define: MUSCLE_REGIONS, regionsFor, anatomySvg, GROUP_ANATOMY, groupAnatomy, regionsBox, exWork, exAnatomy, exAnatomyFull, figRegions, pictures, PICTURES_MAX, exHasFigure, exPicture, LATER_MARGIN, laterWatchers, laterWatched, fillLater, watchLater, exPictureLater, exMotion, exMusclesSmall
 */
 import { groupOf } from '../data/library.js';
 import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
-import { figureStage, figureSvg } from './figure.js';
+import { figureStage, figureStill, figureSvg } from './figure.js';
 import { figPose } from './moves.js';
 import { sideRegions } from './rig.js';
 import { groupIcon } from '../core/icons.js';
@@ -115,10 +115,11 @@ const figRegions = (f, e) => {
   const p = of(P);
   return [p, of(S).filter(k => !p.includes(k))];
 };
-/* las miniaturas ya pintadas, por ejercicio y tamaño: la figura de un ejercicio de la librería no cambia, y las listas y el
-   entreno piden la misma una y otra vez. Si se juntan demasiadas, se empieza de nuevo */
+/* las figuras quietas ya calculadas, por ejercicio (y aparte las grandes, que llevan todos los músculos): la de un ejercicio
+   de la librería no cambia, y las listas, el Overview, el entreno y la ficha piden la misma, cada uno a su tamaño. Caben las
+   de toda la librería; si se juntan más, se empieza de nuevo */
 const pictures = new Map();
-const PICTURES_MAX = 400;
+const PICTURES_MAX = 700;
 /** Si un ejercicio tiene figura (los de la librería; uno propio, no). */
 export const exHasFigure = n => !!figPose(n);
 /** La imagen pequeña de un ejercicio (s×s px): el modelo haciéndolo; en uno propio, que no tiene postura, sus músculos en el mapa. */
@@ -126,15 +127,59 @@ export const exPicture = (n, s) => {
   const f = figPose(n);
   if (!f)
     return exAnatomy(n, s);
-  const key = n + '|' + s;
+  const big = s > 80;
+  const key = big ? n + '|+' : n;
   if (!pictures.has(key)) {
     if (pictures.size >= PICTURES_MAX)
       pictures.clear();
     const [p, q] = figRegions(f, exAll().find(x => x.n == n));
-    pictures.set(key, figureSvg(f, p, q, s));
+    pictures.set(key, figureStill(f, p, q, big));
   }
-  return pictures.get(key);
+  return figureSvg(pictures.get(key), s);
 };
+/* ── las imágenes que esperan ──────────────────────────────────────────────────────────────────────────────────────────
+   Una lista larga (un grupo de la librería, el buscador, «Añadir ejercicio», Swap) no pinta de golpe sus sesenta u ochenta
+   figuras: solo las de las primeras filas. Las demás llevan un hueco del mismo tamaño con el nombre del ejercicio
+   (exPictureLater), que se cambia por la figura cuando la fila se acerca a lo que se ve. Así la lista se abre, y se filtra
+   al escribir, en la tercera parte del tiempo, y la página lleva la quinta parte de nodos. */
+/* cuánto antes de verse se pinta una fila, por arriba y por abajo */
+const LATER_MARGIN = '700px 0px';
+/* quien vigila las filas de cada página que se desliza (el .sp de la hoja; fuera de una hoja, la ventana) y las filas que
+   ya vigila */
+const laterWatchers = new WeakMap();
+const laterWatched = new WeakSet();
+/* pone la figura en los huecos de una fila (o de un hueco suelto) */
+const fillLater = el => (el.matches('svg[data-pic]') ? [el] : [...el.querySelectorAll('svg[data-pic]')]).forEach(hole => {
+  hole.outerHTML = exPicture(hole.dataset.pic, +hole.getAttribute('width'));
+});
+/* vigila los huecos nuevos de root: cada uno se pinta cuando su fila se acerca a lo que se ve */
+const watchLater = root => root.querySelectorAll('svg[data-pic]').forEach(hole => {
+  const row = hole.closest('.exr') || hole;
+  if (laterWatched.has(row))
+    return;
+  laterWatched.add(row);
+  if (typeof IntersectionObserver == 'undefined') {
+    fillLater(row);
+    return;
+  }
+  const page = hole.closest('.sp') || document.documentElement;
+  let watcher = laterWatchers.get(page);
+  if (!watcher) {
+    watcher = new IntersectionObserver((entries, w) => entries.forEach(en => {
+      if (!en.isIntersecting)
+        return;
+      w.unobserve(en.target);
+      fillLater(en.target);
+    }), { root: page == document.documentElement ? null : page, rootMargin: LATER_MARGIN });
+    laterWatchers.set(page, watcher);
+  }
+  watcher.observe(row);
+});
+/** El sitio de la imagen pequeña de un ejercicio en una fila que aún no se ve: se pinta sola cuando la fila se acerca. */
+export const exPictureLater = (n, s) => html`<svg width="${s}" height="${s}" data-pic="${n}" aria-hidden="true" focusable="false"></svg>`;
+/* las listas largas van en la hoja (#sh): cada vez que se pinta algo en ella, se vigilan sus huecos */
+if (document.getElementById('sh') && typeof MutationObserver != 'undefined')
+  new MutationObserver(() => watchLater(document.getElementById('sh'))).observe(document.getElementById('sh'), { childList: true, subtree: true });
 /** La figura grande de un ejercicio, que se mueve entre el inicio y el final (still: las dos posturas quietas); '' si no tiene postura. */
 export const exMotion = (n, still) => {
   const f = figPose(n);
