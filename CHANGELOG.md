@@ -10,7 +10,7 @@ aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en fr
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
-## [1.0.3] — 2026-11-13
+## [1.0.3] — 2026-11-16
 
 ### Novedades
 - Los ejercicios se ven: cada uno de los 551 ejercicios de la librería tiene su figura haciéndolo, con los músculos que
