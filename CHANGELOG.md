@@ -38,6 +38,10 @@ línea.
   después de verdad. Cada cuenta conserva su identificador, su contraseña, su rol y sus datos, y en cada móvil hay que volver
   a entrar una vez ([cómo](docs/tecnica/backend.md#el-dominio-de-las-cuentas)). «Restablecer contraseña» y «Asignar rol»
   encuentran la cuenta con cualquiera de los dos, y «Comprobar Firebase» dice cuántas quedan por pasar.
+- Cerrar sesión con un guardado todavía en marcha ya no deja en el móvil el núcleo escrito con sus partes borradas
+  (`core/persist`: un guardado pedido antes de borrar el estado ya no escribe nada). Antes, la siguiente apertura se quedaba
+  en «No se pudieron leer tus datos» sobre el inicio de sesión, sin poder entrar. Salió al probar el paso de las cuentas con el
+  emulador de Firebase.
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

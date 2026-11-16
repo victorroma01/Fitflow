@@ -20,7 +20,7 @@
    se lee con los nombres del programa (core/schema).
    Leer y escribir comparten lo que se sabe de cada clave (savedText), dónde están las partes (idb) y si se puede guardar
    (saveLocked): por eso van juntos en este módulo, y lo que no tiene estado, fuera (core/parts y core/idb).
-   Define: stateRecovered, partsLost, badParts, savedText, queued, queuedParts, saveLocked, lastKey, idb, expectedParts, leftovers, lastState, allSaved, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
+   Define: stateRecovered, partsLost, badParts, savedText, queued, queuedParts, saveLocked, lastKey, dropCount, idb, expectedParts, leftovers, lastState, allSaved, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
 */
 import { Store } from './store.js';
 import { idbStore } from './idb.js';
@@ -47,6 +47,10 @@ let queuedParts = null;
 let saveLocked = 0;
 /** Clave que se estaba escribiendo (para el registro de errores si falla). */
 let lastKey = '';
+/** Cuántas veces se ha borrado el estado guardado (dropSavedState). Un guardado pedido antes del último borrado ya no escribe
+  nada: el que estaba en marcha al cerrar sesión dejaba escrito el núcleo con sus partes ya borradas, y la siguiente apertura
+  se quedaba en «No se pudieron leer tus datos», sin poder entrar. */
+let dropCount = 0;
 /** 1: las partes van en IndexedDB; 0: en localStorage. */
 let idb = 0;
 /** Partes que el núcleo dice tener en IndexedDB (las lee loadParts), o null si no las tiene allí. */
@@ -418,7 +422,11 @@ const writeIdb = ({ out, keys }, report) => {
     savedText.set(core, text);
     Store.note(core, text);
   }
+  const drop = dropCount;
   return enqueue(async () => {
+    /* el estado se borró después de pedir este guardado (se cerró la sesión o entró otra cuenta): ya no hay nada que escribir */
+    if (drop != dropCount)
+      return true;
     let step = 'partes';
     let putsDone = !puts.length;
     let coreDone = text == null;
@@ -426,6 +434,9 @@ const writeIdb = ({ out, keys }, report) => {
       if (puts.length)
         await partsTx('readwrite', st => puts.forEach(([k, v]) => st.put(v, k)));
       putsDone = true;
+      /* o se borró mientras se escribían las partes: el borrado, que va detrás de este guardado, se las lleva */
+      if (drop != dropCount)
+        return true;
       step = core;
       if (text != null)
         Store.set(core, text, 1);
@@ -437,6 +448,8 @@ const writeIdb = ({ out, keys }, report) => {
       return true;
     }
     catch (e) {
+      if (drop != dropCount)
+        return true;
       /* lo que no llegó a escribirse vuelve a contar como estaba (si ningún guardado posterior lo ha cambiado ya) */
       if (!putsDone)
         for (const [k, v] of puts)
@@ -546,6 +559,7 @@ export const lockSaves = () => {
 };
 /** Borra el estado guardado (núcleo y partes), sin bloquear los guardados (al entrar con otra cuenta: cloud/session). */
 export const dropSavedState = () => {
+  dropCount++;
   Store.del(Store.K.app);
   for (const k of Store.keys(partKey('')))
     Store.del(k);

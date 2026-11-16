@@ -548,6 +548,22 @@ def main(path):
         left = p1.evaluate("Object.keys(localStorage).filter(k=>k=='ff'||k.startsWith('ff:')||k=='ffacct'||k=='ffsync')")
         check('al cerrar sesión se vuelve al inicio y los datos de la cuenta se borran del móvil', p1.evaluate("!!document.getElementById('lgw')") and left == [], str(left))
         check('y siguen en la nube', len(fb.part('users/%s/logs/2026' % uid) or []) == 2 and (fb.part('users/%s/data/core' % uid) or {}).get('wl') == [{'d': today, 'w': 80}])
+        # cerrar sesión con un guardado todavía en marcha (V1.0.32): ese guardado ya no deja escrito el núcleo con sus partes
+        # borradas. Antes, la siguiente apertura se quedaba en «No se pudieron leer tus datos», sin poder entrar
+        login(p1, 'Ana_1', 'contraseña-1')
+        with p1.expect_navigation():
+            p1.evaluate("S.tab=2;flushState();A.signOutConfirmed()")
+        wait(p1, 'window.__ffok')
+        p1.wait_for_timeout(300)
+        left = p1.evaluate("({core: !!localStorage.getItem('ff'), lost: !!document.querySelector('#dg [data-v=partsRetry]'), login: !!document.getElementById('lgw')})")
+        check('cerrar sesión con un guardado en marcha no deja datos a medias en el móvil: sale el inicio de sesión, sin avisos', left == {'core': False, 'lost': False, 'login': True}, str(left))
+        login(p1, 'Ana_1', 'contraseña-1')
+        check('y se vuelve a entrar con los datos de la cuenta', p1.evaluate('S.logs.length') == 2 and sync(p1) == 'ok', str(p1.evaluate('S.logs.length')))
+        p1.evaluate('A.signOut()')
+        wait(p1, "!!document.querySelector('#dg [data-v=signOutConfirmed]')", 30000)
+        with p1.expect_navigation():
+            p1.evaluate("document.querySelector('#dg [data-v=signOutConfirmed]').click()")
+        wait(p1, 'window.__ffok')
 
         # ── el admin: Administración, cuentas y contraseña temporal ──
         c4, p4 = device()
