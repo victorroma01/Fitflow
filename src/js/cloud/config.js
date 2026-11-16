@@ -12,6 +12,6 @@ export const TOKEN_URL = 'https://securetoken.googleapis.com/v1/token';
 export const FIRESTORE_URL = 'https://firestore.googleapis.com/v1/';
 /** App Check (I-05, cloud/appcheck): la clave de sitio de reCAPTCHA Enterprise y el id de la app web de Firebase, que da la
   consola al registrarla (no son secretos). Vacíos, App Check no se usa; los pasos para activarlo, en docs/tecnica/backend.md. */
-export const APP_CHECK = { siteKey: '', appId: '' };
+export const APP_CHECK = { siteKey: '6LdyESMuAAAAAPZHnsGj9BY4yc_sJHy27mDbMk50', appId: '1:433927515134:web:6c856611dfc43eabf16eaf' };
 /** Dominio del correo técnico de cada cuenta (usuario@stratafit.app): el usuario nunca lo ve y nunca se le envía nada. */
 export const TECH_DOMAIN = 'stratafit.app';
