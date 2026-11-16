@@ -124,6 +124,7 @@ no hay: el caso de los accesos directos del icono está probado con el paquete r
 | 16-19, 22, 23 | Bien. |
 | 20 | Funciona. Al lanzar la lista muy deprisa, hacia abajo o hacia arriba, se ve unas milésimas la zona aún sin pintar, en negro, antes de que salgan las filas. No se ha tocado: ver [lo que queda fuera](figuras.md#lo-que-queda-fuera). |
 | 21 | Los ciclos, bien; **el remo, la comba, el saco de boxeo, el SkiErg y la bici de aire había que pulirlos**: es la revisión V1.0.31 ([figuras](figuras.md)). |
+| 24-29 (la V1.0.31, ese mismo día) | Bien los seis. Sale la tarjeta «Versión 1.0.31», con lo que arregla delante y lo de la V1.0.3 debajo, y tras «Actualizar» Perfil pone V1.0.31. El remo, el SkiErg, el saco de boxeo, la bici de aire y las tres combas hacen lo que tienen que hacer y **se mueven con soltura**; con «Reducir animaciones», la comba enseña «Inicio» y «Salto». |
 
 App Check quedó configurado ese día (la clave de reCAPTCHA Enterprise y la app web registrada en Firebase) y **sin exigir**: falta
 mirar en la consola que las peticiones salen verificadas ([cómo](backend.md#activar-app-check)). Las alertas de Dependabot están
@@ -171,7 +172,7 @@ activadas en el repositorio.
 22. En un entreno, la figura del ejercicio queda arriba, junto al nombre, también con el calentamiento desplegado.
 23. Registros: los entrenos van del más reciente al más antiguo y cada mes sale una vez.
 
-**Al publicar la V1.0.31**, la revisión con esos arreglos (publicada el 16-11-2026; pendiente de pasar en el iPhone)
+**Al publicar la V1.0.31**, la revisión con esos arreglos (publicada el 16-11-2026 y pasada ese día en el mismo iPhone: bien)
 
 24. Abrir con conexión: sale la tarjeta «Versión 1.0.31», que enseña primero «Correcciones de la 1.0.31» y, al deslizarla,
     lo de la 1.0.3; «Actualizar»; en Perfil pone V1.0.31.

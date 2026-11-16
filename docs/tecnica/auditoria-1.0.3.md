@@ -190,7 +190,7 @@ L2 solo se pudo ver en el WebKit de GitHub, y X6 se dedujo del código (la regla
 
 La V1.0.3 se publicó el 16-11-2026, con todas hechas y la confirmación del propietario, que la probó ese día en su iPhone
 ([resultado](pruebas.md#la-v103-en-el-iphone-del-propietario)). Esa prueba encontró un fallo que las automáticas no veían (sin
-conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la V1.0.31, publicada también ese día.
+conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la V1.0.31, publicada también ese día y comprobada en el mismo iPhone.
 
 | Fase | Estado | Hecho | Falta |
 | --- | --- | --- | --- |
