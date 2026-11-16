@@ -36,7 +36,9 @@ conexión»…), con **Sincronizar ahora**.
 - **Cambiar contraseña** (Ajustes → Cuenta): la actual y la nueva dos veces. Al cambiarla se cierra la sesión en tus otros móviles.
 - **Si la olvidas**, pídele al administrador una contraseña temporal. Al entrar con ella, la app pide elegir una nueva antes de nada.
 - **Si la sesión caduca** (por ejemplo, porque se cambió la contraseña en otro móvil), la app lo avisa y deja **Volver a entrar** sin
-  perder nada: lo hecho en el móvil se sube al entrar.
+  perder nada: lo hecho en el móvil se sube al entrar. Pasó una vez en todos los móviles con la V1.0.32, por un cambio interno
+  de las cuentas: se vuelve a entrar con el usuario y la contraseña de siempre. Si la app dice que no son correctos, falta
+  actualizarla: se abre con conexión y se pulsa «Actualizar» en la tarjeta de versión nueva.
 
 ## Cerrar sesión
 

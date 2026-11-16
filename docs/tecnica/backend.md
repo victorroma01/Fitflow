@@ -11,7 +11,7 @@ gimnasio sin cobertura (*offline-first*).
 | Plan | **Spark**: gratis y sin tarjeta. Solo Authentication y Firestore; sin Cloud Functions ni Cloud Storage. |
 | Proyecto | `stratafit-960ec`, con Firestore en `europe-southwest1` (Madrid). La configuración web no es secreta: va en el código (`cloud/config`). La clave de la API está limitada a `https://victorroma01.github.io/*` (Google Cloud → Credenciales). |
 | Cliente | La API REST de Firebase, **sin SDK**: ninguna dependencia en tiempo de ejecución, la CSP abre solo tres dominios y todo se prueba sin red (`tests/fakefb.py`) y con el emulador. |
-| Cuentas | Registro libre con usuario y contraseña. Authentication usa un correo técnico interno, `usuario@stratafit.app`, que el usuario nunca ve y al que nunca se envía nada. |
+| Cuentas | Registro libre con usuario y contraseña. Authentication usa un correo técnico interno, `usuario@stratafit-960ec.firebaseapp.com`, que el usuario nunca ve y al que nunca se envía nada: su dominio es el del propio proyecto de Firebase, que no tiene buzones. Hasta la V1.0.31 fue `usuario@stratafit.app` ([el cambio](#el-dominio-de-las-cuentas)). |
 | Usuario | Único, de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo, sin punto al principio, al final ni dos seguidos (no valdría como correo); sin distinguir mayúsculas (se guarda como se registró). |
 | Contraseña | 8 caracteres o más. Firebase bloquea un rato los intentos fallidos repetidos y la app añade una espera que se dobla a partir del quinto fallo (5 s, 10 s… hasta 5 min). |
 | Roles | Admin y Usuario, con *custom claims* (`role: "admin"`) en el token de la sesión: la app no puede cambiarlos. Admin: `VictorAdmin_`. |
@@ -110,7 +110,8 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
   los perfiles, `adminInbox` y los fallos y sugerencias, nunca los datos ni la copia de nadie; un aviso solo lo crea su dueño (id con
   su uid, su usuario, pendiente y sin respuesta) y el admin solo le cambia el estado y la respuesta; en el perfil, solo las
   preferencias que conoce la app (el color propio como `#rrggbb`, la pestaña al abrir de 0 a 3, el recorrido y las animaciones 0 o 1);
-  solo valen cuentas con correo técnico; lo demás está denegado.
+  solo valen cuentas con correo técnico (con el dominio de ahora o, mientras [se pasan](#el-dominio-de-las-cuentas), con el
+  anterior; un correo que solo se les parezca no entra en nada); lo demás está denegado.
 - **Pruebas**: `tests/rules.test.mjs` las comprueba con el emulador en cada cambio (CI, «Reglas y nube»), junto con la app entera
   contra el emulador (`tests/cloud.py`). Se despliegan desde GitHub Actions al fusionar en `main` («Desplegar reglas»), antes de publicar la app.
 - La clave de administrador (cuenta de servicio) solo existe como secreto de GitHub, `FIREBASE_SERVICE_ACCOUNT`: nunca en el código,
@@ -174,9 +175,54 @@ Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run wor
 | Restablecer contraseña | `admin-contrasena.yml` | Se escribe el usuario. Le pone una contraseña temporal, cierra sus sesiones y marca `mc` en su perfil; la contraseña solo se guarda en `adminInbox`, que el admin ve en Perfil → Administración durante 24 h. No aparece en el registro, que es público. |
 | Asignar rol | `admin-rol.yml` | Usuario y rol (admin o usuario). Vale la próxima vez que esa persona abra la app. |
 | Desplegar reglas | `firebase-reglas.yml` | Reglas de Firestore (`tools/admin/reglas.mjs`, con la API de reglas de Firebase; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Al publicar, `pruebas.yml` lo llama tras las pruebas si cambian las reglas o el flujo, y la app no se publica hasta que termina bien (T-24). También a mano, desde `main`. |
-| Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuentas y acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
+| Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuántas cuentas hay, cuántas tienen el correo técnico con el dominio de ahora y cuántas con el anterior, y el acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
+| Pasar las cuentas al dominio nuevo | `admin-dominio.yml` | `simulacro` o `aplicar` ([El dominio de las cuentas](#el-dominio-de-las-cuentas)). Solo desde `main`. No escribe usuarios ni correos, solo recuentos: el registro es público. |
 
 Los flujos manuales solo aparecen en Actions cuando están en `main`.
+
+## El dominio de las cuentas
+
+Firebase identifica cada cuenta por un correo. El de StrataFit es técnico, `usuario@dominio`: nadie lo ve y nunca se le envía
+nada. Hasta la V1.0.31 el dominio fue `stratafit.app`; desde la V1.0.32 es `stratafit-960ec.firebaseapp.com`, el del propio
+proyecto de Firebase, que es de la app y no tiene buzones. Las cuentas que ya existían se pasan de uno a otro sin que cambie
+nada más: el mismo identificador (uid), la misma contraseña, el mismo rol y los mismos datos.
+
+| Pieza | Durante el cambio |
+| --- | --- |
+| La app (`cloud/auth`, `cloud/config`) | Registra con el dominio de ahora. Al entrar prueba el de ahora y, si no hay tal cuenta, el anterior: una cuenta que aún no se ha pasado entra igual, con su usuario y su contraseña. |
+| Las reglas (`firestore.rules`) | Admiten los dos (`techUser`, `ownName`), y ninguno que solo se les parezca. |
+| `tools/admin` | «Restablecer contraseña» y «Asignar rol» buscan la cuenta con los dos (`findUser`). «Comprobar Firebase» dice cuántas hay con cada uno. |
+| «Pasar las cuentas al dominio nuevo» (`tools/admin/dominio.mjs`, `cuentas.mjs`) | Cambia el correo de cada cuenta que sigue con el anterior. Antes comprueba que las reglas publicadas ya admiten el de ahora y ensaya con una cuenta de prueba, que crea, pasa y borra: si algo de eso falla, no toca ninguna. |
+
+### Pasar las cuentas
+
+Se hace una vez, con la V1.0.32 ya publicada (al publicarse, las reglas nuevas se despliegan antes que la app):
+
+1. Actualizar la app en el móvil del admin y comprobar que entra y sincroniza como siempre.
+2. En GitHub, Actions → **Pasar las cuentas al dominio nuevo** → *Run workflow* → `simulacro`. No cambia ninguna cuenta. En el
+   resumen tienen que salir «Reglas de Firestore publicadas: Correcto», «Ensayo con una cuenta de prueba: Correcto» y cuántas
+   quedan «Por pasar».
+3. Lo mismo con `aplicar`. En el resumen: «Pasadas ahora», las del paso anterior, y «Quedan en el dominio anterior: 0».
+4. Firebase cierra las sesiones de una cuenta cuando cambia su correo. En cada móvil sale **Tu sesión ha caducado**: «Entrar» y
+   la contraseña de siempre. Lo que haya en el móvil se conserva y se sube al entrar.
+5. Un móvil con una versión anterior a la 1.0.32 no conoce el dominio nuevo y, una vez pasada su cuenta, no puede volver a
+   entrar: primero **Actualizar** (la tarjeta de versión nueva sale al abrir la app con conexión) y después entrar.
+6. «Comprobar Firebase» confirma el final: «Dominio de las cuentas», todas con el de ahora.
+
+Se puede lanzar las veces que haga falta: las cuentas ya pasadas no se tocan. Lo que puede salir en el resumen:
+
+- **Las reglas publicadas aún no aceptan el dominio nuevo**: la versión no está publicada, o el despliegue de las reglas falló
+  (Actions → «Pruebas», el trabajo «Desplegar reglas de Firestore»). No se pasa ninguna cuenta.
+- **Con el usuario ya ocupado en el dominio nuevo**: alguien se registró con ese nombre entre la publicación y el paso. Esa
+  cuenta no se pasa sola (sigue entrando con el dominio anterior); el resumen da su identificador para decidir en la consola de
+  Firebase (Authentication → Usuarios) cuál de las dos se queda, borrar la otra y volver a lanzarlo.
+- **La cuenta de prueba no se ha podido borrar**: se borra a mano en la consola, por el identificador que da el resumen. Su
+  nombre tiene más de 20 caracteres, así que no puede ser la de ningún usuario ni entrar en nada.
+
+### Después
+
+Con todas las cuentas pasadas, el dominio anterior ya no hace falta: una versión posterior lo quita de las reglas y de la
+app (`OLD_TECH_DOMAIN`), y «Comprobar Firebase» avisa si aparece alguna cuenta con él.
 
 ## Límites del plan Spark
 

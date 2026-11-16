@@ -12,6 +12,8 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 PROJECT = 'stratafit-960ec'
 DB = 'projects/%s/databases/(default)/documents' % PROJECT
+DOMAIN = 'stratafit-960ec.firebaseapp.com'  # el del correo técnico de las cuentas (cloud/config: TECH_DOMAIN)
+OLD_DOMAIN = 'stratafit.app'                # el de antes de la V1.0.32 (OLD_TECH_DOMAIN)
 
 
 def _b64(o):
@@ -44,15 +46,39 @@ class FakeFirebase:
         """Sin red en ese móvil (los demás siguen con ella)."""
         (self.off.add if on else self.off.discard)(ctx)
 
+    def _email(self, user):
+        """El correo técnico de un usuario, esté su cuenta en el dominio de ahora o en el anterior."""
+        for d in (DOMAIN, OLD_DOMAIN):
+            if user.lower() + '@' + d in self.users:
+                return user.lower() + '@' + d
+        raise KeyError(user)
+
     def uid_of(self, user):
-        return self.users[user.lower() + '@stratafit.app']['uid']
+        return self.users[self._email(user)]['uid']
+
+    def domain_of(self, user):
+        return self._email(user).split('@')[1]
+
+    def to_old_domain(self, user):
+        """Deja la cuenta como las de antes de la V1.0.32, con el dominio anterior: una que aún no se ha pasado."""
+        self.users[user.lower() + '@' + OLD_DOMAIN] = self.users.pop(self._email(user))
+
+    def move_accounts(self):
+        """Lo que hace tools/admin/dominio.mjs: cada cuenta del dominio anterior pasa al de ahora, con su uid, su contraseña y
+        su rol, y sus sesiones se cierran (Firebase lo hace al cambiar el correo). Devuelve cuántas ha pasado."""
+        old = [e for e in self.users if e.endswith('@' + OLD_DOMAIN)]
+        for e in old:
+            u = self.users.pop(e)
+            u['valid_after'] = self._now()
+            self.users[e.split('@')[0] + '@' + DOMAIN] = u
+        return len(old)
 
     def set_role(self, user, role):
-        self.users[user.lower() + '@stratafit.app']['claims'] = {'role': role} if role == 'admin' else {}
+        self.users[self._email(user)]['claims'] = {'role': role} if role == 'admin' else {}
 
     def reset_password(self, user, temp):
         """Lo que hace tools/admin/contrasena.mjs: contraseña temporal, sesiones cerradas, mc y adminInbox."""
-        u = self.users[user.lower() + '@stratafit.app']
+        u = self.users[self._email(user)]
         u['pw'] = temp
         u['valid_after'] = self._now()
         path = 'users/' + u['uid']
@@ -159,7 +185,7 @@ class FakeFirebase:
             p = self._who(_Req(b.get('idToken')))
             if not p:
                 raise _Fail(400, 'INVALID_ID_TOKEN')
-            email = p['email']
+            email = next(e for e, x in self.users.items() if x['uid'] == p['user_id'])
             self.users[email]['pw'] = b['password']
             self.users[email]['valid_after'] = self._now()
         else:

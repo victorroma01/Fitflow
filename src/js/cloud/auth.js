@@ -1,10 +1,11 @@
 /* ═══ cloud/auth ═══
    Cuentas con Firebase Authentication (API REST): registro, entrada, renovación del token de sesión y cambio de contraseña.
-   Firebase trabaja con correo y contraseña; aquí el correo es técnico, `usuario@stratafit.app` (T-09): el usuario solo ve
-   su nombre de usuario. El token de sesión dura una hora y se renueva solo con el de renovación.
-   Define: userProblem, passProblem, techEmail, authCall, sessionFrom, signUp, signIn, refreshing, DEAD_SESSION, idToken, changePassword, AUTH_MESSAGES, authMessage
+   Firebase trabaja con correo y contraseña; aquí el correo es técnico, `usuario@` y el dominio del proyecto (T-09,
+   cloud/config: TECH_DOMAIN): el usuario solo ve su nombre de usuario. El token de sesión dura una hora y se renueva solo
+   con el de renovación.
+   Define: userProblem, passProblem, techEmail, authCall, sessionFrom, signUp, passwordSignIn, NO_SUCH_ACCOUNT, signIn, refreshing, DEAD_SESSION, idToken, changePassword, AUTH_MESSAGES, authMessage
 */
-import { AUTH_URL, FIREBASE, TECH_DOMAIN, TOKEN_URL } from './config.js';
+import { AUTH_URL, FIREBASE, OLD_TECH_DOMAIN, TECH_DOMAIN, TOKEN_URL } from './config.js';
 import { fetchJson, netError } from './net.js';
 import { appCheckToken } from './appcheck.js';
 import { account, acctSave } from './session.js';
@@ -12,15 +13,30 @@ import { account, acctSave } from './session.js';
   bajo, sin punto al principio, al final ni dos seguidos (no valdría como correo técnico). */
 export const userProblem = u => !u ? 'Escribe tu usuario.' : u.length < 3 || u.length > 20 ? 'El usuario tiene de 3 a 20 caracteres.' : !/^[A-Za-z0-9._-]+$/.test(u) ? 'El usuario solo lleva letras sin tilde, números, punto, guion y guion bajo.' : /^\.|\.$|\.\./.test(u) ? 'El usuario no puede empezar ni acabar en punto, ni llevar dos seguidos.' : '';
 export const passProblem = p => !p ? 'Escribe la contraseña.' : p.length < 8 ? 'La contraseña tiene que tener 8 caracteres o más.' : p.length > 100 ? 'La contraseña tiene como mucho 100 caracteres.' : '';
-/** Correo técnico de un usuario: sin distinguir mayúsculas, como el propio usuario. */
-const techEmail = u => String(u).toLowerCase() + '@' + TECH_DOMAIN;
+/** Correo técnico de un usuario: sin distinguir mayúsculas, como el propio usuario. `domain`: otro que el de ahora. */
+const techEmail = (u, domain) => String(u).toLowerCase() + '@' + (domain || TECH_DOMAIN);
 const authCall = async (op, body) => fetchJson(AUTH_URL + 'accounts:' + op + '?key=' + FIREBASE.apiKey, { method: 'POST', body, appCheck: await appCheckToken() });
 /** Respuesta de Authentication → sesión de cloud/session. */
 const sessionFrom = (r, u) => ({ uid: r.localId, u, it: r.idToken, rt: r.refreshToken, exp: Date.now() + (+r.expiresIn || 3600) * 1e3 });
 /** Crea la cuenta. Devuelve la sesión (sin guardarla); lanza un error de cloud/net (EMAIL_EXISTS si el usuario ya existe). */
 export const signUp = async (u, p) => sessionFrom(await authCall('signUp', { email: techEmail(u), password: p, returnSecureToken: true }), u);
-/** Entra con usuario y contraseña. Devuelve la sesión (sin guardarla); lanza un error de cloud/net (INVALID_LOGIN_CREDENTIALS…). */
-export const signIn = async (u, p) => sessionFrom(await authCall('signInWithPassword', { email: techEmail(u), password: p, returnSecureToken: true }), u);
+const passwordSignIn = async (u, p, domain) => sessionFrom(await authCall('signInWithPassword', { email: techEmail(u, domain), password: p, returnSecureToken: true }), u);
+/** Códigos con los que Authentication dice que no hay tal cuenta. El primero vale también para una contraseña que no es:
+  con la protección contra la enumeración de correos, Firebase no distingue un caso del otro. */
+const NO_SUCH_ACCOUNT = ['INVALID_LOGIN_CREDENTIALS', 'EMAIL_NOT_FOUND'];
+/** Entra con usuario y contraseña. Devuelve la sesión (sin guardarla); lanza un error de cloud/net (INVALID_LOGIN_CREDENTIALS…).
+  Si con el dominio de ahora no hay tal cuenta, prueba con el anterior: una cuenta que aún no se ha pasado al de ahora. El
+  error que se ve, si tampoco entra, es el de este segundo intento. */
+export const signIn = async (u, p) => {
+  try {
+    return await passwordSignIn(u, p);
+  }
+  catch (e) {
+    if (!NO_SUCH_ACCOUNT.includes(e.code))
+      throw e;
+    return passwordSignIn(u, p, OLD_TECH_DOMAIN);
+  }
+};
 /* una sola renovación a la vez, aunque la pidan varias peticiones */
 let refreshing = null;
 /** Códigos con los que la sesión ya no vale (contraseña restablecida, cuenta borrada o desactivada): hay que volver a entrar. */

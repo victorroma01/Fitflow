@@ -22,16 +22,28 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 
 ## [1.0.32] — 2026-11-16
 
-Revisión de la [1.0.3]: lo que quedaba por decidir de su auditoría.
+Revisión de la [1.0.3]. No tiene tarjeta propia ni detalla sus cambios en la app: va delante en la de la 1.0.3, con una sola
+línea.
 
 ### Mejoras
-- Entreno: el botón que guarda el entreno se llama ahora «Guardar entreno». Antes ponía «Log out», que suena a cerrar la
-  sesión de la cuenta.
+- Corrección y mejoras de la app.
 
 ### Interno
+- Entreno: el botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out», que suena a cerrar la sesión de la
+  cuenta), también en los textos que lo nombran.
+- Cuentas: el correo técnico de cada cuenta, que nadie ve, pasa a ser `usuario@stratafit-960ec.firebaseapp.com`, con el dominio
+  del propio proyecto de Firebase. La app registra con él y entra con él o, si la cuenta aún no se ha pasado, con el anterior
+  (`cloud/auth`); las reglas de Firestore admiten los dos mientras tanto. Las cuentas se pasan desde GitHub Actions («Pasar
+  las cuentas al dominio nuevo», `tools/admin/dominio.mjs`): primero un simulacro, que ensaya con una cuenta de prueba, y
+  después de verdad. Cada cuenta conserva su identificador, su contraseña, su rol y sus datos, y en cada móvil hay que volver
+  a entrar una vez ([cómo](docs/tecnica/backend.md#el-dominio-de-las-cuentas)). «Restablecer contraseña» y «Asignar rol»
+  encuentran la cuenta con cualquiera de los dos, y «Comprobar Firebase» dice cuántas quedan por pasar.
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.
+- Pruebas: `tests/dominio.test.mjs` (el paso de las cuentas, con una Authentication de mentira), `tests/cloud.py` (una cuenta
+  con el dominio anterior entra, se pasa y su móvil vuelve a entrar sin perder nada), `tests/rules.test.mjs` (los dos
+  dominios, y ninguno que solo se parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.
 - Documentación: la V1.0.31 comprobada en el iPhone del propietario, las versiones 1.0.3 y 1.0.31 en la documentación
   funcional y el estado de App Check (en marcha, sin exigir); el pendiente 7 de la auditoría (el nombre de «Log out»), hecho.
 

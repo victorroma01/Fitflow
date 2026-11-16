@@ -1,0 +1,48 @@
+# Pasar las cuentas de StrataFit al dominio nuevo de su correo técnico (Actions → Pasar las cuentas al dominio nuevo → Run
+# workflow). Cada cuenta conserva su identificador, su contraseña, su rol y sus datos; solo cambia el correo técnico, que
+# nadie ve. Primero «simulacro», que ensaya con una cuenta de prueba y cuenta cuántas pasaría sin cambiar ninguna; después
+# «aplicar». Al pasarlas, Firebase cierra las sesiones abiertas: en cada móvil hay que volver a entrar una vez.
+# El registro es público: no escribe usuarios ni correos, solo recuentos. Usa la cuenta de servicio de Firebase, que solo
+# existe como secreto del repositorio (FIREBASE_SERVICE_ACCOUNT). Código: tools/admin/dominio.mjs.
+name: Pasar las cuentas al dominio nuevo
+
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: «simulacro» ensaya y cuenta, sin cambiar ninguna cuenta; «aplicar» las pasa
+        required: true
+        type: choice
+        default: simulacro
+        options:
+          - simulacro
+          - aplicar
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-firebase
+  cancel-in-progress: false
+
+jobs:
+  dominio:
+    name: ${{ inputs.modo }}
+    # solo desde main: las reglas de Firestore que tienen que estar publicadas son las de main
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          package-manager-cache: false
+          node-version: 22
+      - name: firebase-admin
+        run: npm install --no-save --no-audit --no-fund firebase-admin@13
+      # el modo llega por una variable de entorno, nunca pegado en el código del paso
+      - name: Pasar las cuentas
+        env:
+          MODO: ${{ inputs.modo }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tools/admin/dominio.mjs "$MODO"

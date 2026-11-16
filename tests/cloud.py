@@ -10,7 +10,7 @@ Con el emulador, la contraseña temporal la crea el script de verdad (tools/admi
 import os, re, sys, json, time, base64, subprocess, urllib.request
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts, RECAPTCHA, recaptcha_route
-from fakefb import FakeFirebase
+from fakefb import FakeFirebase, DOMAIN, OLD_DOMAIN
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -59,9 +59,50 @@ class EmuFirebase:
         self._req('%s/emulator/v1/projects/%s/databases/(default)/documents' % (self.FS, self.P), method='DELETE')
         self._req('%s/emulator/v1/projects/%s/accounts' % (self.AUTH, self.P), method='DELETE')
 
+    def _account(self, user):
+        """La cuenta de un usuario, esté en el dominio de ahora o en el anterior."""
+        for d in (DOMAIN, OLD_DOMAIN):
+            r = self._req('%s/identitytoolkit.googleapis.com/v1/projects/%s/accounts:lookup' % (self.AUTH, self.P), {'email': [user.lower() + '@' + d]})
+            if r.get('users'):
+                return r['users'][0]
+        raise KeyError(user)
+
     def uid_of(self, user):
-        r = self._req('%s/identitytoolkit.googleapis.com/v1/projects/%s/accounts:lookup' % (self.AUTH, self.P), {'email': [user.lower() + '@stratafit.app']})
-        return r['users'][0]['localId']
+        return self._account(user)['localId']
+
+    def domain_of(self, user):
+        return self._account(user)['email'].split('@')[1]
+
+    def to_old_domain(self, user):
+        """Deja la cuenta como las de antes de la V1.0.32, con el dominio anterior: una que aún no se ha pasado."""
+        self._req('%s/identitytoolkit.googleapis.com/v1/projects/%s/accounts:update' % (self.AUTH, self.P),
+                  {'localId': self.uid_of(user), 'email': user.lower() + '@' + OLD_DOMAIN})
+
+    def _tool(self, *args):
+        """Un script de administración de verdad (tools/admin, con firebase-admin) contra el emulador: (código de salida, salida)."""
+        env = dict(os.environ, FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099', FIRESTORE_EMULATOR_HOST='127.0.0.1:8080')
+        r = subprocess.run(['node', os.path.join(ROOT, 'tools', 'admin', args[0])] + list(args[1:]), env=env, capture_output=True, text=True, timeout=120)
+        return r.returncode, r.stdout + r.stderr
+
+    def tool_finds(self, user):
+        """¿Encuentran la cuenta los scripts de administración? («Asignar rol», que la deja como estaba: usuario)."""
+        return self._tool('rol.mjs', user, 'usuario')[0] == 0
+
+    def dry_run(self):
+        """El simulacro de pasar las cuentas: (¿ha ido bien?, cuántas dice que quedan por pasar)."""
+        code, out = self._tool('dominio.mjs', 'simulacro')
+        m = re.search(r'Por pasar \| (\d+)', out)
+        return code == 0, int(m.group(1)) if m else -1
+
+    def move_accounts(self):
+        """Pasa las cuentas con el script de verdad (tools/admin/dominio.mjs). Devuelve cuántas ha pasado."""
+        code, out = self._tool('dominio.mjs', 'aplicar')
+        if code:
+            raise RuntimeError(out)
+        m = re.search(r'Pasadas ahora \| (\d+)', out)
+        if not m:
+            raise RuntimeError('tools/admin/dominio.mjs no dice cuántas cuentas ha pasado:\n' + out)
+        return int(m.group(1))
 
     def set_role(self, user, role):
         self._req('%s/identitytoolkit.googleapis.com/v1/projects/%s/accounts:update' % (self.AUTH, self.P),
@@ -202,7 +243,8 @@ def main(path):
         check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm', 'os'}, str(prof))
         check('y se suben el índice y el núcleo', fb.data('users/%s/data/index' % uid) is not None and fb.part('users/%s/data/core' % uid) is not None)
         check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.pfn').textContent)") == 'Ana_1')
-        check('el correo técnico no aparece en la app', '@stratafit.app' not in p1.content())
+        check('la cuenta nueva se crea con el dominio de ahora (el del proyecto de Firebase)', fb.domain_of('Ana_1') == DOMAIN, fb.domain_of('Ana_1'))
+        check('el correo técnico no aparece en la app', '@' + DOMAIN not in p1.content() and '@' + OLD_DOMAIN not in p1.content())
 
         # ── cuenta nueva (I-23, I-24): sin programa y, tras la primera sincronización, la bienvenida con sus datos; después, el
         #    recorrido de la primera vez (F-36). Visto en un móvil, no vuelve a salir en otro ──
@@ -584,6 +626,59 @@ def main(path):
         p4.wait_for_timeout(800)
         check('«Entregada» la borra de Administración', temp not in p4.inner_text('#sh'))
 
+        # ── el dominio de las cuentas (V1.0.32): se registran con el del proyecto de Firebase. Una de antes, con el dominio
+        #    anterior, entra igual; cuando se pasa (tools/admin/dominio.mjs), su móvil vuelve a entrar una vez y no pierde nada ──
+        c6, p6 = device()
+        login(p6, 'Dora_7', 'clave-dora-7', new=True)
+        wait(p6, "!!document.getElementById('wlc')", 30000)
+        new_account_bio(p6, 'F')
+        p6.click('#tour [data-a=tourSkip]')
+        p6.evaluate("S.logs.push({d:'%s',n:'Espalda',v:3600,s:14,m:50,q:7});saveState()" % today)
+        sync(p6)
+        dora = fb.uid_of('Dora_7')
+        check('otra cuenta nueva, con un entreno en la nube', fb.domain_of('Dora_7') == DOMAIN and len(fb.part('users/%s/logs/2026' % dora) or []) == 1)
+        # (como estaban todas las cuentas al publicarse la V1.0.32)
+        fb.to_old_domain('Dora_7')
+        p6.evaluate('A.signOut()')
+        wait(p6, "!!document.querySelector('#dg [data-v=signOutConfirmed]')", 30000)
+        with p6.expect_navigation():
+            p6.evaluate("document.querySelector('#dg [data-v=signOutConfirmed]').click()")
+        wait(p6, 'window.__ffok')
+        tries = len([c for c in fb.calls if c == ('auth', 'signInWithPassword')]) if not EMU else 0
+        login(p6, 'Dora_7', 'clave-dora-7')
+        check('una cuenta que sigue con el dominio anterior entra igual, con su usuario y su contraseña', p6.evaluate('account.uid') == dora and fb.domain_of('Dora_7') == OLD_DOMAIN, str(p6.evaluate('account.uid')))
+        check('y baja sus datos y sincroniza', p6.evaluate('S.logs.length') == 1 and sync(p6) == 'ok', str(p6.evaluate('S.logs.length')))
+        if not EMU:
+            check('la app prueba primero el dominio de ahora y después el anterior', len([c for c in fb.calls if c == ('auth', 'signInWithPassword')]) - tries == 2)
+        if EMU:
+            # (con los scripts de verdad de tools/admin, contra el emulador)
+            check('«Asignar rol» y «Restablecer contraseña» encuentran una cuenta que sigue con el dominio anterior', fb.tool_finds('Dora_7'))
+            dry = fb.dry_run()
+            check('el simulacro va bien, dice que queda una por pasar y no la pasa', dry == (True, 1) and fb.domain_of('Dora_7') == OLD_DOMAIN, str(dry))
+        # un entreno hecho antes de que la cuenta se pase, sin subir todavía
+        p6.evaluate("stopSync();S.logs.push({d:'2026-11-05',n:'Pierna',v:5200,s:18,m:60,q:8});saveState();flushState()")
+        moved = fb.move_accounts()
+        check('pasar las cuentas mueve la que quedaba al dominio de ahora, con su mismo identificador', moved == 1 and fb.domain_of('Dora_7') == DOMAIN and fb.uid_of('Dora_7') == dora, '%s %s' % (moved, fb.domain_of('Dora_7')))
+        check('y no toca las que ya estaban en él', fb.uid_of('Ana_1') == uid and fb.domain_of('VictorAdmin_') == DOMAIN)
+        p6.reload()
+        wait(p6, 'window.__ffok')
+        st = sync(p6)
+        if not EMU:
+            check('al pasarse la cuenta, la sesión de su móvil caduca y la app lo avisa', st == 'dead' and p6.evaluate("!!document.querySelector('#dg [data-v=reloginShow]')"), st)
+        if st == 'dead':
+            wait(p6, "!!document.querySelector('#dg [data-v=reloginShow]')")
+            check('con lo hecho todavía en el móvil', p6.evaluate('S.logs.length') == 2, str(p6.evaluate('S.logs.length')))
+            p6.evaluate("document.querySelector('#dg [data-v=reloginShow]').click()")
+            p6.fill('#lrp', 'clave-dora-7')
+            p6.click('[data-a=reloginSubmit]')
+            wait(p6, "!document.querySelector('#sh #lrp')", 15000)
+        check('se vuelve a entrar con la contraseña de siempre y lo que no se había subido llega a la nube',
+              p6.evaluate('account.uid') == dora and p6.evaluate('S.logs.length') == 2 and sync(p6) == 'ok' and len(fb.part('users/%s/logs/2026' % dora) or []) == 2,
+              '%s %s' % (p6.evaluate('S.logs.length'), len(fb.part('users/%s/logs/2026' % dora) or [])))
+        p6.evaluate('S.tab=3;R();A.openSettings()')
+        check('el correo técnico no aparece en la app, ni con el dominio de ahora ni con el anterior', '@' + DOMAIN not in p6.content() and '@' + OLD_DOMAIN not in p6.content() and 'firebaseapp' not in p6.inner_text('body'))
+        close(c6, p6)
+
         # ── fallos y sugerencias (M5, F-27): los envía el usuario; el admin los ve, los marca y los contesta ──
         sync(p2)
         p2.evaluate("A.openReport();document.querySelector('[data-a=reportChooseKind][data-v=f]').click()")
@@ -592,7 +687,7 @@ def main(path):
         rid = p2.evaluate('S.reports[0].id')
         rdoc = fb.data('reports/' + rid) or {}
         check('el aviso llega a la nube: pendiente, con el usuario y el id de la cuenta', rdoc.get('st') == 'p' and rdoc.get('u') == 'Ana_1' and rdoc.get('uid') == uid and rid.startswith(uid + '-') and rdoc.get('k') == 'f' and rdoc.get('a') == 'Algo se ve mal', str(rdoc))
-        check('con los datos técnicos (versión y navegador; nada personal)', ('StrataFit ' + p2.evaluate('APPV')) in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@stratafit.app' not in json.dumps(rdoc))
+        check('con los datos técnicos (versión y navegador; nada personal)', ('StrataFit ' + p2.evaluate('APPV')) in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@' + DOMAIN not in json.dumps(rdoc) and '@' + OLD_DOMAIN not in json.dumps(rdoc))
         fb.set_offline(c2, True)
         p2.evaluate("A.openReport();document.querySelector('[data-a=reportChooseKind][data-v=s]').click()")
         p2.evaluate("document.getElementById('rpx').value='Poder exportar el análisis también en Excel';A.reportSend()")

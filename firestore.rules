@@ -5,7 +5,9 @@ rules_version = '2';
 // · El admin (custom claim role: 'admin', que solo se pone desde GitHub Actions: tools/admin) lee además los perfiles de
 //   todas las cuentas y las contraseñas temporales (adminInbox), y borra estas al entregarlas. Nunca ve los entrenos, las
 //   comidas, las medidas ni la foto de nadie.
-// · Solo valen cuentas con correo técnico (usuario@stratafit.app): una cuenta creada a mano con otro correo no entra en nada.
+// · Solo valen cuentas con correo técnico: usuario@stratafit-960ec.firebaseapp.com, el dominio del propio proyecto, o, mientras
+//   las cuentas se pasan a él (tools/admin/dominio.mjs), el anterior, usuario@stratafit.app. Una cuenta creada a mano con otro
+//   correo no entra en nada.
 // · La copia de seguridad (users/{uid}/backup: meta y trozos c0…c23) es solo de su dueño, como el resto de sus datos.
 // · Fallos y sugerencias (reports/{uid}-{ms}): cada cuenta crea los suyos, pendientes y con su usuario, y lee solo los suyos;
 //   el admin los lee todos y solo cambia el estado (pendiente, vista, arreglada) y la respuesta.
@@ -15,7 +17,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function techUser() {
       return request.auth != null && request.auth.token.email is string
-        && request.auth.token.email.matches('^[a-z0-9._-]{3,20}@stratafit[.]app$');
+        && request.auth.token.email.matches('^[a-z0-9._-]{3,20}@(stratafit-960ec[.]firebaseapp[.]com|stratafit[.]app)$');
+    }
+    // ¿es `u` el usuario de la cuenta? Su correo técnico es ese usuario, en minúsculas, con uno de los dos dominios
+    function ownName(u) {
+      return u is string && (u.lower() + '@stratafit-960ec.firebaseapp.com' == request.auth.token.email
+        || u.lower() + '@stratafit.app' == request.auth.token.email);
     }
     function isOwner(uid) {
       return techUser() && request.auth.uid == uid;
@@ -62,7 +69,7 @@ service cloud.firestore {
     // un aviso nuevo: de quien lo crea (uid y usuario de su correo técnico), fallo o sugerencia, pendiente y sin respuesta
     function validReport(d) {
       return d.keys().hasOnly(['uid', 'u', 'k', 'a', 't', 'dx', 'v', 'ca', 'st', 'm'])
-        && d.uid == request.auth.uid && d.u is string && d.u.lower() + '@stratafit.app' == request.auth.token.email
+        && d.uid == request.auth.uid && ownName(d.u)
         && d.k in ['f', 's'] && d.a is string && d.a.size() <= 60 && d.t is string && d.t.size() >= 10 && d.t.size() <= 1500
         && d.dx is string && d.dx.size() <= 1500 && d.v is string && d.v.size() <= 20 && d.ca is int && d.st == 'p' && d.m is int;
     }
@@ -76,7 +83,7 @@ service cloud.firestore {
       allow read: if isOwner(uid) || isAdmin();
       // al registrarse: el usuario tiene que ser el del correo técnico de la cuenta
       allow create: if isOwner(uid) && request.resource.data.keys().hasOnly(['u', 'sx', 'pr', 'ca', 'm'])
-        && request.resource.data.u is string && request.resource.data.u.lower() + '@stratafit.app' == request.auth.token.email
+        && ownName(request.resource.data.u)
         && validProfile(request.resource.data);
       // después: sexo, preferencias y sistema del móvil; «debe cambiar la contraseña» (mc) solo se puede quitar (lo pone GitHub
       // Actions)

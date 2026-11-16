@@ -192,7 +192,7 @@ La V1.0.3 se publicó el 16-11-2026, con todas hechas y la confirmación del pro
 ([resultado](pruebas.md#la-v103-en-el-iphone-del-propietario)). Esa prueba encontró un fallo que las automáticas no veían (sin
 conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la
 V1.0.31, publicada también ese día y comprobada en el mismo iPhone. La segunda, la V1.0.32, cierra el pendiente 7 (el nombre
-del botón que guarda el entreno).
+del botón que guarda el entreno) y pasa las cuentas al [dominio del proyecto](backend.md#el-dominio-de-las-cuentas).
 
 | Fase | Estado | Hecho | Falta |
 | --- | --- | --- | --- |
@@ -220,6 +220,7 @@ del botón que guarda el entreno).
 | 9 | Las filas de la lista de alimentos miden 35 px de alto: cumplen el mínimo de accesibilidad (24 px), no los 44 px que recomienda Apple. | Subirlas a 44 px deja ver menos alimentos por pantalla (de unos 14 a 11): es un cambio de diseño, decisión del propietario. |
 | 10 | Quedan 24 líneas de más de 800 caracteres en las vistas. | Son texto de la app o dibujos SVG en una sola línea: partirlas no las hace más claras. |
 | 11 | `tests/deploy.py`: de tarde en tarde, una recarga con service worker no termina en Chromium (I-13); la prueba vuelve a abrir la dirección y lo anota. | Sin reproducir a voluntad: salió una vez en esta auditoría, en un guion aparte. No se ha visto en la app de verdad. |
+| 12 | Quitar de las reglas de Firestore y de la app el dominio anterior del correo técnico de las cuentas (`stratafit.app`). | Hasta que todas las cuentas estén pasadas al de ahora ([cómo](backend.md#el-dominio-de-las-cuentas)), las que queden entran con él. |
 
 ## Limitaciones técnicas
 
