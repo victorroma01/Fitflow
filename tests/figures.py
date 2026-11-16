@@ -291,7 +291,7 @@ def main(path, shots=None):
             check('hoja de «%s»: no se detiene en ningún momento del ciclo' % n, all(a != b for a, b in zip(seen, seen[1:])) and 'NaN' not in ''.join(seen))
         # un gesto seguido (remar, el SkiErg, una serie de golpes) va y vuelve sin pararse en los extremos: mirado a pasos
         # iguales, no hay tres momentos seguidos iguales (dos sí puede haberlos, a un lado y otro de la vuelta), pasa por
-        # posturas bien distintas y, al cabo de un gesto entero, está donde estaba. El reloj de la página se para y solo
+        # posturas bien distintas y, al cabo de unos gestos enteros, está donde estaba. El reloj de la página se para y solo
         # avanza lo que se le pide: si no, lo que tarda la propia prueba mueve la figura
         def numbers(layers):
             return [float(x) for x in re.findall(r'-?\d+\.?\d*', layers)]
@@ -305,10 +305,13 @@ def main(path, shots=None):
                 seen.append(ev(LAYERS))
             still = [i for i in range(len(seen) - 2) if seen[i] == seen[i + 1] == seen[i + 2]]
             check('hoja de «%s»: va y vuelve sin pararse en los extremos' % n, not still and len(set(seen)) >= steps // 2 and 'NaN' not in ''.join(seen), 'parada hacia el paso %s; posturas distintas: %d' % (still[:1], len(set(seen))))
-            # un fotograma (16 ms) de diferencia como mucho: unos píxeles o unos grados en lo que más corre
-            first, last = numbers(seen[0]), numbers(seen[steps])
+            # se compara tras un número de gestos que sean fotogramas enteros (el reloj de prueba los da cada 16 ms): así el
+            # último fotograma cae en el mismo punto del gesto y la figura tiene que estar exactamente igual
+            whole = next(k for k in range(1, 17) if k * period % 16 == 0)
+            pg.clock.run_for(period * (whole - 1))
+            first, last = numbers(seen[0]), numbers(ev(LAYERS))
             far = max([abs(a - b) for a, b in zip(first, last)] or [99]) if len(first) == len(last) else 99
-            check('hoja de «%s»: al cabo de un gesto entero está donde estaba' % n, far <= 4, 'se aparta %.1f' % far)
+            check('hoja de «%s»: al cabo de %s está donde estaba' % (n, 'un gesto entero' if whole == 1 else '%d gestos enteros' % whole), far <= .2, 'se aparta %.1f' % far)
             # (si una pieza pasa a verse en escorzo, su transformación lleva más números: es otra postura sin más que mirar)
             half = numbers(seen[steps // 2])
             check('hoja de «%s»: y a medio gesto, en otra postura' % n, len(half) != len(first) or max(abs(a - b) for a, b in zip(first, half)) > 20)

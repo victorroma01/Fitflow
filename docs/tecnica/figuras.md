@@ -190,9 +190,10 @@ pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el
   piezas, el nombre y el texto, sin fotos); las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
   (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios ciclos);
   las posturas que se mantienen; los ciclos, que no se detienen en ningún momento, y los peldaños de la escaladora, que se
-  deslizan; los gestos seguidos (el remo, el SkiErg, el saco), que no se paran en los extremos y al cabo de un gesto entero
-  están donde estaban; la cuerda de la comba, que gira con su mango una vuelta por salto, o dos (con el reloj de la página
-  parado, para que lo que tarda la prueba no mueva la figura); una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla (se exige en
+  deslizan; los gestos seguidos (el remo, el SkiErg, el saco), que no se paran en los extremos y al cabo de unos gestos enteros
+  están exactamente donde estaban; la cuerda de la comba, que gira con su mango una vuelta por salto, o dos (con el reloj de
+  la página parado, para que lo que tarda la prueba no mueva la figura, y comparando en fotogramas enteros: el reloj de prueba
+  da uno cada 16 ms, y un gesto de 1,9 s no acaba en uno); una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla (se exige en
   Chromium; en Firefox y WebKit se anota: WebKit sin pantalla no pinta fotogramas a su ritmo y solo las pone si se le
   obliga a pintar uno con una captura, que es lo que se comprueba) y, en cualquier caso, por tandas; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas, y con las dos de un salto; lo pintado de
   verdad (los músculos que trabajan en rojo y naranja, el resto del cuerpo, las mancuernas en los extremos con los brazos
