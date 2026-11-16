@@ -7,15 +7,33 @@ Cada versión se divide en **Novedades**, **Mejoras**, **Correcciones** e **Inte
 aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en frases cortas); **Interno** es solo para desarrollo.
 `build.py` lee este archivo: la versión de `APPV` debe tener aquí su entrada o la compilación se detiene.
 
-Una **revisión** arregla una versión ya publicada sin ser otra: lleva su número con una cifra más (la 1.0.31 es la primera
-revisión de la 1.0.3) y, antes de su primer apartado, una línea que empieza por «Revisión de la [1.0.3]». La app enseña entonces
-una sola tarjeta: los apartados de la revisión y, debajo, los de la versión que revisa, cada uno con el número de la suya
-(«Correcciones de la 1.0.31», «Novedades de la 1.0.3»). Para el aviso de versión nueva los números se comparan uno a uno, así que
-1.0.31 es posterior a 1.0.3, pero también a 1.0.4: lo que venga después de una revisión tiene que llevar un número mayor que
-ella (1.0.32, 1.1.0…).
+Una **revisión** arregla una versión ya publicada sin ser otra. La app enseña entonces una sola tarjeta: los apartados de la
+revisión y, debajo, los de la versión que revisa (y los de sus revisiones anteriores), cada uno con el número de la suya
+(«Correcciones de la 1.0.31», «Novedades de la 1.0.3»).
+
+- **Desde la versión que siga a la 1.0.32**, una revisión lleva una cuarta cifra: 1.1.0.1 es la primera revisión de la 1.1.0, y
+  no hace falta decir más. El aviso de versión nueva compara todas las cifras: 1.1.0.1 es posterior a 1.1.0 y anterior a 1.1.1.
+- **Las revisiones de la 1.0.3** se numeraron añadiendo una cifra al tercer número (1.0.31 y 1.0.32) y dicen, antes de su primer
+  apartado, «Revisión de la [1.0.3]». Entonces el aviso solo comparaba tres números, y para él 1.0.31 es posterior a 1.0.3 pero
+  también a 1.0.4: por eso la versión que siga a la 1.0.32 tiene que ser mayor que ella (1.1.0).
 
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
+
+## [1.0.32] — 2026-11-16
+
+Revisión de la [1.0.3]: lo que quedaba por decidir de su auditoría.
+
+### Mejoras
+- Entreno: el botón que guarda el entreno se llama ahora «Guardar entreno». Antes ponía «Log out», que suena a cerrar la
+  sesión de la cuenta.
+
+### Interno
+- El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
+  revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
+  primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.
+- Documentación: la V1.0.31 comprobada en el iPhone del propietario, las versiones 1.0.3 y 1.0.31 en la documentación
+  funcional y el estado de App Check (en marcha, sin exigir); el pendiente 7 de la auditoría (el nombre de «Log out»), hecho.
 
 ## [1.0.31] — 2026-11-16
 

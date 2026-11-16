@@ -66,8 +66,8 @@ const exerciseSection = (day, blocks, blockOf, exercise, exIndex, current) => {
   const rows = sets.map((set, setIndex) => html`${setRow(exercise, exIndex, set, setIndex, current && current[0] == exIndex && current[1] == setIndex)}${restRunning(exIndex, setIndex)}${rpeRow(exIndex, setIndex, set)}`);
   return html`<div class="xs${W.folded && W.folded[exIndex] ? ' fd' : ''}${sets.length && sets.every(s => s.ok) ? ' dn' : ''}" id="ex${exIndex}">${blockOf[exIndex][1] ? blockHeader(blocks, blockOf[exIndex][0], current) : ''}${blockBadge(day.ex, exIndex)}${exerciseHead(exercise, exIndex)}${foldSummary(exercise, exIndex)}${exToolsHtml(exercise, exIndex)}${exerciseTools2(exercise, exIndex)}<div class="thd"><span>Set</span><span></span><span>${raw(unitHead(exercise))}</span><span>${usesWeight(exercise) ? 'Peso' : ''}</span><span>Desc.</span><span>Log</span></div>${rows}<div class="g2 mt-8"><button data-a="removeSet" data-i="${exIndex}">− Serie</button><button data-a="addSet" data-i="${exIndex}">+ Serie</button></div></div>`;
 };
-/* al final, «Salir y descartar» y «Log out»; abajo, pegada al borde, la barra de serie anterior, pausa y siguiente */
-const sessionFooter = () => html`<div class="g2 m-16-0-84"><button data-a="discardAsk" class="bg-xd4d4da c-x111 bd-0 p-15 r-16 fs-15">Salir y descartar</button><button data-a="finishAsk" class="bg-xfff c-x111 bd-0 p-15 r-16 fs-16 fw-700">Log out</button></div><div class="pb"><button data-a="previousSet" aria-label="Serie anterior">${icon('prv', 26)}</button><button data-a="togglePause" aria-label="${W.pausedAt ? 'Reanudar' : 'Pausar'}">${icon(W.pausedAt ? 'ply' : 'pau', 30)}</button><button data-a="goToNextSet" aria-label="Siguiente serie">${icon('nxt', 26)}</button></div>`;
+/* al final, «Salir y descartar» y «Guardar entreno»; abajo, pegada al borde, la barra de serie anterior, pausa y siguiente */
+const sessionFooter = () => html`<div class="g2 m-16-0-84"><button data-a="discardAsk" class="bg-xd4d4da c-x111 bd-0 p-15 r-16 fs-15">Salir y descartar</button><button data-a="finishAsk" class="bg-xfff c-x111 bd-0 p-15 r-16 fs-16 fw-700">Guardar entreno</button></div><div class="pb"><button data-a="previousSet" aria-label="Serie anterior">${icon('prv', 26)}</button><button data-a="togglePause" aria-label="${W.pausedAt ? 'Reanudar' : 'Pausar'}">${icon(W.pausedAt ? 'ply' : 'pau', 30)}</button><button data-a="goToNextSet" aria-label="Siguiente serie">${icon('nxt', 26)}</button></div>`;
 /** La pantalla del entreno en curso. */
 export function sessionView() {
   const day = S.plan[S.selectedDay];
@@ -97,7 +97,7 @@ A.exerciseHistory = i => {
   const best = bw && !unitOf(E) ? html`<div class="g2"><div class="cd"><small>Mejor peso</small><br><b class="fs-20">${toDisplayWeight(bw)} ${weightUnit()}</b></div><div class="cd"><small>1RM estimado</small><br><b class="fs-20">${rm ? round1(toDisplayWeight(rm)) + ' ' + weightUnit() : '—'}</b></div></div>` : '';
   const chart = h.length > 1 && !unitOf(E) ? html`<div class="pgs">${raw(progressBody(n))}</div>` : '';
   const list = h.slice(0, 12).map(x => html`<div class="it cols-1fr"><b>${raw(x.d)}</b><small>${raw(x.s.map(s => setText(E, s)).join(' · '))}</small></div>`).join('');
-  sheet(html`<h3>${n}</h3>${raw(h.length ? best + chart + list : '<p class="mu">Aún no hay registros de este ejercicio. Se guardan al pulsar Log out.</p>')}`);
+  sheet(html`<h3>${n}</h3>${raw(h.length ? best + chart + list : '<p class="mu">Aún no hay registros de este ejercicio. Se guardan al pulsar «Guardar entreno».</p>')}`);
 };
 A.togglePause = () => {
   if (W.pausedAt) {

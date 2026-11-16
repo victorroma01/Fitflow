@@ -357,6 +357,17 @@ def main(app):
                     pg.wait_for_timeout(1200)
                     check('la versión nueva abre sin conexión', ev('!!window.__ffok') and ev('APPV') == '9.9.9' and ev("!document.getElementById('ffe')"))
                     c.set_offline(False)
+                # la revisión de la versión instalada lleva una cuarta cifra, y se anuncia (hasta la V1.0.31 el aviso solo
+                # comparaba tres números: para él era la misma versión)
+                rev = ev('APPV') + '.1'
+                publish(rev, ['Un arreglo'], code=False)
+                ev("S.tab=3;R();A.openSettings()")
+                pg.click('#sh [data-a=updateCheck]')
+                pg.wait_for_timeout(800)
+                check('Ajustes → Actualizaciones encuentra la revisión de la versión instalada (una cuarta cifra: %s)' % rev, ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión ' + rev)
+                if ev("!!document.querySelector('#upd .updx')"):
+                    pg.click('#upd .updx')
+                    pg.wait_for_timeout(200)
                 # Ajustes → Actualizaciones cuando hay una versión nueva en el servidor
                 publish('9.9.10', ['Otra mejora'], code=False)
                 ev("S.tab=3;R();A.openSettings()")

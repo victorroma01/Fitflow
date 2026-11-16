@@ -45,7 +45,7 @@ export const backTarget = () => {
     return { k: 'hoja', el: p, go: () => b && A[b.dataset.a] ? A[b.dataset.a](+b.dataset.i, b) : A.closeSheet() };
   }
   if (W)
-    return { k: 'entreno', go: () => toast('El entreno sigue en marcha. Para salir, usa «Salir y descartar» o «Log out»') };
+    return { k: 'entreno', go: () => toast('El entreno sigue en marcha. Para salir, usa «Salir y descartar» o «Guardar entreno»') };
   if (overviewMode)
     return { k: 'página', el: $('#app'), go: () => A.overviewBack() };
   if (weightView && S.tab == 2)

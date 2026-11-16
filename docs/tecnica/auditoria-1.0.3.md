@@ -190,7 +190,9 @@ L2 solo se pudo ver en el WebKit de GitHub, y X6 se dedujo del código (la regla
 
 La V1.0.3 se publicó el 16-11-2026, con todas hechas y la confirmación del propietario, que la probó ese día en su iPhone
 ([resultado](pruebas.md#la-v103-en-el-iphone-del-propietario)). Esa prueba encontró un fallo que las automáticas no veían (sin
-conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la V1.0.31, publicada también ese día y comprobada en el mismo iPhone.
+conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la
+V1.0.31, publicada también ese día y comprobada en el mismo iPhone. La segunda, la V1.0.32, cierra el pendiente 7 (el nombre
+del botón que guarda el entreno).
 
 | Fase | Estado | Hecho | Falta |
 | --- | --- | --- | --- |
@@ -213,7 +215,7 @@ conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco
 | 4 | App Check (I-05): configurado el 16-11-2026 (la clave de reCAPTCHA Enterprise y la app web, registrada en Firebase) y **sin exigir**. Falta, con la versión ya en los móviles, comprobar en la consola que las peticiones salen verificadas y entonces exigirlo. | Es un paso del propietario en la consola de Firebase ([cómo](backend.md#activar-app-check)); exigirlo antes de tiempo dejaría fuera a quien aún no tenga la versión nueva. |
 | 5 | Prueba en un Android de verdad (I-01) y con VoiceOver en un iPhone. | No hay dispositivos en este entorno. |
 | 6 | Editar una serie de un entreno ya guardado (hoy se borra el entreno entero con sus series). | Función nueva: cambia el historial, los récords y la sincronización; mejor en una versión propia. |
-| 7 | «Log out», el botón que guarda el entreno, puede confundirse con cerrar la sesión de la cuenta. | Es un cambio de nombre visible en la pantalla principal del entreno: decisión del propietario. |
+| 7 | ~~«Log out», el botón que guarda el entreno, puede confundirse con cerrar la sesión de la cuenta.~~ | Hecho en la V1.0.32, por decisión del propietario: se llama «Guardar entreno», en el botón y en los textos que lo nombran. |
 | 8 | ~~Alertas de Dependabot.~~ | Activadas por el propietario el 16-11-2026. Avisan por correo de fallos de seguridad conocidos en las herramientas de compilar y probar; la app publicada no lleva librerías de terceros. |
 | 9 | Las filas de la lista de alimentos miden 35 px de alto: cumplen el mínimo de accesibilidad (24 px), no los 44 px que recomienda Apple. | Subirlas a 44 px deja ver menos alimentos por pantalla (de unos 14 a 11): es un cambio de diseño, decisión del propietario. |
 | 10 | Quedan 24 líneas de más de 800 caracteres en las vistas. | Son texto de la app o dibujos SVG en una sola línea: partirlas no las hace más claras. |
@@ -244,7 +246,7 @@ conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco
 1. Estadísticas avanzadas sobre `core/calc`: volumen por grupo muscular y por semana, y progresión de cada ejercicio.
 2. Planificación semanal de comidas a partir de las plantillas y de la semana.
 3. Exigir App Check (ya configurado) antes de abrir la app a más gente, cuando la consola enseñe las peticiones verificadas.
-4. Editar las series de un entreno guardado (pendiente 6) y decidir el nombre de «Log out» (pendiente 7).
+4. Editar las series de un entreno guardado (pendiente 6).
 5. Repetir la lista de comprobación en un iPhone y un Android de verdad en cada versión, y una pasada con VoiceOver.
 6. Probar cada versión actualizando desde la anterior publicada, no solo desde sí misma: `tests/deploy.py` ya lo hace desde el
    service worker de la V1.0.2 (`tests/sw-anterior.js`); cuando el service worker vuelva a cambiar, añadir el de la V1.0.3.

@@ -1,6 +1,6 @@
 """Prueba de cómo `build.py` lee CHANGELOG.md y compone las tarjetas de versión que enseña la app (el aviso de versión
-nueva, las novedades y Ajustes), sin navegador: las entradas normales, las revisiones de una versión (1.0.31 de la 1.0.3),
-lo que no se admite y el historial de verdad.
+nueva, las novedades y Ajustes), sin navegador: las entradas normales, las revisiones de una versión (con una cuarta cifra,
+1.1.0.1 de la 1.1.0, o diciéndolo, 1.0.31 de la 1.0.3), lo que no se admite y el historial de verdad.
 
   python3 tests/changelog.py
 """
@@ -94,6 +94,20 @@ Revisión de la [1.0.3].
 """)
 
 
+FOURTH = PLAIN.replace('## [1.1.0] — 2026-12-01\n', """## [1.1.0.2] — 2026-12-09
+
+### Correcciones
+- Otro arreglo.
+
+## [1.1.0.1] — 2026-12-05
+
+### Correcciones
+- Un arreglo de la 1.1.0.
+
+## [1.1.0] — 2026-12-01
+""")
+
+
 def main():
     print('Entradas normales')
     entries, cards, err = parsed(PLAIN)
@@ -119,6 +133,19 @@ def main():
     check('lleva lo suyo, lo de la revisión anterior y lo de la versión, en ese orden', titles(card) == ['Mejoras de la 1.0.32', 'Correcciones de la 1.0.31', 'Novedades de la 1.0.3', 'Mejoras de la 1.0.3', 'Correcciones de la 1.0.3'], str(err or titles(card)))
     check('y ni la revisión anterior ni la versión salen aparte', cards and [c['version'] for c in cards] == ['1.0.32', '1.0.2'], str(cards and [c['version'] for c in cards]))
 
+    print('Revisiones con una cuarta cifra')
+    entries, cards, err = parsed(FOURTH)
+    check('una versión de cuatro cifras es la revisión de la de sus tres primeras, sin decirlo', entries and [e.get('base') for e in entries] == ['1.1.0', '1.1.0', None, None, None], str(err or [(e['version'], e.get('base')) for e in entries]))
+    card = cards[0] if cards else {'sections': []}
+    check('su tarjeta: lo suyo, lo de la revisión anterior y lo de la versión', titles(card) == ['Correcciones de la 1.1.0.2', 'Correcciones de la 1.1.0.1', 'Novedades de la 1.1.0'], str(titles(card)))
+    check('y la lista de versiones: la revisión, y después las versiones anteriores', cards and [c['version'] for c in cards] == ['1.1.0.2', '1.0.3', '1.0.2'], str(cards and [c['version'] for c in cards]))
+    _, cards, err = parsed(FOURTH.replace('## [1.1.0] — 2026-12-01', '## [1.1.0] — sin fecha'))
+    check('una revisión de cuatro cifras sin su versión debajo detiene la compilación', cards is None and '1.1.0' in err, err[:160])
+    entries, _, err = parsed(FOURTH.replace('## [1.1.0.1] — 2026-12-05\n', '## [1.1.0.1] — 2026-12-05\n\nRevisión de la [1.1.0]: un arreglo.\n'))
+    check('puede decir además cuál revisa, si es la de su número', entries is not None and entries[1].get('base') == '1.1.0', str(err))
+    entries, _, err = parsed(FOURTH.replace('## [1.1.0.1] — 2026-12-05\n', '## [1.1.0.1] — 2026-12-05\n\nRevisión de la [1.0.3]: un arreglo.\n'))
+    check('y no puede decir que revisa otra', entries is None and '1.1.0.1' in err and '1.0.3' in err, err[:160])
+
     print('Lo que no se admite')
     _, cards, err = parsed(REVISION.replace('Revisión de la [1.0.3]', 'Revisión de la [1.0.9]'))
     check('una revisión de una versión que no está más abajo detiene la compilación', cards is None and '1.0.9' in err, err[:160])
@@ -143,6 +170,8 @@ def main():
         t = titles(cards[0])
         own = [x['title'] + ' de la ' + ver for x in entries[0]['sections']]
         check('%s es una revisión de la %s: su tarjeta enseña primero lo suyo y después lo de esa versión, que ya no sale aparte' % (ver, base), t[:len(own)] == own and t[-1].endswith(' de la ' + base) and base not in versions, str(t) + ' ' + str(versions[:4]))
+        earlier = [e['version'] for e in entries[1:] if e.get('base') == base]
+        check('ni sus revisiones anteriores (%s), que van en la misma tarjeta' % (', '.join(earlier) or 'ninguna'), all(v not in versions and any(x.endswith(' de la ' + v) for x in t) for v in earlier), str(t))
         # el aviso de versión nueva enseña ocho cambios por apartado: lo que arregla la revisión tiene que verse entero
         check('lo que arregla la revisión cabe entero en el aviso (ocho cambios por apartado)', all(len(x['items']) <= 8 for x in entries[0]['sections']), str([len(x['items']) for x in entries[0]['sections']]))
     print()

@@ -41,6 +41,7 @@ MEDIA_MODULE = 'data/media.js'
 RELEASE_MODULE = 'data/release.js'
 CHANGELOG = os.path.join(ROOT, 'CHANGELOG.md')
 USER_SECTIONS = ('Novedades', 'Mejoras', 'Correcciones')  # apartados que la app enseña al usuario
+VERSION = r'\d+\.\d+\.\d+(?:\.\d+)?'  # 1.1.0 o, la revisión de una versión, 1.1.0.1
 
 
 def read(p):
@@ -153,16 +154,19 @@ def plain(s):
 
 def changelog():
     """Versiones de CHANGELOG.md, de la más nueva a la más antigua: [{version, date, sections: [{title, items}]}].
-    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. La revisión de una versión dice cuál
-    revisa antes de su primer apartado («Revisión de la [1.0.3]…») y lo lleva en `base`."""
+    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. La revisión de una versión lleva en
+    `base` la que revisa: la de sus tres primeras cifras si tiene cuatro (1.1.0.1 revisa la 1.1.0) o la que diga antes de su
+    primer apartado («Revisión de la [1.0.3]…»: las de la 1.0.3, que se numeraron 1.0.31 y 1.0.32)."""
     out, cur, sec, head = [], None, None, False
     for raw in read(CHANGELOG).splitlines():
         l = raw.rstrip()
         if l.startswith('## '):
-            m = re.match(r'^## \[(\d+\.\d+\.\d+)\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})$', l)
+            m = re.match(r'^## \[(' + VERSION + r')\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})$', l)
             cur = {'version': m.group(1), 'date': m.group(2), 'sections': []} if m else None
             if cur:
                 out.append(cur)
+                if cur['version'].count('.') == 3:
+                    cur['base'] = cur['version'].rsplit('.', 1)[0]
             sec, head = None, True
         elif cur is None:
             continue
@@ -172,8 +176,11 @@ def changelog():
             if sec:
                 cur['sections'].append(sec)
             head = False
-        elif head and re.match(r'^Revisión de la \[(\d+\.\d+\.\d+)\]', l):
-            cur['base'] = re.match(r'^Revisión de la \[(\d+\.\d+\.\d+)\]', l).group(1)
+        elif head and re.match(r'^Revisión de la \[(' + VERSION + r')\]', l):
+            said = re.match(r'^Revisión de la \[(' + VERSION + r')\]', l).group(1)
+            if cur.get('base', said) != said:
+                die('CHANGELOG.md: la %s es, por su número, una revisión de la %s, y dice que lo es de la %s' % (cur['version'], cur['base'], said))
+            cur['base'] = said
         elif sec is not None and re.match(r'^[-*] ', l):
             sec['items'].append(plain(l[2:]))
         elif sec is not None and l.strip() and sec['items'] and raw.startswith('  '):

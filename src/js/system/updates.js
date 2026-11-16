@@ -81,11 +81,13 @@ let updateReady = 0;
 let updateCheckedAt = 0;
 /** Versión publicada que se está anunciando (contenido de version.json) o null si no se pudo leer. */
 let updateInfo = null;
-/** ¿La versión a es posterior a b? Compara número a número: 1.10.0 es posterior a 1.9.3. */
+/** ¿La versión a es posterior a b? Compara número a número, tengan los que tengan: 1.10.0 es posterior a 1.9.3, y la
+    revisión de una versión, que lleva una cuarta cifra (1.1.0.1), es posterior a ella (1.1.0) y anterior a la siguiente
+    (1.1.1). Hasta la V1.0.31 solo se miraban tres. */
 export const isNewerVersion = (a, b) => {
   const x = String(a || '').split('.').map(Number);
   const y = String(b || '').split('.').map(Number);
-  for (let i = 0; i < 3; i++)
+  for (let i = 0; i < Math.max(x.length, y.length); i++)
     if ((x[i] || 0) != (y[i] || 0))
       return (x[i] || 0) > (y[i] || 0);
   return false;

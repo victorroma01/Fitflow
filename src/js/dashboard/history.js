@@ -35,7 +35,7 @@ const logsPage = () => {
   let h = html`${pgHead('Registros')}<div class="g2 cols-3 gap-8"><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${S.logs.length}</b><br><small>Entrenos</small></div><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${raw(volumeText(tv, 1))}</b><br><small>Volumen</small></div><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${round1(tm / 60)} h</b><br><small>Tiempo</small></div></div>`;
   let last = '';
   if (!L.length)
-    return html`${raw(h)}<p class="mu mt-18">Aún no hay entrenos guardados. Se registran al pulsar Log out.</p>`;
+    return html`${raw(h)}<p class="mu mt-18">Aún no hay entrenos guardados. Se registran al pulsar «Guardar entreno».</p>`;
   L.forEach(o => {
     const m = fmtDateShort(o.l.d, MONTH_YEAR);
     if (m != last) {

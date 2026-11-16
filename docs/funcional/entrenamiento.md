@@ -97,6 +97,8 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 - Cada serie se anota con sus repeticiones y su peso, y se marca hecha con ✓. Se pueden añadir o quitar series (al quitar una
   ya hecha, el aviso trae [«Deshacer»](experiencia.md#avisos-y-deshacer)). Al marcar la última
   serie que faltaba, sale **¿Guardar el entreno?**, con **Guardar y salir** y **Cancelar** (como con el botón de avance de abajo).
+- Al final de la pantalla hay dos botones: **Guardar entreno**, que hace esa misma pregunta en cualquier momento y registra las
+  series hechas, y **Salir y descartar**, que sale sin guardar nada (también pregunta antes).
 - **Esfuerzo (RPE)**: si lo activas en Ajustes → Ajustes avanzados, al marcar una serie salen debajo los números del 6 al 10 para
   anotar lo dura que ha sido. Viene desactivado; **+ Drop set** sale siempre bajo la serie recién hecha que lleve peso.
 - **Peso sugerido**: al escribir el peso de una serie, las siguientes lo traen sugerido en gris oscuro, menos destacado que un

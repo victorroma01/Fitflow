@@ -39,6 +39,9 @@ def note_expected():
                 base = re.match(r'Revisión de la \[([\d.]+)\]', l).group(1)
             elif cur and l.startswith('- '):
                 cur[1] += 1
+        # (con una cuarta cifra, es la revisión de la versión de sus tres primeras)
+        if not base and ver.count('.') == 3:
+            base = ver.rsplit('.', 1)[0]
         return ver, base, [x for x in secs if x[1]]
 
     first = parts(entries[0])
@@ -245,9 +248,11 @@ def main(path):
         # el número de la suya
         if any(' de la ' in t for t in titles):
             check('y, al ser una revisión, primero lo que arregla ella y después lo de la versión que revisa', sec[0].endswith(' de la ' + ev("APPV")) and not sec[-1].endswith(' de la ' + ev("APPV")), str(sec))
-        # el aviso de versión nueva compara los números uno a uno: una revisión es posterior a su versión, pero también a la
-        # siguiente de una cifra, así que lo que venga después tiene que llevar un número mayor
-        check('para el aviso, la 1.0.31 es posterior a la 1.0.3, y la 1.0.32 y la 1.1.0, a la 1.0.31; la 1.0.4, no', ev("isNewerVersion('1.0.31','1.0.3') && isNewerVersion('1.0.32','1.0.31') && isNewerVersion('1.1.0','1.0.31') && !isNewerVersion('1.0.4','1.0.31') && !isNewerVersion('1.0.31','1.0.31')"))
+        # el aviso de versión nueva compara los números uno a uno. Las revisiones de la 1.0.3 (1.0.31, 1.0.32) son posteriores
+        # a ella, pero también a una 1.0.4, así que lo que venga después tiene que llevar un número mayor
+        check('para el aviso, la 1.0.31 es posterior a la 1.0.3, y la 1.0.32 y la 1.1.0, a la 1.0.31; la 1.0.4, no', ev("isNewerVersion('1.0.31','1.0.3') && isNewerVersion('1.0.32','1.0.31') && isNewerVersion('1.1.0','1.0.32') && !isNewerVersion('1.0.4','1.0.31') && !isNewerVersion('1.0.31','1.0.31')"))
+        # y compara todas las cifras: una revisión con una cuarta (1.1.0.1) es posterior a su versión y anterior a la siguiente
+        check('una cuarta cifra cuenta: 1.1.0.1 es posterior a 1.1.0 y anterior a 1.1.1, y 1.1.0.10, posterior a 1.1.0.9', ev("isNewerVersion('1.1.0.1','1.1.0') && !isNewerVersion('1.1.0','1.1.0.1') && isNewerVersion('1.1.1','1.1.0.9') && !isNewerVersion('1.1.0.9','1.1.1') && isNewerVersion('1.1.0.10','1.1.0.9') && !isNewerVersion('1.1.0.0','1.1.0') && !isNewerVersion('1.1.0','1.1.0.0')"))
         lk = ev("(b=>{const s=getComputedStyle(b);return [b.innerText,s.textDecorationLine,parseFloat(s.fontSize),s.color==getComputedStyle(document.querySelector('.rnp small.mu')||b).color,b.getBoundingClientRect().top>document.querySelector('.rnp').getBoundingClientRect().bottom]})(document.querySelector('.rnc .lnk'))")
         check('debajo, «Cerrar» pequeño, gris y subrayado', lk[0] == 'Cerrar' and 'underline' in lk[1] and lk[2] <= 14 and lk[3] and lk[4], str(lk))
         ev("document.querySelector('.rnc .lnk').click()")

@@ -84,7 +84,7 @@ siendo desplazar la página.
 El botón o el gesto atrás del sistema cierra lo que haya abierto, de arriba abajo: una ventana de aviso (sin hacer nada), el menú,
 la página de dentro (volviendo a la anterior, como «←»), Overview o Evolución del peso. En Nutrición, Dashboard o Perfil, lleva a
 Workout; desde Workout, sin nada abierto, sale de la app, como siempre. Durante un entreno no sale: avisa de que sigue en marcha
-(para salir, «Salir y descartar» o «Log out»). En el navegador, el botón atrás hace lo mismo.
+(para salir, «Salir y descartar» o «Guardar entreno»). En el navegador, el botón atrás hace lo mismo.
 
 En la librería de ejercicios, «atrás» dentro de un grupo muscular vuelve a los grupos, y otro «atrás» la cierra.
 
