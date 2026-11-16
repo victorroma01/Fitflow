@@ -7,11 +7,11 @@
      silueta, sin los músculos en reposo, y lo que trabaja en color.
    - figureStage: la figura grande de la hoja «Cómo se hace», que se mueve entre el inicio y el final (playFigures); con
      «Reducir animaciones» (o si el móvil lo pide), las dos posturas quietas, una junto a otra.
-   Define: FIG_FILL, SIL, SIL_FAR, SIL_SMALL, SIL_SMALL_FAR, EDGE_SMALL, RIM, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, figureStill, figureSvg, STAGE_MOMENTS, STAGE_WIDEST, FLOOR_LINE, figureStage, BEAT, beatAt, playing, playFigures
+   Define: FIG_FILL, SIL, SIL_FAR, SIL_SMALL, SIL_SMALL_FAR, EDGE_SMALL, RIM, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, figureStill, figureSvg, STAGE_WIDEST, FLOOR_LINE, figureStage, BEAT, beatAt, flowAt, playing, playFigures
 */
 import { AN_PA, AN_R } from '../data/anatomy.js';
 import { FG_P, FG_PA } from '../data/figure.js';
-import { ease, FRONT, rigBox, rigFrame, rigLayers } from './rig.js';
+import { ease, FRONT, rigBox, rigFrame, rigLayers, rigMoments } from './rig.js';
 import { $ } from '../core/util.js';
 import { html, raw } from '../core/html.js';
 /* relleno y borde de un músculo: en reposo, principal y secundario */
@@ -146,7 +146,7 @@ const gear = (def, k, big) => {
     const t = tone(pr[5], big);
     return html`<path d="M0 0H1" stroke="${t[1]}" stroke-width="${big ? pr[4] : Math.max(pr[4], 1.8)}" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
-  if (pr[0] == 'on' || pr[0] == 'slide')
+  if (pr[0] == 'on' || pr[0] == 'slide' || pr[0] == 'by')
     return prim(pr[3], big);
   if (pr[0] == 'aim')
     return prim(pr[4], big);
@@ -207,26 +207,26 @@ export const figureStill = (def, P, S, big) => {
 };
 /** Esa figura (figureStill) como imagen de s×s px. */
 export const figureSvg = (still, s) => html`<svg viewBox="${still[0]}" width="${s}" height="${s}" aria-hidden="true" focusable="false">${raw(still[1])}</svg>`;
-/* los momentos del gesto que tiene que abarcar el encuadre de la figura grande */
-const STAGE_MOMENTS = [0, .25, .5, .75, 1];
 /* lo más apaisado que llega a ser el recuadro de la figura grande (ancho entre alto): una plancha o un press tumbado no
    dejan media hoja vacía */
 const STAGE_WIDEST = 1.6;
 const FLOOR_LINE = '<path d="M-999 402.6H1999" stroke="#fff" stroke-opacity=".13" stroke-width="1.2"/>';
-/** La figura grande: se mueve del inicio al final y vuelta, o sin parar si es un ciclo (playFigures); quieta (still), las
-    posturas del gesto con su rótulo: inicio y final y, si pasa por una postura intermedia que es un tiempo del ejercicio,
-    también esa. Una postura que se mantiene (hold) es una sola figura, quieta. */
+/** La figura grande: se mueve del inicio al final y vuelta, o sin parar si es un ciclo o un gesto seguido (playFigures);
+    quieta (still), las posturas del gesto con su rótulo: inicio y final y, si pasa por una postura intermedia que es un
+    tiempo del ejercicio, también esa. Una postura que se mantiene (hold) es una sola figura, quieta. */
 export const figureStage = (def, P, S, still) => {
   needDefs();
   const floor = def.nofloor ? '' : FLOOR_LINE;
-  /* un ciclo ocupa lo mismo en su segunda mitad, con los lados cambiados; por si acaso, se mira también */
-  const all = rigBox(def, def.cycle ? STAGE_MOMENTS.concat(STAGE_MOMENTS.map(t => t + 1)) : STAGE_MOMENTS);
+  const all = rigBox(def, rigMoments(def));
   if (def.hold)
     return html`<div class="fgs"><svg viewBox="${boxText(fit(all, Math.min(STAGE_WIDEST, Math.max(1, all[2] / all[3]))))}" role="img" aria-label="La postura que se mantiene">${raw(floor)}${groups(def, P, S, 0, 1)}</svg></div>`;
   if (still) {
-    /* la postura intermedia solo se enseña si es un tiempo del ejercicio, no si está para guiar el camino (via) */
-    const stops = def.m && !def.via ? [[0, 'Inicio', 'Postura de inicio'], [.5, 'Paso', 'Postura intermedia'], [1, 'Final', 'Postura final']] : [[0, 'Inicio', 'Postura de inicio'], [1, 'Final', 'Postura final']];
-    const box = boxText(fit(all, Math.min(1.15, Math.max(.55, all[2] / all[3]))));
+    /* la postura intermedia solo se enseña si es un tiempo del ejercicio, no si está para guiar el camino (via); un salto
+       que acaba como empieza (la comba) se enseña en el suelo y en el aire, en el momento de su miniatura */
+    const stops = def.hop ? [[0, 'Inicio', 'Postura de inicio'], [def.at, 'Salto', 'En el aire']] : def.m && !def.via ? [[0, 'Inicio', 'Postura de inicio'], [.5, 'Paso', 'Postura intermedia'], [1, 'Final', 'Postura final']] : [[0, 'Inicio', 'Postura de inicio'], [1, 'Final', 'Postura final']];
+    /* el encuadre, el de esas posturas: lo que el gesto ocupa entre una y otra (la vuelta de la comba) no se ve */
+    const shown = rigBox(def, stops.map(stop => stop[0]));
+    const box = boxText(fit(shown, Math.min(1.15, Math.max(.55, shown[2] / shown[3]))));
     return html`<div class="fgs two">${stops.map(([t, name, label]) => html`<figure><svg viewBox="${box}" role="img" aria-label="${label}">${raw(floor)}${groups(def, P, S, t, 1)}</svg><figcaption>${name}</figcaption></figure>`)}</div>`;
   }
   return html`<div class="fgs"><svg viewBox="${boxText(fit(all, Math.min(STAGE_WIDEST, Math.max(1, all[2] / all[3]))))}" data-fig="${JSON.stringify(def)}" role="img" aria-label="El movimiento, del inicio al final">${raw(floor)}${groups(def, P, S, 0, 1)}</svg></div>`;
@@ -249,6 +249,12 @@ const beatAt = (ms, up, long) => {
     return 1 - ease(x / back);
   return 0;
 };
+/** Momento de un gesto que va y vuelve sin pararse en los extremos (remar, el SkiErg): la ida dura flow[0] ms y la
+    vuelta, flow[1]. */
+const flowAt = (ms, flow) => {
+  const x = ms % (flow[0] + flow[1]);
+  return x < flow[0] ? ease(x / flow[0]) : 1 - ease((x - flow[0]) / flow[1]);
+};
 /* las figuras que se están moviendo */
 const playing = new Set();
 /** Pone en marcha las figuras grandes que haya dentro de root; cada una se para sola cuando deja de estar en la página. */
@@ -268,7 +274,7 @@ const playFigures = root => {
       }
       t0 = t0 || now;
       /* un ciclo no para ni vuelve atrás: cada cycle ms hace medio gesto, y el siguiente con los lados cambiados */
-      const at = def.cycle ? (now - t0) / def.cycle % 2 : beatAt(now - t0, def.up, def.m && !def.via);
+      const at = def.cycle ? (now - t0) / def.cycle % 2 : def.flow ? flowAt(now - t0, def.flow) : beatAt(now - t0, def.up, def.m && !def.via);
       /* en la pausa de cada extremo la figura no se mueve: no hay nada que calcular ni que tocar en la página */
       if (at !== last) {
         last = at;

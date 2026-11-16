@@ -119,7 +119,8 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
   misma altura.
 - **Cómo se hace**: la imagen de cada ejercicio es una figura haciéndolo, con los músculos que trabajan en color. Al tocarla
   se abre su ejecución: arriba, la figura en grande, que repite el gesto del inicio al final, o sin parar si es un ciclo
-  (correr, pedalear, la escaladora); con «Reducir animaciones», las posturas quietas, una junto a otra; debajo, los músculos principales y secundarios y el texto paso a paso, propio de cada
+  (correr, pedalear, la escaladora) o un gesto que se hace seguido (remar, el SkiErg, saltar a la comba, golpear el saco); con
+  «Reducir animaciones», las posturas quietas, una junto a otra; debajo, los músculos principales y secundarios y el texto paso a paso, propio de cada
   ejercicio, con un enlace a su ficha.
 - Al terminar, un **resumen** con el volumen, los récords y las series, que se puede compartir como imagen. La duración no
   cuenta las pausas. Un entreno a medias se puede reanudar al volver a abrir la app: sigue con los ejercicios con los que

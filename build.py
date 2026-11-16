@@ -20,6 +20,7 @@ Estructura (todo vive en src/):
   src/js/data/media.js    molde que el build sustituye por las fotos de src/img/ (rutas o base64 según la variante)
   src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
+                          (la revisión de una versión enseña sus arreglos junto con las novedades de la que revisa)
   src/img/day/            portadas de los días (.jpg) y order.txt
   static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
 
@@ -152,8 +153,9 @@ def plain(s):
 
 def changelog():
     """Versiones de CHANGELOG.md, de la más nueva a la más antigua: [{version, date, sections: [{title, items}]}].
-    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran."""
-    out, cur, sec = [], None, None
+    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. La revisión de una versión dice cuál
+    revisa antes de su primer apartado («Revisión de la [1.0.3]…») y lo lleva en `base`."""
+    out, cur, sec, head = [], None, None, False
     for raw in read(CHANGELOG).splitlines():
         l = raw.rstrip()
         if l.startswith('## '):
@@ -161,7 +163,7 @@ def changelog():
             cur = {'version': m.group(1), 'date': m.group(2), 'sections': []} if m else None
             if cur:
                 out.append(cur)
-            sec = None
+            sec, head = None, True
         elif cur is None:
             continue
         elif l.startswith('### '):
@@ -169,12 +171,43 @@ def changelog():
             sec = {'title': title, 'items': []} if title in USER_SECTIONS else None
             if sec:
                 cur['sections'].append(sec)
+            head = False
+        elif head and re.match(r'^Revisión de la \[(\d+\.\d+\.\d+)\]', l):
+            cur['base'] = re.match(r'^Revisión de la \[(\d+\.\d+\.\d+)\]', l).group(1)
         elif sec is not None and re.match(r'^[-*] ', l):
             sec['items'].append(plain(l[2:]))
         elif sec is not None and l.strip() and sec['items'] and raw.startswith('  '):
             sec['items'][-1] += ' ' + plain(l)
     for e in out:
         e['sections'] = [s for s in e['sections'] if s['items']]
+    return out
+
+
+def cards(entries):
+    """Las versiones tal como las enseña la app (el aviso de versión nueva, las novedades y Ajustes). Una revisión no tiene
+    tarjeta propia: es la de la versión que revisa con lo suyo delante, y cada apartado dice de cuál es («Correcciones de la
+    1.0.31», «Novedades de la 1.0.3»…). Así, quien ya tenía esa versión ve qué arregla la revisión y quien llega de una
+    anterior lo ve todo, una sola vez: la versión revisada (y sus revisiones anteriores) ya no sale aparte en la lista."""
+    out, covered = [], set()
+    for i, e in enumerate(entries):
+        if e['version'] in covered:
+            continue
+        if not e.get('base'):
+            out.append({'version': e['version'], 'date': e['date'], 'sections': e['sections']})
+            continue
+        # de la revisión a la versión que revisa, pasando por las revisiones anteriores de la misma
+        chain = [e]
+        for x in entries[i + 1:]:
+            chain.append(x)
+            if x['version'] == e['base']:
+                break
+            if x.get('base') != e['base']:
+                die('CHANGELOG.md: entre la revisión %s y la %s que revisa está la %s, que no es otra revisión suya' % (e['version'], e['base'], x['version']))
+        if chain[-1]['version'] != e['base'] or len(chain) < 2:
+            die('CHANGELOG.md: la %s dice que revisa la %s, que no está más abajo' % (e['version'], e['base']))
+        out.append({'version': e['version'], 'date': e['date'],
+                    'sections': [{'title': '%s de la %s' % (s['title'], x['version']), 'items': s['items']} for x in chain for s in x['sections']]})
+        covered.update(x['version'] for x in chain[1:])
     return out
 
 
@@ -466,7 +499,7 @@ def main():
     mods = module_list()
     check_tree(mods)
     m = media()
-    entries = changelog()
+    entries = cards(changelog())
     css = compile_css()
     tpl = read(os.path.join(SRC, 'index.html'))
     if tpl.count('@@CSS@@') != 1 or tpl.count('@@JS@@') != 1:

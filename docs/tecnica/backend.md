@@ -140,6 +140,9 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
 
 ### Activar App Check
 
+Estado a 16-11-2026: hechos los pasos 1 a 3 (la V1.0.3 ya lleva los dos valores); falta el 4, que es mirar en la consola y,
+cuando casi todo salga verificado, exigirlo.
+
 1. **Clave de reCAPTCHA Enterprise.** En la consola de Google Cloud, con el proyecto de Firebase (`stratafit-960ec`), la página de
    reCAPTCHA, que ahora se llama *Fraud Defense* (<https://console.cloud.google.com/security/recaptcha>; activa la API si lo
    pide) → *Crear clave*: plataforma *Sitio web*, dominio `victorroma01.github.io`, sin marcar «Usar desafío de casilla de

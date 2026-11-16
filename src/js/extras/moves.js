@@ -1285,12 +1285,41 @@ const MOVES = {
     const b = { x: 200, y: top - 17, lean: 30, neck: -14, hip: 92, knee: 90, ft: 0, sh: 60, el: 30 };
     return fig(a, b, [box(150, 266, top, 'b')], 'b', 1, { m });
   },
-  /** Comba: la cuerda pasa bajo los pies en cada salto. */
+  /** Comba: saltos cortos con los pies juntos mientras la cuerda da la vuelta: pasa sobre la cabeza con los pies en el
+      suelo y bajo ellos en lo más alto del salto. Con «double», dos vueltas por salto, que es más alto: pasa a media
+      subida y a media bajada. Con «alt», a la manera de los boxeadores: un pie y después el otro, como trotando en el
+      sitio. Las manos se quedan a la altura de la cintura y giran las muñecas. De perfil la cuerda se ve de canto: una
+      línea que gira sobre las manos, por delante, bajo los pies, por detrás y sobre la cabeza. */
   jumpRope: f => {
     const double = has(f, 'double');
-    const a = { x: 97, y: 385, lean: 2, neck: 0, hip: 6, knee: 10, ft: 0, sh: 8, el: 34, ha: 180 };
-    const b = { y: 385 - (double ? 54 : 30), hip: double ? 34 : 4, knee: double ? 56 : 8, ft: 36, ha: 360 };
-    return fig(a, b, [['on', 'b', 'HA', ['L', '', 'M100 220C160 264 154 408 100 436C46 408 40 264 100 220', 1.6, 3]]], 'b', 1, { fist: 1, whole: 1 });
+    const arms = { lean: 3, neck: -2, grip: [118, 188], kF: .9 };
+    let a;
+    let b = {};
+    let m;
+    if (has(f, 'alt')) {
+      /* la pierna que apoya, la que está recogida y, en el aire, la que acaba de empujar y la que va a caer */
+      const down = { hip: 6, knee: 10, ft: 0 };
+      const up = { hip: 26, knee: 66, ft: 30 };
+      /* la cadera, a la altura a la que el pie que apoya pisa el suelo */
+      const y = 196 + 385 - poseSpot(Object.assign({ at: 'hip', x: 104, y: 196 }, arms, down), ['SH', 97, 385])[1];
+      a = Object.assign({ at: 'hip', x: 104, y }, arms, down, { far: up });
+      m = { y: y - 24, hip: 14, knee: 30, ft: 34, far: { hip: 22, knee: 40, ft: 26 } };
+      b = Object.assign({}, up, { far: down });
+    }
+    else {
+      a = Object.assign({ x: 97, y: 385, hip: 8, knee: 14, ft: 0 }, arms);
+      m = { y: 385 - (double ? 50 : 32), hip: double ? 16 : 4, knee: double ? 26 : 6, ft: double ? 40 : 38 };
+    }
+    /* la postura cuando la cuerda pasa bajo los pies: en lo más alto o, si da dos vueltas, a tres cuartos de la altura
+       (el salto frena al subir: a un cuarto del tiempo ya lleva tres cuartos del camino) */
+    const k = double ? .75 : 1;
+    const pass = Object.assign({}, a, { y: a.y + (m.y - a.y) * k, hip: a.hip + (m.hip - a.hip) * k, knee: a.knee + (m.knee - a.knee) * k, ft: m.ft * k });
+    /* la cuerda mide lo que hay entonces de las manos al suelo: lo roza al pasar; va algo combada, y con su mango */
+    const reach = Math.round(402 - poseSpot(pass, 'g')[1]);
+    const spin = [double ? 2 : 1, -90];
+    const rope = [['by', 'f', 'g', ['L', '', 'M14 0Q' + Math.round(reach * .56) + ' -60 ' + reach + ' 0', 1.7, 3], spin], ['by', 'f', 'g', ['L', '', 'M-4 0H16', 4.5, 0], spin]];
+    /* la miniatura, en ese momento */
+    return fig(a, b, rope, 'b', double ? .25 : .5, { fist: 1, whole: 1, m, via: 1, hop: 1, cycle: double ? 640 : has(f, 'alt') ? 400 : 460 });
   },
   /** Trepa de cuerda: colgado de la cuerda, los brazos tiran y las piernas la pinzan (o cuelgan). */
   ropeClimb: f => {
@@ -1349,8 +1378,8 @@ const MOVES = {
     const ped = deg => [c[0] + 26 * Math.cos(deg * RAD) - 8, c[1] + 26 * Math.sin(deg * RAD) - 17];
     const hands = road ? [238, 216] : [206, 180];
     /* en la de aire los brazos de la máquina giran sobre su eje: una mano va delante y la otra atrás, por su arco */
-    const fore = air ? { gl: [206, 316, 140, -82] } : { gw: hands };
-    const aft = air ? { gl: [206, 316, 140, -102] } : { gw: hands };
+    const fore = air ? { gl: [206, 316, 140, -70], shx: 6 } : { gw: hands };
+    const aft = air ? { gl: [206, 316, 140, -106], shx: -4 } : { gw: hands };
     const a = Object.assign({ at: 'hip', x: 96, y: 196, lean: road ? 52 : 30, neck: road ? -40 : -20, foot: ped(-90), ft: 8, far: Object.assign({ foot: ped(90), ft: 8 }, aft) }, fore);
     const b = Object.assign({ foot: ped(90), far: Object.assign({ foot: ped(-90), ft: 8 }, fore) }, aft);
     let gear = [pad(88, 227, 46, 10), beam([92, 232, c[0], c[1]], 6, 'b'), ['C', 'b', c[0], c[1], 13, 0], ['on', 'b', 'xFT', ['R', '', 104, 404, 28, 5, 0, 2]], ['on', 'f', 'FT', ['R', '', 104, 404, 28, 5, 0, 2]]];
@@ -1366,9 +1395,10 @@ const MOVES = {
     }
     /* media vuelta de pedales, y otra media con los pies cambiados: el pie de arriba baja por delante del eje y el otro
        sube por detrás (repartiendo solo el principio y el final, bajarían y subirían en línea recta, como en un escalón) */
-    const half = air ? { gl: [206, 316, 140, -92] } : { gw: hands };
-    const m = Object.assign({ foot: ped(0), far: Object.assign({ foot: ped(180), ft: 8 }, half) }, half);
-    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m, via: 1, cycle: 760 });
+    const half = air ? { gl: [206, 316, 140, -88], shx: 1 } : { gw: hands };
+    /* en la de aire el tronco acompaña a los brazos: se echa un poco atrás en cada cruce */
+    const m = Object.assign({ foot: ped(0), far: Object.assign({ foot: ped(180), ft: 8 }, half) }, half, air ? { lean: 27 } : {});
+    return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m, via: 1, cycle: air ? 680 : 760 });
   },
   /** Elíptica: de pie en los pedales, los brazos y las piernas se alternan. */
   elliptical: () => {
@@ -1394,19 +1424,26 @@ const MOVES = {
     const gear = [['slide', 'b', [-62, 44], ['L', '', 'M310 226H248V270H186V314H124V358H62', 5, 0]], ['R', 'b', 64, 379, 150, 46, 0, 6], ['R', 'b', 280, 296, 84, 212, 0, 6], beam([252, 138, 128, 178], 4, 'b'), beam([252, 138, 252, 192], 5, 'b'), pad(266, 132, 40, 12, -24)];
     return fig(a, b, gear, 'b', 0, { fist: 1, whole: 1, m, via: 1, cycle: 1000 });
   },
-  /** Remo en ergómetro: de recogido, con los brazos estirados, a las piernas estiradas y el asa en el abdomen. */
+  /** Remo en ergómetro. La palada tiene su orden: primero empujan las piernas, con los brazos estirados; después el tronco
+      se echa atrás y, al final, tiran los brazos hasta la base del esternón. A la vuelta, al revés: brazos, tronco y
+      piernas. El asiento va con la cadera por su guía. */
   rower: () => {
-    const a = { at: 'hip', x: 140, y: 338, lean: 18, neck: -8, foot: [262, 350], ft: -44, grip: [232, 118] };
-    const b = { x: 84, lean: -18, neck: 0, grip: [127, 142] };
-    const gear = [beam([20, 376, 330, 376], 6, 'b'), beam([40, 376, 40, 398], 5, 'b'), beam([300, 376, 300, 398], 5, 'b'), ['on', 'm', 'PV', ['R', '', 78, 232, 12, 44, 0, 1]], pad(290, 348, 9, 54, 34), ['C', 'b', 330, 326, 40, 0], ['C', 'b', 330, 326, 30, 0], ['C', 'b', 330, 326, 4, 2], beam([330, 366, 330, 398], 6, 'b'), ['link', 'b', [300, 318], 'g', 1.3, 3, 'h']];
-    return fig(a, b, gear, 'b', 1, { fist: 1 });
+    const a = { at: 'hip', x: 146, y: 338, lean: 20, neck: -10, foot: [262, 350], ft: -44, grip: [232, 118] };
+    /* las piernas casi estiradas y el tronco ya vertical, con los brazos aún estirados: el asa pasa por encima de las rodillas */
+    const m = { x: 86, lean: 2, neck: -4 };
+    const b = { x: 76, lean: -22, neck: 2, grip: [127, 134] };
+    const gear = [beam([20, 376, 330, 376], 6, 'b'), beam([40, 376, 40, 398], 5, 'b'), beam([300, 376, 300, 398], 5, 'b'), ['by', 'm', ['PV', 99, 196], ['R', '', 0, 33, 50, 9, 0, 1]], pad(290, 348, 9, 54, 34), ['C', 'b', 330, 326, 40, 0], ['C', 'b', 330, 326, 30, 0], ['C', 'b', 330, 326, 4, 2], beam([330, 366, 330, 398], 6, 'b'), ['link', 'b', [300, 318], 'g', 1.3, 3, 'h']];
+    /* unas 27 paladas por minuto, con la vuelta más lenta que el tirón */
+    return fig(a, b, gear, 'b', 1, { fist: 1, m, via: 1, flow: [820, 1380] });
   },
-  /** SkiErg: de pie ante la máquina, las asas bajan desde arriba hasta las caderas doblando el cuerpo. */
+  /** SkiErg: de pie ante la máquina, las asas bajan desde arriba hasta las caderas doblando el cuerpo; bajan por delante
+      de la cara, con los codos doblados, y no pegadas al pecho. */
   skiErg: () => {
     const a = { lean: 2, neck: -4, hip: 4, knee: 4, grip: [150, -30], kF: .9 };
+    const m = { lean: 20, neck: -12, hip: 26, knee: 14, grip: [188, 62], kF: 1 };
     const b = { lean: 46, neck: -22, hip: 62, knee: 30, grip: [112, 206], kF: 1 };
     const gear = [beam([262, -86, 262, 398], 7, 'b'), beam([236, 399.5, 288, 399.5], 5, 'b'), ['C', 'b', 262, -60, 30, 0], ['C', 'b', 262, -60, 22, 0], ['C', 'b', 262, -60, 4, 2], beam([262, -96, 236, -96, 236, -82], 4, 'b'), ['link', 'b', [236, -82], 'G', 1.3, 3, ''], ['link', 'b', [236, -82], 'g', 1.3, 3, 'h']];
-    return fig(a, b, gear, 'b', 1, { fist: 1 });
+    return fig(a, b, gear, 'b', 1, { fist: 1, m, via: 1, flow: [750, 1150] });
   },
   /** Trineo: empujarlo con el cuerpo inclinado, tirar de él con la cuerda o arrastrarlo andando hacia atrás. */
   sled: f => {
@@ -1437,11 +1474,18 @@ const MOVES = {
     const m = { hip: -1, knee: 7, sh: 94, el: 30, kU: 1, far: { hip: -1, knee: 7, ft: 84, sh: -86, el: 76, kU: .5 } };
     return fig(a, b, [['L', 'f', 'M-90 236q15 -7 30 0t30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0', 2.4, 4], ['L', 'b', 'M-90 262q15 -7 30 0t30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0 30 0', 1.6, 4]], 'b', 0, { nofloor: 1, whole: 1, m, via: 1, cycle: 1000 });
   },
-  /** Saco de boxeo: de la guardia al directo con el brazo de delante. */
+  /** Saco de boxeo: de la guardia (los puños en la cara y los codos abajo), el directo con la mano de delante y el
+      cruzado con la de atrás, que lleva el hombro y el peso hacia delante y gira sobre la punta del pie; vuelve por el
+      mismo camino (uno, dos, uno) sin pararse. Los dos pies se quedan en el suelo. */
   boxing: () => {
-    const a = { lean: 6, neck: -2, hip: -8, knee: 14, ft: 14, grip: [124, 50], kF: .8, far: { hip: 26, knee: 22, ft: 0, grip: [128, 56], kF: .8 } };
-    const b = { lean: 12, far: { hip: 30, knee: 26, ft: 0, grip: [228, 66], kF: 1 } };
-    return fig(a, b, [beam([292, -70, 292, 20], 2, 'b', 3), ['R', 'b', 292, 130, 62, 220, 0, 6], ['L', 'b', 'M262 60H322M262 200H322', 2, 0]], 'b', 1, { fist: 1 });
+    /* el pie de atrás, apoyado en su punta: dónde queda el tobillo según lo levantado que esté el talón */
+    const rear = ft => ({ foot: add([85, 401.5], turn([-31, -16.5], ft)), ft });
+    const guard = { foot: [165, 385], ft: 0, grip: [128, 56], fa: 166, kF: .9, shx: 6 };
+    const a = Object.assign({ at: 'hip', x: 122, y: 204, lean: 8, neck: 4, grip: [122, 60], fa: 168, kF: .9, shx: -4, far: guard }, rear(16));
+    const m = { x: 127, lean: 9, far: Object.assign({}, guard, { grip: [251, 60], fa: 96, kF: 1, shx: 17 }) };
+    const b = Object.assign({ x: 134, y: 206, lean: 13, grip: [240, 47], fa: 98, kF: 1, shx: 12, far: Object.assign({}, guard, { shx: -4 }) }, rear(38));
+    /* el saco cuelga donde llegan los puños con el brazo estirado: el directo lo toca y el cruzado se hunde un poco en él */
+    return fig(a, b, [beam([340, -36, 340, 20], 2, 'b', 3), ['R', 'b', 340, 130, 62, 220, 0, 6], ['L', 'b', 'M310 60H370M310 200H370', 2, 0]], 'b', 1, { fist: 1, m, flow: [960, 960] });
   },
   /* ── funcional: a cuatro apoyos, en el suelo, lanzamientos y saltos ── */
   /** Desplazamientos a cuatro apoyos: oso (boca abajo, rodillas en el aire) y cangrejo (boca arriba). */

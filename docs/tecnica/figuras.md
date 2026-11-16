@@ -1,7 +1,8 @@
 # Figuras de ejercicio
 
 El modelo anatómico haciendo cada uno de los 551 ejercicios de la librería. Sustituye a las fotos realistas, que ya no existen.
-Va en la V1.0.3 (rama `desarrollo-1.0.3`), que no se publica sin el visto bueno del propietario.
+Llegó con la V1.0.3. Su primera revisión, la V1.0.31, rehace cinco gestos tras probarla el propietario en su iPhone (el remo, el SkiErg, el saco de
+boxeo, la bici de aire y la comba) y añade al motor lo que les hacía falta: gestos seguidos, saltos y piezas que giran.
 
 ## Qué se ve
 
@@ -17,14 +18,23 @@ Va en la V1.0.3 (rama `desarrollo-1.0.3`), que no se publica sin el visto bueno 
 - Los gestos de **varias fases** (una cargada, un burpee, un muscle-up, la levantada turca) pasan por una postura intermedia.
 - Lo que es un **ciclo** (andar, correr, pedalear, la elíptica, la escaladora, nadar, empujar el trineo, gatear, las cuerdas)
   no va y vuelve: sigue sin parar, y las piernas y los brazos se turnan. La pierna que apoya pasa bajo la cadera mientras la
-  otra vuelve por el aire; en la escaladora, los peldaños bajan con el pie que los pisa.
+  otra vuelve por el aire; en la escaladora, los peldaños bajan con el pie que los pisa; en la bici de aire, cada mano va y
+  viene con su palanca y tira mientras empuja la pierna de su lado.
+- Un **gesto seguido** (remar, el SkiErg, una serie de golpes al saco) va y vuelve, pero sin pararse en los extremos. Al
+  remar, primero empujan las piernas con los brazos estirados, después se echa atrás el tronco y al final tiran los brazos, y
+  la vuelta es al revés; en el saco, de la guardia sale el directo y después el cruzado.
+- La **comba** es un salto tras otro: el cuerpo bota (sube frenando y baja acelerando) y la cuerda da la vuelta entera sobre
+  las manos, por encima de la cabeza con los pies en el suelo y bajo ellos en lo más alto; en los double unders, dos vueltas
+  por salto, y en la comba de boxeo, un pie y después el otro.
 - Una **postura que se mantiene** (una plancha, el pino, colgarse de la barra) es una sola figura, quieta.
 - Con **«Reducir animaciones»** (Ajustes) o si el móvil pide menos movimiento, la figura no se mueve: salen las posturas del
   gesto una junto a otra, con su rótulo: «Inicio» y «Final» y, si el ejercicio tiene una fase intermedia, «Paso». Una
-  intermedia que solo guía el camino (el paso de una zancada, la media vuelta de un pedal) no se enseña.
+  intermedia que solo guía el camino (el paso de una zancada, la media vuelta de un pedal) no se enseña. Un salto que acaba
+  como empieza (la comba) enseña «Inicio» y «Salto»: en el suelo y en el aire, con la cuerda bajo los pies. El recuadro es el
+  de esas posturas, no el de todo el recorrido.
 - Un **ejercicio propio** no tiene postura: se ve como siempre, con sus músculos en el mapa.
 
-Hay 416 figuras distintas: los ejercicios que se hacen igual (un curl con barra recta o con barra Z, las series de carrera)
+Hay 417 figuras distintas: los ejercicios que se hacen igual (un curl con barra recta o con barra Z, las series de carrera)
 comparten figura.
 
 ## Cómo está hecho
@@ -76,13 +86,17 @@ La postura del final (`b`) y la intermedia (`m`) solo dicen lo que cambia respec
 ángulos y los puntos se reparten: los pies no se mueven en una sentadilla porque el tobillo es lo que queda quieto, y la
 barra sube recta en un press porque lo que se reparte es el punto del puño.
 
-Dos datos de la figura dicen cómo se recorre el gesto:
+Cuatro datos de la figura dicen cómo se recorre el gesto:
 
 - `via: 1`: la intermedia solo guía el camino (la barra rodea las rodillas, el pie da el paso por el aire). No es una fase
   del ejercicio: ni se enseña quieta ni alarga el compás.
 - `cycle: ms`: el gesto es medio ciclo, que dura esos milisegundos y se repite sin pausa ni vuelta atrás, cada vez con los
   lados cambiados (lo que hacía la pierna de delante lo hace la de atrás). Solo se escribe una zancada, una pedalada o una
   brazada; la otra mitad sale sola, y el final de una es exactamente el principio de la siguiente.
+- `flow: [ida, vuelta]` (ms): el gesto va y vuelve sin la pausa de cada extremo, con esas duraciones. Para lo que se hace
+  seguido: una palada, una bajada del SkiErg, una serie de golpes.
+- `hop: 1`: la intermedia es lo más alto de un salto. Se llega a ella frenando y se sale acelerando, como cae un cuerpo: a un
+  cuarto del tiempo ya se llevan tres cuartos de la altura. Con `cycle`, un salto tras otro.
 
 El modelo cuida solo dos cosas que de otro modo habría que vigilar en cada postura: el **codo y la rodilla doblan siempre
 hacia su lado** y, si la mano queda tan cerca del hombro que el codo tendría que cerrarse más de lo que da de sí, el brazo
@@ -101,14 +115,18 @@ se caiga. `extras/moves.js` tiene una ayuda para cada caso, y `tests/rig.test.mj
 | **La barra no atraviesa el cuerpo.** | En el press militar sale de la parte alta del pecho y pasa por delante de la cara, con la barbilla atrás; en los levantamientos olímpicos la cabeza se echa atrás cuando la barra va de los hombros a arriba, y en la arrancada la barra pasa ante la frente antes de quedar sobre la cabeza. |
 | **Un paso se da por el aire, y un pedal da la vuelta.** | En las zancadas hay una postura intermedia con el pie que da el paso levantado; el otro no se mueve del suelo (el de atrás, sobre su punta, gira sobre ella). En las bicis, la intermedia lleva los pedales en horizontal: el pie baja por delante del eje y el otro sube por detrás. |
 | **Un ciclo no tiene costuras.** | Con `cycle`, la intermedia es el cruce: la pierna que apoya, bajo la cadera, y la que vuelve, recogida y en el aire (`gait` lo escribe para andar y correr). En la escaladora los peldaños son una pieza que se desliza (`slide`) justo lo que mide un peldaño en medio ciclo, así que el pie baja con el suyo y el otro pisa el que llega. En crol, un brazo tira bajo el agua y el otro vuelve por encima. |
+| **Remar tiene su orden.** | La palada lleva una intermedia que solo guía (`via`): las piernas casi estiradas y el tronco ya vertical, con los brazos tan estirados como al empezar. De ahí al final se echa atrás el tronco y tiran los brazos, así que el asa pasa por encima de las rodillas y no a través de ellas. El asiento es una pieza que va con la cadera (`by`) sin girar con ella: se queda sobre su guía. |
+| **La cuerda pasa cuando los pies están en el aire.** | La cuerda de la comba es una pieza que gira sobre el puño (`by` con vueltas): una vuelta por salto, que empieza en lo alto, así que apunta al suelo en lo más alto del salto; con dos vueltas, a media subida y a media bajada. Mide lo que hay de las manos al suelo en ese momento: lo roza al pasar y nunca se mete en él. |
+| **Los pies que apoyan no se mueven ni se hunden.** | Cuando el cuerpo se desplaza sobre dos pies separados (el saco de boxeo), lo que se escribe es dónde está la cadera (`at: 'hip'`) y dónde pisa cada pie (`foot`): el de delante, plano; el de atrás, sobre su punta, que no se mueve del suelo aunque el talón se levante más al cruzar. Con ángulos de cadera y rodilla, uno de los dos acaba bajo el suelo. |
 | **Quien se inclina no se cae.** | `bentOver(lean)`: de pie con el tronco inclinado, la cadera se va atrás lo justo para que los hombros, y el peso que cuelga de ellos, queden sobre los pies (remos, pájaros, patadas de tríceps). |
 | **Colgado, el cuerpo sube recto.** | En las dominadas lo que se reparte es dónde está la cadera, y los brazos llegan a la barra: con los ángulos del hombro y el codo el cuerpo se iría hacia atrás a medio camino. |
 
 El material es una lista de piezas, cada una en su plano (detrás de todo, entre el lado de atrás y el cuerpo, o delante):
 trazos, rellenos, almohadillas, círculos y placas, fijos o unidos a una pieza del cuerpo (`on`); una barra recta entre dos
 puntos que pueden moverse (`link`: un cable, una palanca, una goma); una pieza rígida que apunta a un punto (`aim`: el
-neumático que se voltea); una que se desliza con el gesto (`slide`: los peldaños de la escaladora); y lo que se lleva en las
-manos (`bar`, `db`, `kb`, `ball`, `bag`, `disc`). Está explicado en la
+neumático que se voltea); una que se desliza con el gesto (`slide`: los peldaños de la escaladora); una que va con un punto
+que se mueve sin girar con el cuerpo o que gira sobre él a velocidad constante (`by`: el asiento del remo, la cuerda de la
+comba); y lo que se lleva en las manos (`bar`, `db`, `kb`, `ball`, `bag`, `disc`). Está explicado en la
 cabecera de `extras/rig.js`; `extras/gear.js` tiene lo que se repite.
 
 ### Añadir un ejercicio o una variante
@@ -123,8 +141,9 @@ cabecera de `extras/rig.js`; `extras/gear.js` tiene lo que se repite.
 ## Lo que pesa
 
 No hay imágenes: son trazados. Con los dos modelos, el motor, el material y las 551 posturas, el código que se descarga al
-arrancar pasa de 444 a 559 KB (de 168 a 208 KB comprimido, que es lo que viaja): **40 KB más**. A cambio se van las 28
-fotos, 321 KB: una instalación nueva descarga **unos 280 KB menos**, y el archivo único baja de 1.446 a 1.134 KB.
+arrancar pasó, en la V1.0.3, de 444 a 559 KB (de 168 a 208 KB comprimido, que es lo que viaja): **40 KB más**. A cambio se
+fueron las 28 fotos, 321 KB: una instalación nueva descarga **unos 280 KB menos**, y el archivo único bajó de 1.446 a
+1.134 KB. Lo añadido en la V1.0.31 pesa 1,6 KB (minificado).
 
 Para que no se note:
 
@@ -140,32 +159,43 @@ Para que no se note:
   (de unos 40 a unos 20 ms hasta que se ve), y abrirlo por primera vez, tres cuartos.
 - La figura grande solo se mueve mientras está en pantalla, cambiando la colocación de sus capas en cada fotograma (unas
   3 décimas de milisegundo); en la pausa de cada extremo no se calcula nada.
+- Su encuadre se calcula una vez, al abrir la hoja, con la figura en los octavos del gesto (y, si algo da vueltas, en cada
+  octavo de vuelta): entre el inicio y el final un pie o una mano pueden ir por fuera de los dos.
 
 Medido con `tests/perf.py` frente a la compilación sin figuras, el arranque y el pintado de las pestañas no cambian (primer
 pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el entreno, las listas y las hojas.
 
 ## Pruebas
 
-- `tests/rig.test.mjs` (31 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
+- `tests/rig.test.mjs` (38 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
   gesto: cada uno tiene figura; las figuras están bien escritas; ninguna pieza sale sin sitio; los codos y las rodillas doblan
   hacia donde doblan; **ninguna articulación pasa de lo que un cuerpo puede hacer** (cintura, cuello, hombro, codo, muñeca,
   cadera, rodilla y tobillo; de frente, brazos y piernas); **las manos y los pies llegan a donde se les pide** (el agarre, el
-  pedal, el suelo); nada se hunde en el suelo; el gesto no da saltos; **en la Smith la barra no se sale de su guía**; **las
+  pedal, el suelo); nada se hunde en el suelo, tampoco un pie apoyado plano; el gesto no da saltos; **en la Smith la barra no se sale de su guía**; **las
   palancas de las máquinas no cambian de largo**; **de pie, el peso cae sobre los pies** (con unas masas aproximadas de cada
   parte del cuerpo y de lo que lleva en las manos); **la barra no atraviesa la cabeza ni las piernas**; **un ciclo no tiene
-  costuras** (al acabar medio ciclo, cada pieza está donde empieza el siguiente, con los lados cambiados); y el encuadre,
-  centrado y entero. Además, en ejercicios conocidos: en el peso muerto la barra sube pegada a las piernas y la cadera no
+  costuras** (al acabar medio ciclo, cada pieza está donde empieza el siguiente, con los lados cambiados, y al acabar el
+  ciclo vuelve a empezar); y el encuadre, centrado y entero: **la figura grande cabe en él en todo momento del gesto**, no
+  solo en los que se miran para calcularlo. Además, en ejercicios conocidos: en el peso muerto la barra sube pegada a las piernas y la cadera no
   deja de subir; en la zancada el pie que da el paso va por el aire y el otro no se mueve; en las dominadas el cuerpo sube
   recto; en la escaladora los peldaños bajan con el pie que apoya; en la sentadilla los pies no se mueven; en el press la barra sube casi recta y el cuerpo no se mueve del banco; en el curl solo se
   cierra el codo; colgado de la barra, las manos no se mueven de ella y los pies no tocan el suelo; en el remo el codo va
-  hacia atrás; y el cable del jalón acaba en la mano.
-- `tests/figures.py` (145 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
+  hacia atrás; y el cable del jalón acaba en la mano. Y los cinco gestos de la V1.0.31: **en el remo en ergómetro** van primero
+  las piernas, después el tronco y al final los brazos, el asa pasa por encima de las rodillas y el asiento va con la cadera
+  sin girar; **en el SkiErg** las asas bajan separadas del cuerpo y acaban junto a las caderas; **en el saco** los pies no se
+  mueven del suelo y cada puño llega al saco, a la altura del hombro, desde la guardia; **en la bici de aire** cada puño va
+  por el arco de su palanca, al revés que el otro; y **en la comba** el salto es un bote y la cuerda roza el suelo bajo los
+  pies cuando están en el aire, sin meterse nunca en él (con los pies juntos, con dos vueltas y alternando los pies).
+- `tests/figures.py` (188 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
   piezas, el nombre y el texto, sin fotos); las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
   (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios ciclos);
   las posturas que se mantienen; los ciclos, que no se detienen en ningún momento, y los peldaños de la escaladora, que se
-  deslizan; una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla (se exige en
+  deslizan; los gestos seguidos (el remo, el SkiErg, el saco), que no se paran en los extremos y al cabo de unos gestos enteros
+  están exactamente donde estaban; la cuerda de la comba, que gira con su mango una vuelta por salto, o dos (con el reloj de
+  la página parado, para que lo que tarda la prueba no mueva la figura, y comparando en fotogramas enteros: el reloj de prueba
+  da uno cada 16 ms, y un gesto de 1,9 s no acaba en uno); una lista larga, que abre con las figuras de lo que se ve y pone las demás al deslizarla (se exige en
   Chromium; en Firefox y WebKit se anota: WebKit sin pantalla no pinta fotogramas a su ritmo y solo las pone si se le
-  obliga a pintar uno con una captura, que es lo que se comprueba) y, en cualquier caso, por tandas; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas; lo pintado de
+  obliga a pintar uno con una captura, que es lo que se comprueba) y, en cualquier caso, por tandas; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas, y con las dos de un salto; lo pintado de
   verdad (los músculos que trabajan en rojo y naranja, el resto del cuerpo, las mancuernas en los extremos con los brazos
   abiertos, el deltoides posterior de espaldas), que es lo que comprueba el dibujo en Safari y Firefox; y que un ejercicio
   propio sigue con sus músculos.
@@ -182,3 +212,9 @@ comprueba aparte, en `tests/figures.py`.
   principales, y así sale la figura: toda en rojo.
 - Lo que solo se entiende desde arriba o en tres cuartos (el Pallof press, la abducción sentada) se ha resuelto de frente o
   de espaldas, con los brazos o los muslos en escorzo.
+- De perfil, la cuerda de la comba es una línea que gira sobre las manos: no se ve su arco, que queda de canto.
+- **Al lanzar muy deprisa una lista larga en el iPhone** (17 Pro, iOS 27) se ve unas milésimas la zona que aún no está
+  pintada, en negro, antes de que salgan las filas (observación del propietario al probar la V1.0.3; la lista funciona). Las
+  filas que no se ven no se pintan hasta que se acercan (`content-visibility`), que es lo que hace que abrir la lista sea
+  rápido, y cada miniatura es un dibujo de trazos, no una imagen. No se ha cambiado nada: aquí no hay forma de medirlo sin el
+  móvil, y lo que podría reducirlo (pintar las miniaturas una vez como imagen) es un cambio que hay que probar en él.

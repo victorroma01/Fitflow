@@ -568,7 +568,7 @@ export const FIG_POSES = {
   'Natación intervalos': 'swim',
   'Saco de boxeo': 'boxing',
   'Escalera de gimnasio': 'stairs',
-  'Comba boxeo': 'jumpRope',
+  'Comba boxeo': 'jumpRope alt',
   /* ── Abducción y aducción ── */
   'Abducción en máquina': 'hipOpen machine',
   'Abducción en polea': 'hipOpen cable',

@@ -4,9 +4,13 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 fallos=0
+# Cada prueba tiene un tiempo máximo (SF_LIMIT, en segundos; la más larga, la del contraste, tarda unos 4 minutos en GitHub):
+# una que se quede colgada se para y falla con su nombre, en vez de agotar el tiempo de todo el trabajo sin decir cuál era.
+limite=${SF_LIMIT:-900}
 run() {
   echo; echo "── $*"
-  local out; out=$("$@" 2>&1); local code=$?
+  local out; out=$(timeout -k 20 "$limite" "$@" 2>&1); local code=$?
+  if [ $code -eq 124 ] || [ $code -eq 137 ]; then out="$out"$'\n'"FALLA: no ha terminado en $limite s y se ha parado"; fi
   echo "$out"
   if [ $code -ne 0 ]; then
     fallos=$((fallos + 1))
@@ -22,6 +26,7 @@ run node tools/format_css.js --check
 run node tools/modindex.js --check
 run node tools/figure.js --check
 run python3 build.py --check
+run python3 tests/changelog.py
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs

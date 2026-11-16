@@ -111,6 +111,14 @@ como un archivo sin formatear.
 4. Abre una solicitud de fusión y, cuando las pruebas estén en verde, fusiónala. Al llegar a `main`, GitHub Actions vuelve a probar en
    Chrome y Safari, crea la etiqueta `vX.Y.Z` con sus notas y publica la app; la app instalada enseña el aviso con las novedades.
 
+**Una revisión** arregla una versión ya publicada sin ser otra versión (la V1.0.31, de la V1.0.3). Se publica igual, con dos
+diferencias: su número es el de la versión con una cifra más, y su entrada del `CHANGELOG.md` lleva, antes del primer apartado, una
+línea que empieza por «Revisión de la [1.0.3]». Con eso `build.py` compone una sola tarjeta (`cards`): los apartados de la revisión y,
+debajo, los de la versión que revisa, cada uno con el número de la suya; quien ya tenía la versión ve qué arregla la revisión, y
+quien llega de una anterior lo ve todo una vez. El aviso de versión nueva compara los números uno a uno (`isNewerVersion`), así que
+la 1.0.31 es posterior a la 1.0.3 y también a una 1.0.4: después de una revisión, la siguiente versión tiene que llevar un número
+mayor que ella (1.0.32 para otra revisión; 1.1.0 para una versión nueva). `tests/changelog.py` lo comprueba.
+
 GitHub Pages publica desde GitHub Actions (*Settings → Pages → Source*: **GitHub Actions**), así que el repositorio no guarda ninguna
 copia compilada: lo publicado siempre sale del código de `main`. Si algún día se vuelve a *Deploy from a branch*, lo publicado sería
 la raíz del repositorio: `python3 tools/pages.py copiar` pone ahí `dist/app/`, y GitHub Actions falla si falta o no coincide con la

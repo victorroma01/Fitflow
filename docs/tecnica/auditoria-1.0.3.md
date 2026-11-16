@@ -3,7 +3,7 @@
 Auditoría completa de StrataFit sobre la V1.0.2 publicada (12 de noviembre de 2026): qué se miró y cómo, qué se encontró, qué
 se corrigió en la V1.0.3 y qué queda pendiente. Lo que aquí se da por comprobado se ejecutó; lo que no se pudo ejecutar se dice
 ([Lo que no se pudo comprobar](#lo-que-no-se-pudo-comprobar)). Se hizo por fases dentro de la misma versión, en la rama
-`desarrollo-1.0.3`, que se publica cuando el propietario lo confirme ([estado](#estado-por-fases)).
+`desarrollo-1.0.3`, y se publicó el 16 de noviembre de 2026, con la confirmación del propietario ([estado](#estado-por-fases)).
 
 ## Qué es el proyecto
 
@@ -188,7 +188,9 @@ L2 solo se pudo ver en el WebKit de GitHub, y X6 se dedujo del código (la regla
 
 ## Estado por fases
 
-La V1.0.3 se publica cuando estén todas y el propietario lo confirme; hasta entonces vive en la rama `desarrollo-1.0.3`.
+La V1.0.3 se publicó el 16-11-2026, con todas hechas y la confirmación del propietario, que la probó ese día en su iPhone
+([resultado](pruebas.md#la-v103-en-el-iphone-del-propietario)). Esa prueba encontró un fallo que las automáticas no veían (sin
+conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la V1.0.31, publicada también ese día.
 
 | Fase | Estado | Hecho | Falta |
 | --- | --- | --- | --- |
@@ -199,20 +201,20 @@ La V1.0.3 se publica cuando estén todas y el propietario lo confirme; hasta ent
 | 5 · Dashboard, perfil y persistencia | Hecha | Cada cifra frente a los registros (D2-D4), borrar con sus series, pesajes, CSV y copia de seguridad, datos manipulados (S2). | — |
 | 6 · UX/UI, rendimiento y accesibilidad | Hecha | Contraste (C1), avisos y «Deshacer» (X1, X2, X5, A2), zonas táctiles (A3), cargas (L1), «atrás» (X4), saltos visuales y rendimiento medido de nuevo (R1). | — |
 | 7 · Seguridad, pruebas y compatibilidad | Hecha, con límites | Tamaños de pantalla (X3), datos manipulados, `npm audit`, WebKit y Firefox en GitHub (L2), y la actualización desde la versión publicada (SW1, SW2). | Lo que no se pudo comprobar aquí (arriba). |
-| 8 · Verificación final y documentación | Hecha | Batería completa aquí (con las dos letras) y en GitHub (Chrome, WebKit, Firefox y el emulador de Firebase), documentación al día e informe final. | Publicar, cuando el propietario lo confirme. |
+| 8 · Verificación final y documentación | Hecha | Batería completa aquí (con las dos letras) y en GitHub (Chrome, WebKit, Firefox y el emulador de Firebase), documentación al día e informe final. Publicada el 16-11-2026. | — |
 
 ## Pendiente
 
 | | Qué | Por qué no está hecho |
 | --- | --- | --- |
-| 1 | Publicar la V1.0.3 (fusionar la rama en `main` y etiquetar). | Lo confirma el propietario, que lo deja para más adelante (15-11-2026) junto con los puntos 4 y 8. Antes, la [lista de la V1.0.3 en su iPhone](pruebas.md#la-v103-en-un-iphone-pendiente). |
+| 1 | ~~Publicar la V1.0.3.~~ | Hecho el 16-11-2026, con la [lista en el iPhone del propietario](pruebas.md#la-v103-en-el-iphone-del-propietario). |
 | 2 | Cada alimento enseña sus valores redondeados y el total se redondea aparte: la suma de lo que se ve puede diferir en 1. | Es lo correcto (redondear la suma, no sumar redondeos), pero no se explica en la app. |
 | 3 | Los logros de volumen («Mueve 10 toneladas») siguen en toneladas con las cargas en libras. | A propósito: es su nombre y su meta; el volumen del Dashboard y del análisis sí va en libras. |
-| 4 | App Check (I-05): el propietario ha decidido activarlo. Faltan sus dos valores de la consola (la clave de reCAPTCHA y el ID de la app web) y, con la versión ya en los móviles, comprobar en la consola que las peticiones salen verificadas antes de exigirlo. | reCAPTCHA y App Check de verdad solo funcionan desde la dirección de la app: aquí se prueban simulados. |
+| 4 | App Check (I-05): configurado el 16-11-2026 (la clave de reCAPTCHA Enterprise y la app web, registrada en Firebase) y **sin exigir**. Falta, con la versión ya en los móviles, comprobar en la consola que las peticiones salen verificadas y entonces exigirlo. | Es un paso del propietario en la consola de Firebase ([cómo](backend.md#activar-app-check)); exigirlo antes de tiempo dejaría fuera a quien aún no tenga la versión nueva. |
 | 5 | Prueba en un Android de verdad (I-01) y con VoiceOver en un iPhone. | No hay dispositivos en este entorno. |
 | 6 | Editar una serie de un entreno ya guardado (hoy se borra el entreno entero con sus series). | Función nueva: cambia el historial, los récords y la sincronización; mejor en una versión propia. |
 | 7 | «Log out», el botón que guarda el entreno, puede confundirse con cerrar la sesión de la cuenta. | Es un cambio de nombre visible en la pantalla principal del entreno: decisión del propietario. |
-| 8 | Alertas de Dependabot, desactivadas en el repositorio. | Ajuste del repositorio (Settings → Security and quality → Advanced Security → Dependabot alerts → Enable): paso del propietario, que lo deja para más adelante. Avisan por correo de fallos de seguridad conocidos en las herramientas de compilar y probar; la app publicada no lleva librerías de terceros. |
+| 8 | ~~Alertas de Dependabot.~~ | Activadas por el propietario el 16-11-2026. Avisan por correo de fallos de seguridad conocidos en las herramientas de compilar y probar; la app publicada no lleva librerías de terceros. |
 | 9 | Las filas de la lista de alimentos miden 35 px de alto: cumplen el mínimo de accesibilidad (24 px), no los 44 px que recomienda Apple. | Subirlas a 44 px deja ver menos alimentos por pantalla (de unos 14 a 11): es un cambio de diseño, decisión del propietario. |
 | 10 | Quedan 24 líneas de más de 800 caracteres en las vistas. | Son texto de la app o dibujos SVG en una sola línea: partirlas no las hace más claras. |
 | 11 | `tests/deploy.py`: de tarde en tarde, una recarga con service worker no termina en Chromium (I-13); la prueba vuelve a abrir la dirección y lo anota. | Sin reproducir a voluntad: salió una vez en esta auditoría, en un guion aparte. No se ha visto en la app de verdad. |
@@ -241,7 +243,7 @@ La V1.0.3 se publica cuando estén todas y el propietario lo confirme; hasta ent
 
 1. Estadísticas avanzadas sobre `core/calc`: volumen por grupo muscular y por semana, y progresión de cada ejercicio.
 2. Planificación semanal de comidas a partir de las plantillas y de la semana.
-3. Activar App Check antes de abrir la app a más gente, y las alertas de Dependabot en el repositorio.
+3. Exigir App Check (ya configurado) antes de abrir la app a más gente, cuando la consola enseñe las peticiones verificadas.
 4. Editar las series de un entreno guardado (pendiente 6) y decidir el nombre de «Log out» (pendiente 7).
 5. Repetir la lista de comprobación en un iPhone y un Android de verdad en cada versión, y una pasada con VoiceOver.
 6. Probar cada versión actualizando desde la anterior publicada, no solo desde sí misma: `tests/deploy.py` ya lo hace desde el
