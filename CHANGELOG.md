@@ -10,6 +10,37 @@ aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en fr
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.4] — 2026-11-16
+
+### Mejoras
+- Remo, SkiErg, saco de boxeo, bici de aire y comba: sus figuras se han rehecho. Al remar, primero empujan las piernas,
+  después va el tronco y al final tiran los brazos, y el asiento corre por su guía. En el SkiErg las asas bajan por delante
+  del cuerpo hasta los muslos. En el saco: guardia, directo y cruzado. En la bici de aire los brazos van y vienen con sus
+  palancas. En la comba la cuerda da la vuelta entera y pasa bajo los pies en cada salto (dos veces en los double unders).
+- Esos gestos ya no se paran al final de cada repetición: van seguidos, como se hacen.
+- La comba de boxeo tiene su propia figura: un pie y después el otro.
+- Con «Reducir animaciones», la comba enseña dos posturas: «Inicio» y «Salto».
+
+### Correcciones
+- En el saco de boxeo, el pie de delante quedaba por debajo de la línea del suelo.
+- Al correr, gatear o empujar el trineo, la figura grande salía más pequeña de lo que cabía en su recuadro.
+- En los burpees, una parte de la figura se salía un momento del recuadro.
+
+### Interno
+- Motor de las figuras (`extras/rig`, `extras/figure`): `flow` (un gesto que va y vuelve sin pausa en los extremos), `hop` (la
+  postura intermedia es lo más alto de un salto: se llega frenando y se sale acelerando), la pieza de material `by` (va con
+  un punto del cuerpo sin girar con él, como el asiento del remo; con vueltas, gira sobre él a velocidad constante, como la
+  cuerda) y `rigMoments` (el encuadre de la figura grande mira los octavos del gesto y cada octavo de vuelta de lo que gira,
+  no solo los cuartos). El momento 2 de un ciclo es el 0: antes era medio gesto hacia atrás, que agrandaba el encuadre.
+- Las posturas quietas se encuadran con lo que ocupan ellas, no con todo el recorrido.
+- Pruebas: `tests/rig.test.mjs` pasa de 31 a 38 (la figura cabe en su encuadre en todo momento, un pie plano no se hunde en el
+  suelo, y el remo, el SkiErg, el saco, la bici de aire y la comba hacen lo que tienen que hacer) y `tests/figures.py`, de 145
+  a 188 comprobaciones (los gestos seguidos no se paran y vuelven a su sitio, la cuerda gira una o dos vueltas por salto, y
+  las posturas quietas de un salto).
+- `tests/run.sh`: cada prueba tiene un tiempo máximo (15 minutos): una que se quede colgada se para y falla con su nombre.
+- Documentación: el resultado de la lista de la V1.0.3 en el iPhone del propietario ([pruebas](docs/tecnica/pruebas.md)) y el
+  estado de App Check y de las alertas de Dependabot.
+
 ## [1.0.3] — 2026-11-16
 
 ### Novedades

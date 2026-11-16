@@ -39,7 +39,9 @@
    la lleva, por la intermedia m a medio camino. m es un tiempo del ejercicio (un burpee: de pie, en cuclillas, en
    plancha) salvo que la figura diga via: entonces solo guía el camino (el pie que da un paso va por el aire) y ni se
    enseña quieta ni alarga el compás. Con cycle: ms, el gesto es medio ciclo (media zancada, media vuelta de pedales)
-   que se repite sin parar ni volver atrás, cada vez con los lados cambiados: el momento t va entonces de 0 a 2.
+   que se repite sin parar ni volver atrás, cada vez con los lados cambiados: el momento t va entonces de 0 a 2. Con hop,
+   la intermedia es lo más alto de un salto: se llega a ella frenando y se sale acelerando, como cae un cuerpo. Y con
+   flow: [ida, vuelta] (ms), el gesto va y vuelve sin pararse en los extremos (remar, el SkiErg, una serie de golpes).
 
    El material de una figura es una lista de piezas [tipo, hueco, …]. El hueco dice dónde se pinta: 'b' detrás de todo,
    'm' entre el lado de atrás y el cuerpo (bancos, asientos) o 'f' delante. Tipos:
@@ -52,8 +54,11 @@
      aim a b prim       una pieza rígida con el origen en a y el eje x apuntando a b (un neumático que se voltea)
      slide [dx, dy] prim  una de las fijas que se desliza (dx, dy) a lo largo del gesto, a velocidad constante (los
                         peldaños de una escaladora, que en un ciclo vuelven a empezar)
+     by punto prim [vueltas, desde]   una de las fijas con el origen en un punto que se mueve (como los de link) y sin
+                        girar con el cuerpo: el asiento de un remo, que va con la cadera. Con vueltas, gira sobre ese
+                        punto a velocidad constante, tantas vueltas por gesto y empezando en desde grados: la comba
      bar radio · db modo · kb modo · ball radio · bag · disc   lo que se lleva en las manos
-   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, held, propLayers, SIDE_BODY, FRONT_BODY, SIDE_KEYS, otherSide, rigPose, solve, rigLayers, rigFrame, pathPoints, framePoints, rigBox, poseSpot, SIDE_REGIONS, sideRegions
+   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, turned, held, propLayers, SIDE_BODY, FRONT_BODY, SIDE_KEYS, otherSide, rigPose, solve, rigLayers, rigFrame, pathPoints, framePoints, rigMoments, rigBox, poseSpot, SIDE_REGIONS, sideRegions
 */
 import { FG_J, FG_P } from '../data/figure.js';
 /** Un grado, en radianes. */
@@ -293,6 +298,8 @@ const spot = (o, s) => {
   return o.out ? o.out(q) : q;
 };
 const at = q => 'translate(' + f1(q[0]) + ' ' + f1(q[1]) + ')';
+/* los grados que lleva girados en el momento t lo que da [vueltas, desde] por gesto */
+const turned = (spin, t) => (spin[1] || 0) + 360 * spin[0] * t;
 /* lo que gira con la mano: en el puño g y con el giro de la mano, sin su escorzo */
 const held = (hand, g) => move({ r: J.grip, w: g, a: hand.a });
 /** Las capas de la pieza de material número i en una postura: [{ k: nombre, s: hueco, t: transformación o '' }]. */
@@ -317,6 +324,9 @@ const propLayers = (pr, i, o) => {
   /* lo que se desliza a lo largo del gesto (los peldaños de una escaladora), a velocidad constante */
   if (type == 'slide')
     return [{ k, s: slot, t: at([pr[2][0] * o.t, pr[2][1] * o.t]) }];
+  /* lo que va con un punto sin girar con el cuerpo (un asiento con la cadera) o girando sobre él a velocidad constante */
+  if (type == 'by')
+    return [{ k, s: slot, t: at(spot(o, pr[2])) + (pr[4] ? ' rotate(' + f1(turned(pr[4], o.t)) + ')' : '') }];
   if (type == 'aim') {
     const a = spot(o, pr[2]);
     return [{ k, s: slot, t: at(a) + ' rotate(' + f1(angle(sub(spot(o, pr[3]), a))) + ')' }];
@@ -352,14 +362,18 @@ const otherSide = p => {
 /** La postura de la figura en el momento t (0 = inicio, 1 = final). Si la figura lleva una postura intermedia (m), el
     gesto pasa por ella a medio camino: de pie → en cuclillas → en plancha, en un burpee. */
 const rigPose = (def, t) => {
-  /* un ciclo (correr, pedalear) es el mismo medio gesto dos veces, la segunda con los lados cambiados: de 1 a 2 */
+  /* un ciclo (correr, pedalear) es el mismo medio gesto dos veces, la segunda con los lados cambiados: de 1 a 2; y en 2
+     vuelve a empezar */
   if (def.cycle && t >= 1)
-    return otherSide(rigPose(def, t % 2 - 1));
+    return t % 2 < 1 ? rigPose(def, t % 2) : otherSide(rigPose(def, t % 2 - 1));
   const end = Object.assign({}, def.a, def.b);
   if (!def.m)
     return mix(def.a, end, t);
   const mid = Object.assign({}, def.a, def.m);
-  return t < .5 ? mix(def.a, mid, t * 2) : mix(mid, end, t * 2 - 1);
+  /* de camino a la intermedia y desde ella, a paso constante; si es lo más alto de un salto (hop), frenando al subir y
+     acelerando al bajar */
+  const u = t < .5 ? t * 2 : t * 2 - 1;
+  return t < .5 ? mix(def.a, mid, def.hop ? 1 - (1 - u) * (1 - u) : u) : mix(mid, end, def.hop ? u * u : u);
 };
 /** Las piezas de la figura en el momento t. */
 const solve = (def, t) => def.v == 'S' ? sidePose(rigPose(def, t)) : frontPose(rigPose(def, t));
@@ -479,6 +493,9 @@ const framePoints = (def, t) => {
       prim(pr[3], o[pr[2]]);
     else if (type == 'slide')
       prim(pr[3], { r: [0, 0], w: [pr[2][0] * (def.cycle ? t % 1 : t), pr[2][1] * (def.cycle ? t % 1 : t)], a: 0 });
+    /* lo que va con un punto, con el giro que lleve en ese momento */
+    else if (type == 'by')
+      prim(pr[3], { r: [0, 0], w: spot(o, pr[2]), a: pr[4] ? turned(pr[4], def.cycle ? t % 1 : t) : 0 });
     else if (type == 'link' || type == 'aim') {
       add(gear, spot(o, pr[2]), type == 'aim' ? pr[5] || 20 : 2);
       add(gear, spot(o, pr[3]), type == 'aim' ? pr[5] || 20 : 2);
@@ -487,6 +504,14 @@ const framePoints = (def, t) => {
       prim(pr);
   });
   return ps;
+};
+/** Los momentos del gesto que tiene que abarcar el encuadre de la figura grande: sus octavos (entre el inicio y el final
+    un pie o una mano pueden ir por fuera de los dos) y, si algo del material da vueltas (la comba), cada octavo de
+    vuelta; en un ciclo, también los de su segunda mitad, con los lados cambiados. */
+export const rigMoments = def => {
+  const turns = Math.max(1, ...(def.props || []).map(pr => pr[0] == 'by' && pr[4] ? Math.ceil(Math.abs(pr[4][0])) : 1));
+  const ts = Array.from({ length: 8 * turns + 1 }, (_, i) => i / (8 * turns));
+  return def.cycle ? ts.concat(ts.slice(1, -1).map(t => t + 1)) : ts;
 };
 /** Caja [x, y, ancho, alto] que ocupa la figura en los momentos ts, con margen. Con focus, solo la cabeza y lo que se mueve
     en el ejercicio (los brazos y la barra en un press o un curl): es el encuadre de la miniatura. Si se mueve el cuerpo

@@ -4,7 +4,7 @@ texto. Los 551 ejercicios se abren uno a uno; unos cuantos, de cada clase de fig
 
   python3 tests/figures.py dist/stratafit.html [carpeta_capturas]
 """
-import io, os, sys, datetime
+import io, os, re, sys, datetime
 import numpy as np
 from PIL import Image
 from playwright.sync_api import sync_playwright
@@ -21,10 +21,10 @@ def rd(n):
 INIT = rd('init.js')
 fails = []
 # uno de cada clase de figura: de perfil con barra, con mancuernas, en máquina y en polea; de frente y de espaldas; con
-# postura intermedia; de cardio
-MOVING = ['Press banca', 'Sentadilla', 'Curl con mancuernas', 'Jalón al pecho', 'Remo en polea baja', 'Elevaciones laterales', 'Pájaros en máquina', 'Abducción en máquina', 'Clean & jerk', 'Burpees', 'Bicicleta']
+# postura intermedia; de cardio, en ciclo (la bici), de un gesto seguido (el remo, el saco) y de un salto tras otro (la comba)
+MOVING = ['Press banca', 'Sentadilla', 'Curl con mancuernas', 'Jalón al pecho', 'Remo en polea baja', 'Elevaciones laterales', 'Pájaros en máquina', 'Abducción en máquina', 'Clean & jerk', 'Burpees', 'Bicicleta', 'Remo 1000 m', 'Saco de boxeo', 'Comba']
 # con postura intermedia (tres posturas quietas) y que se mantienen (una sola, quieta)
-THREE = ['Clean & jerk', 'Burpees']
+THREE = ['Clean & jerk', 'Burpees', 'Saco de boxeo']
 HELD = ['Plancha', 'Pino contra la pared']
 # la figura de un ejercicio se reconoce por sus piezas (<use href="#fs…"> en pequeño, "#fb…" en grande)
 IS_FIGURE = "(el => !!el && !!el.querySelector('use[href^=\"#fs\"],use[href^=\"#fb\"]'))"
@@ -282,13 +282,47 @@ def main(path, shots=None):
             shot('hoja_' + n.split()[0].lower())
         # un ciclo (pedalear, subir peldaños, correr) no para ni vuelve atrás: en dos ciclos y medio no hay dos momentos
         # seguidos iguales, y a mitad de ciclo las piernas han cambiado los papeles
-        for n, half in [('Bicicleta', 760), ('Escaladora', 1000), ('Carrera 1 km', 430)]:
+        for n, half in [('Bicicleta', 760), ('Escaladora', 1000), ('Carrera 1 km', 430), ('Assault bike calorías', 680), ('Comba', 460), ('Double unders', 640), ('Comba boxeo', 400)]:
             how(n)
             seen = [ev(LAYERS)]
             for _ in range(24):
                 pg.clock.run_for(half * 5 // 24)
                 seen.append(ev(LAYERS))
             check('hoja de «%s»: no se detiene en ningún momento del ciclo' % n, all(a != b for a, b in zip(seen, seen[1:])) and 'NaN' not in ''.join(seen))
+        # un gesto seguido (remar, el SkiErg, una serie de golpes) va y vuelve sin pararse en los extremos: mirado a pasos
+        # iguales, no hay tres momentos seguidos iguales (dos sí puede haberlos, a un lado y otro de la vuelta), pasa por
+        # posturas bien distintas y, al cabo de un gesto entero, está donde estaba. El reloj de la página se para y solo
+        # avanza lo que se le pide: si no, lo que tarda la propia prueba mueve la figura
+        def numbers(layers):
+            return [float(x) for x in re.findall(r'-?\d+\.?\d*', layers)]
+
+        pg.clock.pause_at(datetime.datetime.fromtimestamp(ev("Date.now()") / 1000 + 1))
+        for n, period, steps in [('Remo 1000 m', 2200, 20), ('SkiErg 1000 m', 1900, 20), ('Saco de boxeo', 1920, 16)]:
+            how(n)
+            seen = [ev(LAYERS)]
+            for _ in range(steps):
+                pg.clock.run_for(period // steps)
+                seen.append(ev(LAYERS))
+            still = [i for i in range(len(seen) - 2) if seen[i] == seen[i + 1] == seen[i + 2]]
+            check('hoja de «%s»: va y vuelve sin pararse en los extremos' % n, not still and len(set(seen)) >= steps // 2 and 'NaN' not in ''.join(seen), 'parada hacia el paso %s; posturas distintas: %d' % (still[:1], len(set(seen))))
+            # un fotograma (16 ms) de diferencia como mucho: unos píxeles o unos grados en lo que más corre
+            first, last = numbers(seen[0]), numbers(seen[steps])
+            far = max([abs(a - b) for a, b in zip(first, last)] or [99]) if len(first) == len(last) else 99
+            check('hoja de «%s»: al cabo de un gesto entero está donde estaba' % n, far <= 4, 'se aparta %.1f' % far)
+            # (si una pieza pasa a verse en escorzo, su transformación lleva más números: es otra postura sin más que mirar)
+            half = numbers(seen[steps // 2])
+            check('hoja de «%s»: y a medio gesto, en otra postura' % n, len(half) != len(first) or max(abs(a - b) for a, b in zip(first, half)) > 20)
+        # la comba: la cuerda da una vuelta entera por salto, girando sobre las manos (dos en los dobles)
+        ROPE = "[...document.querySelectorAll('#sh svg[data-fig] > g')].map(g => g.getAttribute('transform') || '').filter(t => /^translate\\([^)]*\\) rotate\\([^)]*\\)$/.test(t)).map(t => Math.round(parseFloat(t.split('rotate(')[1])))"
+        for n, cycle, turns in [('Comba', 460, 1), ('Double unders', 640, 2)]:
+            how(n)
+            angles = []
+            for _ in range(8 * turns):
+                pg.clock.run_for(cycle // (8 * turns))
+                angles.append(ev(ROPE))
+            turned = [((b[0] - a[0]) % 360) for a, b in zip(angles, angles[1:])] if all(len(a) == 2 for a in angles) else []
+            check('hoja de «%s»: la cuerda y su mango giran a la vez, siempre hacia delante, %d vuelta(s) por salto' % (n, turns), len(turned) == 8 * turns - 1 and all(a[0] == a[1] for a in angles) and all(30 <= d <= 60 for d in turned), str(angles[:4]) + ' ' + str(turned))
+        pg.clock.resume()
         how('Escaladora')
         steps = "document.querySelector('#sh svg[data-fig] > g').getAttribute('transform')"
         s0 = ev(steps)
@@ -356,7 +390,7 @@ def main(path, shots=None):
         check('pájaros en máquina: de espaldas se ve el deltoides posterior', red > .0006 and slate > .012, '%.4f %.4f %.4f' % (red, orange, slate))
         # si la postura intermedia solo está para guiar el camino (el paso de una zancada, las rodillas de un peso muerto,
         # la media vuelta de un pedal), se enseñan dos, como siempre
-        for n in ['Peso muerto', 'Zancadas', 'Bicicleta']:
+        for n in ['Peso muerto', 'Zancadas', 'Bicicleta', 'Remo 1000 m', 'SkiErg 1000 m']:
             how(n)
             check('reducir animaciones, «%s»: dos posturas, «Inicio» y «Final»' % n, ev("[...document.querySelectorAll('#sh .fgs.two figcaption')].map(x=>x.textContent).join() == 'Inicio,Final' && new Set([...document.querySelectorAll('#sh .fgs.two svg')].map(s=>s.innerHTML)).size == 2"))
         # con postura intermedia: tres posturas; la que se mantiene: una, sin rótulo
@@ -366,6 +400,11 @@ def main(path, shots=None):
             fits = ev("(() => { const s = document.querySelector('#sh .sp'); return s.scrollWidth <= s.clientWidth + 1; })()")
             check('reducir animaciones, «%s»: las tres caben a lo ancho' % n, fits)
         shot('tres')
+        # un salto que acaba como empieza (la comba): en el suelo y en el aire, con la cuerda bajo los pies
+        for n in ['Comba', 'Double unders', 'Comba boxeo']:
+            how(n)
+            check('reducir animaciones, «%s»: dos posturas, «Inicio» y «Salto»' % n, ev("[...document.querySelectorAll('#sh .fgs.two figcaption')].map(x=>x.textContent).join() == 'Inicio,Salto' && new Set([...document.querySelectorAll('#sh .fgs.two svg')].map(s=>s.innerHTML)).size == 2"))
+        shot('salto')
         how('Plancha')
         check('reducir animaciones: una postura que se mantiene sigue siendo una sola figura', ev("document.querySelectorAll('#sh .fgs svg').length == 1 && !document.querySelector('#sh .fgs figcaption')"))
         ev("A.closeSheet()")

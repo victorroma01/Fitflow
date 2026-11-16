@@ -15,14 +15,15 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 // los módulos son JS de la app (módulos ES): se copian a una carpeta con "type": "module" para cargarlos tal cual. La copia
-// de extras/rig exporta además rigPose (la postura en un momento del gesto), que la app no necesita fuera del módulo.
+// de extras/rig exporta además rigPose (la postura en un momento del gesto) y framePoints (los puntos que marcan lo que
+// ocupa la figura), que la app no necesita fuera del módulo.
 const dir = mkdtempSync(join(tmpdir(), 'sf-rig-'));
 writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
 for (const f of ['data/figure.js', 'data/figposes.js', 'data/aliases.js', 'extras/rig.js', 'extras/gear.js', 'extras/moves.js']) {
   mkdirSync(join(dir, f.split('/')[0]), { recursive: true });
   writeFileSync(join(dir, f), readFileSync(new URL('../src/js/' + f, import.meta.url), 'utf8'));
 }
-appendFileSync(join(dir, 'extras/rig.js'), '\nexport { rigPose };\n');
+appendFileSync(join(dir, 'extras/rig.js'), '\nexport { rigPose, framePoints };\n');
 const { FG_J, FG_P } = await import(pathToFileURL(join(dir, 'data/figure.js')));
 const { FIG_POSES } = await import(pathToFileURL(join(dir, 'data/figposes.js')));
 const { EX_ALIASES } = await import(pathToFileURL(join(dir, 'data/aliases.js')));
@@ -78,7 +79,7 @@ test('las figuras están bien escritas', () => {
     keysIn(n, 'el final', def.b, def.a);
     keysIn(n, 'la postura intermedia', def.m, def.a);
     for (const p of def.props || [])
-      if (!['L', 'P', 'R', 'C', 'S', 'on', 'slide', 'link', 'aim', 'bar', 'db', 'kb', 'ball', 'bag', 'disc'].includes(p[0]))
+      if (!['L', 'P', 'R', 'C', 'S', 'on', 'slide', 'by', 'link', 'aim', 'bar', 'db', 'kb', 'ball', 'bag', 'disc'].includes(p[0]))
         bad.push(n + ': material ' + p[0]);
   }
   fails(bad, 'figuras mal escritas');
@@ -225,6 +226,26 @@ test('nada se hunde en el suelo', () => {
       }
   }
   fails(bad, 'piezas bajo el suelo (que está en y=402)');
+  // y un pie apoyado plano pisa el suelo, no se mete en él: la suela, del talón a la punta (el del lado de atrás se
+  // dibuja 3,5 px más arriba). Un talón levantado sí hunde un poco la punta, que en el dibujo no se dobla
+  const sunk = [];
+  for (const { n, def } of FIGURES) {
+    if (def.v != 'S' || def.nofloor)
+      continue;
+    const top = def.cycle ? 2 : 1;
+    for (let i = 0; i < 20 * top + (def.cycle ? 0 : 1); i++) {
+      const t = i / 20;
+      const o = layersAt(def, t);
+      for (const [k, what] of [['FT', 'el pie'], ['xFT', 'el pie de atrás']]) {
+        if (Math.abs(norm(placed(o[k])[2])) > 3)
+          continue;
+        const y = Math.max(spot(def, t, [k, 83, 402])[1], spot(def, t, [k, 137, 402])[1]);
+        if (y > 407)
+          sunk.push(n + ': ' + what + ', plano, a y=' + Math.round(y) + ' en t=' + t);
+      }
+    }
+  }
+  fails(sunk, 'pies planos bajo el suelo');
 });
 
 test('el gesto no da saltos', () => {
@@ -280,6 +301,32 @@ test('el encuadre: la figura grande cabe entera y la miniatura enseña la cabeza
     const box = R.rigBox(figPose(n), [0, .5, 1]);
     near(box[0] + box[2] / 2, 100, 3, n + ': el centro del recuadro');
     assert.ok(box[1] + box[3] > 398, n + ': el recuadro llega al suelo');
+  }
+});
+
+test('la figura grande cabe en su encuadre en todo momento del gesto', () => {
+  // el encuadre se calcula con unos cuantos momentos (rigMoments: los octavos del gesto y, si algo da vueltas, los de cada
+  // vuelta); entre uno y otro nada puede salirse de él, ni en la segunda mitad de un ciclo
+  const bad = [];
+  for (const { n, def } of FIGURES) {
+    const moments = R.rigMoments(def);
+    assert.ok(moments.every(t => t >= 0 && t < (def.cycle ? 2 : 1.0001)), n + ': momentos fuera del gesto');
+    const b = R.rigBox(def, moments);
+    const top = def.cycle ? 2 : 1;
+    let worst = 0;
+    for (let i = 0; i < 40 * top + (def.cycle ? 0 : 1); i++)
+      for (const [, q, m] of R.framePoints(def, i / 40))
+        worst = Math.max(worst, b[0] - (q[0] - m), b[1] - (q[1] - m), q[0] + m - b[0] - b[2], q[1] + m - b[1] - b[3]);
+    if (worst > .5)
+      bad.push(n + ': se sale ' + worst.toFixed(1) + ' px');
+  }
+  fails(bad, 'figuras que se salen de su encuadre');
+  // lo que da vueltas cuenta con el giro que lleva en cada momento: la cuerda de la comba ensancha el encuadre de la
+  // figura grande hasta donde llega por delante y por detrás, pero no el de la miniatura, que la pinta bajo los pies
+  for (const n of ['Comba', 'Double unders']) {
+    const def = figPose(n);
+    const [all, small] = [R.rigBox(def, R.rigMoments(def)), R.rigBox(def, [def.at], 1)];
+    assert.ok(all[2] > 440 && small[2] < 200, n + ': la figura grande mide ' + Math.round(all[2]) + ' de ancho y la miniatura, ' + Math.round(small[2]));
   }
 });
 
@@ -544,6 +591,9 @@ test('un ciclo no tiene costuras: acaba como empieza, con los lados cambiados', 
   }
   assert.ok(seen >= 20, 'ciclos: ' + seen);
   fails(bad, 'ciclos con costuras');
+  // y al acabar la segunda mitad vuelve a empezar: el momento 2 es el 0 (no un medio gesto hacia atrás)
+  for (const n of ['Carrera 1 km', 'Bicicleta', 'Comba'])
+    assert.deepEqual(R.rigPose(figPose(n), 2), R.rigPose(figPose(n), 0), n + ': el momento 2');
 });
 
 test('escaladora: los peldaños bajan con el pie que apoya y el otro pisa el que llega', () => {
@@ -562,6 +612,186 @@ test('escaladora: los peldaños bajan con el pie que apoya y el otro pisa el que
   near(end[0], from[0] + 3, .2, 'el pie que sube acaba en x');
   near(end[1], from[1] - 3.5, .2, 'el pie que sube acaba en y');
   assert.ok(mid[1] < Math.min(start[1], end[1]) - 15, 'el pie que sube no se levanta: ' + mid.map(Math.round));
+});
+
+test('remo en ergómetro: primero las piernas, después el tronco y al final los brazos; el asiento va con la cadera', () => {
+  const def = figPose('Remo 1000 m');
+  assert.ok(def.flow && def.m && def.via, 'la palada es un gesto seguido, con su orden');
+  const hip = t => spot(def, t, ['PV', 99, 196]);
+  const reach = t => {
+    const [g, s] = [spot(def, t, 'g'), spot(def, t, ['TX', 99, 82])];
+    return Math.hypot(g[0] - s[0], g[1] - s[1]);
+  };
+  const lean = t => R.rigPose(def, t).lean;
+  // a media palada las piernas ya han hecho casi todo su recorrido, con los brazos tan estirados como al empezar y el
+  // tronco aún sin echarse atrás
+  const travel = hip(0)[0] - hip(1)[0];
+  assert.ok(travel > 50, 'el asiento se mueve: ' + travel);
+  assert.ok(hip(0)[0] - hip(.5)[0] > travel * .8, 'las piernas, a media palada');
+  near(reach(.5), reach(0), .5, 'los brazos, a media palada');
+  assert.ok(lean(0) > 10 && lean(.5) > -5, 'el tronco, al empezar y a media palada: ' + lean(0) + ', ' + lean(.5));
+  // al final, el tronco se ha echado atrás y el asa ha llegado al abdomen
+  assert.ok(lean(1) < -15 && reach(1) < reach(0) * .6, 'el final: ' + lean(1) + ', ' + reach(1));
+  // el asa pasa por encima de las rodillas, no a través de ellas
+  let over = 0;
+  for (const t of STEPS) {
+    const [g, k] = [spot(def, t, 'g'), spot(def, t, ['TH', 101, 297])];
+    if (Math.abs(g[0] - k[0]) > 30)
+      continue;
+    over++;
+    assert.ok(g[1] < k[1] - 15, 'el asa y la rodilla en t=' + t + ': ' + g.map(Math.round) + ' · ' + k.map(Math.round));
+  }
+  assert.ok(over, 'el asa no pasa por las rodillas');
+  // el asiento: una pieza que va con la cadera (by), sin girar con ella y siempre a la misma altura, sobre su guía
+  const i = def.props.findIndex(p => p[0] == 'by');
+  assert.ok(i >= 0, 'el asiento va con la cadera');
+  for (const t of [0, .3, .7, 1]) {
+    const m = /^translate\(([-\d.]+) ([-\d.]+)\)$/.exec(layersAt(def, t)['p' + i]);
+    assert.ok(m, 'el asiento no gira: ' + layersAt(def, t)['p' + i]);
+    near(Number(m[1]), hip(t)[0], .1, 'el asiento, en x, en t=' + t);
+    near(Number(m[2]), hip(0)[1], .1, 'el asiento, en y, en t=' + t);
+  }
+});
+
+test('SkiErg: las asas bajan por delante del cuerpo, separadas de él, y acaban junto a las caderas', () => {
+  const def = figPose('SkiErg 1000 m');
+  assert.ok(def.flow && def.m && def.via, 'la bajada es un gesto seguido, con su camino');
+  const [start, mid, end] = [0, .5, 1].map(t => spot(def, t, 'g'));
+  assert.ok(start[1] < spot(def, 0, ['HD', 100, 4])[1] - 10, 'empieza con las manos por encima de la cabeza: ' + start.map(Math.round));
+  const shoulder = spot(def, .5, ['TX', 99, 82]);
+  assert.ok(mid[0] - shoulder[0] > 60, 'a media bajada, las manos van por delante del pecho: ' + mid.map(Math.round) + ' · ' + shoulder.map(Math.round));
+  const hip = spot(def, 1, ['PV', 99, 196]);
+  assert.ok(Math.hypot(end[0] - hip[0], end[1] - hip[1]) < 30, 'acaban junto a la cadera: ' + end.map(Math.round) + ' · ' + hip.map(Math.round));
+  // y el cuerpo se dobla para tirar: el tronco se inclina y las rodillas ceden
+  const [p0, p1] = [R.rigPose(def, 0), R.rigPose(def, 1)];
+  assert.ok(p1.lean - p0.lean > 30 && p1.knee - p0.knee > 15, 'el cuerpo acompaña');
+});
+
+test('saco de boxeo: los pies no se mueven del suelo y cada puño llega al saco desde la guardia', () => {
+  const def = figPose('Saco de boxeo');
+  assert.ok(def.flow && def.m && !def.via, 'tres tiempos: guardia, directo y cruzado');
+  // la cara del saco que da al boxeador
+  const bag = def.props.find(p => p[0] == 'R');
+  const face = bag[2] - bag[4] / 2;
+  // el pie de delante (el del lado de atrás de la imagen), plano; el de atrás, sobre su punta, que no se mueve del suelo
+  const toe = spot(def, 0, ['FT', 128, 401.5]);
+  near(toe[1], 401.5, .1, 'la punta del pie de atrás, en el suelo');
+  for (const t of STEPS) {
+    near(spot(def, t, ['xFT', 97, 402])[1], 398.5, .6, 'la suela del pie de delante en t=' + t);
+    const now = spot(def, t, ['FT', 128, 401.5]);
+    assert.ok(Math.hypot(now[0] - toe[0], now[1] - toe[1]) < 1.5, 'la punta del pie de atrás se mueve en t=' + t + ': ' + now);
+  }
+  // el talón de atrás se levanta más al cruzar: el pie gira sobre su punta
+  assert.ok(R.rigPose(def, 1).ft > R.rigPose(def, 0).ft + 15, 'el talón de atrás');
+  // qué puño está en la guardia (junto a la cara) y cuál llega al saco, a la altura del hombro, en cada tiempo
+  const FIST = 9;
+  const guards = (t, s) => {
+    const [g, head] = [spot(def, t, s), spot(def, t, ['HD', 103, 27])];
+    assert.ok(Math.hypot(g[0] - head[0], g[1] - head[1]) < 50, 'en t=' + t + ', el puño ' + s + ' no está en la guardia: ' + g.map(Math.round));
+  };
+  const lands = (t, s, what) => {
+    const [g, shoulder] = [spot(def, t, s), spot(def, t, ['TX', 99, 82])];
+    assert.ok(g[0] + FIST >= face && g[0] + FIST <= face + 12, what + ' no llega al saco (o lo atraviesa): ' + g.map(Math.round) + ', el saco en ' + face);
+    assert.ok(Math.abs(g[1] - shoulder[1]) < 12, what + ' no va a la altura del hombro: ' + g.map(Math.round) + ' · ' + shoulder.map(Math.round));
+  };
+  guards(0, 'g');
+  guards(0, 'G');
+  lands(.5, 'G', 'el directo');
+  guards(.5, 'g');
+  lands(1, 'g', 'el cruzado');
+  guards(1, 'G');
+});
+
+test('bici de aire: cada mano va y viene con su palanca, al revés que la otra, y tira mientras su pierna empuja', () => {
+  const def = figPose('Assault bike calorías');
+  assert.ok(def.cycle, 'pedalear es un ciclo');
+  const [g0, g1] = [spot(def, 0, 'g'), spot(def, 1, 'g')];
+  const [G0, G1] = [spot(def, 0, 'G'), spot(def, 1, 'G')];
+  // las manos recorren un buen tramo, y la de atrás hace lo mismo medio ciclo después (se dibuja 3 px desplazada)
+  assert.ok(g0[0] - g1[0] > 70, 'la mano de delante va y viene: ' + Math.round(g0[0] - g1[0]));
+  near(G0[0] - 3, g1[0], .5, 'la mano de atrás, al empezar');
+  near(G1[0] - 3, g0[0], .5, 'la mano de atrás, a medio ciclo');
+  // el pie de ese lado baja de lo alto a lo bajo del pedal mientras su mano viene hacia el cuerpo
+  const [f0, f1] = [spot(def, 0, ['SH', 97, 385]), spot(def, 1, ['SH', 97, 385])];
+  assert.ok(f1[1] - f0[1] > 40, 'el pie de delante baja: ' + Math.round(f1[1] - f0[1]));
+  // y cada puño va por el arco de su palanca: siempre a la misma distancia de su eje
+  const lever = def.a.gl;
+  for (let i = 0; i < 40; i++) {
+    const g = spot(def, i / 20, 'g');
+    near(Math.hypot(g[0] - lever[0], g[1] - lever[1]), lever[2], .6, 'la distancia del puño al eje en t=' + i / 20);
+  }
+});
+
+test('comba: el salto es un bote y la cuerda pasa bajo los pies cuando están en el aire', () => {
+  for (const [name, turns, passes] of [['Comba', 1, [.5]], ['Double unders', 2, [.25, .75]]]) {
+    const def = figPose(name);
+    assert.ok(def.cycle && def.hop && def.m && def.via, name + ': un salto tras otro');
+    const height = t => 385 - spot(def, t, ['SH', 97, 385])[1];
+    const top = height(.5);
+    assert.ok(top > 20, name + ': salta ' + top);
+    near(height(0), 0, .01, name + ': empieza en el suelo');
+    near(height(1), 0, .01, name + ': acaba en el suelo');
+    // sube frenando y baja acelerando, como cae un cuerpo: a un cuarto del tiempo ya lleva tres cuartos de la altura
+    near(height(.25), top * .75, .01, name + ': a media subida');
+    near(height(.75), top * .75, .01, name + ': a media bajada');
+    // la cuerda: una pieza que gira sobre el puño, tantas vueltas por salto, y que empieza en lo alto
+    const i = def.props.findIndex(p => p[0] == 'by' && p[4]);
+    assert.ok(i >= 0, name + ': la cuerda gira');
+    assert.deepEqual(def.props[i][4], [turns, -90], name + ': las vueltas');
+    const reach = Number(/ (\d+) 0$/.exec(def.props[i][3][2])[1]);
+    const rope = t => {
+      const m = /^translate\(([-\d.]+) ([-\d.]+)\) rotate\(([-\d.]+)\)$/.exec(layersAt(def, t)['p' + i]);
+      assert.ok(m, name + ': la capa de la cuerda en t=' + t);
+      const a = Number(m[3]) * Math.PI / 180;
+      return { hand: [Number(m[1]), Number(m[2])], tip: [Number(m[1]) + reach * Math.cos(a), Number(m[2]) + reach * Math.sin(a)] };
+    };
+    for (const t of [0, .3, .8, 1.4]) {
+      const g = spot(def, t, 'g');
+      near(rope(t).hand[0], g[0], .1, name + ': la cuerda sale del puño, en x, en t=' + t);
+      near(rope(t).hand[1], g[1], .1, name + ': la cuerda sale del puño, en y, en t=' + t);
+    }
+    // con los pies en el suelo pasa por encima de la cabeza
+    const crown = spot(def, 0, ['HD', 100, 4]);
+    assert.ok(rope(0).tip[1] < crown[1] - 20, name + ': la cuerda, sobre la cabeza: ' + Math.round(rope(0).tip[1]) + ' · ' + Math.round(crown[1]));
+    // y bajo ellos, rozando el suelo, cuando están en el aire
+    for (const t of passes) {
+      const tip = rope(t).tip;
+      const toe = spot(def, t, ['FT', 137, 402]);
+      near(tip[1], 402, 1.5, name + ': la cuerda roza el suelo en t=' + t);
+      assert.ok(toe[1] < tip[1] - 8, name + ': los pies no están en el aire en t=' + t + ': ' + Math.round(toe[1]));
+      assert.ok(Math.abs(tip[0] - toe[0]) < 30, name + ': la cuerda no pasa bajo los pies en t=' + t + ': ' + Math.round(tip[0]) + ' · ' + Math.round(toe[0]));
+    }
+    // nunca se mete en el suelo, y en la segunda mitad del ciclo (el salto siguiente) hace lo mismo
+    for (let j = 0; j < 200; j++)
+      assert.ok(rope(j / 100).tip[1] < 402 + 1.5, name + ': la cuerda se mete en el suelo en t=' + j / 100);
+    near(rope(1.5).tip[1], rope(.5).tip[1], .3, name + ': el salto siguiente');
+  }
+});
+
+test('comba de boxeo: un pie y después el otro, y la cuerda pasa cuando los dos están en el aire', () => {
+  const def = figPose('Comba boxeo');
+  assert.ok(def.cycle && def.hop, 'un paso tras otro');
+  const sole = (t, x) => spot(def, t, [x + 'FT', 97, 402])[1];
+  // al empezar apoya el pie de delante y el otro está recogido; medio ciclo después, al revés (el de atrás se dibuja 3,5 px
+  // más arriba); y en lo más alto de cada paso, los dos en el aire
+  near(sole(0, ''), 402, .1, 'el pie que apoya al empezar');
+  assert.ok(sole(0, 'x') < 380, 'el otro pie, recogido: ' + sole(0, 'x'));
+  near(sole(1, 'x'), 398.5, .1, 'el pie que apoya medio ciclo después');
+  assert.ok(sole(1, '') < 380, 'el primero, recogido: ' + sole(1, ''));
+  for (const t of [.5, 1.5])
+    assert.ok(sole(t, '') < 392 && sole(t, 'x') < 392, 'los dos pies en el aire en t=' + t + ': ' + sole(t, '') + ', ' + sole(t, 'x'));
+  // el cuerpo bota: sube frenando y baja acelerando
+  const hip = t => spot(def, t, ['PV', 99, 196])[1];
+  near(hip(0) - hip(.25), (hip(0) - hip(.5)) * .75, .01, 'la cadera, a media subida');
+  near(hip(1), hip(0), .01, 'la cadera, al caer');
+  // y la cuerda roza el suelo en lo más alto, por debajo de las dos puntas de los pies
+  const i = def.props.findIndex(p => p[0] == 'by' && p[4]);
+  const reach = Number(/ (\d+) 0$/.exec(def.props[i][3][2])[1]);
+  const m = /^translate\(([-\d.]+) ([-\d.]+)\) rotate\(([-\d.]+)\)$/.exec(layersAt(def, .5)['p' + i]);
+  near(Number(m[3]), 90, .1, 'la cuerda, hacia abajo en lo más alto');
+  near(Number(m[2]) + reach, 402, 1.5, 'la cuerda roza el suelo');
+  for (const x of ['', 'x'])
+    assert.ok(spot(def, .5, [x + 'FT', 137, 402])[1] < 402 - 8, 'la punta del pie, por encima de la cuerda');
 });
 
 test('remo: el codo va hacia atrás, por encima de la espalda', () => {
