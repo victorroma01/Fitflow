@@ -33,6 +33,8 @@ WEEKS = {
 ALIAS_F = {'competencia': 'trineo'}
 # las que no llevan a nadie: las mismas para todos
 NEUTRAL = ['crossfit', 'hyrox', 'cardio', 'core', 'funcional']
+# al medir el contraste, todo escondido menos la tarjeta del día (con el CSSOM: la política de seguridad no deja <style>)
+ONLY_HERO = 'body *{visibility:hidden!important}.cd.hero,.cd.hero *{visibility:visible!important}'
 
 
 def check(name, cond, info=''):
@@ -147,9 +149,13 @@ def main(path):
                     use(ev, 0, sex)
                     ev("S.plan[0]=Object.assign({},S.plan[0],{cu:1,img:'%s'});R()" % key)
                 pg.evaluate('window.scrollTo(0, 0)')
+                # solo el texto de la tarjeta del día, que es lo que va sobre la portada: lo demás se esconde mientras se mide
+                # (el resto de la pantalla lo mide tests/contrast.py)
+                pg.evaluate("css => { const s = new CSSStyleSheet(); s.replaceSync(css); document.adoptedStyleSheets = [...document.adoptedStyleSheets, s]; window.__only = s; }", ONLY_HERO)
                 for r in measure(pg):
                     if r[0] < r[1] - .005:
                         bad.append('%s: «%s» %.2f:1 (pide %.1f) sobre %s' % (key, r[2][:22], r[0], r[1], r[5]))
+                pg.evaluate("document.adoptedStyleSheets = document.adoptedStyleSheets.filter(s => s !== window.__only)")
             check('%d portadas, %s: todo el texto se lee' % (len(order), 'mujer' if sex == 'F' else 'hombre'), not bad, '; '.join(bad[:6]))
         c.close()
         b.close()
