@@ -41,6 +41,17 @@ línea.
 - Fondo de la app: liso, negro (`#000`) en el tema oscuro y gris muy claro en el claro, con cualquier estilo y color. Con
   Cristal llevaba detrás unos brillos del color de acento (`body::before`, en `css/90-glass`), que ya no están; la vista previa
   de Cristal en Tema y estilo, igual. La barra del sistema (`theme-color`) y el manifiesto, también en negro.
+- Portadas de los días, con imágenes del propietario (hechas con Gemini; `tools/portadas.py`): las de los días de CrossFit,
+  Hyrox y funcional (SkiErg y remo, trineo, wall balls, arrancada, thrusters, box jumps y burpees, carga de granjero y, en la
+  simulación de Hyrox, una competición), un descanso propio para las semanas que los tienen (Hyrox / CrossFit, Híbrido) y, con
+  el perfil de mujer, las de una modelo para todas; la de competición, la del trineo mientras no haya otra (`workout/images`).
+  Un día cuyo nombre no dice nada lleva la de su primer ejercicio: los de Full Body, «Glúteo (fuerza)» y «Glúteo e isquios» se
+  quedaban sin ninguna. Los workouts personalizados pueden elegir cualquiera; sin elegir, la de sus ejercicios. La tarjeta del
+  día se oscurece más arriba: con el 13 % de antes, su nombre no llegaba al contraste AA sobre la foto de espalda ni sobre las
+  nuevas más claras. Van en WebP, a 704 × 440 y en gris (unos 10 KB cada una): `build.py` admite .webp y la carpeta de mujer.
+- Repaso técnico: las reglas de las portadas, sus nombres y sus grupos (`data/photos`, `workout/images`) y los programas que se
+  añadieron después (Híbrido, Full Body y Glúteo y pierna, en `data/library`) están ya en su sitio, sin parches encima; el
+  contenido es el mismo.
 - Cuentas: el correo técnico de cada cuenta, que nadie ve, pasa a ser `usuario@stratafit-960ec.firebaseapp.com`, con el dominio
   del propio proyecto de Firebase. La app registra con él y entra con él o, si la cuenta aún no se ha pasado, con el anterior
   (`cloud/auth`); las reglas de Firestore admiten los dos mientras tanto. Publicar la versión no cambia nada para nadie. Las
@@ -57,7 +68,8 @@ línea.
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.
 - Pruebas: `tests/login.py` (el fondo del inicio de sesión a diez tamaños, con el contraste de cada texto, y lo que va debajo
-  de la tarjeta), `tests/smoke.py` (el fondo de la app, liso, con Cristal y sin él),
+  de la tarjeta), `tests/covers.py` (la portada de cada día por programa y por sexo, los descansos, los workouts personalizados
+  y el texto de la tarjeta del día sobre las 22 portadas), `tests/smoke.py` (el fondo de la app, liso, con Cristal y sin él),
   `tests/dominio.test.mjs` (el paso de las cuentas, con una Authentication de mentira), `tests/cloud.py` (una cuenta con el
   dominio anterior entra, se pasa y su sesión sigue abierta), `tests/rules.test.mjs` (los dos dominios, y ninguno que solo se
   parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.

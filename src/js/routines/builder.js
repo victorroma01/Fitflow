@@ -5,14 +5,13 @@
 import { $, clampNum, fmtMinSec, roundInt, typedName, typedNum, X } from '../core/util.js';
 import { A, C, U } from '../core/registry.js';
 import { groupLabel } from '../data/library.js';
-import { DAY_PHOTOS } from '../data/photos.js';
 import { S, saveState } from '../core/state.js';
 import { icon } from '../core/icons.js';
 import { backRow, dialog, sheet } from '../core/ui.js';
 import { exAll, exCellHtml, exCompare, exSearchText, groupOfName } from '../library/model.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, groupDropdown, groupMatch } from '../library/filters.js';
 import { REST_OPTIONS, restDefault } from '../workout/rest.js';
-import { imagePicker, routineImage } from '../workout/images.js';
+import { imagePicker, photoUrl, routineImage } from '../workout/images.js';
 import { MAX_SETS } from '../workout/targets.js';
 import { exPicture } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
@@ -79,7 +78,7 @@ const routineCard = (routine, i) => {
   const menu = html`<button data-a="routineMenu" data-i="${i}" aria-label="${'Opciones de ' + routine.n}" class="bd-0 bg-none p-4-8"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>`;
   const tags = html`<div class="d-flex gap-6 wrap"><span class="tg">${roundInt(sets * 2.4)} min</span>${groups.slice(0, 2).map(g => html`<span class="tg">${raw(g)}</span>`)}${groups.length > 2 ? html`<span class="tg">+${groups.length - 2}</span>` : ''}</div>`;
   const actions = routineState.m === i ? html`<div class="g2 mt-10 cols-3"><button class="pr" data-a="routineStart" data-i="${i}">Empezar</button><button data-a="routineEdit" data-i="${i}">Editar</button><button data-a="routineListDeleteAsk" data-i="${i}" class="c-ctx">Borrar</button></div>` : '';
-  return html`<div class="ovx ai-start p-16-0"><div data-a="routineEdit" data-i="${i}" aria-hidden="true" class="w-96 h-132 r-16 fx-none cur-pointer" data-style="background:url(${DAY_PHOTOS[photo]}) center/cover"></div><div class="fx-1 minw-0"><div class="row"><small class="c-at fw-700">${icon('prog', 14)} Personalizado</small>${menu}</div><b data-a="routineEdit" data-i="${i}" role="button" tabindex="0" class="fs-20 d-block m-4-0-10 cur-pointer">${routine.n}</b>${tags}${actions}</div></div>`;
+  return html`<div class="ovx ai-start p-16-0"><div data-a="routineEdit" data-i="${i}" aria-hidden="true" class="w-96 h-132 r-16 fx-none cur-pointer" data-style="background:url(${photoUrl(photo)}) center/cover"></div><div class="fx-1 minw-0"><div class="row"><small class="c-at fw-700">${icon('prog', 14)} Personalizado</small>${menu}</div><b data-a="routineEdit" data-i="${i}" role="button" tabindex="0" class="fs-20 d-block m-4-0-10 cur-pointer">${routine.n}</b>${tags}${actions}</div></div>`;
 };
 function routineRows() {
   const q = (routineState.s || '').toLowerCase();

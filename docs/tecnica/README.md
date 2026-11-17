@@ -122,12 +122,14 @@ el que usan la mayoría de las pruebas.
 │   │   ├── cloud/          Firebase por REST: configuración, peticiones, sesión, cuentas, Firestore, fusión y sincronización
 │   │   └── account/        inicio de sesión y registro, la cuenta en Ajustes y Administración
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
-│   └── img/                day/ (portadas, order.txt) y brand/ (el logo: fuentes y
+│   └── img/                day/ (portadas, order.txt; las de mujer, en mujer/) y brand/ (el logo: fuentes y
 │                           lo que genera tools/marca.py)
 ├── static/                 sw.js (plantilla), manifiesto, iconos de la app y de los accesos directos (tools/marca.py)
 ├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py ·
-│                           marca.py (logo e iconos) · figure.js (el dibujo del modelo de perfil)
-│   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar)
+│                           marca.py (logo e iconos) · figure.js (el dibujo del modelo de perfil) · fondo.py (el fondo del
+│                           inicio de sesión) · portadas.py (las portadas de los días)
+│   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar,
+│                           pasar las cuentas al dominio nuevo)
 ├── tests/                  pruebas, run.sh y compare.sh
 ├── docs/
 │   ├── funcional/          qué hace la app, pantalla a pantalla

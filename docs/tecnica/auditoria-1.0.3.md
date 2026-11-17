@@ -254,3 +254,18 @@ fondo del inicio de sesión (F-33), que estaba pospuesto.
    service worker de la V1.0.2 (`tests/sw-anterior.js`); cuando el service worker vuelva a cambiar, añadir el de la V1.0.3.
 7. Mantener el trabajo de Firefox aunque nadie use la app con él: un tercer motor encuentra lo que depende de casualidades de
    los otros dos (SW1 llevaba dos versiones publicado).
+
+## Repaso de la V1.0.32
+
+Antes de añadir las portadas nuevas, a petición del propietario: el código y su comprobación estática (`tools/check.js`), lo que
+quedaba de parches sobre lo ya definido, la portada de cada día de los siete programas, el contraste del texto sobre cada
+portada, el rendimiento contra la V1.0.31 publicada y la batería entera, en local y en GitHub Actions.
+
+| Qué se miró | Qué salió | Qué se hizo |
+| --- | --- | --- |
+| La portada de cada día de los programas | Los tres días de Full Body y dos de Glúteo y pierna («Glúteo (fuerza)», «Glúteo e isquios») no llevaban ninguna: su nombre no encajaba con ninguna regla. Son los dos programas que la app recomienda a las mujeres. | Los de glúteo, la de isquios y glúteos; un día cuyo nombre no dice nada, la de su primer ejercicio (`workout/images`). |
+| El texto de la tarjeta del día sobre cada portada (hasta ahora solo se medía la de pecho, la de los datos de prueba) | Sobre la de espalda, el nombre del día se quedaba en 1,77:1 (pide 3:1); sobre las nuevas más claras, entre 2,4 y 2,8:1. | La tarjeta se oscurece más arriba (del 13 % al 47 %): pasan las 22 portadas, de hombre y de mujer (`tests/covers.py`). |
+| Parches sobre lo ya definido | Tres: las reglas de las portadas (se les añadían después reglas repetidas), sus nombres y sus grupos (se completaban después) y los programas añadidos en versiones posteriores (Híbrido, Full Body, Glúteo y pierna). | En su sitio y con el mismo contenido: los programas, comparados antes y después. |
+| Marcas olvidadas y temporizadores | Ninguna marca (TODO, FIXME, `console.log`); cada `setInterval` tiene su `clearInterval`. | — |
+| Rendimiento | Igual que la V1.0.31 ([Rendimiento](rendimiento.md#medido-en-la-v1032)). | — |
+| Las fotos | Las nuevas, en WebP, pesan unos 10 KB cada una. Las de antes, en JPEG, apenas bajan pasadas a WebP (176 KB → 158 KB) y perderían calidad al volver a comprimirse. | Las nuevas, en WebP; las de antes, como estaban. |

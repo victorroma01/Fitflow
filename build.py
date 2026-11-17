@@ -21,7 +21,7 @@ Estructura (todo vive en src/):
   src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
                           (la revisión de una versión enseña sus arreglos junto con las novedades de la que revisa)
-  src/img/day/            portadas de los días (.jpg) y order.txt
+  src/img/day/            portadas de los días (.webp o .jpg), en el orden de order.txt; las de mujer, en mujer/ (tools/portadas.py)
   src/img/login/          fondo del inicio de sesión (fondo.webp, que prepara tools/fondo.py)
   static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
 
@@ -109,16 +109,29 @@ BRAND_LOGOS = ('claro', 'oscuro')
 LOGIN_PHOTO = 'img/login/fondo.webp'
 
 
+def cover_file(folder, k):
+    """El archivo de la portada `k` en una carpeta de src/img/day: <k>.webp o <k>.jpg (None si no está)."""
+    found = [k + ext for ext in ('.webp', '.jpg') if os.path.isfile(os.path.join(folder, k + ext))]
+    if len(found) > 1:
+        die('la portada %s está dos veces en %s (%s): deja una' % (k, folder, ' y '.join(found)))
+    return found[0] if found else None
+
+
 def media():
-    """Lee src/img: las portadas de día (order.txt), el logo y el fondo del inicio de sesión. Devuelve la lista de fotos y los
-    enlaces."""
-    files, day = [], []
-    for k in list_lines(os.path.join(IMG, 'day', 'order.txt')):
-        p = os.path.join(IMG, 'day', k + '.jpg')
-        if not os.path.isfile(p):
-            die('falta la portada ' + p)
-        day.append(k)
-        files.append(('img/day/' + k + '.jpg', p))
+    """Lee src/img: las portadas de día (order.txt; las de mujer, en src/img/day/mujer, las que haya), el logo y el fondo del
+    inicio de sesión. Devuelve la lista de fotos y los enlaces de cada portada (clave → img/…)."""
+    files, day, day_f = [], {}, {}
+    base = os.path.join(IMG, 'day')
+    for k in list_lines(os.path.join(base, 'order.txt')):
+        f = cover_file(base, k)
+        if not f:
+            die('falta la portada src/img/day/%s.webp (o .jpg)' % k)
+        day[k] = 'img/day/' + f
+        files.append((day[k], os.path.join(base, f)))
+        f = cover_file(os.path.join(base, 'mujer'), k)
+        if f:
+            day_f[k] = 'img/day/mujer/' + f
+            files.append((day_f[k], os.path.join(base, 'mujer', f)))
     # el logo dentro de la app (core/brand): claro y oscuro. Las fuentes (fuente-*.png) no se publican: son de tools/marca.py
     for k in BRAND_LOGOS:
         p = os.path.join(IMG, 'brand', 'logo-%s.webp' % k)
@@ -130,11 +143,12 @@ def media():
     if not os.path.isfile(p):
         die('falta el fondo del inicio de sesión %s (python3 tools/fondo.py foto.jpg)' % p)
     files.append((LOGIN_PHOTO, p))
-    used = {os.path.basename(p) for _, p in files}
-    for f in sorted(os.listdir(os.path.join(IMG, 'day'))):
-        if f.endswith('.jpg') and f not in used:
-            print('  aviso: src/img/day/%s no está en su lista y no se usa' % f)
-    return {'files': files, 'day': day}
+    used = {p for _, p in files}
+    for folder in (base, os.path.join(base, 'mujer')):
+        for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            if f.endswith(('.jpg', '.webp')) and os.path.join(folder, f) not in used:
+                print('  aviso: %s no está en su lista y no se usa' % os.path.relpath(os.path.join(folder, f), ROOT))
+    return {'files': files, 'day': day, 'dayF': day_f}
 
 
 def media_js(m, inline):
@@ -146,7 +160,8 @@ def media_js(m, inline):
             return 'data:%s;base64,%s' % (mime, base64.b64encode(f.read()).decode('ascii'))
     src = dict(m['files'])
     obj = {
-        'day': {k: url('img/day/%s.jpg' % k, src['img/day/%s.jpg' % k]) for k in m['day']},
+        'day': {k: url(rel, src[rel]) for k, rel in m['day'].items()},
+        'dayF': {k: url(rel, src[rel]) for k, rel in m['dayF'].items()},
         'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
         'login': url(LOGIN_PHOTO, src[LOGIN_PHOTO]),
     }
@@ -579,8 +594,8 @@ def main():
         later = sum(os.path.getsize(os.path.join(out, f)) for f in js_files) - start
         print('  dist/app/            index.html %d bytes + js/ (%d KB al arrancar, %d KB al usarlo, %d archivos) + sw.js, version.json, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
             os.path.getsize(os.path.join(out, 'index.html')), start // 1024, later // 1024, len(js_files), len(m['files']), size // 1024))
-    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas de día' % (
-        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day'])))
+    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas de día (%d de mujer)' % (
+        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day']), len(m['dayF'])))
     if a.check:
         tool = os.path.join(ROOT, 'tools', 'check.js')
         if not os.path.isfile(tool):

@@ -24,6 +24,13 @@
 - **Semana**: arriba se cambia de semana (‹ ›). Los 7 días de la semana salen como botones; los de descanso llevan una luna.
 - **Tarjeta del día**: el día elegido, con su número de ejercicios, series y minutos. **Overview** enseña los ejercicios y permite
   editarlos; **Empezar** abre el entreno.
+- **La foto de cada día** va según el día: pecho, espalda, hombros, piernas, brazos… En los días de CrossFit, Hyrox y funcional,
+  la de su ejercicio principal (SkiErg y remo, trineo, wall balls, arrancada, thrusters, box jumps y burpees, carga de granjero),
+  y la simulación de Hyrox, la de una competición. Los días de descanso de esos programas (Hyrox / CrossFit, Híbrido) llevan una
+  foto propia, sentado en un cajón del gimnasio. Un día cuyo nombre no dice nada (los de Full Body) lleva la de su primer
+  ejercicio, que suele ser el principal. Las de carrera llevan un dibujo, igual para todos.
+  - Con el perfil de **mujer** (Perfil → Datos biométricos → Sexo), todas son de una modelo, con los mismos ejercicios. La de
+    la competición, mientras no haya una suya, es la del trineo.
 - **Al completar un día** (guardando su entreno, o con **Completar descanso** en un día de descanso), queda elegido el siguiente
   día sin completar; tras el último de la semana, el primero de la semana siguiente. Un día de descanso no se salta: la app se
   queda en él hasta que lo marques como completado.
@@ -147,7 +154,8 @@ con un entreno en curso no se toca ninguno.
 ## Workouts personalizados
 
 Bloques sueltos, superseries y triseries que puedes montar a tu gusto y usar después en un programa propio. Un workout que
-se deja sin crear no se queda en la lista, y «atrás» en el editor pregunta antes si se descartan los cambios.
+se deja sin crear no se queda en la lista, y «atrás» en el editor pregunta antes si se descartan los cambios. Cada uno lleva una
+foto: la que elijas en su editor entre todas las de los días (las de tu perfil) o, si no eliges ninguna, la de sus ejercicios.
 
 ## Temporizador WOD y cardio
 

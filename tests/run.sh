@@ -58,6 +58,7 @@ run python3 tests/render.py dist/stratafit.html
 run python3 build.py --appcheck
 run python3 tests/cloud.py dist/stratafit.html
 run python3 tests/login.py dist/stratafit.html
+run python3 tests/covers.py dist/stratafit.html
 run python3 tests/deploy.py dist/app
 echo
 if [ $fallos -eq 0 ]; then echo "Todas las pruebas correctas"; else echo "$fallos pruebas fallan"; exit 1; fi

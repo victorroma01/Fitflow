@@ -26,6 +26,8 @@ import { libBody, libState } from '../library/browse.js';
 import { clone, progDraft } from '../programs/create.js';
 import { levelPlan } from '../programs/levels.js';
 import { isDeloadWeek } from '../workout/deload.js';
+import { dayImage, photoUrl, routineImage } from '../workout/images.js';
+import { MEDIA } from '../data/media.js';
 import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
@@ -137,7 +139,11 @@ const DEBUG_NAMES = {
   workoutToStored: [() => workoutToStored],
   iconNoticeApplies: [() => iconNoticeApplies],
   iconNoticeCheck: [() => iconNoticeCheck],
-  isNewerVersion: [() => isNewerVersion]
+  isNewerVersion: [() => isNewerVersion],
+  dayImage: [() => dayImage],
+  photoUrl: [() => photoUrl],
+  routineImage: [() => routineImage],
+  MEDIA: [() => MEDIA],
 };
 for (const k in DEBUG_NAMES)
   Object.defineProperty(window, k, { get: DEBUG_NAMES[k][0], set: DEBUG_NAMES[k][1], configurable: true });
