@@ -221,3 +221,7 @@ trae las fotos nuevas de los días y pasa las cuentas a su [dominio nuevo](backe
 41. Carrera continua y Trote en cinta: corre erguido y pisa el suelo (o la cinta) a media zancada, sin agacharse.
 42. Dominadas y Pull-ups kipping: la barra sale de un poste en la pared, lejos de la espalda y de las piernas.
 43. Double unders: la cuerda se ve como un lazo, no como una línea suelta. ¿Se entiende cada ejercicio de un vistazo?
+44. Caminata rápida y Curl con barra Z: las manos tienen pulgar y dedos (abiertas al andar, en puño con la barra), la cara se ve
+    de perfil (nariz, labios, barbilla) con su oreja, y en las rodillas y los codos no se marcan juntas de muñeco. En Salto
+    lateral (de frente), las manos y las orejas; entre un lado y otro, un cono.
+45. Remo T y Landmine press: la barra se ve entera, clara, desde el suelo hasta las manos.

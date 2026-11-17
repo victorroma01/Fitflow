@@ -136,6 +136,9 @@ def main(path, shots=None):
               str(ev(PIECES + ".filter(i=>document.querySelectorAll('[id=\"'+i+'\"]').length!=1)")))
         # y ya no están las de antes: la pieza grande con los músculos en reposo (fb…) ni una por vista de frente y de espaldas
         check('una sola silueta para las dos vistas, sin los músculos en reposo', ev("![...document.querySelectorAll('[id^=\"fb\"]')].some(e => /^fb[A-Z]/.test(e.id)) && !document.querySelector('#fsFB,#fsBB')"))
+        # más humana: la mano abierta y el puño con su pulgar y sus dedos, y la cabeza con su perfil y su oreja (la silueta y,
+        # aparte, sus detalles, sin relleno); de frente, cada mano dibujada bajo el antebrazo y las dos orejas
+        check('el maniquí tiene manos, cara y orejas', ev("['fqHA','fqHG','fqHD'].every(i => (g => g.tagName == 'g' && g.querySelectorAll('path').length == 2 && g.querySelectorAll('path')[1].getAttribute('fill') == 'none')(document.getElementById(i))) && document.querySelectorAll('#fsB > path').length == 2 && document.querySelectorAll('#fsF0 > path, #fsF1 > path').length == 4"))
 
         # la hoja «Cómo se hace» de todos: cada una con su figura grande, entera
         bad = ev("""(async () => { const bad = []; const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -152,6 +155,8 @@ def main(path, shots=None):
             else if (!!st.querySelector('svg[data-fig]') == held) bad.push(e.n + (held ? ': se mantiene y se mueve' : ': no se mueve'));
             else if (document.querySelector('#sh .hwt').textContent != e.n || document.querySelector('#sh .hwp').innerText.length < 80) bad.push(e.n + ': el nombre o el texto');
             else if (document.querySelector('#sh img')) bad.push(e.n + ': lleva una foto');
+            // una barra o un trazo del material, casi negro, no se ve sobre el fondo (la barra del remo en T se veía así)
+            else if (st.querySelector('path[fill="none"][stroke="#0a0b10"], path[fill="none"][stroke="#0c0d14"], path[d="M0 0H1"][stroke="#0a0b10"], path[d="M0 0H1"][stroke="#0c0d14"]')) bad.push(e.n + ': un trazo del material casi negro');
             // de perfil, ninguna pieza del cuerpo ni del material se sale del recuadro (se cortaría en el borde); en
             // unidades del dibujo, con el margen de lo que una pieza girada abulta de más en su caja
             else if (figPose(e.n).v == 'S') { let over = 0;

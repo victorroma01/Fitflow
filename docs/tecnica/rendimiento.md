@@ -113,11 +113,11 @@ el repaso y con él (rama `desarrollo-animaciones`). Solo cambia lo que tiene fi
 
 | Medida | Antes | Después | Diferencia |
 | --- | ---: | ---: | --- |
-| Abrir «Cómo se hace» | 4,7 ms | 3,2 ms | Un tercio menos: sin los músculos en reposo, hay menos que montar |
-| Piezas de la figura de la sentadilla | 81 | 40 | La mitad de lo que se pinta en cada fotograma |
-| Piezas preparadas una vez (`<defs>`) | 844 (102 KB) | 656 (87 KB) | Una silueta para las dos vistas de frente, sin la pieza grande con sus músculos |
+| Abrir «Cómo se hace» | 5,1 ms | 3,7 ms | Un 27 % menos: sin los músculos en reposo, hay menos que montar |
+| Piezas de la figura de la sentadilla | 81 | 46 | Casi la mitad de lo que se pinta en cada fotograma, con las manos y la cara |
+| Piezas preparadas una vez (`<defs>`) | 844 (102 KB) | 668 (93 KB) | Una silueta para las dos vistas de frente, sin la pieza grande con sus músculos |
 | Una miniatura, de media | 3,4 KB | 3,0 KB | Las de cuerpo completo ya no llevan cada músculo en color, y el borde va en la pieza |
-| Buscar en la Librería (cada letra) | 2,9 ms | 3,0 ms | Igual |
+| Buscar en la Librería (cada letra) | 3,3 ms | 2,7 ms | Igual (lo que varía de una vez a otra) |
 
 ## Qué se hizo
 

@@ -8,10 +8,10 @@
    - figureStill y figureSvg: la figura quieta, en un momento del gesto (miniaturas).
    - figureStage: la figura grande de la hoja «Cómo se hace», que se mueve entre el inicio y el final (playFigures); con
      «Reducir animaciones» (o si el móvil lo pide), las dos posturas quietas, una junto a otra.
-   Define: LIT, SKIN_TONES, SKIN, FRONT_LIGHT, EDGE_SIL, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, THUMB_AIR, figureStill, figureSvg, STAGE_WIDEST, STAGE_AIR, stageBox, floorOf, figureStage, BEAT, beatAt, flowAt, playing, playFigures
+   Define: LIT, SKIN_TONES, SKIN, FRONT_LIGHT, WRIST_Y, EDGE_SIL, EDGE_DETAIL, use, hatched, outline, sideOf, viewParts, figureDefs, defsReady, needDefs, TONES, tone, ink, prim, hex, EDGE, HELD_NEAR, HELD_FAR, ENDS, gear, layer, groups, ONE_USE, flat, boxText, fit, THUMB_AIR, figureStill, figureSvg, STAGE_WIDEST, STAGE_AIR, stageBox, floorOf, figureStage, BEAT, beatAt, flowAt, playing, playFigures
 */
 import { AN_PA, AN_R } from '../data/anatomy.js';
-import { FG_P, FG_PA } from '../data/figure.js';
+import { FG_F, FG_P, FG_PA } from '../data/figure.js';
 import { ease, FRONT, rigBox, rigFrame, rigLayers, rigMoments } from './rig.js';
 import { $ } from '../core/util.js';
 import { html, raw } from '../core/html.js';
@@ -26,9 +26,13 @@ const SKIN = [['url(#gSm)', '#3b4162', 'url(#gSmF)'], ['url(#gSw)', '#4f2a35', '
 /* de frente, la luz es una para todo el cuerpo, en unidades del dibujo (la caja de la silueta del mapa muscular, #aS): así
    los discos de las articulaciones llevan la misma que su pieza y no salen como manchas */
 const FRONT_LIGHT = ' gradientUnits="userSpaceOnUse" gradientTransform="matrix(162.5 0 0 355 18.75 44)"';
-/* el borde oscuro de una pieza, que la separa de lo que tiene detrás (la cadera y la pelvis no lo llevan: son la misma
-   masa que el tronco y el muslo) */
-const EDGE_SIL = ' stroke="#0c0d14" stroke-width="1.1" stroke-linejoin="round"';
+/* de frente, a qué altura se corta el antebrazo de la silueta del mapa muscular: de ahí abajo va la mano de la figura */
+const WRIST_Y = 213;
+/* el borde de una pieza, oscuro y suave: la separa de lo que tiene detrás sin marcar las juntas como en un muñeco
+   articulado (la cadera y la pelvis no lo llevan: son la misma masa que el tronco y el muslo); y el de los detalles de
+   dentro (los dedos, la oreja), algo más fino */
+const EDGE_SIL = ' stroke="#0c0d14" stroke-opacity=".45" stroke-width=".9" stroke-linejoin="round"';
+const EDGE_DETAIL = ' fill="none" stroke="#0c0d14" stroke-opacity=".5" stroke-width=".75" stroke-linecap="round" stroke-linejoin="round"';
 const use = (id, lvl) => html`<use href="#${id}" fill="url(#${LIT[lvl][0]})" stroke="${LIT[lvl][1]}" stroke-width=".7" stroke-linejoin="round"/>`;
 const hatched = (id, d, pa) => html`<path id="fp${id}" d="${d}"/><g id="fr${id}"><use href="#fp${id}"/><use href="#fp${id}" fill="url(#pa${pa || 35})" stroke="none"/></g>`;
 /* el contorno cerrado que pasa por unos puntos; mirror, su reflejo en el otro lado de la figura */
@@ -45,23 +49,29 @@ const figureDefs = () => {
   const stops = c => c.map((x, i) => '<stop offset="' + [0, .55, 1][i] + '" stop-color="' + x + '"/>').join('');
   let h = ['gSm', 'gSw'].map((id, i) => '<radialGradient id="' + id + '" cx=".38" cy=".3" r=".9">' + stops(SKIN_TONES[i]) + '</radialGradient><radialGradient id="' + id + 'F" cx=".38" cy=".3" r=".9"' + FRONT_LIGHT + '>' + stops(SKIN_TONES[i]) + '</radialGradient>').join('');
   h += '<linearGradient id="gFl"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><radialGradient id="gPo"><stop offset="0" stop-color="#9ba3c6" stop-opacity=".16"/><stop offset="1" stop-color="#9ba3c6" stop-opacity="0"/></radialGradient>';
-  /* perfil: la silueta de cada pieza (fq) y sus músculos (fp; con su rayado, fr) */
+  /* perfil: la silueta de cada pieza (fq), con sus detalles si los lleva (la oreja, los dedos), y sus músculos (fp; con su
+     rayado, fr) */
   Object.keys(FG_P).forEach(k => {
-    const [, sil, m] = FG_P[k];
-    h += html`<path id="fq${k}" d="${sil}"${raw(k == 'HP' || k == 'PV' ? '' : EDGE_SIL)}/>`;
+    const [, sil, m, detail] = FG_P[k];
+    const edge = raw(k == 'HP' || k == 'PV' ? '' : EDGE_SIL);
+    h += detail ? html`<g id="fq${k}"><path d="${sil}"${edge}/><path d="${detail}"${raw(EDGE_DETAIL)}/></g>` : html`<path id="fq${k}" d="${sil}"${edge}/>`;
     Object.keys(m).forEach(c => {
       h += hatched(c, m[c], FG_PA[c]);
     });
   });
-  /* de frente (F) y de espaldas (B), la misma silueta: el cuerpo con la cabeza (fsB) y, a cada lado, brazo (U), antebrazo
-     (F), muslo (T) y pierna (S), recortados de la silueta del mapa muscular; bajo el antebrazo, el muslo y la pierna, un
-     disco en su articulación tapa el hueco al girar. Los músculos de cada lado, aparte, en cada vista */
+  /* de frente (F) y de espaldas (B), la misma silueta: el cuerpo con la cabeza y sus orejas, que asoman por detrás (fsB),
+     y, a cada lado, brazo (U), antebrazo (F), muslo (T) y pierna (S), recortados de la silueta del mapa muscular; bajo el
+     antebrazo, el muslo y la pierna, un disco en su articulación tapa el hueco al girar. El antebrazo se corta en la
+     muñeca: la mano es la de la figura (FG_F), con su pulgar y sus dedos, y va debajo, así que no se ve la junta. Los
+     músculos de cada lado, aparte, en cada vista */
   const disc = { F: [FRONT.el, 7.5], T: [FRONT.hip, 20], S: [FRONT.knee, 14.5] };
-  h += html`<clipPath id="fcB"><path d="${outline(FRONT.cut.B)}"/></clipPath><g id="fsB"><use href="#aS"${raw(EDGE_SIL)} clip-path="url(#fcB)"/><use href="#aH"${raw(EDGE_SIL)}/></g>`;
+  const cut = k => k == 'F' ? FRONT.cut.F.filter(p => p[1] < WRIST_Y).concat([[47, WRIST_Y], [0, WRIST_Y]]) : FRONT.cut[k];
+  h += html`<clipPath id="fcB"><path d="${outline(FRONT.cut.B)}"/></clipPath><g id="fsB"><path d="${FG_F.E0}"${raw(EDGE_SIL)}/><path d="${FG_F.E1}"${raw(EDGE_SIL)}/><use href="#aS"${raw(EDGE_SIL)} clip-path="url(#fcB)"/><use href="#aH"${raw(EDGE_SIL)}/></g>`;
   Object.keys(FRONT.regions).forEach(k => {
     [0, 1].forEach(i => {
       const joint = disc[k] ? html`<circle cx="${i ? 200 - disc[k][0][0] : disc[k][0][0]}" cy="${disc[k][0][1]}" r="${disc[k][1]}"/>` : '';
-      h += html`<clipPath id="fc${k}${i}"><path d="${outline(FRONT.cut[k], i)}"/></clipPath><g id="fs${k}${i}">${joint}<use href="#aS"${raw(EDGE_SIL)} clip-path="url(#fc${k}${i})"/></g>`;
+      const hand = k == 'F' ? html`<path d="${FG_F['H' + i]}"${raw(EDGE_SIL)}/><path d="${FG_F['L' + i]}"${raw(EDGE_DETAIL)}/>` : '';
+      h += html`<clipPath id="fc${k}${i}"><path d="${outline(cut(k), i)}"/></clipPath><g id="fs${k}${i}">${joint}${hand}<use href="#aS"${raw(EDGE_SIL)} clip-path="url(#fc${k}${i})"/></g>`;
     });
   });
   ['F', 'B'].forEach(v => {
@@ -88,12 +98,15 @@ const needDefs = () => {
    elástica, 5 disco, 6 cajón y placas, 7 balón */
 const TONES = [[['', '#4d5370'], ['', '#727a9e']], [['#343950', '#7078a0'], ['#4a5070', '#8a92b5']], [['#b9bed0', '#0a0b10'], ['#c9cee0', '#0c0d14']], [['', '#8f96b3'], ['', '#aeb5cf']], [['', '#6aa5ff'], ['', '#7db1ff']], [['#171a27', '#59607c'], ['#1b1e2d', '#a9b0cc']], [['#2b2f45', '#59607c'], ['#3a3f5c', '#8a92b5']], [['#3c4159', '#8a92b5'], ['#4a5070', '#a9b0cc']]];
 const tone = (n, big) => TONES[n || 0][big ? 0 : 1];
+/* el color de una pieza que es una línea (un trazo, un cable, una palanca): el de su tono; el acero (2), que como relleno
+   lleva un borde casi negro, va en su color claro: en negro, la barra de un remo en T o de un landmine no se veía */
+const ink = (n, big) => tone(n, big)[n == 2 ? 0 : 1];
 /** Una pieza fija del material: trazo (L), relleno (P), almohadilla (R), círculo (C) o placas de pesas (S). */
 const prim = (q, big) => {
   const t = tone(q[0] == 'L' ? q[4] : q[0] == 'P' ? q[3] : q[0] == 'R' ? q[7] : q[0] == 'C' ? q[5] : 6, big);
   const thin = big ? '.8' : '1.4';
   if (q[0] == 'L')
-    return html`<path d="${q[2]}" fill="none" stroke="${t[1]}" stroke-width="${q[3]}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    return html`<path d="${q[2]}" fill="none" stroke="${ink(q[4], big)}" stroke-width="${q[3]}" stroke-linecap="round" stroke-linejoin="round"/>`;
   if (q[0] == 'P')
     return html`<path d="${q[2]}" fill="${t[0]}" stroke="${t[1]}" stroke-width="${thin}" stroke-linejoin="round"/>`;
   if (q[0] == 'R')
@@ -139,8 +152,7 @@ const gear = (def, k, big) => {
   if (pr[0] == 'link') {
     if (part == 'e')
       return raw(ENDS[pr[6]]);
-    const t = tone(pr[5], big);
-    return html`<path d="M0 0H1" stroke="${t[1]}" stroke-width="${big ? pr[4] : Math.max(pr[4], 1.8)}" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+    return html`<path d="M0 0H1" stroke="${ink(pr[5], big)}" stroke-width="${big ? pr[4] : Math.max(pr[4], 1.8)}" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
   }
   if (pr[0] == 'on' || pr[0] == 'slide' || pr[0] == 'by')
     return prim(pr[3], big);

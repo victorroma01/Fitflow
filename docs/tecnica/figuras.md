@@ -5,12 +5,16 @@ Llegó con la V1.0.3. Su primera revisión, la V1.0.31, rehace cinco gestos tras
 boxeo, la bici de aire y la comba) y añade al motor lo que les hacía falta: gestos seguidos, saltos y piezas que giran.
 Después, a petición del propietario, se repasó su aspecto para que se entienda de un vistazo ([El aspecto](#el-aspecto)): la
 figura grande es el mismo maniquí limpio que la miniatura, los ejercicios de cuerpo completo ya no salen enteros en rojo, y se
-arreglaron la carrera, la barra de dominadas y la cuerda de la comba.
+arreglaron la carrera, la barra de dominadas y la cuerda de la comba. Y, en un segundo repaso, la figura se hizo más humana:
+manos con su pulgar y sus dedos (antes, unos muñones), la cara de perfil con su oreja, los pies con su talón y su arco, y
+juntas más suaves.
 
 ## Qué se ve
 
 - **La figura es un maniquí**, igual en pequeño que en grande: la silueta, clara, sin los músculos en reposo, y encima, en
-  color, solo lo que trabaja: en rojo los músculos principales y en naranja los secundarios. Si el ejercicio trabaja el
+  color, solo lo que trabaja: en rojo los músculos principales y en naranja los secundarios. Tiene manos (abiertas, con el
+  pulgar y los dedos; o en puño, con el pulgar por delante y los dedos doblados), cara de perfil (nariz, labios, barbilla) con
+  su oreja, y pies con talón y arco; de frente, sus manos y sus orejas. Al correr las manos van cerradas, sin apretar. Si el ejercicio trabaja el
   **cuerpo entero** (un burpee, un thruster, el remo, el SkiErg: 68 de la librería), la silueta va en un rojo apagado y lo
   que más trabaja, encima, en rojo y naranja; el mapa muscular de la hoja y de la ficha lo pinta igual.
 - **En pequeño** (el entreno, la ficha, las listas de la librería y de las rutinas): la figura haciendo el ejercicio, en el
@@ -51,7 +55,7 @@ comparten figura.
 
 | Pieza | Qué es |
 | --- | --- |
-| `tools/figure.js` → `src/js/data/figure.js` | El dibujo del **modelo de perfil**: tórax, pelvis, cabeza, cadera, muslo, pierna, pie, brazo, antebrazo y mano (abierta y en puño). Cada pieza es una silueta y sus músculos, y cada forma, una curva cerrada que pasa por unos pocos puntos. Los puntos están en la herramienta; el módulo lleva los trazados ya calculados y no se edita a mano. |
+| `tools/figure.js` → `src/js/data/figure.js` | El dibujo del **modelo de perfil**: tórax, pelvis, cabeza, cadera, muslo, pierna, pie, brazo, antebrazo y mano (abierta y en puño). Cada pieza es una silueta y sus músculos, y cada forma, una curva cerrada que pasa por unos pocos puntos; la cabeza y las manos llevan además sus detalles (la oreja, los dedos, el pulgar), curvas abiertas. También lo que la figura de frente dibuja aparte de la silueta del mapa muscular: sus manos y sus orejas (`FG_F`). Los puntos están en la herramienta; el módulo lleva los trazados ya calculados y no se edita a mano. |
 | `src/js/data/figposes.js` | La **tabla**: ejercicio → familia de movimiento y variantes (`'Press inclinado mancuernas': 'press incline db'`). |
 | `src/js/extras/moves.js` | Las **familias de movimiento** (82): cada una recibe las variantes y devuelve la figura: vista, postura de inicio, lo que cambia al final (y a medio gesto, si pasa por una postura intermedia), material, qué extremo es el final del esfuerzo y en qué momento se pinta la miniatura. `figPose(nombre)` da la figura de un ejercicio. |
 | `src/js/extras/gear.js` | El **material**: bancos, torres de polea, cables, placas, guías, barras de dominadas y paralelas, cajones, esterillas, paredes. |
@@ -93,6 +97,20 @@ Lo pinta `extras/figure.js`; lo que sigue es por qué es así.
   rodilla o el codo; por eso de frente el degradado va en unidades del dibujo, con la caja de la silueta entera
   (`FRONT_LIGHT`), y la misma silueta vale para las dos vistas (`fsB`, `fsU0`…): lo que cambia de frente a espaldas son los
   músculos.
+- **Más humana.** La mano era una paleta (abierta) o una bola (el puño): ahora la abierta lleva el pulgar por delante y los
+  cuatro dedos juntos, con las líneas que los separan, y el puño, el pulgar cruzado y los dedos doblados; la cabeza, su perfil
+  (frente, nariz, labios, barbilla) y la oreja; el pie, el talón redondo, el empeine y un poco de arco. Las líneas de dentro son
+  detalles de la pieza (el cuarto dato de `FG_P`), sin relleno y con un trazo algo más fino (`EDGE_DETAIL`). De frente, la
+  silueta del mapa muscular trae la mano como una paleta: el antebrazo se corta en la muñeca (`WRIST_Y`) y debajo va la mano de
+  la figura (`FG_F`), con el pulgar hacia dentro y los dedos algo doblados, que la tapa la junta; las orejas asoman por detrás
+  de la cabeza. Al correr, las manos van cerradas (`fist`).
+- **Juntas suaves.** El borde de cada pieza (`EDGE_SIL`) era casi negro y marcaba cada junta (la rodilla, el codo, el tobillo)
+  como en un muñeco articulado. Ahora es oscuro pero translúcido y más fino: sigue separando un brazo de lo que tiene detrás y
+  las juntas casi no se notan.
+- **El material se ve.** Una pieza que es una línea (un trazo, un cable, una palanca) va en el color de su tono, y el acero, que
+  como relleno lleva un borde casi negro, iba en ese negro: la barra del remo en T, la del landmine, la toalla de las dominadas
+  y la marca de la pared del wall ball apenas se veían. Ahora el acero, en una línea, va en su color claro (`ink`). Y en el salto
+  lateral lo que se salta es un cono, no una raya negra.
 - **El escenario.** El recuadro de la figura grande (`.fgs`) es oscuro y casi liso, para que el maniquí claro destaque. El
   suelo ya no es una raya de lado a lado: es una raya del ancho del recuadro que se desvanece hacia los lados y, en medio, un
   poco de luz (`floorOf`). Alrededor de lo que ocupa la figura en todo el gesto queda aire (`STAGE_AIR`: 14 unidades a los
@@ -205,13 +223,14 @@ Para que no se note:
 Medido con `tests/perf.py` frente a la compilación sin figuras, el arranque y el pintado de las pestañas no cambian (primer
 pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el entreno, las listas y las hojas.
 
-El repaso del aspecto aligeró el dibujo, porque ya no hay músculos en reposo: la figura grande de la sentadilla pasa de 81
-piezas que pintar en cada fotograma a 40; las piezas que se preparan una vez (`<defs>`), de 844 a 656 (de 102 a 87 KB), y una
-miniatura, de 3,4 a 3,0 KB de media. Abrir la hoja «Cómo se hace» pasó de 4,7 a 3,2 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-de-las-figuras)).
+El repaso del aspecto aligeró el dibujo, porque ya no hay músculos en reposo, aunque las manos, la cara y los pies lleven
+ahora sus detalles: la figura grande de la sentadilla pasa de 81 piezas que pintar en cada fotograma a 46; las piezas que se
+preparan una vez (`<defs>`), de 844 a 668 (de 102 a 93 KB), y una miniatura, de 3,4 a 3,0 KB de media. Abrir la hoja «Cómo se
+hace» pasó de 5,1 a 3,7 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-de-las-figuras)).
 
 ## Pruebas
 
-- `tests/rig.test.mjs` (41 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
+- `tests/rig.test.mjs` (42 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
   gesto: cada uno tiene figura; las figuras están bien escritas; ninguna pieza sale sin sitio; los codos y las rodillas doblan
   hacia donde doblan; **ninguna articulación pasa de lo que un cuerpo puede hacer** (cintura, cuello, hombro, codo, muñeca,
   cadera, rodilla y tobillo; de frente, brazos y piernas); **las manos y los pies llegan a donde se les pide** (el agarre, el
@@ -232,10 +251,12 @@ miniatura, de 3,4 a 3,0 KB de media. Abrir la hoja «Cómo se hace» pasó de 4,
   pies cuando están en el aire, sin meterse nunca en él (con los pies juntos, con dos vueltas y alternando los pies). Y lo
   que arregló el repaso del aspecto: **colgado de la barra, el poste queda lejos del cuerpo** en todo el gesto (también con
   kipping); **al correr**, el pie que apoya pisa el suelo a media zancada, la cadera no baja como en una zancada y esa rodilla
-  no se dobla de más; y **la cuerda de la comba lleva sus dos cabos**.
-- `tests/figures.py` (194 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
-  piezas, el nombre y el texto, sin fotos); que las piezas están una sola vez y ya no las de antes (la pieza grande con los
-  músculos en reposo); el maniquí (la silueta clara, también la cabeza, y el brazo y la pierna de atrás en su tono más
+  no se dobla de más; **la cuerda de la comba lleva sus dos cabos**; y **la figura es más humana**: la mano abierta, el puño y
+  la cabeza llevan sus detalles (los dedos y el pulgar, la oreja), la mano abierta llega hasta donde el encuadre la espera, y
+  de frente la mano y la oreja de un lado son el reflejo exacto de las del otro.
+- `tests/figures.py` (195 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
+  piezas, el nombre y el texto, sin fotos, y ningún trazo del material casi negro); que las piezas están una sola vez y ya no
+  las de antes (la pieza grande con los músculos en reposo); que el maniquí tiene manos, cara y orejas; el maniquí (la silueta clara, también la cabeza, y el brazo y la pierna de atrás en su tono más
   oscuro; de frente, una sola luz para todo el cuerpo; en un ejercicio de cuerpo completo, la silueta en rojo apagado, como
   su mapa muscular) y el suelo, a lo ancho del recuadro; las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
   (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios ciclos);

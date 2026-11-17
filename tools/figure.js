@@ -3,7 +3,9 @@
    Uso:  node tools/figure.js            escribe src/js/data/figure.js
          node tools/figure.js --check    falla si src/js/data/figure.js no está al día
    Aquí está el dibujo, en puntos: cada pieza del cuerpo (tórax, pelvis, cabeza, cadera, muslo, pierna, pie, brazo, antebrazo
-   y mano) es una silueta y sus músculos, y cada forma es una curva cerrada que pasa por unos pocos puntos. Las coordenadas
+   y mano) es una silueta y sus músculos, y cada forma es una curva cerrada que pasa por unos pocos puntos; la cabeza y las
+   manos llevan además sus detalles (la oreja, los dedos), curvas abiertas. También la mano y las orejas de la figura de
+   frente, que la silueta del mapa muscular no tiene. Las coordenadas
    son las de la caja 200×410 del mapa muscular (data/anatomy): la figura de pie, mirando a la derecha, con el suelo en
    y=402 y las mismas alturas que la figura frontal (hombro 82, cadera 196, rodilla 297, tobillo 385).
    El módulo generado lleva los trazados ya calculados; quien lo mueve es extras/figure. */
@@ -23,6 +25,20 @@ const smooth = pts => {
   return d + 'Z';
 };
 const shape = v => Array.isArray(v[0][0]) ? v.map(smooth).join('') : smooth(v);
+/** Curva abierta y suave por los puntos: los detalles que van dentro de una silueta (los dedos, la oreja). */
+const open = pts => {
+  const n = pts.length, P = i => pts[Math.max(0, Math.min(n - 1, i))];
+  let d = 'M' + r1(P(0)[0]) + ' ' + r1(P(0)[1]);
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = P(i - 1), p1 = P(i), p2 = P(i + 1), p3 = P(i + 2);
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += 'C' + [c1[0], c1[1], c2[0], c2[1], p2[0], p2[1]].map(r1).join(' ');
+  }
+  return d;
+};
+/** El reflejo de unos puntos en el otro lado de la figura de frente (x → 200 − x). */
+const mirror = v => Array.isArray(v[0][0]) ? v.map(mirror) : v.map(p => [200 - p[0], p[1]].concat(p.slice(2)));
 
 /* Articulaciones de la figura en reposo; grip es el centro del puño (por donde pasa la barra) */
 const J = { hip: [99, 196], waist: [96, 152], neck: [99.5, 44], sh: [99, 82], el: [99, 150], wr: [99.5, 207], grip: [100, 220], knee: [101, 297], ankle: [97, 385], toe: [128, 401.5] };
@@ -51,7 +67,9 @@ const PIECES = {
       AB2: [[[114.5, 150.5], [122, 151], [122.2, 159], [121.6, 165.5], [114.3, 165], [113.8, 157.5]], [[114, 168.5], [121.5, 169], [120.5, 180], [117, 192], [114, 197], [112.5, 188], [112.6, 178]]],
       OB: [[103.5, 146], [111.2, 146.5], [112, 156], [111.6, 166], [110, 174.5], [102, 172], [93.5, 169], [96.8, 160], [100, 152]],
     }],
-  HD: ['neck', [[102, 6], [111.5, 8], [118.5, 14.5], [121.5, 23.5], [122, 31.5], [120.5, 38.5], [117, 44.5], [111, 48], [104, 48], [97.5, 46], [91, 41.5], [86, 35], [84, 26.5], [86, 16], [93, 8.5]], {}],
+  /* la cabeza, con su perfil (frente, nariz, labios y barbilla) y, dentro, la oreja */
+  HD: ['neck', [[101.5, 5.5], [110.5, 7.2], [116.8, 11.6], [120.2, 17.6], [121.2, 22.4], [120.6, 24.8], [122.6, 28.4], [124.4, 31.2], [122, 32.6], [122.4, 34.4], [121.6, 35.6], [122, 37], [121, 39], [121.6, 41.2], [119.6, 43.6], [114.4, 45], [109, 46.4], [104.4, 48.6], [97.5, 46.4], [91.4, 42.4], [86.6, 36], [84.4, 27.4], [86.2, 17.4], [92.6, 9.2]], {},
+    [[[101.6, 23.6], [104.2, 24.6], [105.2, 28], [104.2, 32], [101.4, 33.2], [99.6, 30.4], [99.4, 26.4], [101.6, 23.6]]]],
   /* cadera: lo que tapa la articulación por fuera (glúteos y tensor); va con el tronco, pero se pinta encima del muslo */
   HP: ['hip',
     [[82, 171], [92, 166.5], [104, 167], [113, 171.5], [117, 180], [116.5, 192], [112, 203], [104, 213], [93, 221], [83, 226], [77.5, 226], [72, 218.5], [69.5, 207], [70.5, 195], [75.5, 183]],
@@ -74,7 +92,8 @@ const PIECES = {
       SO: [[91, 355], [95.5, 345], [98.3, 355], [97.5, 369], [94, 380], [90.8, 374]],
       TA: [[104.5, 304], [110.5, 308.5], [109, 326], [107, 346], [104.5, 365], [102.2, 372], [101.2, 356], [101.8, 336], [102.5, 318]],
     }],
-  FT: ['ankle', [[90, 380], [104, 380], [108.5, 386], [118, 391], [130, 395], [136.5, 398.5], [137, 401.3, 1], [132, 402, 1], [100, 402], [86, 402, 1], [83.2, 399], [84, 391], [87, 384]], {}],
+  /* el pie: el talón redondo, el empeine y un poco de arco en la planta */
+  FT: ['ankle', [[90, 379], [104, 379.5], [107.8, 384.6], [113.6, 388.6], [121, 391.6], [128.6, 394.4], [134.4, 396.6], [137.4, 398.8], [137.6, 400.8], [135.4, 402, 1], [124, 402], [114, 400.8], [104, 400.8], [94, 402], [87.4, 402, 1], [84, 400], [83, 395.6], [84.6, 389.6], [87.6, 384]], {}],
   UA: ['sh',
     [[99, 63.5], [107.2, 66], [113.5, 73], [115.5, 84], [114.5, 97], [112.5, 108], [112.8, 120], [111.8, 132], [109.5, 143], [109, 151], [106.3, 157.5], [99, 160.5], [91.5, 157.5], [88.6, 151], [86.8, 140], [84.6, 126], [84.2, 112], [83.5, 98], [83.8, 84], [87, 72.5], [92.5, 65.5]],
     {
@@ -91,25 +110,41 @@ const PIECES = {
       BQ: [[100.8, 143], [107, 144.2], [109.6, 153], [109.2, 166], [107.6, 181], [105.2, 196], [103, 190], [101.6, 174], [100.6, 158]],
       AN: [[90.8, 145], [96.3, 143], [98.8, 153], [99.9, 172], [101.2, 189], [102.6, 203], [98.2, 205.5], [95, 198], [91.6, 184], [89, 168], [88.3, 154]],
     }],
-  /* mano abierta y puño (el que agarra) */
-  HA: ['wr', [[95.5, 205], [104.5, 205], [106.3, 215], [106.8, 227], [105.5, 239], [102.5, 246.5], [99.3, 247], [96.8, 239], [95.5, 227], [95, 215]], {}],
-  HG: ['wr', [[94.5, 205.5], [105, 205], [109.5, 210.5], [111, 220.5], [108, 229], [101, 232], [94.5, 229.5], [91.8, 221], [92.3, 212]], {}],
+  /* mano abierta y puño (el que agarra), con su pulgar y los dedos: los dedos juntos, con las líneas que los separan, y
+     el pulgar por delante */
+  HA: ['wr', [[95, 205], [94, 211], [93.4, 219], [93.6, 226], [94.2, 232], [95, 237.4], [96.4, 239.8], [97.6, 239.8], [98.4, 243.2], [100, 245.2], [101.2, 245], [102.4, 247], [103.8, 246.6], [104.6, 244.4], [105.8, 243], [106.6, 240.4], [106.9, 234], [106.8, 228.6], [107.4, 227.6], [109, 229.2], [110.8, 228], [111.6, 223.4], [110.8, 217.6], [108.4, 212.4], [106, 208.6], [104.6, 205]], {},
+    [[[97.2, 231], [97.4, 236], [97.6, 239.6]], [[100.6, 232], [100.9, 238.5], [101.2, 244.8]], [[103.9, 231.6], [104.3, 238], [104.6, 244.2]], [[106.8, 228.4], [106.2, 222.6], [105, 217.4]]]],
+  HG: ['wr', [[94.5, 205.5], [105, 205], [108.4, 207.6], [111.2, 211.4], [112.2, 216.4], [111.6, 221.6], [110.8, 226.2], [108.6, 230], [103.6, 232.4], [97.6, 232], [93.6, 228.8], [92, 222.6], [92.2, 214], [93, 209]], {},
+    [[[104.8, 208.8], [108.2, 213.4], [109.6, 219.2], [107.4, 222.4]], [[103.4, 224.6], [107, 224.8], [110.8, 224]], [[101.6, 228.8], [105.6, 229], [109.4, 228.2]]]],
 };
+/* De frente, la silueta del mapa muscular dibuja la mano como una paleta: la figura lleva la suya (el lado izquierdo de la
+   imagen; el derecho es su reflejo), colgando de la muñeca, con el pulgar hacia dentro, los dedos algo doblados y sus
+   pliegues. Y las orejas, a los lados de la cabeza (van detrás de ella: solo asoman). */
+const FRONT_HAND = [[[23.4, 211], [21.8, 218.6], [20.4, 225.6], [19.8, 232.4], [20.4, 238.6], [21.8, 243.6], [23.8, 247.2], [26, 248], [27.8, 246.6], [28.8, 243.4], [29.4, 239.6], [30.2, 237.2], [31.8, 237], [33.6, 234.4], [34.6, 229.6], [34.6, 223.6], [34.6, 217.4], [34.6, 211]],
+  [[[31.6, 220.2], [30.4, 225.6], [30.2, 231.4], [30.8, 236.4]], [[21, 237.4], [23.8, 239.4], [27, 239.6], [29.4, 238.6]], [[23.4, 242.6], [25.2, 245.8]]]];
+const FRONT_EAR = [[85, 21.4], [82, 21.8], [80.6, 24.6], [80.8, 29.2], [82.2, 32.8], [84.4, 34.4], [86, 33]];
+
 /* dirección del rayado de cada región (los tramados pa15, pa35 y pa90 de extras/anatomy); las demás, pa35 */
 const HATCH = { NK: 90, ER1: 90, ER2: 90, PS: 15, PI: 15, SA: 90, AB1: 90, AB2: 90, CU: 90, IS: 90, GE: 90, SO: 90, TA: 90, DL: 90, DP: 90, BI: 90, TR: 90, BR: 90, BQ: 90, AN: 90 };
 
-const lines = Object.entries(PIECES).map(([k, [pivot, sil, m]]) => '  ' + k + ": ['" + pivot + "', '" + shape(sil) + "', " + (Object.keys(m).length ? '{ ' + Object.entries(m).map(([c, v]) => c + ": '" + shape(v) + "'").join(', ') + ' }' : '{}') + '],');
+const lines = Object.entries(PIECES).map(([k, [pivot, sil, m, det]]) => '  ' + k + ": ['" + pivot + "', '" + shape(sil) + "', " + (Object.keys(m).length ? '{ ' + Object.entries(m).map(([c, v]) => c + ": '" + shape(v) + "'").join(', ') + ' }' : '{}') + (det ? ", '" + det.map(open).join('') + "'" : '') + '],');
+const front = { H0: shape(FRONT_HAND[0]), L0: FRONT_HAND[1].map(open).join(''), E0: shape(FRONT_EAR), H1: shape(mirror(FRONT_HAND[0])), L1: mirror(FRONT_HAND[1]).map(open).join(''), E1: shape(mirror(FRONT_EAR)) };
 const out = `/* ═══ data/figure ═══
    El modelo de perfil de las figuras de ejercicio: articulaciones en reposo (FG_J), piezas con su silueta y sus músculos
-   (FG_P: pieza → [articulación sobre la que gira, silueta, { región: trazado }]) y dirección del rayado (FG_PA).
+   (FG_P: pieza → [articulación sobre la que gira, silueta, { región: trazado }, detalles]: los detalles son las líneas de
+   dentro, como los dedos o la oreja) y dirección del rayado (FG_PA). Y lo que la figura de frente dibuja aparte de la
+   silueta del mapa muscular (FG_F): la mano de cada lado (H0, H1) con sus pliegues (L0, L1) y las orejas (E0, E1).
    Lo genera tools/figure.js a partir de los puntos del dibujo: no se edita a mano.
-   Define: FG_J, FG_P, FG_PA
+   Define: FG_J, FG_P, FG_PA, FG_F
 */
 export const FG_J = ${JSON.stringify(J).replace(/"/g, '').replace(/,/g, ', ').replace(/:/g, ': ').replace(/\{/, '{ ').replace(/\}$/, ' }')};
 export const FG_P = {
 ${lines.join('\n')}
 };
 export const FG_PA = ${JSON.stringify(HATCH).replace(/"/g, '').replace(/,/g, ', ').replace(/:/g, ': ').replace(/\{/, '{ ').replace(/\}$/, ' }')};
+export const FG_F = {
+${Object.entries(front).map(([k, d]) => '  ' + k + ": '" + d + "',").join('\n')}
+};
 `;
 if (process.argv.includes('--check')) {
   if (!fs.existsSync(OUT) || fs.readFileSync(OUT, 'utf8') !== out) {

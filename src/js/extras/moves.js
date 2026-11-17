@@ -1279,7 +1279,7 @@ const MOVES = {
     return fig(a, b, gear, 'b', .75, { m });
   },
   /** Wall ball: de la sentadilla con el balón en el pecho a lanzarlo arriba contra la pared. */
-  wallBall: () => fig({ lean: 24, neck: -6, hip: 108, knee: 114, grip: [124, 82], kF: .6 }, { lean: 0, neck: 8, hip: 0, knee: 0, grip: [148, -46], kF: 1 }, [wall(250, -110), ['L', 'b', 'M250 -70H236', 5, 2], ['ball', 'f', 15]], 'b', 1),
+  wallBall: () => fig({ lean: 24, neck: -6, hip: 108, knee: 114, grip: [124, 82], kF: .6 }, { lean: 0, neck: 8, hip: 0, knee: 0, grip: [148, -46], kF: 1 }, [wall(250, -110), ['L', 'b', 'M250 -70H234', 5, 3], ['ball', 'f', 15]], 'b', 1),
   /** Salto al cajón: del suelo, en cuclillas, a caer en cuclillas sobre el cajón. */
   boxJump: f => {
     const top = 402 - (has(f, 'high') ? 150 : 112);
@@ -1373,7 +1373,8 @@ const MOVES = {
       gear = treadmill();
     if (has(f, 'pack'))
       gear.push(['on', 'm', 'TX', ['R', '', 64, 112, 26, 64, 0, 6]]);
-    return gait(base, front, back, walk ? STRIDE.walk : STRIDE.run, fore, aft, gear, Object.assign({ cycle: walk ? 640 : 430 }, has(f, 'treadmill') ? { nofloor: 1 } : {}));
+    /* (al correr, las manos van cerradas sin apretar; al andar, abiertas) */
+    return gait(base, front, back, walk ? STRIDE.walk : STRIDE.run, fore, aft, gear, Object.assign({ cycle: walk ? 640 : 430 }, walk ? {} : { fist: 1 }, has(f, 'treadmill') ? { nofloor: 1 } : {}));
   },
   /** Bicicleta: estática, de aire (con los brazos) o de carretera. */
   bike: f => {
@@ -1571,7 +1572,8 @@ const MOVES = {
       const b = { x: 52, rot: 10, leg: -22, knee: 34, kT: 1, kS: .7, arm: 30, elb: 30, r: { leg: 4, knee: 0, kT: .92, kS: 1, arm: 20, elb: -30 } };
       return front(Object.assign({ kS: 1 }, a), b, [], 'b', 0, { whole: 1, m: { x: 0, y: -14, rot: 0 } });
     }
-    return front({ x: -46, y: 14, leg: 4, kT: .9, arm: 14, elb: -40 }, { x: 46 }, [['L', 'b', 'M100 380V400', 3, 2]], 'b', 0, { whole: 1, m: { x: 0, y: -34, kT: 1, arm: 30, elb: -20 } });
+    /* (lo que se salta: un cono en el suelo, entre un lado y otro) */
+    return front({ x: -46, y: 14, leg: 4, kT: .9, arm: 14, elb: -40 }, { x: 46 }, [['P', 'b', 'M91 401L96.6 382Q100 378 103.4 382L109 401Z', 7]], 'b', 0, { whole: 1, m: { x: 0, y: -34, kT: 1, arm: 30, elb: -20 } });
   },
   /** Abducción y aducción de cadera, de frente: sentado en la máquina, de pie en la polea o con banda, o tumbado de lado. */
   hipOpen: f => {

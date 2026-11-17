@@ -24,7 +24,7 @@ for (const f of ['data/figure.js', 'data/figposes.js', 'data/aliases.js', 'extra
   writeFileSync(join(dir, f), readFileSync(new URL('../src/js/' + f, import.meta.url), 'utf8'));
 }
 appendFileSync(join(dir, 'extras/rig.js'), '\nexport { rigPose, framePoints };\n');
-const { FG_J, FG_P } = await import(pathToFileURL(join(dir, 'data/figure.js')));
+const { FG_J, FG_P, FG_F } = await import(pathToFileURL(join(dir, 'data/figure.js')));
 const { FIG_POSES } = await import(pathToFileURL(join(dir, 'data/figposes.js')));
 const { EX_ALIASES } = await import(pathToFileURL(join(dir, 'data/aliases.js')));
 const R = await import(pathToFileURL(join(dir, 'extras/rig.js')));
@@ -589,6 +589,23 @@ test('correr: erguido y apoyando el pie en el suelo a media zancada, no agachado
     // y la rodilla que apoya, doblada lo justo para amortiguar
     const o = layersAt(def, .5);
     assert.ok(Math.abs(norm(placed(o.SH)[2] - placed(o.TH)[2])) <= 40, n + ': la rodilla que apoya, muy doblada');
+  }
+});
+
+test('la figura es más humana: manos con pulgar y dedos, la cara de perfil con su oreja, y de frente manos y orejas', () => {
+  // de perfil, la mano abierta, el puño y la cabeza llevan detalles (curvas abiertas, sin relleno) además de su silueta
+  for (const k of ['HA', 'HG', 'HD'])
+    assert.ok(typeof FG_P[k][3] == 'string' && /^M[^Z]+$/.test(FG_P[k][3]) && (FG_P[k][3].match(/M/g) || []).length >= 1, k + ': sus detalles');
+  // los dedos: tres líneas entre los cuatro y el pliegue del pulgar
+  assert.equal((FG_P.HA[3].match(/M/g) || []).length, 4, 'la mano abierta: los dedos y el pulgar');
+  // la mano abierta llega a donde el encuadre la espera (la punta de los dedos, en reposo, hacia y=246)
+  const tips = FG_P.HA[1].match(/-?\d*\.?\d+/g).map(Number).filter((n, i) => i % 2);
+  assert.ok(Math.max(...tips) > 244 && Math.max(...tips) < 250, 'la punta de los dedos, a ' + Math.max(...tips));
+  // de frente: la mano y las orejas de cada lado, una el reflejo de la otra
+  for (const k of ['H', 'L', 'E']) {
+    const a = FG_F[k + '0'].match(/-?\d*\.?\d+/g).map(Number);
+    const b = FG_F[k + '1'].match(/-?\d*\.?\d+/g).map(Number);
+    assert.ok(a.length == b.length && a.every((n, i) => Math.abs((i % 2 ? n : 200 - n) - b[i]) < .01), k + ': un lado es el reflejo del otro');
   }
 });
 
