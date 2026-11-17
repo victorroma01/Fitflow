@@ -45,13 +45,19 @@ línea.
   Hyrox y funcional (SkiErg y remo, trineo, wall balls, arrancada, thrusters, box jumps y burpees, carga de granjero y, en la
   simulación de Hyrox, una competición), un descanso propio para las semanas que los tienen (Hyrox / CrossFit, Híbrido) y, con
   el perfil de mujer, las de una modelo para todas; la de competición, la del trineo mientras no haya otra (`workout/images`).
-  Un día cuyo nombre no dice nada lleva la de su primer ejercicio: los de Full Body, «Glúteo (fuerza)» y «Glúteo e isquios» se
-  quedaban sin ninguna. Los workouts personalizados pueden elegir cualquiera; sin elegir, la de sus ejercicios. La tarjeta del
+  Un día cuyo nombre no dice nada lleva la de su primer ejercicio, sin repetir la de otro día así de la semana (el Full Body C
+  empieza por pierna, como el A: lleva la de pecho): los de Full Body, «Glúteo (fuerza)» y «Glúteo e isquios» se quedaban sin
+  ninguna. Los workouts personalizados pueden elegir cualquiera; sin elegir, la de sus ejercicios. La tarjeta del
   día se oscurece más arriba: con el 13 % de antes, su nombre no llegaba al contraste AA sobre la foto de espalda ni sobre las
   nuevas más claras. Van en WebP, a 704 × 440 y en gris (unos 10 KB cada una): `build.py` admite .webp y la carpeta de mujer.
 - Repaso técnico: las reglas de las portadas, sus nombres y sus grupos (`data/photos`, `workout/images`) y los programas que se
   añadieron después (Híbrido, Full Body y Glúteo y pierna, en `data/library`) están ya en su sitio, sin parches encima; el
   contenido es el mismo.
+- Rendimiento: la sincronización recuerda la huella de cada elemento con su texto y solo la vuelve a calcular si cambió
+  (`cloud/sync`): mirar qué hay que subir tarda la mitad con años de datos, y se hace en cada sincronización. Buscar un
+  ejercicio por su nombre ya no junta y recorre la lista entera cada vez (`exByName`, en `library/model`): lo hacían las
+  figuras, las listas y el entreno en curso, una vez por fila. El texto en el que busca el buscador de la Librería se calcula
+  una vez por ejercicio. Lo que se pinta es lo mismo carácter a carácter (`tests/samehtml.py`, 106 pantallas).
 - Cuentas: el correo técnico de cada cuenta, que nadie ve, pasa a ser `usuario@stratafit-960ec.firebaseapp.com`, con el dominio
   del propio proyecto de Firebase. La app registra con él y entra con él o, si la cuenta aún no se ha pasado, con el anterior
   (`cloud/auth`); las reglas de Firestore admiten los dos mientras tanto. Publicar la versión no cambia nada para nadie. Las
@@ -70,6 +76,8 @@ línea.
 - Pruebas: `tests/login.py` (el fondo del inicio de sesión a diez tamaños, con el contraste de cada texto, y lo que va debajo
   de la tarjeta), `tests/covers.py` (la portada de cada día por programa y por sexo, los descansos, los workouts personalizados
   y el texto de la tarjeta del día sobre las 22 portadas), `tests/smoke.py` (el fondo de la app, liso, con Cristal y sin él),
+  `tests/cloud.py` (un cambio hecho en su sitio cuenta como pendiente), `tests/training.py` (buscar por nombre da lo mismo que
+  recorrer la lista), `tests/perf.py` (mide también el buscador de la Librería),
   `tests/dominio.test.mjs` (el paso de las cuentas, con una Authentication de mentira), `tests/cloud.py` (una cuenta con el
   dominio anterior entra, se pasa y su sesión sigue abierta), `tests/rules.test.mjs` (los dos dominios, y ninguno que solo se
   parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.

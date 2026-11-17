@@ -80,21 +80,38 @@ Medido el 17 de noviembre de 2026 con los mismos datos: mediana de 5 vueltas, al
 ordenador no es el de la V1.0.3: solo valen comparadas entre sí las dos columnas. La V1.0.32 trae 25 fotos de portada nuevas y
 el fondo del inicio de sesión. En el archivo único van incrustadas (pesa 1,58 MB, unos 420 KB más); en el paquete instalable
 son archivos aparte, que el service worker guarda en la primera actualización (unos 315 KB más) y que no se cargan al arrancar.
+Desde esta versión se mide también el buscador de la Librería.
 
 | Medida | V1.0.31 | V1.0.32 | Diferencia |
 | --- | ---: | ---: | --- |
-| Primer pintado | 122 ms | 127 ms | Igual: está dentro de lo que varía de una vuelta a otra (en otras tres vueltas, 131 y 132 ms) |
-| Guardar, mirándolo todo | 7,1 ms | 7,3 ms | Igual |
+| Primer pintado | 115 ms | 113 ms | Igual |
+| Guardar, mirándolo todo | 7,1 ms | 6,6 ms | Igual |
 | Guardar, diciendo qué cambió | 0,5 ms | 0,5 ms | Igual |
-| Ver qué hay que subir | 18,4 ms | 20,4 ms | Igual (en otras tres vueltas, 21 y 28 ms: en este ordenador varía mucho) |
+| Ver qué hay que subir | 20,7 ms | 9,9 ms | La mitad: la huella de cada elemento se recuerda con su texto |
 | Pintar Workout | 1,0 ms | 1,0 ms | Igual |
-| Pintar Nutrición | 0,9 ms | 1,0 ms | Igual |
-| Pintar Dashboard | 5,0 ms | 4,7 ms | Igual |
-| Pintar Perfil | 1,1 ms | 1,0 ms | Igual |
-| Abrir Registros (700 entrenos) | 35 ms | 37 ms | Igual |
+| Pintar Nutrición | 1,0 ms | 1,0 ms | Igual |
+| Pintar Dashboard | 4,9 ms | 5,0 ms | Igual |
+| Pintar Perfil | 1,1 ms | 1,1 ms | Igual |
+| Buscar en la Librería (cada letra) | 3,9 ms | 3,2 ms | Un 18 % menos: el texto de búsqueda y el ejercicio de cada fila, sin recorrer la lista |
+| Abrir Registros (700 entrenos) | 33 ms | 33 ms | Igual |
+
+Con el perfil de CPU de Chromium: mirar qué hay que subir se iba casi todo en recalcular la huella de cada elemento (recorrer su
+texto entero), aunque no hubiera cambiado; buscar un ejercicio por su nombre juntaba la biblioteca con los propios y la
+recorría entera, en doce sitios, una vez por fila en las listas y en las figuras; y el buscador quitaba otra vez las tildes de
+los 551 ejercicios en cada letra. Lo que se pinta es lo mismo carácter a carácter: `tests/samehtml.py` compara el HTML de 106
+pantallas antes y después. El arranque no ha cambiado: casi todo es esperar a IndexedDB y lo que hace el navegador (leer el
+código, los estilos y colocar la página), no el código de la app.
 
 ## Qué se hizo
 
+- **Mirar qué hay que subir (V1.0.32)**: `cloud/sync` recuerda, de cada elemento (un entreno, un día de comidas, el historial
+  de un ejercicio…), su texto y su huella. Si el texto es el mismo, la huella también, y no se vuelve a recorrer (`hashText`).
+  Un cambio hecho en su sitio cambia el texto y se nota igual (`tests/cloud.py`).
+- **Buscar un ejercicio por su nombre (V1.0.32)**: `exByName` (`library/model`) tiene la biblioteca en un índice por nombre,
+  que no cambia después de arrancar; los propios, que se renombran en su sitio, se buscan en su lista, que es corta. Da lo mismo
+  que recorrer las dos listas (`tests/training.py`).
+- **El buscador de la Librería (V1.0.32)**: el texto en el que busca cada ejercicio de la biblioteca (nombre, material, músculos
+  y otros nombres, también sin tildes) se calcula una vez; el de los propios, cada vez.
 - **Guardar solo lo que cambia (I-10)**: antes, cada guardado pasaba a texto todo el estado para saber qué había cambiado; ahora la
   acción dice qué partes tocó y solo esas se pasan a texto (las demás, en un repaso 2 s después, con la app parada).
 - **IndexedDB (I-04)**: escribir las partes ya no frena la pantalla (va en segundo plano y en orden). Leerlas al arrancar es asíncrono:

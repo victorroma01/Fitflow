@@ -8,7 +8,7 @@ import { C } from '../core/registry.js';
 import { groupOf } from '../data/library.js';
 import { S, saveState, W } from '../core/state.js';
 import { R } from '../core/render.js';
-import { exAll } from '../library/model.js';
+import { exByName } from '../library/model.js';
 import { inSuperset } from './day.js';
 import { blockEnd, COMPOUND_RE, restAt } from './rest.js';
 import { warmupHtml } from './warmup.js';
@@ -110,7 +110,7 @@ const weeklySets = pl => {
   pl.forEach(d => d.ex.forEach(e => {
     if (unitOf(e))
       return;
-    const x = exAll().find(y => y.n == e.n);
+    const x = exByName(e.n);
     const g = x ? groupOf(x) : 'Otros';
     o[g] = (o[g] || 0) + e.s;
   }));

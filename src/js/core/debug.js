@@ -12,7 +12,7 @@ import { partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
 import { mealsPart } from './parts.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
-import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
+import { EXERCISES, groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_ALIASES } from '../data/aliases.js';
 import { FIG_POSES } from '../data/figposes.js';
 import { figPose } from '../extras/moves.js';
@@ -21,7 +21,7 @@ import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, overv
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
-import { exAll, exSearchText } from '../library/model.js';
+import { exAll, exByName, exSearchText } from '../library/model.js';
 import { libBody, libState } from '../library/browse.js';
 import { clone, progDraft } from '../programs/create.js';
 import { levelPlan } from '../programs/levels.js';
@@ -75,6 +75,8 @@ const DEBUG_NAMES = {
   errorLog: [() => errorLog],
   EX_ALIASES: [() => EX_ALIASES],
   exAll: [() => exAll],
+  exByName: [() => exByName],
+  EXERCISES: [() => EXERCISES],
   exPicture: [() => exPicture],
   exSearchText: [() => exSearchText],
   FFDEP: [() => FFDEP],

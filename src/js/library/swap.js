@@ -8,7 +8,7 @@ import { groupOf } from '../data/library.js';
 import { S, saveState, W } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { exAll, exCellHtml, exOrder, exSearchText, overlapCount } from './model.js';
+import { exAll, exByName, exCellHtml, exOrder, exSearchText, overlapCount } from './model.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
 import { fixUnits } from '../workout/targets.js';
 import { prefillSets } from '../workout/progression.js';
@@ -106,7 +106,7 @@ const swapTiers = (c, l) => {
 };
 export const swapBody = () => {
   const cur = S.plan[S.selectedDay].ex[swapState.i];
-  const c = exAll().find(x => x.n == cur.n) || { n: cur.n, p: [], s: [] };
+  const c = exByName(cur.n) || { n: cur.n, p: [], s: [] };
   const cand = swapCandidates(c);
   const eqs = equipIn(cand);
   const l = cand.filter(e => equipMatch(swapState.eq, e));

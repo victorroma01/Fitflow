@@ -295,6 +295,10 @@ def main(path):
         sync(p2)
         check('el móvil 2 recibe lo del móvil 1', sorted(p2.evaluate('S.logs.map(l=>l.n)')) == ['Espalda', 'Pecho', 'Pierna'] and p2.evaluate("S.meals['%s'][0].length" % today) == 2)
         check('sin nada pendiente en ninguno', p1.evaluate('pendingDocs()') == 0 and p2.evaluate('pendingDocs()') == 0)
+        # cloud/sync recuerda la huella de cada elemento con su texto: un cambio hecho en su sitio (sin cambiar el objeto) se
+        # nota igual, y deshacerlo deja otra vez nada pendiente
+        changed = p1.evaluate("(()=>{const l=S.logs[0];l.v+=1;const a=pendingDocs();l.v-=1;return [a,pendingDocs()]})()")
+        check('un entreno cambiado en su sitio cuenta como pendiente, y al dejarlo como estaba, ya no', changed == [1, 0], str(changed))
 
         # ── preferencias: van en el perfil y pasan al otro móvil al abrir la app ──
         p2.evaluate("S.theme='light';S.accent=-1;S.accentColor='#ff2d55';S.reduceMotion=1;saveState()")

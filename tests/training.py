@@ -406,6 +406,19 @@ def main(path):
         check('con un entreno en curso no se toca un ejercicio', 'Termina o descarta antes el entreno en curso' in text('#tt') and idx('Mi ejercicio') >= 0 and ev("!document.querySelector('#dg').firstChild"))
         ev("A.discardWorkout()")
         run()
+        # library/model: exByName es lo mismo que buscar en exAll(), con la biblioteca por delante, también con un propio
+        # renombrado en su sitio y con uno que se llama como uno de la biblioteca
+        same = ev("""(() => { const all = exAll(), names = all.map(e => e.n).concat(['No existe', '']);
+          const ok = () => names.every(n => exByName(n) === all.find(x => x.n == n));
+          const before = ok(); const c = S.customExercises[0]; const was = c && c.n;
+          if (c) { c.n = 'Renombrado en su sitio'; names.push(c.n, was); }
+          const after = names.every(n => exByName(n) === exAll().find(x => x.n == n));
+          if (c) c.n = was;
+          S.customExercises.push({ n: 'Press banca', c: 'Propio', g: 'Propio' });
+          const dup = exByName('Press banca') === EXERCISES.find(x => x.n == 'Press banca');
+          S.customExercises.pop();
+          return [before, after, dup, !!c]; })()""")
+        check('buscar un ejercicio por su nombre da lo mismo que recorrer la lista (también un propio renombrado y uno repetido)', same == [True, True, True, True], str(same))
 
         print('Workouts propios y días')
         n_routines = ev("S.routines.length")

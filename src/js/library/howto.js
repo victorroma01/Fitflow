@@ -16,7 +16,7 @@ import { loadExInfo } from '../core/lazy.js';
 import { groupOf } from '../data/library.js';
 import { sheet, sheetToTop } from '../core/ui.js';
 import { S } from '../core/state.js';
-import { exAll, exMuscles } from './model.js';
+import { exAll, exByName, exMuscles } from './model.js';
 import { exAnatomy, exMotion, exMusclesSmall } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 /* consejo de los ejercicios propios (no están en el catálogo), según su grupo */
@@ -46,7 +46,7 @@ export const exTip = n => {
   const x = info.get(n);
   if (x)
     return x.t;
-  const e = exAll().find(y => y.n == n);
+  const e = exByName(n);
   return GROUP_TIPS[e ? groupOf(e) : 'Propio'] || GROUP_TIPS.Propio;
 };
 const exHow = n => (info && info.get(n) || {}).h || '';
@@ -54,7 +54,7 @@ const exHow = n => (info && info.get(n) || {}).h || '';
 const stillFigures = () => !!S.reduceMotion || typeof matchMedia == 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* bajo la imagen grande: a la izquierda, los músculos en pequeño (de frente y de espaldas); a su lado, el nombre y cuáles son */
 const howHead = n => {
-  const e = exAll().find(x => x.n == n);
+  const e = exByName(n);
   const small = exMusclesSmall(n);
   const line = (k, label, cls) => e && exMuscles(e, k).length ? html`<p class="hwl"><i class="${cls}"></i><b>${label}</b> ${exMuscles(e, k).join(', ')}</p>` : '';
   return small ? html`<div class="hwm">${small}<div class="fx-1 minw-0"><h3 class="hwt">${n}</h3>${line('p', 'Principal', 'bg-grad-red')}${line('s', 'Secundario', 'bg-grad-amber')}</div></div>` : html`<h3 class="hwt">${n}</h3>`;

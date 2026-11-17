@@ -105,8 +105,11 @@ def main(path):
         use(ev, 5, 'F')
         fb = week(ev)
         firsts = ev("[0,1,2,3,4,5,6].map(w => { S.selectedWeekday = w; syncSel(); const d = S.plan[S.selectedDay]; return d && d.ex.length ? d.ex[0].n : ''; })")
-        check('Full Body: cada día, la de su primer ejercicio (antes no llevaban ninguna)',
-              all(k for k, f in zip(fb, firsts) if f) and fb[0] == 'piernas', str(list(zip(firsts, fb))))
+        trained = {f: k for k, f in zip(fb, firsts) if f}
+        check('Full Body: cada día, una distinta: la de su primer ejercicio o, si ya la lleva otro (A y C empiezan por pierna), la del siguiente',
+              len(trained) == 3 and len(set(trained.values())) == 3 and trained.get('Sentadilla') == 'piernas' and trained.get('Sentadilla búlgara') == 'pecho', str(list(zip(firsts, fb))))
+        use(ev, 5, 'M')
+        check('con el de hombre, las mismas portadas', week(ev) == fb, str(week(ev)))
         # lo que se ve: la tarjeta del día lleva la foto de la modelo
         use(ev, 1, 'F')
         ev("S.selectedWeekday=3;syncSel();R()")

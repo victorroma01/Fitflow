@@ -1,11 +1,11 @@
 /* ═══ workout/images ═══
    Portadas de los días y su selector. Un día lleva la portada de su nombre (data/photos: DAY_PHOTO_RULES) o, si el nombre no
-   dice nada (un Full Body, un día propio), la de su primer ejercicio: la de su grupo o, en CrossFit, Hyrox, funcional y cardio,
-   la del ejercicio si tiene una suya (EXERCISE_PHOTO_RULES). Un workout personalizado, la que se elija o, si no, la de sus
-   ejercicios (la que más se repite). Los
+   dice nada (un Full Body, un día propio), la de su primer ejercicio (la de su grupo o, en CrossFit, Hyrox, funcional y
+   cardio, la del ejercicio si tiene una suya: EXERCISE_PHOTO_RULES) sin repetir la de otro día así de la semana. Un workout
+   personalizado, la que se elija o, si no, la de sus ejercicios (la que más se repite). Los
    descansos de una semana con CrossFit, Hyrox o funcional llevan la suya (descanso2). Con el perfil de mujer, todas son las de
    la modelo (DAY_PHOTOS_F; mientras falte alguna, la que la sustituye: PHOTO_ALIAS_F).
-   Define: GROUP_IMAGE, REST_IMAGES, CONDITIONING, photoUrl, exerciseImage, imageOfExercises, baseImage, dayImage, coverStyle, routineImage, IMAGE_LABELS, IMAGE_LABELS_F, imagePicker  · acciones/registros: 1
+   Define: GROUP_IMAGE, REST_IMAGES, CONDITIONING, photoUrl, exerciseImage, imageOfExercises, nameImage, unnamedImage, baseImage, dayImage, coverStyle, routineImage, IMAGE_LABELS, IMAGE_LABELS_F, imagePicker  · acciones/registros: 1
 */
 import { A } from '../core/registry.js';
 import { DAY_PHOTO_RULES, DAY_PHOTOS, DAY_PHOTOS_F, EXERCISE_PHOTO_RULES, PHOTO_ALIAS_F } from '../data/photos.js';
@@ -42,9 +42,31 @@ const imageOfExercises = names => {
   });
   return best;
 };
-/* la portada de un día sin decidir aún qué descanso: la elegida (personalizado), la de su nombre o, si no dice nada (un Full
-   Body, un día propio), la de su primer ejercicio, que suele ser el principal */
-const baseImage = (n, d) => d && d.cu && DAY_PHOTOS[d.img] ? d.img : (DAY_PHOTO_RULES.find(r => r[0].test(n || '')) || [])[1] || (d && d.ex && d.ex.length ? exerciseImage(d.ex[0].n) : '');
+/* la portada que da el nombre de un día ('' si no encaja con ninguna regla) */
+const nameImage = n => (DAY_PHOTO_RULES.find(r => r[0].test(n || '')) || [])[1] || '';
+/* la de un día cuyo nombre no dice nada (un Full Body, un día propio): la de su primer ejercicio, que suele ser el principal,
+   salvo que ya la lleve otro día así de la semana; entonces, la del siguiente que no se repita (A y C del Full Body empiezan
+   los dos por pierna). Los días se reparten por orden alfabético: cada uno lleva siempre la misma, empiece la semana por
+   donde empiece el ciclo */
+const unnamedImage = d => {
+  const days = new Map([[d.n, d]]);
+  (S.plan || []).forEach(x => {
+    if (x && !days.has(x.n) && !x.cu && x.ex && x.ex.length && !nameImage(x.n))
+      days.set(x.n, x);
+  });
+  const taken = new Set();
+  let mine = '';
+  [...days.keys()].sort((a, b) => String(a).localeCompare(String(b), 'es')).forEach(n => {
+    const own = days.get(n).ex.map(e => exerciseImage(e.n));
+    const k = own.find(x => !taken.has(x)) || own[0];
+    taken.add(k);
+    if (n == d.n)
+      mine = k;
+  });
+  return mine;
+};
+/* la portada de un día sin decidir aún qué descanso: la elegida (personalizado), la de su nombre o la de sus ejercicios */
+const baseImage = (n, d) => d && d.cu && DAY_PHOTOS[d.img] ? d.img : nameImage(n) || (d && d.ex && d.ex.length ? unnamedImage(d) : '');
 /** La portada de un día (`n`, su nombre; `d`, el día con sus ejercicios). Un descanso, en una semana con CrossFit, Hyrox o
     funcional, lleva la suya. */
 export const dayImage = (n, d) => {

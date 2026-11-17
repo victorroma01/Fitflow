@@ -14,7 +14,7 @@
    Lo de cada documento en la última sincronización se recuerda por huellas (clave `sync` de Store), no por copias: así se sabe
    qué cambió en cada lado sin duplicar los datos en el móvil. Lo que se vació al arrancar porque estaba dañado (core/persist)
    no cuenta como borrado: esas huellas se olvidan y se vuelve a bajar de la nube (forgetDamaged).
-   Define: newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, unsynced, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   Define: newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
@@ -31,7 +31,7 @@ import { account, acctSave, isAdmin } from './session.js';
 import { netError } from './net.js';
 import { idToken } from './auth.js';
 import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.js';
-import { hashMap, hashOf, KINDS, merge3, sameHashes } from './merge.js';
+import { hashMap, hashOf, hashText, KINDS, merge3, sameHashes } from './merge.js';
 import { afterSync } from './hooks.js';
 import { applyDoc, applyPrefs, docPath, indexPath, localDocs, okType, PREF_KEYS, prefsLocal, profilePath } from './docs.js';
 const newMeta = fresh => ({ dev: newId(), base: {}, lt: {}, pt: 0, fresh: fresh ? 1 : 0, last: 0 });
@@ -247,20 +247,35 @@ const pruneIndex = async (idx, missing) => {
       logError('sincronizar: limpiar el índice', e);
   }
 };
+/* el texto y la huella de cada elemento la última vez que se miró (documento + clave → { s, h }): si el texto es el mismo, la
+   huella también, y no hace falta recorrerlo otra vez (hashText). Con años de datos era casi la mitad de lo que tarda
+   unsynced, que se hace en cada sincronización. Solo guarda lo que había la última vez */
+let lastHashes = new Map();
 /* los documentos con cambios del móvil aún sin subir: [{ id, m: su contenido de ahora por elementos (cloud/merge), h: sus
    huellas }]. Lo son los que no coinciden con lo de la última sincronización y los nuevos que tienen algo */
 const unsynced = local => {
   const out = [];
+  const seen = new Map();
   for (const id of new Set([...Object.keys(local), ...Object.keys(meta.base).filter(k => k != 'profile')])) {
     const kind = KINDS[id.split(':')[0]];
     if (!kind)
       continue;
     const m = kind.split(local[id]);
-    const h = hashMap(m);
+    /* lo mismo que hashMap(m) */
+    const h = {};
+    for (const [k, v] of m) {
+      const s = JSON.stringify(v);
+      const key = id + '\n' + k;
+      const was = lastHashes.get(key);
+      const x = was && was.s === s ? was : { s, h: hashText(s) };
+      seen.set(key, x);
+      h[k] = x.h;
+    }
     const b = meta.base[id];
     if (b ? !sameHashes(h, b.h) : m.size)
       out.push({ id, m, h });
   }
+  lastHashes = seen;
   return out;
 };
 /* paso 3: subir lo cambiado en el móvil, con el índice, todo o nada. false si el índice cambió entretanto */

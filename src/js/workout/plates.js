@@ -6,7 +6,7 @@ import { $ } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { W } from '../core/state.js';
 import { sheet } from '../core/ui.js';
-import { exAll } from '../library/model.js';
+import { exByName } from '../library/model.js';
 import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
 let plateTotal = 60;
@@ -20,7 +20,7 @@ export const setPlateBar = v => {
   plateBar = v;
 };
 export const usesBarbell = n => {
-  const e = exAll().find(x => x.n == n);
+  const e = exByName(n);
   return e && e.q ? ['Barra', 'Barra Z'].includes(e.q) && !/Plancha|Giro|Hiperext|Superman|Encog/.test(n) : /barra|banca|sentadilla|peso muerto/i.test(n);
 };
 const plateSizes = () => usesLb() ? [45, 35, 25, 10, 5, 2.5] : [25, 20, 15, 10, 5, 2.5, 1.25];

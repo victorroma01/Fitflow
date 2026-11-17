@@ -28,7 +28,8 @@
   la de su ejercicio principal (SkiErg y remo, trineo, wall balls, arrancada, thrusters, box jumps y burpees, carga de granjero),
   y la simulación de Hyrox, la de una competición. Los días de descanso de esos programas (Hyrox / CrossFit, Híbrido) llevan una
   foto propia, sentado en un cajón del gimnasio. Un día cuyo nombre no dice nada (los de Full Body) lleva la de su primer
-  ejercicio, que suele ser el principal. Las de carrera llevan un dibujo, igual para todos.
+  ejercicio, que suele ser el principal, sin repetir la de otro día así de la semana. Las de carrera llevan un dibujo, igual
+  para todos.
   - Con el perfil de **mujer** (Perfil → Datos biométricos → Sexo), todas son de una modelo, con los mismos ejercicios. La de
     la competición, mientras no haya una suya, es la del trineo.
 - **Al completar un día** (guardando su entreno, o con **Completar descanso** en un día de descanso), queda elegido el siguiente

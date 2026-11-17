@@ -7,7 +7,7 @@
    Define: hashText, hashOf, hashMap, sameHashes, entryKey, unionList, unionDay, newest, mapOf, KINDS, merge3
 */
 /** Huella de un texto (cyrb53, 53 bits, en base 36): para saber si un elemento cambió, sin guardar una copia de él. */
-const hashText = s => {
+export const hashText = s => {
   let h1 = 0xdeadbeef;
   let h2 = 0x41c6ce57;
   for (let i = 0; i < s.length; i++) {
