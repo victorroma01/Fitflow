@@ -19,7 +19,7 @@ import { pathToFileURL } from 'node:url';
 // ocupa la figura), que la app no necesita fuera del módulo.
 const dir = mkdtempSync(join(tmpdir(), 'sf-rig-'));
 writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
-for (const f of ['data/figure.js', 'data/figposes.js', 'data/aliases.js', 'extras/rig.js', 'extras/gear.js', 'extras/moves.js']) {
+for (const f of ['data/figure.js', 'data/figposes.js', 'data/aliases.js', 'extras/rig.js', 'extras/gear.js', 'extras/moves.js', 'extras/athlete.js']) {
   mkdirSync(join(dir, f.split('/')[0]), { recursive: true });
   writeFileSync(join(dir, f), readFileSync(new URL('../src/js/' + f, import.meta.url), 'utf8'));
 }
@@ -29,6 +29,7 @@ const { FIG_POSES } = await import(pathToFileURL(join(dir, 'data/figposes.js')))
 const { EX_ALIASES } = await import(pathToFileURL(join(dir, 'data/aliases.js')));
 const R = await import(pathToFileURL(join(dir, 'extras/rig.js')));
 const { figPose } = await import(pathToFileURL(join(dir, 'extras/moves.js')));
+const { athleteFrame } = await import(pathToFileURL(join(dir, 'extras/athlete.js')));
 const { EXERCISES } = await import('../src/js/data/library.js');
 
 const NAMES = EXERCISES.map(e => e.n);
@@ -900,4 +901,45 @@ test('los músculos de cada pieza del modelo de perfil', () => {
   const drawn = new Set(Object.values(FG_P).flatMap(p => Object.keys(p[2])));
   const codes = ['ps', 'pi', 'pe', 'dA', 'dL', 'dP', 'tr', 'bi', 'br', 'bq', 'an', 'da', 'rm', 'ro', 'ts', 'tm', 'er', 'cu', 'is', 'gl', 'gm', 'ge', 'so', 'ta', 'ab', 'ob', 'tv', 'co', 'fc', 'sa', 'ag'];
   fails(R.sideRegions(codes).filter(k => !drawn.has(k)), 'regiones sin dibujo');
+});
+
+test('el atleta (piloto): solo lo lleva la figura del curl con barra Z, y de perfil', () => {
+  assert.deepEqual(NAMES.filter(n => figPose(n) && figPose(n).athlete), ['Curl con barra Z']);
+  assert.equal(figPose('Curl con barra Z').v, 'S');
+  // el resto de su familia (el curl con barra recta) sigue con el maniquí
+  assert.equal(FIG_POSES['Curl bíceps barra'], FIG_POSES['Curl con barra Z']);
+  assert.ok(!figPose('Curl bíceps barra').athlete);
+});
+
+test('el atleta: el brazo se rehace en todo el gesto, el antebrazo llega a la mano y, arriba, el codo hace punta', () => {
+  const def = figPose('Curl con barra Z');
+  /* los vértices de una silueta (M y el final de cada C) */
+  const verts = d => {
+    const n = d.match(/-?[\d.]+/g).map(Number);
+    const out = [[n[0], n[1]]];
+    for (let i = 2; i + 5 < n.length; i += 6)
+      out.push([n[i + 4], n[i + 5]]);
+    return out;
+  };
+  const bad = [];
+  for (const t of STEPS) {
+    const at = Object.fromEntries(athleteFrame(def, t).map(([k, attr, v]) => [k + ' ' + attr, v]));
+    for (const [k, v] of Object.entries(at))
+      if (!/^[MCZ\d. -]+$|^translate\(/.test(v) || /NaN|Infinity/.test(v))
+        bad.push(t + ' ' + k + ': ' + v.slice(0, 40));
+    // la muñeca del antebrazo es la de la mano: sus dos bordes, a un lado y a otro de donde gira la mano
+    const L = layersAt(def, t);
+    for (const [x, hand] of [['', 'HA'], ['x', 'xHA']]) {
+      const [wx, wy] = placed(L[hand]);
+      const ends = verts(at[x + 'f d']).map(p => [Math.hypot(p[0] - wx, p[1] - wy), p]).sort((a, b) => a[0] - b[0]).slice(0, 2);
+      const mid = [(ends[0][1][0] + ends[1][1][0]) / 2, (ends[0][1][1] + ends[1][1][1]) / 2];
+      if (ends[1][0] > 7 || Math.hypot(mid[0] - wx, mid[1] - wy) > 1.5)
+        bad.push(t + ' ' + (x ? 'atrás' : 'delante') + ': la muñeca no está en la mano');
+    }
+  }
+  fails(bad, 'brazos del atleta');
+  // arriba, el brazo y el antebrazo juntos: el codo baja por fuera de la articulación (la punta del olécranon)
+  const [, ey] = placed(layersAt(def, 1).FA);
+  const low = Math.max(...verts(Object.fromEntries(athleteFrame(def, 1).map(([k, , v]) => [k, v])).u).map(p => p[1]));
+  assert.ok(low - ey >= 9, 'el codo, arriba, baja ' + (low - ey).toFixed(1) + ' bajo la articulación');
 });

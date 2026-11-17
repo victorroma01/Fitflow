@@ -58,7 +58,7 @@
                         girar con el cuerpo: el asiento de un remo, que va con la cadera. Con vueltas, gira sobre ese
                         punto a velocidad constante, tantas vueltas por gesto y empezando en desde grados: la comba
      bar radio · db modo · kb modo · ball radio · bag · disc   lo que se lleva en las manos
-   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, turned, held, propLayers, SIDE_BODY, FRONT_BODY, SIDE_KEYS, otherSide, rigPose, solve, rigLayers, rigFrame, pathPoints, framePoints, rigMoments, rigBox, poseSpot, SIDE_REGIONS, sideRegions
+   Define: RAD, rot, place, norm, angle, limb, mix, ease, sub, J, FAR_SHIFT, MIN_FORESHORTEN, ELBOW_MIN, FLOOR, f1, move, sidePose, FRONT, frontPose, spot, at, turned, held, propLayers, SIDE_BODY, FRONT_BODY, SIDE_KEYS, otherSide, rigPose, solve, rigLayers, rigFrame, rigSolve, rigPlace, rigMove, pathPoints, framePoints, rigMoments, rigBox, poseSpot, SIDE_REGIONS, sideRegions
 */
 import { FG_J, FG_P } from '../data/figure.js';
 /** Un grado, en radianes. */
@@ -389,6 +389,13 @@ export const rigLayers = (def, t) => {
 };
 /** Solo las transformaciones, en el mismo orden que rigLayers (para mover una figura ya pintada). */
 export const rigFrame = (def, t) => rigLayers(def, t).map(l => l.t);
+/** La postura en el momento t, con cada pieza en su sitio ({ r, w, a, k, ax }) y los puños (g, G): la usa el atleta
+    (extras/athlete), que dibuja el brazo de una pieza. */
+export const rigSolve = (def, t) => solve(def, t);
+/** Dónde queda en la imagen el punto p (en reposo) de una pieza colocada t. */
+export const rigPlace = (t, p) => place(t, p);
+/** La transformación SVG que coloca una pieza t (la misma que llevan sus capas). */
+export const rigMove = t => move(t);
 /* los puntos por los que pasa un trazo de SVG (M L H V Q T C S, en absoluto o en relativo; de las curvas, también los de
    control): lo que ocupa una pieza del material */
 const pathPoints = d => {

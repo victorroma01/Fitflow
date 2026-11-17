@@ -4,7 +4,7 @@
    a: postura de inicio, b: lo que cambia en la del final, props: material, up: qué extremo es el final del esfuerzo,
    at: momento del gesto que se pinta en la miniatura, hold: si es una postura que se mantiene }. La tabla de qué familia
    y qué variantes lleva cada ejercicio está en data/figposes; cómo se escribe una postura, en extras/rig.
-   Define: has, REST, ANGLES, complete, figure, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, railGrips, railBody, leverFrom, leverGrips, pivotAt, bentOver, SUPINE, LIFT, gait, treadmill, sledAt, HANG_POST, STRIDE, MOVES, made, figPose
+   Define: has, REST, ANGLES, complete, figure, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, railGrips, railBody, leverFrom, leverGrips, pivotAt, bentOver, SUPINE, LIFT, gait, treadmill, sledAt, HANG_POST, STRIDE, MOVES, made, ATHLETE, figPose
 */
 import { FIG_POSES } from '../data/figposes.js';
 import { RAD, poseSpot } from './rig.js';
@@ -1604,11 +1604,16 @@ const MOVES = {
 };
 /* las figuras ya calculadas */
 const made = {};
+/* los ejercicios que ya llevan el atleta (extras/athlete) en vez del maniquí: el piloto, hasta que el propietario lo revise
+   y se lleve al resto */
+const ATHLETE = ['Curl con barra Z'];
 /** La figura de un ejercicio de la librería (data/figposes dice su familia y sus variantes), o null si no tiene. */
 export const figPose = n => {
   if (!(n in made)) {
     const words = (FIG_POSES[n] || '').split(' ');
     made[n] = MOVES[words[0]] ? MOVES[words[0]](words.slice(1)) : null;
+    if (made[n] && made[n].v == 'S' && ATHLETE.includes(n))
+      made[n] = Object.assign({}, made[n], { athlete: 1 });
   }
   return made[n];
 };

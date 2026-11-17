@@ -101,6 +101,14 @@ línea.
   manos, cara y orejas), `tests/figures.py` (el maniquí, el cuerpo completo, la luz de frente, el suelo, las manos y la cara,
   y ningún trazo del material casi negro) y `tests/perf.py` (abrir «Cómo se hace» y las piezas de la figura)
   ([figuras](docs/tecnica/figuras.md#el-aspecto)).
+- Figuras de ejercicio, piloto del atleta (a petición del propietario, en la rama `piloto-atleta`, pendiente de su revisión):
+  la figura grande del curl con barra Z es una persona (piel, pantalón corto, pelo y cara) sobre el mismo esqueleto, así que
+  conserva el ritmo, el recorrido, los colores de los músculos y el agarre de la barra con las dos manos. El brazo es una sola
+  silueta que se rehace en cada fotograma: sale del hombro sin junta y el codo hace su pliegue por dentro y su punta por fuera
+  (`extras/athlete`). Las miniaturas y el resto de ejercicios siguen con el maniquí. Pruebas: `tests/rig.test.mjs` (solo el
+  curl con barra Z lo lleva; en todo el gesto, trazados válidos y la muñeca en la mano; arriba, la punta del codo) y
+  `tests/figures.py` (el atleta en la hoja, su brazo al moverse, sus recortes y lo pintado, en cada motor)
+  ([figuras](docs/tecnica/figuras.md#el-atleta-piloto)).
 
 ## [1.0.31] — 2026-11-16
 

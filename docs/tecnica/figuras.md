@@ -116,6 +116,32 @@ Lo pinta `extras/figure.js`; lo que sigue es por qué es así.
   poco de luz (`floorOf`). Alrededor de lo que ocupa la figura en todo el gesto queda aire (`STAGE_AIR`: 14 unidades a los
   lados y arriba, 10 bajo el suelo), y la miniatura lleva un 6 % (`THUMB_AIR`).
 
+### El atleta (piloto)
+
+A petición del propietario, en la rama `piloto-atleta` y pendiente de su revisión: la figura grande del curl con barra Z es
+una persona (piel morena, pantalón corto oscuro, pelo corto y cara) sobre el mismo esqueleto que el maniquí. Se mueve igual
+que él (mismo ritmo, mismo recorrido y la misma barra en las mismas manos), porque es `extras/rig` quien coloca todo; lo
+pinta `extras/athlete.js`. La figura lo pide con `athlete` (`extras/moves`, solo de perfil); las miniaturas y el resto de
+ejercicios siguen con el maniquí.
+
+- **El brazo, de una pieza.** El maniquí pinta el brazo y el antebrazo como dos piezas rígidas que giran en el codo, y al
+  doblarlo se ve la junta. El atleta rehace en cada fotograma (`athleteFrame`) la silueta del brazo entero con la postura: el
+  borde de delante (deltoides y bíceps, que se hincha al subir) y el de atrás (tríceps), cosidos al antebrazo en el codo. Por
+  dentro, el pliegue, donde el borde del bíceps se cruza con el del antebrazo; por fuera, la punta del codo (el olécranon),
+  que va con el antebrazo: arriba, el codo baja unas 12 unidades bajo la articulación.
+- **El hombro, sin junta.** La cumbre del brazo no lleva contorno, y el contorno y la sombra de sus bordes se desvanecen al
+  llegar al hombro (un degradado que va con el brazo). La sombra de los bordes cae también sobre el tronco, que es lo que
+  separa el brazo de él; sobre el fondo, no.
+- **Los músculos, recortados.** Los del brazo y los del antebrazo van con su hueso y recortados a su silueta: arriba, el
+  antebrazo no se sale por encima del bíceps. Lo que trabaja va en el mismo rojo y naranja, y en las mismas regiones, que en
+  el maniquí.
+- **El resto, con piel.** Las demás piezas son las del maniquí (`data/figure`) con un tono de piel, la sombra de los bordes
+  por dentro y el relieve de los músculos en reposo (una luz, sin rayado). El pantalón tapa la pelvis, la cadera y el
+  principio del muslo con un solo degradado, para que sus piezas no dejen junta.
+- **Lo que pesa.** Unos 11 KB más de piezas en `<defs>` y 9 KB más en el archivo único. En cada fotograma, rehacer los dos
+  brazos cuesta en el equipo de pruebas unas 12 centésimas de milisegundo (23 cambios en la página), además de las 15
+  milésimas de colocar las capas; las dos figuras de la comparación se mueven a 60 cuadros por segundo.
+
 ### Escribir una postura
 
 Con ángulos en grados, como los diría un entrenador (0 = de pie y recto). De perfil:
@@ -230,7 +256,7 @@ hace» pasó de 5,1 a 3,7 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-d
 
 ## Pruebas
 
-- `tests/rig.test.mjs` (42 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
+- `tests/rig.test.mjs` (44 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
   gesto: cada uno tiene figura; las figuras están bien escritas; ninguna pieza sale sin sitio; los codos y las rodillas doblan
   hacia donde doblan; **ninguna articulación pasa de lo que un cuerpo puede hacer** (cintura, cuello, hombro, codo, muñeca,
   cadera, rodilla y tobillo; de frente, brazos y piernas); **las manos y los pies llegan a donde se les pide** (el agarre, el
@@ -253,8 +279,11 @@ hace» pasó de 5,1 a 3,7 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-d
   kipping); **al correr**, el pie que apoya pisa el suelo a media zancada, la cadera no baja como en una zancada y esa rodilla
   no se dobla de más; **la cuerda de la comba lleva sus dos cabos**; y **la figura es más humana**: la mano abierta, el puño y
   la cabeza llevan sus detalles (los dedos y el pulgar, la oreja), la mano abierta llega hasta donde el encuadre la espera, y
-  de frente la mano y la oreja de un lado son el reflejo exacto de las del otro.
-- `tests/figures.py` (195 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
+  de frente la mano y la oreja de un lado son el reflejo exacto de las del otro. Y el piloto del atleta: **solo el curl con
+  barra Z lo lleva** (el curl con barra recta, de la misma familia, no) y, en todo el gesto, sus trazados son válidos, **el
+  antebrazo llega a la mano** (los dos bordes de la muñeca, a un lado y a otro de donde gira la mano, también la de atrás) y,
+  arriba, **el codo hace punta** (baja al menos 9 unidades bajo la articulación).
+- `tests/figures.py` (200 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
   piezas, el nombre y el texto, sin fotos, y ningún trazo del material casi negro); que las piezas están una sola vez y ya no
   las de antes (la pieza grande con los músculos en reposo); que el maniquí tiene manos, cara y orejas; el maniquí (la silueta clara, también la cabeza, y el brazo y la pierna de atrás en su tono más
   oscuro; de frente, una sola luz para todo el cuerpo; en un ejercicio de cuerpo completo, la silueta en rojo apagado, como
@@ -268,8 +297,10 @@ hace» pasó de 5,1 a 3,7 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-d
   Chromium; en Firefox y WebKit se anota: WebKit sin pantalla no pinta fotogramas a su ritmo y solo las pone si se le
   obliga a pintar uno con una captura, que es lo que se comprueba) y, en cualquier caso, por tandas; a 320 y a 768 px de ancho; «Reducir animaciones» con dos y con tres posturas, y con las dos de un salto; lo pintado de
   verdad (los músculos que trabajan en rojo y naranja, el resto del cuerpo, las mancuernas en los extremos con los brazos
-  abiertos, el deltoides posterior de espaldas), que es lo que comprueba el dibujo en Safari y Firefox; y que un ejercicio
-  propio sigue con sus músculos.
+  abiertos, el deltoides posterior de espaldas), que es lo que comprueba el dibujo en Safari y Firefox; el atleta del curl
+  con barra Z (su piel y su pelo, sin el brazo del maniquí; el brazo que se rehace al moverse; lo que trabaja en rojo y
+  naranja; los recortes de los brazos sin ids repetidos; pintado arriba, con su piel, el bíceps y el antebrazo y nada del gris
+  del maniquí) y el curl con barra recta, que sigue con el maniquí; y que un ejercicio propio sigue con sus músculos.
 - `node tools/figure.js --check`: `data/figure.js` está al día con los puntos del dibujo.
 
 La hoja «Cómo se hace» no está entre las 47 pantallas que recorren las pruebas de accesibilidad, tamaños y contraste: se

@@ -300,6 +300,19 @@ def main(path, shots=None):
         check('hoja de «Burpees»: y su mapa muscular, igual', ev("!!document.querySelector('#sh .hwf use[fill=\"url(#gWa)\"]') && !!document.querySelector('#sh .hwf use[fill=\"url(#gOr)\"]')"))
         how('Elevaciones laterales')
         check('hoja de «Elevaciones laterales»: de frente, la silueta con una sola luz para todo el cuerpo', ev("(s => [...s.querySelectorAll('use[href^=\"#fs\"]')].length == 9 && [...s.querySelectorAll('use[href^=\"#fs\"]')].every(u => u.getAttribute('fill') == 'url(#gSmF)'))(" + STAGE + ")"))
+        # el atleta (piloto): la figura grande del curl con barra Z es una persona sobre el mismo esqueleto; su brazo se rehace
+        # en cada fotograma (data-at), con sus recortes, uno por figura, y el curl con barra recta, de la misma familia, sigue
+        # con el maniquí
+        how('Curl con barra Z')
+        ARM = "[...document.querySelectorAll('#sh .fgs svg [data-at=\"u\"], #sh .fgs svg [data-at=\"f\"], #sh .fgs svg [data-at=\"mf\"]')].map(e => e.getAttribute('d') || e.getAttribute('transform')).join('|')"
+        a0 = ev(ARM)
+        pg.clock.run_for(600)
+        a1 = ev(ARM)
+        check('hoja de «Curl con barra Z»: el atleta (piel, pelo), sin el brazo del maniquí, y su brazo se rehace al moverse', ev("(s => !!s.querySelector('use[href=\"#atHr\"]') && !!s.querySelector('use[href=\"#atPTX\"]') && !s.querySelector('use[href=\"#fqUA\"], use[href=\"#fqFA\"]'))(" + STAGE + ")") and a0.count('|') == 2 and a0 != a1 and 'NaN' not in a1, a1[:120])
+        check('hoja de «Curl con barra Z»: lo que trabaja, en rojo y naranja, como en el maniquí', ev("(s => !!s.querySelector('[data-at=\"bi\"][fill=\"url(#gRd)\"]') && !!s.querySelector('use[href=\"#atMAN\"][fill=\"url(#gOr)\"]') && !!s.querySelector('use[href=\"#atMBR\"][fill=\"url(#gOr)\"]'))(" + STAGE + ")"))
+        check('hoja de «Curl con barra Z»: los recortes de los brazos no repiten id', ev("(ids => ids.length >= 6 && new Set(ids).size == ids.length)([...document.querySelectorAll('[id^=\"atK\"]')].map(e => e.id))"))
+        how('Curl bíceps barra')
+        check('hoja de «Curl bíceps barra»: sigue con el maniquí', ev("(s => !!s.querySelector('use[href=\"#fqUA\"]') && !s.querySelector('[data-at]'))(" + STAGE + ")"))
         # un ciclo (pedalear, subir peldaños, correr) no para ni vuelve atrás: en dos ciclos y medio no hay dos momentos
         # seguidos iguales, y a mitad de ciclo las piernas han cambiado los papeles
         for n, half in [('Bicicleta', 760), ('Escaladora', 1000), ('Carrera 1 km', 430), ('Assault bike calorías', 680), ('Comba', 460), ('Double unders', 640), ('Comba boxeo', 400)]:
@@ -405,6 +418,16 @@ def main(path, shots=None):
         red, orange, slate, _, _ = painted(capture(pg.locator('#sh .fgs figure').nth(1)))
         print('        pintado: press banca %.4f %.4f %.4f' % (red, orange, slate))
         check('press banca: se ven el pectoral, los secundarios y el cuerpo', red > .0008 and orange > .0008 and slate > .018, '%.4f %.4f %.4f' % (red, orange, slate))
+        # el atleta, arriba: su piel, el bíceps en rojo y el antebrazo en naranja (los recortes y los degradados del brazo se
+        # pintan en cada motor), y nada del gris azulado del maniquí
+        how('Curl con barra Z')
+        settled()
+        png = capture(pg.locator('#sh .fgs figure').nth(1))
+        red, orange, slate, _, _ = painted(png)
+        a = np.asarray(Image.open(io.BytesIO(png)).convert('RGB')).astype(int)
+        skin = ((a[..., 0] > 150) & (a[..., 0] < 240) & (a[..., 1] > 95) & (a[..., 1] < 190) & (a[..., 2] > 55) & (a[..., 2] < 175) & (a[..., 0] - a[..., 2] > 60)).sum() / a[..., 0].size
+        print('        pintado: curl con barra Z, el atleta arriba %.4f %.4f %.4f · piel %.4f' % (red, orange, slate, skin))
+        check('curl con barra Z: el atleta se pinta, con su piel, el bíceps y el antebrazo', red > .0012 and orange > .002 and skin > .04 and slate < .006, '%.4f %.4f %.4f %.4f' % (red, orange, slate, skin))
         # de espaldas: el deltoides posterior, que de frente no se ve
         how('Pájaros en máquina')
         settled()

@@ -12,7 +12,8 @@
 */
 import { AN_PA, AN_R } from '../data/anatomy.js';
 import { FG_F, FG_P, FG_PA } from '../data/figure.js';
-import { ease, FRONT, rigBox, rigFrame, rigLayers, rigMoments } from './rig.js';
+import { ease, FRONT, rigBox, rigFrame, rigLayers, rigMoments, rigSolve } from './rig.js';
+import { ATHLETE_STILL, athleteDefs, athleteFrame, athleteLayer } from './athlete.js';
 import { $ } from '../core/util.js';
 import { html, raw } from '../core/html.js';
 /* relleno y borde de los músculos que trabajan: principales y secundarios */
@@ -92,7 +93,7 @@ const needDefs = () => {
   if (defsReady)
     return;
   defsReady = 1;
-  document.body.insertAdjacentHTML('afterbegin', html`<svg width="0" height="0" class="pos-abs" aria-hidden="true" focusable="false"><defs>${figureDefs()}</defs></svg>`);
+  document.body.insertAdjacentHTML('afterbegin', html`<svg width="0" height="0" class="pos-abs" aria-hidden="true" focusable="false"><defs>${figureDefs()}${raw(athleteDefs())}</defs></svg>`);
 };
 /* tonos del material: [relleno o '', trazo], en grande y en pequeño. 0 armazón, 1 almohadilla, 2 acero, 3 cable, 4 goma
    elástica, 5 disco, 6 cajón y placas, 7 balón */
@@ -187,7 +188,16 @@ const layer = (def, k, work, big) => {
   const base = k == 'HA' ? hand : k;
   return html`<use href="#fq${base}" fill="${skin[0]}"/>${lit(Object.keys(FG_P[base][2]), c => own + c)}`;
 };
-const groups = (def, work, t, big) => rigLayers(def, t).map(l => html`<g${raw(l.t ? ' transform="' + l.t + '"' : '')}>${layer(def, l.k, work, big)}</g>`);
+/* las capas de la figura grande; con el atleta (piloto: def.athlete), las suyas, y el brazo y el antebrazo van en la imagen,
+   sin transformación: los dibuja enteros en cada fotograma */
+const groups = (def, work, t, big) => {
+  const o = def.athlete ? rigSolve(def, t) : null;
+  return rigLayers(def, t).map(l => {
+    const own = o ? athleteLayer(def, l.k, work, o) : null;
+    const t2 = own != null && ATHLETE_STILL.includes(l.k) ? '' : l.t;
+    return html`<g${raw(t2 ? ' transform="' + t2 + '"' : '')}>${own == null ? layer(def, l.k, work, big) : raw(own)}</g>`;
+  });
+};
 /* lo mismo, para una figura que no se va a mover, con lo justo: la capa que no pinta nada no sale y la que es una sola pieza
    lleva su sitio en la propia pieza, sin grupo. Una lista con sesenta miniaturas ocupa así un tercio menos */
 const ONE_USE = /^<use [^>]*\/>$/;
@@ -288,6 +298,9 @@ const playFigures = root => {
     playing.add(svg);
     const def = JSON.parse(svg.dataset.fig);
     const gs = [...svg.children].filter(g => g.tagName == 'g');
+    /* con el atleta: qué capas van en la imagen (sin transformación) y lo que se rehace en cada fotograma */
+    const still = def.athlete ? rigLayers(def, 0).map(l => ATHLETE_STILL.includes(l.k)) : [];
+    const parts = {};
     let t0 = 0;
     let last = -1;
     const step = now => {
@@ -302,9 +315,15 @@ const playFigures = root => {
       if (at !== last) {
         last = at;
         rigFrame(def, at).forEach((t, i) => {
-          if (t)
+          if (t && !still[i])
             gs[i].setAttribute('transform', t);
         });
+        if (def.athlete)
+          athleteFrame(def, at).forEach(([k, attr, value]) => {
+            const el = parts[k] || (parts[k] = svg.querySelector('[data-at="' + k + '"]'));
+            if (el)
+              el.setAttribute(attr, value);
+          });
       }
       requestAnimationFrame(step);
     };
