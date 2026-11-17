@@ -210,3 +210,14 @@ trae las fotos nuevas de los días y pasa las cuentas a su [dominio nuevo](backe
     Bro Split (el día de brazos, el tríceps en polea) y en los descansos (por la calle). Volver a Hombre deja las de antes.
 38. En un día de descanso, los nombres de la barra de pestañas (Nutrición, Dashboard, Perfil) se leen igual de bien que en un
     día de entreno. (En el Safari de las pruebas de GitHub se midieron más tenues ese día; en Chromium, no.)
+
+**Con el repaso de las figuras** (rama `desarrollo-animaciones`; se prueba con la versión en la que vaya)
+
+39. Tocar la imagen de la Sentadilla: la figura grande es un maniquí claro, sin rayas en el cuerpo; la cabeza se ve entera (no
+    es un hueco oscuro) y el brazo y la pierna de atrás son más oscuros pero macizos. Lo que trabaja, en rojo y naranja; debajo,
+    el suelo, una raya suave con un poco de luz. Nada toca los bordes ni las esquinas del recuadro.
+40. Burpees, Thruster y Remo 1000 m: el cuerpo entero en un rojo apagado y encima, más vivo, lo que más trabaja; los músculos
+    en pequeño de debajo, igual. Una sentadilla o un curl siguen en gris con sus músculos en color.
+41. Carrera continua y Trote en cinta: corre erguido y pisa el suelo (o la cinta) a media zancada, sin agacharse.
+42. Dominadas y Pull-ups kipping: la barra sale de un poste en la pared, lejos de la espalda y de las piernas.
+43. Double unders: la cuerda se ve como un lazo, no como una línea suelta. ¿Se entiende cada ejercicio de un vistazo?

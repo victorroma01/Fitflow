@@ -3,15 +3,22 @@
 El modelo anatómico haciendo cada uno de los 551 ejercicios de la librería. Sustituye a las fotos realistas, que ya no existen.
 Llegó con la V1.0.3. Su primera revisión, la V1.0.31, rehace cinco gestos tras probarla el propietario en su iPhone (el remo, el SkiErg, el saco de
 boxeo, la bici de aire y la comba) y añade al motor lo que les hacía falta: gestos seguidos, saltos y piezas que giran.
+Después, a petición del propietario, se repasó su aspecto para que se entienda de un vistazo ([El aspecto](#el-aspecto)): la
+figura grande es el mismo maniquí limpio que la miniatura, los ejercicios de cuerpo completo ya no salen enteros en rojo, y se
+arreglaron la carrera, la barra de dominadas y la cuerda de la comba.
 
 ## Qué se ve
 
+- **La figura es un maniquí**, igual en pequeño que en grande: la silueta, clara, sin los músculos en reposo, y encima, en
+  color, solo lo que trabaja: en rojo los músculos principales y en naranja los secundarios. Si el ejercicio trabaja el
+  **cuerpo entero** (un burpee, un thruster, el remo, el SkiErg: 68 de la librería), la silueta va en un rojo apagado y lo
+  que más trabaja, encima, en rojo y naranja; el mapa muscular de la hoja y de la ficha lo pinta igual.
 - **En pequeño** (el entreno, la ficha, las listas de la librería y de las rutinas): la figura haciendo el ejercicio, en el
-  momento del gesto que mejor lo identifica, con los músculos que trabajan en rojo (principales) y naranja (secundarios). A
-  ese tamaño es un pictograma: la silueta, sin los músculos en reposo, encuadrada en lo que se mueve (los brazos y la barra
-  en un curl; el cuerpo entero en una sentadilla).
+  momento del gesto que mejor lo identifica, encuadrada en lo que se mueve (los brazos y la barra en un curl; el cuerpo
+  entero en una sentadilla), con un poco de aire para que las esquinas redondeadas no corten la cabeza ni la barra.
 - **Al tocar la imagen**, la hoja «Cómo se hace»: arriba, la figura en grande, que se mueve del inicio al final y vuelve (la
-  parte del esfuerzo va más rápida que la otra); debajo, a la izquierda, los músculos en pequeño (de frente y de espaldas) y,
+  parte del esfuerzo va más rápida que la otra), sobre un fondo oscuro y liso, con el suelo (una raya que se desvanece hacia
+  los lados y un poco de luz) y aire alrededor; debajo, a la izquierda, los músculos en pequeño (de frente y de espaldas) y,
   a su lado, el nombre del ejercicio y los músculos con su nombre; y después, el texto.
 - Las **máquinas y las poleas** van dibujadas con lo que las hace reconocibles: el banco o el asiento, la torre, el cable con
   su agarre, las placas, las guías, la plataforma. El cable y la palanca siguen a la mano.
@@ -25,7 +32,10 @@ boxeo, la bici de aire y la comba) y añade al motor lo que les hacía falta: ge
   la vuelta es al revés; en el saco, de la guardia sale el directo y después el cruzado.
 - La **comba** es un salto tras otro: el cuerpo bota (sube frenando y baja acelerando) y la cuerda da la vuelta entera sobre
   las manos, por encima de la cabeza con los pies en el suelo y bajo ellos en lo más alto; en los double unders, dos vueltas
-  por salto, y en la comba de boxeo, un pie y después el otro.
+  por salto, y en la comba de boxeo, un pie y después el otro. La cuerda se ve como un lazo, con sus dos cabos.
+- Al **correr** el cuerpo va erguido y apoya el pie en el suelo, bajo la cadera, con la rodilla doblada lo justo; y **colgado
+  de la barra** (dominadas, toes to bar, muscle-up), la barra va anclada a la pared, con su poste lejos del cuerpo aunque
+  las piernas se balanceen hacia atrás.
 - Una **postura que se mantiene** (una plancha, el pino, colgarse de la barra) es una sola figura, quieta.
 - Con **«Reducir animaciones»** (Ajustes) o si el móvil pide menos movimiento, la figura no se mueve: salen las posturas del
   gesto una junto a otra, con su rótulo: «Inicio» y «Final» y, si el ejercicio tiene una fase intermedia, «Paso». Una
@@ -50,15 +60,43 @@ comparten figura.
 | `src/js/extras/anatomy.js` | `exPicture` (la imagen pequeña de un ejercicio, que se calcula una vez), `exPictureLater` (su hueco en una fila que aún no se ve), `exMotion` (la grande) y `exMusclesSmall` (los músculos en pequeño). |
 | `src/js/library/howto.js` | La hoja. |
 
-Hay **dos modelos**, con los mismos colores, degradados y rayado que el mapa muscular:
+Hay **dos modelos**, con los músculos en los mismos colores, degradados y rayado que el mapa muscular:
 
 - **De perfil** (`v: 'S'`), dibujado para esto, con las mismas alturas que la figura frontal (hombro, cadera, rodilla y
   tobillo). Las piezas giran sobre sus articulaciones y se pintan de atrás adelante; el brazo y la pierna del lado de atrás
-  van un poco desplazados y más oscuros, para dar fondo. Es la vista de casi todos los ejercicios.
+  van un poco desplazados y en un tono más oscuro, para dar fondo. Es la vista de casi todos los ejercicios.
 - **De frente** (`v: 'F'`) y **de espaldas** (`v: 'B'`): la figura del mapa muscular, recortada en cuerpo, brazos, antebrazos,
   muslos y piernas, que giran sobre sus articulaciones. Es para lo que solo se entiende así: elevaciones laterales, cruces de
   polea, abductores y aductores, saltos laterales; de espaldas, lo que trabaja por detrás (el deltoides posterior, el glúteo
   en la abducción).
+
+### El aspecto
+
+Lo pinta `extras/figure.js`; lo que sigue es por qué es así.
+
+- **Un maniquí, sin los músculos en reposo.** La figura grande llevaba antes cada músculo en reposo dibujado con su relleno
+  oscuro, su borde y su rayado: de lejos se leía como una armadura llena de rayas y lo que trabajaba no destacaba tanto. Ahora
+  la grande es como la miniatura, que ya era así: la silueta clara (`SKIN`, un degradado de gris azulado con la luz arriba a
+  la izquierda de cada pieza) y un borde oscuro en cada pieza (`EDGE_SIL`, en el propio trazado), que separa un brazo de lo
+  que tiene detrás. Lo que trabaja va encima en rojo y naranja; en grande, con el rayado de las fibras.
+- **La cabeza, las manos y los pies se ven.** No tienen músculos, así que antes enseñaban la silueta desnuda (`#2a2e42`),
+  casi del color del fondo: la cabeza parecía un hueco. Ahora llevan la misma silueta clara que el resto.
+- **El brazo y la pierna de atrás, macizos.** Iban en `#1d2031` con un borde claro, que sobre el fondo se leía como un
+  contorno transparente («fantasmas»). Ahora son la misma pieza en un tono más oscuro (`#3b4162`), sin borde claro.
+- **Cuerpo completo.** La librería marca 68 ejercicios con el cuerpo entero como principal (`fu`), y antes la figura salía
+  entera en rojo, sin distinguir nada. Ahora `figRegions` (extras/anatomy) los separa: la silueta va en un rojo apagado
+  (`SKIN_TONES[1]`) y encima, más vivo, lo que nombra además el ejercicio (los glúteos en rojo en un thruster; las piernas y
+  el core en naranja en un burpee). El mapa muscular (`anatomySvg`) usa el mismo rojo apagado (`gWa`) para el resto del
+  cuerpo, así que la hoja dice lo mismo arriba y abajo.
+- **De frente, una sola luz.** La silueta de frente se recorta en piezas (cuerpo, brazos, piernas) con un disco en cada
+  articulación para tapar el hueco al girar. Si cada disco llevara su propio degradado, saldría como una mancha clara en la
+  rodilla o el codo; por eso de frente el degradado va en unidades del dibujo, con la caja de la silueta entera
+  (`FRONT_LIGHT`), y la misma silueta vale para las dos vistas (`fsB`, `fsU0`…): lo que cambia de frente a espaldas son los
+  músculos.
+- **El escenario.** El recuadro de la figura grande (`.fgs`) es oscuro y casi liso, para que el maniquí claro destaque. El
+  suelo ya no es una raya de lado a lado: es una raya del ancho del recuadro que se desvanece hacia los lados y, en medio, un
+  poco de luz (`floorOf`). Alrededor de lo que ocupa la figura en todo el gesto queda aire (`STAGE_AIR`: 14 unidades a los
+  lados y arriba, 10 bajo el suelo), y la miniatura lleva un 6 % (`THUMB_AIR`).
 
 ### Escribir una postura
 
@@ -116,10 +154,12 @@ se caiga. `extras/moves.js` tiene una ayuda para cada caso, y `tests/rig.test.mj
 | **Un paso se da por el aire, y un pedal da la vuelta.** | En las zancadas hay una postura intermedia con el pie que da el paso levantado; el otro no se mueve del suelo (el de atrás, sobre su punta, gira sobre ella). En las bicis, la intermedia lleva los pedales en horizontal: el pie baja por delante del eje y el otro sube por detrás. |
 | **Un ciclo no tiene costuras.** | Con `cycle`, la intermedia es el cruce: la pierna que apoya, bajo la cadera, y la que vuelve, recogida y en el aire (`gait` lo escribe para andar y correr). En la escaladora los peldaños son una pieza que se desliza (`slide`) justo lo que mide un peldaño en medio ciclo, así que el pie baja con el suyo y el otro pisa el que llega. En crol, un brazo tira bajo el agua y el otro vuelve por encima. |
 | **Remar tiene su orden.** | La palada lleva una intermedia que solo guía (`via`): las piernas casi estiradas y el tronco ya vertical, con los brazos tan estirados como al empezar. De ahí al final se echa atrás el tronco y tiran los brazos, así que el asa pasa por encima de las rodillas y no a través de ellas. El asiento es una pieza que va con la cadera (`by`) sin girar con ella: se queda sobre su guía. |
-| **La cuerda pasa cuando los pies están en el aire.** | La cuerda de la comba es una pieza que gira sobre el puño (`by` con vueltas): una vuelta por salto, que empieza en lo alto, así que apunta al suelo en lo más alto del salto; con dos vueltas, a media subida y a media bajada. Mide lo que hay de las manos al suelo en ese momento: lo roza al pasar y nunca se mete en él. |
+| **La cuerda pasa cuando los pies están en el aire.** | La cuerda de la comba es una pieza que gira sobre el puño (`by` con vueltas): una vuelta por salto, que empieza en lo alto, así que apunta al suelo en lo más alto del salto; con dos vueltas, a media subida y a media bajada. Mide lo que hay de las manos al suelo en ese momento: lo roza al pasar y nunca se mete en él. Se dibuja con sus dos cabos, de las manos a la punta y vuelta, un poco separados: una sola línea parecía un látigo. |
 | **Los pies que apoyan no se mueven ni se hunden.** | Cuando el cuerpo se desplaza sobre dos pies separados (el saco de boxeo), lo que se escribe es dónde está la cadera (`at: 'hip'`) y dónde pisa cada pie (`foot`): el de delante, plano; el de atrás, sobre su punta, que no se mueve del suelo aunque el talón se levante más al cruzar. Con ángulos de cadera y rodilla, uno de los dos acaba bajo el suelo. |
 | **Quien se inclina no se cae.** | `bentOver(lean)`: de pie con el tronco inclinado, la cadera se va atrás lo justo para que los hombros, y el peso que cuelga de ellos, queden sobre los pies (remos, pájaros, patadas de tríceps). |
 | **Colgado, el cuerpo sube recto.** | En las dominadas lo que se reparte es dónde está la cadera, y los brazos llegan a la barra: con los ángulos del hombro y el codo el cuerpo se iría hacia atrás a medio camino. |
+| **Colgado, el poste no toca el cuerpo.** | La barra va como una de pared: `pullBar(x, y, HANG_POST)` pone su poste 180 unidades por detrás, lejos también de las piernas cuando se balancean hacia atrás (kipping). Antes estaba a 46 y bajaba pegado a la espalda: parecía que el cuerpo se deslizaba por él. |
+| **Correr no es una zancada.** | La carrera va erguida (la cadera a 210, poco más baja que de pie, 199; en cuesta, 214) y, a media zancada, la pierna que apoya pasa bajo la cadera con la rodilla doblada lo justo (35°) y el pie en el suelo. Antes la cadera iba a 218 con esa rodilla a 52° y la de delante muy levantada: en las posturas quietas parecía una zancada. |
 
 El material es una lista de piezas, cada una en su plano (detrás de todo, entre el lado de atrás y el cuerpo, o delante):
 trazos, rellenos, almohadillas, círculos y placas, fijos o unidos a una pieza del cuerpo (`on`); una barra recta entre dos
@@ -165,9 +205,13 @@ Para que no se note:
 Medido con `tests/perf.py` frente a la compilación sin figuras, el arranque y el pintado de las pestañas no cambian (primer
 pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el entreno, las listas y las hojas.
 
+El repaso del aspecto aligeró el dibujo, porque ya no hay músculos en reposo: la figura grande de la sentadilla pasa de 81
+piezas que pintar en cada fotograma a 40; las piezas que se preparan una vez (`<defs>`), de 844 a 656 (de 102 a 87 KB), y una
+miniatura, de 3,4 a 3,0 KB de media. Abrir la hoja «Cómo se hace» pasó de 4,7 a 3,2 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-de-las-figuras)).
+
 ## Pruebas
 
-- `tests/rig.test.mjs` (38 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
+- `tests/rig.test.mjs` (41 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
   gesto: cada uno tiene figura; las figuras están bien escritas; ninguna pieza sale sin sitio; los codos y las rodillas doblan
   hacia donde doblan; **ninguna articulación pasa de lo que un cuerpo puede hacer** (cintura, cuello, hombro, codo, muñeca,
   cadera, rodilla y tobillo; de frente, brazos y piernas); **las manos y los pies llegan a donde se les pide** (el agarre, el
@@ -185,9 +229,15 @@ pintado: 96 y 94 ms). Las pestañas no llevan figuras: se ven en el Overview, el
   sin girar; **en el SkiErg** las asas bajan separadas del cuerpo y acaban junto a las caderas; **en el saco** los pies no se
   mueven del suelo y cada puño llega al saco, a la altura del hombro, desde la guardia; **en la bici de aire** cada puño va
   por el arco de su palanca, al revés que el otro; y **en la comba** el salto es un bote y la cuerda roza el suelo bajo los
-  pies cuando están en el aire, sin meterse nunca en él (con los pies juntos, con dos vueltas y alternando los pies).
-- `tests/figures.py` (188 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
-  piezas, el nombre y el texto, sin fotos); las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
+  pies cuando están en el aire, sin meterse nunca en él (con los pies juntos, con dos vueltas y alternando los pies). Y lo
+  que arregló el repaso del aspecto: **colgado de la barra, el poste queda lejos del cuerpo** en todo el gesto (también con
+  kipping); **al correr**, el pie que apoya pisa el suelo a media zancada, la cadera no baja como en una zancada y esa rodilla
+  no se dobla de más; y **la cuerda de la comba lleva sus dos cabos**.
+- `tests/figures.py` (194 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
+  piezas, el nombre y el texto, sin fotos); que las piezas están una sola vez y ya no las de antes (la pieza grande con los
+  músculos en reposo); el maniquí (la silueta clara, también la cabeza, y el brazo y la pierna de atrás en su tono más
+  oscuro; de frente, una sola luz para todo el cuerpo; en un ejercicio de cuerpo completo, la silueta en rojo apagado, como
+  su mapa muscular) y el suelo, a lo ancho del recuadro; las listas, la ficha y el entreno; la hoja con detalle en un ejercicio de cada clase
   (figura grande arriba, músculos debajo a la izquierda, texto después; que se mueve y sigue en su sitio tras varios ciclos);
   las posturas que se mantienen; los ciclos, que no se detienen en ningún momento, y los peldaños de la escaladora, que se
   deslizan; los gestos seguidos (el remo, el SkiErg, el saco), que no se paran en los extremos y al cabo de unos gestos enteros
@@ -208,11 +258,12 @@ comprueba aparte, en `tests/figures.py`.
 
 - Las figuras enseñan la postura de inicio, la del final y, en algunos gestos, una intermedia: el camino entre ellas es un
   reparto, no una captura de movimiento.
-- En los ejercicios de cuerpo completo (CrossFit, Hyrox, funcional) la librería marca casi todos los músculos como
-  principales, y así sale la figura: toda en rojo.
+- En los ejercicios de cuerpo completo (CrossFit, Hyrox, funcional) lo que destaca sobre la silueta en rojo apagado es lo
+  que la librería nombra además del cuerpo entero; si no nombra nada más (un burpee solo dice cuerpo completo y cardio), lo
+  que destaca son sus secundarios, en naranja.
 - Lo que solo se entiende desde arriba o en tres cuartos (el Pallof press, la abducción sentada) se ha resuelto de frente o
   de espaldas, con los brazos o los muslos en escorzo.
-- De perfil, la cuerda de la comba es una línea que gira sobre las manos: no se ve su arco, que queda de canto.
+- De perfil, la cuerda de la comba es un lazo estrecho que gira sobre las manos: su arco queda de canto y no se ve.
 - **Al lanzar muy deprisa una lista larga en el iPhone** (17 Pro, iOS 27) se ve unas milésimas la zona que aún no está
   pintada, en negro, antes de que salgan las filas (observación del propietario al probar la V1.0.3; la lista funciona). Las
   filas que no se ven no se pintan hasta que se acercan (`content-visibility`), que es lo que hace que abrir la lista sea

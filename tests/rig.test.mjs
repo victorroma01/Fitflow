@@ -562,6 +562,43 @@ test('dominadas: el cuerpo sube recto', () => {
   assert.ok(spot(def, .5, ['UA', 99, 150])[0] > spot(def, .5, ['UA', 99, 82])[0], 'el codo queda detrás del hombro');
 });
 
+test('colgado de la barra: el poste queda lejos del cuerpo, también si las piernas se balancean hacia atrás', () => {
+  // la barra va como una de pared: el poste, detrás; antes bajaba pegado a la espalda y parecía que el cuerpo se deslizaba
+  // por él
+  for (const n of ['Dominadas', 'Dominadas lastradas', 'Pull-ups kipping', 'Toes to bar', 'Elevación de piernas colgado', 'Bar muscle-up']) {
+    const def = figPose(n);
+    const post = def.props.map(p => p[0] == 'L' && /^M(-?[\d.]+) -?[\d.]+L(-?[\d.]+) 398$/.exec(p[2])).find(m => m && m[1] == m[2]);
+    assert.ok(post, n + ': el poste de la barra');
+    let back = 1e9;
+    for (let i = 0; i <= 40 * (def.cycle ? 2 : 1); i++)
+      for (const [k, q, m] of R.framePoints(def, i / 40))
+        if (/^(head|body|x?arm|x?leg)$/.test(k))
+          back = Math.min(back, q[0] - m);
+    assert.ok(back - Number(post[1]) > 12, n + ': el poste, a ' + Math.round(back - Number(post[1])) + ' del cuerpo');
+  }
+});
+
+test('correr: erguido y apoyando el pie en el suelo a media zancada, no agachado como en una zancada', () => {
+  for (const n of ['Carrera continua', 'Cuestas', 'Trote en cinta']) {
+    const def = figPose(n);
+    // el pie que apoya (talón o punta), en el suelo
+    near(Math.max(spot(def, .5, ['FT', 83, 402])[1], spot(def, .5, ['FT', 137, 402])[1]), 402, 1.5, n + ': el pie que apoya');
+    // la cadera, poco más baja que de pie (199): antes iba a 218, con la rodilla de delante muy doblada
+    for (const t of [0, .5, 1])
+      assert.ok(spot(def, t, ['PV', 99, 196])[1] <= 215, n + ': la cadera, baja en t=' + t);
+    // y la rodilla que apoya, doblada lo justo para amortiguar
+    const o = layersAt(def, .5);
+    assert.ok(Math.abs(norm(placed(o.SH)[2] - placed(o.TH)[2])) <= 40, n + ': la rodilla que apoya, muy doblada');
+  }
+});
+
+test('comba: la cuerda se ve como un lazo, con sus dos cabos, no como un látigo', () => {
+  for (const n of ['Comba', 'Double unders', 'Comba boxeo']) {
+    const rope = figPose(n).props.find(p => p[0] == 'by' && p[4]);
+    assert.equal((rope[3][2].match(/Q/g) || []).length, 2, n + ': los dos cabos');
+  }
+});
+
 test('un ciclo no tiene costuras: acaba como empieza, con los lados cambiados', () => {
   // correr, pedalear o subir peldaños es el mismo medio gesto dos veces, la segunda con los lados cambiados (de 1 a 2): el
   // cuerpo no puede dar un salto ni al pasar de una mitad a otra ni al volver a empezar

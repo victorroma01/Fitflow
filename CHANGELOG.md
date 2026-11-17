@@ -83,6 +83,19 @@ línea.
   parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.
 - Documentación: la V1.0.31 comprobada en el iPhone del propietario, las versiones 1.0.3 y 1.0.31 en la documentación
   funcional y el estado de App Check (en marcha, sin exigir); el pendiente 7 de la auditoría (el nombre de «Log out»), hecho.
+- Figuras de ejercicio, repaso de su aspecto (a petición del propietario, en la rama `desarrollo-animaciones`): la figura
+  grande es el mismo maniquí limpio que la miniatura (la silueta clara y lo que trabaja en color, sin los músculos en reposo
+  con su rayado); la cabeza, las manos y los pies, que enseñaban la silueta desnuda casi del color del fondo, se ven, y el
+  brazo y la pierna de atrás son macizos (antes, un contorno transparente). En los 68 ejercicios de cuerpo completo la figura
+  ya no sale entera en rojo: la silueta va en un rojo apagado y encima, más vivo, lo que más trabaja; el mapa muscular, igual.
+  De frente, una sola luz para todo el cuerpo (los discos de las articulaciones salían como manchas). El recuadro, más oscuro
+  y liso, con el suelo que se desvanece hacia los lados, un poco de luz y aire alrededor; la miniatura, con un 6 % de aire
+  para que las esquinas no corten la cabeza. Arreglos de gesto: correr ya no parece una zancada agachada (21 ejercicios);
+  colgado de la barra, el poste va lejos del cuerpo, también con kipping; y la cuerda de la comba se ve como un lazo. Pesa
+  menos: la figura de la sentadilla, de 81 a 40 piezas que pintar en cada fotograma; las piezas en `<defs>`, de 102 a 87 KB.
+  Pruebas: `tests/rig.test.mjs` (el poste, la carrera y la cuerda), `tests/figures.py` (el maniquí, el cuerpo completo, la
+  luz de frente y el suelo) y `tests/perf.py` (abrir «Cómo se hace» y las piezas de la figura)
+  ([figuras](docs/tecnica/figuras.md#el-aspecto)).
 
 ## [1.0.31] — 2026-11-16
 

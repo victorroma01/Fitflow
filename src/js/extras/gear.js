@@ -65,8 +65,12 @@ export const tower = (x, y, out) => {
 export const cable = (x, y, end, to, slot) => ['link', slot || 'b', [r1(x), r1(y)], to || 'g', 1.3, 3, end || 'h'];
 /** Máquina Smith: las guías por las que corre la barra, en x. */
 export const smith = x => [beam([x, 30, x, 398], 4, 'b', 3), beam([x - 46, 30, x - 46, 398], 6, 'b'), beam([x - 46, 30, x + 6, 30], 5, 'b'), beam([x - 62, 399.5, x + 22, 399.5], 5, 'b')];
-/** Barra de dominadas a la altura y, vista de punta, con su soporte. */
-export const pullBar = (x, y) => [beam([x - 46, y - 12, x - 46, 398], 6, 'b'), beam([x - 46, y - 12, x - 6, y - 12, x, y], 5, 'b'), beam([x - 62, 399.5, x - 30, 399.5], 5, 'b'), ['C', 'f', r1(x), r1(y), 3.6, 2]];
+/** Barra de dominadas a la altura y, vista de punta, con su soporte: un poste a out por detrás (46 si no se dice) y un
+    brazo que llega hasta ella. Colgado de ella, el poste va bien atrás, que no parezca que el cuerpo baja pegado a él. */
+export const pullBar = (x, y, out) => {
+  const p = x - (out || 46);
+  return [beam([p, y - 12, p, 398], 6, 'b'), beam([p, y - 12, x - 6, y - 12, x, y], 5, 'b'), beam([p - 16, 399.5, p + 16, 399.5], 5, 'b'), ['C', 'f', r1(x), r1(y), 3.6, 2]];
+};
 /** Paralelas a la altura y, centradas en x. */
 export const dipBars = (x, y) => [beam([x - 30, y, x + 34, y], 5, 'b', 3), beam([x - 24, y, x - 24, 398], 5, 'b'), beam([x + 28, y, x + 28, 398], 5, 'b'), beam([x - 40, 399.5, x + 44, 399.5], 5, 'b')];
 /** La palanca de una máquina, del eje (x, y) a to ('g' el puño, o un punto de una pieza), con su remate. */

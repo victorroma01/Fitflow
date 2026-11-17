@@ -6,7 +6,7 @@
 */
 import { groupOf } from '../data/library.js';
 import { AN_BB, AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
-import { figureStage, figureStill, figureSvg } from './figure.js';
+import { figureStage, figureStill, figureSvg, SKIN_TONES } from './figure.js';
 import { figPose } from './moves.js';
 import { sideRegions } from './rig.js';
 import { groupIcon } from '../core/icons.js';
@@ -17,7 +17,7 @@ document.body.insertAdjacentHTML('afterbegin', '<svg width="0" height="0" class=
 (function () {
   const pat = (id, r) => html`<pattern id="${id}" width="4" height="4" patternUnits="userSpaceOnUse"${raw(r ? ' patternTransform="rotate(' + r + ')"' : '')}><line x1="0" y1="0" x2="0" y2="4" stroke="#000" stroke-opacity=".26" stroke-width=".55"/></pattern>`;
   const gr = (id, a, b, c) => html`<radialGradient id="${id}" cx=".38" cy=".3" r=".9"><stop offset="0" stop-color="${a}"/><stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></radialGradient>`;
-  let h = html`<svg width="0" height="0" class="pos-abs" aria-hidden="true" focusable="false"><defs>${raw(gr('gNe', '#5a617f', '#3b405a', '#252839'))}${raw(gr('gRd', '#ff7670', '#e0263a', '#7a0b1c'))}${raw(gr('gOr', '#ffd48f', '#f59a2c', '#a24f0a'))}${raw(pat('pa15', 80))}${raw(pat('pa35', 35))}${raw(pat('pa90', 0))}<path id="aS" d="${AN_S}"/><path id="aH" d="${AN_H}"/>`;
+  let h = html`<svg width="0" height="0" class="pos-abs" aria-hidden="true" focusable="false"><defs>${raw(gr('gNe', '#5a617f', '#3b405a', '#252839'))}${raw(gr('gRd', '#ff7670', '#e0263a', '#7a0b1c'))}${raw(gr('gOr', '#ffd48f', '#f59a2c', '#a24f0a'))}${raw(gr('gWa', ...SKIN_TONES[1]))}${raw(pat('pa15', 80))}${raw(pat('pa35', 35))}${raw(pat('pa90', 0))}<path id="aS" d="${AN_S}"/><path id="aH" d="${AN_H}"/>`;
   ['F', 'B'].forEach(v => {
     const ks = Object.keys(AN_R[v]);
     ks.forEach(k => {
@@ -40,12 +40,16 @@ const regionsFor = (codes, v) => {
   });
   return o;
 };
+/* el mapa de unos músculos: los principales en rojo y los secundarios en naranja; si trabaja el cuerpo entero ('fu'), el
+   resto en un rojo apagado, como la silueta de su figura (extras/figure), para que lo que más trabaja se distinga */
 const anatomySvg = (v, P, S, box, w, h) => {
-  const p = regionsFor(P, v);
+  const all = (P || []).includes('fu');
+  const p = regionsFor(all ? P.filter(c => c != 'fu') : P, v);
   const s = regionsFor(S, v).filter(k => !p.includes(k));
+  const rest = all ? regionsFor(['fu'], v) : [];
   const sm = (w || 0) <= 80;
   const u = (k, f, st) => html`<use href="#${sm ? 'p' : 'r'}${v}${k}" fill="url(#${f})" stroke="${st}" stroke-width=".7" stroke-linejoin="round"/>`;
-  return html`<svg viewBox="${box}" width="${w}" height="${h || w}" aria-hidden="true" focusable="false"><use href="#${sm ? 's' : 'b'}${v}"/>${raw(Object.keys(AN_R[v]).map(k => p.includes(k) ? u(k, 'gRd', '#2a0409') : s.includes(k) ? u(k, 'gOr', '#3a1a04') : '').join(''))}</svg>`;
+  return html`<svg viewBox="${box}" width="${w}" height="${h || w}" aria-hidden="true" focusable="false"><use href="#${sm ? 's' : 'b'}${v}"/>${raw(Object.keys(AN_R[v]).map(k => p.includes(k) ? u(k, 'gRd', '#2a0409') : s.includes(k) ? u(k, 'gOr', '#3a1a04') : rest.includes(k) ? u(k, 'gWa', '#2a0409') : '').join(''))}</svg>`;
 };
 const GROUP_ANATOMY = { Pecho: ['F', ['pe'], ['dA', 'tr', 'sa'], '24 42 152 152'], Espalda: ['B', ['da', 'tm', 'ro'], ['dP', 'tr', 'er', 'rm'], '24 38 152 152'], Hombros: ['F', ['dA', 'dL'], ['ts', 'tr'], '30 40 140 140'], 'Bíceps': ['F', ['bi'], ['br', 'bq', 'an', 'dA'], '14 70 172 172'], 'Tríceps': ['B', ['tr'], ['dP', 'an', 'bq'], '14 70 172 172'], Antebrazos: ['F', ['an', 'bq'], ['bi', 'br'], '14 110 172 172'], Abdomen: ['F', ['ab'], ['ob', 'tv', 'fc', 'sa'], '36 98 128 128'], 'Cuádriceps': ['F', ['cu'], ['fc', 'ad', 'ta'], '36 196 128 128'], 'Isquios y glúteos': ['B', ['is', 'gl'], ['gm', 'ad', 'ge', 'er'], '36 160 128 128'], Gemelos: ['B', ['ge', 'so'], ['is', 'ta'], '36 270 128 128'] };
 export function groupAnatomy(g, s) {
@@ -109,12 +113,13 @@ export const exAnatomyFull = e => {
     return '';
   return html`<div class="anf"><div>${anatomySvg('F', P, S, '0 0 200 410', 132, 271)}<small>Frontal</small></div><div>${anatomySvg('B', P, S, '0 0 200 410', 132, 271)}<small>Posterior</small></div><div class="anl"><span><i class="bg-grad-red"></i>Principal</span><span><i class="bg-grad-amber"></i>Secundario</span></div></div>`;
 };
-/** Las regiones [principales, secundarias] que se pintan en la figura f de un ejercicio, según su vista. */
+/** Lo que trabaja en la figura f de un ejercicio, según su vista: las regiones principales y las secundarias y, si
+    trabaja el cuerpo entero, all (la silueta entera va en color y encima, más vivo, lo que más trabaja). */
 const figRegions = (f, e) => {
   const [P, S] = exWork(e);
   const of = cs => f.v == 'S' ? sideRegions(cs) : regionsFor(cs, f.v);
-  const p = of(P);
-  return [p, of(S).filter(k => !p.includes(k))];
+  const p = of(P.filter(c => c != 'fu'));
+  return { p, s: of(S).filter(k => !p.includes(k)), all: P.includes('fu') };
 };
 /* las figuras quietas ya calculadas, por ejercicio (y aparte las grandes, que llevan todos los músculos): la de un ejercicio
    de la librería no cambia, y las listas, el Overview, el entreno y la ficha piden la misma, cada uno a su tamaño. Caben las
@@ -133,8 +138,7 @@ export const exPicture = (n, s) => {
   if (!pictures.has(key)) {
     if (pictures.size >= PICTURES_MAX)
       pictures.clear();
-    const [p, q] = figRegions(f, exByName(n));
-    pictures.set(key, figureStill(f, p, q, big));
+    pictures.set(key, figureStill(f, figRegions(f, exByName(n)), big));
   }
   return figureSvg(pictures.get(key), s);
 };
@@ -214,8 +218,7 @@ export const exMotion = (n, still) => {
   const f = figPose(n);
   if (!f)
     return '';
-  const [p, q] = figRegions(f, exByName(n));
-  return figureStage(f, p, q, still);
+  return figureStage(f, figRegions(f, exByName(n)), still);
 };
 /** Los músculos de un ejercicio en pequeño, de frente y de espaldas; '' si no hay datos. */
 export const exMusclesSmall = n => {

@@ -4,7 +4,7 @@
    a: postura de inicio, b: lo que cambia en la del final, props: material, up: qué extremo es el final del esfuerzo,
    at: momento del gesto que se pinta en la miniatura, hold: si es una postura que se mantiene }. La tabla de qué familia
    y qué variantes lleva cada ejercicio está en data/figposes; cómo se escribe una postura, en extras/rig.
-   Define: has, REST, ANGLES, complete, figure, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, railGrips, railBody, leverFrom, leverGrips, pivotAt, bentOver, SUPINE, LIFT, gait, treadmill, sledAt, STRIDE, MOVES, made, figPose
+   Define: has, REST, ANGLES, complete, figure, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, railGrips, railBody, leverFrom, leverGrips, pivotAt, bentOver, SUPINE, LIFT, gait, treadmill, sledAt, HANG_POST, STRIDE, MOVES, made, figPose
 */
 import { FIG_POSES } from '../data/figposes.js';
 import { RAD, poseSpot } from './rig.js';
@@ -144,8 +144,11 @@ const gait = (base, legA, legB, mid, armA, armB, props, more) => {
 const treadmill = () => [['R', 'b', 110, 409, 260, 10, 0, 6], beam([-20, 421, 250, 421], 5, 'b'), beam([236, 404, 256, 248], 5, 'b'), pad(254, 242, 42, 10, -28), beam([240, 296, 186, 296], 4, 'b')];
 /* el trineo, cargado, con sus postes: x es donde empieza */
 const sledAt = x => [['R', 'b', x + 60, 393, 124, 9, 0, 6], beam([x + 20, 388, x + 20, 250], 5, 'b'), beam([x + 100, 388, x + 100, 300], 5, 'b'), ['R', 'b', x + 100, 352, 46, 10, 0, 5], ['R', 'b', x + 100, 364, 46, 10, 0, 5], ['R', 'b', x + 100, 376, 46, 10, 0, 5]];
+/* colgado de la barra, lo que el poste de la barra queda por detrás de ella: como una barra de pared, lejos de las piernas
+   aunque se balanceen hacia atrás (kipping) */
+const HANG_POST = 180;
 /* a media zancada: [la pierna que apoya, bajo la cadera; la que vuelve por el aire, doblada] */
-const STRIDE = { walk: [{ hip: 10, knee: 16, ft: 0 }, { hip: 20, knee: 58, ft: 6 }], run: [{ hip: 36, knee: 52, ft: 0 }, { hip: 22, knee: 100, ft: 52 }] };
+const STRIDE = { walk: [{ hip: 10, knee: 16, ft: 0 }, { hip: 20, knee: 58, ft: 6 }], run: [{ hip: 15, knee: 35, ft: 0 }, { hip: 16, knee: 96, ft: 54 }] };
 /** Las familias de movimiento: nombre → función que recibe las variantes y devuelve la figura. */
 const MOVES = {
   /* ── empuje: press de banca (plano, inclinado, declinado, en el suelo), de hombro, flexiones y fondos ── */
@@ -728,9 +731,9 @@ const MOVES = {
       b = { lean: -24, sh: 2, el: 152, neck: -22 };
     if (has(f, 'kip'))
       Object.assign(a, { lean: 10, hip: -16, knee: 30, sh: 188 });
-    let gear = has(f, 'rings') ? ringsAt(bar[0], 6) : pullBar(bar[0], bar[1]);
+    let gear = has(f, 'rings') ? ringsAt(bar[0], 6) : pullBar(bar[0], bar[1], HANG_POST);
     if (has(f, 'towel'))
-      gear = pullBar(bar[0], bar[1] - 30).concat([['link', 'b', [bar[0], bar[1] - 30], 'G', 3, 2, ''], ['link', 'f', [bar[0], bar[1] - 30], 'g', 3, 2, '']]);
+      gear = pullBar(bar[0], bar[1] - 30, HANG_POST).concat([['link', 'b', [bar[0], bar[1] - 30], 'G', 3, 2, ''], ['link', 'f', [bar[0], bar[1] - 30], 'g', 3, 2, '']]);
     /* el lastre: un disco que cuelga del cinturón, por delante de los muslos */
     if (has(f, 'weight'))
       gear.push(['on', 'f', 'PV', ['L', '', 'M80 184L121 188', 4, 3]], ['on', 'f', 'PV', ['L', '', 'M119 189L122 236', 1.6, 3]], ['on', 'f', 'PV', ['C', '', 122, 248, 15, 5]], ['on', 'f', 'PV', ['C', '', 122, 248, 3, 2]]);
@@ -1317,7 +1320,9 @@ const MOVES = {
     /* la cuerda mide lo que hay entonces de las manos al suelo: lo roza al pasar; va algo combada, y con su mango */
     const reach = Math.round(402 - poseSpot(pass, 'g')[1]);
     const spin = [double ? 2 : 1, -90];
-    const rope = [['by', 'f', 'g', ['L', '', 'M14 0Q' + Math.round(reach * .56) + ' -60 ' + reach + ' 0', 1.7, 3], spin], ['by', 'f', 'g', ['L', '', 'M-4 0H16', 4.5, 0], spin]];
+    /* (los dos cabos, de la punta a las manos y vuelta: de lado, la cuerda se ve como un lazo, no como un látigo) */
+    const bow = Math.round(reach * .56);
+    const rope = [['by', 'f', 'g', ['L', '', 'M' + reach + ' 0Q' + bow + ' -30 14 0Q' + bow + ' -60 ' + reach + ' 0', 1.7, 3], spin], ['by', 'f', 'g', ['L', '', 'M-4 0H16', 4.5, 0], spin]];
     /* la miniatura, en ese momento */
     return fig(a, b, rope, 'b', double ? .25 : .5, { fist: 1, whole: 1, m, via: 1, hop: 1, cycle: double ? 640 : has(f, 'alt') ? 400 : 460 });
   },
@@ -1334,7 +1339,7 @@ const MOVES = {
     const a = { at: 'grip', x: bar[0], y: bar[1], lean: -2, neck: -8, sh: 176, el: 4, hip: -4, knee: 22, ft: 30 };
     const m = { lean: -24, neck: -18, sh: 24, el: 150, hip: 34, knee: 30 };
     const b = { lean: 12, neck: -4, sh: 17, el: 4, hip: 16, knee: 10 };
-    return fig(a, b, has(f, 'rings') ? ringsAt(bar[0], bar[1] - 250) : pullBar(bar[0], bar[1]), 'b', 1, { m, fist: 1 });
+    return fig(a, b, has(f, 'rings') ? ringsAt(bar[0], bar[1] - 250) : pullBar(bar[0], bar[1], HANG_POST), 'b', 1, { m, fist: 1 });
   },
   /** Pino y flexiones de pino contra la pared, flexiones en pica y la subida a la pared andando con las manos. */
   handstand: f => {
@@ -1357,11 +1362,12 @@ const MOVES = {
   /** Carrera y marcha, al aire libre o en la cinta. */
   run: f => {
     const walk = has(f, 'walk');
-    const base = { at: 'hip', x: 110, y: walk ? 199 : 218, lean: (walk ? 5 : 12) + (has(f, 'incline') ? 5 : 0), neck: -4 };
-    const front = walk ? { hip: 28, knee: 8, ft: -14 } : { hip: 62, knee: 76, ft: 10 };
-    const back = walk ? { hip: -16, knee: 14, ft: 28 } : { hip: -20, knee: 24, ft: 46 };
-    const fore = walk ? { sh: 22, el: 16 } : { sh: 44, el: 96 };
-    const aft = walk ? { sh: -22, el: 10 } : { sh: -42, el: 84 };
+    /* la cadera, a la altura a la que el pie que apoya pisa el suelo a media zancada (cuesta arriba, inclinado, algo más baja) */
+    const base = { at: 'hip', x: 110, y: walk ? 199 : has(f, 'incline') ? 214 : 210, lean: (walk ? 5 : 10) + (has(f, 'incline') ? 5 : 0), neck: -4 };
+    const front = walk ? { hip: 28, knee: 8, ft: -14 } : { hip: 46, knee: 70, ft: 12 };
+    const back = walk ? { hip: -16, knee: 14, ft: 28 } : { hip: -18, knee: 20, ft: 40 };
+    const fore = walk ? { sh: 22, el: 16 } : { sh: 38, el: 94 };
+    const aft = walk ? { sh: -22, el: 10 } : { sh: -36, el: 82 };
     let gear = [];
     if (has(f, 'treadmill'))
       gear = treadmill();

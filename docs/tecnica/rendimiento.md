@@ -14,6 +14,10 @@ frente a la V1.0.2.
 - **Ver qué hay que subir**: lo que calcula la sincronización antes de hablar con Firebase (las huellas de cada elemento).
 - **Pintar cada pestaña**: lo que tarda `R()` en volver a pintar la pestaña (con `core/morph`, cambiando solo lo distinto).
 - **Abrir Registros** (desde la V1.0.3): la página más larga de la app, con una fila por entreno (700).
+- **Buscar en la Librería** (desde la V1.0.32): cada letra del buscador, que vuelve a buscar en los 551 ejercicios y pinta
+  hasta 80 filas con su figura.
+- **Abrir «Cómo se hace»** (desde el repaso de las figuras): la hoja con la figura grande de cinco ejercicios de clases
+  distintas, por turnos, y de cuántas piezas es la figura de la sentadilla (lo que el navegador pinta en cada fotograma).
 
 No es una prueba que pase o falle: los números dependen del ordenador, así que solo valen para comparar dos compilaciones medidas
 seguidas en el mismo. Por eso las mide por turnos (A, B, A, B…) y da la mediana de las vueltas (`PERF_ROUNDS`, 3 si no se dice).
@@ -102,8 +106,24 @@ los 551 ejercicios en cada letra. Lo que se pinta es lo mismo carácter a carác
 pantallas antes y después. El arranque no ha cambiado: casi todo es esperar a IndexedDB y lo que hace el navegador (leer el
 código, los estilos y colocar la página), no el código de la app.
 
+## Medido en el repaso de las figuras
+
+Medido el 17 de noviembre de 2026 con los mismos datos y en el mismo ordenador: mediana de 5 vueltas, alternando la V1.0.32 sin
+el repaso y con él (rama `desarrollo-animaciones`). Solo cambia lo que tiene figuras; el resto de medidas, igual.
+
+| Medida | Antes | Después | Diferencia |
+| --- | ---: | ---: | --- |
+| Abrir «Cómo se hace» | 4,7 ms | 3,2 ms | Un tercio menos: sin los músculos en reposo, hay menos que montar |
+| Piezas de la figura de la sentadilla | 81 | 40 | La mitad de lo que se pinta en cada fotograma |
+| Piezas preparadas una vez (`<defs>`) | 844 (102 KB) | 656 (87 KB) | Una silueta para las dos vistas de frente, sin la pieza grande con sus músculos |
+| Una miniatura, de media | 3,4 KB | 3,0 KB | Las de cuerpo completo ya no llevan cada músculo en color, y el borde va en la pieza |
+| Buscar en la Librería (cada letra) | 2,9 ms | 3,0 ms | Igual |
+
 ## Qué se hizo
 
+- **Las figuras, sin los músculos en reposo (repaso de las figuras)**: la figura grande era la pieza de perfil con todos sus
+  músculos encima, cada uno con su relleno, su borde y su rayado; ahora es la silueta y, encima, solo lo que trabaja, como la
+  miniatura. Lo que se ve es más limpio y lo que se pinta, la mitad ([figuras](figuras.md#el-aspecto)).
 - **Mirar qué hay que subir (V1.0.32)**: `cloud/sync` recuerda, de cada elemento (un entreno, un día de comidas, el historial
   de un ejercicio…), su texto y su huella. Si el texto es el mismo, la huella también, y no se vuelve a recorrer (`hashText`).
   Un cambio hecho en su sitio cambia el texto y se nota igual (`tests/cloud.py`).
