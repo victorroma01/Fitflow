@@ -20,7 +20,8 @@ const utc = s => new Date(s * 1000).toUTCString();
 /** Authentication de mentira, con lo que usa el paso de las cuentas (`auth`: lo de firebase-admin; `io`: lo demás).
     `opts.page`: cuántas cuentas da cada página de la lista; `opts.refuse(email)`: código de error con el que rechaza poner ese
     correo; `opts.keep`: no deja borrar cuentas; `opts.restore`: qué hace con un «válidas desde» que se le pide: 'inline' (lo
-    respeta también en la petición que cambia el correo), 'after' (solo en una petición aparte) o 'never' (lo ignora);
+    respeta también en la petición que cambia el correo), 'after' (en esa petición lo ignora: solo en una aparte), 'apart'
+    (rechaza la petición que lleva las dos cosas: solo en una aparte) o 'never' (lo ignora siempre);
     `opts.signIn`: código de error al entrar por la API pública; `opts.bound`: una sesión no se renueva si el correo cambió. */
 const fake = (emails, opts = {}) => {
   let now = 1800000000;
@@ -74,6 +75,8 @@ const fake = (emails, opts = {}) => {
       calls.push('update ' + uid + ' ' + Object.keys(fields).join('+'));
       const u = find(uid);
       assert.ok(Object.keys(fields).every(k => ['email', 'validSince'].includes(k)), 'solo se cambian el correo y la validez de las sesiones');
+      if (restore == 'apart' && 'email' in fields && 'validSince' in fields)
+        throw fbError('INVALID_REQ_TYPE');
       if ('email' in fields) {
         if (opts.refuse && opts.refuse(fields.email))
           throw fbError(opts.refuse(fields.email));
@@ -82,7 +85,7 @@ const fake = (emails, opts = {}) => {
         u.email = fields.email;
         u.validSince = now;
       }
-      if ('validSince' in fields && (restore == 'inline' || (restore == 'after' && !('email' in fields)))) {
+      if ('validSince' in fields && (restore == 'inline' || (['after', 'apart'].includes(restore) && !('email' in fields)))) {
         assert.match(fields.validSince, /^\d+$/, 'en segundos, como texto');
         u.validSince = +fields.validSince;
       }
@@ -212,14 +215,22 @@ test('aplicar: pasa todas, con su mismo identificador, su contraseña y su rol, 
   assert.match(text(r), /nadie tiene que volver a entrar/);
 });
 
-test('si Firebase solo deja devolver la validez en una petición aparte, se hace así y las sesiones también se conservan', async () => {
-  const f = fake(five(), { restore: 'after' });
-  const open = f.users.map(u => f.session(u.uid));
-  const r = await run(f, 'aplicar');
-  assert.ok(r.ok, text(r));
-  assert.equal(r.moved, 5);
-  assert.ok(open.every(alive => alive()));
-  assert.ok(f.calls.includes('update uid1 email+validSince') && f.calls.includes('update uid1 validSince'), 'primero con el correo y, al ver que no ha valido, aparte');
+test('si Firebase no respeta la validez en la petición que cambia el correo, o no la admite ahí, va en otra y las sesiones también se conservan', async () => {
+  for (const restore of ['after', 'apart']) {
+    const f = fake(five(), { restore });
+    const open = f.users.map(u => f.session(u.uid));
+    const r = await run(f, 'aplicar');
+    assert.ok(r.ok, restore + ':\n' + text(r));
+    assert.equal(r.moved, 5);
+    assert.match(String(row(r, KEPT)), /^Sí/);
+    assert.ok(open.every(alive => alive()), restore + ': las sesiones siguen valiendo');
+    const updates = f.calls.filter(c => c.startsWith('update'));
+    // el ensayo prueba primero las dos cosas juntas y, al ver que no vale, aparte
+    assert.deepEqual(updates.filter(c => c.includes('prueba0')), ['update prueba0 email+validSince'].concat(restore == 'apart' ? ['update prueba0 email'] : [], 'update prueba0 validSince'));
+    // y las de verdad van directamente en dos peticiones: lo que no ha valido en el ensayo no se prueba con ninguna
+    assert.deepEqual(updates.filter(c => c.includes('uid1')), ['update uid1 email', 'update uid1 validSince']);
+    assert.ok(!updates.some(c => c.includes('uid') && c.includes('email+validSince')), restore);
+  }
 });
 
 test('si las sesiones no se conservarían, «aplicar» no pasa ninguna cuenta y lo dice', async () => {
@@ -326,6 +337,7 @@ test('si una cuenta falla, las demás se pasan y se dice cuál ha fallado', asyn
   assert.equal(row(r, 'No se han podido pasar'), 1);
   assert.equal(row(r, 'Quedan en el dominio anterior'), 1);
   assert.match(text(r), /uid2 \(INTERNAL_ERROR\)/);
+  assert.deepEqual(f.calls.filter(c => c.startsWith('update uid2')), ['update uid2 email+validSince'], 'y no se prueba de otra manera: queda como estaba');
 });
 
 test('si la cuenta de prueba no se puede borrar, se dice cuál es para borrarla a mano', async () => {
@@ -352,7 +364,7 @@ test('la cuenta de prueba no puede ser la de nadie: su nombre no vale como usuar
 test('lo que se escribe no lleva usuarios ni correos, solo recuentos e identificadores', async () => {
   const names = ['victoradmin_', 'ana_1', 'bea', 'carlos.m', 'dora-7'];
   for (const mode of MODES)
-    for (const opts of [{}, { restore: 'never' }, { signIn: 'PERMISSION_DENIED' }, { refuse: email => email == 'bea' + NEW ? 'INTERNAL_ERROR' : '' }, { keep: 1 }]) {
+    for (const opts of [{}, { restore: 'never' }, { restore: 'apart' }, { signIn: 'PERMISSION_DENIED' }, { refuse: email => email == 'bea' + NEW ? 'INTERNAL_ERROR' : '' }, { keep: 1 }]) {
       const f = fake(names.map(n => n + OLD).concat('ana_1' + NEW, 'zoe.externa@gmail.com'), opts);
       const out = text(await run(f, mode));
       for (const n of names.concat('zoe.externa', 'gmail', OLD_TECH_DOMAIN, TECH_DOMAIN, 'zz-prueba', 'mensaje de Firebase'))

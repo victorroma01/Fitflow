@@ -53,35 +53,55 @@ export function sortAccounts(users) {
 export const rulesAccept = source => String(source || '').includes(TECH_DOMAIN.replace(/\./g, '[.]')) && String(source || '').includes("'@" + TECH_DOMAIN + "'");
 
 /** Pasa una cuenta al dominio de ahora: el mismo uid, la misma contraseña y el mismo rol; solo cambia el correo técnico.
-    Al cambiar el correo, Firebase da por caducadas las sesiones abiertas: pone «válidas desde» (validSince) a ese momento. Con
-    `keep`, ese dato vuelve a su valor de antes (va en la misma petición y, si Firebase no lo respeta ahí, en otra después), así
-    que las sesiones que valían siguen valiendo y el móvil no nota nada; se comprueba leyendo la cuenta. Devuelve true si las
-    sesiones se han conservado (o false: la cuenta está pasada, pero en sus móviles hay que volver a entrar). */
-async function moveOne(auth, io, u, keep) {
+    Al cambiar el correo, Firebase da por caducadas las sesiones abiertas: pone «válidas desde» (validSince) a ese momento.
+    Para conservarlas, ese dato vuelve a su valor de antes, y las sesiones que valían siguen valiendo: el móvil no nota nada.
+    `how` dice cómo: 'inline', en la misma petición que cambia el correo (y, si ahí no queda, en otra después); 'after', en
+    otra justo después (entre las dos, unas décimas de segundo, la sesión de esa cuenta no se renovaría); 'find', en el
+    ensayo, prueba la primera y, si Firebase la rechaza, la segunda; '', no se conservan. Se comprueba leyendo la cuenta.
+    Devuelve cómo se han conservado ('inline' o 'after') o '': la cuenta está pasada, pero en sus móviles hay que volver a
+    entrar. Si Firebase no admite el correo, el error sale de aquí y la cuenta queda como estaba. */
+async function moveOne(auth, io, u, how) {
   const email = localOf(u.email) + '@' + TECH_DOMAIN;
-  if (!keep || !u.validSince) {
+  const since = String(u.validSince);
+  const same = async () => validSinceOf(await auth.getUser(u.uid)) == u.validSince;
+  if (!how || !u.validSince) {
     await io.update(u.uid, { email });
-    return false;
+    return '';
   }
-  await io.update(u.uid, { email, validSince: String(u.validSince) });
-  for (let i = 0; i < 2; i++) {
-    if (validSinceOf(await auth.getUser(u.uid)) == u.validSince)
-      return true;
-    if (!i)
-      await io.update(u.uid, { validSince: String(u.validSince) });
+  let inline = how != 'after';
+  if (inline)
+    try {
+      await io.update(u.uid, { email, validSince: since });
+    }
+    catch (e) {
+      /* con una cuenta de verdad no se prueba otra cosa: queda sin pasar y se dice */
+      if (how != 'find')
+        throw e;
+      inline = false;
+    }
+  if (!inline)
+    await io.update(u.uid, { email });
+  if (inline && await same())
+    return 'inline';
+  try {
+    await io.update(u.uid, { validSince: since });
   }
-  return false;
+  catch (e) {
+    return '';
+  }
+  return await same() ? 'after' : '';
 }
 
 /** Ensayo con una cuenta de prueba, que se crea con el dominio anterior, entra como entraría un móvil, se pasa como las de
     verdad y se borra. Dice, sin tocar ninguna cuenta, si Authentication admite el dominio de ahora y si la sesión que tenía
-    abierta sigue valiendo después (`sessions`: 'kept', 'lost' o, si no se ha podido mirar, 'unknown'; `reason`: por qué).
+    abierta sigue valiendo después (`sessions`: 'kept', 'lost' o, si no se ha podido mirar, 'unknown'; `reason`: por qué;
+    `how`: cómo se han conservado, que es como se pasan después las de verdad: moveOne).
     Su nombre tiene más de 20 caracteres: no puede ser el de ningún usuario (la app no los admite tan largos) y las reglas de
     Firestore no la dejan entrar en nada. `problem`: '' si va bien o qué falla; `left`: su uid si no se ha podido borrar. */
 export async function rehearse(auth, io) {
   const name = 'zz-prueba-del-dominio-' + randomBytes(4).toString('hex');
   const password = randomBytes(24).toString('base64url');
-  const out = { problem: '', left: '', sessions: 'unknown', reason: '' };
+  const out = { problem: '', left: '', sessions: 'unknown', reason: '', how: '' };
   let uid = '';
   try {
     uid = (await auth.createUser({ email: name + '@' + OLD_TECH_DOMAIN, password })).uid;
@@ -98,10 +118,10 @@ export async function rehearse(auth, io) {
     /* el cambio tiene que caer en un segundo posterior al de la entrada: si no, la sesión valdría de todos modos */
     if (token)
       await io.pause();
-    const kept = await moveOne(auth, io, u, true);
+    const how = await moveOne(auth, io, u, 'find');
     if ((await auth.getUserByEmail(name + '@' + TECH_DOMAIN)).uid !== uid)
       out.problem = 'la cuenta de prueba no aparece con el dominio de ahora';
-    else if (!kept) {
+    else if (!how) {
       out.sessions = 'lost';
       out.reason = 'Firebase no deja devolver la validez de las sesiones';
     }
@@ -109,6 +129,7 @@ export async function rehearse(auth, io) {
       try {
         await io.refresh(token);
         out.sessions = 'kept';
+        out.how = how;
       }
       catch (e) {
         out.sessions = 'lost';
@@ -167,7 +188,8 @@ export async function moveAccounts(auth, io, { mode, rules }) {
   else if (go) {
     for (const u of before.move)
       try {
-        if (!await moveOne(auth, io, u, keep))
+        /* como se han conservado en el ensayo, y de ninguna otra manera */
+        if (!await moveOne(auth, io, u, keep ? test.how : ''))
           closed.push(u.uid);
         moved++;
       }

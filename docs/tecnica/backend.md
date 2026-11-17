@@ -204,10 +204,12 @@ Firebase da por caducadas las sesiones de una cuenta cuando cambia su correo: ap
 cada móvil tendría que volver a entrar, y uno con una versión anterior a la 1.0.32, que no conoce el dominio nuevo, no podría
 hasta actualizar.
 
-Por eso, al pasar una cuenta se le devuelve ese dato a su valor de antes (`moveOne`): va en la misma petición que cambia el
-correo y, si Firebase no lo respeta ahí, en otra justo después; al final se lee la cuenta para comprobarlo. Las sesiones que
-valían siguen valiendo, las que ya no valían siguen sin valer y el móvil no nota nada: sigue sincronizando, ahora con el
-correo nuevo, tenga la versión que tenga.
+Por eso, al pasar una cuenta se le devuelve ese dato a su valor de antes (`moveOne`), en la misma petición que cambia el
+correo, y después se lee la cuenta para comprobarlo. Si Firebase no lo respeta ahí, o no admite las dos cosas juntas, va en
+otra petición justo después: entonces, durante unas décimas de segundo, esa cuenta no podría renovar su sesión (un móvil la
+renueva una vez por hora; si cayese justo en ese momento, pediría volver a entrar). El ensayo averigua cuál de las dos
+maneras funciona, y las cuentas de verdad se pasan de esa. Las sesiones que valían siguen valiendo, las que ya no valían
+siguen sin valer y el móvil no nota nada: sigue sincronizando, ahora con el correo nuevo, tenga la versión que tenga.
 
 Como esto depende de cómo se porte Firebase de verdad, **antes de tocar ninguna cuenta se ensaya** con una de prueba
 (`rehearse`): se crea con el dominio anterior, entra por la API pública como entraría un móvil, se pasa como las de verdad y se
