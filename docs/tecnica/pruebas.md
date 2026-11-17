@@ -208,3 +208,5 @@ trae las fotos nuevas de los días y pasa las cuentas a su [dominio nuevo](backe
 37. Con el Hyrox / CrossFit: cada día lleva su foto (SkiErg, la carga de granjero, el thruster, la competición) y los descansos,
     la de sentado en el cajón. En Perfil → Datos biométricos, Sexo: Mujer: las fotos pasan a ser las de la modelo, también en
     Bro Split (el día de brazos, el tríceps en polea) y en los descansos (por la calle). Volver a Hombre deja las de antes.
+38. En un día de descanso, los nombres de la barra de pestañas (Nutrición, Dashboard, Perfil) se leen igual de bien que en un
+    día de entreno. (En el Safari de las pruebas de GitHub se midieron más tenues ese día; en Chromium, no.)
