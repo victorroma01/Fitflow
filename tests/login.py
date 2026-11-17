@@ -88,9 +88,24 @@ def main(path):
         check('es un adorno: sin texto alternativo, fuera del lector de pantalla y sin recibir toques', k['alt'] == '' and k['hidden'] == 'true' and k['events'] == 'none', str([k['alt'], k['hidden'], k['events']]))
         check('con el móvil en claro, el inicio de sesión sigue en oscuro (también la tarjeta)', k['theme'] == 'dark' and k['scheme'] == 'dark' and k['card'] == 'rgb(23, 23, 27)', str([k['theme'], k['scheme'], k['card']]))
         bar = pg.evaluate("(m => m ? m.content : '')(document.querySelector('meta[name=\"theme-color\"]:not([media])'))")
-        check('y la barra del sistema, oscura', bar == '#0b0b0d', bar)
+        check('y la barra del sistema, negra', bar == '#000000', bar)
+        # debajo de la tarjeta, poco texto: al entrar, cómo recuperar la contraseña; al crear cuenta, nada (lo que se guarda lo
+        # cuenta Privacidad). Con App Check, además, una línea con reCAPTCHA, sin nombrar las condiciones de Google (desde abril
+        # de 2026 sus preguntas frecuentes piden quitarlas)
+        notes = "[...document.querySelectorAll('#lgw .lgn')].map(p => p.textContent.trim())"
+        rc = ['Protegido por reCAPTCHA.'] if pg.evaluate('appCheckOn()') else []
+        check('al entrar, debajo de la tarjeta: cómo recuperar la contraseña' + (' y «Protegido por reCAPTCHA.»' if rc else ''),
+              pg.evaluate(notes) == ['¿Has olvidado la contraseña? Pídele al administrador una temporal.'] + rc, str(pg.evaluate(notes)))
         pg.evaluate("A.loginMode(0,{dataset:{v:'up'}})")
         check('al pasar a «Crear cuenta» la foto es la misma (no se vuelve a cargar)', pg.evaluate("(i => !!i && i.complete && i.naturalWidth == 720)(document.querySelector('#lgw .lgbg'))"))
+        check('al crear cuenta no hay nota' + (', solo la línea de reCAPTCHA' if rc else ''), pg.evaluate(notes) == rc, str(pg.evaluate(notes)))
+        check('y Privacidad sigue a mano, en las dos', pg.evaluate("!!document.querySelector('#lgw button.lgl[data-a=loginPrivacy]')"))
+        if rc:
+            pg.click('[data-a=loginPrivacy]')
+            pg.wait_for_timeout(300)
+            seen = pg.evaluate("document.querySelector('#sh') ? document.querySelector('#sh').textContent : ''")
+            check('Privacidad cuenta para qué se usa reCAPTCHA, sin nombrar las condiciones de Google',
+                  'reCAPTCHA Enterprise' in seen and 'Condiciones de servicio' not in seen and 'No se guarda ningún dato personal' in seen, seen[-200:])
         c.close()
 
         print('A cada tamaño')

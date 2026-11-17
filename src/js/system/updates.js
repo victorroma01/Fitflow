@@ -36,7 +36,7 @@ let swState = 0;
           x.drawImage(im, 0, 0, 180, 180);
           const ic = c.toDataURL('image/png');
           mk('link', { rel: 'apple-touch-icon', href: ic });
-          const mf = { name: 'StrataFit', short_name: 'StrataFit', display: 'standalone', start_url: location.href.split('#')[0], background_color: '#0b0b0d', theme_color: '#0b0b0d', icons: [{ src: ic, sizes: '180x180', type: 'image/png' }] };
+          const mf = { name: 'StrataFit', short_name: 'StrataFit', display: 'standalone', start_url: location.href.split('#')[0], background_color: '#000000', theme_color: '#000000', icons: [{ src: ic, sizes: '180x180', type: 'image/png' }] };
           mk('link', { rel: 'manifest', href: URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/manifest+json' })) });
         }
         catch (e) {

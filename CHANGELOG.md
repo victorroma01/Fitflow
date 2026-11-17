@@ -31,10 +31,16 @@ línea.
 ### Interno
 - Entreno: el botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out», que suena a cerrar la sesión de la
   cuenta), también en los textos que lo nombran.
-- Inicio de sesión (F-33, T-18, que estaba pospuesto): detrás va la foto de un gimnasio visto desde arriba, del propietario,
-  en gris y desenfocada, a media luz. La pantalla va siempre en oscuro, también su tarjeta, tenga el móvil el tema que tenga,
-  y cada texto suelto lleva su propio velo para leerse también sobre la parte clara de la foto. Al repositorio y a la app solo
-  llega la versión desenfocada (`tools/fondo.py`), en la que no se reconoce a nadie.
+- Inicio de sesión (F-33, T-18, que estaba pospuesto): detrás va la imagen de un gimnasio visto desde arriba, del propietario
+  (hecha con Gemini: ni el sitio ni la gente son reales), en gris y desenfocada, a media luz, como en su ejemplo
+  (`tools/fondo.py`). La pantalla va siempre en oscuro, también su tarjeta, tenga el móvil el tema que tenga, y cada texto
+  suelto lleva su propio velo para leerse también sobre la parte clara de la imagen. Debajo de la tarjeta, menos texto: al
+  crear cuenta ya no hay nota (lo que se guarda lo cuenta Privacidad) y el aviso de reCAPTCHA es una línea, «Protegido por
+  reCAPTCHA.». Desde el 2 de abril de 2026, con el sello de reCAPTCHA oculto, sus preguntas frecuentes solo piden decir que
+  se usa y piden quitar las referencias a las condiciones de Google, que tampoco nombra ya Privacidad.
+- Fondo de la app: liso, negro (`#000`) en el tema oscuro y gris muy claro en el claro, con cualquier estilo y color. Con
+  Cristal llevaba detrás unos brillos del color de acento (`body::before`, en `css/90-glass`), que ya no están; la vista previa
+  de Cristal en Tema y estilo, igual. La barra del sistema (`theme-color`) y el manifiesto, también en negro.
 - Cuentas: el correo técnico de cada cuenta, que nadie ve, pasa a ser `usuario@stratafit-960ec.firebaseapp.com`, con el dominio
   del propio proyecto de Firebase. La app registra con él y entra con él o, si la cuenta aún no se ha pasado, con el anterior
   (`cloud/auth`); las reglas de Firestore admiten los dos mientras tanto. Publicar la versión no cambia nada para nadie. Las
@@ -50,7 +56,8 @@ línea.
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.
-- Pruebas: `tests/login.py` (el fondo del inicio de sesión a diez tamaños, con el contraste de cada texto),
+- Pruebas: `tests/login.py` (el fondo del inicio de sesión a diez tamaños, con el contraste de cada texto, y lo que va debajo
+  de la tarjeta), `tests/smoke.py` (el fondo de la app, liso, con Cristal y sin él),
   `tests/dominio.test.mjs` (el paso de las cuentas, con una Authentication de mentira), `tests/cloud.py` (una cuenta con el
   dominio anterior entra, se pasa y su sesión sigue abierta), `tests/rules.test.mjs` (los dos dominios, y ninguno que solo se
   parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.

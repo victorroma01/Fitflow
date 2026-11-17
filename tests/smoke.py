@@ -142,12 +142,24 @@ def main(path):
         ev("A.themeChoose(0,{dataset:{v:'light'}})")
         check('theme-color claro con el tema claro elegido', ev(tc) == '#f3f3f7', ev(tc))
         ev("A.themeChoose(0,{dataset:{v:'dark'}})")
-        check('theme-color oscuro con el tema oscuro elegido', ev(tc) == '#0b0b0d', ev(tc))
+        check('theme-color oscuro con el tema oscuro elegido', ev(tc) == '#000000', ev(tc))
         ev("A.themeChoose(0,{dataset:{v:''}})")
         auto = ev(tc)
-        check('en automático manda el tema del móvil', ev("!document.querySelector('meta[name=theme-color]:not([media])')") and auto in ('', '#0b0b0d'), auto)
+        check('en automático manda el tema del móvil', ev("!document.querySelector('meta[name=theme-color]:not([media])')") and auto in ('', '#000000'), auto)
         if 'index.html' in path:
-            check('el paquete trae theme-color para tema claro y oscuro', ev("[...document.querySelectorAll('meta[name=theme-color][media]')].map(m=>m.content).sort().join()") == '#0b0b0d,#f3f3f7')
+            check('el paquete trae theme-color para tema claro y oscuro', ev("[...document.querySelectorAll('meta[name=theme-color][media]')].map(m=>m.content).sort().join()") == '#000000,#f3f3f7')
+
+        # el fondo de la app, liso: negro en el tema oscuro y gris muy claro en el claro, sin Cristal y con sus tres niveles. Hasta
+        # la V1.0.32, Cristal ponía detrás unos brillos del color de acento (body::before)
+        bgs = ev("""(() => { const out = [], g = [S.glassLevel, S.glassOn];
+          for (const th of ['dark', 'light']) for (const gm of [0, 1, 2, 3]) {
+            A.themeChoose(0, {dataset: {v: th}}); S.glassLevel = gm; S.glassOn = gm ? 1 : 0; R();
+            const b = getComputedStyle(document.body), a = getComputedStyle(document.body, '::before');
+            out.push([th, gm, document.documentElement.classList.contains('gl'), b.backgroundColor, b.backgroundImage, a.backgroundImage]); }
+          [S.glassLevel, S.glassOn] = g; A.themeChoose(0, {dataset: {v: ''}}); return out; })()""")
+        want = {'dark': 'rgb(0, 0, 0)', 'light': 'rgb(243, 243, 247)'}
+        check('el fondo es liso, sin brillos de color: negro en oscuro y gris muy claro en claro, con Cristal (sus tres niveles) y sin él',
+              len(bgs) == 8 and all(x[2] == (x[1] > 0) and x[3] == want[x[0]] and x[4] == 'none' and x[5] == 'none' for x in bgs), str(bgs))
 
         # persistencia
         ev('saveState()')

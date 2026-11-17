@@ -72,7 +72,6 @@ html.gl {
   --gb:rgba(255,255,255,var(--gba));
   --gh:rgba(255,255,255,var(--gha));
   --gs:0 12px 34px rgba(var(--gsc),var(--gss));
-  --gtop:var(--a3);
   --gw:rgba(255,255,255,calc(var(--gba)*.35));
   --gsh:linear-gradient(155deg,rgba(255,255,255,var(--s1)) 0%,rgba(255,255,255,var(--s2)) 46%,rgba(255,255,255,var(--s3)) 100%);
   --grim:inset 0 1.5px 0 var(--gh),inset 0 -1px 0 var(--gw),inset 0 26px 28px -26px rgba(255,255,255,calc(var(--gha)*.5));
@@ -88,7 +87,6 @@ html.gl[data-gm="1"] {
   --gfa:0.05;
   --gba:0.12;
   --gha:0.2;
-  --gz:0.35;
   --gss:0.22;
   --s1:0.09;
   --s2:0.03;
@@ -105,7 +103,6 @@ html.gl[data-gm="2"] {
   --gfa:0.09;
   --gba:0.2;
   --gha:0.38;
-  --gz:0.8;
   --gss:0.3;
   --s1:0.17;
   --s2:0.05;
@@ -124,15 +121,14 @@ html.gl[data-gm="3"] {
   --gfa:0.14;
   --gba:0.34;
   --gha:0.65;
-  --gz:1;
   --gss:0.4;
   --s1:0.22;
   --s2:0.07;
   --s3:0.14;
 }
 /* el texto sobre vidrio: el gris del texto secundario (--mu) y los colores que hacen de texto (--at, --ctx, --ptx…) son más
-   claros en el tema oscuro y más oscuros en el claro que sin Cristal, y más aún en el nivel 3: detrás del vidrio va el brillo
-   de color del fondo y, con el gris de serie, el contraste no llegaba a 4,5 (tests/contrast.py) */
+   claros en el tema oscuro y más oscuros en el claro que sin Cristal, y más aún en el nivel 3: el vidrio lleva su propio brillo
+   y deja ver lo que pasa por debajo y, con el gris de serie, el contraste no llegaba a 4,5 (tests/contrast.py) */
 /* tema claro: el diálogo (--pd), las hojas (--ps) y las páginas (--pf), casi opacos en todos los niveles. Su texto es oscuro
    y lo de detrás se oscurece (.dgb, .bk): con el vidrio más fino quedaban grises y, sobre una foto oscura, el texto no se
    leía (tests/contrast.py) */
@@ -148,13 +144,11 @@ html.gl[data-gm="3"] {
     --wnx:#7a4e08;
     --erx:#922a2e;
     --snx:#1a5294;
-    --gtop:var(--a1);
     --ps:92%;
     --pf:95%;
     --gfa:0.78;
     --gba:0.75;
     --gha:0.95;
-    --gz:0.14;
     --gss:0.08;
     --s1:0.86;
     --s2:0.72;
@@ -171,14 +165,12 @@ html.gl[data-gm="3"] {
     --wnx:#7a4e08;
     --erx:#922a2e;
     --snx:#1a5294;
-    --gtop:var(--a1);
     --ps:90%;
     --pf:93%;
     --pd:84%;
     --gfa:0.55;
     --gba:0.85;
     --gha:1;
-    --gz:0.36;
     --gss:0.13;
     --s1:0.72;
     --s2:0.46;
@@ -195,14 +187,12 @@ html.gl[data-gm="3"] {
     --wnx:#6b4406;
     --erx:#822428;
     --snx:#164780;
-    --gtop:var(--a1);
     --ps:88%;
     --pf:92%;
     --pd:84%;
     --gfa:0.4;
     --gba:0.95;
     --gha:1;
-    --gz:0.6;
     --gss:0.18;
     --s1:0.6;
     --s2:0.28;
@@ -220,13 +210,11 @@ html.gl[data-gm="1"][data-theme="light"] {
   --wnx:#7a4e08;
   --erx:#922a2e;
   --snx:#1a5294;
-  --gtop:var(--a1);
   --ps:92%;
   --pf:95%;
   --gfa:0.78;
   --gba:0.75;
   --gha:0.95;
-  --gz:0.14;
   --gss:0.08;
   --s1:0.86;
   --s2:0.72;
@@ -243,14 +231,12 @@ html.gl[data-gm="2"][data-theme="light"] {
   --wnx:#7a4e08;
   --erx:#922a2e;
   --snx:#1a5294;
-  --gtop:var(--a1);
   --ps:90%;
   --pf:93%;
   --pd:84%;
   --gfa:0.55;
   --gba:0.85;
   --gha:1;
-  --gz:0.36;
   --gss:0.13;
   --s1:0.72;
   --s2:0.46;
@@ -267,35 +253,18 @@ html.gl[data-gm="3"][data-theme="light"] {
   --wnx:#6b4406;
   --erx:#822428;
   --snx:#164780;
-  --gtop:var(--a1);
   --ps:88%;
   --pf:92%;
   --pd:84%;
   --gfa:0.4;
   --gba:0.95;
   --gha:1;
-  --gz:0.6;
   --gss:0.18;
   --s1:0.6;
   --s2:0.28;
   --s3:0.5;
 }
-html.gl body::before {
-  content:"";
-  position:fixed;
-  inset:-8% -8%;
-  z-index:-1;
-  pointer-events:none;
-}
-html.gl[data-gm="1"] body::before {
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -157.37% -14.54%/75.9% 31.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 187.54% 6.21%/63.6% 26.9% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 178.87% 91.06%/61.2% 26.9% no-repeat;
-}
-html.gl[data-gm="2"] body::before {
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -416.42% -20.33%/89.3% 37.4% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 249.04% 3.16%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gmid) min(100%,calc(var(--gz)*100%)),transparent),transparent) -149.04% 70.49%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 228.57% 93.91%/72.0% 31.7% no-repeat;
-}
-html.gl[data-gm="3"] body::before {
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) 0.00% -32.71%/100.0% 46.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 831.25% -2.98%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gmid) min(100%,calc(var(--gz)*100%)),transparent),transparent) -731.25% 73.18%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 550.00% 99.67%/90.0% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*85%)),transparent),transparent) 0.00% 151.50%/100.0% 46.8% no-repeat;
-}
+/* el fondo va liso, el de --bg (negro en el tema oscuro): sin los brillos de color que Cristal ponía detrás hasta la V1.0.32 */
 :where(html.gl) button {
   background:color-mix(in srgb,var(--tx) 8%,transparent);
   border-color:var(--gb);
@@ -446,8 +415,5 @@ html.gl .mc:not(.on) {
     background:var(--cd);
     -webkit-backdrop-filter:none;
     backdrop-filter:none;
-  }
-  html.gl body::before {
-    display:none;
   }
 }

@@ -67,8 +67,10 @@
   background:color-mix(in srgb,var(--tx) 9%,var(--cd));
   border:1px solid color-mix(in srgb,var(--tx) 22%,transparent);
 }
+/* sobre el fondo liso, como en la app (hasta la V1.0.32, con los brillos de color que llevaba detrás) */
 .gpv.gc {
-  background:radial-gradient(70% 100% at 8% 0%,var(--a2),transparent 72%),radial-gradient(60% 90% at 100% 100%,var(--p),transparent 70%),radial-gradient(40% 70% at 55% 120%,var(--c),transparent 70%),var(--bg);
+  background:var(--bg);
+  border:1px solid var(--ln);
 }
 .gpv.gc::after {
   border-radius:14px;

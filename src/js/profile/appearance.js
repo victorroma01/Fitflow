@@ -11,7 +11,7 @@ import { R } from '../core/render.js';
 import { html, raw } from '../core/html.js';
 /** Colores de serie: [nombre, claro (a1), principal (a2), oscuro (a3), texto sobre el principal (ft)]. El orden no cambia
   (S.accent es la posición); los nuevos van al final. El texto de encima (ft) tiene un contraste de 4,5 o más con el principal
-  (WCAG AA) y el oscuro es lo bastante oscuro para que el texto gris se lea sobre su brillo de fondo (tests/contrast.py). */
+  (WCAG AA) y el oscuro es lo bastante oscuro para que el texto de encima se lea (la cabecera del día: tests/contrast.py). */
 export const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#523e00', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#c64c0a', '#702a05', '#fff'], ['Rosa', '#ff8fc8', '#d6337f', '#6b1440', '#fff'], ['Turquesa', '#4fd6cf', '#0c817c', '#064a47', '#fff'], ['Lima', '#c8ee62', '#8cc61b', '#2f4505', '#142000'], ['Grafito', '#b9bdc9', '#5b6170', '#2a2e37', '#fff']];
 /** El color con el que empieza la app, mientras no se elija otro: Azul eléctrico, el del logo (F-40; hasta la V1.0.0, Morado). */
 const DEFAULT_ACCENT = 1;
@@ -52,8 +52,8 @@ const toneBetween = (hex, lo, hi) => {
     c = c.map(v => v + (255 - v) * .04);
   return rgbHex(c);
 };
-/** Hasta dónde puede brillar el color de acento detrás del texto (el brillo de fondo del estilo Cristal y la fila de la serie en
-  curso): en el tema oscuro, algo menos que el azul de serie tal cual; en el claro, no menos que él. Con un amarillo o un lima
+/** Hasta dónde puede brillar el color de acento detrás del texto (la fila de la serie en curso; hasta la V1.0.32, también el
+  brillo de fondo del estilo Cristal): en el tema oscuro, algo menos que el azul de serie tal cual; en el claro, no menos que él. Con un amarillo o un lima
   tal cual, el texto gris de encima no llegaba al contraste (tests/contrast.py). */
 const GLOW_MAX_DARK = .13;
 const GLOW_MIN_LIGHT = .165;

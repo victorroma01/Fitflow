@@ -5,7 +5,7 @@
    Tras cinco intentos fallidos, una espera que se dobla en cada fallo (de 5 s a 5 min), además del bloqueo de Firebase.
    Al entrar: si los datos del móvil son de otra cuenta se borran, se bajan los de la cuenta (cloud/sync) y la app se abre
    de nuevo con ellos.
-   Define: loginState, waitLeft, noteFail, BAD_LOGIN, clearFails, loginBusy, loginError, waitTimer, loginField, loginModeTabs, signUpExtra, loginBackdrop, loginView, passwordView, loginSync, enterAccount, finishLogin, reloginBusy  · acciones/registros: 7
+   Define: loginState, waitLeft, noteFail, BAD_LOGIN, clearFails, loginBusy, loginError, waitTimer, loginField, loginModeTabs, signUpExtra, loginBackdrop, RECAPTCHA_NOTE, loginView, passwordView, loginSync, enterAccount, finishLogin, reloginBusy  · acciones/registros: 7
 */
 import { $, APPV } from '../core/util.js';
 import { Store } from '../core/store.js';
@@ -20,7 +20,7 @@ import { LOGIN_PHOTO } from '../data/photos.js';
 import { morph } from '../core/morph.js';
 import { pgHead, sheet } from '../core/ui.js';
 import { toast } from '../core/toast.js';
-import { privacyText, RECAPTCHA_TEXT } from '../profile/settings.js';
+import { privacyText } from '../profile/settings.js';
 import { appCheckOn } from '../cloud/appcheck.js';
 import { account, acctSave, wipeAccountData } from '../cloud/session.js';
 import { authMessage, changePassword, passProblem, signIn, signUp, userProblem } from '../cloud/auth.js';
@@ -89,16 +89,18 @@ const signUpExtra = () => html`<label for="lgp2">Repite la contraseña</label><i
 /** El fondo del inicio de sesión (F-33): la foto de un gimnasio visto desde arriba, ya en gris y desenfocada (data/photos);
   la oscurece css/94-account. Es un adorno: sin texto alternativo. */
 const loginBackdrop = () => LOGIN_PHOTO ? html`<img class="lgbg" src="${LOGIN_PHOTO}" alt="" aria-hidden="true">` : '';
-/** Pantalla de inicio de sesión o de registro. */
+/** Lo que pide reCAPTCHA cuando su sello no se ve (cloud/appcheck): decir que se usa. Desde el 2 de abril de 2026, sin nombrar
+    las condiciones de Google, como piden sus preguntas frecuentes. Qué hace lo cuenta Privacidad. */
+const RECAPTCHA_NOTE = 'Protegido por reCAPTCHA.';
+/** Pantalla de inicio de sesión o de registro: al crear cuenta, sin nota (lo que se guarda lo cuenta Privacidad). */
 const loginView = () => {
   if (account && account.mc)
     return passwordView();
   const up = loginState.m == 'up';
   const wait = waitLeft();
   const label = loginState.busy || (wait ? 'Espera ' + Math.ceil(wait / 1e3) + ' s' : up ? 'Crear cuenta' : 'Entrar');
-  const note = up ? 'Tus entrenos, comidas y medidas se guardan en tu cuenta para no perderlos y usarlos en varios móviles. No se guarda ningún dato personal: ni nombre, ni correo, ni teléfono.' : '¿Has olvidado la contraseña? Pídele al administrador una temporal.';
   const form = html`${loginModeTabs(up)}${raw(loginField('lgu', 'Usuario', { ac: 'username', go: 'loginSubmit' }))}${raw(loginField('lgp', 'Contraseña', { pw: 1, ac: up ? 'new-password' : 'current-password', go: 'loginSubmit' }))}${up ? signUpExtra() : ''}<p id="lge" class="lge" role="alert">${loginState.err}</p><button class="pr lgb" data-a="loginSubmit"${raw(loginState.busy || wait ? ' disabled' : '')}>${label}</button>`;
-  return html`<div id="lgw" class="lgw">${loginBackdrop()}<div class="lgbr">${brandLogo('lgl', 1)}</div><p class="lgs">Entrenamiento y nutrición</p><div class="cd lgc">${form}</div><p class="mu lgn">${note}</p>${appCheckOn() ? html`<p class="mu lgn fs-12">${RECAPTCHA_TEXT}</p>` : ''}<button class="lgl" data-a="loginPrivacy">Privacidad</button><div class="lgv">V${APPV}</div></div>`;
+  return html`<div id="lgw" class="lgw">${loginBackdrop()}<div class="lgbr">${brandLogo('lgl', 1)}</div><p class="lgs">Entrenamiento y nutrición</p><div class="cd lgc">${form}</div>${up ? '' : html`<p class="mu lgn">¿Has olvidado la contraseña? Pídele al administrador una temporal.</p>`}${appCheckOn() ? html`<p class="mu lgn fs-12">${RECAPTCHA_NOTE}</p>` : ''}<button class="lgl" data-a="loginPrivacy">Privacidad</button><div class="lgv">V${APPV}</div></div>`;
 };
 /** Cambio obligatorio de una contraseña temporal (account.mc: 1 al entrar, 2 al volver a entrar con la sesión caducada). */
 const passwordView = () => html`<div id="lgw" class="lgw">${loginBackdrop()}<div class="lgbr">${brandLogo('lgl', 1)}</div><div class="cd lgc"><h2 class="lgt">Elige una contraseña nueva</h2><p class="mu m-0-0-6">Has entrado con una contraseña temporal. Para seguir, elige una nueva que solo sepas tú.</p>${raw(loginField('lgp', 'Contraseña nueva', { pw: 1, ac: 'new-password', go: 'loginCreatePassword' }))}<label for="lgp2">Repite la contraseña</label><input id="lgp2" type="${loginState.eye ? 'text' : 'password'}" autocomplete="new-password" maxlength="100" data-enter="loginCreatePassword"><p id="lge" class="lge" role="alert">${loginState.err}</p><button class="pr lgb" data-a="loginCreatePassword"${raw(loginState.busy ? ' disabled' : '')}>${loginState.busy || 'Guardar y entrar'}</button></div><div class="lgv">V${APPV}</div></div>`;

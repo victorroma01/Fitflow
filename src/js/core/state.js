@@ -81,7 +81,7 @@ export const applyTheme = (only) => {
   }
   const t = m || document.createElement('meta');
   t.name = 'theme-color';
-  t.content = theme == 'light' ? '#f3f3f7' : '#0b0b0d';
+  t.content = theme == 'light' ? '#f3f3f7' : '#000000';
   m || document.head.insertBefore(t, document.querySelector('meta[name="theme-color"]'));
 };
 export let overviewMode = 0;
