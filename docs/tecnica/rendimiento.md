@@ -74,6 +74,25 @@ y `tests/calc.test.mjs` compara `fmtDate` con `toLocaleDateString` y `mondayKey`
 
 Además, al arrancar con datos nada da un salto en la pantalla (layout shift 0, que comprueba `tests/layout.py`).
 
+## Medido en la V1.0.32
+
+Medido el 17 de noviembre de 2026 con los mismos datos: mediana de 5 vueltas, alternando la V1.0.31 publicada y la V1.0.32. Este
+ordenador no es el de la V1.0.3: solo valen comparadas entre sí las dos columnas. La V1.0.32 trae 25 fotos de portada nuevas y
+el fondo del inicio de sesión. En el archivo único van incrustadas (pesa 1,58 MB, unos 420 KB más); en el paquete instalable
+son archivos aparte, que el service worker guarda en la primera actualización (unos 315 KB más) y que no se cargan al arrancar.
+
+| Medida | V1.0.31 | V1.0.32 | Diferencia |
+| --- | ---: | ---: | --- |
+| Primer pintado | 122 ms | 127 ms | Igual: está dentro de lo que varía de una vuelta a otra (en otras tres vueltas, 131 y 132 ms) |
+| Guardar, mirándolo todo | 7,1 ms | 7,3 ms | Igual |
+| Guardar, diciendo qué cambió | 0,5 ms | 0,5 ms | Igual |
+| Ver qué hay que subir | 18,4 ms | 20,4 ms | Igual (en otras tres vueltas, 21 y 28 ms: en este ordenador varía mucho) |
+| Pintar Workout | 1,0 ms | 1,0 ms | Igual |
+| Pintar Nutrición | 0,9 ms | 1,0 ms | Igual |
+| Pintar Dashboard | 5,0 ms | 4,7 ms | Igual |
+| Pintar Perfil | 1,1 ms | 1,0 ms | Igual |
+| Abrir Registros (700 entrenos) | 35 ms | 37 ms | Igual |
+
 ## Qué se hizo
 
 - **Guardar solo lo que cambia (I-10)**: antes, cada guardado pasaba a texto todo el estado para saber qué había cambiado; ahora la
