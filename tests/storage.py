@@ -159,13 +159,13 @@ def two_windows(b, path, url):
     a.evaluate("S.logs=[];S.defaultRest=150;" + log('Pecho'))
     a.reload()
     booted(a)
-    # (lo que la app guarda sola al arrancar con datos nuevos, como el primer logro, unos 2,5 s después: que quede hecho)
-    a.wait_for_timeout(3200)
+    # (lo que la app guarda sola al arrancar con datos nuevos: los logros, la primera vez, unos 2,5 s después. Que quede hecho)
+    until(a, '!!S.achievements', 8000)
     rev = a.evaluate("savesDone().then(()=>localStorage.getItem('ffrev'))")
     check('cada guardado deja su marca', bool(rev) and a.evaluate("S.defaultRest=151;flushState().then(()=>localStorage.getItem('ffrev'))") != rev, str(rev))
     q = window()
-    # (las dos hacen su primera sincronización, sin conexión, 1,5 s después de arrancar)
-    q.wait_for_timeout(2200)
+    # (lo que cada una hace sola al arrancar: la primera sincronización, sin conexión, a los 1,5 s, y mirar los logros, a los 2,5 s)
+    q.wait_for_timeout(3200)
     check('abrir la app otra vez no deja atrás a la que ya estaba: arrancar no guarda nada', not stale(a) and not stale(q) and q.evaluate(names) == 'Pecho' and a.evaluate(no_notice), str([stale(a), stale(q), q.evaluate(names), a.evaluate("document.querySelector('#dg').innerText")[:150]]))
 
     # ── una guarda: la otra se queda atrás, lo dice y deja de sincronizar ──

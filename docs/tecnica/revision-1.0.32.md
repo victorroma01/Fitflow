@@ -69,6 +69,10 @@ le haya pasado a nadie: R1 necesita un móvil sin sitio y R2, la app abierta dos
   de antes consigo misma: sus miniaturas se dibujan poco a poco y depende del momento. Y con el ordenador ocupado en otra
   prueba, una semilla del paseo dio una vez un HTML distinto al abrir «Cómo se hace», que carga su contenido aparte; repetida
   sola, salió igual.
+- **En GitHub**, con la [solicitud #61](https://github.com/victorroma01/Fitflow/pull/61): la batería entera con Chromium, con
+  el motor de Safari (WebKit) y con el de Firefox; `tests/cloud.py` contra el emulador de Firebase, con sus reglas; y la
+  comparación con `desarrollo-1.0.32` (paseo aleatorio y capturas), sin diferencias. Las pruebas nuevas pasan en los tres
+  motores: el aviso de que otra ventana ha guardado llega igual en todos.
 - **Rendimiento** (`tests/perf.py`, 1,3 MB de datos, 7 vueltas, las dos compilaciones alternadas dos veces): sin diferencia
   fuera de lo que varía de una medida a otra.
 
@@ -82,8 +86,6 @@ le haya pasado a nadie: R1 necesita un móvil sin sitio y R2, la app abierta dos
 
 ## Lo que no se pudo comprobar
 
-- **WebKit (Safari) y Firefox**: aquí solo hay Chromium. La batería entera con los otros dos motores se pasa en GitHub al subir
-  la rama.
 - **En un móvil de verdad**: dos pestañas de Safari en el iPhone, y la app instalada junto a una pestaña de Chrome en Android
   (la prueba en un Android sigue abierta: I-01). Lo probado son dos páginas del mismo navegador de prueba, que comparten lo
   guardado igual que ellas.
