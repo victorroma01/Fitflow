@@ -29,7 +29,7 @@ const { FIG_POSES } = await import(pathToFileURL(join(dir, 'data/figposes.js')))
 const { EX_ALIASES } = await import(pathToFileURL(join(dir, 'data/aliases.js')));
 const R = await import(pathToFileURL(join(dir, 'extras/rig.js')));
 const { figPose } = await import(pathToFileURL(join(dir, 'extras/moves.js')));
-const { athleteFrame } = await import(pathToFileURL(join(dir, 'extras/athlete.js')));
+const { athleteDefs, athleteFrame } = await import(pathToFileURL(join(dir, 'extras/athlete.js')));
 const { EXERCISES } = await import('../src/js/data/library.js');
 
 const NAMES = EXERCISES.map(e => e.n);
@@ -957,4 +957,52 @@ test('el atleta: el brazo se rehace en todo el gesto, el antebrazo llega a la ma
   const [, ey] = placed(layersAt(def, 1).FA);
   const low = Math.max(...verts(Object.fromEntries(athleteFrame(def, 1).map(([k, , v]) => [k, v])).u).map(p => p[1]));
   assert.ok(low - ey >= 9, 'el codo, arriba, baja ' + (low - ey).toFixed(1) + ' bajo la articulación');
+});
+
+test('el atleta: el cuerpo de perfil va de una pieza (las juntas siguen de una pieza a otra), con los mismos puntos de giro y los pies en el suelo', () => {
+  const defs = athleteDefs();
+  /* los vértices de cada tramo (M y el final de cada C) de un trazado de <defs> */
+  const subpaths = id => {
+    const d = new RegExp('<path id="' + id + '" d="([^"]+)"').exec(defs)[1];
+    return d.split('M').filter(Boolean).map(t => {
+      const n = t.match(/-?[\d.]+/g).map(Number);
+      const out = [[n[0], n[1]]];
+      for (let i = 2; i + 5 < n.length; i += 6)
+        out.push([n[i + 4], n[i + 5]]);
+      return out;
+    });
+  };
+  /* si un punto queda dentro de un polígono (sus vértices) */
+  const inside = (p, ps) => {
+    let c = false;
+    for (let i = 0, j = ps.length - 1; i < ps.length; j = i++)
+      if ((ps[i][1] > p[1]) != (ps[j][1] > p[1]) && p[0] < (ps[j][0] - ps[i][0]) * (p[1] - ps[i][1]) / (ps[j][1] - ps[i][1]) + ps[i][0])
+        c = !c;
+    return c;
+  };
+  /* lo que dista un punto de una línea quebrada */
+  const away = (p, ps) => Math.min(...ps.slice(1).map((q, i) => {
+    const a = ps[i];
+    const L = (q[0] - a[0]) ** 2 + (q[1] - a[1]) ** 2 || 1;
+    const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * (q[0] - a[0]) + (p[1] - a[1]) * (q[1] - a[1])) / L));
+    return Math.hypot(p[0] - a[0] - u * (q[0] - a[0]), p[1] - a[1] - u * (q[1] - a[1]));
+  }));
+  const bad = [];
+  // cada pieza tapa sus articulaciones: gira por donde giraba la del maniquí
+  for (const [k, js] of [['TX', ['neck', 'sh', 'waist']], ['TH', ['hip', 'knee']], ['SH', ['knee', 'ankle']], ['FT', ['ankle', 'toe']]])
+    for (const j of js)
+      if (!inside(FG_J[j], subpaths('atB' + k)[0]))
+        bad.push(k + ': ' + j + ' fuera de la silueta');
+  // los bordes siguen de una pieza a la siguiente: el final del borde de una está sobre el de la otra
+  const [thF, thB] = subpaths('atBETH');
+  const [shF, shB] = subpaths('atBESH');
+  const [ft] = subpaths('atBEFT');
+  for (const [name, end, next] of [['rodilla, delante', thF.at(-1), shF], ['rodilla, detrás', thB.at(-1), shB], ['tobillo, delante', shF.at(-1), ft], ['tobillo, detrás', shB.at(-1), ft]])
+    if (away(end, next) > .6)
+      bad.push(name + ': el borde se corta (' + away(end, next).toFixed(2) + ')');
+  // el talón y el antepié apoyan en el suelo
+  const foot = subpaths('atBFT')[0];
+  if (!foot.some(p => p[0] < FG_J.ankle[0] && p[1] >= 401.8) || !foot.some(p => p[0] > FG_J.toe[0] - 8 && p[1] >= 401.8))
+    bad.push('el pie no apoya el talón y el antepié');
+  fails(bad, 'cuerpo del atleta');
 });

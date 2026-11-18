@@ -112,7 +112,12 @@ línea.
   va seguido del hombro al codo; el bíceps es parte del volumen del brazo (sin borde negro, fundido con la piel) y al
   flexionar se acorta y se hincha; el puño rodea la barra con el pulgar y el índice, y una prueba comprueba que las dos manos
   no la sueltan en todo el gesto. La vista de tres cuartos que pedía para ver el tramo acodado de la barra Z no cabe en el
-  modelo de perfil: el piloto sigue de perfil.
+  modelo de perfil: el piloto sigue de perfil. Tercera revisión, la silueta: el cuerpo va de una pieza (las juntas sin
+  línea, con los mismos puntos de giro); la nuca baja al trapecio y la garganta sale de la barbilla, con la cabeza algo
+  mayor y ceja, ojo y boca; el pantalón sigue la curva lumbar y del glúteo, con cinturilla y un bajo que acompaña a la
+  pierna; la rodilla, sin la «U» ni el óvalo de la rótula; y el pie, con el tendón de Aquiles, empeine y la punta
+  redondeada, apoyado en el suelo. Pruebas: `tests/rig.test.mjs` (las articulaciones, los bordes que siguen y el apoyo) y
+  `tests/figures.py`.
 
 ## [1.0.31] — 2026-11-16
 

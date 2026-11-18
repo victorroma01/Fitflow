@@ -11,7 +11,7 @@
    - Lo demás son las piezas del maniquí (data/figure) con piel: un mismo tono, la sombra de los bordes por dentro, el
      relieve de los músculos en reposo y, encima, en rojo y naranja, lo que trabaja. El pantalón corto tapa la pelvis, la
      cadera y el principio del muslo; el pelo, corto y oscuro.
-   Define: AT_SKIN, AT_SKIN_FAR, AT_CONTOUR, AT_SOFT, AT_EDGE, AT_PIECES, AT_ARM, AT_BULGE, AT_ARM_MUSCLES, AT_FORE_MUSCLES, AT_HATCH, atR1, atPt, atCurve, atCross, AT_FIST, AT_THUMB, atSwell, atBulge, atBiceps, atShade, atArm, athleteDefs, atDefsHtml, atSkin, atWorked, atMuscle, atRelief, atShorts, atFist, atN, atArmHtml, athleteLayer, ATHLETE_STILL, athleteFrame
+   Define: AT_SKIN, AT_SKIN_FAR, AT_CONTOUR, AT_SOFT, AT_EDGE, AT_PIECES, AT_ARM, AT_BULGE, AT_ARM_MUSCLES, AT_FORE_MUSCLES, AT_HATCH, atR1, atPt, atCurve, atCross, AT_BODY, AT_LIGHT, AT_SHORTS, AT_HEAD, atSegs, AT_FIST, AT_THUMB, atSwell, atBulge, atBiceps, atShade, atArm, athleteDefs, atDefsHtml, atSkin, atWorked, atMuscle, atRelief, atBody, atShorts, atHead, atFist, atN, atArmHtml, athleteLayer, ATHLETE_STILL, athleteFrame
 */
 import { FG_J, FG_P, FG_PA } from '../data/figure.js';
 import { rigMove, rigPlace, rigSolve } from './rig.js';
@@ -24,7 +24,7 @@ const AT_SOFT = ' fill="none" stroke-opacity=".2" stroke-width="7" stroke-linejo
 /* los bordes del brazo: [opacidad de la sombra, la del contorno, su color, ancho de la sombra, el del contorno] */
 const AT_EDGE = [.26, .8, '#45200d', 7, 1.1];
 /* las piezas del maniquí que el atleta pinta con piel */
-const AT_PIECES = ['TX', 'PV', 'HP', 'TH', 'SH', 'FT', 'HD', 'HA', 'HG'];
+const AT_PIECES = ['HD', 'HA'];
 /* El brazo en reposo (colgando, de perfil y mirando a la derecha), por sus bordes, de arriba abajo: la cumbre del hombro
    (cap), el borde de delante (deltoides, bíceps) y el de atrás (deltoides, tríceps) hasta el codo; y los del antebrazo,
    del codo a la muñeca (la mano tapa la muñeca), y la punta del codo (ol, el olécranon, que va con el antebrazo). En cada
@@ -89,6 +89,67 @@ const atCross = (a, b) => {
         return [i, j, [p[0] + u * (q[0] - p[0]), p[1] + u * (q[1] - p[1]), 1]];
     }
   return null;
+};
+/* El cuerpo del atleta de perfil, en las coordenadas de reposo de sus piezas (los mismos puntos de giro que el maniquí): por
+   pieza, su silueta (f) y sus bordes de fuera (e: lo que lleva contorno y sombra). Las juntas con la pieza de al lado no
+   llevan línea: las siluetas se solapan con el mismo tono y los bordes de una siguen en la otra, así que de pie (el curl) el
+   cuerpo es una sola silueta. El tronco: la garganta baja de la barbilla al pecho y la nuca cae al trapecio y a la espalda;
+   el muslo, de la cadera a la rodilla, con la corva que cambia de dirección sin quiebro; la pierna: la rótula, un relieve en
+   el borde de delante, la pantorrilla y el tendón de Aquiles hasta el talón; el pie: talón y antepié en el suelo, el empeine
+   y la punta redondeada */
+const AT_BODY = {
+  TX: {
+    f: [[110, 36], [118, 44], [116.2, 46.2], [115, 47.2], [113.4, 48.6], [112.4, 51.6], [112, 55.6], [112.6, 60.2], [114.4, 64.6], [117.2, 68.6], [121, 73.6], [124.4, 79.6], [126.5, 88], [127.5, 97], [126, 107], [124, 117], [123.5, 132], [124, 150], [124, 160], [124.2, 166], [122, 169.4], [105, 170], [88, 169], [85, 166], [85.2, 160], [84.5, 148], [81.5, 134], [77.5, 120], [74.5, 106], [73.4, 92], [73.3, 85], [74.2, 77], [76.4, 69.4], [79.8, 62.4], [83.4, 56], [85.8, 50], [86.6, 44.6], [86, 40.5], [85, 36.5], [92, 33], [100, 32.4]],
+    e: [[[116.2, 46.2], [115, 47.2], [113.4, 48.6], [112.4, 51.6], [112, 55.6], [112.6, 60.2], [114.4, 64.6], [117.2, 68.6], [121, 73.6], [124.4, 79.6], [126.5, 88], [127.5, 97], [126, 107], [124, 117], [123.5, 132], [124, 150], [124, 160], [124.1, 166]], [[85, 36.5], [86, 40.5], [86.6, 44.6], [85.8, 50], [83.4, 56], [79.8, 62.4], [76.4, 69.4], [74.2, 77], [73.3, 85], [73.4, 92], [74.5, 106], [77.5, 120], [81.5, 134], [84.5, 148], [85.2, 160], [85, 166]]],
+  },
+  TH: {
+    f: [[98, 172], [108, 175], [116.4, 182], [121, 192], [123.2, 204], [123.8, 218], [123.4, 232], [122.4, 246], [120.8, 260], [118.8, 273], [117, 284], [117.2, 290], [117.6, 295], [116.8, 300.4], [113, 304.6], [106, 306], [98, 305.6], [90.6, 303.6], [85.6, 301], [87.6, 296], [88.4, 291], [88, 286], [86.6, 278], [83.8, 266], [81.8, 255], [80.8, 244], [80.6, 232], [81.4, 220], [83.4, 207], [86.8, 194], [91, 183]],
+    e: [[[123.4, 234], [122.4, 246], [120.8, 260], [118.8, 273], [117, 284], [117.2, 290], [117.6, 295], [116.8, 300.4]], [[80.6, 234], [80.8, 244], [81.8, 255], [83.8, 266], [86.6, 278], [88, 286], [88.4, 291], [87.6, 296], [85.6, 301]]],
+  },
+  SH: {
+    f: [[96, 284], [104, 283], [111, 285], [117.2, 290], [117.6, 295], [116.8, 300.4], [115.2, 304.4], [114.8, 309], [113.8, 316], [112.4, 326], [110.6, 338], [109, 350], [107.8, 360], [107.4, 368], [107.8, 375], [108.6, 380], [106, 384], [100, 386], [93, 386], [87, 384.2], [87.8, 381], [88.4, 376], [88.4, 370], [87.4, 361], [85.6, 351.4], [82.8, 341], [80.4, 331], [79.6, 322], [80.6, 314], [82.8, 307], [85.6, 301], [87.6, 296], [88.4, 291], [91.4, 287.4]],
+    e: [[[117.2, 290], [117.6, 295], [116.8, 300.4], [115.2, 304.4], [114.8, 309], [113.8, 316], [112.4, 326], [110.6, 338], [109, 350], [107.8, 360], [107.4, 368], [107.8, 375], [108.6, 380]], [[86.6, 278], [88, 286], [88.4, 291], [87.6, 296], [85.6, 301], [82.8, 307], [80.6, 314], [79.6, 322], [80.4, 331], [82.8, 341], [85.6, 351.4], [87.4, 361], [88.4, 370], [88.4, 376], [87.8, 381], [87, 384.2]]],
+  },
+  FT: {
+    f: [[90.8, 374], [96, 373], [102.4, 373.6], [106.6, 375.6], [108.6, 379.6], [111.6, 383.4], [116.4, 386.6], [122.6, 389.8], [129, 392.6], [134.8, 395], [139.2, 397], [141.6, 398.8], [141.8, 400.7], [140.2, 401.9], [135, 402.2], [124, 402], [112, 401.8], [100, 401.9], [90, 402.1], [86.2, 401.4], [84, 399.2], [83.4, 395.6], [84.4, 391.2], [86.4, 386.2], [87.8, 381]],
+    e: [[[88.4, 370], [88.4, 376], [87.8, 381], [86.4, 386.2], [84.4, 391.2], [83.4, 395.6], [84, 399.2], [86.2, 401.4], [90, 402.1], [100, 401.9], [112, 401.8], [124, 402], [135, 402.2], [140.2, 401.9], [141.8, 400.7], [141.6, 398.8], [139.2, 397], [134.8, 395], [129, 392.6], [122.6, 389.8], [116.4, 386.6], [111.6, 383.4], [108.6, 379.6], [107.6, 375]]],
+  },
+};
+/* La luz que da volumen a las piernas, sin borde: el muslo por delante, la pantorrilla y la espinilla ([x, y, rx, ry]) */
+const AT_LIGHT = {
+  TH: [[107, 266, 9, 24]],
+  SH: [[88.6, 326, 5.6, 15], [106.4, 342, 3.4, 22]],
+  FT: [[112, 392, 9, 4]],
+};
+/* El pantalón corto, en las coordenadas de la cadera: su silueta, que sigue la curva del glúteo y cae hasta el bajo sin
+   esquina; la cinturilla (su borde de abajo) y la costura del bajo, que acompaña al muslo */
+const AT_SHORTS = {
+  f: [[85, 164.6], [83.4, 170.4], [79.6, 177.6], [75.4, 186], [72.4, 195], [71.4, 204], [72.4, 213], [75, 221], [78, 229], [80.4, 236.6], [81.6, 243.4], [85, 245.6], [93, 247.4], [103, 248.4], [113, 248.4], [121, 247.6], [125.2, 246.4], [126.2, 238], [126.6, 226], [126.4, 212], [125.8, 199], [125.2, 186], [124.9, 176], [125, 169.6], [124.8, 166.4], [116, 165.4], [104, 165], [92, 164.6]],
+  band: [[84.6, 168.2], [92, 168.2], [104, 168.6], [116, 169], [124.9, 170]],
+  hem: [[81.8, 241.6], [85.4, 243.8], [93, 245.6], [103, 246.6], [113, 246.6], [121, 245.8], [125.4, 244.4]],
+};
+/* La cabeza, algo mayor que la del maniquí (se agranda alrededor de c, junto a la oreja) y, en las coordenadas de su pieza:
+   los tramos de su silueta que llevan contorno (la cara, de la frente a la barbilla por debajo, y la nuca, del cráneo al
+   occipital: el resto se funde con el cuello), y los rasgos (la mandíbula, que acaba bajo la oreja, la ceja, el ojo con su
+   párpado, la aleta de la nariz y la boca) */
+const AT_HEAD = {
+  s: 1.12,
+  c: [101, 34],
+  face: [1, 15],
+  nape: [19, 24],
+  jaw: 'M115.6 44.6C112 45.9 108.2 45.7 106 43.8C104.5 42.5 103.7 40.4 103.4 38.2',
+  brow: 'M112.8 21.6C114.8 20.5 117.4 20.3 119.6 21.1',
+  eye: 'M114.6 25.2C115.9 24.2 117.6 24.1 118.9 24.9C117.7 25.8 116 25.9 114.6 25.2Z',
+  lid: 'M114.2 24.6C115.7 23.4 117.9 23.3 119.4 24.4',
+  nose: 'M121.9 31.9C120.9 31.8 120.2 31.1 120.4 30.3',
+  mouth: 'M121.3 36.4C120.1 36.6 118.9 36.6 117.8 36.4',
+};
+/** Los tramos [a, b) de un trazado de curvas (M…C…C…), como trazado abierto. */
+const atSegs = (d, a, b) => {
+  const parts = d.replace(/Z$/, '').split('C');
+  const cs = parts.slice(1).map(t => t.trim().split(/[ ,]+/).map(Number));
+  const start = a ? cs[a - 1].slice(4) : parts[0].slice(1).trim().split(/[ ,]+/).map(Number);
+  return 'M' + start.join(' ') + cs.slice(a, b).map(c => 'C' + c[0] + ' ' + c[1] + ' ' + c[2] + ' ' + c[3] + ' ' + c[4] + ' ' + c[5]).join('');
 };
 /* El puño, en las coordenadas de reposo de la mano (cuelga de la muñeca y la barra pasa por el agarre, 100 220): su silueta
    (env); el índice, que rodea la barra por abajo y por delante, y el pulgar, que la cierra por arriba y apoya la punta en él
@@ -177,17 +238,22 @@ const atArm = (o, x) => {
 export const athleteDefs = () => atDefsHtml || (atDefsHtml = AT_PIECES.map(k => '<path id="atP' + k + '" d="' + FG_P[k][1] + '"/><clipPath id="atC' + k + '"><use href="#atP' + k + '"/></clipPath>' + (FG_P[k][3] ? '<path id="atD' + k + '" d="' + FG_P[k][3] + '"/>' : '')).join('')
   + Object.entries(Object.assign({}, AT_ARM_MUSCLES, AT_FORE_MUSCLES)).map(([c, ps]) => '<path id="atM' + c + '" d="' + atCurve(ps, true) + '"/>').join('')
   + '<path id="atFe" d="' + atCurve(AT_FIST.env, true) + '"/><clipPath id="atCFe"><use href="#atFe"/></clipPath><path id="atFi" d="' + atCurve(AT_FIST.index.slice(0, -1), false) + '"/><path id="atFt" d="' + atCurve(AT_FIST.thumb.slice(0, -1), false) + '"/><path id="atFl" d="' + AT_FIST.lines.map(l => atCurve(l, false)).join('') + '"/>'
+  + Object.entries(AT_BODY).map(([k, b]) => '<path id="atB' + k + '" d="' + atCurve(b.f, true) + '"/><clipPath id="atBC' + k + '"><use href="#atB' + k + '"/></clipPath><path id="atBE' + k + '" d="' + b.e.map(e => atCurve(e, false)).join('') + '"/>').join('')
+  + '<path id="atS" d="' + atCurve(AT_SHORTS.f, true) + '"/><clipPath id="atSC"><use href="#atS"/></clipPath><path id="atSB" d="' + atCurve(AT_SHORTS.f.slice(-4).concat([AT_SHORTS.f[0]]), false) + atCurve(AT_SHORTS.band.slice().reverse(), false).replace('M', 'L') + 'Z"/><path id="atSM" d="' + atCurve(AT_SHORTS.hem, false) + '"/>'
+  + '<radialGradient id="atSg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#9aa0b4" stop-opacity=".2"/><stop offset="1" stop-color="#9aa0b4" stop-opacity="0"/></radialGradient>'
+  + '<path id="atHF" d="' + atSegs(FG_P.HD[1], AT_HEAD.face[0], AT_HEAD.face[1]) + '"/><path id="atHN" d="' + atSegs(FG_P.HD[1], AT_HEAD.nape[0], AT_HEAD.nape[1]) + '"/>'
+  + ['jaw', 'brow', 'eye', 'lid', 'nose', 'mouth'].map(k => '<path id="atH' + k + '" d="' + AT_HEAD[k] + '"/>').join('')
   + '<radialGradient id="atRd" cx=".42" cy=".38" r=".66"><stop offset="0" stop-color="#ff7a6c"/><stop offset=".45" stop-color="#e8303f"/><stop offset="1" stop-color="#9c1029"/></radialGradient>'
   + '<radialGradient id="atOr" cx=".42" cy=".38" r=".66"><stop offset="0" stop-color="#ffc77e"/><stop offset=".45" stop-color="#f2922f"/><stop offset="1" stop-color="#ad540c"/></radialGradient>'
   + '<radialGradient id="atFdG"><stop offset=".8" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient><mask id="atFd" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#atFdG)"/></mask>'
   + [[15, 80], [35, 35], [90, 0]].map(([k, r]) => '<pattern id="atFb' + k + '" width="3.4" height="3.4" patternUnits="userSpaceOnUse"' + (r ? ' patternTransform="rotate(' + r + ')"' : '') + '><path d="M0 0V3.4" stroke="#4a0710" stroke-opacity=".3" stroke-width=".55"/></pattern>').join('')
+  + '<radialGradient id="atLg" cx=".45" cy=".42" r=".6"><stop offset="0" stop-color="' + AT_SKIN[1] + '" stop-opacity=".34"/><stop offset=".6" stop-color="' + AT_SKIN[1] + '" stop-opacity=".1"/><stop offset="1" stop-color="' + AT_SKIN[1] + '" stop-opacity="0"/></radialGradient>'
   + '<radialGradient id="atMu" cx=".42" cy=".36" r=".62"><stop offset="0" stop-color="' + AT_SKIN[1] + '" stop-opacity=".6"/><stop offset=".6" stop-color="' + AT_SKIN[1] + '" stop-opacity=".2"/><stop offset="1" stop-color="' + AT_SKIN[1] + '" stop-opacity="0"/></radialGradient>'
   + '<linearGradient id="atSh" gradientUnits="userSpaceOnUse" x1="70" y1="160" x2="130" y2="250"><stop offset="0" stop-color="#4a4c54"/><stop offset=".5" stop-color="#2f3137"/><stop offset="1" stop-color="#1d1e22"/></linearGradient>'
   + '<linearGradient id="atHa" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a322d"/><stop offset="1" stop-color="#151211"/></linearGradient>'
-  /* lo que tapa el pantalón: de la cintura abajo en la pelvis y la parte de arriba del muslo */
-  + '<clipPath id="atCw"><rect x="0" y="163" width="200" height="80"/></clipPath><clipPath id="atCt"><rect x="0" y="150" width="200" height="98"/></clipPath>'
-  /* el pelo, corto: la parte de arriba y de atrás de la cabeza, con la entrada en la frente y la patilla delante de la oreja */
-  + '<path id="atHr" d="' + atCurve([[85.4, 19], [89.4, 10.6], [97.4, 5.6], [106.6, 5], [114.4, 7.8], [119, 12.6], [119.4, 16.4], [114.2, 15.2], [109, 16.6], [106.2, 20.6], [105.4, 24.6], [102.2, 22.8], [98.2, 23.6], [95.2, 28], [92.6, 34.4], [89.6, 38.8], [86.6, 34], [84.6, 26.4]], true) + '"/>');
+  /* el pelo, corto: la parte de arriba y de atrás de la cabeza, con la entrada en la frente, la patilla delante de la oreja y
+     el nacimiento en la nuca, redondeado */
+  + '<path id="atHr" d="' + atCurve([[85.4, 19], [89.4, 10.6], [97.4, 5.6], [106.6, 5], [114.4, 7.8], [119, 12.6], [119.4, 16.4], [114.2, 15.2], [109, 16.6], [106.2, 20.6], [105.4, 24.6], [102.2, 22.8], [98.2, 23.6], [95.2, 28], [92.4, 32.6], [89.4, 35.6], [86.4, 33.6], [84.6, 26.4]], true) + '"/>');
 let atDefsHtml = '';
 /* la piel de una pieza del maniquí: su silueta en el tono de la piel, la sombra de sus bordes por dentro, su contorno y sus
    detalles */
@@ -205,9 +271,25 @@ const atMuscle = (href, c, work, pa) => {
 };
 /* los músculos de una pieza del maniquí */
 const atRelief = (k, work) => Object.keys(FG_P[k][2]).map(c => atMuscle('#fp' + c, c, work, FG_PA[c])).join('');
-/* el pantalón corto sobre una pieza (recortado a lo que tapa): de un solo degradado, para que sus piezas no dejen junta; en
-   la pelvis, la cinturilla, y en el muslo, el bajo */
-const atShorts = (k, clip) => '<use href="#atP' + k + '" fill="url(#atSh)"' + (clip ? ' clip-path="url(#' + clip + ')"' : '') + '/>' + (k == 'PV' ? '<path d="M83.6 168.4Q104 165.2 123.8 168.6" fill="none" stroke="#5d6069" stroke-opacity=".9" stroke-width="1.2" stroke-linecap="round" clip-path="url(#atCPV)"/>' : k == 'TH' ? '<path d="M74 247.4H126" fill="none" stroke="#121316" stroke-opacity=".8" stroke-width="1.6" clip-path="url(#atCTH)"/>' : '');
+/* una pieza del cuerpo: su silueta en el tono de la piel, la sombra de sus bordes de fuera (por dentro), sus músculos
+   (recortados a ella: en el tronco, el relieve de todos; en las piernas, solo los que trabajan: los óvalos del maniquí, como
+   el de la rótula, cortaban la pierna) y el contorno de sus bordes */
+const atBody = (k, far, work) => {
+  const s = far ? AT_SKIN_FAR : AT_SKIN;
+  const cs = Object.keys(FG_P[k][2]).filter(c => k == 'TX' || work.p.includes(c) || work.s.includes(c));
+  const relief = far || !cs.length ? '' : '<g clip-path="url(#atBC' + k + ')">' + cs.map(c => atMuscle('#fp' + c, c, work, FG_PA[c])).join('') + '</g>';
+  const light = AT_LIGHT[k] ? '<g clip-path="url(#atBC' + k + ')" opacity="' + (far ? .5 : 1) + '">' + AT_LIGHT[k].map(([x, y, rx, ry]) => '<ellipse cx="' + x + '" cy="' + y + '" rx="' + rx + '" ry="' + ry + '" fill="url(#atLg)"/>').join('') + '</g>' : '';
+  return '<use href="#atB' + k + '" fill="' + s[0] + '"/>' + light + atShade('#atBE' + k, 'atBC' + k, s[2]) + relief + '<use href="#atBE' + k + '"' + AT_CONTOUR + '/>';
+};
+/* el pantalón corto (clip: recortado a una pieza, el muslo de atrás): un solo degradado, la luz del glúteo, la cinturilla, la
+   costura del bajo y su contorno */
+const atShorts = clip => '<g' + (clip ? ' clip-path="url(#' + clip + ')"' : '') + '><use href="#atS" fill="url(#atSh)"/><ellipse cx="80" cy="200" rx="11" ry="17" fill="url(#atSg)" clip-path="url(#atSC)"/><use href="#atSB" fill="#44464e" clip-path="url(#atSC)"/><path d="' + atCurve(AT_SHORTS.band, false) + '" fill="none" stroke="#18191d" stroke-opacity=".8" stroke-width=".8"/><use href="#atSM" fill="none" stroke="#18191d" stroke-opacity=".75" stroke-width=".9"/><use href="#atS" fill="none" stroke="#0e0f12" stroke-opacity=".7" stroke-width=".9" stroke-linejoin="round"/></g>';
+/* la cabeza: algo mayor, con la piel y la sombra de la cara y la nuca, su contorno, la oreja, la mandíbula, los rasgos y el
+   pelo */
+const atHead = () => {
+  const line = (k, c, w, op) => '<use href="#atH' + k + '" fill="none" stroke="' + c + '"' + (op ? ' stroke-opacity="' + op + '"' : '') + ' stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round"/>';
+  return '<g transform="translate(' + AT_HEAD.c[0] + ' ' + AT_HEAD.c[1] + ') scale(' + AT_HEAD.s + ') translate(' + -AT_HEAD.c[0] + ' ' + -AT_HEAD.c[1] + ')"><use href="#atPHD" fill="' + AT_SKIN[0] + '"/>' + atShade('#atHF', 'atCHD', AT_SKIN[2]) + atShade('#atHN', 'atCHD', AT_SKIN[2]) + '<use href="#atHF"' + AT_CONTOUR + '/><use href="#atHN"' + AT_CONTOUR + '/><use href="#atDHD"' + AT_CONTOUR + ' stroke-width=".7"/>' + line('jaw', AT_EDGE[2], .8, .38) + line('brow', '#2b211c', 1.35) + '<use href="#atHeye" fill="#2a1a13"/>' + line('lid', '#3a2418', .6) + line('nose', AT_EDGE[2], .7, .5) + line('mouth', '#5a2a17', .95) + '<use href="#atHr" fill="url(#atHa)"/></g>';
+};
 /* el puño de un lado: la silueta con su sombra y su contorno, el índice y, encima, el pulgar (dedos: un trazo grueso del
    color de la piel sobre otro algo más grueso y oscuro, que hace de contorno), y los nudillos */
 const atFist = far => {
@@ -230,7 +312,7 @@ const atArmHtml = (o, far, work) => {
   let n = 0;
   const biceps = bi ? atWorked(fill => '<path data-at="' + (n++ ? 'bh' : 'bi') + '" d="' + a.bi + '" fill="' + fill + '"/>', bi, AT_HATCH.BI) : '<path data-at="bi" d="' + a.bi + '" fill="url(#atMu)"/>';
   const fade = (k, c, op) => '<linearGradient id="' + id + k + '" data-at="' + x + 'k' + k + '" gradientUnits="userSpaceOnUse" x1="0" y1="63" x2="0" y2="73" gradientTransform="' + a.mu + '"><stop offset="0" stop-color="' + c + '" stop-opacity="0"/><stop offset="1" stop-color="' + c + '" stop-opacity="' + op + '"/></linearGradient>';
-  const clip = (k, ds) => '<clipPath id="' + id + k + '">' + ds.map(([n, d]) => '<path data-at="' + x + 'k' + n + '" d="' + d + '"/>').join('') + (k == 'e' && !far ? '<use data-at="kt" href="#atPTX" transform="' + a.t + '"/>' : '') + '</clipPath>';
+  const clip = (k, ds) => '<clipPath id="' + id + k + '">' + ds.map(([n, d]) => '<path data-at="' + x + 'k' + n + '" d="' + d + '"/>').join('') + (k == 'e' && !far ? '<use data-at="kt" href="#atBTX" transform="' + a.t + '"/>' : '') + '</clipPath>';
   const muscles = (k, d, t, cs) => far ? '' : clip(k, [[k, d]]) + '<g clip-path="url(#' + id + k + ')"><g data-at="m' + k + '" transform="' + t + '">' + cs.map(c => atMuscle('#atM' + c, c, work, AT_HATCH[c])).join('') + (k == 'u' ? biceps : '') + '</g></g>';
   return fade('g', s[2], AT_EDGE[0]) + fade('h', AT_EDGE[2], AT_EDGE[1]) + clip('e', [['a', a.u], ['b', a.f]])
     + '<path data-at="' + x + 'u" d="' + a.u + '" fill="' + s[0] + '"/>' + muscles('u', a.u, a.mu, ['DL', 'TR', 'BR'])
@@ -254,20 +336,18 @@ export const athleteLayer = (def, k, work, o) => {
   if (key == 'HA')
     return def.fist ? atFist(far) : atSkin('HA', far);
   if (key == 'HD')
-    return atSkin('HD') + '<use href="#atHr" fill="url(#atHa)"/>';
+    return atHead();
   if (key == 'TXs')
-    return atSkin('TX');
-  if (key == 'PVs')
-    return atSkin('PV') + atShorts('PV', 'atCw');
-  if (key == 'TXi')
-    return atRelief('TX', work);
-  if (key == 'PVi')
+    return atBody('TX', false, work);
+  /* la pelvis y el glúteo quedan bajo el pantalón (en la capa de la cadera, encima del muslo); el relieve del tronco va con
+     su piel */
+  if (key == 'PVs' || key == 'PVi' || key == 'TXi')
     return '';
   if (key == 'HP')
-    return atShorts('HP');
+    return atShorts();
   if (key == 'TH')
-    return atSkin('TH', far) + (far ? '' : atRelief('TH', work)) + atShorts('TH', 'atCt');
-  return atSkin(key, far) + (far ? '' : atRelief(key, work));
+    return atBody('TH', far, work) + (far ? atShorts('atBCTH') : '');
+  return AT_BODY[key] ? atBody(key, far, work) : atSkin(key, far) + (far ? '' : atRelief(key, work));
 };
 /** Las capas del atleta que van en la imagen y no con su transformación: el brazo y el antebrazo de los dos lados. */
 export const ATHLETE_STILL = ['UA', 'FA', 'xUA', 'xFA'];

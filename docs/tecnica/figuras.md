@@ -147,10 +147,22 @@ ejercicios siguen con el maniquí.
   espaldas (la silueta del mapa muscular), y el lado de atrás es el de delante desplazado un poco (`FAR_SHIFT`): una vista
   de tres cuartos pediría dibujar de nuevo cada pieza del cuerpo en ese ángulo y que el modelo supiera la profundidad de
   cada pieza, es decir, otra figura y otra animación. El piloto sigue de perfil.
-- **El resto, con piel.** Las demás piezas son las del maniquí (`data/figure`) con un tono de piel, la sombra de los bordes
-  por dentro y el relieve de los músculos en reposo (una luz, sin rayado). El pantalón tapa la pelvis, la cadera y el
-  principio del muslo con un solo degradado, para que sus piezas no dejen junta.
-- **Lo que pesa.** Unos 13 KB más de piezas en `<defs>` y 11 KB más en el archivo único. En cada fotograma, rehacer los dos
+- **El cuerpo, de una pieza.** El tronco, el muslo, la pierna y el pie tienen silueta propia (`AT_BODY`), en las
+  coordenadas de las piezas del maniquí y con sus mismos puntos de giro: cada pieza pinta su silueta en el tono de la piel
+  y lleva contorno y sombra solo en sus bordes de fuera. Las juntas no llevan línea: las siluetas se solapan y los bordes de
+  una siguen en la otra con los mismos puntos, así que de pie el cuerpo es una sola silueta, sin la «U» que cerraba el muslo
+  sobre la pierna ni la línea cerrada del tobillo. La rótula es un pequeño relieve en el borde de delante y la corva un
+  cambio suave de dirección; la pantorrilla baja por el tendón de Aquiles hasta el talón, y el pie tiene empeine, la punta
+  redondeada y el talón y el antepié en el suelo. Las piernas no llevan los óvalos de los músculos del maniquí (solo los
+  que trabajan, como en el brazo), sino una luz suave que les da volumen; el tronco conserva el relieve de los suyos.
+- **Cabeza y cuello.** La cabeza es la del maniquí algo mayor (1,12 veces, alrededor de la oreja), con contorno solo en la
+  cara y en la parte de atrás del cráneo: el resto se funde con el cuello. La nuca baja en curva hasta el trapecio y la
+  garganta sale de debajo de la barbilla; la mandíbula acaba bajo la oreja, y la cara lleva ceja, ojo con su párpado, la
+  aleta de la nariz y la boca, que se leen al tamaño de la tarjeta.
+- **El pantalón.** Una sola prenda en la capa de la cadera, encima del muslo (`AT_SHORTS`): sigue la curva de la zona lumbar
+  al glúteo y cae hasta el bajo sin esquina, con una cinturilla discreta y un bajo que acompaña a la pierna; el de la pierna
+  de atrás es el mismo, recortado a su muslo.
+- **Lo que pesa.** Unos 18 KB más de piezas en `<defs>` y 17 KB más en el archivo único. En cada fotograma, rehacer los dos
   brazos cuesta en el equipo de pruebas unas 16 centésimas de milisegundo (23 cambios en la página), además de las 15
   milésimas de colocar las capas; las dos figuras de la comparación se mueven a 60 cuadros por segundo.
 
@@ -268,7 +280,7 @@ hace» pasó de 5,1 a 3,7 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-d
 
 ## Pruebas
 
-- `tests/rig.test.mjs` (44 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
+- `tests/rig.test.mjs` (45 pruebas, sin navegador), sobre **todos** los ejercicios de la librería y todo el recorrido del
   gesto: cada uno tiene figura; las figuras están bien escritas; ninguna pieza sale sin sitio; los codos y las rodillas doblan
   hacia donde doblan; **ninguna articulación pasa de lo que un cuerpo puede hacer** (cintura, cuello, hombro, codo, muñeca,
   cadera, rodilla y tobillo; de frente, brazos y piernas); **las manos y los pies llegan a donde se les pide** (el agarre, el
@@ -295,8 +307,10 @@ hace» pasó de 5,1 a 3,7 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-d
   barra Z lo lleva** (el curl con barra recta, de la misma familia, no) y, en todo el gesto, sus trazados son válidos, **el
   antebrazo llega a la mano** (los dos bordes de la muñeca, a un lado y a otro de donde gira la mano, también la de atrás) y,
   arriba, **el codo hace punta** (baja al menos 9 unidades bajo la articulación); y **las dos manos no sueltan la barra**: el
-  agarre de cada puño está en su extremo de la barra en todo el gesto.
-- `tests/figures.py` (201 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
+  agarre de cada puño está en su extremo de la barra en todo el gesto. Y su cuerpo: **cada pieza tapa sus articulaciones**
+  (gira por donde giraba la del maniquí), **los bordes siguen de una pieza a la siguiente** en la rodilla y en el tobillo, por
+  delante y por detrás, y **el talón y el antepié apoyan en el suelo**.
+- `tests/figures.py` (202 comprobaciones, en navegador): las 551 miniaturas y las 551 hojas, una a una (la figura, sus
   piezas, el nombre y el texto, sin fotos, y ningún trazo del material casi negro); que las piezas están una sola vez y ya no
   las de antes (la pieza grande con los músculos en reposo); que el maniquí tiene manos, cara y orejas; el maniquí (la silueta clara, también la cabeza, y el brazo y la pierna de atrás en su tono más
   oscuro; de frente, una sola luz para todo el cuerpo; en un ejercicio de cuerpo completo, la silueta en rojo apagado, como
@@ -312,7 +326,8 @@ hace» pasó de 5,1 a 3,7 ms ([rendimiento](rendimiento.md#medido-en-el-repaso-d
   verdad (los músculos que trabajan en rojo y naranja, el resto del cuerpo, las mancuernas en los extremos con los brazos
   abiertos, el deltoides posterior de espaldas), que es lo que comprueba el dibujo en Safari y Firefox; el atleta del curl
   con barra Z (su piel y su pelo, sin el brazo del maniquí; el brazo que se rehace al moverse; lo que trabaja en rojo y
-  naranja, sin borde y fundido con la piel; los puños, con el pulgar y el índice alrededor de la barra; los recortes de los
+  naranja, sin borde y fundido con la piel; el cuerpo de una pieza, sin las siluetas cerradas del maniquí ni el óvalo de la
+  rótula, con el pantalón y la cara con ceja, ojo y boca; los puños, con el pulgar y el índice alrededor de la barra; los recortes de los
   brazos sin ids repetidos; pintado arriba, con su piel, el bíceps y el antebrazo y nada del gris
   del maniquí) y el curl con barra recta, que sigue con el maniquí; y que un ejercicio propio sigue con sus músculos.
 - `node tools/figure.js --check`: `data/figure.js` está al día con los puntos del dibujo.
