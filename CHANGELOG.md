@@ -83,6 +83,12 @@ línea.
   sincronización borraba de la nube lo que a esa le faltaba; también en la 1.0.31. El entreno en curso lo lleva quien lo
   empieza o lo reanuda, y una ventana sin entreno ya no borra el de otra (`workout/resume`)
   ([la app abierta dos veces](docs/tecnica/estado.md#la-app-abierta-dos-veces)).
+- Arranque (`core/boot`): `start` es ahora la lista de sus pasos, cada uno con su nombre (los relojes del entreno, lo que quedó
+  a medias, el entreno por reanudar y lo de después del primer pintado). Hace lo mismo y en el mismo orden.
+- Revisión de la versión antes de publicarla: qué se miró, lo encontrado (lo de los dos puntos anteriores), lo comprobado y lo
+  que queda por decidir, en [docs/tecnica/revision-1.0.32.md](docs/tecnica/revision-1.0.32.md). Pruebas nuevas en
+  `tests/cloud.py` (el móvil sin poder guardar y la misma cuenta en dos pestañas) y en `tests/storage.py` (la app abierta dos
+  veces); cada una falla si se quita su parte de la corrección.
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

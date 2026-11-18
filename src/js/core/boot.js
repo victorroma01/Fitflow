@@ -5,7 +5,7 @@
    nada (con la mitad de los datos, la nube creería que se borró el resto) y se avisa, con «Reintentar» y, con sesión, «Bajar
    de mi cuenta». window.__ffready se cumple al terminar el arranque; window.__ffok vale 1 desde el primer pintado.
    También decide qué pasa si la app está abierta dos veces y la otra guarda después: esta se recarga (onInstanceStale).
-   Define: RESTORE_HINT, lostDialog, staleWaiting, staleDialog, start  · acciones/registros: 4
+   Define: RESTORE_HINT, lostDialog, staleWaiting, staleDialog, watchSheet, startClocks, tidyLeftovers, recoverWorkout, restoreNotice, afterFirstPaint, start  · acciones/registros: 4
 */
 import { $, fmtDuration, fmtMinSec, roundInt } from './util.js';
 import { Store } from './store.js';
@@ -84,16 +84,21 @@ onInstanceStale(arriving => {
 A.staleReload = () => location.reload();
 /* un error inesperado no se queda en silencio: se dice, y dónde contarlo si se repite (system/report) */
 setErrorNotice(() => toast('Algo ha fallado. Si se repite, cuéntalo en Ajustes → Informar de un fallo.'));
-const start = () => {
-  repairState();
-  applyTheme();
-  applyAccent();
+/* al cerrarse la hoja (#sh se queda vacía), también se quita su clase */
+const watchSheet = () => {
   if (typeof MutationObserver != 'undefined')
     new MutationObserver(() => {
       const s = $('#sh');
       if (!s.firstChild)
         s.className = '';
     }).observe($('#sh'), { childList: true });
+};
+/* Los relojes del entreno en curso, siempre en marcha (sin entreno no hacen nada). Cinco veces por segundo: el tiempo de la
+   sesión (#tm) y la cuenta atrás del descanso (#rt), con sus pitidos en los tres últimos segundos y el aviso al acabar. Cuatro
+   veces por segundo: la cuenta atrás del botón «Descanso» de la cabecera (#rt2). Y cada 2,5 s, la pantalla encendida si así
+   se pidió (workout/wake). Solo cambian el texto que toca: la pantalla se vuelve a pintar (R) solo cuando el descanso se
+   acaba. */
+const startClocks = () => {
   setInterval(() => {
     if (!W || W.pausedAt)
       return;
@@ -130,6 +135,21 @@ const start = () => {
       }
     }
   }, 200);
+  setInterval(() => {
+    if (!W || W.pausedAt || !W.restEndsAt)
+      return;
+    const r = $('#rt2');
+    if (r) {
+      const tx = fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000)));
+      if (r.textContent !== tx)
+        r.textContent = tx;
+    }
+  }, 250);
+  setInterval(keepAwake, 2500);
+};
+/* lo que quedó a medias al cerrarse la app: el día de un workout propio puesto sobre el plan, un workout sin bloques y las
+   portadas de días que no son propios */
+const tidyLeftovers = () => {
   restorePlanBackup();
   /* un workout propio sin bloques es uno que se empezó a crear y se dejó a medias (cerrando la app): no se queda en la lista */
   S.routines = S.routines.filter(r => r.bl.length);
@@ -137,6 +157,9 @@ const start = () => {
     if (!d.cu && d.img)
       delete d.img;
   });
+};
+/* el entreno que estaba en marcha al cerrarse la app (workout/resume): si vale, se ofrece reanudarlo; si no, se descarta */
+const recoverWorkout = () => {
   try {
     setPendingResume(JSON.parse(Store.get(WIP_KEY)));
   }
@@ -161,17 +184,9 @@ const start = () => {
       }
     }
   })();
-  setInterval(() => {
-    if (!W || W.pausedAt || !W.restEndsAt)
-      return;
-    const r = $('#rt2');
-    if (r) {
-      const tx = fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000)));
-      if (r.textContent !== tx)
-        r.textContent = tx;
-    }
-  }, 250);
-  setInterval(keepAwake, 2500);
+};
+/* tras restaurar una copia (system/backup), el resumen de lo restaurado, una vez */
+const restoreNotice = () => {
   try {
     const q = Store.get(Store.K.rs);
     if (q) {
@@ -190,26 +205,10 @@ const start = () => {
   catch (e) {
     logError('arranque: resumen de restauración', e);
   }
-  /* las fotos de progreso de la serie de prueba ya no existen (sin datos personales: F-35) */
-  try {
-    indexedDB.deleteDatabase('ffph');
-  }
-  catch (e) {
-    logError('arranque: borrar fotos de progreso', e);
-  }
-  if (signedIn())
-    setTimeout(checkAchievements, 2500);
-  buildTabbar();
-  /* la pestaña elegida para abrir la app (Ajustes) y, si se abrió desde un acceso directo del icono, su pantalla */
-  applyStartTab();
-  launchAction();
-  R();
-  window.__ffok = 1;
-  /* sin los datos de este móvil, solo el aviso: ni guardar, ni sincronizar, ni copias, ni otros avisos */
-  if (partsLost) {
-    lostDialog();
-    return;
-  }
+};
+/* Después del primer pintado: los avisos de datos dañados, guardar lo que el arranque arregló y, con sesión, las copias
+   automáticas, las novedades, los avisos que esperan a que la app esté libre y la sincronización. */
+const afterFirstPaint = () => {
   /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
   if (stateRecovered == 1)
     setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + RESTORE_HINT, [['Entendido', 'doNothing', 'pr']]), 600);
@@ -234,6 +233,39 @@ const start = () => {
     navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(e => logError('almacenamiento persistente', e));
   /* aviso de espacio (I-04): si lo guardado se acerca al límite del navegador, cuando la app esté libre */
   setTimeout(spaceCheck, 6000);
+};
+/* El arranque, en orden: el estado, válido y con su tema; los relojes; lo que quedó a medias; el primer pintado; y lo de
+   después. window.__ffok vale 1 desde ese primer pintado. */
+const start = () => {
+  repairState();
+  applyTheme();
+  applyAccent();
+  watchSheet();
+  startClocks();
+  tidyLeftovers();
+  recoverWorkout();
+  restoreNotice();
+  /* las fotos de progreso de la serie de prueba ya no existen (sin datos personales: F-35) */
+  try {
+    indexedDB.deleteDatabase('ffph');
+  }
+  catch (e) {
+    logError('arranque: borrar fotos de progreso', e);
+  }
+  if (signedIn())
+    setTimeout(checkAchievements, 2500);
+  buildTabbar();
+  /* la pestaña elegida para abrir la app (Ajustes) y, si se abrió desde un acceso directo del icono, su pantalla */
+  applyStartTab();
+  launchAction();
+  R();
+  window.__ffok = 1;
+  /* sin los datos de este móvil, solo el aviso: ni guardar, ni sincronizar, ni copias, ni otros avisos */
+  if (partsLost) {
+    lostDialog();
+    return;
+  }
+  afterFirstPaint();
 };
 /* primero, las partes del estado (IndexedDB); después, el arranque. Un fallo antes del primer pintado enseña la pantalla de
    error de index.html al momento */
