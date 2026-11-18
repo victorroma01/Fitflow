@@ -33,6 +33,10 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
  else e.value=txt;
  e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}"""
 SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
+ /* las figuras grandes se mueven (extras/figure) y su contenido se carga aparte: la postura en la que se las pilla depende de
+    si llegó antes o después de avanzar el reloj, y dos pasadas de la misma compilación daban HTML distinto. Se compara qué
+    figura es (data-fig), no su fotograma; cómo se dibujan lo prueban tests/figures.py y las capturas */
+ b.querySelectorAll('svg[data-fig]').forEach(x=>{x.innerHTML=''});
  if(ren){for(const [at,r] of [['data-a','A'],['data-enter','A'],['data-c','C'],['data-u','U']])b.querySelectorAll('['+at+']').forEach(e=>{const v=e.getAttribute(at);if(ren[r][v])e.setAttribute(at,ren[r][v])});
   b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])})}
  /* lo que mide el tiempo de verdad (Diagnóstico e informe de un fallo: «Tiempo de pintado») cambia en cada ejecución; y lo que
@@ -109,6 +113,13 @@ def trace(file,seed,steps,ren=None):
             try:pg.clock.run_for(adv)
             except Exception as e:res['errs'].append('CLOCK '+str(e)[:100])
             pg.wait_for_timeout(25)  # tiempo real para lo asíncrono que no depende del reloj (IndexedDB: copias, fotos)
+            # las figuras pequeñas de las listas se pintan al acercarse a lo que se ve (extras/anatomy: IntersectionObserver), cuando
+            # el navegador avisa y no cuando lo dice el reloj: se espera a que haya avisado. Un vigilante nuevo recibe su primer
+            # aviso en la misma vuelta que los de la app, y después de ellos (se atienden por orden de creación)
+            pg.evaluate("(()=>{window.__io=0;const o=new IntersectionObserver(()=>{o.disconnect();window.__io=1});o.observe(document.documentElement)})()")
+            for _ in range(60):
+                if pg.evaluate("window.__io===1"):break
+                pg.wait_for_timeout(10)
             for _ in range(20):  # la lista de copias automáticas se rellena desde IndexedDB: esperar a que deje de decir «Cargando…»
                 if not pg.evaluate("(()=>{const e=document.querySelector('#snapl');return !!e&&/Cargando/.test(e.textContent)})()"):break
                 pg.wait_for_timeout(25)

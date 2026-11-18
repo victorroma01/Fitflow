@@ -89,6 +89,10 @@ línea.
   que queda por decidir, en [docs/tecnica/revision-1.0.32.md](docs/tecnica/revision-1.0.32.md). Pruebas nuevas en
   `tests/cloud.py` (el móvil sin poder guardar y la misma cuenta en dos pestañas) y en `tests/storage.py` (la app abierta dos
   veces); cada una falla si se quita su parte de la corrección.
+- `tests/walk.py`: el paseo que compara dos compilaciones ya no da por distinta la misma pantalla según el momento en que mira
+  las figuras de los ejercicios, que se mueven y se pintan poco a poco. Pasaba incluso entre dos copias de la
+  misma compilación, sobre todo en GitHub. Ahora compara qué figura grande es, no su fotograma, y espera a que las pequeñas
+  de las listas estén pintadas.
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

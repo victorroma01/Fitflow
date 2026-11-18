@@ -61,18 +61,23 @@ le haya pasado a nadie: R1 necesita un móvil sin sitio y R2, la app abierta dos
   que no debía (1).
 - **Batería completa** (`bash tests/run.sh`) con Chromium: sus 37 órdenes pasan, con 1.456 comprobaciones en navegador, 41 de
   ellas nuevas (27 en `tests/storage.py` y 14 en `tests/cloud.py`).
-- **Lo mismo que antes con una sola apertura**: el paseo aleatorio (4 semillas × 150 pasos: el HTML, lo guardado y los sonidos
-  de cada paso) y las capturas (282: 47 pantallas × 6 configuraciones, píxel a píxel) de `tests/compare.sh` entre la compilación de
-  `desarrollo-1.0.32` y esta: sin diferencias, tampoco con dos semillas más. El HTML de las 106 pantallas de
-  `tests/samehtml.py --mas` es el mismo salvo una línea de Diagnóstico, que ahora cuenta también la marca
-  (`Almacenamiento: … rev 1 KB`). Una de esas pantallas («Añadir ejercicio») sale distinta también al comparar la compilación
-  de antes consigo misma: sus miniaturas se dibujan poco a poco y depende del momento. Y con el ordenador ocupado en otra
-  prueba, una semilla del paseo dio una vez un HTML distinto al abrir «Cómo se hace», que carga su contenido aparte; repetida
-  sola, salió igual.
+- **Lo mismo que antes con una sola apertura**: las capturas (282: 47 pantallas × 6 configuraciones, píxel a píxel) y el paseo
+  aleatorio (4 semillas × 150 pasos: el HTML, lo guardado y los sonidos de cada paso) de `tests/compare.sh` entre la compilación
+  de `desarrollo-1.0.32` y esta: sin diferencias. El HTML de las 106 pantallas de `tests/samehtml.py --mas` es el mismo salvo
+  una línea de Diagnóstico, que ahora cuenta también la marca (`Almacenamiento: … rev 1 KB`).
+- **El paseo daba diferencias que no lo eran, y se ha corregido.** En GitHub, con el mismo código, marcó HTML distinto en 3 de
+  4 semillas en una pasada y en 1 de 4 en la siguiente (ese trabajo es informativo y no falla por eso); aquí, solo con el
+  ordenador ocupado. Eran las figuras de los ejercicios, que se mueven y se pintan poco a poco: según el momento, a una
+  figura grande se la pillaba en otra postura y una pequeña de una lista estaba o no pintada todavía. Pasaba igual comparando
+  la compilación de antes consigo misma (con el ordenador cargado, en 3 de 9 pasadas). `tests/walk.py` compara ahora qué
+  figura grande es, no su fotograma, y espera a que el navegador haya avisado a las pequeñas: con la misma carga, dos copias
+  iguales dan el mismo HTML en las 5 pasadas repetidas con las semillas que fallaban. Con esa carga aún puede variar la cuenta
+  de pitidos tras un salto largo del reloj (1 de esas 5), porque el sonido arranca cuando el navegador quiere; GitHub no ha
+  dado ninguna de esas.
 - **En GitHub**, con la [solicitud #61](https://github.com/victorroma01/Fitflow/pull/61): la batería entera con Chromium, con
-  el motor de Safari (WebKit) y con el de Firefox; `tests/cloud.py` contra el emulador de Firebase, con sus reglas; y la
-  comparación con `desarrollo-1.0.32` (paseo aleatorio y capturas), sin diferencias. Las pruebas nuevas pasan en los tres
-  motores: el aviso de que otra ventana ha guardado llega igual en todos.
+  el motor de Safari (WebKit) y con el de Firefox, y `tests/cloud.py` contra el emulador de Firebase, con sus reglas. Las
+  pruebas nuevas pasan en los tres motores: el aviso de que otra ventana ha guardado llega igual en todos. La comparación con
+  `desarrollo-1.0.32` dio las 282 capturas iguales y, en el paseo, las diferencias del punto anterior.
 - **Rendimiento** (`tests/perf.py`, 1,3 MB de datos, 7 vueltas, las dos compilaciones alternadas dos veces): sin diferencia
   fuera de lo que varía de una medida a otra.
 
