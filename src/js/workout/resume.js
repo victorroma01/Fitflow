@@ -1,9 +1,10 @@
 /* ═══ workout/resume ═══
    Reanudar un entreno interrumpido (estado en curso guardado). Se guarda con las claves cortas de siempre (core/schema):
    { W, d: el día, sel, sl, wk, pb: si era un workout propio sobre el plan, t: cuándo }, y pendingResume lo tiene tal cual.
-   Define: WIP_KEY, pendingResume, setPendingResume, saveSession, resumeSync, sameExercises, resumeBanner, dropResume  · acciones/registros: 3
+   Define: WIP_KEY, pendingResume, wipMine, setPendingResume, saveSession, resumeSync, sameExercises, resumeBanner, dropResume  · acciones/registros: 3
 */
 import { Store } from '../core/store.js';
+import { staleNow, takeOver } from '../core/persist.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
 import { S, saveState, setW, W } from '../core/state.js';
@@ -14,16 +15,30 @@ import { html, raw } from '../core/html.js';
 import { workoutFromStored, workoutToStored } from '../core/schema.js';
 export const WIP_KEY = Store.K.wip;
 export let pendingResume = null;
+/* 1 mientras el entreno en curso guardado lo escribe esta apertura de la app. Con la app abierta dos veces (otra pestaña o
+   ventana: core/persist), lo lleva una sola: la que lo empieza o lo reanuda se lo queda (takeOver) y la otra se queda atrás;
+   y una apertura sin entreno no borra el que otra tiene en marcha (que, si el móvil la cerrara, no podría reanudarlo) */
+let wipMine = 0;
 /** Cambia `pendingResume` desde otros módulos (un módulo no puede asignar una variable importada). */
 export const setPendingResume = v => {
   pendingResume = v;
 };
+/** Guarda el entreno en curso para poder reanudarlo (en cada R()); al acabar o descartarlo, lo borra. */
 export const saveSession = () => {
   try {
-    if (W)
+    /* otra apertura de la app ha guardado después: lo guardado ya no es cosa de esta */
+    if (staleNow())
+      return;
+    if (W) {
+      if (!wipMine && !takeOver())
+        return;
+      wipMine = 1;
       Store.set(WIP_KEY, JSON.stringify({ W: workoutToStored(W), d: S.plan[S.selectedDay], sel: S.selectedDay, sl: S.selectedWeekday, wk: S.week, pb: !!S.planBackup, t: Date.now() }));
-    else if (!pendingResume)
+    }
+    else if (!pendingResume && wipMine) {
+      wipMine = 0;
       Store.del(WIP_KEY);
+    }
   }
   catch (e) {
     logError('guardar entreno en curso', e);

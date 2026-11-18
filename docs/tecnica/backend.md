@@ -99,6 +99,14 @@ pudieron leer (IndexedDB falla o falta una parte), no se sincroniza nada hasta p
 creería que se borró el resto. Desde ese aviso, «Bajar de mi cuenta» borra lo del móvil y las huellas, y la app vuelve a bajarlo
 todo, como al entrar. La pantalla de error de arranque, al «Restablecer», también olvida las huellas (V1.0.2).
 
+Las huellas solo se guardan cuando lo que describen **está guardado en el móvil** (`saveMeta`). Si el móvil no puede guardar (sin
+espacio; `savesBroken` de `core/persist`), lo nuevo sube igual a la nube, pero no se apunta; y lo que baja se apunta cuando ya
+está escrito. Así, si la app se cierra sin haber podido guardar, al abrirla otra vez al móvil le falta eso y, como no consta que
+lo tuviera, **baja de la nube en vez de borrarse de ella**. Cuando un guardado completo vuelve a salir bien, las huellas se
+guardan con normalidad. Y si la app está abierta en otra pestaña o ventana que ha guardado después
+([la app abierta dos veces](estado.md#la-app-abierta-dos-veces)), esta ni sincroniza ni guarda sus huellas: subiría lo suyo, que
+ya no es lo último, y la nube daría por borrado lo que le falta.
+
 Al entrar, los datos del móvil se borran si son de otra cuenta, se bajan los de la cuenta y la app se abre de nuevo con ellos.
 «Cerrar sesión» intenta subir lo pendiente y avisa si no puede; después borra del móvil los datos de la cuenta. «Borrar todos los
 datos» los borra primero de la nube (sin conexión no borra nada: si no, la siguiente sincronización los volvería a bajar).

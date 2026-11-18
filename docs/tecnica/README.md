@@ -14,6 +14,7 @@ ver la [documentación funcional](../funcional/README.md).
 | [Pruebas](pruebas.md) | Qué comprueba cada prueba, en qué navegadores y cuándo se pasan. |
 | [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en la V1.0.2 frente a la V1.0.1 (T-26). |
 | [Auditoría de la V1.0.3](auditoria-1.0.3.md) | Auditoría técnica completa de la V1.0.2: diagnóstico por áreas, lo corregido en la V1.0.3, lo pendiente y las recomendaciones. |
+| [Revisión de la V1.0.32](revision-1.0.32.md) | Repaso de la V1.0.32 antes de publicarla: qué se miró, los dos casos de pérdida de datos encontrados y corregidos, lo comprobado y lo que queda por decidir. |
 | [Informe de issues](issues.md) | Lo encontrado en la revisión final (M8, T-22): lo corregido y lo que queda abierto, con su prioridad, el orden recomendado y su coste en puntos función. |
 | [Figuras de ejercicio](figuras.md) | El modelo anatómico haciendo cada uno de los 551 ejercicios, en lugar de fotos: cómo está hecho, cómo se escribe una postura, cómo se añade un ejercicio, lo que pesa y cómo se prueba. |
 | [Versiones de prueba](versiones-de-prueba.md) | Historial de la serie 1.19 – 1.24, anterior a la V1.0.0. |
@@ -71,7 +72,8 @@ el que usan la mayoría de las pruebas.
 - **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
   exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
 - **Persistencia solo a través de `Store`** (`core/store`) y de `core/persist`. Ninguna otra parte toca `localStorage` ni las partes
-  del estado en IndexedDB (las copias automáticas, `system/snapshots`, tienen su propia base, también con `core/idb`), y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`).
+  del estado en IndexedDB (las copias automáticas, `system/snapshots`, tienen su propia base, también con `core/idb`), y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`). Con la app abierta dos veces (dos
+  pestañas), guarda una sola cada vez y la otra se recarga con lo último ([cómo](estado.md#la-app-abierta-dos-veces)).
 - **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
   `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Ajustes → Diagnóstico; un `catch` vacío solo se

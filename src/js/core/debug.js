@@ -8,7 +8,7 @@
 import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
+import { instanceStale, partSizes, partsLost, savesBroken, savesDone, stateRecovered } from './persist.js';
 import { mealsPart } from './parts.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
@@ -100,6 +100,8 @@ const DEBUG_NAMES = {
   parseProgram: [() => parseProgram],
   partSizes: [() => partSizes],
   partsLost: [() => partsLost],
+  instanceStale: [() => instanceStale],
+  savesBroken: [() => savesBroken],
   PROGRAM_NAMES: [() => PROGRAM_NAMES],
   PROGRAMS: [() => PROGRAMS],
   pendingDocs: [() => pendingDocs],

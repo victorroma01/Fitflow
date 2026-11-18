@@ -1,5 +1,5 @@
 """Prueba de la cuenta y la nube (M2 y M5): inicio de sesión y registro, sincronización entre dos móviles (también sin conexión y
-con cambios en los dos), cerrar sesión, espera tras fallos, Administración, contraseña temporal, fallos y sugerencias (enviar,
+con cambios en los dos, sin poder guardar en el móvil y con la app abierta dos veces), cerrar sesión, espera tras fallos, Administración, contraseña temporal, fallos y sugerencias (enviar,
 sin conexión, vista, respuesta y arreglado), copia de seguridad en la nube (a mano, semanal, sin pisar una copia con más datos,
 restaurar), foto con consentimiento, borrar todos los datos y seguridad (sin código inyectado ni choques con la CSP).
 
@@ -361,6 +361,93 @@ def main(path):
         wait(p2, 'S.logs.length==2', 20000)
         check('«Bajar de mi cuenta» vuelve a bajar los datos de la cuenta', sorted(p2.evaluate('S.logs.map(l=>l.n)')) == ['Pecho', 'Pierna'] and not p2.evaluate('partsLost') and len(fb.part(lpath) or []) == 2)
         sync(p2)
+
+        # ── el móvil no puede guardar (sin espacio), pero la sincronización sí funciona: lo que el móvil no tiene guardado no se
+        #    apunta como sincronizado, así que al volver a abrir la app baja de la nube en vez de borrarse de ella (core/persist:
+        #    savesBroken; cloud/sync: saveMeta) ──
+        no_space = "window.__put=window.__put||IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(){throw new DOMException('sin espacio','QuotaExceededError')};0"
+        base_r = "((JSON.parse(localStorage.getItem('ffsync')||'{}').base||{})['logs:2026']||{}).r"
+        names = lambda pg: sorted(pg.evaluate('S.logs.map(l=>l.n)'))
+        cloud = lambda: sorted(l['n'] for l in fb.part(lpath) or [])
+        one = lambda day, n: "S.logs.push({d:'2026-11-%02d',n:'%s',v:3000,s:12,m:40,q:7});saveState('logs')" % (day, n)
+        r0 = p2.evaluate(base_r)
+        p2.evaluate(no_space)
+        p2.evaluate(one(7, 'Hombro'))
+        wait(p2, 'savesBroken()')
+        check('si el móvil no puede guardar, lo dice', 'No se ha podido guardar' in p2.inner_text('#tt'), p2.inner_text('#tt'))
+        st = sync(p2)
+        check('lo que el móvil no ha podido guardar sube igual a la nube', st == 'ok' and cloud() == ['Hombro', 'Pecho', 'Pierna'], '%s %s' % (st, cloud()))
+        check('pero no se apunta como sincronizado, porque el móvil no lo tiene guardado', bool(r0) and p2.evaluate(base_r) == r0, '%s %s' % (r0, p2.evaluate(base_r)))
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        check('(al volver a abrir la app, al móvil le falta lo que no pudo guardar)', names(p2) == ['Pecho', 'Pierna'] and not p2.evaluate('savesBroken()'), str(names(p2)))
+        st = sync(p2)
+        check('y lo baja de la nube, en vez de borrarlo de ella', st == 'ok' and names(p2) == ['Hombro', 'Pecho', 'Pierna'] and cloud() == ['Hombro', 'Pecho', 'Pierna'], '%s %s %s' % (st, names(p2), cloud()))
+        # lo que baja de la nube y el móvil no puede guardar tampoco se apunta como bajado: se baja otra vez
+        sync(p1)
+        p1.evaluate(one(8, 'Brazos'))
+        sync(p1)
+        r1 = p2.evaluate(base_r)
+        p2.evaluate(no_space)
+        st = sync(p2)
+        check('lo que baja de la nube sin poder guardarlo se ve en la app, pero no se apunta como bajado', st == 'ok' and names(p2) == ['Brazos', 'Hombro', 'Pecho', 'Pierna'] and p2.evaluate('savesBroken()') and r1 != r0 and p2.evaluate(base_r) == r1, '%s %s %s' % (st, names(p2), [r0, r1, p2.evaluate(base_r)]))
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        check('al volver a abrir, se baja otra vez y la nube no pierde nada', st == 'ok' and names(p2) == ['Brazos', 'Hombro', 'Pecho', 'Pierna'] and cloud() == ['Brazos', 'Hombro', 'Pecho', 'Pierna'], '%s %s %s' % (st, names(p2), cloud()))
+        # y si vuelve a haber sitio sin cerrar la app, el siguiente guardado lo escribe todo y lo sincronizado se apunta
+        r2 = p2.evaluate(base_r)
+        p2.evaluate(no_space)
+        p2.evaluate(one(9, 'Core'))
+        wait(p2, 'savesBroken()')
+        p2.evaluate("IDBObjectStore.prototype.put=window.__put;saveState();0")
+        wait(p2, '!savesBroken()')
+        st = sync(p2)
+        saved = sorted(l['n'] for l in p2.evaluate("savesDone().then(()=>__stored()).then(s=>s.logs)"))
+        check('cuando vuelve a poder guardar, queda todo guardado, subido y apuntado', st == 'ok' and saved == ['Brazos', 'Core', 'Hombro', 'Pecho', 'Pierna'] and cloud() == saved and p2.evaluate(base_r) not in (None, r2), '%s %s %s' % (st, saved, cloud()))
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        check('y al volver a abrir sigue todo, en el móvil y en la nube', st == 'ok' and names(p2) == saved and cloud() == saved, '%s %s %s' % (st, names(p2), cloud()))
+
+        # ── la app abierta dos veces en el mismo móvil (dos pestañas): la que se queda atrás ni guarda ni sincroniza, así que no
+        #    borra de la nube lo que guardó la otra (core/persist: instanceStale; lo del propio móvil, en tests/storage.py) ──
+        # (antes, que la app haya guardado lo que guarda sola al arrancar con datos nuevos, como un logro: unos 2,5 s después)
+        sync(p1)
+        p1.reload()
+        wait(p1, 'window.__ffok')
+        p1.wait_for_timeout(3200)
+        sync(p1)
+        q1 = c1.new_page()
+        q1.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200] + ' (tras «%s»)' % LAST[0]))
+        q1.on('console', lambda m: errs.append('CONSOLE ' + brief(m.text)) if m.type == 'error' and not offline_noise(m.text) else None)
+        q1.goto(url)
+        wait(q1, 'window.__ffok')
+        wait(q1, "syncState().st=='ok'")
+        q1.wait_for_timeout(3200)
+        check('(preparado: la misma cuenta, abierta en dos pestañas del mismo móvil)', q1.evaluate('account.u') == 'Ana_1' and names(q1) == saved and not p1.evaluate('instanceStale') and not q1.evaluate('instanceStale'), str([names(q1), p1.evaluate('instanceStale'), q1.evaluate('instanceStale')]))
+        p1.evaluate(one(10, 'Gemelo'))
+        st = sync(p1)
+        wait(q1, 'instanceStale')
+        check('una pestaña guarda y sube un entreno; la otra se queda atrás y lo dice', st == 'ok' and 'Gemelo' in cloud() and 'abierta en otra ventana' in q1.inner_text('#dg'), '%s %s' % (st, cloud()))
+        # la que se quedó atrás no tiene ese entreno: si guardara y sincronizara lo suyo, la nube lo daría por borrado
+        meta0 = q1.evaluate("localStorage.getItem('ffsync')")
+        q1.evaluate("S.logs=S.logs.filter(l=>l.n!='Pecho');" + one(11, 'Tibial'))
+        sync(q1)
+        q1.wait_for_timeout(300)
+        check('la que se quedó atrás no sube lo suyo ni toca lo sincronizado: la nube no pierde nada', cloud() == sorted(saved + ['Gemelo']) and q1.evaluate("localStorage.getItem('ffsync')") == meta0 and sorted(l['n'] for l in p1.evaluate("savesDone().then(()=>__stored()).then(s=>s.logs)")) == sorted(saved + ['Gemelo']), str(cloud()))
+        # (la acción del botón «Recargar», sin cerrar el aviso con el historial, como arriba)
+        with q1.expect_navigation(timeout=20000):
+            q1.evaluate("A.staleReload()")
+        wait(q1, 'window.__ffok')
+        st = sync(q1)
+        check('recargada, tiene lo último, sincroniza y la nube sigue entera', st == 'ok' and names(q1) == sorted(saved + ['Gemelo']) and cloud() == sorted(saved + ['Gemelo']) and not q1.evaluate('instanceStale'), '%s %s %s' % (st, names(q1), cloud()))
+        q1.close()
+        # (se deja la cuenta como estaba, con sus dos entrenos, para lo que sigue)
+        p1.evaluate("S.logs=S.logs.filter(l=>['Pecho','Pierna'].includes(l.n));saveState()")
+        sync(p1)
+        sync(p2)
+        check('(y los entrenos de estas pruebas, borrados en los dos móviles y en la nube)', names(p1) == ['Pecho', 'Pierna'] and names(p2) == ['Pecho', 'Pierna'] and cloud() == ['Pecho', 'Pierna'] and not p1.evaluate('instanceStale'), str([names(p1), names(p2), cloud()]))
 
         # ── App Check (I-05): sin configurar no hace nada; configurado, cada petición a Firebase lleva su token, la CSP de la app
         #    admite reCAPTCHA y, si reCAPTCHA falla, tarda o no hay conexión, la app sigue sin token. reCAPTCHA (tests/browser.py) y
