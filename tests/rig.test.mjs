@@ -19,7 +19,7 @@ import { pathToFileURL } from 'node:url';
 // ocupa la figura), que la app no necesita fuera del módulo.
 const dir = mkdtempSync(join(tmpdir(), 'sf-rig-'));
 writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
-for (const f of ['data/figure.js', 'data/figposes.js', 'data/aliases.js', 'extras/rig.js', 'extras/gear.js', 'extras/moves.js']) {
+for (const f of ['data/figure.js', 'data/figposes.js', 'data/aliases.js', 'extras/rig.js', 'extras/gear.js', 'extras/moves.js', 'extras/athlete.js']) {
   mkdirSync(join(dir, f.split('/')[0]), { recursive: true });
   writeFileSync(join(dir, f), readFileSync(new URL('../src/js/' + f, import.meta.url), 'utf8'));
 }
@@ -29,6 +29,7 @@ const { FIG_POSES } = await import(pathToFileURL(join(dir, 'data/figposes.js')))
 const { EX_ALIASES } = await import(pathToFileURL(join(dir, 'data/aliases.js')));
 const R = await import(pathToFileURL(join(dir, 'extras/rig.js')));
 const { figPose } = await import(pathToFileURL(join(dir, 'extras/moves.js')));
+const { athleteDefs, athleteFrame } = await import(pathToFileURL(join(dir, 'extras/athlete.js')));
 const { EXERCISES } = await import('../src/js/data/library.js');
 
 const NAMES = EXERCISES.map(e => e.n);
@@ -900,4 +901,108 @@ test('los músculos de cada pieza del modelo de perfil', () => {
   const drawn = new Set(Object.values(FG_P).flatMap(p => Object.keys(p[2])));
   const codes = ['ps', 'pi', 'pe', 'dA', 'dL', 'dP', 'tr', 'bi', 'br', 'bq', 'an', 'da', 'rm', 'ro', 'ts', 'tm', 'er', 'cu', 'is', 'gl', 'gm', 'ge', 'so', 'ta', 'ab', 'ob', 'tv', 'co', 'fc', 'sa', 'ag'];
   fails(R.sideRegions(codes).filter(k => !drawn.has(k)), 'regiones sin dibujo');
+});
+
+test('el atleta (piloto): solo lo lleva la figura del curl con barra Z, y de perfil', () => {
+  assert.deepEqual(NAMES.filter(n => figPose(n) && figPose(n).athlete), ['Curl con barra Z']);
+  assert.equal(figPose('Curl con barra Z').v, 'S');
+  // el resto de su familia (el curl con barra recta) sigue con el maniquí
+  assert.equal(FIG_POSES['Curl bíceps barra'], FIG_POSES['Curl con barra Z']);
+  assert.ok(!figPose('Curl bíceps barra').athlete);
+});
+
+test('el atleta: el brazo se rehace en todo el gesto, el antebrazo llega a la mano, las dos manos no sueltan la barra y, arriba, el codo hace punta', () => {
+  const def = figPose('Curl con barra Z');
+  /* los vértices de una silueta (M y el final de cada C) */
+  const verts = d => {
+    const n = d.match(/-?[\d.]+/g).map(Number);
+    const out = [[n[0], n[1]]];
+    for (let i = 2; i + 5 < n.length; i += 6)
+      out.push([n[i + 4], n[i + 5]]);
+    return out;
+  };
+  const bad = [];
+  for (const t of STEPS) {
+    const at = Object.fromEntries(athleteFrame(def, t).map(([k, attr, v]) => [k + ' ' + attr, v]));
+    for (const [k, v] of Object.entries(at))
+      if (!/^[MCZ\d. -]+$|^translate\(/.test(v) || /NaN|Infinity/.test(v))
+        bad.push(t + ' ' + k + ': ' + v.slice(0, 40));
+    // la muñeca del antebrazo es la de la mano: sus dos bordes, a un lado y a otro de donde gira la mano
+    const L = layersAt(def, t);
+    for (const [x, hand] of [['', 'HA'], ['x', 'xHA']]) {
+      const [wx, wy] = placed(L[hand]);
+      const ends = verts(at[x + 'f d']).map(p => [Math.hypot(p[0] - wx, p[1] - wy), p]).sort((a, b) => a[0] - b[0]).slice(0, 2);
+      const mid = [(ends[0][1][0] + ends[1][1][0]) / 2, (ends[0][1][1] + ends[1][1][1]) / 2];
+      if (ends[1][0] > 7 || Math.hypot(mid[0] - wx, mid[1] - wy) > 1.5)
+        bad.push(t + ' ' + (x ? 'atrás' : 'delante') + ': la muñeca no está en la mano');
+    }
+  }
+  fails(bad, 'brazos del atleta');
+  // las dos manos sujetan la barra en toda la subida y la bajada: el agarre de cada puño está en su extremo de la barra
+  for (const t of STEPS) {
+    const L = layersAt(def, t);
+    for (const [hand, bar] of [['HA', 'p0f'], ['xHA', 'p0b']]) {
+      const [x, y, a] = placed(L[hand]);
+      const q = [FG_J.grip[0] - FG_J.wr[0], FG_J.grip[1] - FG_J.wr[1]];
+      const c = Math.cos(a * Math.PI / 180);
+      const s = Math.sin(a * Math.PI / 180);
+      const grip = [x + q[0] * c - q[1] * s, y + q[0] * s + q[1] * c];
+      const [bx, by] = /translate\(([-\d.]+) ([-\d.]+)\)/.exec(L[bar]).slice(1).map(Number);
+      if (Math.hypot(grip[0] - bx, grip[1] - by) > .3)
+        bad.push(t + ' ' + hand + ': el puño, a ' + Math.hypot(grip[0] - bx, grip[1] - by).toFixed(2) + ' de la barra');
+    }
+  }
+  fails(bad, 'manos sin la barra');
+  // arriba, el brazo y el antebrazo juntos: el codo baja por fuera de la articulación (la punta del olécranon)
+  const [, ey] = placed(layersAt(def, 1).FA);
+  const low = Math.max(...verts(Object.fromEntries(athleteFrame(def, 1).map(([k, , v]) => [k, v])).u).map(p => p[1]));
+  assert.ok(low - ey >= 9, 'el codo, arriba, baja ' + (low - ey).toFixed(1) + ' bajo la articulación');
+});
+
+test('el atleta: el cuerpo de perfil va de una pieza (las juntas siguen de una pieza a otra), con los mismos puntos de giro y los pies en el suelo', () => {
+  const defs = athleteDefs();
+  /* los vértices de cada tramo (M y el final de cada C) de un trazado de <defs> */
+  const subpaths = id => {
+    const d = new RegExp('<path id="' + id + '" d="([^"]+)"').exec(defs)[1];
+    return d.split('M').filter(Boolean).map(t => {
+      const n = t.match(/-?[\d.]+/g).map(Number);
+      const out = [[n[0], n[1]]];
+      for (let i = 2; i + 5 < n.length; i += 6)
+        out.push([n[i + 4], n[i + 5]]);
+      return out;
+    });
+  };
+  /* si un punto queda dentro de un polígono (sus vértices) */
+  const inside = (p, ps) => {
+    let c = false;
+    for (let i = 0, j = ps.length - 1; i < ps.length; j = i++)
+      if ((ps[i][1] > p[1]) != (ps[j][1] > p[1]) && p[0] < (ps[j][0] - ps[i][0]) * (p[1] - ps[i][1]) / (ps[j][1] - ps[i][1]) + ps[i][0])
+        c = !c;
+    return c;
+  };
+  /* lo que dista un punto de una línea quebrada */
+  const away = (p, ps) => Math.min(...ps.slice(1).map((q, i) => {
+    const a = ps[i];
+    const L = (q[0] - a[0]) ** 2 + (q[1] - a[1]) ** 2 || 1;
+    const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * (q[0] - a[0]) + (p[1] - a[1]) * (q[1] - a[1])) / L));
+    return Math.hypot(p[0] - a[0] - u * (q[0] - a[0]), p[1] - a[1] - u * (q[1] - a[1]));
+  }));
+  const bad = [];
+  // cada pieza tapa sus articulaciones: gira por donde giraba la del maniquí
+  for (const [k, js] of [['TX', ['neck', 'sh', 'waist']], ['TH', ['hip', 'knee']], ['SH', ['knee', 'ankle']], ['FT', ['ankle', 'toe']]])
+    for (const j of js)
+      if (!inside(FG_J[j], subpaths('atB' + k)[0]))
+        bad.push(k + ': ' + j + ' fuera de la silueta');
+  // los bordes siguen de una pieza a la siguiente: el final del borde de una está sobre el de la otra
+  const [thF, thB] = subpaths('atBETH');
+  const [shF, shB] = subpaths('atBESH');
+  const [ft] = subpaths('atBEFT');
+  for (const [name, end, next] of [['rodilla, delante', thF.at(-1), shF], ['rodilla, detrás', thB.at(-1), shB], ['tobillo, delante', shF.at(-1), ft], ['tobillo, detrás', shB.at(-1), ft]])
+    if (away(end, next) > .6)
+      bad.push(name + ': el borde se corta (' + away(end, next).toFixed(2) + ')');
+  // el talón y el antepié apoyan en el suelo
+  const foot = subpaths('atBFT')[0];
+  if (!foot.some(p => p[0] < FG_J.ankle[0] && p[1] >= 401.8) || !foot.some(p => p[0] > FG_J.toe[0] - 8 && p[1] >= 401.8))
+    bad.push('el pie no apoya el talón y el antepié');
+  fails(bad, 'cuerpo del atleta');
 });

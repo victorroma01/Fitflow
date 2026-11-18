@@ -103,6 +103,7 @@ import './system/space.js';
 import './system/welcome.js';
 import './system/tour.js';
 import './extras/rig.js';
+import './extras/athlete.js';
 import './extras/figure.js';
 import './extras/gear.js';
 import './extras/moves.js';

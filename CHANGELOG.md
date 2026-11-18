@@ -101,6 +101,23 @@ línea.
   manos, cara y orejas), `tests/figures.py` (el maniquí, el cuerpo completo, la luz de frente, el suelo, las manos y la cara,
   y ningún trazo del material casi negro) y `tests/perf.py` (abrir «Cómo se hace» y las piezas de la figura)
   ([figuras](docs/tecnica/figuras.md#el-aspecto)).
+- Figuras de ejercicio, piloto del atleta (a petición del propietario, en la rama `piloto-atleta`, pendiente de su revisión):
+  la figura grande del curl con barra Z es una persona (piel, pantalón corto, pelo y cara) sobre el mismo esqueleto, así que
+  conserva el ritmo, el recorrido, los colores de los músculos y el agarre de la barra con las dos manos. El brazo es una sola
+  silueta que se rehace en cada fotograma: sale del hombro sin junta y el codo hace su pliegue por dentro y su punta por fuera
+  (`extras/athlete`). Las miniaturas y el resto de ejercicios siguen con el maniquí. Pruebas: `tests/rig.test.mjs` (solo el
+  curl con barra Z lo lleva; en todo el gesto, trazados válidos y la muñeca en la mano; arriba, la punta del codo) y
+  `tests/figures.py` (el atleta en la hoja, su brazo al moverse, sus recortes y lo pintado, en cada motor)
+  ([figuras](docs/tecnica/figuras.md#el-atleta-piloto)). Segunda revisión, a petición del propietario: el contorno del brazo
+  va seguido del hombro al codo; el bíceps es parte del volumen del brazo (sin borde negro, fundido con la piel) y al
+  flexionar se acorta y se hincha; el puño rodea la barra con el pulgar y el índice, y una prueba comprueba que las dos manos
+  no la sueltan en todo el gesto. La vista de tres cuartos que pedía para ver el tramo acodado de la barra Z no cabe en el
+  modelo de perfil: el piloto sigue de perfil. Tercera revisión, la silueta: el cuerpo va de una pieza (las juntas sin
+  línea, con los mismos puntos de giro); la nuca baja al trapecio y la garganta sale de la barbilla, con la cabeza algo
+  mayor y ceja, ojo y boca; el pantalón sigue la curva lumbar y del glúteo, con cinturilla y un bajo que acompaña a la
+  pierna; la rodilla, sin la «U» ni el óvalo de la rótula; y el pie, con el tendón de Aquiles, empeine y la punta
+  redondeada, apoyado en el suelo. Pruebas: `tests/rig.test.mjs` (las articulaciones, los bordes que siguen y el apoyo) y
+  `tests/figures.py`.
 
 ## [1.0.31] — 2026-11-16
 
