@@ -96,9 +96,14 @@ le haya pasado a nadie: R1 necesita un móvil sin sitio y R2, la app abierta dos
 
 No son fallos; son mejoras que tocan cosas que decide el propietario.
 
-- **`package-lock.json` y `npm ci` en GitHub Actions.** Las tres dependencias de desarrollo tienen versión fija, pero las
-  suyas no: con el archivo de bloqueo, la compilación de GitHub usa siempre exactamente las mismas. No se ha podido generar
-  aquí (este entorno no llega al registro de npm).
+- **`package-lock.json` y `npm ci` en GitHub Actions.** Poco que ganar hoy. Las tres herramientas con las que se compila y se
+  comprueba el código (`acorn`, `esbuild` y `typescript`) tienen versión exacta y no dependen de ninguna otra (`esbuild` solo
+  trae su programa para cada sistema, con su misma versión): GitHub instala 4 paquetes, siempre los mismos, y la app ya se
+  compila siempre con lo mismo. El archivo de bloqueo solo añadiría comprobar la huella de cada paquete al bajarlo. Lo que sí
+  cambia de una pasada a otra son herramientas que solo usan las pruebas y no van en la app: `firebase-tools` y
+  `firebase-admin` (el emulador de Firebase: fijadas solo a su versión mayor, con unos 700 paquetes detrás) y `numpy` y
+  `pillow` (las comparaciones de capturas: sin versión en `tests/requirements.txt`). Si una prueba falla en GitHub sin haber
+  tocado el código, es lo primero que mirar; fijar sus versiones es lo que tendría más sentido.
 - **Borrar solas las ramas ya fusionadas** (en GitHub: Settings → General → «Automatically delete head branches»), para que
   no se vuelvan a juntar ramas antiguas.
 - **Partir las plantillas largas** con un formateador que entienda `html`: mejoraría la lectura de las vistas, pero cambia el
