@@ -911,7 +911,7 @@ test('el atleta (piloto): solo lo lleva la figura del curl con barra Z, y de per
   assert.ok(!figPose('Curl bíceps barra').athlete);
 });
 
-test('el atleta: el brazo se rehace en todo el gesto, el antebrazo llega a la mano y, arriba, el codo hace punta', () => {
+test('el atleta: el brazo se rehace en todo el gesto, el antebrazo llega a la mano, las dos manos no sueltan la barra y, arriba, el codo hace punta', () => {
   const def = figPose('Curl con barra Z');
   /* los vértices de una silueta (M y el final de cada C) */
   const verts = d => {
@@ -938,6 +938,21 @@ test('el atleta: el brazo se rehace en todo el gesto, el antebrazo llega a la ma
     }
   }
   fails(bad, 'brazos del atleta');
+  // las dos manos sujetan la barra en toda la subida y la bajada: el agarre de cada puño está en su extremo de la barra
+  for (const t of STEPS) {
+    const L = layersAt(def, t);
+    for (const [hand, bar] of [['HA', 'p0f'], ['xHA', 'p0b']]) {
+      const [x, y, a] = placed(L[hand]);
+      const q = [FG_J.grip[0] - FG_J.wr[0], FG_J.grip[1] - FG_J.wr[1]];
+      const c = Math.cos(a * Math.PI / 180);
+      const s = Math.sin(a * Math.PI / 180);
+      const grip = [x + q[0] * c - q[1] * s, y + q[0] * s + q[1] * c];
+      const [bx, by] = /translate\(([-\d.]+) ([-\d.]+)\)/.exec(L[bar]).slice(1).map(Number);
+      if (Math.hypot(grip[0] - bx, grip[1] - by) > .3)
+        bad.push(t + ' ' + hand + ': el puño, a ' + Math.hypot(grip[0] - bx, grip[1] - by).toFixed(2) + ' de la barra');
+    }
+  }
+  fails(bad, 'manos sin la barra');
   // arriba, el brazo y el antebrazo juntos: el codo baja por fuera de la articulación (la punta del olécranon)
   const [, ey] = placed(layersAt(def, 1).FA);
   const low = Math.max(...verts(Object.fromEntries(athleteFrame(def, 1).map(([k, , v]) => [k, v])).u).map(p => p[1]));

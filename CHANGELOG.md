@@ -108,7 +108,11 @@ línea.
   (`extras/athlete`). Las miniaturas y el resto de ejercicios siguen con el maniquí. Pruebas: `tests/rig.test.mjs` (solo el
   curl con barra Z lo lleva; en todo el gesto, trazados válidos y la muñeca en la mano; arriba, la punta del codo) y
   `tests/figures.py` (el atleta en la hoja, su brazo al moverse, sus recortes y lo pintado, en cada motor)
-  ([figuras](docs/tecnica/figuras.md#el-atleta-piloto)).
+  ([figuras](docs/tecnica/figuras.md#el-atleta-piloto)). Segunda revisión, a petición del propietario: el contorno del brazo
+  va seguido del hombro al codo; el bíceps es parte del volumen del brazo (sin borde negro, fundido con la piel) y al
+  flexionar se acorta y se hincha; el puño rodea la barra con el pulgar y el índice, y una prueba comprueba que las dos manos
+  no la sueltan en todo el gesto. La vista de tres cuartos que pedía para ver el tramo acodado de la barra Z no cabe en el
+  modelo de perfil: el piloto sigue de perfil.
 
 ## [1.0.31] — 2026-11-16
 
