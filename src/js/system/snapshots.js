@@ -9,6 +9,7 @@ import { $, APPV, dayKey } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { idbStore } from '../core/idb.js';
+import { staleNow } from '../core/persist.js';
 import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { askRestore, backupDate, buildBackup, countOf, plural } from './backup.js';
@@ -45,6 +46,10 @@ export const takeSnapshot = async () => {
 let snapDay = '';
 /* la copia de hoy, si hoy aún no se ha intentado */
 const dailySnapshot = () => {
+  /* con la app abierta en otra ventana que ha guardado después (core/persist), esta no tiene lo último: la copia la hará
+     cuando se recargue */
+  if (staleNow())
+    return;
   const d = dayKey(new Date());
   if (snapDay == d)
     return;

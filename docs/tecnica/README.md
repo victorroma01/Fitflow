@@ -71,7 +71,8 @@ el que usan la mayoría de las pruebas.
 - **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
   exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
 - **Persistencia solo a través de `Store`** (`core/store`) y de `core/persist`. Ninguna otra parte toca `localStorage` ni las partes
-  del estado en IndexedDB (las copias automáticas, `system/snapshots`, tienen su propia base, también con `core/idb`), y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`).
+  del estado en IndexedDB (las copias automáticas, `system/snapshots`, tienen su propia base, también con `core/idb`), y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`). Con la app abierta dos veces (dos
+  pestañas), guarda una sola cada vez y la otra se recarga con lo último ([cómo](estado.md#la-app-abierta-dos-veces)).
 - **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
   `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Ajustes → Diagnóstico; un `catch` vacío solo se

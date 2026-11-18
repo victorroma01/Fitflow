@@ -16,12 +16,18 @@
    borran las que sobran; así el núcleo nunca nombra una parte que no esté guardada. savesDone() espera a que esté escrito
    todo lo guardado (reloadApp lo espera antes de recargar la página).
    Cada parte que cambia se avisa enseguida a Store.remote (cloud/sync, que la sube a Firebase).
+   Si un guardado falla (sin espacio), se sabe con savesBroken() hasta que uno completo sale bien: mientras tanto cloud/sync
+   no apunta lo sincronizado, para que lo subido baje de la nube al volver a abrir la app en vez de darse por borrado.
+   Una sola apertura de la app guarda cada vez: si otra pestaña o ventana ha guardado después, esta lo nota (la marca
+   Store.K.rev) y ya no guarda ni sincroniza (instanceStale) hasta que core/boot la recarga con lo último. Ver «una sola
+   apertura de la app guarda cada vez», más abajo.
    Este módulo no conoce S: core/state le pasa el estado (saveState, flushState). Se guarda con las claves cortas de siempre y
    se lee con los nombres del programa (core/schema).
    Leer y escribir comparten lo que se sabe de cada clave (savedText), dónde están las partes (idb) y si se puede guardar
    (saveLocked): por eso van juntos en este módulo, y lo que no tiene estado, fuera (core/parts y core/idb).
-   Define: stateRecovered, partsLost, badParts, savedText, queued, queuedParts, saveLocked, lastKey, dropCount, idb, expectedParts, leftovers, lastState, allSaved, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
+   Define: stateRecovered, partsLost, badParts, savedText, queued, queuedParts, saveLocked, lastKey, dropCount, idb, expectedParts, leftovers, lastState, allSaved, unsaved, pendingWrites, savesBroken, knownRev, instanceStale, staleNotice, onInstanceStale, outdated, touchRev, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, goStale, staleCheck, staleNow, claim, takeOver, pendingChanges, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
 */
+import { newId } from './util.js';
 import { Store } from './store.js';
 import { idbStore } from './idb.js';
 import { partKey, readPart, splitState, STATE_PARTS } from './parts.js';
@@ -62,6 +68,62 @@ let lastState = null;
 /** 1 desde la primera vez que se mira todo: hasta entonces (lo que arregla core/repair al arrancar, por ejemplo) o tras un fallo,
   un guardado que dice sus partes también lo mira todo. */
 let allSaved = 0;
+/** 1 mientras algo de lo que se decidió guardar no haya quedado escrito en este dispositivo (sin espacio, sobre todo): hasta
+  que un guardado completo salga bien, lo que hay en S no es lo que habrá al volver a abrir la app. */
+let unsaved = 0;
+/** Escrituras en IndexedDB decididas y aún sin terminar. Un guardado completo solo responde de que todo S está escrito si se
+  decidió sin otras a medias: las anteriores cuentan como escritas desde que se deciden, aunque luego fallen. */
+let pendingWrites = 0;
+/** ¿Hay algo de S sin escribir en este dispositivo porque un guardado falló? cloud/sync lo mira para no apuntar como
+  sincronizado lo que el móvil no tiene guardado: al volver a abrir la app le faltaría, y la nube lo daría por borrado. */
+export const savesBroken = () => !!unsaved;
+/* ── una sola apertura de la app guarda cada vez ──
+   La app puede estar abierta dos veces sobre lo mismo guardado: dos pestañas del navegador o, en Android, la app instalada y
+   una pestaña. Cada una tiene su S en memoria; si las dos guardaran, la segunda pisaría con lo suyo lo que guardó la primera y
+   cloud/sync daría por borrado en la nube lo que a esa le faltaba.
+   Por eso lo guardado lleva una marca (Store.K.rev) que cambia con cada guardado, y cada apertura recuerda la última que leyó
+   o dejó ella (knownRev). Antes de escribir se mira que la marca siga siendo esa (claim): si lo es, nadie más ha guardado
+   desde entonces y se deja una nueva, antes de escribir (las demás ya no escriben) y al terminar (la que haya leído a medias
+   tampoco); si no lo es, otra ha guardado después: esta se queda atrás (instanceStale) y no vuelve a escribir nada de lo que
+   comparten (el estado, lo sincronizado y el entreno en curso) hasta que se recargue. */
+/** La marca que había al leer el estado, o la que dejó el último guardado de esta apertura. */
+let knownRev = null;
+try {
+  knownRev = Store.get(Store.K.rev);
+}
+catch (e) {
+  /* sin localStorage no hay nada guardado que cuidar */
+}
+/** 1 si otra apertura de la app ha guardado después de lo que esta tiene en S: ya no guarda ni sincroniza (cloud/sync) hasta
+  que se recargue. */
+export let instanceStale = 0;
+let staleNotice = null;
+/** Qué hacer cuando esta apertura se queda atrás (core/boot: recargarla con lo último). `fn(arriving)`: `arriving`, 1 si se
+  ha sabido al volver a ella (hasta entonces no se estaba viendo). Se llama al saberlo y, después, cada vez que algo intenta
+  guardar. */
+export const onInstanceStale = fn => {
+  staleNotice = fn;
+};
+/* ¿ha guardado otra apertura de la app después de lo que esta sabe? */
+const outdated = () => {
+  try {
+    return Store.get(Store.K.rev) !== knownRev;
+  }
+  catch (e) {
+    return false;
+  }
+};
+/* deja una marca nueva, que solo conoce esta apertura: las demás se quedan atrás. Si no cabe ni la marca, sigue la de antes */
+const touchRev = () => {
+  const r = newId();
+  try {
+    Store.set(Store.K.rev, r, 1);
+    knownRev = r;
+  }
+  catch (e) {
+    /* sin sitio: el guardado que viene dirá qué falla */
+  }
+};
 /* aparta en Store.K.bad lo que no se pudo leer ({ clave: texto }) y lo anota para el aviso de core/boot y para cloud/sync */
 const setAside = (bad, salvage) => {
   const keys = Object.keys(bad);
@@ -266,6 +328,11 @@ const moveToIdb = async (s) => {
   let split;
   try {
     split = splitState(stateToStored(s), null, idb);
+    /* con algo ya guardado, pasarlo es escribir: como en cualquier guardado, solo si nadie más ha guardado desde que se leyó */
+    if ((hadCore || old.length) && !claim()) {
+      idb = 0;
+      return;
+    }
     await partsTx('readwrite', st => {
       st.clear();
       for (const k of split.keys)
@@ -273,6 +340,8 @@ const moveToIdb = async (s) => {
     });
     if (moved)
       Store.set(core, split.out[core], 1);
+    if (hadCore || old.length)
+      claim();
   }
   catch (e) {
     idb = 0;
@@ -354,33 +423,102 @@ const checkNow = () => {
   if (lastState && !queued)
     writeState(lastState);
 };
+/* esta apertura se queda atrás: ya no guarda (writeState) ni tiene nada pendiente de guardar, y se avisa (core/boot) */
+const goStale = arriving => {
+  if (!instanceStale) {
+    instanceStale = 1;
+    queued = null;
+    clearTimeout(checkTimer);
+    checkTimer = 0;
+  }
+  try {
+    staleNotice && staleNotice(arriving);
+  }
+  catch (e) {
+    logError('otra apertura de la app', e);
+  }
+};
+/* lo mira ahora; `arriving`: se acaba de volver a esta apertura */
+const staleCheck = arriving => {
+  if (!instanceStale && !saveLocked && outdated())
+    goStale(arriving);
+};
+/** ¿Se ha quedado atrás esta apertura? Lo mira ahora: se pregunta antes de escribir algo que comparten todas las aperturas y
+  no pasa por aquí (lo sincronizado, en cloud/sync; el entreno en curso, en workout/resume). */
+export const staleNow = () => {
+  staleCheck(0);
+  return !!instanceStale;
+};
+/* antes de escribir, y al terminar: si nadie más ha guardado desde lo que esta apertura sabe, deja su marca (true); si no,
+   esta se queda atrás y no escribe (false) */
+const claim = () => {
+  if (instanceStale || outdated()) {
+    goStale(0);
+    return false;
+  }
+  touchRev();
+  return true;
+};
+/** Esta apertura pasa a llevar algo que se guarda fuera del estado (el entreno en curso: workout/resume), como si acabara de
+  guardar: las demás se quedan atrás. false si la que se ha quedado atrás es esta. */
+export const takeOver = claim;
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState == 'hidden')
     checkNow();
+  else
+    staleCheck(1);
 });
 window.addEventListener('pagehide', checkNow);
-/* localStorage: se escribe ya, en el orden de siempre (partes, borrados y el núcleo al final). true si todo fue bien */
-const writeLocal = ({ out, keys }, report) => {
+/* lo que guarda otra pestaña o ventana se sabe al momento (el evento storage solo llega a las demás): por su marca o, si es
+   una versión anterior de la app, que no la deja, porque cambia el núcleo. Y si el navegador tenía esta parada, al volver */
+window.addEventListener('storage', e => {
+  if (e.storageArea != localStorage)
+    return;
+  if (e.key == Store.K.app && !instanceStale && !saveLocked)
+    goStale(0);
+  else if (e.key == null || e.key == Store.K.rev)
+    staleCheck(0);
+});
+window.addEventListener('pageshow', e => {
+  if (e.persisted)
+    staleCheck(1);
+});
+/* lo que hay que escribir para que quede guardado lo que da splitState: { puts: [[clave, texto]] de las partes que cambian,
+   dels: claves de las partes que sobran, text: el núcleo si cambia (null si no) } */
+const pendingChanges = ({ out, keys }) => {
   const core = Store.K.app;
   const has = new Set(keys);
+  return {
+    puts: keys.filter(k => k in out && savedText.get(k) !== out[k]).map(k => [k, out[k]]),
+    dels: [...savedText.keys()].filter(k => k != core && !has.has(k)),
+    text: savedText.get(core) !== out[core] ? out[core] : null
+  };
+};
+/* localStorage: se escribe ya, en el orden de siempre (partes, borrados y el núcleo al final). true si todo fue bien */
+const writeLocal = (split, report) => {
+  const core = Store.K.app;
+  const { puts, dels, text } = pendingChanges(split);
+  if (!puts.length && !dels.length && text == null)
+    return true;
+  if (!claim())
+    return false;
   try {
-    for (const k of keys)
-      if (k in out && savedText.get(k) !== out[k]) {
-        lastKey = k;
-        Store.set(k, out[k]);
-        savedText.set(k, out[k]);
-      }
-    for (const k of [...savedText.keys()])
-      if (k != core && !has.has(k)) {
-        lastKey = k;
-        Store.del(k);
-        savedText.delete(k);
-      }
-    if (savedText.get(core) !== out[core]) {
-      lastKey = core;
-      Store.set(core, out[core]);
-      savedText.set(core, out[core]);
+    for (const [k, v] of puts) {
+      lastKey = k;
+      Store.set(k, v);
+      savedText.set(k, v);
     }
+    for (const k of dels) {
+      lastKey = k;
+      Store.del(k);
+      savedText.delete(k);
+    }
+    if (text != null) {
+      lastKey = core;
+      Store.set(core, text);
+      savedText.set(core, text);
+    }
+    claim();
     return true;
   }
   catch (e) {
@@ -390,14 +528,13 @@ const writeLocal = ({ out, keys }, report) => {
   }
 };
 /* IndexedDB: lo que cambia se decide y se avisa ya; se escribe en la cola (partes, núcleo, borrados). Promesa: true si fue bien */
-const writeIdb = ({ out, keys }, report) => {
+const writeIdb = (split, report) => {
   const core = Store.K.app;
-  const has = new Set(keys);
-  const puts = keys.filter(k => k in out && savedText.get(k) !== out[k]).map(k => [k, out[k]]);
-  const dels = [...savedText.keys()].filter(k => k != core && !has.has(k));
-  const text = savedText.get(core) !== out[core] ? out[core] : null;
+  const { puts, dels, text } = pendingChanges(split);
   if (!puts.length && !dels.length && text == null)
     return Promise.resolve(true);
+  if (!claim())
+    return Promise.resolve(false);
   /* lo que había, por si falla: cada transacción es todo o nada, así que entonces sigue estando lo de antes */
   const before = new Map();
   for (const k of [...puts.map(x => x[0]), ...dels, ...text != null ? [core] : []])
@@ -423,7 +560,8 @@ const writeIdb = ({ out, keys }, report) => {
     Store.note(core, text);
   }
   const drop = dropCount;
-  return enqueue(async () => {
+  pendingWrites++;
+  const job = async () => {
     /* el estado se borró después de pedir este guardado (se cerró la sesión o entró otra cuenta): ya no hay nada que escribir */
     if (drop != dropCount)
       return true;
@@ -441,6 +579,8 @@ const writeIdb = ({ out, keys }, report) => {
       if (text != null)
         Store.set(core, text, 1);
       coreDone = true;
+      /* ya está lo que lee quien abra la app: la marca de que este guardado ha terminado */
+      claim();
       step = 'borrar partes';
       if (dels.length)
         await partsTx('readwrite', st => dels.forEach(k => st.delete(k)));
@@ -468,7 +608,10 @@ const writeIdb = ({ out, keys }, report) => {
         checkLater(5000);
       return false;
     }
-  });
+  };
+  return enqueue(() => job().finally(() => {
+    pendingWrites--;
+  }));
 };
 /* las pruebas: ¿cambió alguna parte que la acción no dijo? (se anota en window.__ffHintCheck) */
 const hintCheck = (s, parts) => {
@@ -501,12 +644,20 @@ export const writeState = (s, parts) => {
   queued = null;
   queuedParts = null;
   lastState = s;
+  /* otra apertura de la app guardó después: esta ya no escribe (pisaría lo de la otra), y se vuelve a avisar. Si aún no lo
+     sabe, lo ve al ir a escribir (claim) */
+  if (instanceStale) {
+    goStale(0);
+    return Promise.resolve(false);
+  }
   if (saveLocked)
     return Promise.resolve(true);
   if (!allSaved) {
     parts = null;
     allSaved = 1;
   }
+  /* un guardado completo, decidido sin otros a medias: si sale bien, todo S está escrito */
+  const vouches = !parts && !pendingWrites;
   if (parts && window.__ffHintCheck)
     hintCheck(s, parts);
   else if (parts)
@@ -515,7 +666,13 @@ export const writeState = (s, parts) => {
     clearTimeout(checkTimer);
     checkTimer = 0;
   }
-  return writeSplit(() => stateToStored(s), parts || null, 1);
+  return writeSplit(() => stateToStored(s), parts || null, 1).then(ok => {
+    if (!ok)
+      unsaved = 1;
+    else if (vouches)
+      unsaved = 0;
+    return ok;
+  });
 };
 /** Guarda `s` al terminar la acción en curso: muchas llamadas seguidas se escriben una sola vez (core/state: saveState).
   `parts`: las partes que la acción ha tocado ('core' si ninguna, 'logs', 'hist', mealsPart(día)); sin ellas, todas. */
@@ -560,6 +717,7 @@ export const lockSaves = () => {
 /** Borra el estado guardado (núcleo y partes), sin bloquear los guardados (al entrar con otra cuenta: cloud/session). */
 export const dropSavedState = () => {
   dropCount++;
+  touchRev();
   Store.del(Store.K.app);
   for (const k of Store.keys(partKey('')))
     Store.del(k);

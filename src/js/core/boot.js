@@ -4,13 +4,14 @@
    sesión, empieza a sincronizar con Firebase (cloud/sync). Si esos datos no se pudieron leer, no se guarda ni se sincroniza
    nada (con la mitad de los datos, la nube creería que se borró el resto) y se avisa, con «Reintentar» y, con sesión, «Bajar
    de mi cuenta». window.__ffready se cumple al terminar el arranque; window.__ffok vale 1 desde el primer pintado.
-   Define: RESTORE_HINT, lostDialog, start  · acciones/registros: 3
+   También decide qué pasa si la app está abierta dos veces y la otra guarda después: esta se recarga (onInstanceStale).
+   Define: RESTORE_HINT, lostDialog, staleWaiting, staleDialog, start  · acciones/registros: 4
 */
 import { $, fmtDuration, fmtMinSec, roundInt } from './util.js';
 import { Store } from './store.js';
 import { logError, setErrorNotice } from './errors.js';
 import { toast } from './toast.js';
-import { dropSavedState, loadParts, partsLost, reloadApp, stateRecovered } from './persist.js';
+import { dropSavedState, loadParts, onInstanceStale, partsLost, reloadApp, stateRecovered } from './persist.js';
 import { A } from './registry.js';
 import { applyTheme, S, saveState, W } from './state.js';
 import { confirmDialog, dialog } from './ui.js';
@@ -34,7 +35,7 @@ import { tourCheck } from '../system/tour.js';
 import { iconNoticeCheck } from '../system/iconnotice.js';
 import { cleanDay, repairState } from './repair.js';
 import { signedIn } from '../cloud/session.js';
-import { startSync } from '../cloud/sync.js';
+import { startSync, stopSync } from '../cloud/sync.js';
 import { spaceCheck } from '../system/space.js';
 /* los datos de este móvil no se pudieron leer (core/persist: partsLost): nada se guarda ni se sincroniza hasta que se lean */
 /* cómo recuperar los datos, en los avisos de datos dañados */
@@ -53,6 +54,34 @@ A.partsFromCloud = () => {
   }
   reloadApp();
 };
+/* La app está abierta también en otra pestaña o ventana, que ha guardado después (core/persist: instanceStale): esta ya no
+   guarda ni sincroniza, y hay que recargarla con lo último. Si no se estaba usando (no se ve, o se sabe justo al volver a
+   ella), se recarga sola; si se está viendo, se dice con un aviso que tapa la app y solo se quita recargando (si se cierra
+   de otra forma, con el gesto de volver, se recarga igual). El entreno en curso no se pierde: está guardado aparte
+   (workout/resume) y, tras recargar, se ofrece reanudarlo. */
+let staleWaiting = 0;
+let staleDialog = null;
+onInstanceStale(arriving => {
+  stopSync();
+  if (document.visibilityState == 'hidden') {
+    if (!staleWaiting)
+      document.addEventListener('visibilitychange', () => document.visibilityState == 'hidden' || location.reload());
+    staleWaiting = 1;
+    return;
+  }
+  /* con el aviso puesto no hay nada más que hacer (esto se llama otra vez cada vez que algo intenta guardar) */
+  if (staleDialog && staleDialog.isConnected)
+    return;
+  if (arriving || staleDialog) {
+    location.reload();
+    return;
+  }
+  dialog('La app está abierta en otra ventana', 'Se han guardado cambios desde otra pestaña o ventana de la app. Para no mezclar los datos, esta se recarga con lo último.', [['Recargar', 'staleReload', 'pr']]);
+  staleDialog = $('#dg').firstChild;
+  if (typeof MutationObserver != 'undefined')
+    new MutationObserver(() => staleDialog.isConnected || location.reload()).observe($('#dg'), { childList: true });
+});
+A.staleReload = () => location.reload();
 /* un error inesperado no se queda en silencio: se dice, y dónde contarlo si se repite (system/report) */
 setErrorNotice(() => toast('Algo ha fallado. Si se repite, cuéntalo en Ajustes → Informar de un fallo.'));
 const start = () => {

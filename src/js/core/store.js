@@ -26,9 +26,11 @@ import { logError } from './errors.js';
           (cloud/sync)
    lgn  → intentos fallidos de entrar, para la espera creciente (account/login)
    space → cuándo se avisó por última vez de que queda poco espacio (system/space; no se sincroniza)
+   rev  → marca de lo último guardado: cada apertura de la app la cambia al guardar, y así otra pestaña o ventana sabe que lo
+          suyo ya no es lo último (core/persist; no se sincroniza)
    Las copias automáticas viven en IndexedDB (base "ffsnap"; ver system/snapshots). */
 export const Store = {
-  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn', space: 'ffspace' },
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn', space: 'ffspace', rev: 'ffrev' },
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…).
      Con quiet no se avisa a Store.remote (core/persist ya avisó al decidir el cambio) */

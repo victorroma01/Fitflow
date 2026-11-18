@@ -14,13 +14,17 @@
    Lo de cada documento en la última sincronización se recuerda por huellas (clave `sync` de Store), no por copias: así se sabe
    qué cambió en cada lado sin duplicar los datos en el móvil. Lo que se vació al arrancar porque estaba dañado (core/persist)
    no cuenta como borrado: esas huellas se olvidan y se vuelve a bajar de la nube (forgetDamaged).
-   Define: newMeta, readMeta, meta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   Las huellas solo se guardan cuando lo que describen está también guardado en el móvil (saveMeta): si el móvil no puede
+   guardar (sin espacio), lo nuevo sube igual a la nube, pero no se apunta; al volver a abrir la app, al móvil le falta y, como
+   no consta que lo tuviera, baja de la nube en vez de borrarse de ella. Y si la app está abierta en otra pestaña o ventana
+   que ha guardado después (core/persist: instanceStale), esta no sincroniza: subiría lo suyo, que ya no es lo último.
+   Define: newMeta, readMeta, meta, storeMeta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
-import { badParts, partsLost, stateRecovered } from '../core/persist.js';
+import { badParts, instanceStale, partsLost, savesBroken, savesDone, staleNow, stateRecovered } from '../core/persist.js';
 import { partKey } from '../core/parts.js';
 import { applyTheme, flushState, W } from '../core/state.js';
 import { R } from '../core/render.js';
@@ -49,13 +53,19 @@ const readMeta = () => {
   return newMeta(0);
 };
 let meta = readMeta();
-const saveMeta = () => {
+const storeMeta = () => {
   try {
     Store.set(Store.K.sync, JSON.stringify(meta));
   }
   catch (e) {
     logError('guardar el estado de la sincronización', e);
   }
+};
+/* guarda lo sincronizado, si lo que describe está guardado en este móvil y esta apertura de la app sigue siendo la última (ver
+   arriba). Si no, se queda lo último que se guardó, que sí corresponde a lo que hay en el móvil */
+const saveMeta = () => {
+  if (!savesBroken() && !staleNow())
+    storeMeta();
 };
 /** st: idle, run, ok, off (sin conexión), err (code), wait (entreno en curso), dead (hay que volver a entrar). */
 let status = { st: 'idle', t: 0, code: '' };
@@ -98,12 +108,14 @@ export const syncLine = () => {
   const t = meta.last ? new Date(meta.last).toLocaleString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
   return { run: 'sincronizando…', off: 'sin conexión; se sube al volver la red', wait: 'al terminar el entreno', err: 'no se pudo (' + status.code + '); se reintenta sola' }[status.st] || (t ? 'al día · ' + t : 'pendiente');
 };
-/* tras aplicar lo de la nube: estado válido, guardado (sin contarlo como cambio local), tema y color, y la app pintada */
+/* tras aplicar lo de la nube: estado válido, guardado (sin contarlo como cambio local), tema y color, y la app pintada.
+   Promesa: se cumple cuando lo aplicado queda escrito en el móvil (o se sabe que no se pudo: savesBroken) */
 const afterApply = () => {
+  let saved;
   applying = 1;
   try {
     repairState();
-    flushState();
+    saved = flushState();
     applyTheme();
     applyAccent();
   }
@@ -118,6 +130,7 @@ const afterApply = () => {
     catch (e) {
       logError('pintar tras sincronizar', e);
     }
+  return saved;
 };
 /* paso 1: el perfil. Si no existe (cuenta recién creada), se crea con el usuario; las preferencias se juntan como el núcleo */
 const syncProfile = async () => {
@@ -143,7 +156,7 @@ const syncProfile = async () => {
       pr[k] = merged[k];
   if (!sameHashes(hashMap(M), hashMap(L))) {
     applyPrefs(merged);
-    afterApply();
+    await afterApply();
   }
   if (!rd)
     await commitWrites([setWrite(profilePath(), { u: account.u, sx: merged.sx || '', pr, ca: Date.now(), m: Date.now() }, { exists: false })]);
@@ -221,8 +234,9 @@ const pull = async (idx) => {
     else
       delete meta.base[id];
   }
+  /* lo juntado, escrito en el móvil antes de apuntarlo como sincronizado */
   if (touched)
-    afterApply();
+    await afterApply();
   if (missing.length)
     await pruneIndex(idx, missing);
   saveMeta();
@@ -318,6 +332,8 @@ const push = async (idx) => {
         meta.base[o.id] = { r: o.r, h: o.h };
       else
         delete meta.base[o.id];
+    /* lo subido se apunta cuando el móvil ha terminado de escribir lo suyo (y solo si pudo: saveMeta) */
+    await savesDone();
     saveMeta();
     chunk = [];
     size = 0;
@@ -343,8 +359,9 @@ const syncRound = async () => {
      programar) */
   clearTimeout(timer);
   timerAt = 0;
-  /* sin los datos del móvil (core/persist: partsLost), la nube creería que se borraron: no se sincroniza nada */
-  if (!account || partsLost)
+  /* sin los datos del móvil (core/persist: partsLost), la nube creería que se borraron: no se sincroniza nada. Tampoco si otra
+     apertura de la app ha guardado después (instanceStale): lo de esta ya no es lo último */
+  if (!account || partsLost || staleNow())
     return;
   if (account.x) {
     setStatus('dead');
@@ -367,6 +384,9 @@ const syncRound = async () => {
         retryLater(6e4);
         return;
       }
+      /* lo bajado no se ha podido guardar porque otra apertura de la app guardó antes: la vuelta se deja aquí */
+      if (instanceStale)
+        return;
       if (await push(idx)) {
         meta.last = Date.now();
         meta.fresh = 0;
@@ -500,7 +520,7 @@ export const stopSync = () => {
   si es nueva, crea su perfil y sube el estado inicial) sin pintar la app. true si terminó bien. */
 export const firstSync = async () => {
   meta = newMeta(1);
-  saveMeta();
+  storeMeta();
   quiet = 1;
   try {
     await syncNow();
@@ -520,5 +540,5 @@ export const wipeCloudData = async () => {
   for (let i = 0; i < writes.length; i += 400)
     await commitWrites(writes.slice(i, i + 400));
   meta = newMeta(0);
-  saveMeta();
+  storeMeta();
 };

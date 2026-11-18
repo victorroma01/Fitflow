@@ -70,6 +70,19 @@ línea.
   (`core/persist`: un guardado pedido antes de borrar el estado ya no escribe nada). Antes, la siguiente apertura se quedaba
   en «No se pudieron leer tus datos» sobre el inicio de sesión, sin poder entrar. Salió al probar el paso de las cuentas con el
   emulador de Firebase.
+- Sin sitio en el móvil y con la sincronización en marcha, ya no se pierde nada: lo que el móvil no ha podido guardar sube
+  igual a la nube, pero la sincronización no lo apunta como sincronizado hasta que está guardado (`savesBroken`, en
+  `core/persist`; `saveMeta`, en `cloud/sync`), y lo que baja de la nube se apunta cuando ya está escrito. Antes, al volver a
+  abrir la app, al móvil le faltaba ese entreno y, como constaba que lo había tenido, la nube lo daba por borrado y lo borraba
+  también allí. Pasaba igual en la 1.0.31 publicada.
+- La app abierta dos veces sobre lo mismo guardado (dos pestañas o, en Android, la app instalada y una pestaña; en el iPhone,
+  la app instalada guarda aparte de Safari): guarda una sola cada vez. Cada guardado deja una marca (`ffrev`) y, antes de
+  escribir, se mira que siga siendo la que esta apertura conoce; si otra ha guardado después, esta se queda atrás: no guarda,
+  no sincroniza, no toca el entreno en curso y se recarga con lo último, sola si no se estaba viendo y con el aviso «La app
+  está abierta en otra ventana» si sí (`core/persist`, `core/boot`). Antes, la segunda pisaba lo de la primera y la
+  sincronización borraba de la nube lo que a esa le faltaba; también en la 1.0.31. El entreno en curso lo lleva quien lo
+  empieza o lo reanuda, y una ventana sin entreno ya no borra el de otra (`workout/resume`)
+  ([la app abierta dos veces](docs/tecnica/estado.md#la-app-abierta-dos-veces)).
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.
