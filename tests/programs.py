@@ -126,7 +126,7 @@ def main(path):
         use(0)
         ev("S.exerciseHistory={'Press banca':[{d:'2026-10-26',s:[[8,90,0,0],[8,90,0,0],[8,90,0,0],[8,90,0,0]]}]};S.week=5;S.deloadSheetWeek=0;R()")
         run(1200)
-        check('semana 5 (intermedio): la semana se marca en naranja', ev("!!document.querySelector('.week-nav b.wkdl')") and 'descarga' in txt('.week-nav b'))
+        check('semana 5 (intermedio): la semana se marca en naranja', ev("!!document.querySelector('.week-nav b.deload-week')") and 'descarga' in txt('.week-nav b'))
         check('tarjeta compacta con «Omitir»', ev("!!document.querySelector('.deload-box.deload-box-slim [data-a=deloadSkipAsk]')"))
         check('al abrir la semana sale una vez la hoja con lo que cambia', ev("!!document.querySelector('#sh .deload-intro')") and 'Peso al 65 %' in txt('#sh .deload-intro') and ev("S.deloadSheetWeek") == 5)
         ev("A.deloadSeen();R()")

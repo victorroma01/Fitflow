@@ -11,7 +11,8 @@
            (${on ? 'on' : ''}), los trozos de una suma, la constante o la tabla de la que sale (LEVEL_CLASS[v]);
          - classList.add/remove/toggle/contains/replace, className = … y setAttribute('class', …);
          - los selectores de querySelector, querySelectorAll, closest y matches.
-     · tests y docs, por texto: class="…", classList, y «.nombre» donde es un selector.
+     · tests y docs, por texto: class="…", classList, lo que recibe un selector (querySelector, los ayudantes de las pruebas) y
+       «.nombre» donde empieza un selector.
 
    Lo que no se puede decidir solo se dice, con su archivo y su línea, y no se toca:
      · SIN RESOLVER: una clase que llega por un camino que no se sigue (un parámetro, un dato): hay que mirarlo;
@@ -19,7 +20,8 @@
      · QUEDA: el nombre viejo sigue escrito en un texto, fuera de los sitios de arriba. Casi siempre no es la clase (un
        texto, un valor), pero si lo es y no se cambia, ese elemento se queda sin estilo.
 
-   Uso:  node tools/classes.js --check            (en la batería: toda clase que el código pone o busca está en src/css)
+   Uso:  node tools/classes.js --check            (en la batería: toda clase que el código pone o busca, y toda la que buscan
+                                                    las pruebas, está en src/css)
          node tools/classes.js mapa.txt [--dry]   (líneas «K viejo nuevo»; # comentarios; --dry: solo cuenta, no escribe)
    El mapa crece con cada lote: solo se aplican las líneas cuyo nombre viejo sigue en el CSS. Se niega si un nombre nuevo ya
    es una clase, o si de una línea no existe ni el viejo ni el nuevo. Después: npm run format y la comparación con el
@@ -350,6 +352,29 @@ if (MAP.size)
    el elemento se quedaría sin estilo, o el código sin encontrarlo, y nada más lo diría. */
 // clases sin estilo propio: el código las pone para encontrar el elemento (el recorrido, las pruebas)
 const HOOKS = ['exchips', 'news', 'nwk', 'pgc', 'pgm', 'trp', 'trs', 'update'];
+// clases que ya no existen: las pruebas buscan que no vuelvan (la foto de una ficha y su insignia, el pie con el copyright)
+const GONE = ['exph', 'phi', 'ver'];
+// no se tocan ni se miran: el propio mapa, los nombres de la V1.0.2 y las pruebas de las herramientas, cuyas clases son de juguete
+const SKIP = ['tests/templates.test.mjs', 'tests/classes.test.mjs', 'docs/tecnica/nombres.md', 'tests/nombres-1.0.2.txt'];
+const skipped = f => (mapFile && path.resolve(f) === path.resolve(mapFile)) || SKIP.includes(rel(f).split(path.sep).join('/'));
+const testFiles = () => walk(path.join(ROOT, 'tests'), n => /\.(py|mjs|js|sh)$/.test(n)).filter(f => !skipped(f));
+/* Las pruebas son texto, no se pueden leer como el código. Pero en lo que recibe un selector (los métodos del navegador, los
+   de Playwright y los ayudantes de las pruebas), todo «.nombre» del primer texto es una clase, lleve delante la etiqueta que
+   lleve (b.on, td.done). */
+const SELECTS = 'querySelector(?:All)?|closest|matches|query_selector(?:_all)?|locator|wait_for_selector|inner_text|text_content|is_visible|fill|click|tap|press|select_option|txt|text|gesture';
+const CALL = new RegExp('(\\b(?:' + SELECTS + ')\\(\\s*\\\\?([\'"`]))((?:(?!\\2)[^\\n\\\\])*)', 'g');
+/* Las clases de esos selectores: [nombre, posición]. No cuenta lo de dentro de [attr="…"], ni un nombre que sigue fuera del
+   texto ('.set-' + kind, .day-${i}, .d%d): no está entero. */
+function* selectorClasses(text) {
+  for (const m of text.matchAll(CALL)) {
+    const at = m.index + m[1].length, sel = m[3], after = text.slice(at + sel.length, at + sel.length + 16).replace(/^\\?['"`]/, '');
+    for (const c of sel.matchAll(/\[[^\]]*\]?|\.(-?[_a-zA-Z][\w-]*)/g)) {
+      const end = c.index + c[0].length;
+      if (!c[1] || /^[$%{]/.test(sel.slice(end)) || (end === sel.length && /^\s*(?:[+%]|\.format\b)/.test(after))) continue;
+      yield [c[1], at + c.index + 1];
+    }
+  }
+}
 if (CHECK) {
   let bad = 0;
   for (const [f, ranges] of visited)
@@ -359,15 +384,28 @@ if (CHECK) {
       bad++;
       console.error(`${rel(f)}:${lineOf(sources.get(f), a)}: la clase «${c}» no está en src/css${ALL.has(c) ? ' (se renombró: ' + path.relative(ROOT, path.resolve(mapFile)) + ')' : ''}`);
     }
+  // las pruebas: si buscan una clase que no existe, comprobar que algo «no está» pasaría siempre
+  const looked = new Set();
+  for (const f of testFiles()) {
+    const text = fs.readFileSync(f, 'utf8');
+    for (const [c, at] of selectorClasses(text)) {
+      looked.add(c);
+      if (cssClasses.has(c) || HOOKS.includes(c) || GONE.includes(c)) continue;
+      bad++;
+      console.error(`${rel(f)}:${lineOf(text, at)}: la prueba busca la clase «${c}», que no está en src/css${ALL.has(c) ? ' (se renombró: ' + path.relative(ROOT, path.resolve(mapFile)) + ')' : ''}`);
+    }
+  }
   if (bad) { console.error(`\n${bad} clases que no existen: mal escritas, o renombradas (docs/tecnica/clases.md)`); process.exit(1); }
-  console.log(`Clases correctas: las ${new Set([...visited].flatMap(([f, r]) => r.map(([a, b]) => sources.get(f).slice(a, b)))).size} que usa el código están en src/css`);
+  const used = new Set([...visited].flatMap(([f, r]) => r.map(([a, b]) => sources.get(f).slice(a, b))));
+  console.log(`Clases correctas: las ${used.size} que usa el código y las ${looked.size} que buscan las pruebas están en src/css`);
   process.exit(0);
 }
 
 /* ── pruebas y documentación: por texto ─────────────────────────────────────────────────────────────────────────────
-   Un «.nombre» se toma por selector si el selector del que forma parte (button.pr, .cd.on, #sh .sp) empieza tras una comilla,
-   un espacio o un signo de selector; pegado a un nombre cualquiera (e.ok, o.dataset.ph) es código y se deja, apuntado como
-   QUEDA. */
+   En lo que recibe un selector (CALL), todo «.nombre» es una clase. Fuera de ahí (un selector guardado en una constante), un
+   «.nombre» se toma por selector si el selector del que forma parte (button.pr, .cd.on, #sh .sp) empieza tras una comilla, un
+   espacio o un signo de selector; pegado a un nombre cualquiera (e.ok, o.dataset.ph) es código y se deja. Si ese nombre es
+   también el de una etiqueta (b.on, p.cal) no se sabe: se deja y se apunta como QUEDA. */
 function renameText(text, file, kind) {
   if (!MAP.size) return text;
   const sub = c => (tally(c, kind), MAP.get(c));
@@ -377,11 +415,16 @@ function renameText(text, file, kind) {
   text = text.replace(/(\bclass=\\?["'])([^"'\\]*)/g, (all, pre, val) => pre + val.replace(/[^\s${}]+/g, t => MAP.has(t) ? sub(t) : t));
   // classList.x('nombre')
   text = text.replace(new RegExp('(classList\\.(?:add|remove|toggle|contains)\\(\\s*\\\\?[\'"])(' + names + ')(?=\\\\?[\'"])', 'g'), (all, pre, c) => pre + sub(c));
-  // .nombre en un selector: el selector entero (button.pr, .cd.on, #sh .sp[data-i]) tiene que empezar donde empieza un texto
-  const compound = new RegExp('(?<=^|[\\s\'"`(,>+~}])(?:' + TAGS + ')?[#.][\\w-]+(?:[#.][\\w-]+|\\[[\\w-]+(?:[~|^$*]?=[^\\]\\n]*)?\\]|:[\\w-]+)*(?!\\s*[(=])', 'gm');
+  // lo que recibe un selector
+  for (const [c, at] of [...selectorClasses(text)].reverse())
+    if (MAP.has(c)) text = text.slice(0, at) + sub(c) + text.slice(at + c.length);
+  // .nombre en un selector: el selector entero (button.pr, .cd.on, #sh .sp[data-i]) tiene que empezar donde empieza un texto, y
+  // acabar donde acaba un nombre: de «.calc(» no se toma «.cal», ni de «'.it' + n» o «.it${n}» un nombre que sigue fuera
+  const compound = new RegExp('(?<=^|[\\s\'"`(,>+~}])(?:' + TAGS + ')?[#.][\\w-]+(?:[#.][\\w-]+|\\[[\\w-]+(?:[~|^$*]?=[^\\]\\n]*)?\\]|:[\\w-]+)*(?![\\w$%-])(?!\\\\?[\'"`]\\s*(?:[+%]|\\.format\\b))(?!\\s*[(=])', 'gm');
   const part = new RegExp('\\[[^\\]]*\\]|\\.(' + names + ')(?![\\p{L}\\p{N}_-])', 'gu');
   text = text.replace(compound, all => all.replace(part, (x, c) => c ? '.' + sub(c) : x));
-  for (const m of text.matchAll(new RegExp('(?<![\\p{L}\\p{N}_-])\\.(' + names + ')(?![\\p{L}\\p{N}_-])|[\'"](' + names + ')[\'"]', 'gu')))
+  const tagLike = 'a|abbr|b|code|dd|dt|em|form|g|i|line|main|ol|option|p|pre|rect|s|strong|sub|sup|table|tbody|td|text|th|thead|tr|u|use|video';
+  for (const m of text.matchAll(new RegExp('(?<![\\p{L}\\p{N}_-])\\.(' + names + ')(?![\\p{L}\\p{N}_-])|[\'"](' + names + ')[\'"]|(?<![\\p{L}\\p{N}_.$-])(?:' + tagLike + ')\\.(' + names + ')(?![\\p{L}\\p{N}_-])', 'gu')))
     note('QUEDA', rel(file), lineOf(text, m.index), m[0] + ' en ' + text.slice(Math.max(0, m.index - 60), m.index + 50));
   return text;
 }
@@ -395,11 +438,8 @@ for (const f of jsFiles) {
   for (const [a, [b, text]] of [...edits.get(f)].sort((x, y) => y[0] - x[0])) code = code.slice(0, a) + text + code.slice(b);
   changed += write(f, code, sources.get(f));
 }
-const textFiles = [...walk(path.join(ROOT, 'tests'), n => /\.(py|mjs|js|sh)$/.test(n)).map(f => [f, 'tests']), ...walk(path.join(ROOT, 'docs'), n => n.endsWith('.md')).map(f => [f, 'docs'])];
-// no se tocan: el propio mapa, los nombres de la V1.0.2 y las pruebas de las herramientas, cuyas clases son de juguete
-const SKIP = ['tests/templates.test.mjs', 'tests/classes.test.mjs', 'docs/tecnica/nombres.md', 'tests/nombres-1.0.2.txt'];
+const textFiles = [...testFiles().map(f => [f, 'tests']), ...walk(path.join(ROOT, 'docs'), n => n.endsWith('.md')).filter(f => !skipped(f)).map(f => [f, 'docs'])];
 for (const [f, kind] of textFiles) {
-  if (path.resolve(f) === path.resolve(mapFile) || SKIP.includes(rel(f).split(path.sep).join('/'))) continue;
   const t = fs.readFileSync(f, 'utf8');
   changed += write(f, renameText(t, f, kind), t);
 }
