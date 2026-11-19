@@ -62,7 +62,8 @@ el que usan la mayoría de las pruebas.
   `A.nombre`, `C.nombre` o `U.nombre`, escrito junto a la función que lo usa.
 - **HTML seguro por defecto**: las pantallas se escriben con plantillas ``html`…${valor}…` `` (`core/html`), que escapan cada valor
   insertado. Lo que ya es HTML de la app va tal cual (otra plantilla o una lista de ellas); cualquier otra excepción se marca con
-  `raw(…)`, así que todo lo que no se escapa está a la vista.
+  `raw(…)`, así que todo lo que no se escapa está a la vista. Una plantilla larga va en varias líneas, sangrada como HTML: esos
+  saltos de línea no llegan a la app ([Plantillas HTML](desarrollo.md#plantillas-html)).
 - **Solo su propio código**: una política de seguridad (CSP) en una etiqueta `<meta>` (`build.py`) solo deja ejecutar el código de la
   app, usar su hoja de estilo (sin estilos en línea desde la V1.0.2: clases de `css/99-utilities` y `core/dynstyle`) y conectar con
   su propia web, con Firebase y con Open Food Facts.

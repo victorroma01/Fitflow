@@ -6,6 +6,9 @@
    escaparlos antes con X.
    El resultado es un Html: se comporta como texto (se concatena, se asigna a innerHTML, se guarda en JSON). Por eso, para el
    comprobador de tipos (tools/types.js), html`…` y raw() dan texto.
+   Una plantilla larga se escribe en varias líneas, sangrada como HTML: dentro de html`…`, un salto de línea no forma parte del
+   HTML (entre dos atributos de una etiqueta es el espacio que los separa). Los quita build.py antes de compilar y los pone
+   «npm run format»; la regla entera está en tools/templates.js.
    Define: raw, part, html
 */
 import { X } from './util.js';

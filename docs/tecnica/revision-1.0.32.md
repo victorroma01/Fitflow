@@ -50,7 +50,8 @@ le haya pasado a nadie: R1 necesita un móvil sin sitio y R2, la app abierta dos
 - **Los relojes del entreno** (cinco y cuatro veces por segundo, siempre en marcha): sin entreno salen a la primera línea, y
   pararlos y arrancarlos con cada entreno tocaría el corazón de la sesión para no ganar nada que se pueda medir.
 - **Las líneas largas** (418 de más de 240 caracteres en 84 módulos): casi todas son plantillas `html` escritas en una línea.
-  Partirlas metería espacios en el HTML que se pinta; es el estilo del proyecto y el formateador lo mantiene.
+  Partirlas metería espacios en el HTML que se pinta; es el estilo del proyecto y el formateador lo mantiene. (Después se
+  encontró la forma de partirlas sin cambiar el HTML: [pantallas legibles](#después-de-la-revisión-pantallas-legibles).)
 - **Las animaciones de las figuras**: están en su propia rama (`desarrollo-animaciones`) y aquí no se tocan.
 
 ## Comprobado
@@ -126,6 +127,37 @@ Dos cosas más, para decidir:
   el código; no se ha intentado provocar (haría falta un fallo del propio código en ese punto), así que queda anotado y sin
   tocar.
 
+## Después de la revisión: pantallas legibles
+
+El mismo 19 de noviembre, en la rama `pantallas-legibles`, las plantillas `html` dejaron de ir en una sola línea. Era lo que
+más costaba leer del código: una pantalla entera en una línea de 500 a 1.500 caracteres.
+
+- **La regla.** Dentro de una plantilla `html`, un salto de línea no forma parte del HTML (entre dos atributos de una etiqueta
+  es el espacio que los separa). `build.py` los quita de la copia que compila, y se rechazan, con el archivo y la línea, donde
+  quien lee esperaría un espacio: entre dos palabras, entre un texto y su `${…}`… ([Plantillas HTML](desarrollo.md#plantillas-html)).
+- **El formateador.** `npm run format` reparte solo las plantillas que pasan de 140 columnas (`tools/templates.js`): cada
+  etiqueta en su línea, sangrada según lo que contiene. De las 657 plantillas, 429 van ahora en varias líneas.
+- **La app es la misma.** La compilación con las plantillas repartidas es idéntica, byte a byte, a la de antes (el archivo
+  único y el paquete). La única diferencia es anterior a la regla: la pantalla del análisis mensual era la única escrita en
+  varias líneas, y sus seis saltos de línea llegaban al HTML entre las tarjetas; se quitaron antes (282 capturas iguales, píxel
+  a píxel, y 4 de las 106 pantallas de `tests/samehtml.py` con esos seis caracteres menos).
+- **Las cifras.** De las 228 líneas con plantilla de más de 240 caracteres quedan 7 (frases largas: un texto no se puede
+  partir). Las líneas con plantilla de más de 140 columnas pasan de 379 a 99.
+- **Las pruebas** (`tests/templates.test.mjs`): la regla, lo que rechaza, cómo queda cada caso y, sobre el código de verdad, que
+  cada módulo repartido con cinco anchos distintos sigue siendo el mismo. Se estropeó la herramienta de siete maneras (no poner
+  el espacio entre dos atributos, separar un texto de su `${…}`, saltar junto a un espacio…) y fallan con las siete.
+
+Lo que queda de «las líneas largas», sin tocar:
+
+- **Dos módulos de las figuras** (`extras/figure` y `extras/anatomy`, 21 líneas): los reescribe la solicitud de las figuras
+  nuevas (#59), y repartirlos aquí solo serviría para cruzarse con ella. Están apuntados en `tools/format.js`
+  (`TEMPLATES_LATER`); al fusionarla o descartarla se vacía esa lista y se pasa el formateador.
+- **170 líneas de código sin plantilla**: listas de textos y tablas (los pasos de la guía, los avisos legales, los iconos) y
+  HTML montado sumando textos, de antes de las plantillas. Y las 665 de `data/`, que son datos: un ejercicio o un alimento
+  por línea.
+- **Los nombres de las clases CSS** (337 de 507 tienen cuatro letras o menos: `cd`, `it`, `mu`…): cambiarlos sí cambia el
+  HTML y muchas pruebas que buscan por clase. Es el siguiente paso, por partes.
+
 ## Para decidir
 
 No son fallos; son mejoras que tocan cosas que decide el propietario.
@@ -140,6 +172,5 @@ No son fallos; son mejoras que tocan cosas que decide el propietario.
   tocado el código, es lo primero que mirar; fijar sus versiones es lo que tendría más sentido.
 - **Borrar solas las ramas ya fusionadas** (en GitHub: Settings → General → «Automatically delete head branches»), para que
   no se vuelvan a juntar ramas antiguas.
-- **Partir las plantillas largas** con un formateador que entienda `html`: mejoraría la lectura de las vistas, pero cambia el
-  HTML que se pinta (espacios) y habría que revisar las 106 pantallas de `tests/samehtml.py`. Mejor en una versión sin otros
-  cambios.
+- **Partir las plantillas largas**: hecho, y sin cambiar el HTML que se pinta
+  ([pantallas legibles](#después-de-la-revisión-pantallas-legibles)).
