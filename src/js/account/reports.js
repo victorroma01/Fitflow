@@ -27,25 +27,25 @@ const repCard = d => {
   const kd = (REPORT_KINDS.find(k => k[0] == o.k) || REPORT_KINDS[0])[1];
   const st = ADMIN_STATES.find(x => x[0] == o.st) || ADMIN_STATES[0];
   const head = html`
-    <button class="adrh" data-a="reportsToggle" data-v="${d.id}" aria-expanded="${on ? 'true' : 'false'}">
+    <button class="admin-report-head" data-a="reportsToggle" data-v="${d.id}" aria-expanded="${on ? 'true' : 'false'}">
       <span class="row">
         <b>${String(o.u || '—')}</b>
-        <span class="rps ${o.st == 'a' ? 'ok' : o.st == 'v' ? 'seen' : 'wait'}">${st[1]}</span>
+        <span class="status-pill ${o.st == 'a' ? 'ok' : o.st == 'v' ? 'seen' : 'wait'}">${st[1]}</span>
       </span>
       <small class="muted">
         ${kd}
         ${o.a ? ' · ' + String(o.a) : ''} · ${repDate(o.ca)} · V${String(o.v || '')}
         ${o.rp ? ' · contestada' : ''}
       </small>
-      <span class="rptx${on ? '' : ' clamp'}">${String(o.t || '')}</span>
+      <span class="report-text${on ? '' : ' clamp'}">${String(o.t || '')}</span>
     </button>`;
   if (!on)
-    return html`<div class="card adr">${raw(head)}</div>`;
+    return html`<div class="card admin-report">${raw(head)}</div>`;
   const busy = repState.busy == d.id;
   return html`
-    <div class="card adr on">
+    <div class="card admin-report on">
       ${raw(head)}
-      ${o.dx ? html`<details><summary>Datos técnicos</summary><pre class="rpv">${String(o.dx)}</pre></details>` : ''}
+      ${o.dx ? html`<details><summary>Datos técnicos</summary><pre class="report-tech">${String(o.dx)}</pre></details>` : ''}
       <label>Estado</label>
       <div class="segmented" role="radiogroup" aria-label="Estado">
         ${ADMIN_STATES.map(x => html`
@@ -72,7 +72,7 @@ const reportsAdminView = () => {
   const tabs = [['p', 'Pendientes', n.p], ['v', 'Vistas', n.v], ['a', 'Arregladas', n.a], ['', 'Todas', s.list.length]];
   return html`
     ${raw(head)}
-    <div class="segmented adrf" role="tablist" aria-label="Filtrar por estado">
+    <div class="segmented admin-report-filter" role="tablist" aria-label="Filtrar por estado">
       ${tabs.map(x => html`
         <button class="${s.f == x[0] ? 'on' : ''}" data-a="reportsFilter" data-v="${x[0] || 'all'}" role="tab"
             aria-selected="${s.f == x[0] ? 'true' : 'false'}">${x[1]} (${x[2]})</button>`)}

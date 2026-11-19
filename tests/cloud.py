@@ -206,7 +206,7 @@ def main(path):
             pg.select_option('#wl_act', '1')
             pg.select_option('#wl_goal', '1')
             pg.click('#wlc [data-a=welcomeSave]')
-            wait(pg, "!document.getElementById('wlc') && !!document.querySelector('#tour .trst')")
+            wait(pg, "!document.getElementById('wlc') && !!document.querySelector('#tour .tour-step')")
 
         def sync(pg):
             pg.evaluate('syncNow()')
@@ -230,7 +230,7 @@ def main(path):
         # ── un móvil sin cuenta: solo el inicio de sesión ──
         c1, p1 = device()
         check('sin sesión, solo el inicio de sesión (sin la barra de pestañas)', p1.evaluate("!!document.getElementById('lgw') && document.querySelector('nav').style.display=='none'"))
-        check('el inicio de sesión lleva el logo (F-40)', p1.evaluate("(i=>!!i&&i.alt=='StrataFit'&&i.complete&&i.naturalWidth==288)(document.querySelector('#lgw img.brl'))"))
+        check('el inicio de sesión lleva el logo (F-40)', p1.evaluate("(i=>!!i&&i.alt=='StrataFit'&&i.complete&&i.naturalWidth==288)(document.querySelector('#lgw img.brand-logo'))"))
         check('sin datos personales en el registro: solo usuario y contraseña', p1.evaluate("(A.loginMode(0,{dataset:{v:'up'}}),[...document.querySelectorAll('#lgw input')].map(i=>i.id).join())") == 'lgu,lgp,lgp2')
         p1.fill('#lgu', 'Ana_1'); p1.fill('#lgp', 'contraseña-1'); p1.fill('#lgp2', 'otra-cosa')
         p1.click('[data-a=loginSubmit]')
@@ -244,17 +244,17 @@ def main(path):
         prof = fb.data('users/' + uid) or {}
         check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm', 'os'}, str(prof))
         check('y se suben el índice y el núcleo', fb.data('users/%s/data/index' % uid) is not None and fb.part('users/%s/data/core' % uid) is not None)
-        check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.pfn').textContent)") == 'Ana_1')
+        check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.profile-name').textContent)") == 'Ana_1')
         check('la cuenta nueva se crea con el dominio de ahora (el del proyecto de Firebase)', fb.domain_of('Ana_1') == DOMAIN, fb.domain_of('Ana_1'))
         check('el correo técnico no aparece en la app', '@' + DOMAIN not in p1.content() and '@' + OLD_DOMAIN not in p1.content())
 
         # ── cuenta nueva (I-23, I-24): sin programa y, tras la primera sincronización, la bienvenida con sus datos; después, el
         #    recorrido de la primera vez (F-36). Visto en un móvil, no vuelve a salir en otro ──
-        check('la cuenta nueva empieza sin programa: «Seleccionar programa»', p1.evaluate("S.noProgram===1 && S.plan.every(d=>!d.ex.length) && (S.tab=0,R(),!!document.querySelector('#app .npc'))"))
+        check('la cuenta nueva empieza sin programa: «Seleccionar programa»', p1.evaluate("S.noProgram===1 && S.plan.every(d=>!d.ex.length) && (S.tab=0,R(),!!document.querySelector('#app .no-program-card'))"))
         wait(p1, "!!document.getElementById('wlc')", 30000)
         check('cuenta nueva: tras la primera sincronización sale la bienvenida', 'Gracias por instalar la app' in p1.inner_text('#wlc') and p1.evaluate("!document.getElementById('tour')"))
         new_account_bio(p1, 'F')
-        check('con los datos guardados, el recorrido empieza por su primer paso', p1.evaluate("document.querySelector('#tour .trst').textContent") == 'Paso 1 de 5' and p1.evaluate('S.welcomePending') is None)
+        check('con los datos guardados, el recorrido empieza por su primer paso', p1.evaluate("document.querySelector('#tour .tour-step').textContent") == 'Paso 1 de 5' and p1.evaluate('S.welcomePending') is None)
         p1.click('#tour [data-a=tourSkip]')
         check('«Omitir» lo da por visto', p1.evaluate("!document.getElementById('tour') && S.tourSeen") == 1)
         sync(p1)
@@ -682,7 +682,7 @@ def main(path):
         # ── foto de perfil: primero el consentimiento ──
         jpeg = base64.b64decode(p1.evaluate("(()=>{const c=document.createElement('canvas');c.width=c.height=8;const x=c.getContext('2d');x.fillStyle='#c33';x.fillRect(0,0,8,8);return c.toDataURL('image/jpeg',.8).split(',')[1]})()"))
         p1.evaluate('S.tab=3;R()')
-        p1.click('.pfh [data-a=photoConsentAsk]')
+        p1.click('.profile-head [data-a=photoConsentAsk]')
         check('la foto pide consentimiento antes de subirla', 'Solo la ves tú' in p1.inner_text('#dg'))
         with p1.expect_file_chooser() as fc:
             p1.click('#dg [data-v=photoConsentOk]')
@@ -750,9 +750,9 @@ def main(path):
         wait(p4, "document.querySelector('#sh') && !document.querySelector('#sh').innerText.includes('Cargando')", 15000)
         txt = p4.inner_text('#sh')
         check('Administración lista las cuentas', 'Ana_1' in txt and 'VictorAdmin_' in txt, txt[:300])
-        os_n = p4.evaluate("[...document.querySelectorAll('#sh .aos > div')].map(d=>d.querySelector('small').textContent+':'+d.querySelector('b').textContent)")
+        os_n = p4.evaluate("[...document.querySelectorAll('#sh .os-counts > div')].map(d=>d.querySelector('small').textContent+':'+d.querySelector('b').textContent)")
         check('y cuántas usan iPhone, Android u otro sistema; las que aún no abrieron la 1.0.1, «sin dato» (T-28)', os_n == ['iPhone:1', 'Android:0', 'Otro:2', 'Sin dato:1'], str(os_n))
-        row = p4.evaluate("[...document.querySelectorAll('#sh .acl .item')].map(r=>r.innerText.replace(/\\s+/g,' ')).find(t=>t.startsWith('Ana_1'))")
+        row = p4.evaluate("[...document.querySelectorAll('#sh .account-list .item')].map(r=>r.innerText.replace(/\\s+/g,' ')).find(t=>t.startsWith('Ana_1'))")
         check('con el sistema de cada cuenta en su fila', row and 'Otro' in row, str(row))
         check('un usuario con código se ve como texto (nada se ejecuta)', p4.evaluate("!document.querySelector('#sh img') && document.querySelector('#sh').innerText.includes('<img src=x')"))
         check('la contraseña temporal sale oculta hasta pulsar «Ver»', temp not in txt and 'Ana_1' in txt)
@@ -760,10 +760,10 @@ def main(path):
         # (el cambio es inmediato. Falló una vez en Firefox, en GitHub, sin dejar rastro: ahora se le da un momento y, si no
         # sale, se anota lo que enseña la tarjeta)
         try:
-            wait(p4, "document.querySelector('#sh .adk').textContent != '••••••••••••'", 2000)
+            wait(p4, "document.querySelector('#sh .temp-password').textContent != '••••••••••••'", 2000)
         except AssertionError:
             pass
-        card = p4.evaluate("(()=>{const k=document.querySelector('#sh .adp');return k?k.innerText.replace(/\\s+/g,' '):'no hay tarjeta de contraseña temporal'})()")
+        card = p4.evaluate("(()=>{const k=document.querySelector('#sh .temp-password-card');return k?k.innerText.replace(/\\s+/g,' '):'no hay tarjeta de contraseña temporal'})()")
         check('«Ver» la enseña', temp in p4.inner_text('#sh'), 'la tarjeta: ' + card.replace(temp, '(la contraseña)'))
 
         # ── entrar con la contraseña temporal (en un móvil nuevo): hay que elegir una nueva ──
@@ -893,13 +893,13 @@ def main(path):
         check('al volver la red se envía sola, una vez', (fb.data('reports/' + sid) or {}).get('k') == 's' and sync(p2) == 'ok')
         p4.evaluate('A.openAdmin()')
         txt = p4.inner_text('#sh')
-        check('al abrir Administración otra vez se ve lo ya cargado mientras se actualiza, sin la pantalla de «Cargando…» (I-20)', 'Cargando' not in txt and 'Ana_1' in txt and p4.evaluate("!document.querySelector('#sh .adk')||!/[A-Za-z0-9]/.test(document.querySelector('#sh .adk').textContent)"), txt[:200])
+        check('al abrir Administración otra vez se ve lo ya cargado mientras se actualiza, sin la pantalla de «Cargando…» (I-20)', 'Cargando' not in txt and 'Ana_1' in txt and p4.evaluate("!document.querySelector('#sh .temp-password')||!/[A-Za-z0-9]/.test(document.querySelector('#sh .temp-password').textContent)"), txt[:200])
         wait(p4, "(document.querySelector('#sh [data-a=openReports]')||{innerText:''}).innerText.includes('2 pendientes')", 15000)
         check('Administración dice cuántos hay pendientes', '2 pendientes' in p4.inner_text('#sh [data-a=openReports]'), p4.inner_text('#sh')[:200])
         p4.evaluate('A.openReports()')
-        wait(p4, "!!document.querySelector('#sh .adrf')", 15000)
-        check('el admin ve los dos, con su usuario y el tipo', p4.evaluate("document.querySelectorAll('#sh .adr').length") == 2 and 'Sugerencia de mejora' in p4.inner_text('#sh') and 'Ana_1' in p4.inner_text('#sh'))
-        check('el texto con código se ve como texto', p4.evaluate("!document.querySelector('#sh .rptx b') && document.querySelector('#sh').innerText.includes('<b>bien</b>')"))
+        wait(p4, "!!document.querySelector('#sh .admin-report-filter')", 15000)
+        check('el admin ve los dos, con su usuario y el tipo', p4.evaluate("document.querySelectorAll('#sh .admin-report').length") == 2 and 'Sugerencia de mejora' in p4.inner_text('#sh') and 'Ana_1' in p4.inner_text('#sh'))
+        check('el texto con código se ve como texto', p4.evaluate("!document.querySelector('#sh .report-text b') && document.querySelector('#sh').innerText.includes('<b>bien</b>')"))
         p4.evaluate("document.querySelector('#sh [data-a=reportsToggle][data-v=\"%s\"]').click()" % rid)
         wait(p4, "!document.querySelector('#sh [data-a=reportsSetState][disabled]')", 15000)
         check('al abrir uno pendiente pasa a «vista»', (fb.data('reports/' + rid) or {}).get('st') == 'v')

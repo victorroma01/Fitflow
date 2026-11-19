@@ -58,7 +58,7 @@ export const iconNoticeBody = withButtons => {
   const syncStep = html`
     <li>
       <b>Comprueba que todo está sincronizado.</b>
-      <span class="icst ${ok ? 'ok' : 'bad'}" role="status">${txt}</span>
+      <span class="icon-notice-status ${ok ? 'ok' : 'bad'}" role="status">${txt}</span>
       ${ok ? '' : html`<button data-a="iconNoticeSync">Sincronizar ahora</button>`}
     </li>`;
   const removeStep = html`
@@ -76,13 +76,13 @@ export const iconNoticeBody = withButtons => {
       <button class="primary" data-a="iconNoticeDone">Entendido</button>
     </div>` : '';
   return html`
-    <div class="icnw">
-      <img class="brl icn" src="${BRAND_LOGOS.claro}" alt="El icono nuevo de StrataFit">
+    <div class="icon-notice">
+      <img class="brand-logo icon-notice-logo" src="${BRAND_LOGOS.claro}" alt="El icono nuevo de StrataFit">
       ${withButtons ? html`<h3>El icono nuevo de StrataFit</h3>` : ''}
       <p class="muted">
         StrataFit tiene un logo nuevo, pero el iPhone no cambia el icono de una app que ya estaba en la pantalla de inicio. Para verlo hay que volver a añadirla. Tus datos están en la nube y vuelven al entrar.
       </p>
-      <ol class="icns">${syncStep}${removeStep}${addStep}${openStep}</ol>
+      <ol class="icon-notice-steps">${syncStep}${removeStep}${addStep}${openStep}</ol>
       ${buttons}
     </div>`;
 };
@@ -114,7 +114,7 @@ A.iconNoticeSync = async (i, b) => {
     b.textContent = 'Sincronizando…';
   }
   await syncNow();
-  const e = $('#sh .icnw');
+  const e = $('#sh .icon-notice');
   if (e)
     e.outerHTML = iconNoticeBody(!!e.querySelector('[data-a=iconNoticeDone]'));
 };

@@ -19,7 +19,7 @@ export const syncShort = () => account && (account.x || syncState().st == 'dead'
 const infoRow = (l, v) => html`<div class="item cols-auto-1fr gap-12"><span>${raw(l)}</span><b class="ta-r ow-anywhere">${v}</b></div>`;
 /** Página «Cuenta» de Ajustes. */
 export const accountPage = () => html`
-  <div class="card acl">
+  <div class="card account-list">
     ${raw(infoRow('Usuario', acctName()))}
     ${raw(infoRow('Tipo de cuenta', isAdmin() ? 'Administrador' : 'Usuario'))}
     ${raw(infoRow('Sincronización', syncLine()))}
@@ -39,7 +39,7 @@ export const passwordPage = () => html`
   <input id="acp1" type="password" autocomplete="new-password" maxlength="100">
   <label for="acp2">Repite la nueva</label>
   <input id="acp2" type="password" autocomplete="new-password" maxlength="100" data-enter="accountChangePassword">
-  <p id="ace" class="lge" role="alert">${pwMsg}</p>
+  <p id="ace" class="form-error" role="alert">${pwMsg}</p>
   <button class="primary w-full mt-8" data-a="accountChangePassword">Cambiar contraseña</button>
   <p class="muted fs-13 m-12-2">
     De 8 caracteres o más. Al cambiarla se cierra la sesión en tus otros móviles: allí tendrás que volver a entrar.

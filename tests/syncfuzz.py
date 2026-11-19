@@ -684,7 +684,7 @@ def signup(pg, user='Ana_1', pw='contraseña-1'):
     pg.select_option('#wl_act', '1')
     pg.select_option('#wl_goal', '1')
     pg.click('#wlc [data-a=welcomeSave]')
-    wait(pg, "!document.getElementById('wlc') && !!document.querySelector('#tour .trst')")
+    wait(pg, "!document.getElementById('wlc') && !!document.querySelector('#tour .tour-step')")
     pg.click('#tour [data-a=tourSkip]')
 
 

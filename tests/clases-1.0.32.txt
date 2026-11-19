@@ -168,3 +168,132 @@ K rpxr rpe-example-row
 # «pgr» eran dos piezas con los estilos mezclados: la fila con el nombre de un programa (program-row) y la etiqueta «RÉCORD» de
 # la gráfica de progreso (record-tag), que no llegaba a salir. Separadas a mano; al comparar, la de antes solo tiene la primera
 K pgr program-row
+
+# tercer lote: el seguimiento (novedades, avisos de fallos, copia, aviso de pesarse, análisis), la apariencia, el recorrido,
+# el primer arranque, la cuenta, el perfil y los ajustes
+# novedades y aviso de versión
+K rnp release-notes
+K rnv release-version
+K ups notes-heading
+K rnc release-close
+K lnk link-btn
+K updb update-backdrop
+K updk update-box
+K updx update-close
+K upe update-label
+K upn update-notes
+K upv update-version
+K upb update-btn
+# fallos y sugerencias
+K rpk report-kinds
+K rpt report-areas
+K rpi report-item
+K rpkd report-kind
+K rps status-pill
+K rptx report-text
+K rpr report-reply
+K rpv report-tech
+K adr admin-report
+K adrh admin-report-head
+K adrf admin-report-filter
+# copia de seguridad y aviso de pesarse
+K cbk backup-card
+K cbl backup-line
+K wrb weigh-banner
+K wri weigh-icon
+K wrc weigh-card
+K wrs weigh-steps
+K wro weigh-custom
+K wrk weigh-calendar
+K wrt weigh-note
+# análisis del mes
+K anm analysis-month
+K ankg analysis-kpis
+K ank analysis-kpi
+K ans analysis-section
+K anh analysis-heading
+K anc analysis-chart
+K anlg analysis-legend
+K ann analysis-figures
+K anr analysis-ranking
+K anu analysis-list
+K ane analysis-steady
+K ano analysis-good
+K anx analysis-bad
+# apariencia
+K acp accent-preview
+K acph accent-preview-hero
+K acpr accent-preview-bar
+K acpk accent-preview-row
+K acpb accent-preview-btn
+K acpn accent-preview-nav
+K acn accent-note
+K swc swatch-custom
+K swr swatch-rainbow
+K gst glass-options
+K gso glass-option
+K gpv glass-preview
+# barra de pestañas y recorrido
+K nbb nav-bubble
+K nbon bubble-on
+K trbk tour-backdrop
+K trsp tour-spot
+K trtp tour-tip
+K trar tour-arrow
+K trst tour-step
+K trft tour-foot
+K trdt tour-dots
+K trsk tour-skip
+K trnx tour-next
+K trlv tour-live
+K trw intro-panel
+K trbg intro-icon
+# primer arranque
+K brl brand-logo
+K brl-c brand-logo-light
+K brl-o brand-logo-dark
+K icnw icon-notice
+K icn icon-notice-logo
+K icns icon-notice-steps
+K icst icon-notice-status
+K npw no-program
+K npd no-program-demo
+K npc no-program-card
+K wlb welcome-form
+K wle welcome-error
+K wlg welcome-logo
+K wln3 welcome-numbers
+K wlw welcome-warning
+# cuenta
+K lgw login-page
+K lgbg login-photo
+K lgbr login-brand
+K lgs login-tagline
+K lgc login-card
+K lgt login-title
+K lgh login-hint
+K lge form-error
+K lgpw password-field
+K lgey password-eye
+K lgb login-submit
+K lgn login-note
+K lgv login-version
+K acl account-list
+K adp temp-password-card
+K adk temp-password
+K aos os-counts
+# perfil y ajustes
+K pfh profile-head
+K pfn profile-name
+K pfa profile-role
+K pfq photo-remove
+K pfs profile-summary
+K mdv medal-row
+K srg setting-group
+K sro setting-signout
+K sri setting-icon
+K srl setting-label
+K srv setting-value
+K srd setting-dot
+K srk setting-check
+K srt setting-text

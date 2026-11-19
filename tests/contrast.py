@@ -41,7 +41,7 @@ TEXTS = r"""() => {
   const rgba = c => { const m = String(c).match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,/]+/).map(parseFloat); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; };
   const opacity = el => { let o = 1; for (let e = el; e && e.nodeType == 1; e = e.parentElement) o *= +getComputedStyle(e).opacity; return o; };
   const name = el => { const c = (el.getAttribute('class') || '').trim().split(/\s+/).filter(Boolean).slice(0, 2).join('.'); const p = el.parentElement; const pc = p ? (p.getAttribute('class') || '').trim().split(/\s+/)[0] : ''; return (pc ? p.tagName.toLowerCase() + '.' + pc + ' > ' : '') + el.tagName.toLowerCase() + (c ? '.' + c : ''); };
-  const skip = el => !!el.closest('[disabled],[aria-disabled="true"],[aria-hidden="true"],.brl,[inert]');
+  const skip = el => !!el.closest('[disabled],[aria-disabled="true"],[aria-hidden="true"],.brand-logo,[inert]');
   const add = (el, text, rects, color, ph) => {
     const cs = getComputedStyle(el);
     if (cs.visibility == 'hidden' || cs.display == 'none' || skip(el)) return;

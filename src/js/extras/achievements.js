@@ -96,7 +96,7 @@ function achievementsPage() {
       <b class="fs-32">${dn.length} de ${ACHIEVEMENTS.length}</b><br>
       <small>logros conseguidos</small>
       <div class="bar mt-10"><i class="bg-a2" data-style="width:${Math.round(dn.length / ACHIEVEMENTS.length * 100)}%"></i></div>
-      ${dn.length ? html`<div class="mdv">${dn.map(x => medalSvg(x[0], 40, 1))}</div>` : ''}
+      ${dn.length ? html`<div class="medal-row">${dn.map(x => medalSvg(x[0], 40, 1))}</div>` : ''}
     </div>
     ${pd.length ? html`<div class="section-label">Por conseguir</div>${raw(pd.map(x => row(x, 0)).join(''))}` : ''}
     ${dn.length ? html`<div class="section-label">Conseguidos</div>${raw(dn.map(x => row(x, 1)).join(''))}` : ''}

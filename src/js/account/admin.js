@@ -25,7 +25,7 @@ const osCounts = users => {
   const n = { ios: 0, android: 0, otro: 0, no: 0 };
   users.forEach(d => n[OS_NAMES[d.data.os] ? d.data.os : 'no']++);
   return html`
-    <div class="card aos" aria-label="Cuentas por sistema del móvil">
+    <div class="card os-counts" aria-label="Cuentas por sistema del móvil">
       ${Object.keys(OS_NAMES).map(k => html`<div><b>${raw(n[k])}</b><small>${raw(OS_NAMES[k])}</small></div>`)}
       <div><b>${raw(n.no)}</b><small>Sin dato</small></div>
     </div>`;
@@ -51,9 +51,9 @@ const adminView = () => {
     const h = Math.max(1, Math.round((+d.data.exp - Date.now()) / 36e5));
     const on = s.show == d.id;
     return html`
-      <div class="card adp">
+      <div class="card temp-password-card">
         <div class="row"><b>${String(d.data.u || '')}</b><small>caduca en ${h} h</small></div>
-        <div class="adk" aria-live="polite">${on ? String(d.data.p || '') : '••••••••••••'}</div>
+        <div class="temp-password" aria-live="polite">${on ? String(d.data.p || '') : '••••••••••••'}</div>
         <div class="grid-3">
           <button data-a="adminToggleSection" data-v="${d.id}">${on ? 'Ocultar' : 'Ver'}</button>
           <button data-a="adminCopyPassword" data-v="${d.id}">Copiar</button>
@@ -73,7 +73,7 @@ const adminView = () => {
     ${raw(pw)}
     <div class="section-label">Cuentas (${us.length})</div>
     ${raw(osCounts(us))}
-    <div class="card acl">
+    <div class="card account-list">
       ${us.map(d => html`
         <div class="item cols-1fr-auto-auto-auto gap-10">
           <b class="ow-anywhere">${String(d.data.u || '—')}</b>

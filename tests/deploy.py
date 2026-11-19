@@ -151,7 +151,7 @@ def from_previous(b, orig, log):
         reload(pg, log)
         pg.wait_for_load_state('load')
         try:
-            pg.wait_for_selector('#upd.update .updk', timeout=10000)
+            pg.wait_for_selector('#upd.update .update-box', timeout=10000)
         except Exception:
             pass
         check('viniendo del service worker anterior: abre la versión guardada y avisa de la nueva', ev(state) == v0 + ' con aviso', ev(state))
@@ -171,9 +171,9 @@ def from_previous(b, orig, log):
         check('con la versión nueva ya activa, la página abierta de la anterior aún carga lo que no había usado (WOD)', ev(WOD_OPEN) and ev('APPV') == v0,
               ev("document.querySelector('#tt')?document.querySelector('#tt').innerText.slice(0,120):''"))
         ev("sheet()")
-        if ev("!!document.querySelector('#upd .upb')"):
+        if ev("!!document.querySelector('#upd .update-btn')"):
             with pg.expect_navigation():
-                pg.click('#upd .upb')
+                pg.click('#upd .update-btn')
             pg.wait_for_load_state('load')
             pg.wait_for_timeout(1200)
         check('«Actualizar» carga la versión nueva (antes: seguía la vieja, con el aviso otra vez)', ev(state) == '9.9.9', ev(state))
@@ -297,7 +297,7 @@ def main(app):
                 pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones: «Tienes la última versión»', ev("/Tienes la última versión/.test(document.body.innerText)"))
-                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updateCheck] .srv').textContent") == 'V' + ev('APPV'))
+                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updateCheck] .setting-value').textContent") == 'V' + ev('APPV'))
 
                 def publish(ver, items, code=True):
                     if code:
@@ -319,13 +319,13 @@ def main(app):
                     ev("A.openSettings()")
                     pg.click('#sh [data-a=updateCheck]')  # sin service worker, el aviso llega desde Ajustes → Actualizaciones
                 try:
-                    pg.wait_for_selector('#upd.update .updk', timeout=10000)
+                    pg.wait_for_selector('#upd.update .update-box', timeout=10000)
                 except Exception:
                     pass
                 print('   (aviso tras %s ms)' % ev("Math.round(performance.now())"))
                 check('abre al instante con la versión guardada', ev('APPV') == v0, ev('APPV'))
-                check('aparece el aviso de versión nueva', ev("!!document.querySelector('#upd.update .updk')"))
-                card = ev("""(()=>{const k=document.querySelector('#upd .updk'),b=k&&k.querySelector('.upb'),cs=x=>getComputedStyle(x);if(!k)return null;
+                check('aparece el aviso de versión nueva', ev("!!document.querySelector('#upd.update .update-box')"))
+                card = ev("""(()=>{const k=document.querySelector('#upd .update-box'),b=k&&k.querySelector('.update-btn'),cs=x=>getComputedStyle(x);if(!k)return null;
                   return {title:k.querySelector('h3').textContent,text:k.innerText,bg:cs(k).backgroundColor,fg:cs(k).color,
                           bbg:cs(b).backgroundColor,a1:getComputedStyle(document.documentElement).getPropertyValue('--a1').trim(),bfg:cs(b).color,up:cs(b).textTransform,label:b.innerText}})()""")
                 check('titulado con la versión nueva', bool(card) and card['title'] == 'Versión 9.9.9', str(card and card['title']))
@@ -344,7 +344,7 @@ def main(app):
                     have = ev(CODE_FILES)
                     check('al activarse la versión nueva, el código de la anterior se conserva', all(f in have for f in old_code) and any(f.endswith('-999.js') for f in have), str(sorted(have)[:4]))
                 with pg.expect_navigation():
-                    pg.click('#upd .upb')
+                    pg.click('#upd .update-btn')
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(1200)
                 check('«Actualizar» carga la versión nueva', ev('APPV') == '9.9.9', ev('APPV'))
@@ -365,8 +365,8 @@ def main(app):
                 pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones encuentra la revisión de la versión instalada (una cuarta cifra: %s)' % rev, ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión ' + rev)
-                if ev("!!document.querySelector('#upd .updx')"):
-                    pg.click('#upd .updx')
+                if ev("!!document.querySelector('#upd .update-close')"):
+                    pg.click('#upd .update-close')
                     pg.wait_for_timeout(200)
                 # Ajustes → Actualizaciones cuando hay una versión nueva en el servidor
                 publish('9.9.10', ['Otra mejora'], code=False)
@@ -374,7 +374,7 @@ def main(app):
                 pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones encuentra la versión nueva', ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión 9.9.10')
-                pg.click('#upd .updx')
+                pg.click('#upd .update-close')
                 pg.wait_for_timeout(200)
                 check('el aviso se puede cerrar', ev("!document.getElementById('upd')"))
                 # tras actualizar desde una versión antigua (sin haber visto el aviso): novedades una sola vez
@@ -383,10 +383,10 @@ def main(app):
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(1500)
                 check('un móvil que ya tenía la app guarda la versión que tenía (la de su icono)', ev("localStorage.getItem('ffinst')") == '1.0.0', str(ev("localStorage.getItem('ffinst')")))
-                news = ev("(()=>{const k=document.querySelector('#upd.news .updk');return k?{title:k.querySelector('h3').textContent,btn:k.querySelector('.upb').innerText}:null})()")
+                news = ev("(()=>{const k=document.querySelector('#upd.news .update-box');return k?{title:k.querySelector('h3').textContent,btn:k.querySelector('.update-btn').innerText}:null})()")
                 check('tras actualizar enseña las novedades de la versión', bool(news) and news['title'].startswith('Versión ') and news['btn'] == 'ENTENDIDO', str(news))
                 if news:
-                    pg.click('#upd .upb')
+                    pg.click('#upd .update-btn')
                     pg.wait_for_timeout(200)
                 reload(pg, log)
                 pg.wait_for_load_state('load')

@@ -154,13 +154,13 @@ html.glass nav button {
 html.glass .segmented button {
   border-radius:15px;
 }
-html.glass .gso {
+html.glass .glass-option {
   border-radius:22px;
 }
-html.glass .gpv {
+html.glass .glass-preview {
   border-radius:15px;
 }
-html.glass .gpv.flat::after {
+html.glass .glass-preview.flat::after {
   border-radius:11px;
 }
 #sh>.sticky-btn {

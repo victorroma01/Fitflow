@@ -21,7 +21,7 @@ sys.path.insert(0, HERE)
 from shots import SCR, SEED, EXTRA, INIT, old_names, class_lines  # noqa: E402
 from browser import app_url, context_opts  # noqa: E402
 
-BODY = "(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('script,style').forEach(e=>e.remove());c.querySelectorAll('nav').forEach(n=>n.classList.remove('nbon'));return c.innerHTML})()"
+BODY = "(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('script,style').forEach(e=>e.remove());c.querySelectorAll('nav').forEach(n=>n.classList.remove('bubble-on'));return c.innerHTML})()"
 # las líneas de Diagnóstico con medidas del momento, y la dirección de la página (cada compilación va en su puerto)
 NOISE = re.compile(r'(Tiempo de pintado|Espacio usado): [^\n<]*')
 ADDRESS = re.compile(r'127\.0\.0\.1:\d+/[\w.-]+')

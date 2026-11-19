@@ -111,14 +111,18 @@ export function applyAccent() {
 }
 /* lo principal que cambia con el color: cabecera de un día, botón, chip, barra de progreso y la burbuja de las pestañas */
 const accentPreview = () => html`
-  <div class="acp" aria-hidden="true">
-    <div class="acph">
+  <div class="accent-preview" aria-hidden="true">
+    <div class="accent-preview-hero">
       <small>Vista previa</small>
       <b>Pecho</b>
-      <span class="acpr"><i></i></span>
-      <span class="acpk"><span class="acpb">Empezar</span><span class="chip on">Hoy</span><span class="chip">Mañana</span></span>
+      <span class="accent-preview-bar"><i></i></span>
+      <span class="accent-preview-row">
+        <span class="accent-preview-btn">Empezar</span>
+        <span class="chip on">Hoy</span>
+        <span class="chip">Mañana</span>
+      </span>
     </div>
-    <div class="acpn"><span class="on">Workout</span><span>Nutrición</span><span>Dashboard</span><span>Perfil</span></div>
+    <div class="accent-preview-nav"><span class="on">Workout</span><span>Nutrición</span><span>Dashboard</span><span>Perfil</span></div>
   </div>`;
 export const accentSwatches = () => {
   const own = HEX.test(S.accentColor || '');
@@ -134,8 +138,8 @@ export const accentSwatches = () => {
           <i data-style="${sw(a)}">${cur == i ? '✓' : ''}</i>
           <small>${raw(a[0])}</small>
         </button>`)}
-      <label class="swatch swc${cur == -1 ? ' on' : ''}">
-        <i class="${own ? '' : 'swr'}" data-style="${cs}">
+      <label class="swatch swatch-custom${cur == -1 ? ' on' : ''}">
+        <i class="${own ? '' : 'swatch-rainbow'}" data-style="${cs}">
           ${cur == -1 ? '✓' : ''}
           <input type="color" value="${own ? S.accentColor.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive"
               aria-label="Elegir un color propio">
@@ -143,7 +147,7 @@ export const accentSwatches = () => {
         <small>Personalizado</small>
       </label>
     </div>
-    <small class="muted acn">
+    <small class="muted accent-note">
       Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.
     </small>`;
 };
@@ -163,14 +167,14 @@ export const glassCard = () => {
   const g = m > 0;
   return html`
     <label>Estilo</label>
-    <div class="gst">
-      <button class="gso${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}">
-        <i class="gpv crystal"></i>
+    <div class="glass-options">
+      <button class="glass-option${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}">
+        <i class="glass-preview crystal"></i>
         <b>Cristal</b>
         <small>Translúcido y con brillos</small>
       </button>
-      <button class="gso${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}">
-        <i class="gpv flat"></i>
+      <button class="glass-option${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}">
+        <i class="glass-preview flat"></i>
         <b>Clásico</b>
         <small>Sólido, sin transparencias</small>
       </button>
@@ -187,7 +191,7 @@ export const glassCard = () => {
 /** «Reducir animaciones» (S.reduceMotion): sin deslizamientos ni fundidos al abrir páginas y ventanas. */
 export const motionCard = () => html`
   <label>Animaciones</label>
-  <label class="srk"><input type="checkbox" data-c="reduceMotion"${S.reduceMotion ? ' checked' : ''}> Reducir animaciones</label>
+  <label class="setting-check"><input type="checkbox" data-c="reduceMotion"${S.reduceMotion ? ' checked' : ''}> Reducir animaciones</label>
   <small class="muted d-block mt-n4">
     Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.
   </small>`;
@@ -222,12 +226,12 @@ let accentFrame = 0;
 let accentTimer = 0;
 const previewAccent = () => {
   accentFrame = 0;
-  const box = $('.acp');
+  const box = $('.accent-preview');
   if (!box || !accentPick)
     return;
   const a = customAccent(accentPick);
   setAccentVars(box, a);
-  const dot = $('.swc i');
+  const dot = $('.swatch-custom i');
   if (dot) {
     dot.style.background = 'linear-gradient(135deg,' + a[1] + ',' + a[2] + ')';
     dot.style.color = a[4];

@@ -6,7 +6,7 @@ código, issues o commits anteriores.
 Hasta la V1.0.32 casi todas las clases tenían de dos a cuatro letras (`cd`, `it`, `mu`, `sp`). Con las acciones y las claves del
 estado se hizo lo mismo en la V1.0.2 ([Nombres de la V1.0.2](nombres.md)); las clases eran lo que quedaba. Se renombran por
 lotes: el primero, las 53 de dos letras; el segundo, 104 de las piezas comunes, el entreno, la librería, los programas y la
-descarga.
+descarga; el tercero, 117 del seguimiento, la apariencia, el recorrido, el primer arranque, la cuenta y el perfil.
 
 ## Cómo se nombran
 
@@ -249,6 +249,130 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `wkn` | `week-note` | Nota de esa tarjeta. |
 | `wks` | `week-stats` | Racha y entrenos de la semana. |
 
+### Tercer lote: el seguimiento, la apariencia, el recorrido, el primer arranque, la cuenta y el perfil
+
+| Antes | Ahora | Qué es |
+| --- | --- | --- |
+| `acn` | `accent-note` | Nota sobre el color personalizado. |
+| `acp` | `accent-preview` | Vista previa del color de acento. |
+| `acpr` | `accent-preview-bar` | Barra de progreso de ejemplo. |
+| `acpb` | `accent-preview-btn` | Botón de ejemplo. |
+| `acph` | `accent-preview-hero` | Su tarjeta de ejemplo. |
+| `acpn` | `accent-preview-nav` | Barra de pestañas de ejemplo. |
+| `acpk` | `accent-preview-row` | Fila con el botón y los chips de ejemplo. |
+| `acl` | `account-list` | Tarjeta con una lista de datos de la cuenta. |
+| `adr` | `admin-report` | Tarjeta de un aviso en la bandeja del administrador. |
+| `adrf` | `admin-report-filter` | Pestañas para filtrar la bandeja por estado. |
+| `adrh` | `admin-report-head` | Su cabecera, que la abre y la cierra. |
+| `anx` | `analysis-bad` | Cambio de peso: en contra del objetivo. |
+| `anc` | `analysis-chart` | Gráfica de un apartado. |
+| `ann` | `analysis-figures` | Las dos cifras de nutrición. |
+| `ano` | `analysis-good` | Cambio de peso: hacia el objetivo. |
+| `anh` | `analysis-heading` | Título de un apartado. |
+| `ank` | `analysis-kpi` | Una de esas cifras. |
+| `ankg` | `analysis-kpis` | Rejilla de las tres cifras del mes. |
+| `anlg` | `analysis-legend` | Leyenda de una gráfica. |
+| `anu` | `analysis-list` | Lista de conclusiones. |
+| `anm` | `analysis-month` | Fila para cambiar de mes. |
+| `anr` | `analysis-ranking` | Lista de récords o de ejercicios con más volumen. |
+| `ans` | `analysis-section` | Tarjeta de un apartado del análisis. |
+| `ane` | `analysis-steady` | Cambio de peso: estable. |
+| `cbk` | `backup-card` | Tarjeta de una copia de seguridad. |
+| `cbl` | `backup-line` | Línea con el estado de la copia en la nube. |
+| `brl` | `brand-logo` | El logo de StrataFit. |
+| `brl-o` | `brand-logo-dark` | La del tema oscuro. |
+| `brl-c` | `brand-logo-light` | La imagen del logo para el tema claro. |
+| `nbon` | `bubble-on` | La barra, con la burbuja ya colocada. |
+| `lge` | `form-error` | Línea de error de un formulario (inicio de sesión, cambio de contraseña). |
+| `gso` | `glass-option` | Una de las dos. |
+| `gst` | `glass-options` | Las dos opciones de estilo: Cristal y Clásico. |
+| `gpv` | `glass-preview` | Su muestra. |
+| `icnw` | `icon-notice` | Aviso del icono nuevo de la app. |
+| `icn` | `icon-notice-logo` | El icono, en ese aviso. |
+| `icst` | `icon-notice-status` | Línea que dice si los datos están sincronizados. |
+| `icns` | `icon-notice-steps` | Lista de pasos del aviso. |
+| `trbg` | `intro-icon` | Su icono. |
+| `trw` | `intro-panel` | Panel centrado de la bienvenida y del principio y el final del recorrido. |
+| `lnk` | `link-btn` | Botón con aspecto de enlace. |
+| `lgbr` | `login-brand` | El logo, arriba. |
+| `lgc` | `login-card` | Tarjeta con el formulario. |
+| `lgh` | `login-hint` | Nota sobre el usuario y la contraseña. |
+| `lgn` | `login-note` | Nota bajo la tarjeta. |
+| `lgw` | `login-page` | Pantalla de inicio de sesión. |
+| `lgbg` | `login-photo` | La foto de fondo. |
+| `lgb` | `login-submit` | Botón «Entrar» o «Crear cuenta». |
+| `lgs` | `login-tagline` | Lema bajo el logo. |
+| `lgt` | `login-title` | Título de esa tarjeta. |
+| `lgv` | `login-version` | Número de versión, abajo. |
+| `mdv` | `medal-row` | Fila de medallas conseguidas. |
+| `nbb` | `nav-bubble` | Burbuja que marca la pestaña elegida. |
+| `npw` | `no-program` | Workout sin programa elegido. |
+| `npc` | `no-program-card` | Tarjeta «Elige un programa». |
+| `npd` | `no-program-demo` | El día de ejemplo que se ve detrás, borroso. |
+| `ups` | `notes-heading` | Título de un apartado de las novedades (Novedades, Mejoras, Correcciones). |
+| `aos` | `os-counts` | Cuentas por sistema del móvil. |
+| `lgey` | `password-eye` | Ese botón. |
+| `lgpw` | `password-field` | Casilla de contraseña con su botón de ver. |
+| `pfq` | `photo-remove` | Botón «Quitar foto». |
+| `pfh` | `profile-head` | Tarjeta con la foto y el nombre. |
+| `pfn` | `profile-name` | El nombre de usuario. |
+| `pfa` | `profile-role` | Rótulo «Administrador». |
+| `pfs` | `profile-summary` | Cabecera de una tarjeta del perfil: icono, título y resumen. |
+| `rnc` | `release-close` | Fila del botón «Cerrar» de las novedades. |
+| `rnp` | `release-notes` | Tarjeta con las novedades de una versión. |
+| `rnv` | `release-version` | El número de versión, en esa tarjeta. |
+| `rpt` | `report-areas` | Chips para elegir dónde ocurre. |
+| `rpi` | `report-item` | Tarjeta de un aviso enviado. |
+| `rpkd` | `report-kind` | Tipo y sitio de ese aviso. |
+| `rpk` | `report-kinds` | Chips para elegir el tipo: fallo o sugerencia. |
+| `rpr` | `report-reply` | Respuesta a un aviso. |
+| `rpv` | `report-tech` | Datos técnicos de un aviso. |
+| `rptx` | `report-text` | Texto de un aviso. |
+| `srk` | `setting-check` | Ajuste con casilla. |
+| `srd` | `setting-dot` | Punto con el color de acento elegido. |
+| `srg` | `setting-group` | Tarjeta con un grupo de ajustes. |
+| `sri` | `setting-icon` | Icono de un ajuste. |
+| `srl` | `setting-label` | Nombre de un ajuste. |
+| `sro` | `setting-signout` | El grupo de «Cerrar sesión», separado del resto. |
+| `srt` | `setting-text` | Texto largo de una página de ajustes (privacidad, aviso legal). |
+| `srv` | `setting-value` | Su valor actual. |
+| `rps` | `status-pill` | Píldora con un estado (de un aviso enviado; del veredicto del análisis). |
+| `swc` | `swatch-custom` | El color «Personalizado». |
+| `swr` | `swatch-rainbow` | Su círculo de colores, mientras no se ha elegido ninguno. |
+| `adk` | `temp-password` | La contraseña temporal. |
+| `adp` | `temp-password-card` | Tarjeta de una contraseña temporal por entregar. |
+| `trar` | `tour-arrow` | Flecha del globo. |
+| `trbk` | `tour-backdrop` | Fondo del recorrido, que no deja tocar la app. |
+| `trdt` | `tour-dots` | Puntos de los pasos. |
+| `trft` | `tour-foot` | Pie del globo: los puntos y los botones. |
+| `trlv` | `tour-live` | La barra de pestañas, por encima del recorrido en los pasos en los que se puede tocar. |
+| `trnx` | `tour-next` | Botón «Siguiente». |
+| `trsk` | `tour-skip` | Botón «Omitir». |
+| `trsp` | `tour-spot` | Foco que destaca una parte de la pantalla. |
+| `trst` | `tour-step` | Rótulo «Paso 1 de 6». |
+| `trtp` | `tour-tip` | Globo con la explicación de un paso. |
+| `updb` | `update-backdrop` | Fondo oscuro del aviso de versión nueva. |
+| `updk` | `update-box` | Tarjeta negra del aviso de versión nueva. |
+| `upb` | `update-btn` | Botón «Actualizar» o «Entendido». |
+| `updx` | `update-close` | Su botón de cerrar. |
+| `upe` | `update-label` | Rótulo de arriba: «Novedades» o «Nueva versión disponible». |
+| `upn` | `update-notes` | Las novedades, que se deslizan dentro del aviso. |
+| `upv` | `update-version` | Número de versión, cuando el aviso junta varias. |
+| `wrb` | `weigh-banner` | Aviso «Día de pesarse». |
+| `wrk` | `weigh-calendar` | Botón «Añadir al calendario del móvil». |
+| `wrc` | `weigh-card` | Tarjeta para activar el aviso de pesarse. |
+| `wro` | `weigh-custom` | Casillas del intervalo a medida. |
+| `wri` | `weigh-icon` | Su icono. |
+| `wrt` | `weigh-note` | Nota de esa tarjeta. |
+| `wrs` | `weigh-steps` | Chips con cada cuánto avisa. |
+| `wle` | `welcome-error` | Su línea de error. |
+| `wlb` | `welcome-form` | Hoja «Tus datos» de la bienvenida. |
+| `wlg` | `welcome-logo` | El logo, en la bienvenida. |
+| `wln3` | `welcome-numbers` | Fila de edad, altura y peso. |
+| `wlw` | `welcome-warning` | Aviso de la fase de pruebas. |
+
+Tres nombres del análisis (`ane`, `ano`, `anx`) se montaban a trozos (`'an' + x`); antes de renombrarlos se escribieron enteros.
+
 ### `pgr`: una clase que eran dos
 
 `pgr` se usaba para dos cosas, la fila con el nombre de un programa y la etiqueta «RÉCORD» de la gráfica de progreso, y sus dos
@@ -263,4 +387,8 @@ resto de títulos. En el mapa solo está la primera línea: la etiqueta no llega
 
 ### Sin renombrar todavía
 
+- **`lgl`**, del inicio de sesión, es otra clase que son dos: el botón «Privacidad» y el logo. El logo recibe el relleno del
+  botón y por eso se dibuja más pequeño que su marco y algo estrecho (92 × 100 en un marco de 120 × 120). Separarlas cambia lo
+  que se ve, así que lo decide el propietario.
+- Las del **WOD, el resumen del entreno, las medidas y la nutrición** (`f2…`, `mn…`, `nw…`): el cuarto lote.
 - Las de **las figuras** (`fgs`, `hwf`, `anf`…): las reescribe la solicitud de las figuras nuevas (#59).

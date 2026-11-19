@@ -156,9 +156,11 @@ Lo que queda de «las líneas largas», sin tocar:
   HTML montado sumando textos, de antes de las plantillas. Y las 665 de `data/`, que son datos: un ejercicio o un alimento
   por línea.
 - **Los nombres de las clases CSS** (`cd`, `it`, `mu`…): cambiarlos sí cambia el HTML y muchas pruebas que buscan por clase.
-  Se hace por lotes, cada uno con su prueba de que lo que se ve no cambia: [Clases CSS](clases.md). Van dos, 157 clases: las
-  de dos letras y las de las piezas comunes, el entreno, la librería, los programas y la descarga. Quedan unas 180 de tres y
-  cuatro letras (el seguimiento, el primer arranque, la cuenta, la nutrición y el perfil).
+  Se hace por lotes, cada uno con su prueba de que lo que se ve no cambia: [Clases CSS](clases.md). Van tres, 274 clases: las
+  de dos letras; las de las piezas comunes, el entreno, la librería, los programas y la descarga; y las del seguimiento, la
+  apariencia, el recorrido, el primer arranque, la cuenta y el perfil. Quedan unas 70: las del WOD, el resumen del entreno,
+  las medidas y la nutrición (el cuarto lote), las de las figuras (cuando se resuelva la #59) y una del inicio de sesión que
+  son dos piezas a la vez.
 
 ## Después de la revisión: lo que destapó el cambio de nombres
 

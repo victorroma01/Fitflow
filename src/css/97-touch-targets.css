@@ -44,10 +44,10 @@
 }
 /* el título de un desplegable y una casilla con su texto (unos 20 px de alto) responden en 44, por arriba y por abajo, con
    una zona invisible que no ocupa sitio: nada se mueve */
-summary,.srk {
+summary,.setting-check {
   position:relative;
 }
-summary::before,.srk::after {
+summary::before,.setting-check::after {
   content:"";
   position:absolute;
   inset:-12px 0;

@@ -135,12 +135,12 @@ export const cloudBackupCard = () => {
     Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas
   ` : 'Aún no hay ninguna copia en la nube.';
   return html`
-    <div class="card cbk" id="cbk">
+    <div class="card backup-card" id="cbk">
       <b>Copia en la nube</b>
       <p class="muted">
         Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.
       </p>
-      <p class="cbl" id="cbl">${raw(line)}</p>
+      <p class="backup-line" id="cbl">${raw(line)}</p>
       <div class="grid-2">
         <button class="primary" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button>
         <button data-a="cloudBackupRestore"${cloudBusy ? ' disabled' : ''}>Restaurar</button>

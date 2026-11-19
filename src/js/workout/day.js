@@ -250,9 +250,9 @@ const noProgramView = () => {
     </div>`;
   return html`
     <div class="page-head"><div><h1>Workout</h1></div><button data-a="openMenu" aria-label="Menú" class="fs-26 p-6-14">☰</button></div>
-    <div class="npw">
-      <div class="npd" aria-hidden="true" inert>${raw(demo)}</div>
-      <div class="card npc">
+    <div class="no-program">
+      <div class="no-program-demo" aria-hidden="true" inert>${raw(demo)}</div>
+      <div class="card no-program-card">
         <b>Elige tu programa</b>
         <p class="muted">
           Aún no tienes un programa de entrenamiento. Elige uno de los predefinidos, con los recomendados para ti arriba, o crea el tuyo.

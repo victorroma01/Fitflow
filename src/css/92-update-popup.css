@@ -7,7 +7,7 @@
   place-items:center;
   padding:max(20px,env(safe-area-inset-top,0px)) 20px max(20px,env(safe-area-inset-bottom,0px));
 }
-#upd .updb {
+#upd .update-backdrop {
   position:absolute;
   inset:0;
   background:rgba(0,0,0,.5);
@@ -15,7 +15,7 @@
   backdrop-filter:blur(6px);
   animation:upf .25s ease;
 }
-#upd .updk {
+#upd .update-box {
   position:relative;
   width:100%;
   max-width:340px;
@@ -30,7 +30,7 @@
   box-shadow:0 24px 60px rgba(0,0,0,.6);
   animation:upk .34s cubic-bezier(.2,.8,.2,1);
 }
-#upd .upe {
+#upd .update-label {
   display:block;
   font-size:12px;
   font-weight:700;
@@ -45,17 +45,17 @@
   letter-spacing:-.02em;
   color:#fff;
 }
-#upd .upn {
+#upd .update-notes {
   overflow:auto;
   -webkit-overflow-scrolling:touch;
   margin:0 0 18px;
 }
-#upd .upv {
+#upd .update-version {
   margin:14px 0 0;
   font-weight:700;
   color:#fff;
 }
-#upd .ups {
+#upd .notes-heading {
   margin:12px 0 4px;
   font-size:12px;
   font-weight:700;
@@ -73,7 +73,7 @@
   line-height:1.4;
   color:#fff;
 }
-#upd .upb {
+#upd .update-btn {
   width:100%;
   flex:none;
   border:0;
@@ -87,10 +87,10 @@
   text-transform:uppercase;
   box-shadow:none;
 }
-#upd .upb:disabled {
+#upd .update-btn:disabled {
   opacity:.75;
 }
-#upd .updx {
+#upd .update-close {
   position:absolute;
   top:14px;
   right:14px;
@@ -119,7 +119,7 @@
   }
 }
 @media (prefers-reduced-motion:reduce) {
-  #upd .updb,#upd .updk {
+  #upd .update-backdrop,#upd .update-box {
     animation:none;
   }
 }

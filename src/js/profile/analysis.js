@@ -230,7 +230,7 @@ const svgBars = m => {
   const y = v => 96 - v / mx * 80;
   const plan = m.pwk > 0 ? y(m.pwk) : null;
   return html`
-    <svg viewBox="0 0 320 124" class="anc" role="img" aria-label="Entrenos por semana">
+    <svg viewBox="0 0 320 124" class="analysis-chart" role="img" aria-label="Entrenos por semana">
       ${R.map((r, i) => html`
         <rect x="${(24 + i * bw + bw * .18).toFixed(1)}" y="${y(r[1]).toFixed(1)}" width="${(bw * .64).toFixed(1)}"
             height="${(96 - y(r[1])).toFixed(1)}" rx="5" fill="var(--a2)"/>
@@ -256,7 +256,7 @@ const svgLine = m => {
   const y = w => 104 - (w - lo) / (hi - lo) * 88;
   const pts = P.map(p => [x(p.d), y(p.w)]);
   return html`
-    <svg viewBox="0 0 320 128" class="anc" role="img" aria-label="Peso del mes">
+    <svg viewBox="0 0 320 128" class="analysis-chart" role="img" aria-label="Peso del mes">
       <line x1="20" x2="300" y1="104" y2="104" stroke="var(--ln)"/>
       <polyline fill="none" stroke="var(--a2)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
           points="${pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}"/>
@@ -281,7 +281,7 @@ const svgKcal = m => {
   const bw = 288 / Math.max(D.length, 28);
   const y = v => 92 - v / mx * 80;
   return html`
-    <svg viewBox="0 0 320 112" class="anc" role="img" aria-label="Kcal de cada día">
+    <svg viewBox="0 0 320 112" class="analysis-chart" role="img" aria-label="Kcal de cada día">
       ${raw(n.tk ? html`
         <rect x="16" y="${y(n.tk * 1.1).toFixed(1)}" width="292" height="${(y(n.tk * .9) - y(n.tk * 1.1)).toFixed(1)}" fill="var(--ln)"
             opacity=".55"/>
@@ -297,13 +297,13 @@ const svgKcal = m => {
 };
 /** Cifra de la cabecera: [texto, valor, comparación, clase de color]. */
 const kpi = (l, v, s, c) => html`
-  <div class="ank"><small>${l}</small><b>${v}</b>${s ? html`<small class="${c || ''}">${s}</small>` : ''}</div>`;
+  <div class="analysis-kpi"><small>${l}</small><b>${v}</b>${s ? html`<small class="${c || ''}">${s}</small>` : ''}</div>`;
 const delta = (v, p, u, d = 0) => !p && !v ? '' : (v - p > 0 ? '+' : v - p < 0 ? '−' : '±') + fmtN(Math.abs(v - p), d) + (u || '') + ' vs. mes anterior';
 /* — las partes de la página, de arriba abajo — */
 /* el mes que se ve, con las flechas al anterior y al siguiente (`i`: su sitio entre los `count` meses con datos; `f`: el
    primer día con datos, si cae dentro del mes) */
 const monthBar = (m, i, count, f) => html`
-  <div class="anm">
+  <div class="analysis-month">
     <button data-a="analysisMonth" data-i="-1" aria-label="Mes anterior"${i > 0 ? '' : ' disabled'}>‹</button>
     <div>
       <b>${cap(monthName(anaYm))}</b>
@@ -322,7 +322,7 @@ const kpiGrid = m => {
   const ex = m.ex;
   const hm = Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0');
   return html`
-    <div class="ankg">
+    <div class="analysis-kpis">
       ${kpi('Entrenos', String(t.n), delta(t.n, m.pt.n), t.n >= m.pt.n ? 'up' : 'down')}
       ${kpi('Tiempo', hm, '')}
       ${kpi('Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1), t.vol >= m.pt.vol ? 'up' : 'down')}
@@ -336,13 +336,13 @@ const trainingCard = m => {
   const t = m.t;
   const ex = m.ex;
   return html`
-    <div class="card ans">
-      <b class="anh">Entrenamientos</b>
+    <div class="card analysis-section">
+      <b class="analysis-heading">Entrenamientos</b>
       <p>${t.n ? sessionsText(t) + '. ' + setsText(t) + '.' : 'Sin entrenos registrados este mes.'}</p>
       ${raw(svgBars(m))}
       ${m.plan > 0 ? html`<p class="muted">${planText(m)}</p>` : ''}
       ${ex.rec.length ? html`
-        <div class="anr">
+        <div class="analysis-ranking">
           <small>Récords del mes (1RM estimado)</small>
           ${ex.rec.slice(0, 4).map(r => html`
             <div class="row">
@@ -351,7 +351,7 @@ const trainingCard = m => {
             </div>`)}
         </div>` : ''}
       ${ex.vol.length ? html`
-        <div class="anr">
+        <div class="analysis-ranking">
           <small>Más volumen</small>
           ${ex.vol.map(r => html`<div class="row"><span>${r.n}</span><b>${fmtN(volNum(r.v), 1)}${volUnit()}</b></div>`)}
         </div>` : ''}
@@ -361,11 +361,16 @@ const trainingCard = m => {
 const weightCard = m => {
   const w = m.w;
   return html`
-    <div class="card ans">
-      <b class="anh">Peso corporal</b>
+    <div class="card analysis-section">
+      <b class="analysis-heading">Peso corporal</b>
       ${w.d == null ? html`
         <p class="muted">No hay pesajes este mes. En Dashboard → Evolución del peso puedes registrarlo y activar un recordatorio.</p>
-      ` : html`<p><b class="an${w.tr == 'estable' ? 'e' : w.ok ? 'o' : 'x'}">${weightChange(w)}</b>${goalNote(w)}</p>${raw(svgLine(m))}`}
+      ` : html`
+        <p>
+          <b class="${w.tr == 'estable' ? 'analysis-steady' : w.ok ? 'analysis-good' : 'analysis-bad'}">${weightChange(w)}</b>
+          ${goalNote(w)}
+        </p>
+        ${raw(svgLine(m))}`}
     </div>`;
 };
 /* alimentación: el veredicto, las medias de kcal y proteína frente al objetivo y las kcal de cada día */
@@ -373,11 +378,11 @@ const nutritionCard = m => {
   const n = m.nu;
   const vc = n.verdict == 'Cumplido' ? 'ok' : n.verdict == 'A medias' ? 'seen' : n.verdict ? 'bad' : 'off';
   return html`
-    <div class="card ans">
-      <b class="anh">Alimentación</b>
-      <p><span class="rps ${vc}">${n.verdict || 'Sin datos suficientes'}</span></p>
+    <div class="card analysis-section">
+      <b class="analysis-heading">Alimentación</b>
+      <p><span class="status-pill ${vc}">${n.verdict || 'Sin datos suficientes'}</span></p>
       ${n.logged ? html`
-        <div class="grid-2 ann">
+        <div class="grid-2 analysis-figures">
           <div><small>kcal de media</small><b>${fmtN(n.ak)}</b><small class="muted">objetivo ${fmtN(n.tk)}</small></div>
           <div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="muted">objetivo ${fmtN(n.tp)} g</small></div>
         </div>
@@ -385,7 +390,7 @@ const nutritionCard = m => {
           ${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? ' · de media ' + n.side : ''}.${n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''}
         </p>
         ${raw(svgKcal(m))}
-        <div class="anlg">
+        <div class="analysis-legend">
           <span><i class="bg-x2ecc71"></i>en objetivo</span>
           <span><i class="bg-xf59e0b"></i>por encima</span>
           <span><i class="bg-x4da3ff"></i>por debajo</span>
@@ -395,18 +400,21 @@ const nutritionCard = m => {
 };
 /* otros datos: las medidas que han cambiado y los logros conseguidos ('' si no hay ni unas ni otros) */
 const otherCard = m => m.o.ms.length || m.o.ach.length ? html`
-  <div class="card ans">
-    <b class="anh">Otros datos</b>
+  <div class="card analysis-section">
+    <b class="analysis-heading">Otros datos</b>
     ${m.o.ms.length ? html`
-      <div class="anr">
+      <div class="analysis-ranking">
         <small>Medidas</small>
         ${m.o.ms.map(([k, d]) => html`<div class="row"><span>${k}</span><b>${d > 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)} cm</b></div>`)}
       </div>` : ''}
-    ${m.o.ach.length ? html`<div class="anr"><small>Logros conseguidos</small><p>${m.o.ach.join(' · ')}</p></div>` : ''}
+    ${m.o.ach.length ? html`<div class="analysis-ranking"><small>Logros conseguidos</small><p>${m.o.ach.join(' · ')}</p></div>` : ''}
   </div>` : '';
 /* la conclusión del mes, en frases */
 const conclusionCard = m => html`
-  <div class="card ans"><b class="anh">Conclusión</b><ul class="anu">${conclusions(m).map(c => html`<li>${c}</li>`)}</ul></div>`;
+  <div class="card analysis-section">
+    <b class="analysis-heading">Conclusión</b>
+    <ul class="analysis-list">${conclusions(m).map(c => html`<li>${c}</li>`)}</ul>
+  </div>`;
 const analysisPage = () => {
   const [f, from] = analysisFrom();
   const today = dayKey(new Date());
