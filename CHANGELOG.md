@@ -141,6 +141,11 @@ línea.
   (`tools/classes.js --check`): toda clase que el código pone o busca, y toda la que buscan las pruebas, tiene que estar en
   `src/css`, así que una mal escrita, o una renombrada que vuelva con su nombre viejo al fusionar una rama anterior, ya no
   pasa sin que nadie lo vea ([clases CSS](docs/tecnica/clases.md)).
+- Gráfica de progreso: al elegir un punto que es récord sale «RÉCORD» junto a la cifra. No salía nunca: la cifra se pintaba
+  antes de calcular qué puntos son récord. Ahora se calcula al sacar los puntos (`progressSeries`).
+- Programas y Perfil: el nombre de un programa va como el resto de títulos, en el color del texto y sin las letras separadas.
+  Su clase se llamaba igual que la de la etiqueta «RÉCORD» (`pgr`) y los dos estilos se mezclaban; ahora son `program-row` y
+  `record-tag`.
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

@@ -249,9 +249,18 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `wkn` | `week-note` | Nota de esa tarjeta. |
 | `wks` | `week-stats` | Racha y entrenos de la semana. |
 
+### `pgr`: una clase que eran dos
+
+`pgr` se usaba para dos cosas, la fila con el nombre de un programa y la etiqueta «RÉCORD» de la gráfica de progreso, y sus dos
+estilos se mezclaban: los nombres de los programas salían en el color de acento y con las letras separadas, que es como va la
+etiqueta. Se separaron a mano, y aquí sí cambia lo que se ve (lo decidió el propietario): el nombre de un programa va como el
+resto de títulos. En el mapa solo está la primera línea: la etiqueta no llegaba a salir.
+
+| Antes | Ahora | Qué es |
+| --- | --- | --- |
+| `pgr` | `program-row` | Fila con el nombre de un programa y su nivel. |
+| `pgr` | `record-tag` | Etiqueta «RÉCORD», junto a la cifra de la gráfica de progreso. |
+
 ### Sin renombrar todavía
 
-- **`pgr`** se usa para dos cosas: la fila con el nombre de un programa y la etiqueta «RÉCORD» de la gráfica de progreso. Sus
-  dos estilos se mezclan, y por eso los nombres de los programas salen en el color de acento, más gruesos y con las letras
-  separadas. Separarlas cambia cómo se ve una de las dos, así que lo decide el propietario.
 - Las de **las figuras** (`fgs`, `hwf`, `anf`…): las reescribe la solicitud de las figuras nuevas (#59).

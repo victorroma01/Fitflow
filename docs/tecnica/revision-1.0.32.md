@@ -160,6 +160,18 @@ Lo que queda de «las líneas largas», sin tocar:
   de dos letras y las de las piezas comunes, el entreno, la librería, los programas y la descarga. Quedan unas 180 de tres y
   cuatro letras (el seguimiento, el primer arranque, la cuenta, la nutrición y el perfil).
 
+## Después de la revisión: lo que destapó el cambio de nombres
+
+Al dar nombre a las clases CSS apareció una, `pgr`, que eran dos piezas a la vez, y detrás de ella un fallo que no era de esta
+versión:
+
+| Id | Prioridad | Qué pasaba | Corrección |
+| --- | --- | --- | --- |
+| R6 | Low | **La etiqueta «RÉCORD» de la gráfica de progreso no salía nunca.** Al elegir un punto, la cifra de arriba se pintaba antes de calcular qué puntos son récord (eso lo hacía la función que dibuja la gráfica), así que para ella ninguno lo era. El punto sí iba relleno. | Qué puntos son récord se calcula al sacarlos (`progressSeries`), antes de pintar nada. |
+| R7 | Low | **Los nombres de los programas salían con el color y las letras de esa etiqueta.** La fila con el nombre de un programa y la etiqueta se llamaban igual, `pgr`, y cada una recibía también el estilo de la otra: los nombres, el color de acento y las letras separadas; la etiqueta, de haber salido, habría caído en una línea aparte. | Dos clases, `program-row` y `record-tag`. El nombre de un programa va como el resto de títulos (lo decidió el propietario). |
+
+Las dos llevan su prueba (`tests/dashboard.py` y `tests/programs.py`), y las dos fallan si se vuelve atrás la corrección.
+
 ## Para decidir
 
 No son fallos; son mejoras que tocan cosas que decide el propietario.
