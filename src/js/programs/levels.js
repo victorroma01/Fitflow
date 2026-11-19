@@ -272,4 +272,4 @@ A.previewChooseLevel = (i, b) => {
   A.openProgramPreview(previewProgram);
 };
 export const levelTag = v => html`<span class="level-tag">${levelDot(v)}${raw(LEVEL_NAMES[v])}</span>`;
-export const programRow = (n, tag) => html`<span class="pgr"><b class="fs-17">${n}</b>${raw(tag)}</span>`;
+export const programRow = (n, tag) => html`<span class="program-row"><b class="fs-17">${n}</b>${raw(tag)}</span>`;

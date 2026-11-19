@@ -164,3 +164,7 @@ K rpxs rpe-scale
 K rpxl rpe-levels
 K rpxe rpe-example
 K rpxr rpe-example-row
+
+# «pgr» eran dos piezas con los estilos mezclados: la fila con el nombre de un programa (program-row) y la etiqueta «RÉCORD» de
+# la gráfica de progreso (record-tag), que no llegaba a salir. Separadas a mano; al comparar, la de antes solo tiene la primera
+K pgr program-row
