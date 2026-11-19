@@ -142,14 +142,6 @@
   line-height:1.15;
   font-size:14px;
 }
-.ver {
-  text-align:center;
-  font-size:11px;
-  color:var(--mu);
-  opacity:.75;
-  margin:18px 0 8px;
-  letter-spacing:.04em;
-}
 .fdb {
   margin-left:auto;
   flex:none;

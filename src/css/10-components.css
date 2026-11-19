@@ -96,13 +96,6 @@ nav span {
   font-size:28px;
   line-height:1.2;
 }
-.r {
-  display:grid;
-  grid-template-columns:24px 1fr 1fr 44px;
-  gap:6px;
-  align-items:center;
-  margin:6px 0;
-}
 .check {
   border-radius:50%;
   width:44px;

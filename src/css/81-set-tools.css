@@ -200,16 +200,6 @@
     animation:none;
   }
 }
-.ver.v1 {
-  margin-bottom:3px;
-}
-.ver.v2 {
-  margin:0 0 3px;
-}
-.ver.v3 {
-  margin:0 0 8px;
-  line-height:1.35;
-}
 /* explicación del RPE (workout/rpe, F-42): la escala dibujada y una serie de ejemplo */
 .rpx {
   max-height:86vh;
