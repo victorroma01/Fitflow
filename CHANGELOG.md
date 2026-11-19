@@ -148,6 +148,8 @@ línea.
 - Programas y Perfil: el nombre de un programa va como el resto de títulos, en el color del texto y sin las letras separadas.
   Su clase se llamaba igual que la de la etiqueta «RÉCORD» (`pgr`) y los dos estilos se mezclaban; ahora son `program-row` y
   `record-tag`.
+- Inicio de sesión: el logo llena su marco. Se dibujaba más pequeño y algo estrecho (92 × 100 en un marco de 120 × 120): su
+  clase se llamaba igual que la del botón «Privacidad» (`lgl`) y recibía su relleno. Ahora son `login-logo` y `login-link`.
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

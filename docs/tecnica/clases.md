@@ -373,22 +373,26 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 
 Tres nombres del análisis (`ane`, `ano`, `anx`) se montaban a trozos (`'an' + x`); antes de renombrarlos se escribieron enteros.
 
-### `pgr`: una clase que eran dos
+### `pgr` y `lgl`: dos clases que eran dos piezas cada una
 
-`pgr` se usaba para dos cosas, la fila con el nombre de un programa y la etiqueta «RÉCORD» de la gráfica de progreso, y sus dos
-estilos se mezclaban: los nombres de los programas salían en el color de acento y con las letras separadas, que es como va la
-etiqueta. Se separaron a mano, y aquí sí cambia lo que se ve (lo decidió el propietario): el nombre de un programa va como el
-resto de títulos. En el mapa solo está la primera línea: la etiqueta no llegaba a salir.
+Al dar nombre a una clase hay que decir qué pieza es, y dos de ellas eran dos piezas distintas con el mismo nombre: cada una
+recibía también el estilo de la otra. Se separaron a mano, y aquí sí cambia lo que se ve (lo decidió el propietario, sobre una
+imagen con las dos opciones).
+
+- **`pgr`**: la fila con el nombre de un programa y la etiqueta «RÉCORD» de la gráfica de progreso. Los nombres de los programas
+  salían en el color de acento y con las letras separadas, que es como va la etiqueta; ahora van como el resto de títulos. En
+  el mapa solo está la primera línea: la etiqueta no llegaba a salir.
+- **`lgl`**: el botón «Privacidad» del inicio de sesión y el logo. El logo recibía el relleno del botón y se dibujaba a 92 × 100
+  dentro de su marco de 120 × 120; ahora lo llena.
 
 | Antes | Ahora | Qué es |
 | --- | --- | --- |
 | `pgr` | `program-row` | Fila con el nombre de un programa y su nivel. |
 | `pgr` | `record-tag` | Etiqueta «RÉCORD», junto a la cifra de la gráfica de progreso. |
+| `lgl` | `login-link` | Botón «Privacidad» del inicio de sesión. |
+| `lgl` | `login-logo` | El logo, en el inicio de sesión. |
 
 ### Sin renombrar todavía
 
-- **`lgl`**, del inicio de sesión, es otra clase que son dos: el botón «Privacidad» y el logo. El logo recibe el relleno del
-  botón y por eso se dibuja más pequeño que su marco y algo estrecho (92 × 100 en un marco de 120 × 120). Separarlas cambia lo
-  que se ve, así que lo decide el propietario.
 - Las del **WOD, el resumen del entreno, las medidas y la nutrición** (`f2…`, `mn…`, `nw…`): el cuarto lote.
 - Las de **las figuras** (`fgs`, `hwf`, `anf`…): las reescribe la solicitud de las figuras nuevas (#59).
