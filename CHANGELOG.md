@@ -93,6 +93,19 @@ línea.
   las figuras de los ejercicios, que se mueven y se pintan poco a poco. Pasaba incluso entre dos copias de la
   misma compilación, sobre todo en GitHub. Ahora compara qué figura grande es, no su fotograma, y espera a que las pequeñas
   de las listas estén pintadas.
+- Un guardado que falla con otro esperando detrás ya no deja el núcleo nombrando una parte que no se escribió
+  (`core/persist`, `writeIdb`). Los guardados se deciden al momento, dando por escrito lo que el anterior todavía escribe; si
+  ese fallaba (el móvil sin sitio), el siguiente podía escribir el núcleo con un mes de comidas nuevo que no estaba. Al volver
+  a abrir la app salía «No se pudieron leer tus datos» y no dejaba guardar ni sincronizar. Ahora los decididos detrás de uno
+  fallido no se escriben, lo que se sabe de cada clave vuelve a lo escrito de verdad y el siguiente guardado lo mira todo
+  ([si un guardado falla](docs/tecnica/estado.md#si-un-guardado-falla)). El código era el mismo desde la V1.0.2. Lo
+  encontraron las pruebas al azar del guardado y la sincronización (más abajo).
+- Lo sincronizado que no se pudo apuntar (el móvil sin sitio) se apunta en cuanto el móvil vuelve a guardar bien, sin esperar
+  a la siguiente sincronización (`noteWaiting`, en `cloud/sync`), y nunca por delante de lo que todavía se está escribiendo.
+  Antes, lo bajado mientras tanto quedaba guardado sin constar como sincronizado y, si se borraba sin conexión antes de la
+  siguiente sincronización, volvía de la nube. Queda documentado el caso que no se puede cerrar sin cambiar el formato de lo
+  guardado: algo borrado puede reaparecer una vez, sin perderse nada
+  ([lo que puede volver a aparecer](docs/tecnica/backend.md#lo-que-puede-volver-a-aparecer)).
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

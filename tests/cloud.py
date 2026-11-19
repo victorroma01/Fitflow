@@ -409,6 +409,52 @@ def main(path):
         wait(p2, 'window.__ffok')
         st = sync(p2)
         check('y al volver a abrir sigue todo, en el móvil y en la nube', st == 'ok' and names(p2) == saved and cloud() == saved, '%s %s %s' % (st, names(p2), cloud()))
+        # lo que bajó sin poder guardarse queda apuntado como sincronizado en cuanto el móvil vuelve a guardar. Si no, al borrarlo
+        # después sin conexión parecería algo que este móvil nunca tuvo, y volvería de la nube (lo encontró tests/syncfuzz.py)
+        p1.evaluate(one(12, 'Abdomen'))
+        sync(p1)
+        p2.evaluate(no_space)
+        sync(p2)
+        noted = "(id=>id!=null&&id in ((JSON.parse(localStorage.getItem('ffsync')||'{}').base||{})['logs:2026']||{h:{}}).h)((S.logs.find(l=>l.n=='Abdomen')||{}).id)"
+        check('(preparado: un entreno bajado de la nube que el móvil no ha podido guardar ni apuntar)', 'Abdomen' in names(p2) and p2.evaluate('savesBroken()') and not p2.evaluate(noted))
+        p2.evaluate("IDBObjectStore.prototype.put=window.__put;saveState();0")
+        wait(p2, '!savesBroken()')
+        check('al volver a poder guardar, lo bajado queda guardado y apuntado como sincronizado', p2.evaluate(noted) and 'Abdomen' in [l['n'] for l in p2.evaluate("savesDone().then(()=>__stored()).then(s=>s.logs)")])
+        fb.set_offline(c2, True)
+        p2.evaluate("S.logs=S.logs.filter(l=>l.n!='Abdomen');saveState('logs')")
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        fb.set_offline(c2, False)
+        st = sync(p2)
+        sync(p1)
+        check('y si después se borra sin conexión, sigue borrado al sincronizar, en los dos móviles y en la nube', st == 'ok' and names(p2) == saved and cloud() == saved and names(p1) == saved, '%s %s %s %s' % (st, names(p2), cloud(), names(p1)))
+        # Y eso, sin adelantarse: si en ese momento hay una sincronización a medias que acaba de bajar algo, lo sincronizado no se
+        # apunta hasta que eso también está escrito. Si se apuntara antes y el móvil dejara de poder guardar justo entonces, al
+        # volver a abrir la app faltaría lo bajado, constaría como sincronizado, y se borraría de la nube. Aquí el guardado con
+        # el que el móvil vuelve a guardar tarda (su transacción se retiene abierta) mientras baja un entreno nuevo, y el sitio
+        # se acaba en cuanto se apunta lo sincronizado
+        p1.evaluate(one(13, 'Glúteo'))
+        sync(p1)
+        p2.evaluate(no_space)
+        sync(p2)
+        p1.evaluate(one(14, 'Antebrazo'))
+        sync(p1)
+        check('(preparado: el móvil sin poder guardar, con lo sincronizado esperando a apuntarse, y algo nuevo en la nube)', 'Glúteo' in names(p2) and p2.evaluate('savesBroken()') and 'Antebrazo' in cloud() and 'Antebrazo' not in names(p2))
+        p2.evaluate("""window.__commit=window.__commit||IDBTransaction.prototype.commit;window.__si=window.__si||Storage.prototype.setItem;window.__hold=1;
+          IDBTransaction.prototype.commit=function(){};
+          IDBObjectStore.prototype.put=function(){const st=this,r=window.__put.apply(this,arguments),keep=()=>{try{if(window.__hold)st.get('__').onsuccess=keep}catch(e){}};keep();return r};0""")
+        p2.evaluate("saveState();0")
+        p2.evaluate("syncNow();0")
+        wait(p2, "S.logs.some(l=>l.n=='Antebrazo')")
+        p2.evaluate("Storage.prototype.setItem=function(k){const r=window.__si.apply(this,arguments);if(k=='ffsync')IDBObjectStore.prototype.put=function(){throw new DOMException('sin espacio','QuotaExceededError')};return r};window.__hold=0;0")
+        wait(p2, "syncState().st!='run'")
+        p2.evaluate('savesDone()')
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        sync(p1)
+        saved = sorted(saved + ['Antebrazo', 'Glúteo'])
+        check('lo sincronizado no se apunta antes de que lo recién bajado esté escrito: nada se borra de la nube', st == 'ok' and names(p2) == saved and cloud() == saved and names(p1) == saved, '%s %s %s %s' % (st, names(p2), cloud(), names(p1)))
 
         # ── la app abierta dos veces en el mismo móvil (dos pestañas): la que se queda atrás ni guarda ni sincroniza, así que no
         #    borra de la nube lo que guardó la otra (core/persist: instanceStale; lo del propio móvil, en tests/storage.py) ──

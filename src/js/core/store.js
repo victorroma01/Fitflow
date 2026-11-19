@@ -67,5 +67,17 @@ export const Store = {
       if (k != Store.K.err && typeof logError == 'function')
         logError('Store.remote', e);
     }
+  },
+  /* aviso al adaptador de que un guardado ha terminado bien y no queda nada del estado sin escribir en este dispositivo
+     (core/persist): lo que esperaba a eso para apuntarse (lo sincronizado, en cloud/sync) ya puede */
+  noteSaved() {
+    try {
+      if (Store.remote && Store.remote.saved)
+        Store.remote.saved();
+    }
+    catch (e) {
+      if (typeof logError == 'function')
+        logError('Store.remote', e);
+    }
   }
 };

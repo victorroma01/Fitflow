@@ -361,6 +361,43 @@ def main(path):
             ev("JSON.stringify=__js0;__T.unspy()")
             pg.clock.run_for(2500)
 
+            # ── un guardado que falla, con otro decidido mientras estaba a medias (lo encontró tests/syncfuzz.py) ──
+            # El primero lleva un mes nuevo de comidas. El segundo se decide con el primero aún a medias y solo cambia el
+            # núcleo, que ya nombra ese mes. Si el primero falla (sin sitio), el segundo no puede escribir: el núcleo nombraría
+            # una parte que no está y, al volver a abrir la app, no se podrían leer los datos. Aquí la escritura del primero se
+            # queda a medias (la transacción abierta, sin el commit con que la app la cierra antes) hasta que se le dice que falle
+            hold = """window.__put1=IDBObjectStore.prototype.put;window.__commit1=IDBTransaction.prototype.commit;window.__hold=1;
+              IDBTransaction.prototype.commit=function(){};
+              IDBObjectStore.prototype.put=function(){const st=this,tx=st.transaction,keep=()=>{try{if(window.__hold)st.get('__').onsuccess=keep;else tx.abort()}catch(e){}};
+                const r=st.get('__');r.onsuccess=keep;return r};0"""
+            release = "IDBObjectStore.prototype.put=__put1;IDBTransaction.prototype.commit=__commit1;0"
+            named = "JSON.parse(localStorage.getItem('ff'))._pk"
+            n_logs, rest0 = ev('S.logs.length'), ev("JSON.parse(localStorage.getItem('ff')).rest")
+            ev(hold)
+            ev("S.meals['2027-01-05']={0:[{n:'Uva',g:90,b:[60,15,.5,.2,1,0]}]};saveState(mealsPart('2027-01-05'));0")
+            ev("S.defaultRest=77;saveState('core');0")
+            ev("window.__hold=0;0")
+            ev("savesDone()")
+            check('si un guardado falla, el que se decidió mientras tanto no escribe: el núcleo no nombra la parte que no se guardó', 'ff:meals:2027-01' not in ev(named) and 'ff:meals:2027-01' not in ev('__T.pkeys()') and ev("JSON.parse(localStorage.getItem('ff')).rest") == rest0, '%s %s' % (ev(named), ev("JSON.parse(localStorage.getItem('ff')).rest")))
+            check('y consta que hay cosas sin guardar', ev('savesBroken()'))
+            # el móvil sigue sin sitio al cerrar la app: al volver a abrirla, los datos se leen (falta lo que no cupo, y nada más)
+            reload()
+            check('al volver a abrir la app, los datos se leen', not ev('partsLost') and not ev("!!document.querySelector('#dg [data-v=partsRetry]')") and ev('S.logs.length') == n_logs, str((ev('partsLost'), ev('S.logs.length'), n_logs)))
+            check('y falta solo lo que no se pudo guardar', '2027-01-05' not in ev('Object.keys(S.meals)') and ev('S.defaultRest') == rest0 and '2026-09-02' in ev('Object.keys(S.meals)'), str(ev('S.defaultRest')))
+            # y si el sitio vuelve con la app abierta, el siguiente guardado lo deja todo escrito
+            ev(hold)
+            ev("S.meals['2027-01-05']={0:[{n:'Uva',g:90,b:[60,15,.5,.2,1,0]}]};saveState(mealsPart('2027-01-05'));0")
+            ev("S.defaultRest=77;saveState('core');0")
+            ev("window.__hold=0;0")
+            ev("savesDone()")
+            ev(release)
+            ev("S.water[dayKey(new Date())]=1250;saveState('core');0")
+            check('cuando vuelve el sitio, el siguiente guardado lo escribe todo: el mes nuevo, y el núcleo que lo nombra', 'ff:meals:2027-01' in ev('savesDone().then(()=>__T.pkeys())') and 'ff:meals:2027-01' in ev(named) and ev("JSON.parse(localStorage.getItem('ff')).rest") == 77 and ev('__T.stored().then(s=>__T.can(s)===__T.can(stateToStored(S)))'), str(ev(named)))
+            pg.clock.run_for(6000)
+            check('y deja de constar que hay cosas sin guardar', ev('savesDone().then(()=>!savesBroken())'))
+            ev("delete S.meals['2027-01-05'];S.defaultRest=%d;saveState()" % (rest0 if isinstance(rest0, int) else 90))
+            ev("savesDone()")
+
             # ── datos de la serie de prueba (1.20 y anteriores: todo el estado en 'ff'): no se migran ──
             legacy = ev("JSON.stringify(Object.assign({},S,{rest:61}))")
             ev("(s=>__T.idb(st=>st.clear(),'readwrite').then(()=>{localStorage.clear();localStorage.setItem('ff',s)}))(%s)" % json.dumps(legacy))

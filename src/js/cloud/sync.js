@@ -16,9 +16,13 @@
    no cuenta como borrado: esas huellas se olvidan y se vuelve a bajar de la nube (forgetDamaged).
    Las huellas solo se guardan cuando lo que describen está también guardado en el móvil (saveMeta): si el móvil no puede
    guardar (sin espacio), lo nuevo sube igual a la nube, pero no se apunta; al volver a abrir la app, al móvil le falta y, como
-   no consta que lo tuviera, baja de la nube en vez de borrarse de ella. Y si la app está abierta en otra pestaña o ventana
-   que ha guardado después (core/persist: instanceStale), esta no sincroniza: subiría lo suyo, que ya no es lo último.
-   Define: newMeta, readMeta, meta, storeMeta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   no consta que lo tuviera, baja de la nube en vez de borrarse de ella. En cuanto el móvil vuelve a poder guardar, se apuntan
+   (noteWaiting): lo que guarda entonces incluye lo bajado mientras tanto, y tiene que constar como sincronizado. El orden es
+   siempre ese, primero los datos y después las huellas, porque al revés se pierden datos y así, como mucho (si la app se
+   cierra entre lo uno y lo otro), algo borrado justo después vuelve a aparecer (docs/tecnica/backend.md). Y si la app está
+   abierta en otra pestaña o ventana que ha guardado después (core/persist: instanceStale), esta no sincroniza: subiría lo
+   suyo, que ya no es lo último.
+   Define: newMeta, readMeta, meta, storeMeta, metaWaiting, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, noteWaiting, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
@@ -53,19 +57,31 @@ const readMeta = () => {
   return newMeta(0);
 };
 let meta = readMeta();
+/* false si no se pudo escribir (sin sitio) */
 const storeMeta = () => {
   try {
     Store.set(Store.K.sync, JSON.stringify(meta));
+    return true;
   }
   catch (e) {
     logError('guardar el estado de la sincronización', e);
+    return false;
   }
 };
+/* 1 si lo sincronizado no se ha podido apuntar, porque el móvil no podía guardar los datos o no había sitio para las huellas:
+   se apunta en cuanto se pueda (noteWaiting). Si no, lo que el móvil guarde entonces (lo bajado mientras tanto) quedaría sin
+   constar como sincronizado, y al borrarlo después parecería algo que este móvil nunca tuvo: volvería de la nube */
+let metaWaiting = 0;
 /* guarda lo sincronizado, si lo que describe está guardado en este móvil y esta apertura de la app sigue siendo la última (ver
    arriba). Si no, se queda lo último que se guardó, que sí corresponde a lo que hay en el móvil */
 const saveMeta = () => {
-  if (!savesBroken() && !staleNow())
-    storeMeta();
+  if (savesBroken()) {
+    metaWaiting = 1;
+    return;
+  }
+  if (staleNow())
+    return;
+  metaWaiting = storeMeta() ? 0 : 1;
 };
 /** st: idle, run, ok, off (sin conexión), err (code), wait (entreno en curso), dead (hay que volver a entrar). */
 let status = { st: 'idle', t: 0, code: '' };
@@ -415,6 +431,17 @@ const syncRound = async () => {
     retryLater(Math.min(6e5, 15e3 * 2 ** Math.min(fails, 6)));
   }
 };
+/* Apunta lo sincronizado que estaba esperando (metaWaiting), cuando es seguro: sin una vuelta en marcha (ella apunta lo suyo
+   cuando lo tiene escrito y, al terminar, se vuelve a pasar por aquí), sin guardados fallidos y con todo lo que se ha
+   decidido guardar hasta ahora ya escrito. Sin esas tres cosas, las huellas podrían ir por delante de lo guardado. Se llama
+   cada vez que un guardado termina bien (adapter.saved) y al acabar cada vuelta */
+const noteWaiting = () => {
+  if (metaWaiting && !running && !savesBroken())
+    savesDone().then(() => {
+      if (metaWaiting && !running)
+        saveMeta();
+    });
+};
 /** Sincroniza ya (si ya está en marcha, otra vuelta al terminar). Nunca lanza: el resultado queda en syncState(). */
 export const syncNow = () => {
   if (running) {
@@ -430,6 +457,7 @@ export const syncNow = () => {
     }
     finally {
       running = null;
+      noteWaiting();
     }
   })();
   return running;
@@ -454,8 +482,10 @@ const syncAfterChange = () => {
     syncSoon(CHANGE_WAIT);
 };
 const retryLater = ms => syncSoon(ms);
-/* aviso de Store (core/store) por cada clave que se escribe: solo cuentan las partes del estado */
+/* avisos de Store (core/store). changed: por cada clave que se escribe (solo cuentan las partes del estado). saved: un
+   guardado ha terminado bien y no queda nada sin escribir en el móvil */
 const adapter = {
+  saved: noteWaiting,
   changed(k) {
     if (applying || !account || account.x)
       return;
