@@ -74,7 +74,9 @@ SETTLE = """(async()=>{for(let i=0;i<600&&syncState().st=='run';i++)await new Pr
 SAVED = "savesDone().then(()=>({ok:!savesBroken(),stale:!!instanceStale}))"
 DAYS = ['2025-12-30', '2025-12-31', '2026-01-02', '2026-10-30', '2026-11-03', '2026-11-04']
 EXERCISES = ['Press banca', 'Sentadilla', 'Remo con barra']
-NET_NOISE = re.compile(r'Load failed|Failed to fetch|NetworkError|cancell?ed', re.I)
+# lo que dice el navegador cuando una petición a la nube se corta al cerrar o recargar la app (WebKit, «Fetch API cannot load …
+# due to access control checks»; Firefox, «NetworkError…»): no es un error del código
+NET_NOISE = re.compile(r'Load failed|Failed to fetch|NetworkError|cancell?ed|access control checks', re.I)
 fails = []
 VERBOSE = '-v' in sys.argv or '-vv' in sys.argv
 DEBUG = '-vv' in sys.argv
@@ -105,12 +107,12 @@ class Page:
     """Una pestaña de un móvil.
     pending: lo que ha hecho y aún no consta ni guardado en el móvil ni subido ({dato: 'add' | 'del'}).
     dels: los entrenos que ha borrado desde que se abrió.
-    cant_note: el móvil no tiene sitio para apuntar lo sincronizado desde antes de su último guardado o sincronización buenos."""
+    cant_note: el móvil no tiene sitio para apuntar lo sincronizado desde antes de su último guardado o sincronización buenos.
+    closing: se está cerrando o recargando (lo que el navegador diga de una página que se va no es un error del código)."""
 
     def __init__(self, dev, pg):
-        self.dev, self.pg, self.pending, self.dels, self.cant_note, self.errs = dev, pg, {}, set(), False, []
-        # (una petición a la nube que se corta al cerrar o recargar la app no es un error del código: WebKit la cuenta como tal)
-        pg.on('pageerror', lambda e: None if NET_NOISE.search(str(e)) else self.errs.append(str(e)[:200]))
+        self.dev, self.pg, self.pending, self.dels, self.cant_note, self.errs, self.closing = dev, pg, {}, set(), False, [], False
+        pg.on('pageerror', lambda e: None if self.closing or NET_NOISE.search(str(e)) else self.errs.append(str(e)[:200]))
 
 
 class Device:
@@ -150,6 +152,7 @@ class Run:
             p.pg.evaluate(NO_SPACE[p.dev.nospace])
         p.dels = set()
         p.cant_note = p.dev.nospace in CANT_NOTE
+        p.closing = False
 
     def open(self, dev):
         pg = dev.ctx.new_page()
@@ -366,6 +369,7 @@ class Run:
         excused = self.leaving(p, crash)
         self.lost(p)
         dels = p.dels
+        p.closing = True
         if crash:
             try:
                 p.pg.evaluate("window.__old=1;location.reload();0")
@@ -384,6 +388,7 @@ class Run:
         dev.pages.remove(q)
         self.lost(q)
         self.errs += q.errs
+        q.closing = True
         q.pg.close()
         if excused:
             self.after_excused(dev, q.dels)
