@@ -111,10 +111,10 @@ const autoBackup = async () => {
     const c = dataCounts();
     /* el aviso no tapa otra ventana: si hay una abierta, espera a la próxima vez que se abra la app */
     if (old && shrinks(old.data, c)) {
-      if (!$('#dg .dgb') && !$('#sh .sp'))
+      if (!$('#dg .dgb') && !$('#sh .sheet'))
         dialog('Tu copia en la nube tiene más datos', html`
           La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. No la hemos sustituido por si es la buena: en Copia de seguridad puedes restaurarla o guardar la de ahora.
-        `, [['Ahora no', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'pr']]);
+        `, [['Ahora no', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'primary']]);
     }
     else
       await writeCloudBackup(old);
@@ -135,14 +135,14 @@ export const cloudBackupCard = () => {
     Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas
   ` : 'Aún no hay ninguna copia en la nube.';
   return html`
-    <div class="cd cbk" id="cbk">
+    <div class="card cbk" id="cbk">
       <b>Copia en la nube</b>
-      <p class="mu">
+      <p class="muted">
         Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.
       </p>
       <p class="cbl" id="cbl">${raw(line)}</p>
-      <div class="g2">
-        <button class="pr" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button>
+      <div class="grid-2">
+        <button class="primary" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button>
         <button data-a="cloudBackupRestore"${cloudBusy ? ' disabled' : ''}>Restaurar</button>
       </div>
     </div>`;

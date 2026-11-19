@@ -84,11 +84,11 @@ function myNutritionPage() {
       <div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div>
       ${goalsRing(goals, targets)}
       ${goalsFields(goals, diet, activity, diff)}
-      <p class="mu mnp">${raw(note)}</p>
+      <p class="muted mnp">${raw(note)}</p>
       <div class="h-120"></div>
-      <div class="sb mnb">
+      <div class="sticky-btn mnb">
         <button data-a="openManualGoals">Ajustar a mano</button>
-        <button class="pr" data-a="goalsRecalculate">Recalcular con mis datos</button>
+        <button class="primary" data-a="goalsRecalculate">Recalcular con mis datos</button>
       </div>
     </div>`;
 }
@@ -109,18 +109,18 @@ const manualPage = () => {
   return html`
     <div id="mnm">
       ${pgHead('Ajustar a mano', 'openMyNutrition')}
-      <p class="mu m-n6-0-12">
+      <p class="muted m-n6-0-12">
         Elige tus kcal y el reparto de macros. Mientras estén a mano, cambiar tu peso o tu actividad no los cambia; para volver a tu plan, pulsa «Recalcular con mis datos».
       </p>
       ${f('mnk', 'Kcal diarias', n.k, 800, 8000)}
-      <div class="g2 cols-3">
+      <div class="grid-2 cols-3">
         ${f('mnc0', '% Hidratos', n.c, 0, 100)}
         ${f('mnp0', '% Proteínas', n.p, 0, 100)}
         ${f('mnf0', '% Grasas', n.f, 0, 100)}
       </div>
-      <p id="mnv" class="mu m-12-2"></p>
+      <p id="mnv" class="muted m-12-2"></p>
       <div class="h-90"></div>
-      <div class="sb"><button class="pr w-full p-14" data-a="manualGoalsSave">Guardar</button></div>
+      <div class="sticky-btn"><button class="primary w-full p-14" data-a="manualGoalsSave">Guardar</button></div>
     </div>`;
 };
 /** Valores del formulario «Ajustar a mano»: [kcal, % hidratos, % proteínas, % grasas] (NaN si no son válidos). */

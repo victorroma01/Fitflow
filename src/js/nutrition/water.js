@@ -17,10 +17,10 @@ function waterCard() {
   const v = (S.water || {})[k] || 0;
   const g = waterGoal();
   return html`
-    <div class="cd">
+    <div class="card">
       <div class="row"><b>Agua</b><b>${v / 1000} / ${g / 1000} L</b></div>
       <div class="bar h-10 m-10-0"><i class="bg-a2" data-style="width:${Math.min(100, v / g * 100)}%"></i></div>
-      <div class="g2 cols-3">
+      <div class="grid-2 cols-3">
         <button data-a="addWater" data-i="-250">−250 ml</button>
         <button data-a="addWater" data-i="250">+250 ml</button>
         <button data-a="addWater" data-i="500">+500 ml</button>

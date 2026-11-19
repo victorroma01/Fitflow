@@ -26,14 +26,14 @@
   line-height:1;
   vertical-align:middle;
 }
-.xtl .chip.ic {
+.xtl .chip.icon-only {
   min-width:40px;
   padding:0 11px;
 }
 .xtl .psel {
   background:var(--cd);
 }
-html.gl .xtl .psel {
+html.glass .xtl .psel {
   background:color-mix(in srgb,var(--tx) 8%,transparent);
 }
 /* el desplegable transparente, 2 px más arriba y más abajo que lo que se ve: zona táctil de 44 px */
@@ -43,7 +43,7 @@ html.gl .xtl .psel {
   height:auto;
 }
 /* botones con icono en lugar de texto (Tips, Discos) */
-.chip.ic {
+.chip.icon-only {
   display:inline-grid;
   place-items:center;
   min-width:42px;
@@ -70,7 +70,7 @@ html.gl .xtl .psel {
   font-size:13.5px;
   font-weight:600;
 }
-html.gl .psel {
+html.glass .psel {
   background:color-mix(in srgb,var(--tx) 6%,transparent);
   border-color:var(--gb);
 }
@@ -93,12 +93,12 @@ html.gl .psel {
   box-shadow:0 0 0 3px color-mix(in srgb,var(--a2) 20%,transparent);
 }
 /* peso sugerido (F-10): gris oscuro, menos destacado que un peso ya registrado */
-.r2 input.sug {
+.set-row input.sug {
   color:color-mix(in srgb,var(--mu) 70%,var(--bg));
   font-weight:600;
 }
 /* etiqueta de técnica (F-11): se toca para ver qué técnica es */
-.r2 button.wk2 {
+.set-row button.wk2 {
   position:relative;
   padding:7px 0;
   border:0;
@@ -106,17 +106,17 @@ html.gl .psel {
   font-size:11px;
   font-weight:700;
 }
-.r2 button.wk2::after {
+.set-row button.wk2::after {
   content:"";
   position:absolute;
   inset:-8px -4px;
 }
 /* barra atrás / pausa / avance (F-15): más baja y ajustada al borde inferior, sin pisar la barra de inicio del iPhone */
-.pb {
+.player-bar {
   padding:2px 18px max(4px,calc(env(safe-area-inset-bottom,0px) - 16px));
   border-radius:22px 22px 0 0;
   border-bottom:0;
 }
-.pb button {
+.player-bar button {
   padding:9px 20px;
 }

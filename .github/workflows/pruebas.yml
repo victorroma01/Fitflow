@@ -163,7 +163,9 @@ jobs:
       - name: Paseo aleatorio y capturas
         id: comparar
         continue-on-error: true
-        run: bash tests/compare.sh /tmp/base/dist/stratafit.html /tmp/nueva.html 0,1,2,3 150
+        # con el mapa de las clases CSS renombradas en esta versión: las de la versión anterior se traducen antes de comparar
+        # (en una versión anterior que ya las tenga renombradas, el mapa no encuentra nada que traducir)
+        run: bash tests/compare.sh /tmp/base/dist/stratafit.html /tmp/nueva.html 0,1,2,3 150 tests/clases-1.0.32.txt
       # informativo, salvo con la etiqueta «refactor» (un cambio que no debe alterar nada): entonces cualquier diferencia falla
       - name: Resultado
         env:

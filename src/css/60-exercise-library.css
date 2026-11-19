@@ -1,5 +1,5 @@
 /* ═══ css/60-exercise-library ═══ Librería de ejercicios y filtros de equipo */
-.ph {
+.section-label {
   font-size:11px;
   font-weight:700;
   letter-spacing:.12em;
@@ -19,7 +19,7 @@
 .exr b {
   font-size:15px;
 }
-.mc {
+.muscle-chip {
   display:inline-block;
   margin:3px 5px 3px 0;
   padding:6px 11px;
@@ -27,7 +27,7 @@
   border:1px solid var(--ln);
   font-size:13px;
 }
-.mc.on {
+.muscle-chip.on {
   background:color-mix(in srgb,var(--a2) 22%,transparent);
   border-color:var(--a2);
 }

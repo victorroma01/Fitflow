@@ -119,7 +119,7 @@ const dragMove = x => {
     if (d.hv >= 0)
       buzz(8);
     d.hv = i;
-    tabButtons().forEach((e, j) => e.classList.toggle('hv', j == i));
+    tabButtons().forEach((e, j) => e.classList.toggle('hover', j == i));
   }
 };
 /* mientras la burbuja se acerca al dedo, se mueve en cada fotograma aunque el dedo esté quieto */
@@ -144,7 +144,7 @@ const dragStop = go => {
   tabDragEnd = Date.now();
   const n = $('nav');
   n.classList.remove('drag');
-  tabButtons().forEach(e => e.classList.remove('hv'));
+  tabButtons().forEach(e => e.classList.remove('hover'));
   /* con el botón de la pestaña: A.selectTab mueve la burbuja ya y pinta la pestaña justo después */
   if (go && d.hv >= 0 && d.hv != S.tab)
     A.selectTab(d.hv, tabButtons()[d.hv]);
@@ -208,10 +208,10 @@ const START_TABS = [[-1, 'La última', 'La última que usaste'], ...TABS.map((t,
 const startOf = () => S.startTab >= 0 && S.startTab < TABS.length ? S.startTab : -1;
 export const startTabName = () => START_TABS.find(x => x[0] == startOf())[1];
 export const startTabCard = () => html`
-  <p class="mu m-0-2-12 fs-14">La pestaña que ves al abrir StrataFit.</p>
-  <div class="cd srg" role="radiogroup" aria-label="Pestaña al abrir la app">
+  <p class="muted m-0-2-12 fs-14">La pestaña que ves al abrir StrataFit.</p>
+  <div class="card srg" role="radiogroup" aria-label="Pestaña al abrir la app">
     ${START_TABS.map(x => html`
-      <button class="sr" data-a="setStartTab" data-v="${x[0]}" role="radio" aria-checked="${x[0] == startOf() ? 'true' : 'false'}">
+      <button class="setting-row" data-a="setStartTab" data-v="${x[0]}" role="radio" aria-checked="${x[0] == startOf() ? 'true' : 'false'}">
         <span class="srl">${raw(x[2])}</span>
         ${x[0] == startOf() ? raw(icon('chk', 20)) : ''}
       </button>`)}

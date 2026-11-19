@@ -178,7 +178,7 @@ export const levelPill = () => {
           ${LEVEL_KEYS.map(k => html`
             <button class="lvi ${LEVEL_CLASS[k]}${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem">
               ${levelDot(k)}
-              <span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>
+              <span><b>${raw(LEVEL_NAMES[k])}</b><small class="muted">${raw(LEVEL_SUMMARY[k])}</small></span>
               ${raw(k == v ? '<em>✓</em>' : '')}
             </button>`)}
         </div>` : ''}
@@ -264,7 +264,7 @@ export const levelSegment = () => html`
         <span>${raw(LEVEL_NAMES[k])}</span>
       </button>`)}
   </div>
-  <p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
+  <p class="muted lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
 A.previewChooseLevel = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   if (isLevel(v))

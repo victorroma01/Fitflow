@@ -27,7 +27,7 @@ import { html, raw } from '../core/html.js';
 /* página abierta: '' la principal, una clave de SETTINGS_PAGES o null si Ajustes está cerrado */
 let settingsSub = null;
 const settingsRow = (ic, label, val, a, o) => html`
-  <button class="sr" data-a="${a}"${raw(o && o.v ? ' data-v="' + o.v + '"' : '')}>
+  <button class="setting-row" data-a="${a}"${raw(o && o.v ? ' data-v="' + o.v + '"' : '')}>
     <span class="sri${o && o.red ? ' red' : ''}">${icon(ic, 20)}</span>
     <span class="srl${o && o.red ? ' red' : ''}">${raw(label)}</span>
     ${val ? html`<span class="srv">${val}</span>` : ''}
@@ -64,7 +64,7 @@ const SETTINGS_PAGES = {
   avanzado: () => ['Ajustes avanzados', rpeSettings()]
 };
 /* una sección de Ajustes: su título y sus filas */
-const settingsSection = (title, rows) => html`<div class="ph">${raw(title)}</div><div class="cd srg">${rows}</div>`;
+const settingsSection = (title, rows) => html`<div class="section-label">${raw(title)}</div><div class="card srg">${rows}</div>`;
 /* Cuenta: el usuario y la sincronización */
 const accountRows = () => [settingsRow('user', 'Cuenta', acctName(), 'openSettingsPage', { v: 'cuenta' }), settingsRow('cloud', 'Sincronización', syncShort(), 'accountSyncNow', { act: 1 })];
 /* Apariencia: tema y estilo, color de acento (con su muestra) y la pestaña al abrir la app */
@@ -103,7 +103,7 @@ function settingsMain() {
       ${offlineNote()}
       ${settingsSection('Ajustes avanzados', advancedRows())}
       ${settingsSection('Información', infoRows())}
-      <div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div>
+      <div class="card srg sro">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div>
       <div class="h-40"></div>
     </div>`;
 }
@@ -117,7 +117,7 @@ const settingsPage = k => {
 export const settingsSync = () => {
   if (settingsSub == null)
     return;
-  const p = $('#sh .sp');
+  const p = $('#sh .sheet');
   if (!p || !$('#ajs')) {
     settingsSub = null;
     return;

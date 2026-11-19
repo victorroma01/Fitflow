@@ -48,7 +48,7 @@ export const exSearchText = e => {
 const exSubtitle = e => X((e.q || 'Personalizado') + (e.t && e.t != 'Otros' ? ' · ' + e.t : ''));
 const exMusclesHtml = e => (exMuscles(e, 'p').length ? html`
   <small class="c-at">Principal: ${exMuscles(e, 'p').join(', ')}</small>
-` : '') + (exMuscles(e, 's').length ? html`<br><small class="mu">Secundarios: ${exMuscles(e, 's').join(', ')}</small>` : '');
+` : '') + (exMuscles(e, 's').length ? html`<br><small class="muted">Secundarios: ${exMuscles(e, 's').join(', ')}</small>` : '');
 /* las filas de una lista que llevan su figura desde el principio: las que se ven al abrirla, con algo de margen. Las
    siguientes la reciben al acercarse a la pantalla (extras/anatomy, exPictureLater) */
 const ROWS_WITH_PICTURE = 12;
@@ -58,6 +58,9 @@ export const exCellHtml = (e, row) => html`
   <i class="exth">${row >= ROWS_WITH_PICTURE ? exPictureLater(e.n, 48) : exPicture(e.n, 48)}</i>
   <span class="ext"><b>${e.n}</b><br><small>${raw(exSubtitle(e))}</small><br>${raw(exMusclesHtml(e))}</span>`;
 export const exRowHtml = (o, btn, act, row) => html`
-  <div class="it exr"><span class="exc" data-a="${act || 'exerciseDetail'}" data-i="${o.i}">${exCellHtml(o.e, row)}</span>${raw(btn)}</div>`;
+  <div class="item exr">
+    <span class="exc" data-a="${act || 'exerciseDetail'}" data-i="${o.i}">${exCellHtml(o.e, row)}</span>
+    ${raw(btn)}
+  </div>`;
 export const exCompare = (a, b) => GROUPS.indexOf(groupOf(a)) - GROUPS.indexOf(groupOf(b)) || exOrder(a) - exOrder(b);
 export const categoryOf = g => ['CrossFit', 'Hyrox', 'Funcional', 'Cardio'].includes(g) ? g : 'Culturismo';

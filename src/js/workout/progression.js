@@ -181,7 +181,7 @@ export const lastTimeLine = (e, i) => {
   const U = unitOf(e);
   const P = progressionOf(e);
   return html`
-    <div class="mu fs-12">
+    <div class="muted fs-12">
       Última vez: ${raw(h.s.map(x => U ? x[0] + ' ' + U : x[0] + '×' + (x[1] ? toDisplayWeight(x[1]) : '–') + (EXTRA_ROW[x[3]] || '')).join(' · '))}
     </div>
     ${suggestionBox(e, i, P)}`;

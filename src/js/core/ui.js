@@ -21,10 +21,10 @@ function sheetBarFix() {
     if (!s)
       return;
     [...s.children].forEach(c => {
-      if (c.classList && c.classList.contains('sb'))
+      if (c.classList && c.classList.contains('sticky-btn'))
         c.remove();
     });
-    s.querySelectorAll('.sp .sb').forEach(b => s.appendChild(b));
+    s.querySelectorAll('.sheet .sticky-btn').forEach(b => s.appendChild(b));
   }
   catch (e) {
     logError('barra de la hoja', e);
@@ -125,12 +125,12 @@ const swapPage = (p, h) => {
     función que la quita. null si lo abierto no es una subpágina (debajo se ve la pestaña). */
 export const showPageBelow = () => {
   const s = $('#sh');
-  const p = s.querySelector('.sp');
+  const p = s.querySelector('.sheet');
   const top = pageTrail[pageTrail.length - 1];
   if (!top || !p || s.className != 'full' || !backLink(p))
     return null;
   const u = document.createElement('div');
-  u.className = 'sp spu';
+  u.className = 'sheet spu';
   u.inert = true;
   u.setAttribute('aria-hidden', 'true');
   u.append(top.nodes);
@@ -143,7 +143,7 @@ export const showPageBelow = () => {
 };
 export const sheet = h => {
   const s = $('#sh');
-  const p = s.querySelector('.sp');
+  const p = s.querySelector('.sheet');
   if (h && p && s.className == 'full') {
     swapPage(p, h);
     return;
@@ -157,12 +157,12 @@ export const sheet = h => {
      fondo de la pantalla */
   const hadFocus = !!p && (p.contains(document.activeElement) || p.contains(recentTouch()));
   s.innerHTML = h ? html`
-    <div class="bk" data-a="closeSheet"></div>
-    <div class="sp" data-pg="${pageKey(h)}" role="dialog" aria-modal="true" tabindex="-1">${raw(h)}</div>` : '';
+    <div class="backdrop" data-a="closeSheet"></div>
+    <div class="sheet" data-pg="${pageKey(h)}" role="dialog" aria-modal="true" tabindex="-1">${raw(h)}</div>` : '';
   applyStyles(s);
   sheetBarFix();
   if (h)
-    sheetDialog(s.querySelector('.sp'), opening || hadFocus);
+    sheetDialog(s.querySelector('.sheet'), opening || hadFocus);
   else if (p) {
     /* al cerrar, el foco vuelve a lo que la abrió */
     focusBack(openers['#sh']);
@@ -173,13 +173,13 @@ export const sheet = h => {
     de sesión, la bienvenida, el recorrido, el aviso de versión nueva o el temporizador de WOD. Lo que sale solo (el recorrido,
     el aviso del icono nuevo, el de espacio) espera a que no haya nada. */
 export const appBusy = () => !!(W || document.visibilityState == 'hidden' || $('#lgw') || $('#wlc') || $('#tour') || $('#upd') || $('#f2w') || $('#sh').firstChild || $('#dg').firstChild || $('#mn').firstChild);
-export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'pr']]);
+export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'primary']]);
 /* (#tt, los avisos breves: una región que los lectores de pantalla leen al cambiar, sin quitar el foco de donde está) */
 document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt" role="status" aria-live="polite"></div>');
 /** Los botones de una ventana de aviso, en una fila con tantas columnas como botones. `b`: [[texto, acción, clase]…]; al tocar
     uno, la ventana se cierra y se hace su acción (A.dialogAnswer). */
 export const dialogButtons = b => html`
-  <div class="g2 ${['cols-1', 'cols-2', 'cols-3', 'cols-4'][b.length - 1] || ''}">
+  <div class="grid-2 ${['cols-1', 'cols-2', 'cols-3', 'cols-4'][b.length - 1] || ''}">
     ${b.map(x => html`<button class="${x[2]}" data-a="dialogAnswer" data-v="${x[1]}">${raw(x[0])}</button>`)}
   </div>`;
 export function dialog(t, p, b) {
@@ -188,7 +188,7 @@ export function dialog(t, p, b) {
     <div class="dgb">
       <div class="dgc" role="dialog" aria-modal="true" aria-labelledby="dgt">
         <h3 id="dgt" class="m-0-0-6">${raw(t)}</h3>
-        <p class="mu m-0-0-16 fs-14">${raw(p)}</p>
+        <p class="muted m-0-0-16 fs-14">${raw(p)}</p>
         ${dialogButtons(b)}
       </div>
     </div>`;
@@ -244,14 +244,14 @@ A.closeSheet = () => {
   sheet();
 };
 export const sheetToTop = () => {
-  const p = $('#sh .sp');
+  const p = $('#sh .sheet');
   if (p)
     p.scrollTop = 0;
 };
 /** Abre h a pantalla completa, o lo pone en la página ya abierta: arriba del todo, salvo al volver a la página de antes. */
 export const fullPage = h => {
   const s = $('#sh');
-  const p = s.querySelector('.sp');
+  const p = s.querySelector('.sheet');
   if (p && s.className == 'full') {
     if (!swapPage(p, h))
       p.scrollTop = 0;
@@ -272,10 +272,10 @@ A.openMenu = () => {
       <div class="msb2"></div>
       <div class="msb"></div>
       <div class="mci">
-        <button class="mx" data-a="closeMenu" aria-label="Cerrar">${icon('x', 22)}</button>
+        <button class="menu-close" data-a="closeMenu" aria-label="Cerrar">${icon('x', 22)}</button>
         <div class="mti">Menú</div>
         ${[['openPrograms', 'prog', 'Programas'], ['openCalendar', 'cal', 'Calendario'], ['openLogs', 'log', 'Registros'], ['rotationShow', 'swp', 'Rotar ejercicios'], ['resetWeek', 'reset', 'Reiniciar semana']].map((x, i) => html`
-          <button class="mi" data-style="--d:${70 + i * 60}ms" data-a="menuItem" data-v="${x[0]}">
+          <button class="menu-item" data-style="--d:${70 + i * 60}ms" data-a="menuItem" data-v="${x[0]}">
             <span>${raw(x[2])}</span>
             ${icon(x[1], 22)}
           </button>`)}
@@ -295,11 +295,11 @@ A.closeMenu = () => {
   }, 240);
 };
 export const segmented = (a, cur, list) => html`
-  <div class="seg${list.length == 2 ? ' s2' : ''}">
+  <div class="seg${list.length == 2 ? ' seg-2' : ''}">
     ${list.map(x => html`<button class="${cur == x[0] ? 'on' : ''}" data-a="${a}" data-v="${x[0]}">${raw(x[1])}</button>`)}
   </div>`;
 export const linkRow = (ico, t, s, a, i) => html`
-  <button class="cd f2lk" data-a="${a}"${raw(i != null ? ' data-i="' + i + '"' : '')}>
+  <button class="card f2lk" data-a="${a}"${raw(i != null ? ' data-i="' + i + '"' : '')}>
     ${icon(ico, 30)}
     <span><b>${raw(t)}</b><br><small>${raw(s)}</small></span>
   </button>`;

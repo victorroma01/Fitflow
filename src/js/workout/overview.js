@@ -17,16 +17,19 @@ import { exPicture } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 /* la cabecera: «‹ Atrás» y «Editar» (o «Listo» al editar) */
 const overviewHead = editing => html`
-  <div class="hd"><button data-a="overviewBack">‹ Atrás</button><button data-a="overviewEdit">${editing ? 'Listo' : 'Editar'}</button></div>`;
+  <div class="page-head">
+    <button data-a="overviewBack">‹ Atrás</button>
+    <button data-a="overviewEdit">${editing ? 'Listo' : 'Editar'}</button>
+  </div>`;
 /* la foto del día con su nombre (al editar, un campo) y sus cifras: ejercicios, series y minutos */
 const overviewHero = (d, editing) => {
   const sets = d.ex.reduce((s, e) => s + e.s, 0);
   const name = editing ? html`<input value="${d.n}" maxlength="60" data-c="setDayName" aria-label="Nombre del día" class="m-6-0">` : html`<h2>${d.n}</h2>`;
   return html`
-    <div class="cd hero" data-style="${coverStyle(d.n, d)}">
+    <div class="card hero" data-style="${coverStyle(d.n, d)}">
       <small>Overview</small>
       ${name}
-      <div class="st">
+      <div class="stats">
         <div><b>${d.ex.length}</b><small>Ejercicios</small></div>
         <div><b>${raw(sets)}</b><small>Series</small></div>
         <div><b>${dayMinutes(d)}</b><small>Minutos</small></div>
@@ -34,7 +37,7 @@ const overviewHero = (d, editing) => {
     </div>`;
 };
 /* en una semana de descarga, qué cambia al empezar */
-const DELOAD_NOTE = '<div class="cd m-12-0-0"><b>Semana de descarga</b><div class="mu fs-13 mt-4">Al empezar el entreno, el peso baja al 65 % y cada serie lleva 2 repeticiones menos, con las mismas series.</div></div>';
+const DELOAD_NOTE = '<div class="card m-12-0-0"><b>Semana de descarga</b><div class="muted fs-13 mt-4">Al empezar el entreno, el peso baja al 65 % y cada serie lleva 2 repeticiones menos, con las mismas series.</div></div>';
 /* los botones de un ejercicio al editar: una serie menos o más, descanso, rango, enlazar con el anterior, cambiar y quitar */
 const overviewEditButtons = (d, e, i) => {
   const link = i ? html`
@@ -57,8 +60,8 @@ const overviewExercise = (d, i, editing) => {
   const details = html`${raw(e.s)} series · ${raw(targetText(e))} · Descanso ${raw(fmtMinSec(inSuperset(i) ? 10 : restOf(e)))}${tempo}`;
   return html`
     <div class="ovx">
-      <div class="th">${exPicture(e.n, 64)}</div>
-      <div class="fx-1 minw-0"><b>${e.n}</b><div class="mu fs-13">${details}</div>${editing ? overviewEditButtons(d, e, i) : ''}</div>
+      <div class="thumb">${exPicture(e.n, 64)}</div>
+      <div class="fx-1 minw-0"><b>${e.n}</b><div class="muted fs-13">${details}</div>${editing ? overviewEditButtons(d, e, i) : ''}</div>
     </div>`;
 };
 /* un bloque del día (serie A, B…), con su tipo si junta varios ejercicios, y sus ejercicios */
@@ -66,7 +69,7 @@ const overviewBlock = (d, k, n, editing) => {
   const kind = k.x.length > 1 ? html`
     <b class="c-wnx">${k.x.length == 2 ? 'Superserie' : k.x.length == 3 ? 'Triserie' : 'Circuito'}</b>` : '';
   return html`
-    <div class="row mt-14"><b class="mu">SERIE ${raw(String.fromCharCode(65 + n))}</b>${kind}</div>
+    <div class="row mt-14"><b class="muted">SERIE ${raw(String.fromCharCode(65 + n))}</b>${kind}</div>
     ${k.x.map(i => overviewExercise(d, i, editing))}`;
 };
 /** El overview del día elegido: su foto y cifras, sus bloques y ejercicios y, al editar, cambiarlos. */
@@ -75,7 +78,7 @@ export function overviewPage() {
   const editing = overviewMode == 2;
   const add = editing ? '<button data-a="openPicker" class="w-full m-12-0">+ Añadir ejercicio</button>' : '';
   /* sin ejercicios no hay entreno que empezar: se dice cómo añadirlos */
-  const start = editing ? '' : d.ex.length ? '<button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="startWorkout">Empezar entreno</button>' : '<p class="mu ta-c">Este día no tiene ejercicios. Pulsa «Editar» para añadir alguno.</p>';
+  const start = editing ? '' : d.ex.length ? '<button class="sticky-btn bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="startWorkout">Empezar entreno</button>' : '<p class="muted ta-c">Este día no tiene ejercicios. Pulsa «Editar» para añadir alguno.</p>';
   return html`
     ${overviewHead(editing)}
     ${overviewHero(d, editing)}
@@ -106,7 +109,7 @@ A.overviewEdit = () => {
     return;
   }
   if (JSON.stringify(S.plan[S.selectedDay]) != overviewSnapshot)
-    dialog('¿Guardar los cambios?', 'Se aplicarán a este día de tu programa.', [['Descartar', 'overviewDiscard', ''], ['Guardar', 'overviewSave', 'pr']]);
+    dialog('¿Guardar los cambios?', 'Se aplicarán a este día de tu programa.', [['Descartar', 'overviewDiscard', ''], ['Guardar', 'overviewSave', 'primary']]);
   else
     toggleOverviewEdit();
 };

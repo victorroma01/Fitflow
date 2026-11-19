@@ -32,23 +32,23 @@ const welcomeRoot = () => {
 };
 /* paso 1: la bienvenida */
 const welcomeView = () => html`
-  <div class="bk"></div>
-  <div class="sp" role="dialog" aria-modal="true" aria-labelledby="wlh">
+  <div class="backdrop"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="wlh">
     <div class="trw">
       ${brandLogo('wlg')}
       <h3 id="wlh">Te damos la bienvenida a StrataFit</h3>
-      <p class="mu">Gracias por instalar la app y por apoyar su desarrollo.</p>
-      <p class="mu">
+      <p class="muted">Gracias por instalar la app y por apoyar su desarrollo.</p>
+      <p class="muted">
         StrataFit está en fase de pruebas, así que puede haber errores. Si encuentras alguno, cuéntanoslo en Ajustes → Informar de un fallo: nos ayuda mucho a mejorarla.
       </p>
-      <p class="mu wlw">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p>
-      <button class="pr" data-a="welcomeNext">Siguiente</button>
+      <p class="muted wlw">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p>
+      <button class="primary" data-a="welcomeNext">Siguiente</button>
     </div>
   </div>`;
 /* el sexo: Hombre o Mujer, como botones de opción */
 const sexButtons = sx => html`
   <label>Sexo</label>
-  <div class="seg s2" role="radiogroup" aria-label="Sexo">
+  <div class="seg seg-2" role="radiogroup" aria-label="Sexo">
     ${[['M', 'Hombre'], ['F', 'Mujer']].map(x => html`
       <button class="${sx == x[0] ? 'on' : ''}" data-a="welcomeSex" data-v="${x[0]}" role="radio"
           aria-checked="${sx == x[0] ? 'true' : 'false'}">${raw(x[1])}</button>`)}
@@ -74,10 +74,10 @@ const bioFormView = () => {
       ${list.map((t, i) => html`<option value="${i}"${b[k] !== '' && b[k] != null && +b[k] == i ? ' selected' : ''}>${raw(t)}</option>`)}
     </select>`;
   return html`
-    <div class="bk"></div>
-    <div class="sp wlb" role="dialog" aria-modal="true" aria-labelledby="wlh">
+    <div class="backdrop"></div>
+    <div class="sheet wlb" role="dialog" aria-modal="true" aria-labelledby="wlh">
       <h3 id="wlh">Tus datos</h3>
-      <p class="mu">
+      <p class="muted">
         Antes de empezar, la app necesita unos datos básicos. Con ellos calcula tus calorías y tus macros de cada día y te recomienda los programas que mejor encajan contigo. Puedes cambiarlos cuando quieras en Perfil.
       </p>
       ${sexButtons(sx)}
@@ -85,13 +85,13 @@ const bioFormView = () => {
       ${raw(sel('act', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1])))}
       ${raw(sel('goal', 'Objetivo físico', GOAL_LABELS))}
       <p id="wle" class="wle" role="alert"></p>
-      <button class="pr" data-a="welcomeSave">Guardar y continuar</button>
+      <button class="primary" data-a="welcomeSave">Guardar y continuar</button>
     </div>`;
 };
 const welcomeRender = () => {
   const r = welcomeRoot();
   r.innerHTML = welcome.step == 1 ? welcomeView() : bioFormView();
-  const b = r.querySelector('button.pr');
+  const b = r.querySelector('button.primary');
   if (b)
     b.focus({ preventScroll: true });
 };

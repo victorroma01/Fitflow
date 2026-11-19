@@ -39,7 +39,7 @@ export const equipDropdown = (k, cur, items, base, sh) => {
         </div>
         <div class="eqf">
           <button data-a="filterClearEquipment" data-k="${k}"${cur.length ? '' : ' disabled'}>Limpiar</button>
-          <button class="pr" data-a="filterToggleOpen" data-k="${k}">Listo</button>
+          <button class="primary" data-a="filterToggleOpen" data-k="${k}">Listo</button>
         </div>
       </div>
     </div>`;
@@ -129,7 +129,7 @@ export const groupDropdown = (k, cur, list) => {
         ${icon('chev', 16)}
       </button>
       <div class="eqp"${open ? '' : ' hidden'}>
-        <div class="eqg gr">
+        <div class="eqg groups">
           ${gs.map(x => html`
             <button class="eqi${cur.includes(x) ? ' on' : ''}" data-a="filterToggleGroup" data-k="${k}" data-v="${x}">
               <i>${cur.includes(x) ? icon('chk', 14) : ''}</i>
@@ -139,7 +139,7 @@ export const groupDropdown = (k, cur, list) => {
         </div>
         <div class="eqf">
           <button data-a="filterClearGroups" data-k="${k}"${cur.length ? '' : ' disabled'}>Limpiar</button>
-          <button class="pr" data-a="filterToggleOpen" data-k="${k}">Listo</button>
+          <button class="primary" data-a="filterToggleOpen" data-k="${k}">Listo</button>
         </div>
       </div>
     </div>`;

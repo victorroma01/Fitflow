@@ -291,14 +291,14 @@ A.backupDownload = async () => {
 };
 /* el archivo en el móvil: siempre con el mismo nombre; guardar o importar */
 const backupFileCard = () => html`
-  <div class="cd cbk">
+  <div class="card cbk">
     <b>Archivo en el móvil</b>
-    <p class="mu">
+    <p class="muted">
       Siempre con el mismo nombre, ${BACKUP_FILE}: cada archivo nuevo sustituye al anterior y no se acumulan copias en el teléfono.
     </p>
-    <p class="mu fs-12 m-0-0-10">${raw(backupAge())}</p>
-    <div class="g2">
-      <button class="pr" data-a="backupDownload">Guardar archivo</button>
+    <p class="muted fs-12 m-0-0-10">${raw(backupAge())}</p>
+    <div class="grid-2">
+      <button class="primary" data-a="backupDownload">Guardar archivo</button>
       <label class="btnl">
         Importar archivo
         <input type="file" accept=".json,application/json,text/plain" hidden data-c="backupImportFile">
@@ -307,25 +307,25 @@ const backupFileCard = () => html`
   </div>`;
 /* lo que entra en una copia, contado con los datos de ahora (con las claves guardadas, como en la copia) */
 const backupContents = () => html`
-  <details class="cd mt-12">
+  <details class="card mt-12">
     <summary>Qué incluye la copia</summary>
-    <div class="mu fs-13 mt-8 d-grid gap-6">${backupRows(stateToStored(S), wipSession()).map(x => html`<div>· ${x}</div>`)}</div>
+    <div class="muted fs-13 mt-8 d-grid gap-6">${backupRows(stateToStored(S), wipSession()).map(x => html`<div>· ${x}</div>`)}</div>
   </details>`;
 /* la copia como texto: copiarla o pegar una para restaurarla */
 const backupText = () => html`
-  <details class="cd mt-12">
+  <details class="card mt-12">
     <summary>Copiar o pegar como texto</summary>
     <textarea id="bk" aria-label="Copia de seguridad en texto" rows="5" class="mt-8">${buildBackup()}</textarea>
-    <div class="g2 mt-10">
+    <div class="grid-2 mt-10">
       <button data-a="backupCopyText">Copiar</button>
-      <button class="pr" data-a="backupRestoreText">Restaurar</button>
+      <button class="primary" data-a="backupRestoreText">Restaurar</button>
     </div>
   </details>`;
 /* las copias automáticas de cada día (system/snapshots las rellena al abrir) */
 const backupSnapshots = () => html`
-  <details class="cd mt-12">
+  <details class="card mt-12">
     <summary>Copias automáticas en este móvil</summary>
-    <div id="snapl"><p class="mu fs-13 m-8-0-0">Cargando…</p></div>
+    <div id="snapl"><p class="muted fs-13 m-8-0-0">Cargando…</p></div>
   </details>`;
 A.openBackup = () => {
   const pre = preRestore();
@@ -336,7 +336,7 @@ A.openBackup = () => {
     <button data-a="backupUndoAsk" class="w-full mt-12">Deshacer última restauración (${backupDate(pre.t)})</button>` : '';
   sheet(html`
     ${head}
-    <p class="mu m-0-0-12">
+    <p class="muted m-0-0-12">
       Tus datos se guardan en este móvil y se sincronizan con tu cuenta. La copia de seguridad es una foto de tus datos en un momento, para volver a ella si algo se borra o se estropea.
     </p>
     ${raw(cloudBackupCard())}
@@ -353,7 +353,7 @@ A.backupReminderOff = () => {
   saveState();
   R();
 };
-export const restoreBanner = () => '<div class="cd m-0-0-12"><b>¿Ya usabas StrataFit?</b><div class="mu fs-13 m-4-0-10">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="g2"><button class="pr" data-a="openBackup">Importar copia</button><button data-a="backupReminderOff">Ahora no</button></div></div>';
+export const restoreBanner = () => '<div class="card m-0-0-12"><b>¿Ya usabas StrataFit?</b><div class="muted fs-13 m-4-0-10">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="grid-2"><button class="primary" data-a="openBackup">Importar copia</button><button data-a="backupReminderOff">Ahora no</button></div></div>';
 function backupRowsFull(s) {
   const L = (Array.isArray(s.logs) ? s.logs : []).filter(l => l && typeof l == 'object');
   const cd = L.filter(l => l.k == 'c').length;

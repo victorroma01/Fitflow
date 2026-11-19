@@ -71,12 +71,15 @@ export const iconNoticeBody = withButtons => {
       <b>Ábrela desde el icono nuevo y entra con tu usuario.</b> Los ajustes que son solo de este móvil, como el globo del icono, se eligen otra vez.
     </li>`;
   const buttons = withButtons ? html`
-    <div class="g2"><button data-a="iconNoticeLater">Más tarde</button><button class="pr" data-a="iconNoticeDone">Entendido</button></div>` : '';
+    <div class="grid-2">
+      <button data-a="iconNoticeLater">Más tarde</button>
+      <button class="primary" data-a="iconNoticeDone">Entendido</button>
+    </div>` : '';
   return html`
     <div class="icnw">
       <img class="brl icn" src="${BRAND_LOGOS.claro}" alt="El icono nuevo de StrataFit">
       ${withButtons ? html`<h3>El icono nuevo de StrataFit</h3>` : ''}
-      <p class="mu">
+      <p class="muted">
         StrataFit tiene un logo nuevo, pero el iPhone no cambia el icono de una app que ya estaba en la pantalla de inicio. Para verlo hay que volver a añadirla. Tus datos están en la nube y vuelven al entrar.
       </p>
       <ol class="icns">${syncStep}${removeStep}${addStep}${openStep}</ol>

@@ -77,7 +77,7 @@ const howSheet = (n, back) => {
     ${raw(back || '')}
     ${raw(top || html`<div class="hwa">${raw(exAnatomy(n, 132))}</div>`)}
     ${top ? howHead(n) : html`<h3 class="hwt">${n}</h3>`}
-    <div class="ph">Cómo se hace</div>
+    <div class="section-label">Cómo se hace</div>
     <p class="hwp">${exHow(n) || 'Es un ejercicio tuyo: muévete con control, en todo el recorrido que tu técnica permita.'}</p>
     ${raw(back || !exAll().some(e => e.n == n) ? '' : html`
       <button data-a="exerciseDetailByName" data-n="${n}" class="w-full mt-6">Ver la ficha del ejercicio</button>`)}`;

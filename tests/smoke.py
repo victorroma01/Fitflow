@@ -67,8 +67,8 @@ def main(path):
         pg.clock.run_for(300)
         check('empieza el entreno (W)', ev('!!W'))
         for _ in range(3):
-            if ev("!!document.querySelector('.ck:not(.on)')"):
-                ev("document.querySelector('.ck:not(.on)').click()")
+            if ev("!!document.querySelector('.check:not(.on)')"):
+                ev("document.querySelector('.check:not(.on)').click()")
                 pg.clock.run_for(200)
         check('se completan series', ev('W.sets.flat().filter(s=>s.ok).length') >= 1)
         # añadir un ejercicio desde la librería con el entreno en marcha (antes rompía la sesión)
@@ -80,7 +80,7 @@ def main(path):
         check('añadir ejercicio en pleno entreno añade sus series', ev('W.sets.length') == nx + 1 and ev('W.sets.length==S.plan[S.selectedDay].ex.length'))
         ev('sheet()')
         pg.clock.run_for(200)
-        check('la sesión se sigue pintando', ev("document.querySelectorAll('.xs').length") == nx + 1)
+        check('la sesión se sigue pintando', ev("document.querySelectorAll('.exercise').length") == nx + 1)
         ev('A.finishAsk()')
         pg.clock.run_for(200)
         check('diálogo de guardar', ev("!!document.querySelector('#dg .dgc')"))
@@ -155,7 +155,7 @@ def main(path):
           for (const th of ['dark', 'light']) for (const gm of [0, 1, 2, 3]) {
             A.themeChoose(0, {dataset: {v: th}}); S.glassLevel = gm; S.glassOn = gm ? 1 : 0; R();
             const b = getComputedStyle(document.body), a = getComputedStyle(document.body, '::before');
-            out.push([th, gm, document.documentElement.classList.contains('gl'), b.backgroundColor, b.backgroundImage, a.backgroundImage]); }
+            out.push([th, gm, document.documentElement.classList.contains('glass'), b.backgroundColor, b.backgroundImage, a.backgroundImage]); }
           [S.glassLevel, S.glassOn] = g; A.themeChoose(0, {dataset: {v: ''}}); return out; })()""")
         want = {'dark': 'rgb(0, 0, 0)', 'light': 'rgb(243, 243, 247)'}
         check('el fondo es liso, sin brillos de color: negro en oscuro y gris muy claro en claro, con Cristal (sus tres niveles) y sin él',

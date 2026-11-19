@@ -54,7 +54,7 @@
   margin:4px 0 6px;
   font-size:22px;
 }
-.wlb>p.mu {
+.wlb>p.muted {
   margin:0 0 6px;
   font-size:14px;
   line-height:1.45;
@@ -75,7 +75,7 @@
   font-weight:600;
   color:var(--erx);
 }
-.wlb>button.pr {
+.wlb>button.primary {
   width:100%;
   padding:15px;
   border-radius:16px;

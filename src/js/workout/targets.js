@@ -120,7 +120,7 @@ const weeklySets = pl => {
   return Object.entries(o).map(([g, n]) => /** @type {[string, number]} */ ([g, Math.round(n * f)])).sort((a, b) => b[1] - a[1]);
 };
 export const weeklySetsCard = pl => html`
-  <div class="cd m-8-0">
+  <div class="card m-8-0">
     <b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b>
     <div class="d-flex wrap gap-6 mt-8">
       ${weeklySets(pl).map(o => html`<span class="p-4-10 r-12 bg-gray-18 fs-12">${o[0]} · ${raw(o[1])}</span>`)}
@@ -167,8 +167,8 @@ export const targetLine = (e, i) => {
     ${thenDot(planLine(e))}
     ${together('RIR ' + rirOf(e))}`;
   return html`
-    <div class="mu">Objetivo: ${ob}</div>
-    ${p.length ? html`<div class="mu">${p.map(([head, pair], k) => html`${head}${together(pair, k < p.length - 1)}`)}</div>` : ''}
+    <div class="muted">Objetivo: ${ob}</div>
+    ${p.length ? html`<div class="muted">${p.map(([head, pair], k) => html`${head}${together(pair, k < p.length - 1)}`)}</div>` : ''}
     ${raw(warmupHtml(e, i))}`;
 };
 const RANGE_OPTIONS = ['3-5', '5-8', '6-10', '8-10', '8-12', '10-12', '10-15', '12-15', '15-20'];

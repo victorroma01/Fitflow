@@ -77,13 +77,13 @@ def main(path):
                 day = {str(i): [food() for _ in range(rnd.randint(0, 5))] for i in range(n_meals)}
                 ev("([d,m,n])=>{S.nutritionGoals.n=n;S.meals[d]=m;S.tab=1;saveState();R()}", [today, day, n_meals])
                 want = total([it for l in day.values() for it in l])
-                head = ev("document.querySelector('.cd.pos-sticky').innerText")
+                head = ev("document.querySelector('.card.pos-sticky').innerText")
                 kcal = int(head.split('\n')[-1].split(' / ')[0])
                 grams = [int(x.split(' / ')[0]) for x in head.split('\n') if ' g' in x and ' / ' in x]
-                cards = ev("[...document.querySelectorAll('#app .cd')].filter(c=>c.querySelector('.mlb')).map(c=>[...c.querySelectorAll('.mac b')].map(x=>parseInt(x.textContent)))")
+                cards = ev("[...document.querySelectorAll('#app .card')].filter(c=>c.querySelector('.mlb')).map(c=>[...c.querySelectorAll('.mac b')].map(x=>parseInt(x.textContent)))")
                 per = [[jsround(v) for v in total(day[str(i)])[1:]] for i in range(n_meals)]
                 ev('S.tab=2;R()')
-                dash = int(ev("[...document.querySelectorAll('#app .g2 .cd')].map(x=>x.innerText.split('\\n')[0])[3]"))
+                dash = int(ev("[...document.querySelectorAll('#app .grid-2 .card')].map(x=>x.innerText.split('\\n')[0])[3]"))
                 if kcal != jsround(want[0]) or grams != [jsround(v) for v in want[1:]] or cards != per or dash != kcal:
                     bad.append([n_meals, kcal, jsround(want[0]), grams, cards[:2], per[:2], dash])
         check('el total del día (kcal, hidratos, proteínas y grasas) es la suma de sus alimentos, en 30 días al azar', not bad, str(bad[:2]))
@@ -92,9 +92,9 @@ def main(path):
         txt = ev("document.querySelector('#app').innerText")
         check('con menos comidas al día, lo anotado en las que ya no están se sigue viendo y contando', '550 / ' in txt and 'Comida 5' in txt and 'Fuera de tus comidas del día' in txt, txt[:300])
         ev('S.tab=2;R()')
-        check('y el Dashboard dice lo mismo', ev("[...document.querySelectorAll('#app .g2 .cd')].map(x=>x.innerText.split('\\n')[0])[3]") == '550')
+        check('y el Dashboard dice lo mismo', ev("[...document.querySelectorAll('#app .grid-2 .card')].map(x=>x.innerText.split('\\n')[0])[3]") == '550')
         ev("([d])=>{S.nutritionGoals.k=0;S.meals[d]={};S.tab=1;R()}", [today])
-        check('sin objetivo ni comidas, la barra de kcal no se rompe', ev("document.querySelector('.cd.pos-sticky .bar.mt-8 i').style.width") == '0%')
+        check('sin objetivo ni comidas, la barra de kcal no se rompe', ev("document.querySelector('.card.pos-sticky .bar.mt-8 i').style.width") == '0%')
         ev("S.nutritionGoals.k=1942;saveState()")
 
         print('Nutrición: lo que se escribe')
@@ -194,7 +194,7 @@ def main(path):
         best = ev("(()=>{const out=[];for(const n of Object.keys(S.exerciseHistory)){let b=((S.records||{})[n]||{}).e||0;S.exerciseHistory[n].forEach(x=>x.s.forEach(q=>{if(!q[3]&&+q[1]>0&&+q[0]>=1&&+q[0]<=30)b=Math.max(b,q[1]*(1+q[0]/30))}));const r=bestOf(n);if(b>0)out.push([n,b,r&&r.e])}return out})()")
         check('el récord de cada ejercicio es su mejor 1RM estimado (Epley: peso × (1 + repeticiones / 30)), entre el guardado y las series de 1 a 30 repeticiones de su historial (sin los drop sets)', len(best) > 3 and all(abs(x[1] - x[2]) < 1e-6 for x in best), str([x for x in best if abs(x[1] - (x[2] or 0)) > 1e-6][:2]))
         ev("S.units='kg';S.logs=[{d:'2026-11-12',n:'A',v:1,s:1,m:1,q:7},{d:'2026-11-06',n:'B',v:1,s:1,m:1,q:7},{d:'2026-11-05',n:'C',v:1,s:1,m:1,q:7},{d:'2026-11-13',n:'D',v:1,s:1,m:1,q:7}];S.tab=2;R()")
-        check('«Últimos 7 días» cuenta hoy y los seis días de antes', ev("[...document.querySelectorAll('#app .g2 .cd')].map(x=>x.innerText.split('\\n')[0])[1]") == '2')
+        check('«Últimos 7 días» cuenta hoy y los seis días de antes', ev("[...document.querySelectorAll('#app .grid-2 .card')].map(x=>x.innerText.split('\\n')[0])[1]") == '2')
         c.close()
 
         print('Fechas')
@@ -203,9 +203,9 @@ def main(path):
             c, pg = device(when)
             ev = pg.evaluate
             ev('S.tab=1;R();A.nutritionDay(-1)')
-            a = ev("document.querySelector('.hd h1').textContent")
+            a = ev("document.querySelector('.page-head h1').textContent")
             ev('A.nutritionDay(2)')
-            z = ev("document.querySelector('.hd h1').textContent")
+            z = ev("document.querySelector('.page-head h1').textContent")
             ev('A.nutritionDay(-1);A.addWater(1)')
             w = ev("Object.keys(S.water).includes(dayKey(new Date()))")
             check('el %s a las %s: ayer es el %s y mañana el %s, y lo de hoy se anota en hoy' % (when.strftime('%d/%m/%Y'), when.strftime('%H:%M'), prev, nxt), a == prev and z == nxt and w, '%s %s %s' % (a, z, w))
@@ -223,10 +223,10 @@ def main(path):
         top = max(1942 * 1.25, 2300)
         check('las barras: altura según las kcal, en objetivo con el color de acento y el día que se ve, marcado', look == [['nwd ok', round(1950 / top * 100, 1)], ['nwd on', round(2300 / top * 100, 1)], ['nwd', 0], ['nwd on sel', round(492 / top * 100, 1)], ['nwd', 0], ['nwd', 0], ['nwd', 0]] and abs(float(ev("document.querySelector('.nwl i').style.bottom").rstrip('%')) - 1942 / top * 100) < .01, str(look))
         ev("document.querySelector('.nwd').click()")
-        check('al tocar un día, Nutrición pasa a ese día', ev("document.querySelector('.hd h1').textContent") == '9 nov' and '1950 / 1942 kcal' in ev("document.querySelector('.cd.pos-sticky').innerText") and ev("document.querySelector('.nwd.sel').getAttribute('aria-label')") == 'lunes 9: 1950 kcal, en objetivo' and ev("document.querySelector('.nwd.sel').getAttribute('aria-current')") == 'date')
+        check('al tocar un día, Nutrición pasa a ese día', ev("document.querySelector('.page-head h1').textContent") == '9 nov' and '1950 / 1942 kcal' in ev("document.querySelector('.card.pos-sticky').innerText") and ev("document.querySelector('.nwd.sel').getAttribute('aria-label')") == 'lunes 9: 1950 kcal, en objetivo' and ev("document.querySelector('.nwd.sel').getAttribute('aria-current')") == 'date')
         ev('A.nutritionDay(-1)')
         card = ev("document.querySelector('.nwk').innerText.replace(/\\n+/g,' | ')")
-        check('una semana pasada: su fecha, sus siete días y, sin comidas, lo dice', card.startswith('Semana del 2 nov | 0 de 7 días anotados') and 'Sin comidas anotadas' in card and ev("document.querySelector('.hd h1').textContent") == '8 nov', card)
+        check('una semana pasada: su fecha, sus siete días y, sin comidas, lo dice', card.startswith('Semana del 2 nov | 0 de 7 días anotados') and 'Sin comidas anotadas' in card and ev("document.querySelector('.page-head h1').textContent") == '8 nov', card)
         ev('A.nutritionDay(9)')
         card = ev("document.querySelector('.nwk').innerText.replace(/\\n+/g,' | ')")
         check('una semana que no ha llegado', card.startswith('Semana del 16 nov | Aún no ha llegado'), card)

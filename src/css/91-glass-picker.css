@@ -59,20 +59,20 @@
   inset:11px 12px;
   border-radius:9px;
 }
-.gpv.fl {
+.gpv.flat {
   background:var(--bg);
   border:1px solid var(--ln);
 }
-.gpv.fl::after {
+.gpv.flat::after {
   background:color-mix(in srgb,var(--tx) 9%,var(--cd));
   border:1px solid color-mix(in srgb,var(--tx) 22%,transparent);
 }
 /* sobre el fondo liso, como en la app (hasta la V1.0.32, con los brillos de color que llevaba detrás) */
-.gpv.gc {
+.gpv.crystal {
   background:var(--bg);
   border:1px solid var(--ln);
 }
-.gpv.gc::after {
+.gpv.crystal::after {
   border-radius:14px;
   background:linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,.08) 52%,rgba(255,255,255,.26));
   border:1px solid rgba(255,255,255,.45);

@@ -31,16 +31,16 @@ function profileHead() {
   const pic = html`${img ? html`<img src="${img}" alt="" class="w-full h-full of-cover d-block">` : ''}${img ? '' : icon('camera', 36)}`;
   /* sin consentimiento, la foto abre antes el aviso (A.photoConsentAsk); con él, el selector de fotos */
   const av = +p.pc > 0 ? html`
-    <label class="av cur-pointer fs-0" aria-label="Foto de perfil">
+    <label class="avatar cur-pointer fs-0" aria-label="Foto de perfil">
       ${raw(pic)}
       <input type="file" accept="image/*" data-c="photoFile" hidden id="avf">
     </label>
   ` : html`
-    <button class="av fs-0 p-0" data-a="photoConsentAsk" aria-label="Foto de perfil">${raw(pic)}</button>
+    <button class="avatar fs-0 p-0" data-a="photoConsentAsk" aria-label="Foto de perfil">${raw(pic)}</button>
     <input type="file" accept="image/*" data-c="photoFile" hidden id="avf">`;
   return html`
-    <div class="hd"><h1>Perfil</h1></div>
-    <div class="cd pfh">
+    <div class="page-head"><h1>Perfil</h1></div>
+    <div class="card pfh">
       ${raw(av)}
       <b class="pfn">${acctName()}</b>
       ${isAdmin() ? html`<small class="pfa">Administrador</small>` : ''}
@@ -99,7 +99,7 @@ function bioCard() {
     </p>
   ` : '<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>';
   return html`
-    <details class="cd">
+    <details class="card">
       ${pfSummary('bio', 'Datos biométricos', 'Edad, altura, peso, actividad y objetivo')}
       ${bioSex(bio)}
       ${raw(bioNumber(bio, 'Edad', 'age', 'años'))}
@@ -113,14 +113,14 @@ const planCard = () => {
   /* sin programa elegido (cuenta nueva; I-24) */
   if (S.noProgram)
     return html`
-      <details class="cd">
+      <details class="card">
         ${pfSummary('prog', 'Plan de entrenamiento', 'Aún sin programa')}
-        <p class="mu m-10-0-0 fs-14">Elige uno de los predefinidos o crea el tuyo.</p>
-        <button class="pr w-full mt-12" data-a="openPrograms">Seleccionar programa</button>
+        <p class="muted m-10-0-0 fs-14">Elige uno de los predefinidos o crea el tuyo.</p>
+        <button class="primary w-full mt-12" data-a="openPrograms">Seleccionar programa</button>
       </details>`;
   const nm = programName();
   return html`
-    <details class="cd">
+    <details class="card">
       ${pfSummary('prog', 'Plan de entrenamiento', nm + ' · ' + perWeekText(S.plan || []))}
       <div class="mt-10">${programRow(nm, levelsActive() ? levelTag(S.level) : '')}</div>
       <button data-a="openPrograms" class="w-full mt-12">Cambiar programa o nivel</button>
@@ -166,7 +166,10 @@ export function profileTab() {
     ${linkRow('bug', 'Fallos y sugerencias', reportsLine(), 'openMyReports')}
     ${isAdmin() ? linkRow('adm', 'Administración', 'Fallos y sugerencias, contraseñas temporales y cuentas', 'openAdmin') : ''}
     ${linkRow('gear', 'Ajustes', 'Cuenta, apariencia, unidades, sonido, copias y más', 'openSettings')}
-    <div class="brand" aria-label="${'StrataFit, versión ' + APPV}"><span class="bw">STRATAFIT</span><span class="bv">V${APPV}</span></div>`;
+    <div class="brand" aria-label="${'StrataFit, versión ' + APPV}">
+      <span class="brand-word">STRATAFIT</span>
+      <span class="brand-version">V${APPV}</span>
+    </div>`;
 }
 /* — manejadores de esta función (registros A / C / U) — */
 C.bioField = e => {
@@ -220,7 +223,7 @@ C.photoFile = e => {
   r.readAsDataURL(f);
 };
 /* consentimiento antes de la primera foto: se sube a la cuenta (cloud/sync, documento private/avatar) */
-A.photoConsentAsk = () => dialog('Foto de perfil', 'La foto se guarda en tu cuenta, en la nube (Firebase), para verla en tus otros móviles. Solo la ves tú y puedes quitarla cuando quieras.', [['Cancelar', 'doNothing', ''], ['Aceptar y elegir', 'photoConsentOk', 'pr']]);
+A.photoConsentAsk = () => dialog('Foto de perfil', 'La foto se guarda en tu cuenta, en la nube (Firebase), para verla en tus otros móviles. Solo la ves tú y puedes quitarla cuando quieras.', [['Cancelar', 'doNothing', ''], ['Aceptar y elegir', 'photoConsentOk', 'primary']]);
 A.photoConsentOk = () => {
   S.profile.pc = Date.now();
   saveState();

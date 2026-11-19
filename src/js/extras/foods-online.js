@@ -158,7 +158,7 @@ async function searchOnline(q, onRetry) {
   searchCache.set(key, { t: Date.now(), r: found });
   return found;
 }
-const searchNote = t => html`<p class="mu m-10-2">${t}</p>`;
+const searchNote = t => html`<p class="muted m-10-2">${t}</p>`;
 A.searchFoodOnline = async () => {
   const inp = $('#f2q') || document.querySelector('input[data-u="foodSearch"]');
   const q = ((inp && inp.value) || '').trim();
@@ -186,9 +186,9 @@ A.searchFoodOnline = async () => {
     if (onlineQuery == q)
       onlineFoods = r.list;
     show(r.list.length ? html`
-      <small class="mu d-block m-6-2">Valores por 100 g · datos de Open Food Facts (ODbL)</small>
+      <small class="muted d-block m-6-2">Valores por 100 g · datos de Open Food Facts (ODbL)</small>
       ${r.list.map((f, i) => html`
-        <div class="it cols-1fr-auto" data-a="onlineFoodPick" data-i="${i}" role="button" tabindex="0">
+        <div class="item cols-1fr-auto" data-a="onlineFoodPick" data-i="${i}" role="button" tabindex="0">
           <span>${f.n}${raw(nutriScoreBadge(f.ns))}</span>
           <small>${raw(f.b[0])} kcal</small>
         </div>`)}
@@ -423,14 +423,14 @@ A.openScanner = () => {
   sheet(html`
     <h3>Escanear código de barras</h3>
     <div class="f2sv"><video id="f2v" playsinline muted autoplay></video><div class="f2gd"></div></div>
-    <p id="f2sm" class="mu m-8-2 fs-13">Abriendo la cámara…</p>
+    <p id="f2sm" class="muted m-8-2 fs-13">Abriendo la cámara…</p>
     <label>O escribe el código (8 a 14 cifras)</label>
-    <div class="g2 cols-1fr-auto">
+    <div class="grid-2 cols-1fr-auto">
       <input id="f2ean" aria-label="Código de barras" data-enter="scannerLookupTyped" inputmode="numeric" maxlength="14"
           placeholder="Por ejemplo 8410000000000">
-      <button class="pr" data-a="scannerLookupTyped">Buscar</button>
+      <button class="primary" data-a="scannerLookupTyped">Buscar</button>
     </div>
-    <p class="mu fs-12 m-10-2">Solo se envía el número del código a Open Food Facts. La imagen de la cámara no sale del móvil.</p>
+    <p class="muted fs-12 m-10-2">Solo se envía el número del código a Open Food Facts. La imagen de la cámara no sale del móvil.</p>
     <button data-a="scannerClose" class="w-full">Cerrar</button>`);
   startScan();
 };

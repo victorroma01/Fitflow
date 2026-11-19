@@ -1,0 +1,61 @@
+# Clases CSS renombradas en la V1.0.32: K nombre-viejo nombre-nuevo. Ver docs/tecnica/nombres.md.
+# Lo usa tools/classes.js para renombrarlas en src/css, src/js, tests y docs, y tests/walk.py, tests/shots.py y tests/samehtml.py
+# (bash tests/compare.sh antes.html despues.html 0,1,2,3 150 tests/clases-1.0.32.txt) para comparar una compilación anterior con
+# una nueva: las clases de la anterior se traducen antes de comparar.
+# «K dn@xs done»: «dn» tenía dos sentidos; en un elemento que lleva también «xs» (un ejercicio con todas sus series hechas) pasa
+# a «done», y en el resto, a «down». tools/classes.js no aplica estas líneas: ese cambio se hizo a mano.
+# primer lote: las de dos letras
+K pr primary
+K cd card
+K hd page-head
+K wk week-nav
+K mu muted
+K dy day
+K st stats
+K g2 grid-2
+K g3 grid-3
+K ck check
+K bk backdrop
+K sp sheet
+K it item
+K av avatar
+K gg group-grid
+K mb wide-btn
+K th thumb
+K sb sticky-btn
+K xs exercise
+K xh exercise-head
+K fd folded
+K sl series-label
+K r2 set-row
+K rr rest-row
+K pb player-bar
+K vh visually-hidden
+K tg tag
+K mi menu-item
+K mx menu-close
+K ph section-label
+K mc muscle-chip
+K gr groups
+K dn down
+K dn@xs done
+K rs rest-day
+K td today
+K fu future
+K tq technique
+K ic icon-only
+K gl glass
+K cl clamp
+K nw unread
+K rm reduce-motion
+K hv hover
+K s2 seg-2
+K fl flat
+K gc crystal
+K pz paused
+K tz touch-target
+K hq help-btn
+K bw brand-word
+K bv brand-version
+K sr setting-row
+K md medal

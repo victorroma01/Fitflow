@@ -32,18 +32,18 @@ const repCard = d => {
         <b>${String(o.u || '—')}</b>
         <span class="rps ${o.st == 'a' ? 'ok' : o.st == 'v' ? 'seen' : 'wait'}">${st[1]}</span>
       </span>
-      <small class="mu">
+      <small class="muted">
         ${kd}
         ${o.a ? ' · ' + String(o.a) : ''} · ${repDate(o.ca)} · V${String(o.v || '')}
         ${o.rp ? ' · contestada' : ''}
       </small>
-      <span class="rptx${on ? '' : ' cl'}">${String(o.t || '')}</span>
+      <span class="rptx${on ? '' : ' clamp'}">${String(o.t || '')}</span>
     </button>`;
   if (!on)
-    return html`<div class="cd adr">${raw(head)}</div>`;
+    return html`<div class="card adr">${raw(head)}</div>`;
   const busy = repState.busy == d.id;
   return html`
-    <div class="cd adr on">
+    <div class="card adr on">
       ${raw(head)}
       ${o.dx ? html`<details><summary>Datos técnicos</summary><pre class="rpv">${String(o.dx)}</pre></details>` : ''}
       <label>Estado</label>
@@ -54,10 +54,10 @@ const repCard = d => {
       </div>
       <label for="adrt">Respuesta o solución</label>
       <textarea id="adrt" rows="4" maxlength="${REPORT_MAX}" placeholder="La verá el usuario en su Perfil">${String(o.rp || '')}</textarea>
-      <button class="pr w-full mt-8" data-a="reportsReply" data-v="${d.id}"${busy ? ' disabled' : ''}>
+      <button class="primary w-full mt-8" data-a="reportsReply" data-v="${d.id}"${busy ? ' disabled' : ''}>
         ${o.rp ? 'Cambiar la respuesta' : 'Enviar respuesta'}
       </button>
-      ${o.ra ? html`<small class="mu d-block mt-6">Contestada el ${repDate(o.ra)}</small>` : ''}
+      ${o.ra ? html`<small class="muted d-block mt-6">Contestada el ${repDate(o.ra)}</small>` : ''}
     </div>`;
 };
 const reportsAdminView = () => {
@@ -77,7 +77,7 @@ const reportsAdminView = () => {
         <button class="${s.f == x[0] ? 'on' : ''}" data-a="reportsFilter" data-v="${x[0] || 'all'}" role="tab"
             aria-selected="${s.f == x[0] ? 'true' : 'false'}">${x[1]} (${x[2]})</button>`)}
     </div>
-    ${raw(L.length ? L.map(repCard).join('') : '<p class="mu m-14-2">No hay ninguno.</p>')}`;
+    ${raw(L.length ? L.map(repCard).join('') : '<p class="muted m-14-2">No hay ninguno.</p>')}`;
 };
 const loadReports = async () => {
   try {

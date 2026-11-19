@@ -41,10 +41,10 @@ const sessionHeader = (day, current, done, total) => {
   const elapsed = roundInt(elapsedMs(W.startedAt, W.pausedAt, Date.now()) / 1000);
   return html`
     <div class="wsk">
-      <div class="hd">
+      <div class="page-head">
         <b class="fs-22" id="tm">${raw(fmtDuration(elapsed))}</b>
         <span>Serie ${Math.min(done + 1, total)}/${total}</span>
-        <span class="mu minw-60 ta-r">${W.pausedAt ? 'En pausa' : restPill()}</span>
+        <span class="muted minw-60 ta-r">${W.pausedAt ? 'En pausa' : restPill()}</span>
       </div>
       <div class="bar h-5 m-10-0"><i class="bg-a2" data-style="width:${done / total * 100}%"></i></div>
       ${raw(nextUpBar(day, current))}
@@ -60,20 +60,20 @@ const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
         aria-label="${'Peso' + (set.ws && !set.ok ? ' sugerido' : '') + ', ' + name}">`;
   const rest = restAfterSet(exIndex, setIndex);
   return html`
-    <div class="r2${isCurrent ? ' cur' : ''}">
+    <div class="set-row${isCurrent ? ' cur' : ''}">
       <span>${raw(setNo(W.sets[exIndex], setIndex))}</span>
       ${raw(setLabelButton(set))}
       <input type="number" inputmode="decimal" data-c="setReps" data-i="${exIndex}" data-j="${setIndex}"
           value="${set.r}"${raw(W.deload && !set.ok ? ' class="dlv"' : '')} aria-label="${unitName(exercise) + ', ' + name}">
-      ${raw(!usesWeight(exercise) ? '<span class="mu ta-c">–</span>' : weightInput)}
+      ${raw(!usesWeight(exercise) ? '<span class="muted ta-c">–</span>' : weightInput)}
       <span class="fs-13">${raw(rest ? fmtMinSec(rest) : '–')}</span>
-      <button class="ck ${set.ok ? 'on' : ''}" data-a="toggleSetDone" data-i="${exIndex}" data-j="${setIndex}"
+      <button class="check ${set.ok ? 'on' : ''}" data-a="toggleSetDone" data-i="${exIndex}" data-j="${setIndex}"
           aria-label="${'Hecha, ' + name}" aria-pressed="${set.ok ? 'true' : 'false'}">✓</button>
     </div>`;
 };
 /* el descanso en marcha, bajo la serie que lo lanzó: −15 s, la cuenta atrás con «Saltar» y +15 s */
 const restRunning = (exIndex, setIndex) => W.restEndsAt && W.restAfter && W.restAfter[0] == exIndex && W.restAfter[1] == setIndex ? html`
-  <div class="rr">
+  <div class="rest-row">
     <button data-a="adjustRest" data-i="-15">−15s</button>
     <span>
       Descanso<br>
@@ -86,18 +86,18 @@ const restRunning = (exIndex, setIndex) => W.restEndsAt && W.restAfter && W.rest
 const doneBefore = exIndex => {
   const names = [...new Set(W.sets[exIndex].filter(s => s.ok && s.n).map(s => s.n))];
   return names.length ? html`
-    <div class="mu fs-12">Las series ya hechas se guardan en ${names.map(n => '«' + n + '»').join(' y ')}</div>` : '';
+    <div class="muted fs-12">Las series ya hechas se guardan en ${names.map(n => '«' + n + '»').join(' y ')}</div>` : '';
 };
 /* la cabecera de un ejercicio: foto o figura, nombre, objetivo, la última vez y, si se cambió con Swap, desde cuál */
 const exerciseHead = (exercise, exIndex) => html`
-  <div class="xh">
+  <div class="exercise-head">
     ${exThumb(exercise.n, exIndex)}
     <div class="minw-0">
       <b class="fs-18">${exercise.n}</b>
       ${targetLine(exercise, exIndex)}
       ${lastTimeLine(exercise, exIndex)}
       ${exercise.o ? html`
-        <div class="mu fs-12">
+        <div class="muted fs-12">
           Cambiado desde: ${exercise.o} · <u data-a="swapUndo" data-i="${exIndex}" role="button" tabindex="0" class="cur-pointer">Deshacer</u>
         </div>` : ''}
       ${doneBefore(exIndex)}
@@ -110,7 +110,9 @@ const exerciseTools2 = (exercise, exIndex) => html`
     <button class="chip" data-a="exerciseHistory" data-i="${exIndex}">Historial</button>
     <button class="chip" data-a="openSwap" data-i="${exIndex}">${icon('swp', 15)} Swap</button>
     ${usesBarbell(exercise.n) ? html`
-      <button class="chip ic" data-a="openPlates" data-i="${exIndex}" aria-label="${'Discos, ' + exercise.n}">${icon('plate', 18)}</button>` : ''}
+      <button class="chip icon-only" data-a="openPlates" data-i="${exIndex}" aria-label="${'Discos, ' + exercise.n}">
+        ${icon('plate', 18)}
+      </button>` : ''}
   </div>`;
 /* un ejercicio del entreno: su bloque (superserie…), cabecera, herramientas, las series con su descanso y RPE, y ± serie.
    blockOf[i] = [bloque, si es el primero del bloque] */
@@ -121,7 +123,8 @@ const exerciseSection = (day, blocks, blockOf, exercise, exIndex, current) => {
     ${restRunning(exIndex, setIndex)}
     ${rpeRow(exIndex, setIndex, set)}`);
   return html`
-    <div class="xs${W.folded && W.folded[exIndex] ? ' fd' : ''}${sets.length && sets.every(s => s.ok) ? ' dn' : ''}" id="ex${exIndex}">
+    <div class="exercise${W.folded && W.folded[exIndex] ? ' folded' : ''}${sets.length && sets.every(s => s.ok) ? ' done' : ''}"
+        id="ex${exIndex}">
       ${blockOf[exIndex][1] ? blockHeader(blocks, blockOf[exIndex][0], current) : ''}
       ${blockBadge(day.ex, exIndex)}
       ${exerciseHead(exercise, exIndex)}
@@ -137,7 +140,7 @@ const exerciseSection = (day, blocks, blockOf, exercise, exIndex, current) => {
         <span>Log</span>
       </div>
       ${rows}
-      <div class="g2 mt-8">
+      <div class="grid-2 mt-8">
         <button data-a="removeSet" data-i="${exIndex}">− Serie</button>
         <button data-a="addSet" data-i="${exIndex}">+ Serie</button>
       </div>
@@ -145,11 +148,11 @@ const exerciseSection = (day, blocks, blockOf, exercise, exIndex, current) => {
 };
 /* al final, «Salir y descartar» y «Guardar entreno»; abajo, pegada al borde, la barra de serie anterior, pausa y siguiente */
 const sessionFooter = () => html`
-  <div class="g2 m-16-0-84">
+  <div class="grid-2 m-16-0-84">
     <button data-a="discardAsk" class="bg-xd4d4da c-x111 bd-0 p-15 r-16 fs-15">Salir y descartar</button>
     <button data-a="finishAsk" class="bg-xfff c-x111 bd-0 p-15 r-16 fs-16 fw-700">Guardar entreno</button>
   </div>
-  <div class="pb">
+  <div class="player-bar">
     <button data-a="previousSet" aria-label="Serie anterior">${icon('prv', 26)}</button>
     <button data-a="togglePause" aria-label="${W.pausedAt ? 'Reanudar' : 'Pausar'}">${icon(W.pausedAt ? 'ply' : 'pau', 30)}</button>
     <button data-a="goToNextSet" aria-label="Siguiente serie">${icon('nxt', 26)}</button>
@@ -185,19 +188,19 @@ A.exerciseHistory = i => {
   const bw = Math.max(0, ...all.map(s => +s[1] || 0));
   const rm = Math.max(0, ...all.map(liftScore));
   const best = bw && !unitOf(E) ? html`
-    <div class="g2">
-      <div class="cd"><small>Mejor peso</small><br><b class="fs-20">${toDisplayWeight(bw)} ${weightUnit()}</b></div>
-      <div class="cd">
+    <div class="grid-2">
+      <div class="card"><small>Mejor peso</small><br><b class="fs-20">${toDisplayWeight(bw)} ${weightUnit()}</b></div>
+      <div class="card">
         <small>1RM estimado</small><br>
         <b class="fs-20">${rm ? round1(toDisplayWeight(rm)) + ' ' + weightUnit() : '—'}</b>
       </div>
     </div>` : '';
   const chart = h.length > 1 && !unitOf(E) ? html`<div class="pgs">${raw(progressBody(n))}</div>` : '';
   const list = h.slice(0, 12).map(x => html`
-    <div class="it cols-1fr"><b>${raw(x.d)}</b><small>${raw(x.s.map(s => setText(E, s)).join(' · '))}</small></div>`).join('');
+    <div class="item cols-1fr"><b>${raw(x.d)}</b><small>${raw(x.s.map(s => setText(E, s)).join(' · '))}</small></div>`).join('');
   sheet(html`
     <h3>${n}</h3>
-    ${raw(h.length ? best + chart + list : '<p class="mu">Aún no hay registros de este ejercicio. Se guardan al pulsar «Guardar entreno».</p>')}`);
+    ${raw(h.length ? best + chart + list : '<p class="muted">Aún no hay registros de este ejercicio. Se guardan al pulsar «Guardar entreno».</p>')}`);
 };
 A.togglePause = () => {
   if (W.pausedAt) {
@@ -212,7 +215,7 @@ A.togglePause = () => {
   R();
 };
 const scrollToCurrent = () => {
-  const e = $('.r2.cur');
+  const e = $('.set-row.cur');
   e && e.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 const nextSet = () => {
@@ -323,14 +326,14 @@ const exThumb = (n, i) => {
   const s = exPicture(n, 64);
   /* al tocar la imagen, cómo se hace el ejercicio (F-14: library/howto) */
   const at = ' data-a="exerciseHowTo" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Cómo se hace: ' + X(n) + '"';
-  return html`<div class="th${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}</div>`;
+  return html`<div class="thumb${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}</div>`;
 };
 const restPill = () => W && W.restEndsAt ? html`
   <button class="wsr" data-a="scrollToRest" aria-label="Ir al descanso">
     Descanso <b id="rt2">${raw(fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000))))}</b>
   </button>` : '';
 A.scrollToRest = () => {
-  const r = document.querySelector('.rr');
+  const r = document.querySelector('.rest-row');
   if (r)
     r.scrollIntoView({ block: 'center', behavior: 'smooth' });
 };
@@ -473,12 +476,11 @@ const blockArrowLive = (L, n, cur) => {
 const setLabelButton = s => {
   const k = setTechnique(s);
   return html`
-    <button class="wk2${k != 'WRK' ? ' tq' : ''}" data-a="techniqueInfo" data-v="${k}" aria-label="${'Técnica: ' + TECHNIQUES[k][0]}">
-      ${setLabel(s)}
-    </button>`;
+    <button class="wk2${k != 'WRK' ? ' technique' : ''}" data-a="techniqueInfo" data-v="${k}"
+        aria-label="${'Técnica: ' + TECHNIQUES[k][0]}">${setLabel(s)}</button>`;
 };
 const blockHeader = (L, n, cur) => html`
-  <div class="sl">
+  <div class="series-label">
     SERIE ${raw(String.fromCharCode(65 + n))} <span class="arw${blockArrowLive(L, n, cur) ? ' live' : ''}" aria-hidden="true">
       <span>›</span>
       <span>›</span>
@@ -491,10 +493,10 @@ A.techniqueInfo = (i, b) => {
   const t = TECHNIQUES[b.dataset.v];
   /* tras el nombre, la etiqueta que se ha tocado (WKT en una serie de pirámide) */
   if (t)
-    dialog(html`${t[0]} <span class="mu">· ${(b.textContent || '').trim() || b.dataset.v}</span>`, html`
+    dialog(html`${t[0]} <span class="muted">· ${(b.textContent || '').trim() || b.dataset.v}</span>`, html`
       ${t[1]}
       ${raw(t[2] ? html`<br><br><b>En el entreno:</b> ${t[2]}` : '')}
-    `, [['Entendido', 'doNothing', 'pr']]);
+    `, [['Entendido', 'doNothing', 'primary']]);
 };
 A.addSet = i => {
   const a = W.sets[i];

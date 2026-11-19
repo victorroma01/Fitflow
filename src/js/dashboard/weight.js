@@ -19,12 +19,12 @@ const weekKey = s => {
 const bmiLabel = v => v < 18.5 ? 'Delgadez' : v < 25 ? 'Peso correcto' : v < 30 ? 'Sobrepeso moderado' : 'Sobrepeso extremo';
 /* registrar un peso: kg y fecha */
 const weightEntry = () => html`
-  <div class="cd">
-    <div class="g2">
+  <div class="card">
+    <div class="grid-2">
       <input id="wv" type="number" inputmode="decimal" min="30" max="300" step="0.1" placeholder="Peso (kg)" aria-label="Peso">
       <input id="wd" type="date" value="${dayKey(new Date)}" max="${dayKey(new Date)}" aria-label="Fecha">
     </div>
-    <button class="pr w-full mt-8" data-a="weightAdd">Registrar peso</button>
+    <button class="primary w-full mt-8" data-a="weightAdd">Registrar peso</button>
   </div>`;
 /* cómo se llama en el eje una semana (por su lunes), un mes o un año: «28 sept», «oct 2026», «2026» */
 const periodName = (k, range) => range == 2 ? k : range == 1 ? fmtDateShort(k + '-01', { month: 'short', year: 'numeric' }) : fmtDateShort(k);
@@ -51,9 +51,9 @@ const weightChart = (log, range) => {
         <text x="316" y="154" font-size="9" text-anchor="end" fill="var(--mu)">${periodName(periods[periods.length - 1], range)}</text>
       ` : html`<text x="160" y="154" font-size="9" text-anchor="middle" fill="var(--mu)">${periodName(periods[0], range)}</text>`}
     </svg>
-  ` : '<p class="mu">Registra tu peso para ver la gráfica.</p>';
+  ` : '<p class="muted">Registra tu peso para ver la gráfica.</p>';
   return html`
-    <div class="cd">
+    <div class="card">
       <div>
         ${['Semanas', 'Meses', 'Años'].map((x, i) => html`
           <button class="chip${range == i ? ' on' : ''}" data-a="weightRange" data-i="${i}">${raw(x)}</button>`)}
@@ -75,11 +75,11 @@ const weightSummary = log => {
         Peso saludable para tu altura (OMS): ${roundInt(18.5 * (height / 100) ** 2)}-${roundInt(24.9 * (height / 100) ** 2)} kg. El IMC puede sobrestimar el sobrepeso en personas con mucha masa muscular.
       </small>
     </p>
-  ` : '<p class="mu"><small>Añade tu altura en Perfil para clasificar tu peso según el IMC (OMS).</small></p>';
+  ` : '<p class="muted"><small>Añade tu altura en Perfil para clasificar tu peso según el IMC (OMS).</small></p>';
   return html`
-    <div class="cd">
+    <div class="card">
       <b>Actual: ${+current} kg</b>
-      <div class="g2 mt-8">
+      <div class="grid-2 mt-8">
         <div><small>Máx. ganado</small><br><b class="c-erx">+${Math.max(0, Math.max(...all) - first).toFixed(1)} kg</b></div>
         <div><small>Máx. perdido</small><br><b class="c-okx">−${Math.max(0, first - Math.min(...all)).toFixed(1)} kg</b></div>
       </div>
@@ -89,14 +89,14 @@ const weightSummary = log => {
 /* el historial de pesajes, del más reciente al más antiguo: al tocar uno se borra (uno mal anotado descuadra la gráfica, el
    IMC y los objetivos de kcal, y no había forma de quitarlo) */
 const weightHistory = log => html`
-  <details class="cd">
+  <details class="card">
     <summary>Historial (${log.length})</summary>
     ${log.slice().reverse().map(p => html`
-      <div class="it exr cur-pointer" data-a="weightDeleteAsk" data-v="${p.d}" role="button" tabindex="0">
+      <div class="item exr cur-pointer" data-a="weightDeleteAsk" data-v="${p.d}" role="button" tabindex="0">
         <span><b>${fmtDateShort(p.d, { day: 'numeric', month: 'long', year: 'numeric' })}</b></span>
         <b>${+p.w} kg</b>
       </div>`)}
-    <p class="mu fs-12 m-8-0-0">Toca un pesaje para borrarlo.</p>
+    <p class="muted fs-12 m-8-0-0">Toca un pesaje para borrarlo.</p>
   </details>`;
 /* los pesajes, del más antiguo al más reciente */
 const weightLogSorted = () => (S.weightLog || []).slice().sort((a, b) => a.d < b.d ? -1 : 1);
@@ -104,7 +104,7 @@ const weightLogSorted = () => (S.weightLog || []).slice().sort((a, b) => a.d < b
 export function weightPage() {
   const log = weightLogSorted();
   return html`
-    <div class="hd"><button data-a="weightBack">‹ Atrás</button><h1>Evolución del peso</h1></div>
+    <div class="page-head"><button data-a="weightBack">‹ Atrás</button><h1>Evolución del peso</h1></div>
     ${weightEntry()}
     ${raw(reminderCard())}
     ${weightChart(log, S.weightRange || 0)}

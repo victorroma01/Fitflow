@@ -53,17 +53,17 @@ export const templateCard = k => {
   if (has)
     kc = roundInt(dayTotals(tp)[0]);
   return html`
-    <details class="cd">
+    <details class="card">
       <summary>Plantillas · día de ${raw(nm)}</summary>
-      <p class="mu tpw">${why}</p>
-      <div class="g2 mt-10">
+      <p class="muted tpw">${why}</p>
+      <div class="grid-2 mt-10">
         <div class="hqw"><button data-a="templateApply">Aplicar plantilla</button>${helpDot('tpa', 'Qué hace «Aplicar plantilla»')}</div>
         <div class="hqw">
           <button data-a="templateSave">Guardar día como plantilla</button>
           ${helpDot('tps', 'Qué hace «Guardar día como plantilla»')}
         </div>
       </div>
-      <small class="mu d-block mt-8">
+      <small class="muted d-block mt-8">
         ${raw(has ? 'Plantilla de ' + nm + ' guardada · ' + kc + ' kcal. Solo se rellenan las comidas vacías.' : 'Todavía no tienes plantilla de día de ' + nm + '. Rellena el día y pulsa Guardar.')}
       </small>
     </details>`;
@@ -131,7 +131,7 @@ export const habitsCard = m => {
   if (!l.length && !ys.length)
     return '';
   return html`
-    <div class="mu fs-12 m-2-0-6">Habituales · un toque los añade</div>
+    <div class="muted fs-12 m-2-0-6">Habituales · un toque los añade</div>
     <div class="hab">
       ${raw(ys.length ? '<button class="chip" data-a="copyYesterday">Repetir comida de ayer</button>' : '')}
       ${l.map(x => html`<button class="chip" data-a="frequentAdd" data-n="${x[0]}">${x[0]} · ${habitGrams(x[1])} g</button>`)}
@@ -171,7 +171,7 @@ A.saveDishAsk = (i, b) => {
   sheet(html`
     <h3>Guardar plato en la librería</h3>
     <input id="pn" maxlength="80" aria-label="Nombre del plato" value="${b.dataset.n}">
-    <button class="pr w-full mt-10" data-a="saveDish">Guardar</button>`);
+    <button class="primary w-full mt-10" data-a="saveDish">Guardar</button>`);
 };
 A.saveDish = () => {
   const k = dayKey(nutriDate());
@@ -193,7 +193,7 @@ A.libraryDishDelete = i => {
   toast('Plato «' + dish.n + '» borrado', () => {
     S.savedDishes.splice(i, 0, dish);
     saveState();
-    if ($('#sh .sp'))
+    if ($('#sh .sheet'))
       sheet(addSheet());
   });
 };

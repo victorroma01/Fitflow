@@ -76,8 +76,8 @@ export const offlineText = () => {
   return swState < 0 ? 'Uso sin conexión: no disponible en este entorno. Tus datos sí quedan guardados en el dispositivo, pero la app necesita internet para abrirse.' : on ? 'Uso sin conexión: activo. Si pierdes la cobertura, StrataFit se abre con la última versión que cargaste.' : 'Uso sin conexión: se prepara tras cargar la app una vez con conexión y volver a abrirla.';
 };
 export const offlineNote = () => html`
-  <small class="mu d-block mt-10">${offlineText()}</small>
-  ${raw(isStandalone() ? '' : '<small class="mu d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
+  <small class="muted d-block mt-10">${offlineText()}</small>
+  ${raw(isStandalone() ? '' : '<small class="muted d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
 export let updatesOn = FFDEP;
 let updateReady = 0;
 let updateCheckedAt = 0;
@@ -130,9 +130,9 @@ export const releaseNotePage = () => {
     <p class="ups">${s.title}</p>
     <ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
   return html`
-    <div class="cd rnp">
+    <div class="card rnp">
       <b class="rnv">Versión ${r.version || APPV}</b>
-      ${d ? html`<small class="mu">${d}</small>` : ''}
+      ${d ? html`<small class="muted">${d}</small>` : ''}
       ${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}
     </div>
     <div class="rnc"><button class="lnk" data-a="openSettings">Cerrar</button></div>`;

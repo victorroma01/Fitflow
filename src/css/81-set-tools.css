@@ -1,6 +1,6 @@
 /* ═══ css/81-set-tools ═══ Progresión, calentamiento, RPE, descarga, progreso y flechas animadas */
 /* v21 */
-.seg.s2 {
+.seg.seg-2 {
   grid-template-columns:repeat(2,1fr);
 }
 .wsn {
@@ -165,20 +165,20 @@
   margin:0;
 }
 /* v21.1: flechas animadas junto a la letra de la serie */
-.sl .arw {
+.series-label .arw {
   display:inline-flex;
 }
-.sl .arw>span {
+.series-label .arw>span {
   display:inline-block;
 }
-.sl .arw.live>span {
+.series-label .arw.live>span {
   color:var(--at);
   animation:arwF 1.4s ease-in-out infinite;
 }
-.sl .arw.live>span:nth-child(2) {
+.series-label .arw.live>span:nth-child(2) {
   animation-delay:.2s;
 }
-.sl .arw.live>span:nth-child(3) {
+.series-label .arw.live>span:nth-child(3) {
   animation-delay:.4s;
 }
 @keyframes arwF {
@@ -196,7 +196,7 @@
   }
 }
 @media(prefers-reduced-motion:reduce) {
-  .sl .arw.live>span {
+  .series-label .arw.live>span {
     animation:none;
   }
 }
@@ -263,7 +263,7 @@
   flex:1;
   color:var(--mu);
 }
-.rpxr .ck {
+.rpxr .check {
   display:grid;
   place-items:center;
   width:32px;
@@ -280,6 +280,6 @@
   font-size:12.5px;
   color:var(--mu);
 }
-.rpx .g2 {
+.rpx .grid-2 {
   margin-top:14px;
 }

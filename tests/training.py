@@ -268,7 +268,7 @@ def main(path):
         set_day([dict(press, s=3)], history={'Press banca': [{'d': '2026-11-05', 's': [[8, 60, 0, 0]]}]})
         start()
         toast = lambda: text('#tt')
-        click_done = lambda j: (ev("document.querySelector('.ck[data-i=\"0\"][data-j=\"%d\"]').click()" % j), run(200))
+        click_done = lambda j: (ev("document.querySelector('.check[data-i=\"0\"][data-j=\"%d\"]').click()" % j), run(200))
         ev("W.sets[0].forEach(s => { s.w = 70; s.r = 8; s.ws = 0; }); R()")
         click_done(0)
         first = toast()

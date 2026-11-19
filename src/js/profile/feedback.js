@@ -209,12 +209,12 @@ const alertCheck = (change, value, text, margin) => html`
 export const alertSettings = () => html`
   <label>Avisos de descanso</label>
   ${alertCheck('vibrationToggle', S.vibration, 'Vibración al terminar el descanso', 'm-6-0')}
-  ${raw(canVibrate() ? '' : '<small class="mu d-block m-n2-0-6">Este dispositivo no permite vibrar desde la web (iPhone). El aviso será por sonido.</small>')}
-  <small class="mu d-block">Volumen del aviso</small>
+  ${raw(canVibrate() ? '' : '<small class="muted d-block m-n2-0-6">Este dispositivo no permite vibrar desde la web (iPhone). El aviso será por sonido.</small>')}
+  <small class="muted d-block">Volumen del aviso</small>
   ${segmented('soundChooseVolume', S.volume == null ? 1 : S.volume, [[0, 'Bajo'], [1, 'Medio'], [2, 'Alto']])}
-  <small class="mu d-block mt-8">Sonido</small>
+  <small class="muted d-block mt-8">Sonido</small>
   ${segmented('soundChooseTone', S.soundTone || 0, [[0, 'Clásico'], [1, 'Suave'], [2, 'Alarma']])}
-  <small class="mu d-block mt-4">Si no oyes nada, comprueba el interruptor de silencio del móvil.</small>
+  <small class="muted d-block mt-4">Si no oyes nada, comprueba el interruptor de silencio del móvil.</small>
   ${alertCheck('autoRestToggle', S.autoRest, 'Iniciar el descanso al marcar una serie', 'm-10-0-6')}
   ${alertCheck('keepAwakeToggle', S.keepAwake, 'Mantener la pantalla encendida en el entreno', 'm-6-0')}`;
 /* — manejadores de esta función (registros A / C / U) — */

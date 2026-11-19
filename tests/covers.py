@@ -34,7 +34,7 @@ ALIAS_F = {'competencia': 'trineo'}
 # las que no llevan a nadie: las mismas para todos
 NEUTRAL = ['crossfit', 'hyrox', 'cardio', 'core', 'funcional']
 # al medir el contraste, todo escondido menos la tarjeta del día (con el CSSOM: la política de seguridad no deja <style>)
-ONLY_HERO = 'body *{visibility:hidden!important}.cd.hero,.cd.hero *{visibility:visible!important}'
+ONLY_HERO = 'body *{visibility:hidden!important}.card.hero,.card.hero *{visibility:visible!important}'
 
 
 def check(name, cond, info=''):
@@ -113,14 +113,14 @@ def main(path):
         # lo que se ve: la tarjeta del día lleva la foto de la modelo
         use(ev, 1, 'F')
         ev("S.selectedWeekday=3;syncSel();R()")
-        bg = ev("getComputedStyle(document.querySelector('.cd.hero')).backgroundImage")
+        bg = ev("getComputedStyle(document.querySelector('.card.hero')).backgroundImage")
         check('en la tarjeta del día (WOD CrossFit, mujer) se ve la foto de la modelo', F['thrusters'][-60:] in bg and M['thrusters'][-60:] not in bg)
         ev("S.selectedWeekday=2;syncSel();R()")
-        bg = ev("getComputedStyle(document.querySelector('.cd.hero')).backgroundImage")
+        bg = ev("getComputedStyle(document.querySelector('.card.hero')).backgroundImage")
         check('y el descanso de esa semana, el suyo (sentada en el cajón)', F['descanso2'][-60:] in bg)
         use(ev, 0, 'F')
         ev("S.selectedWeekday=2;syncSel();R()")
-        bg = ev("getComputedStyle(document.querySelector('.cd.hero')).backgroundImage")
+        bg = ev("getComputedStyle(document.querySelector('.card.hero')).backgroundImage")
         check('el de una semana de fuerza, el de siempre (por la calle)', F['descanso'][-60:] in bg)
 
         print('Workouts personalizados')

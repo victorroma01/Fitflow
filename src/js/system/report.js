@@ -71,18 +71,18 @@ const reportTextField = () => html`
   <textarea id="rpx" rows="6" maxlength="${REPORT_MAX}"
       placeholder="${reportKind == 's' ? 'Qué mejorarías y para qué te serviría' : 'Qué estabas haciendo, qué esperabas y qué ocurrió'}"
       data-u="reportText"></textarea>
-  <small id="rpn" class="mu d-block ta-r mt-4">0 / ${REPORT_MAX}</small>`;
+  <small id="rpn" class="muted d-block ta-r mt-4">0 / ${REPORT_MAX}</small>`;
 /* adjuntar los datos técnicos (en un fallo, marcado), con lo que se adjunta a la vista */
 const reportTechField = () => html`
   <label class="srk">
     <input type="checkbox" id="rpd"${reportKind == 's' ? '' : ' checked'}> Adjuntar datos técnicos (versión, navegador y últimos errores; nada personal)
   </label>
-  <details class="cd mt-6"><summary>Ver los datos técnicos</summary><pre class="rpv">${reportTech()}</pre></details>`;
+  <details class="card mt-6"><summary>Ver los datos técnicos</summary><pre class="rpv">${reportTech()}</pre></details>`;
 /* «Informar de un fallo» */
 const reportPage = () => html`
   <div id="rpp">
     ${pgHead('Informar de un fallo', reportBack)}
-    <p class="mu m-n6-0-14">
+    <p class="muted m-n6-0-14">
       Cuéntanos qué ha fallado o qué mejorarías. Te contestamos aquí: verás el estado y la respuesta en Perfil → Fallos y sugerencias.
     </p>
     ${reportKindChips()}
@@ -90,7 +90,7 @@ const reportPage = () => html`
     ${reportTextField()}
     ${reportTechField()}
     <div class="h-110"></div>
-    <div class="sb"><button class="pr w-full p-15 r-16 fs-16" data-a="reportSend">Enviar</button></div>
+    <div class="sticky-btn"><button class="primary w-full p-15 r-16 fs-16" data-a="reportSend">Enviar</button></div>
   </div>`;
 /** Estado de un aviso para quien lo envió: [texto, clase]. */
 const reportStatus = x => !x.s ? ['Sin enviar', 'off'] : x.rp ? ['Contestada', 'ok'] : x.st == 'v' || x.st == 'a' ? ['Vista', 'seen'] : ['Pendiente', 'wait'];
@@ -190,12 +190,12 @@ const reportListPage = () => {
     const [sl, sc] = reportStatus(x);
     const kd = (REPORT_KINDS.find(k => k[0] == x.k) || REPORT_KINDS[0])[1];
     return html`
-      <div class="cd rpi">
+      <div class="card rpi">
         <div class="row"><span class="rpkd">${kd}${x.a ? ' · ' + x.a : ''}</span><span class="rps ${sc}">${sl}</span></div>
-        <small class="mu">${fmtDateShort(dayKey(new Date(+x.ca)), { day: 'numeric', month: 'long', year: 'numeric' })}</small>
+        <small class="muted">${fmtDateShort(dayKey(new Date(+x.ca)), { day: 'numeric', month: 'long', year: 'numeric' })}</small>
         <p class="rptx">${x.t}</p>
         ${x.rp ? html`
-          <div class="rpr${x.sn ? '' : ' nw'}">
+          <div class="rpr${x.sn ? '' : ' unread'}">
             <b>Respuesta${x.ra ? ' · ' + fmtDateShort(dayKey(new Date(+x.ra))) : ''}</b>
             <p>${x.rp}</p>
           </div>` : ''}
@@ -204,9 +204,9 @@ const reportListPage = () => {
   return html`
     <div id="rpl">
       ${pgHead('Fallos y sugerencias')}
-      <p class="mu m-n6-0-12">Lo que nos has enviado, con su estado: pendiente, vista o contestada.</p>
-      <button class="pr w-full mb-12" data-a="reportNew">Nuevo aviso</button>
-      ${raw(items || '<p class="mu">Aún no has enviado ninguno.</p>')}
+      <p class="muted m-n6-0-12">Lo que nos has enviado, con su estado: pendiente, vista o contestada.</p>
+      <button class="primary w-full mb-12" data-a="reportNew">Nuevo aviso</button>
+      ${raw(items || '<p class="muted">Aún no has enviado ninguno.</p>')}
     </div>`;
 };
 /* con la lista abierta, se pinta de nuevo al llegar estados nuevos; las respuestas a la vista quedan vistas */

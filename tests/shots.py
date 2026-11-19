@@ -37,7 +37,7 @@ SCR={
  'logs':"A.openLogs()",
  'dlg':"confirmDialog('Prueba','Texto de prueba para el diálogo.','doNothing','Aceptar')",
  'go':"A.startWorkout()",
- 'go_rest':"A.startWorkout();document.querySelector('.ck:not(.on)').click()",
+ 'go_rest':"A.startWorkout();document.querySelector('.check:not(.on)').click()",
  'go_open':"A.startWorkout();A.openOverview&&0;document.querySelectorAll('details').forEach(d=>d.open=true)",
  'nuadd':"S.tab=1;R();A.openAddFood(0)",
  'wodcfg':"S.tab=0;R();A.openWod()",

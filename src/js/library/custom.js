@@ -77,8 +77,8 @@ const deleteExercise = (n, withHistory) => {
 };
 /** En la ficha de un ejercicio propio (`i`: su índice en la librería): «Renombrar» y «Eliminar». */
 export const customTools = i => html`
-  <h4 class="ph">Ejercicio propio</h4>
-  <div class="g2">
+  <h4 class="section-label">Ejercicio propio</h4>
+  <div class="grid-2">
     <button data-a="customRenamePage" data-i="${i}">Renombrar</button>
     <button data-a="customDeleteAsk" data-i="${i}" class="c-ctx">Eliminar</button>
   </div>`;
@@ -92,8 +92,10 @@ A.customRenamePage = i => {
     <h1 class="pgt">Renombrar ejercicio</h1>
     <label for="cxn">Nombre</label>
     <input id="cxn" maxlength="80" value="${e.n}" data-enter="customRename" data-i="${i}">
-    <p class="mu fs-13">Su historial, sus récords y sus notas pasan al nombre nuevo, igual que los días y los workouts en los que está.</p>
-    <button class="pr w-full mt-10" data-a="customRename" data-i="${i}">Guardar</button>`);
+    <p class="muted fs-13">
+      Su historial, sus récords y sus notas pasan al nombre nuevo, igual que los días y los workouts en los que está.
+    </p>
+    <button class="primary w-full mt-10" data-a="customRename" data-i="${i}">Guardar</button>`);
 };
 /* (desde el botón o con Intro en el campo: el índice va en el propio elemento) */
 A.customRename = (i, b) => {
@@ -129,7 +131,7 @@ A.customDeleteAsk = i => {
   if (uses.length) {
     dialog('Antes, quítalo de donde está', html`
       «${e.n}» está en ${uses.length > 1 ? uses.slice(0, -1).join(', ') + ' y ' + uses[uses.length - 1] : uses[0]}. Quítalo de ahí o cámbialo por otro y vuelve a eliminarlo.
-    `, [['Entendido', 'doNothing', 'pr']]);
+    `, [['Entendido', 'doNothing', 'primary']]);
     return;
   }
   deleting = e.n;
