@@ -105,6 +105,26 @@ test('el mapa crece por lotes: lo ya aplicado no se repite, y se niega si un nom
   assert.match(clash.stderr, /«card» \(para «keep»\) ya es una clase/);
 });
 
+test('--check: una clase que el código pone o busca y no está en el CSS es un error, con su archivo y su línea', () => {
+  const good = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS, 'src/js/a.js': lines(
+    "const a = html`<div class=\"cd${on ? ' on' : ''} keep\">${x}</div>`;",
+    "const b = document.querySelector('.row > .it');") });
+  const ok = good.run('--check');
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(ok.stdout, /^Clases correctas/);
+  assert.equal(good.read('src/js/a.js').split('\n')[1], "const b = document.querySelector('.row > .it');", '--check no cambia nada');
+  // tras renombrar el CSS, el código que sigue con los nombres viejos (una rama de antes, fusionada después) y una errata
+  const stale = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS.replace(/\.cd\b/g, '.card').replace(/\.it\b/g, '.item').replace(/\.gl\b/g, '.glass').replace(/\.ok\b/g, '.fine'), 'src/js/a.js': lines(
+    "const a = html`<div class=\"cd keep\">${x}</div>`;",
+    "const b = document.querySelector('.row > .it');",
+    "const c = html`<b class=\"kepe\"></b>`;") });
+  const bad = stale.run('--check');
+  assert.equal(bad.status, 1);
+  assert.match(bad.stderr, /src\/js\/a\.js:1: la clase «cd» no está en src\/css \(se renombró: mapa\.txt\)/);
+  assert.match(bad.stderr, /src\/js\/a\.js:2: la clase «it» no está en src\/css \(se renombró/);
+  assert.match(bad.stderr, /src\/js\/a\.js:3: la clase «kepe» no está en src\/css\n/);
+});
+
 test('--dry cuenta y no escribe', () => {
   const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS });
   const r = p.run('--dry');

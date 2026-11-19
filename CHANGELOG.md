@@ -134,7 +134,9 @@ línea.
   `tools/classes.js` las cambia a la vez en los estilos, el código y las pruebas, y solo donde el nombre es una clase. Lo que
   se ve no cambia: con el mapa `tests/clases-1.0.32.txt`, que traduce los nombres de la versión anterior, el HTML de las 106
   pantallas es el mismo, el paseo al azar no encuentra diferencias y las 282 capturas salen iguales, píxel a píxel. La app
-  pesa 4 KB más ([clases CSS](docs/tecnica/clases.md)).
+  pesa 4 KB más. Y una comprobación nueva en la batería (`tools/classes.js --check`): toda clase que el código pone o busca
+  tiene que estar en `src/css`, así que una mal escrita, o una renombrada que vuelva con su nombre viejo al fusionar una rama
+  anterior, ya no pasa sin que nadie lo vea ([clases CSS](docs/tecnica/clases.md)).
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

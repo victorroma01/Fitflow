@@ -26,7 +26,7 @@ python -m playwright install chromium webkit
 | `bash tests/compare.sh vieja.html nueva.html` | Compara el comportamiento y la imagen de dos compilaciones. |
 | `npx firebase emulators:exec --only auth,firestore --project demo-stratafit "node --test tests/rules.test.mjs"` | Prueba las reglas de Firestore con el emulador (necesita Java y `npm install --no-save firebase-tools@15`). |
 | `node tools/rename.js mapa.txt` | Renombra globales (líneas «viejo nuevo») entendiendo ámbitos. |
-| `node tools/classes.js mapa.txt` | Renombra clases CSS (líneas «K viejo nuevo») en los estilos, el código, las pruebas y la documentación: [Clases CSS](clases.md). |
+| `node tools/classes.js --check` | Comprueba que toda clase CSS que usa el código existe en `src/css`. Con un mapa (`node tools/classes.js mapa.txt`, líneas «K viejo nuevo»), renombra clases en los estilos, el código, las pruebas y la documentación: [Clases CSS](clases.md). |
 | `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. Con `--html`, las plantillas HTML cuentan sin sus saltos de línea. |
 | `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo si GitHub Pages volviera a publicar desde la rama). |
 
@@ -137,6 +137,9 @@ construye a trozos (`'an' + i`) no se ve como usada: se escriben enteras.
 
 Aparte, `tools/types.js` comprueba los tipos de todos los módulos con el comprobador de TypeScript: una clave de `S` que no
 existe, un valor de otro tipo, una función llamada con lo que no es ([Tipos comprobados](tipos.md)).
+
+Y `tools/classes.js --check` es la regla 12 al revés: toda clase que el código pone o busca tiene que estar en `src/css`. Avisa
+de una clase mal escrita y de una renombrada que vuelve con su nombre viejo ([Clases CSS](clases.md)).
 
 `tools/format.js` además rehace la línea «Define:» de la cabecera de cada módulo con lo que declara de verdad, y
 `tools/modindex.js` copia las cabeceras al [mapa de módulos](modulos.md). Con `--check`, una cabecera o un mapa desfasados fallan

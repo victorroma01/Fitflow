@@ -17,6 +17,16 @@ lotes: el primero, las 53 de dos letras.
 - Un nombre se escribe entero, no a trozos (`'an' + x`): así lo encuentran `tools/check.js`, que avisa de un estilo que ya no
   usa nadie, y `tools/classes.js`.
 
+## La comprobación
+
+`node tools/classes.js --check`, en la batería: toda clase que el código pone (`class="…"`, `classList`) o busca
+(`querySelector`, `closest`) tiene que estar en `src/css`. Avisa, con el archivo y la línea, de un nombre mal escrito y de un
+nombre viejo que vuelve, por ejemplo al fusionar una rama que se escribió antes de renombrarlo. En los dos casos el elemento se
+quedaría sin estilo, o el código sin encontrarlo, y nada más lo diría.
+
+Unas pocas clases no tienen estilo propio: el código las pone solo para encontrar el elemento (el recorrido, las pruebas). Están
+apuntadas en `HOOKS`, en la misma herramienta.
+
 ## Cómo se renombra una clase
 
 Una clase se llama igual en cuatro sitios: el selector del CSS, el HTML que pinta el código, lo que el código busca o cambia

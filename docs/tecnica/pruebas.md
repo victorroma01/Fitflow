@@ -16,6 +16,7 @@ antes de pintar y las guarda sin esperar (I-04), `page.goto` y `page.reload` esp
 | Prueba | Qué comprueba |
 | --- | --- |
 | `tools/format.js --check` y `tools/format_css.js --check` | Que el código y el CSS están formateados, que las [plantillas HTML](desarrollo.md#plantillas-html) largas están repartidas en líneas y que la línea «Define:» de cada módulo está al día. |
+| `tools/classes.js --check` | Que toda clase CSS que el código pone o busca existe en `src/css`: avisa de una mal escrita y de una renombrada que vuelve con su nombre viejo ([Clases CSS](clases.md)). |
 | `tools/modindex.js --check` | Que el [mapa de módulos](modulos.md) está al día. |
 | `tools/figure.js --check` | Que `data/figure.js` (el modelo de perfil de las [figuras](figuras.md)) está al día con los puntos del dibujo. |
 | `tools/check.js` | Sintaxis, importaciones, orden de carga, identificadores sin declarar, duplicados, acciones sin manejador, botones sin nombre, código muerto y CSS sin usar ([reglas](desarrollo.md#reglas-de-calidad)). |

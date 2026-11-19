@@ -19,7 +19,8 @@
      · QUEDA: el nombre viejo sigue escrito en un texto, fuera de los sitios de arriba. Casi siempre no es la clase (un
        texto, un valor), pero si lo es y no se cambia, ese elemento se queda sin estilo.
 
-   Uso:  node tools/classes.js mapa.txt [--dry]   (líneas «K viejo nuevo»; # comentarios; --dry: solo cuenta, no escribe)
+   Uso:  node tools/classes.js --check            (en la batería: toda clase que el código pone o busca está en src/css)
+         node tools/classes.js mapa.txt [--dry]   (líneas «K viejo nuevo»; # comentarios; --dry: solo cuenta, no escribe)
    El mapa crece con cada lote: solo se aplican las líneas cuyo nombre viejo sigue en el CSS. Se niega si un nombre nuevo ya
    es una clase, o si de una línea no existe ni el viejo ni el nuevo. Después: npm run format y la comparación con el
    mapa (bash tests/compare.sh antes.html despues.html 0,1,2,3 150 mapa.txt), que traduce las clases de la versión de antes. */
@@ -29,11 +30,11 @@ function loadTS() {
   console.error('No se encuentra el paquete "typescript"'); process.exit(2);
 }
 const ts = loadTS();
-const args = process.argv.slice(2), DRY = args.includes('--dry'), mapFile = args.find(a => !a.startsWith('--'));
+const args = process.argv.slice(2), DRY = args.includes('--dry'), CHECK = args.includes('--check'), mapFile = args.find(a => !a.startsWith('--'));
 // --root=carpeta: otro proyecto con src/css, src/js, tests y docs (lo usan las pruebas de esta herramienta)
 const ROOT = path.resolve((args.find(a => a.startsWith('--root=')) || '--root=' + path.join(__dirname, '..')).slice(7));
-if (!mapFile) { console.error('Uso: node tools/classes.js mapa.txt [--dry]'); process.exit(2); }
-const LINES = fs.readFileSync(mapFile, 'utf8').split('\n').map(l => l.replace(/#.*/, '').trim().split(/\s+/)).filter(p => p[0] === 'K' && p.length === 3 && !p[1].includes('@'));
+if (!mapFile && !CHECK) { console.error('Uso: node tools/classes.js mapa.txt [--dry] | --check'); process.exit(2); }
+const LINES = (mapFile ? fs.readFileSync(mapFile, 'utf8') : '').split('\n').map(l => l.replace(/#.*/, '').trim().split(/\s+/)).filter(p => p[0] === 'K' && p.length === 3 && !p[1].includes('@'));
 const ALL = new Set(LINES.map(p => p[1]));   // todos los nombres viejos del mapa, también los de lotes ya aplicados
 const MAP = new Map();                       // viejo → nuevo, de las líneas que quedan por aplicar
 const walk = (d, ok) => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name), ok) : ok(e.name) ? [path.join(d, e.name)] : []);
@@ -91,13 +92,16 @@ for (const sf of asts.values())
         if (ts.isIdentifier(d.name) && d.initializer) topConst.set(d.name.text, d);
 const edits = new Map(jsFiles.map(f => [f, new Map()]));   // archivo → (posición → [fin, texto])
 const visited = new Map(jsFiles.map(f => [f, []]));        // archivo → tramos ya mirados como clases
+const partial = new Set();                                 // «archivo:posición» de los nombres a trozos ('an' + x): no son una clase entera
 const isText = n => ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n);
 const fileOf = n => n.getSourceFile().fileName;
 const where = n => { const sf = n.getSourceFile(); return [rel(sf.fileName), sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1]; };
 // el texto de un literal, tal como está escrito, y dónde empieza
 const rawOf = n => { const sf = n.getSourceFile(), a = n.getStart(sf) + 1, b = n.end - (n.kind === ts.SyntaxKind.TemplateHead || n.kind === ts.SyntaxKind.TemplateMiddle ? 2 : 1); return [a, sf.text.slice(a, b)]; };
+const log = [];   // «archivo:posición» de cada nombre mirado, en orden
 function renameToken(file, a, b, tok) {
   visited.get(file).push([a, b]);
+  log.push(file + ':' + a);
   if (!MAP.has(tok)) return;
   if (!edits.get(file).has(a)) { edits.get(file).set(a, [b, MAP.get(tok)]); tally(tok, 'js'); }
 }
@@ -134,6 +138,7 @@ function classExpr(n) {
       for (const m of raw.matchAll(/\S+/g)) {
         const glued = (m.index === 0 && i > 0 && !r[i - 1].end) || (m.index + m[0].length === raw.length && i < r.length && !r[i].start);
         if (glued && MAP.has(m[0])) note('A TROZOS', ...where(l), m[0] + ' en ' + n.getText());
+        else if (glued) partial.add(fileOf(l) + ':' + (a + m.index));
         else renameToken(fileOf(l), a + m.index, a + m.index + m[0].length, m[0]);
       }
     });
@@ -242,7 +247,9 @@ function values(n, guard) {
 function scanSequence(pieces) {
   let inValue = false, delim = '';
   const info = new Map();
-  const exprInfo = k => { if (!info.has(k)) info.set(k, classExpr(pieces[k])); return info.get(k); };
+  const exprInfo = k => { if (!info.has(k)) { const from = log.length, r = classExpr(pieces[k]); info.set(k, { ...r, tokens: log.slice(from) }); } return info.get(k); };
+  // lo que sale de una expresión pegada a un nombre a medias ('an' + (x ? 'e' : 'o')) tampoco es una clase entera
+  const halves = k => { if (k >= 0 && k < pieces.length && info.has(k)) info.get(k).tokens.forEach(t => partial.add(t)); };
   pieces.forEach((p, k) => {
     const lit = isText(p) || p.kind === ts.SyntaxKind.TemplateHead || p.kind === ts.SyntaxKind.TemplateMiddle || p.kind === ts.SyntaxKind.TemplateTail;
     if (!lit) { if (inValue) exprInfo(k); return; }
@@ -263,7 +270,7 @@ function scanSequence(pieces) {
         const before = a === 0 && k > 0, after = b === raw.length && close < 0 && k + 1 < pieces.length;
         const glued = (before && !(isText(pieces[k - 1]) ? false : exprInfo(k - 1).end)) || (after && !(isText(pieces[k + 1]) ? false : exprInfo(k + 1).start));
         if (glued && MAP.has(m[0])) note('A TROZOS', rel(file), lineOf(p.getSourceFile().text, start + a), m[0] + ' en ' + raw.slice(Math.max(0, a - 30), b + 30));
-        else if (glued) visited.get(file).push([start + a, start + b]);
+        else if (glued) { visited.get(file).push([start + a, start + b]); partial.add(file + ':' + (start + a)); if (before) halves(k - 1); if (after) halves(k + 1); }
         else renameToken(file, start + a, start + b, m[0]);
       }
       if (close < 0) break;
@@ -331,6 +338,25 @@ if (MAP.size)
       }
       ts.forEachChild(n, visit);
     })(sf);
+
+/* ── --check: toda clase que el código pone o busca está en el CSS ─────────────────────────────────────────────────────
+   Avisa de un nombre mal escrito y de uno viejo que vuelve (al fusionar una rama de antes de renombrarlo): en los dos casos
+   el elemento se quedaría sin estilo, o el código sin encontrarlo, y nada más lo diría. */
+// clases sin estilo propio: el código las pone para encontrar el elemento (el recorrido, las pruebas)
+const HOOKS = ['exchips', 'news', 'nwk', 'pgc', 'pgm', 'trp', 'trs', 'update'];
+if (CHECK) {
+  let bad = 0;
+  for (const [f, ranges] of visited)
+    for (const [a, b] of ranges) {
+      const c = sources.get(f).slice(a, b);
+      if (!/^-?[_a-zA-Z][\w-]*$/.test(c) || cssClasses.has(c) || HOOKS.includes(c) || partial.has(f + ':' + a)) continue;
+      bad++;
+      console.error(`${rel(f)}:${lineOf(sources.get(f), a)}: la clase «${c}» no está en src/css${ALL.has(c) ? ' (se renombró: ' + path.relative(ROOT, path.resolve(mapFile)) + ')' : ''}`);
+    }
+  if (bad) { console.error(`\n${bad} clases que no existen: mal escritas, o renombradas (docs/tecnica/clases.md)`); process.exit(1); }
+  console.log(`Clases correctas: las ${new Set([...visited].flatMap(([f, r]) => r.map(([a, b]) => sources.get(f).slice(a, b)))).size} que usa el código están en src/css`);
+  process.exit(0);
+}
 
 /* ── pruebas y documentación: por texto ─────────────────────────────────────────────────────────────────────────────
    Un «.nombre» se toma por selector si el selector del que forma parte (button.pr, .cd.on, #sh .sp) empieza tras una comilla,
