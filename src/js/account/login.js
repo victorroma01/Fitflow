@@ -95,7 +95,7 @@ const loginField = (id, label, o) => html`
     <input id="${id}" autocomplete="${o.ac}" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="20" data-enter="${o.go}">`)}`;
 /* Entrar o Crear cuenta */
 const loginModeTabs = up => html`
-  <div class="seg seg-2" role="tablist" aria-label="Entrar o crear cuenta">
+  <div class="segmented seg-2" role="tablist" aria-label="Entrar o crear cuenta">
     <button class="${up ? '' : 'on'}" data-a="loginMode" data-v="in" role="tab" aria-selected="${up ? 'false' : 'true'}">Entrar</button>
     <button class="${up ? 'on' : ''}" data-a="loginMode" data-v="up" role="tab" aria-selected="${up ? 'true' : 'false'}">
       Crear cuenta

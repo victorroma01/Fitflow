@@ -42,10 +42,10 @@ const weekHeader = () => {
   const week = html`
     <div class="week-nav mt-12">
       <button data-a="changeWeek" data-i="-1" aria-label="Semana anterior" class="touch-target">‹</button>
-      <b${raw(deload ? ' class="wkdl"' : '')}>Semana ${raw(S.week)}${deload ? ' · descarga' : ''}</b>
+      <b${raw(deload ? ' class="deload-week"' : '')}>Semana ${raw(S.week)}${deload ? ' · descarga' : ''}</b>
       <button data-a="changeWeek" data-i="1" aria-label="Semana siguiente" class="touch-target">›</button>
     </div>`;
-  return html`${top}${week}<div class="dys">${[0, 1, 2, 3, 4, 5, 6].map(weekdayButton)}</div>`;
+  return html`${top}${week}<div class="days">${[0, 1, 2, 3, 4, 5, 6].map(weekdayButton)}</div>`;
 };
 /* un ejercicio del día al editar la semana: su bloque y su nombre; el descanso, el rango y «Unir al anterior»; las series, con
    − y +; y la ✕ que lo quita */
@@ -109,7 +109,7 @@ function workoutDayBase() {
 const TEMPOS = [['2/0/2/0', 'Estándar'], ['3/0/1/0', 'Excéntrico controlado'], ['3/0/3/0', 'Lento y controlado'], ['4/1/1/0', 'Excéntrico lento con pausa'], ['3/1/X/0', 'Pausa abajo y subida explosiva'], ['1/0/X/0', 'Explosivo'], ['2/2/2/0', 'Pausa en la contracción'], ['5/0/1/0', 'Excéntrico muy lento'], ['1/1/1/1', 'Pausa en ambos extremos'], ['Libre', 'Sin tempo fijo']];
 /** Desplegable corto (F-09): enseña solo su nombre («Tempo», «Descanso»), porque el valor ya está en el objetivo de arriba;
     al tocarlo se abre la lista de siempre (el select va encima, transparente). */
-const shortSelect = (l, sel) => html`<label class="psel"><span>${l}</span>${icon('chev', 14)}${raw(sel)}</label>`;
+const shortSelect = (l, sel) => html`<label class="chip-select"><span>${l}</span>${icon('chev', 14)}${raw(sel)}</label>`;
 /* el desplegable con el tempo de un ejercicio del día */
 const tempoSelect = (e, i) => {
   const t = tempoOf(e) || '2/0/2/0';
@@ -136,7 +136,7 @@ export function exToolsHtml(e, i) {
   const notes = notesOn ? html`
     <textarea rows="3" maxlength="2000" data-c="setExerciseNote" data-i="${i}" aria-label="${'Notas, ' + e.n}"
         placeholder="Anota lo que quieras sobre este ejercicio" class="mb-8">${S.exerciseNotes[e.n] || ''}</textarea>` : '';
-  return html`<div class="xtl">${tipButton}${notesButton}${tempo}${rest}</div>${tip}${notes}`;
+  return html`<div class="exercise-tools">${tipButton}${notesButton}${tempo}${rest}</div>${tip}${notes}`;
 }
 A.toggleExerciseTip = (i, b) => {
   const k = i + b.dataset.v;
@@ -235,7 +235,7 @@ const woExtra = () => linkRow('timer', 'Temporizador WOD', 'AMRAP, EMOM, Tabata 
    lectores de pantalla; delante, la tarjeta para elegir uno. Debajo, lo que se puede usar sin programa. */
 const noProgramView = () => {
   const demo = html`
-    <div class="dys">
+    <div class="days">
       ${[0, 1, 2, 3, 4, 5, 6].map(j => html`
         <button class="day${j ? '' : ' on'}" tabindex="-1">DÍA<br>${raw(j == 2 || j == 6 ? '☾' : j + 1)}</button>`)}
     </div>

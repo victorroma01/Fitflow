@@ -47,7 +47,7 @@ const repCard = d => {
       ${raw(head)}
       ${o.dx ? html`<details><summary>Datos técnicos</summary><pre class="rpv">${String(o.dx)}</pre></details>` : ''}
       <label>Estado</label>
-      <div class="seg" role="radiogroup" aria-label="Estado">
+      <div class="segmented" role="radiogroup" aria-label="Estado">
         ${ADMIN_STATES.map(x => html`
           <button class="${o.st == x[0] ? 'on' : ''}" data-a="reportsSetState" data-v="${d.id + ':' + x[0]}" role="radio"
               aria-checked="${o.st == x[0] ? 'true' : 'false'}"${busy ? ' disabled' : ''}>${x[1]}</button>`)}
@@ -72,7 +72,7 @@ const reportsAdminView = () => {
   const tabs = [['p', 'Pendientes', n.p], ['v', 'Vistas', n.v], ['a', 'Arregladas', n.a], ['', 'Todas', s.list.length]];
   return html`
     ${raw(head)}
-    <div class="seg adrf" role="tablist" aria-label="Filtrar por estado">
+    <div class="segmented adrf" role="tablist" aria-label="Filtrar por estado">
       ${tabs.map(x => html`
         <button class="${s.f == x[0] ? 'on' : ''}" data-a="reportsFilter" data-v="${x[0] || 'all'}" role="tab"
             aria-selected="${s.f == x[0] ? 'true' : 'false'}">${x[1]} (${x[2]})</button>`)}

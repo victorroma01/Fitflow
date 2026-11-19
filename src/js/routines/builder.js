@@ -22,8 +22,8 @@ export const routineExRows = () => {
   const bq = exAll().filter(e => !q || exSearchText(e).includes(q));
   const base = bq.filter(e => groupMatch(routineState.gs, e));
   return filterRow(groupDropdown('crg', routineState.gs, bq), equipDropdown('cr', routineState.eq, equipIn(base), base, 1)) + base.filter(e => equipMatch(routineState.eq, e)).sort(exCompare).slice(0, 100).map((e, row) => html`
-    <div class="item exr cur-pointer" data-a="routinePickExercise" data-n="${e.n}">
-      <span class="exc">${exCellHtml(e, row)}</span>
+    <div class="item item-split cur-pointer" data-a="routinePickExercise" data-n="${e.n}">
+      <span class="exercise-cell">${exCellHtml(e, row)}</span>
       <small class="muted">Añadir +</small>
     </div>
   `).join('') || '<p class="muted">Sin resultados.</p>';
@@ -33,7 +33,8 @@ const routineListPage = () => routineList();
 const routineBlock = (block, j) => {
   const letter = String.fromCharCode(65 + j);
   const kind = block.ex.length > 1 ? html`<b class="c-wnx">${raw(BLOCK_KINDS[block.ex.length])} · 10 s</b>` : '';
-  const exercises = block.ex.map(n => html`<div class="ovx"><div class="thumb">${exPicture(n, 64)}</div><b class="fx-1">${n}</b></div>`);
+  const exercises = block.ex.map(n => html`
+    <div class="exercise-row"><div class="thumb">${exPicture(n, 64)}</div><b class="fx-1">${n}</b></div>`);
   const sets = html`
     <span>
       <button data-a="routineBlockSets" data-i="${j}" data-v="-1" aria-label="${'Una serie menos, serie ' + letter}">−</button> ${raw(block.s)} series <button data-a="routineBlockSets"
@@ -140,7 +141,7 @@ const routineCard = (routine, i) => {
       <button data-a="routineListDeleteAsk" data-i="${i}" class="c-ctx">Borrar</button>
     </div>` : '';
   return html`
-    <div class="ovx ai-start p-16-0">
+    <div class="exercise-row ai-start p-16-0">
       <div data-a="routineEdit" data-i="${i}" aria-hidden="true" class="w-96 h-132 r-16 fx-none cur-pointer"
           data-style="background:url(${photoUrl(photo)}) center/cover"></div>
       <div class="fx-1 minw-0">

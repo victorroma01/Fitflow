@@ -80,16 +80,6 @@ input:focus,select:focus,textarea:focus {
   border-color:var(--ac);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--a2) 20%,transparent);
 }
-.r input {
-  text-align:center;
-  font-weight:700;
-  font-size:17px;
-}
-.r>span {
-  text-align:center;
-  color:var(--mu);
-  font-weight:700;
-}
 .check {
   color:var(--mu);
 }

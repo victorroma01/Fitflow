@@ -89,7 +89,7 @@ A.customRenamePage = i => {
     return;
   sheet(html`
     <div class="row"><button data-a="exerciseDetail" data-i="${i}" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div>
-    <h1 class="pgt">Renombrar ejercicio</h1>
+    <h1 class="page-title">Renombrar ejercicio</h1>
     <label for="cxn">Nombre</label>
     <input id="cxn" maxlength="80" value="${e.n}" data-enter="customRename" data-i="${i}">
     <p class="muted fs-13">

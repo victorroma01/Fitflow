@@ -18,7 +18,7 @@ from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from shots import SCR, SEED, EXTRA, INIT, old_names  # noqa: E402
+from shots import SCR, SEED, EXTRA, INIT, old_names, class_lines  # noqa: E402
 from browser import app_url, context_opts  # noqa: E402
 
 BODY = "(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('script,style').forEach(e=>e.remove());c.querySelectorAll('nav').forEach(n=>n.classList.remove('nbon'));return c.innerHTML})()"
@@ -97,9 +97,10 @@ MORE = {
 }
 
 
-def new_classes(html, path):
-    """El HTML con las clases CSS de después del mapa (registro K; «K dn@xs done»: «dn» pasa a «done» junto a «xs»)."""
-    k = dict(l.split()[1:] for l in open(path, encoding='utf-8') if l.startswith('K '))
+def new_classes(html, path, ref):
+    """El HTML con las clases CSS de después del mapa (registro K; «K dn@xs done»: «dn» pasa a «done» junto a «xs»). Solo las
+    que la compilación ref tiene aún con el nombre viejo."""
+    k = dict(class_lines(path, ref))
 
     def value(m):
         names = m.group(1).split()
@@ -108,7 +109,7 @@ def new_classes(html, path):
 
 
 def grab(path, screens, ren=None):
-    old = (lambda js: old_names(js, ren)) if ren else (lambda js: js)
+    old = (lambda js: old_names(js, ren, path)) if ren else (lambda js: js)
     out, url = {}, app_url(path)
     with sync_playwright() as p:
         b = p.chromium.launch()
@@ -131,7 +132,7 @@ def grab(path, screens, ren=None):
                 pg.wait_for_timeout(900 if k in ('edit', 'overview', 'go_open') else 300)
                 out[k] = ADDRESS.sub('(dirección)', NOISE.sub(r'\1: …', pg.evaluate(old(BODY))))
                 if ren:
-                    out[k] = new_classes(out[k], ren)
+                    out[k] = new_classes(out[k], ren, path)
             except Exception as e:
                 out[k] = 'EXC ' + str(e)[:200]
         out['(errores de JS)'] = str(errs)

@@ -21,7 +21,7 @@ button:focus-visible {
   animation:upi .32s cubic-bezier(.2,.8,.2,1);
 }
 /* la hoja, el aviso, el menú y el WOD reciben el foco al abrirse (core/ui, I-06): son ventanas, no controles, así que sin marco */
-.sheet:focus,.dgc:focus,.msd:focus,#f2w:focus {
+.sheet:focus,.dialog-box:focus,.menu-panel:focus,#f2w:focus {
   outline:none;
 }
 /* solo para los lectores de pantalla: el nombre de una hoja que no lleva título a la vista (I-06) */
@@ -86,26 +86,26 @@ details[open]>:not(summary) {
   animation:slr .32s cubic-bezier(.2,.8,.2,1);
 }
 /* la página a la que se vuelve, puesta debajo de la subpágina que se desliza con el dedo (core/ui showPageBelow) */
-#sh.full .sheet.spu {
+#sh.full .sheet.sheet-under {
   z-index:8;
   animation:none;
   pointer-events:none;
 }
 /* la página que sigue al dedo, con una sombra en su borde: se ve que va por encima de lo que deja a la vista */
-html.sliding #sh.full .sheet:not(.spu) {
+html.sliding #sh.full .sheet:not(.sheet-under) {
   box-shadow:-12px 0 32px rgba(0,0,0,.3);
 }
 /* esa página, y la misma ya de verdad al soltar el dedo (.still), salen tal cual: sin las animaciones de entrada */
-.sheet.spu *,.sheet.spu *::before,.sheet.spu *::after,.sheet.still,.sheet.still *,.sheet.still *::before,.sheet.still *::after {
+.sheet.sheet-under *,.sheet.sheet-under *::before,.sheet.sheet-under *::after,.sheet.still,.sheet.still *,.sheet.still *::before,.sheet.still *::after {
   animation:none!important;
 }
-.swg {
+.swatch-grid {
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:12px 8px;
   margin-top:8px;
 }
-.swb {
+.swatch {
   background:none;
   border:0;
   padding:0;
@@ -114,7 +114,7 @@ html.sliding #sh.full .sheet:not(.spu) {
   align-items:center;
   gap:6px;
 }
-.swb i {
+.swatch i {
   width:46px;
   height:46px;
   border-radius:50%;
@@ -124,15 +124,15 @@ html.sliding #sh.full .sheet:not(.spu) {
   font-weight:800;
   transition:transform .2s,box-shadow .2s;
 }
-.swb.on i {
+.swatch.on i {
   box-shadow:0 0 0 3px var(--cd),0 0 0 5px var(--tx);
   transform:scale(1.06);
 }
-.swb small {
+.swatch small {
   font-size:11px;
   color:var(--mu);
 }
-.seg {
+.segmented {
   display:grid;
   grid-template-columns:repeat(3,1fr);
   background:var(--ib);
@@ -142,13 +142,13 @@ html.sliding #sh.full .sheet:not(.spu) {
   gap:3px;
   margin-top:6px;
 }
-.seg button {
+.segmented button {
   border:0;
   background:none;
   padding:9px;
   border-radius:11px;
 }
-.seg button.on {
+.segmented button.on {
   background:var(--a2);
   color:var(--ft);
 }

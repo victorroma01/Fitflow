@@ -132,7 +132,7 @@ export const habitsCard = m => {
     return '';
   return html`
     <div class="muted fs-12 m-2-0-6">Habituales · un toque los añade</div>
-    <div class="hab">
+    <div class="quick-add">
       ${raw(ys.length ? '<button class="chip" data-a="copyYesterday">Repetir comida de ayer</button>' : '')}
       ${l.map(x => html`<button class="chip" data-a="frequentAdd" data-n="${x[0]}">${x[0]} · ${habitGrams(x[1])} g</button>`)}
     </div>`;

@@ -25,7 +25,7 @@ html.glass .sheet {
 html.glass .bar {
   border-radius:8px;
 }
-html.glass .cal i {
+html.glass .calendar i {
   border-radius:11px;
 }
 html.glass .card {
@@ -52,7 +52,7 @@ html.glass .thumb {
 html.glass .set-row {
   border-radius:17px;
 }
-html.glass .wk2 {
+html.glass .set-kind {
   border-radius:11px;
 }
 html.glass .rest-row {
@@ -61,34 +61,34 @@ html.glass .rest-row {
 html.glass .player-bar {
   border-radius:34px 34px 0 0;
 }
-html.glass .seg {
+html.glass .segmented {
   border-radius:20px;
 }
-html.glass .seg button {
+html.glass .segmented button {
   border-radius:15px;
 }
 html.glass .tag {
   border-radius:17px;
 }
-html.glass .dgc {
+html.glass .dialog-box {
   border-radius:30px;
 }
 html.glass .menu-item {
   border-radius:20px;
 }
-html.glass .eqb {
+html.glass .filter-btn {
   border-radius:20px;
 }
-html.glass .eqp {
+html.glass .filter-panel {
   border-radius:25px;
 }
-html.glass .eqi {
+html.glass .filter-option {
   border-radius:17px;
 }
-html.glass .eqi i {
+html.glass .filter-option i {
   border-radius:9px;
 }
-html.glass .eqf button {
+html.glass .filter-foot button {
   border-radius:17px;
 }
 html.glass .anf {
@@ -97,43 +97,43 @@ html.glass .anf {
 html.glass .anb {
   border-radius:22px;
 }
-html.glass .exth {
+html.glass .exercise-thumb {
   border-radius:17px;
 }
-html.glass .cpo {
+html.glass .create-option {
   border-radius:28px;
 }
-html.glass .cpi {
+html.glass .create-icon {
   border-radius:20px;
 }
-html.glass .cpw {
+html.glass .create-routine {
   border-radius:20px;
 }
-html.glass .cpw i {
+html.glass .create-routine i {
   border-radius:9px;
 }
-html.glass .cpm button {
+html.glass .create-move button {
   border-radius:14px;
 }
-html.glass .lvm {
+html.glass .level-menu {
   border-radius:28px;
 }
-html.glass .lvi {
+html.glass .level-option {
   border-radius:20px;
 }
-html.glass .lvs button {
+html.glass .level-tabs button {
   border-radius:20px;
 }
-html.glass .wsn {
+html.glass .session-now {
   border-radius:17px;
 }
-html.glass .sgb {
+html.glass .suggestion {
   border-radius:17px;
 }
 html.glass .rpe {
   border-radius:17px;
 }
-html.glass .btnl {
+html.glass .file-btn {
   border-radius:17px;
 }
 html.glass .r-16 {
@@ -151,7 +151,7 @@ html.glass nav {
 html.glass nav button {
   border-radius:26px;
 }
-html.glass .seg button {
+html.glass .segmented button {
   border-radius:15px;
 }
 html.glass .gso {

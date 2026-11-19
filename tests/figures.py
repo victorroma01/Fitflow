@@ -80,7 +80,7 @@ def main(path, shots=None):
             ev("A.exerciseHowTo(0,{dataset:{n:%r}})" % n)
             pg.clock.run_for(300)
             for _ in range(30):
-                if ev("!!document.querySelector('#sh .hwp')"):
+                if ev("!!document.querySelector('#sh .howto-text')"):
                     return
                 pg.wait_for_timeout(100)
 
@@ -147,7 +147,7 @@ def main(path, shots=None):
             if (/NaN|undefined/.test(st.innerHTML)) bad.push(e.n + ': fuera de sitio');
             else if (uses.some(h => !document.querySelector(h))) bad.push(e.n + ': usa ' + uses.find(h => !document.querySelector(h)));
             else if (!!st.querySelector('svg[data-fig]') == held) bad.push(e.n + (held ? ': se mantiene y se mueve' : ': no se mueve'));
-            else if (document.querySelector('#sh .hwt').textContent != e.n || document.querySelector('#sh .hwp').innerText.length < 80) bad.push(e.n + ': el nombre o el texto');
+            else if (document.querySelector('#sh .howto-title').textContent != e.n || document.querySelector('#sh .howto-text').innerText.length < 80) bad.push(e.n + ': el nombre o el texto');
             else if (document.querySelector('#sh img')) bad.push(e.n + ': lleva una foto');
             // de perfil, ninguna pieza del cuerpo ni del material se sale del recuadro (se cortaría en el borde); en
             // unidades del dibujo, con el margen de lo que una pieza girada abulta de más en su caja
@@ -167,20 +167,20 @@ def main(path, shots=None):
         for q, n in [('press banca', 'Press banca'), ('sentadilla', 'Sentadilla frontal'), ('jalón', 'Jalón al pecho'), ('elevaciones laterales', 'Elevaciones laterales'), ('burpee', 'Burpees')]:
             pg.fill('#sh input', q)
             pg.clock.run_for(500)
-            row = "[...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent==%r)" % n
+            row = "[...document.querySelectorAll('#sh .item-split')].find(r=>r.querySelector('b').textContent==%r)" % n
             check('lista: «%s» lleva su figura' % n, ev(IS_FIGURE + "(" + row + ")"))
         pg.fill('#sh input', 'mi ejercicio')
         pg.clock.run_for(500)
-        check('lista: un ejercicio propio sigue con sus músculos', ev("(r=>!!r && !" + IS_FIGURE + "(r) && !!r.querySelector('.exth svg'))([...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent=='Mi ejercicio'))"))
+        check('lista: un ejercicio propio sigue con sus músculos', ev("(r=>!!r && !" + IS_FIGURE + "(r) && !!r.querySelector('.exercise-thumb svg'))([...document.querySelectorAll('#sh .item-split')].find(r=>r.querySelector('b').textContent=='Mi ejercicio'))"))
         # las mancuernas: dos hexágonos (la de delante y la de atrás) y ninguna barra
         pg.fill('#sh input', 'curl con mancuernas')
         pg.clock.run_for(500)
-        check('lista: un ejercicio con mancuernas lleva mancuernas', ev("(g=>g.querySelectorAll('polygon').length == 3 && g.querySelectorAll('circle').length == 0)([...document.querySelectorAll('#sh .exr')].find(r=>r.querySelector('b').textContent=='Curl con mancuernas').querySelector('.exth svg'))"))
+        check('lista: un ejercicio con mancuernas lleva mancuernas', ev("(g=>g.querySelectorAll('polygon').length == 3 && g.querySelectorAll('circle').length == 0)([...document.querySelectorAll('#sh .item-split')].find(r=>r.querySelector('b').textContent=='Curl con mancuernas').querySelector('.exercise-thumb svg'))"))
         check('en las listas no queda ninguna insignia de foto', ev("!document.querySelector('.phi')"))
         shot('lista')
         # una lista larga no pinta de golpe todas sus figuras: las primeras filas la llevan y las demás esperan (un hueco del
         # mismo tamaño) a acercarse a lo que se ve o, pase lo que pase, a su tanda
-        ROWS = "[...document.querySelectorAll('#sh .exr')]"
+        ROWS = "[...document.querySelectorAll('#sh .item-split')]"
         SEEN = ROWS + ".filter(r => { const b = r.getBoundingClientRect(); return b.bottom > 0 && b.top < innerHeight; })"
         HOLES = "document.querySelectorAll('#sh svg[data-pic]').length"
         open_group = "A.openLibrary();[...document.querySelectorAll('#sh [data-a=libraryGroup]')].find(b => /Espalda/.test(b.textContent)).click()"
@@ -253,7 +253,7 @@ def main(path, shots=None):
         ev("document.querySelector('#sh .anb[data-a=exerciseHowTo]').click()")
         pg.clock.run_for(300)
         for _ in range(30):
-            if ev("!!document.querySelector('#sh .hwp')"):
+            if ev("!!document.querySelector('#sh .howto-text')"):
                 break
             pg.wait_for_timeout(100)
         check('ficha: al tocarla se abre la hoja, con la vuelta a la ficha', ev("!!document.querySelector('#sh svg[data-fig]') && !!document.querySelector('#sh [data-a=exerciseDetail]')"))
@@ -266,8 +266,8 @@ def main(path, shots=None):
             how(n)
             check('hoja de «%s»: la figura grande' % n, ev("!!document.querySelector('#sh .fgs svg[data-fig]') && " + IS_FIGURE + "(document.querySelector('#sh .fgs'))"))
             check('hoja de «%s»: los músculos en pequeño, de frente y de espaldas' % n, ev("document.querySelectorAll('#sh .hwm .hwf svg').length == 2"))
-            check('hoja de «%s»: el nombre y los músculos con su nombre' % n, ev("document.querySelector('#sh .hwm .hwt').textContent == %r && document.querySelectorAll('#sh .hwm .hwl').length >= 1 && /^Principal /.test(document.querySelector('#sh .hwl').textContent)" % n))
-            order = ev("""(() => { const y = s => document.querySelector('#sh ' + s).getBoundingClientRect(); const f = y('.fgs'), m = y('.hwf'), t = y('.hwm .hwt'), p = y('.hwp');
+            check('hoja de «%s»: el nombre y los músculos con su nombre' % n, ev("document.querySelector('#sh .hwm .howto-title').textContent == %r && document.querySelectorAll('#sh .hwm .hwl').length >= 1 && /^Principal /.test(document.querySelector('#sh .hwl').textContent)" % n))
+            order = ev("""(() => { const y = s => document.querySelector('#sh ' + s).getBoundingClientRect(); const f = y('.fgs'), m = y('.hwf'), t = y('.hwm .howto-title'), p = y('.howto-text');
               return [f.bottom <= m.top + 1, m.bottom <= p.top + 1, m.right <= t.left + 1, m.left - f.left < 2, f.width > 300 && f.height > 200, m.width < 110]; })()""")
             check('hoja de «%s»: figura arriba, músculos debajo a la izquierda, texto después' % n, all(order), str(order))
             fits = ev("(() => { const s = document.querySelector('#sh .sheet'); return s.scrollWidth <= s.clientWidth + 1; })()")
@@ -338,7 +338,7 @@ def main(path, shots=None):
         shot('hoja_quieta')
         # un ejercicio propio: sus músculos, como antes
         how('Mi ejercicio')
-        check('ejercicio propio: sus músculos, sin figura', ev("!!document.querySelector('#sh .hwa svg') && !document.querySelector('#sh .fgs') && document.querySelector('#sh .hwt').textContent == 'Mi ejercicio'"), str(ev("document.querySelector('#sh .sheet').innerHTML.slice(0,200)")))
+        check('ejercicio propio: sus músculos, sin figura', ev("!!document.querySelector('#sh .howto-anatomy svg') && !document.querySelector('#sh .fgs') && document.querySelector('#sh .howto-title').textContent == 'Mi ejercicio'"), str(ev("document.querySelector('#sh .sheet').innerHTML.slice(0,200)")))
         ev("A.closeSheet()")
         pg.clock.run_for(300)
         check('al cerrar la hoja no queda ninguna figura moviéndose', ev("!document.querySelector('svg[data-fig]')"))
@@ -419,7 +419,7 @@ def main(path, shots=None):
         pg.fill('#sh input', 'sentadilla')
         pg.clock.run_for(500)
         settled()
-        red, orange, _, _, _ = painted(capture(pg.locator('#sh .exr .exth').first))
+        red, orange, _, _, _ = painted(capture(pg.locator('#sh .item-split .exercise-thumb').first))
         print('        pintado: miniatura de la sentadilla %.4f %.4f' % (red, orange))
         check('miniatura de la sentadilla: los músculos en color', red > .01 and orange > .004, '%.4f %.4f' % (red, orange))
         ev("A.closeSheet()")
@@ -438,10 +438,10 @@ def main(path, shots=None):
         ev(sel + ".click()")
         pg.clock.run_for(300)
         for _ in range(30):
-            if ev("!!document.querySelector('#sh .hwp')"):
+            if ev("!!document.querySelector('#sh .howto-text')"):
                 break
             pg.wait_for_timeout(100)
-        check('entreno: al tocarla se abre la hoja con la figura grande y el texto', ev("!!document.querySelector('#sh .fgs svg') && document.querySelector('#sh .hwp').innerText.length > 80"))
+        check('entreno: al tocarla se abre la hoja con la figura grande y el texto', ev("!!document.querySelector('#sh .fgs svg') && document.querySelector('#sh .howto-text').innerText.length > 80"))
         ev("document.querySelector('#sh [data-a=exerciseDetailByName]').click()")
         pg.clock.run_for(400)
         for _ in range(30):

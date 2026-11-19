@@ -30,7 +30,7 @@ export function calendarPage() {
       <b>${fmtDate(d, MONTH_YEAR)}</b>
       <button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente" class="touch-target">›</button>
     </div>
-    <div class="cal mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
+    <div class="calendar mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
 const logsPage = () => {
   /* del día más reciente al más antiguo y, dentro de un día, el último que se guardó primero: un cardio se puede apuntar con
@@ -55,7 +55,7 @@ const logsPage = () => {
       h += html`<div class="section-label">${m}</div>`;
     }
     h += html`
-      <div class="item exr cur-pointer" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0">
+      <div class="item item-split cur-pointer" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0">
         <span><b>${o.l.n}</b><br><small>${fmtDateShort(o.l.d, WEEKDAY_DAY)}${raw(logText(o.l))}</small></span>
         <b>${raw(logRight(o.l))}</b>
       </div>`;

@@ -131,7 +131,7 @@ def main(path):
             check('la hoja de copia lista las copias automáticas', n == 7, str(n))
             ev("document.querySelector('#snapl [data-a=snapshotRestore]').click()")
             pg.wait_for_timeout(300)
-            check('«Restaurar» pide confirmación con el resumen de la copia', ev("!!document.querySelector('#dg .dgc')&&/Restaurar/.test(document.querySelector('#dg').innerText)"))
+            check('«Restaurar» pide confirmación con el resumen de la copia', ev("!!document.querySelector('#dg .dialog-box')&&/Restaurar/.test(document.querySelector('#dg').innerText)"))
             ev("document.querySelector('#dg').innerHTML='';sheet()")
             # la conexión con IndexedDB se puede perder (Safari la cierra al volver del fondo): la siguiente vez se abre otra y se
             # repite (core/idb). Antes, las copias automáticas dejaban de funcionar hasta volver a abrir la app

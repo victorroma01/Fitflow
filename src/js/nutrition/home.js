@@ -33,7 +33,7 @@ const nutritionDayHead = (dt, t) => {
 /* lo comido frente al objetivo (los tres macros y las kcal), fijo arriba al desplazar */
 const nutritionTotals = (tt, tg) => html`
   <div class="card pos-sticky top-6 z-3">
-    <div class="mac">
+    <div class="macros">
       ${macroBar('Hidratos', tt[1], tg[1], 'c')}
       ${macroBar('Proteínas', tt[2], tg[2], 'p')}
       ${macroBar('Grasas', tt[3], tg[3], 'g')}
@@ -86,7 +86,7 @@ const mealCard = (m, i, nm, v, goal) => {
     <div class="card">
       <div class="row"><b>${raw(nm)}</b><small>${note}</small></div>
       ${mealItems(m, i).map((it, j) => mealItemRow(it, i, j))}
-      <div class="mac m-8-0">
+      <div class="macros m-8-0">
         <b class="c-ctx">${roundInt(v[1])}${of(1)} C</b>
         <b class="c-ptx">${roundInt(v[2])}${of(2)} P</b>
         <b class="c-gtx">${roundInt(v[3])}${of(3)} G</b>

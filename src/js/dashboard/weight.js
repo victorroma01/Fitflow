@@ -92,7 +92,7 @@ const weightHistory = log => html`
   <details class="card">
     <summary>Historial (${log.length})</summary>
     ${log.slice().reverse().map(p => html`
-      <div class="item exr cur-pointer" data-a="weightDeleteAsk" data-v="${p.d}" role="button" tabindex="0">
+      <div class="item item-split cur-pointer" data-a="weightDeleteAsk" data-v="${p.d}" role="button" tabindex="0">
         <span><b>${fmtDateShort(p.d, { day: 'numeric', month: 'long', year: 'numeric' })}</b></span>
         <b>${+p.w} kg</b>
       </div>`)}

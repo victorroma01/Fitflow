@@ -117,16 +117,16 @@ export const weekStats = () => {
 const weekCard = () => {
   const s = weekStats();
   return html`
-    <div class="card wkc">
+    <div class="card week-card">
       <div class="row"><b>Esta semana</b><small>${raw(s.c)} de ${s.g}${s.g == 1 ? ' entreno' : ' entrenos'}</small></div>
-      <div class="wkd">
+      <div class="week-dots">
         ${s.dots.map(d => html`<span class="${d.on ? 'on ' : ''}${d.td ? 'today ' : ''}${d.fu ? 'future' : ''}"><i></i>${raw(d.l)}</span>`)}
       </div>
-      <div class="wks">
+      <div class="week-stats">
         <div><b>${s.st}</b><small>${s.st == 1 ? 'semana de racha' : 'semanas de racha'}</small></div>
         <div><b>${s.best}</b><small>mejor racha</small></div>
       </div>
-      <small class="muted wkn">
+      <small class="muted week-note">
         ${raw(s.any ? 'La semana cuenta con ' + s.t + ' o más entrenos.' : 'Completa tu primer entreno para empezar la racha.')}
       </small>
     </div>`;

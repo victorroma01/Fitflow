@@ -55,11 +55,11 @@ const ROWS_WITH_PICTURE = 12;
 /** La celda de un ejercicio en una lista: su imagen, nombre, material y músculos. `row`, el puesto de la fila en la lista
     (si no se dice, lleva la imagen desde el principio). */
 export const exCellHtml = (e, row) => html`
-  <i class="exth">${row >= ROWS_WITH_PICTURE ? exPictureLater(e.n, 48) : exPicture(e.n, 48)}</i>
-  <span class="ext"><b>${e.n}</b><br><small>${raw(exSubtitle(e))}</small><br>${raw(exMusclesHtml(e))}</span>`;
+  <i class="exercise-thumb">${row >= ROWS_WITH_PICTURE ? exPictureLater(e.n, 48) : exPicture(e.n, 48)}</i>
+  <span class="exercise-text"><b>${e.n}</b><br><small>${raw(exSubtitle(e))}</small><br>${raw(exMusclesHtml(e))}</span>`;
 export const exRowHtml = (o, btn, act, row) => html`
-  <div class="item exr">
-    <span class="exc" data-a="${act || 'exerciseDetail'}" data-i="${o.i}">${exCellHtml(o.e, row)}</span>
+  <div class="item item-split">
+    <span class="exercise-cell" data-a="${act || 'exerciseDetail'}" data-i="${o.i}">${exCellHtml(o.e, row)}</span>
     ${raw(btn)}
   </div>`;
 export const exCompare = (a, b) => GROUPS.indexOf(groupOf(a)) - GROUPS.indexOf(groupOf(b)) || exOrder(a) - exOrder(b);

@@ -40,7 +40,7 @@ const foldPassed = current => {
 const sessionHeader = (day, current, done, total) => {
   const elapsed = roundInt(elapsedMs(W.startedAt, W.pausedAt, Date.now()) / 1000);
   return html`
-    <div class="wsk">
+    <div class="session-head">
       <div class="page-head">
         <b class="fs-22" id="tm">${raw(fmtDuration(elapsed))}</b>
         <span>Serie ${Math.min(done + 1, total)}/${total}</span>
@@ -56,15 +56,15 @@ const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
   const weightInput = html`
     <input type="number" inputmode="decimal" data-c="setWeight" data-i="${exIndex}" data-j="${setIndex}"
         value="${set.w ? toDisplayWeight(set.w) : ''}"
-        placeholder="${weightUnit()}"${raw(set.ws && !set.ok ? (W.deload ? ' class="dlv"' : ' class="sug"') : '')}
+        placeholder="${weightUnit()}"${raw(set.ws && !set.ok ? (W.deload ? ' class="deload-weight"' : ' class="suggested"') : '')}
         aria-label="${'Peso' + (set.ws && !set.ok ? ' sugerido' : '') + ', ' + name}">`;
   const rest = restAfterSet(exIndex, setIndex);
   return html`
-    <div class="set-row${isCurrent ? ' cur' : ''}">
+    <div class="set-row${isCurrent ? ' current' : ''}">
       <span>${raw(setNo(W.sets[exIndex], setIndex))}</span>
       ${raw(setLabelButton(set))}
       <input type="number" inputmode="decimal" data-c="setReps" data-i="${exIndex}" data-j="${setIndex}"
-          value="${set.r}"${raw(W.deload && !set.ok ? ' class="dlv"' : '')} aria-label="${unitName(exercise) + ', ' + name}">
+          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')} aria-label="${unitName(exercise) + ', ' + name}">
       ${raw(!usesWeight(exercise) ? '<span class="muted ta-c">–</span>' : weightInput)}
       <span class="fs-13">${raw(rest ? fmtMinSec(rest) : '–')}</span>
       <button class="check ${set.ok ? 'on' : ''}" data-a="toggleSetDone" data-i="${exIndex}" data-j="${setIndex}"
@@ -106,7 +106,7 @@ const exerciseHead = (exercise, exIndex) => html`
   </div>`;
 /* la segunda fila de herramientas: Historial, Swap y, con barra, Discos */
 const exerciseTools2 = (exercise, exIndex) => html`
-  <div class="xtl">
+  <div class="exercise-tools">
     <button class="chip" data-a="exerciseHistory" data-i="${exIndex}">Historial</button>
     <button class="chip" data-a="openSwap" data-i="${exIndex}">${icon('swp', 15)} Swap</button>
     ${usesBarbell(exercise.n) ? html`
@@ -131,7 +131,7 @@ const exerciseSection = (day, blocks, blockOf, exercise, exIndex, current) => {
       ${foldSummary(exercise, exIndex)}
       ${exToolsHtml(exercise, exIndex)}
       ${exerciseTools2(exercise, exIndex)}
-      <div class="thd">
+      <div class="set-head">
         <span>Set</span>
         <span></span>
         <span>${raw(unitHead(exercise))}</span>
@@ -195,7 +195,7 @@ A.exerciseHistory = i => {
         <b class="fs-20">${rm ? round1(toDisplayWeight(rm)) + ' ' + weightUnit() : '—'}</b>
       </div>
     </div>` : '';
-  const chart = h.length > 1 && !unitOf(E) ? html`<div class="pgs">${raw(progressBody(n))}</div>` : '';
+  const chart = h.length > 1 && !unitOf(E) ? html`<div class="progress-chart">${raw(progressBody(n))}</div>` : '';
   const list = h.slice(0, 12).map(x => html`
     <div class="item cols-1fr"><b>${raw(x.d)}</b><small>${raw(x.s.map(s => setText(E, s)).join(' · '))}</small></div>`).join('');
   sheet(html`
@@ -215,7 +215,7 @@ A.togglePause = () => {
   R();
 };
 const scrollToCurrent = () => {
-  const e = $('.set-row.cur');
+  const e = $('.set-row.current');
   e && e.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 const nextSet = () => {
@@ -293,12 +293,12 @@ const setName = (j, s, e) => (s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : 
     de rest-pause. */
 const setNo = (a, j) => a[j].t == 1 ? 'D' : a[j].t == 2 ? '+' : a.slice(0, j + 1).filter(x => !x.t).length;
 const foldButton = i => html`
-  <button class="fdb" data-a="toggleFold" data-i="${i}" aria-label="Plegar o desplegar ejercicio">${icon('chev', 20)}</button>`;
+  <button class="fold-btn" data-a="toggleFold" data-i="${i}" aria-label="Plegar o desplegar ejercicio">${icon('chev', 20)}</button>`;
 const foldSummary = (e, i) => {
   const a = W.sets[i] || [];
   const ok = a.filter(s => s.ok).length;
   return html`
-    <div class="xsm" data-a="toggleFold" data-i="${i}" role="button" tabindex="0">
+    <div class="exercise-summary" data-a="toggleFold" data-i="${i}" role="button" tabindex="0">
       <span><b>${raw(ok)}/${a.length}</b> series</span>
       <span>${raw(targetText(e))}</span>
     </div>`;
@@ -329,7 +329,7 @@ const exThumb = (n, i) => {
   return html`<div class="thumb${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}</div>`;
 };
 const restPill = () => W && W.restEndsAt ? html`
-  <button class="wsr" data-a="scrollToRest" aria-label="Ir al descanso">
+  <button class="rest-pill" data-a="scrollToRest" aria-label="Ir al descanso">
     Descanso <b id="rt2">${raw(fmtMinSec(Math.max(0, Math.ceil((W.restEndsAt - Date.now()) / 1000))))}</b>
   </button>` : '';
 A.scrollToRest = () => {
@@ -443,12 +443,12 @@ export const avgEffort = () => {
 };
 const nextUpBar = (d, cur) => {
   if (!cur)
-    return '<div class="wsn done"><span>Entreno completado</span></div>';
+    return '<div class="session-now done"><span>Entreno completado</span></div>';
   const e = d.ex[cur[0]];
   const a = W.sets[cur[0]];
   const n = a.filter(s => s.ok).length;
   return html`
-    <button class="wsn" data-a="scrollToCurrentSet" aria-label="Ir al ejercicio actual">
+    <button class="session-now" data-a="scrollToCurrentSet" aria-label="Ir al ejercicio actual">
       <span>${e.n}</span>
       <small>Serie ${Math.min(n + 1, a.length)}/${a.length}</small>
     </button>`;
@@ -458,7 +458,7 @@ A.scrollToCurrentSet = () => {
   if (!c)
     return;
   const el = document.getElementById('ex' + c[0]);
-  const h = document.querySelector('.wsk');
+  const h = document.querySelector('.session-head');
   if (!el)
     return;
   const top = el.getBoundingClientRect().top + window.scrollY - (h ? h.offsetHeight : 90) - 8;
@@ -476,12 +476,12 @@ const blockArrowLive = (L, n, cur) => {
 const setLabelButton = s => {
   const k = setTechnique(s);
   return html`
-    <button class="wk2${k != 'WRK' ? ' technique' : ''}" data-a="techniqueInfo" data-v="${k}"
+    <button class="set-kind${k != 'WRK' ? ' technique' : ''}" data-a="techniqueInfo" data-v="${k}"
         aria-label="${'Técnica: ' + TECHNIQUES[k][0]}">${setLabel(s)}</button>`;
 };
 const blockHeader = (L, n, cur) => html`
   <div class="series-label">
-    SERIE ${raw(String.fromCharCode(65 + n))} <span class="arw${blockArrowLive(L, n, cur) ? ' live' : ''}" aria-hidden="true">
+    SERIE ${raw(String.fromCharCode(65 + n))} <span class="arrows${blockArrowLive(L, n, cur) ? ' live' : ''}" aria-hidden="true">
       <span>›</span>
       <span>›</span>
       <span>›</span>

@@ -45,8 +45,8 @@ export const pickBody = () => {
   const l = base.filter(o => equipMatch(pickState.eq, o.e)).sort((a, b) => exCompare(a.e, b.e));
   const lim = 120;
   return filterRow(groupDropdown('pkg', pickState.gs, bq.map(o => o.e)), equipDropdown('pk', pickState.eq, equipIn(base.map(o => o.e)), base.map(o => o.e), 1)) + l.slice(0, lim).map((o, row) => html`
-    <div class="item exr cur-pointer" data-a="pickerAdd" data-i="${o.i}">
-      <span class="exc">${exCellHtml(o.e, row)}</span>
+    <div class="item item-split cur-pointer" data-a="pickerAdd" data-i="${o.i}">
+      <span class="exercise-cell">${exCellHtml(o.e, row)}</span>
       <small class="muted">Añadir +</small>
     </div>
   `).join('') + (l.length > lim ? html`

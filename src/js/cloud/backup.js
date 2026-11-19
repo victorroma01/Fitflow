@@ -111,7 +111,7 @@ const autoBackup = async () => {
     const c = dataCounts();
     /* el aviso no tapa otra ventana: si hay una abierta, espera a la próxima vez que se abra la app */
     if (old && shrinks(old.data, c)) {
-      if (!$('#dg .dgb') && !$('#sh .sheet'))
+      if (!$('#dg .dialog-backdrop') && !$('#sh .sheet'))
         dialog('Tu copia en la nube tiene más datos', html`
           La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. No la hemos sustituido por si es la buena: en Copia de seguridad puedes restaurarla o guardar la de ahora.
         `, [['Ahora no', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'primary']]);

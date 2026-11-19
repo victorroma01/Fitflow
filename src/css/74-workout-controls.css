@@ -1,17 +1,17 @@
 /* ═══ css/74-workout-controls ═══ Entreno en curso: Tips y Discos con icono (F-08), desplegables cortos (F-09), peso sugerido (F-10), etiqueta de técnica que se toca (F-11) y barra inferior pegada al borde (F-15) */
 /* herramientas de cada ejercicio en dos filas: Tips, Notas, Tempo y Descanso; Historial, Swap y Discos (I-26). Todas iguales:
    la misma altura, en línea, con el mismo fondo y la misma letra. Se ven de 40 px y responden en 44 (css/97-touch-targets) */
-.xtl {
+.exercise-tools {
   display:flex;
   gap:8px;
   align-items:center;
   margin:8px 0;
   flex-wrap:wrap;
 }
-.xtl+.xtl {
+.exercise-tools+.exercise-tools {
   margin-top:0;
 }
-.xtl .chip,.xtl .psel {
+.exercise-tools .chip,.exercise-tools .chip-select {
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -26,18 +26,18 @@
   line-height:1;
   vertical-align:middle;
 }
-.xtl .chip.icon-only {
+.exercise-tools .chip.icon-only {
   min-width:40px;
   padding:0 11px;
 }
-.xtl .psel {
+.exercise-tools .chip-select {
   background:var(--cd);
 }
-html.glass .xtl .psel {
+html.glass .exercise-tools .chip-select {
   background:color-mix(in srgb,var(--tx) 8%,transparent);
 }
 /* el desplegable transparente, 2 px más arriba y más abajo que lo que se ve: zona táctil de 44 px */
-.xtl .psel select {
+.exercise-tools .chip-select select {
   top:-2px;
   bottom:-2px;
   height:auto;
@@ -54,7 +54,7 @@ html.glass .xtl .psel {
    elegida («2/2/2/0 · Pausa en la contracción») es más ancho que el select: en WebKit cuenta como contenido que se sale y
    ensanchaba la página del entreno (446 px en un móvil de 320). Se recorta a lo ancho; a lo alto no, porque el select
    sobresale 2 px por arriba y por abajo para que la zona táctil llegue a 44 (css/97-touch-targets) */
-.psel {
+.chip-select {
   position:relative;
   display:inline-flex;
   align-items:center;
@@ -70,14 +70,14 @@ html.glass .xtl .psel {
   font-size:13.5px;
   font-weight:600;
 }
-html.glass .psel {
+html.glass .chip-select {
   background:color-mix(in srgb,var(--tx) 6%,transparent);
   border-color:var(--gb);
 }
-.psel svg {
+.chip-select svg {
   opacity:.65;
 }
-.psel select {
+.chip-select select {
   position:absolute;
   inset:0;
   width:100%;
@@ -88,17 +88,17 @@ html.glass .psel {
   opacity:0;
   cursor:pointer;
 }
-.psel:focus-within {
+.chip-select:focus-within {
   border-color:var(--ac);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--a2) 20%,transparent);
 }
 /* peso sugerido (F-10): gris oscuro, menos destacado que un peso ya registrado */
-.set-row input.sug {
+.set-row input.suggested {
   color:color-mix(in srgb,var(--mu) 70%,var(--bg));
   font-weight:600;
 }
 /* etiqueta de técnica (F-11): se toca para ver qué técnica es */
-.set-row button.wk2 {
+.set-row button.set-kind {
   position:relative;
   padding:7px 0;
   border:0;
@@ -106,7 +106,7 @@ html.glass .psel {
   font-size:11px;
   font-weight:700;
 }
-.set-row button.wk2::after {
+.set-row button.set-kind::after {
   content:"";
   position:absolute;
   inset:-8px -4px;

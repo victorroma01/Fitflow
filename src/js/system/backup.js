@@ -299,7 +299,7 @@ const backupFileCard = () => html`
     <p class="muted fs-12 m-0-0-10">${raw(backupAge())}</p>
     <div class="grid-2">
       <button class="primary" data-a="backupDownload">Guardar archivo</button>
-      <label class="btnl">
+      <label class="file-btn">
         Importar archivo
         <input type="file" accept=".json,application/json,text/plain" hidden data-c="backupImportFile">
       </label>

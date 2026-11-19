@@ -12,13 +12,13 @@
 h1,h2,h3 {
   text-wrap:balance;
 }
-.wkc .wkd {
+.week-card .week-dots {
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:6px;
   margin:14px 0 4px;
 }
-.wkc .wkd span {
+.week-card .week-dots span {
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -27,7 +27,7 @@ h1,h2,h3 {
   font-weight:650;
   color:var(--mu);
 }
-.wkc .wkd i {
+.week-card .week-dots i {
   display:grid;
   place-items:center;
   width:100%;
@@ -37,12 +37,12 @@ h1,h2,h3 {
   border:1.5px solid var(--ln);
   box-sizing:border-box;
 }
-.wkc .wkd .on i {
+.week-card .week-dots .on i {
   border-color:transparent;
   background:var(--ag);
   box-shadow:0 4px 12px color-mix(in srgb,var(--a2) 40%,transparent);
 }
-.wkc .wkd .on i::after {
+.week-card .week-dots .on i::after {
   content:"";
   width:34%;
   height:18%;
@@ -50,20 +50,20 @@ h1,h2,h3 {
   border-bottom:2px solid var(--ft);
   transform:translateY(-12%) rotate(-45deg);
 }
-.wkc .wkd .today {
+.week-card .week-dots .today {
   color:var(--tx);
 }
-.wkc .wkd .today i {
+.week-card .week-dots .today i {
   border-color:var(--a1);
 }
-.wkc .wkd .on.today i {
+.week-card .week-dots .on.today i {
   border-color:transparent;
 }
-.wkc .wkd .future i {
+.week-card .week-dots .future i {
   border-style:dashed;
   opacity:.55;
 }
-.wkc .wks {
+.week-card .week-stats {
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
@@ -71,15 +71,15 @@ h1,h2,h3 {
   padding-top:12px;
   border-top:1px solid var(--ln);
 }
-.wkc .wks b {
+.week-card .week-stats b {
   display:block;
   font-size:26px;
   line-height:1.1;
 }
-.wkc .wks small {
+.week-card .week-stats small {
   color:var(--mu);
 }
-.wkc .wkn {
+.week-card .week-note {
   display:block;
   margin-top:10px;
   font-size:12px;

@@ -197,7 +197,7 @@ button.lnk {
 .adr .adrh .row {
   gap:10px;
 }
-.adr.on .seg {
+.adr.on .segmented {
   margin-bottom:10px;
 }
 .adr details {

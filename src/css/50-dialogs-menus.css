@@ -6,7 +6,7 @@
   padding:7px 12px;
   font-size:14px;
 }
-.dgb {
+.dialog-backdrop {
   position:fixed;
   inset:0;
   background:#000a;
@@ -16,7 +16,7 @@
   padding:24px;
   animation:fdi .2s;
 }
-.dgc {
+.dialog-box {
   background:var(--cd);
   border:1px solid var(--ln);
   border-radius:22px;
@@ -26,14 +26,14 @@
   animation:rsi .25s;
   box-shadow:0 24px 60px #0008;
 }
-.mbk {
+.menu-backdrop {
   position:fixed;
   inset:0;
   background:#0006;
   z-index:14;
   animation:fdi .25s;
 }
-.mti {
+.menu-title {
   font-size:10px;
   letter-spacing:.18em;
   text-transform:uppercase;
@@ -45,7 +45,7 @@
    avisos largos, los de error sobre todo, se salían por los dos lados de la pantalla). No recoge los toques: mientras está a
    la vista, lo que tapa (el «←» y el título de una página) sigue respondiendo, y el gesto de volver, también; solo su
    «Deshacer» se puede tocar */
-.tst {
+.toast {
   pointer-events:none;
   position:fixed;
   left:14px;
@@ -67,7 +67,7 @@
   box-shadow:0 10px 30px #0006;
 }
 /* «Deshacer» dentro del aviso: como un enlace, con sitio de sobra para el dedo */
-.tsu {
+.toast-undo {
   pointer-events:auto;
   margin:-10px -10px -10px 6px;
   padding:10px;
@@ -78,12 +78,12 @@
   text-decoration:underline;
   cursor:pointer;
 }
-.mbk {
+.menu-backdrop {
   background:transparent!important;
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
 }
-.msd {
+.menu-panel {
   position:fixed;
   top:0;
   right:0;
@@ -93,13 +93,13 @@
   pointer-events:none;
   animation:msi .45s cubic-bezier(.2,.9,.25,1) both;
 }
-.msd.out {
+.menu-panel.out {
   animation:mso .26s ease-in both;
 }
 #sh.full .sheet::before {
   display:none;
 }
-.msb {
+.menu-shade {
   position:absolute;
   inset:0;
   background:linear-gradient(90deg,#0000 0%,#00000004 8%,#0000000f 18%,#0000001f 28%,#00000033 38%,#0000004d 48%,#00000069 58%,#00000085 68%,#0000009e 78%,#000000b3 88%,#000000c2 100%);
@@ -109,17 +109,17 @@
   mask-image:linear-gradient(90deg,transparent 0%,#000 38%);
 }
 @media(prefers-color-scheme:light) {
-  :root:not([data-theme="dark"]) .msb {
+  :root:not([data-theme="dark"]) .menu-shade {
     background:linear-gradient(90deg,#0000 0%,#00000008 8%,#00000018 18%,#0000002e 28%,#00000059 38%,#0000007a 48%,#00000096 58%,#000000a3 68%,#000000bb 78%,#000000cc 88%,#000000d9 100%);
   }
 }
-:root[data-theme="light"] .msb {
+:root[data-theme="light"] .menu-shade {
   background:linear-gradient(90deg,#0000 0%,#00000008 8%,#00000018 18%,#0000002e 28%,#00000059 38%,#0000007a 48%,#00000096 58%,#000000a3 68%,#000000bb 78%,#000000cc 88%,#000000d9 100%);
 }
-.menu-item span,.mci .mti {
+.menu-item span,.menu-items .menu-title {
   text-shadow:0 1px 14px #000a,0 0 2px #0006;
 }
-.mci {
+.menu-items {
   position:absolute;
   inset:0;
   display:flex;
@@ -128,7 +128,7 @@
   padding:calc(env(safe-area-inset-top,0px) + 12px) 20px 24px;
   color:#fff;
 }
-.mci .menu-close {
+.menu-items .menu-close {
   pointer-events:auto;
   background:none;
   border:0;
@@ -137,8 +137,8 @@
   margin-right:-8px;
   border-radius:50%;
 }
-.mci .mti {
-  /* con la opacidad de .mti, blanco al 52 %: contraste de 4,5 o más sobre el degradado oscuro del menú */
+.menu-items .menu-title {
+  /* con la opacidad de .menu-title, blanco al 52 %: contraste de 4,5 o más sobre el degradado oscuro del menú */
   color:#ffffffa6;
   font-size:11px;
   letter-spacing:.2em;
@@ -185,7 +185,7 @@
     transform:translateX(18px);
   }
 }
-.chs {
+.chip-row {
   display:flex;
   gap:6px;
   overflow-x:auto;
@@ -193,10 +193,10 @@
   scrollbar-width:none;
   -webkit-overflow-scrolling:touch;
 }
-.chs::-webkit-scrollbar {
+.chip-row::-webkit-scrollbar {
   display:none;
 }
-.chs .chip {
+.chip-row .chip {
   flex:none;
   white-space:nowrap;
   margin:0;

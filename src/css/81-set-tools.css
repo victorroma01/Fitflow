@@ -1,9 +1,9 @@
 /* ═══ css/81-set-tools ═══ Progresión, calentamiento, RPE, descarga, progreso y flechas animadas */
 /* v21 */
-.seg.seg-2 {
+.segmented.seg-2 {
   grid-template-columns:repeat(2,1fr);
 }
-.wsn {
+.session-now {
   display:flex;
   align-items:baseline;
   justify-content:space-between;
@@ -20,7 +20,7 @@
   min-height:0;
   -webkit-tap-highlight-color:transparent;
 }
-.wsn span {
+.session-now span {
   min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -28,16 +28,16 @@
   font-weight:650;
   font-size:14px;
 }
-.wsn small {
+.session-now small {
   flex:none;
   color:var(--mu);
   font-size:12px;
 }
-.wsn.done {
+.session-now.done {
   justify-content:center;
   cursor:default;
 }
-.sgb {
+.suggestion {
   display:flex;
   flex-wrap:wrap;
   align-items:center;
@@ -49,29 +49,29 @@
   font-size:12.5px;
   line-height:1.35;
 }
-.sgb>span {
+.suggestion>span {
   flex:1 1 140px;
   min-width:0;
 }
-.sgb b {
+.suggestion b {
   color:var(--at);
 }
-.sgb .chip {
+.suggestion .chip {
   margin:0;
 }
-.wup {
+.warmup {
   display:flex;
   flex-wrap:wrap;
   align-items:center;
   gap:6px;
   margin:6px 0 0;
 }
-.wup>span {
+.warmup>span {
   flex:0 0 100%;
   font-size:12px;
   color:var(--mu);
 }
-.wup .chip {
+.warmup .chip {
   margin:0;
   font-size:12.5px;
 }
@@ -97,21 +97,21 @@
   justify-content:center;
   padding:6px 8px;
 }
-.dlc {
+.deload-advice {
   margin:12px 0 0;
 }
-.pgs svg {
+.progress-chart svg {
   display:block;
   width:100%;
   height:auto;
   margin-top:6px;
   overflow:visible;
 }
-.pga {
+.progress-axis {
   font-size:9.5px;
   fill:var(--mu);
 }
-.pgt2 {
+.progress-total {
   display:flex;
   justify-content:space-between;
   align-items:baseline;
@@ -119,10 +119,10 @@
   margin-top:10px;
   flex-wrap:wrap;
 }
-.pgt2 b {
+.progress-total b {
   font-size:20px;
 }
-.pgt2 small {
+.progress-total small {
   color:var(--mu);
 }
 .pgr {
@@ -133,14 +133,14 @@
   color:var(--at);
   margin-left:4px;
 }
-.pgsum {
+.progress-summary {
   font-size:12.5px;
   margin-top:8px;
 }
-.pgs .seg {
+.progress-chart .segmented {
   margin-top:0;
 }
-.btnl {
+.file-btn {
   display:flex;
   align-items:center;
   justify-content:center;
@@ -155,30 +155,30 @@
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
 }
-.hab {
+.quick-add {
   display:flex;
   flex-wrap:wrap;
   gap:6px;
   margin-bottom:10px;
 }
-.hab .chip {
+.quick-add .chip {
   margin:0;
 }
 /* v21.1: flechas animadas junto a la letra de la serie */
-.series-label .arw {
+.series-label .arrows {
   display:inline-flex;
 }
-.series-label .arw>span {
+.series-label .arrows>span {
   display:inline-block;
 }
-.series-label .arw.live>span {
+.series-label .arrows.live>span {
   color:var(--at);
   animation:arwF 1.4s ease-in-out infinite;
 }
-.series-label .arw.live>span:nth-child(2) {
+.series-label .arrows.live>span:nth-child(2) {
   animation-delay:.2s;
 }
-.series-label .arw.live>span:nth-child(3) {
+.series-label .arrows.live>span:nth-child(3) {
   animation-delay:.4s;
 }
 @keyframes arwF {
@@ -196,74 +196,64 @@
   }
 }
 @media(prefers-reduced-motion:reduce) {
-  .series-label .arw.live>span {
+  .series-label .arrows.live>span {
     animation:none;
   }
 }
-.ver.v1 {
-  margin-bottom:3px;
-}
-.ver.v2 {
-  margin:0 0 3px;
-}
-.ver.v3 {
-  margin:0 0 8px;
-  line-height:1.35;
-}
 /* explicación del RPE (workout/rpe, F-42): la escala dibujada y una serie de ejemplo */
-.rpx {
+.rpe-help {
   max-height:86vh;
   overflow:auto;
 }
-.rpx h3 {
+.rpe-help h3 {
   margin:0 0 8px;
 }
-.rpx h4 {
+.rpe-help h4 {
   margin:14px 0 4px;
   font-size:15px;
 }
-.rpx p {
+.rpe-help p {
   margin:0 0 10px;
   font-size:14px;
   line-height:1.45;
   color:var(--mu);
 }
-.rpxs {
+.rpe-scale {
   display:block;
   width:100%;
   height:auto;
   margin:4px 0 6px;
   color:var(--tx);
 }
-.rpxl {
+.rpe-levels {
   margin:0 0 6px;
   padding:0;
   list-style:none;
   font-size:13.5px;
   line-height:1.6;
 }
-.rpxl b {
+.rpe-levels b {
   display:inline-block;
   width:26px;
 }
-.rpxe {
+.rpe-example {
   margin:4px 0 12px;
   padding:10px;
   border:1px solid var(--ln);
   border-radius:16px;
 }
-.rpxr {
+.rpe-example-row {
   display:flex;
   align-items:center;
   gap:10px;
   margin-bottom:6px;
   font-size:14px;
 }
-.rpxr span {
+.rpe-example-row span {
   flex:1;
   color:var(--mu);
 }
-.rpxr .check {
+.rpe-example-row .check {
   display:grid;
   place-items:center;
   width:32px;
@@ -271,15 +261,15 @@
   border-radius:10px;
   font-style:normal;
 }
-.rpxe .chip {
+.rpe-example .chip {
   font-style:normal;
 }
-.rpxe small {
+.rpe-example small {
   display:block;
   margin-top:6px;
   font-size:12.5px;
   color:var(--mu);
 }
-.rpx .grid-2 {
+.rpe-help .grid-2 {
   margin-top:14px;
 }

@@ -83,7 +83,7 @@ def main(path):
         check('la sesión se sigue pintando', ev("document.querySelectorAll('.exercise').length") == nx + 1)
         ev('A.finishAsk()')
         pg.clock.run_for(200)
-        check('diálogo de guardar', ev("!!document.querySelector('#dg .dgc')"))
+        check('diálogo de guardar', ev("!!document.querySelector('#dg .dialog-box')"))
         ev("document.querySelector('#dg [data-v=finishSave]').click()")
         pg.clock.run_for(400)
         check('entreno guardado en el registro', ev('S.logs.length') == n0 + 1, str(ev('S.logs.length')))

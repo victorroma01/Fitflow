@@ -60,7 +60,7 @@ const wodSetup = () => {
   const t = wodTotal(c);
   return html`
     ${pgHead('Temporizador WOD')}
-    <div class="seg cols-4">
+    <div class="segmented cols-4">
       ${WOD_MODES.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="wodMode" data-v="${x[0]}">${raw(x[1])}</button>`)}
     </div>
     <p class="muted fs-13 m-10-2-4">${raw(WOD_INFO[m])}</p>

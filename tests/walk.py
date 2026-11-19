@@ -11,6 +11,7 @@ Requiere:  pip install playwright  &&  playwright install chromium
 import os,sys,json,random,hashlib,datetime,re
 from playwright.sync_api import sync_playwright
 from browser import app_url, context_opts
+from shots import class_lines
 HERE=os.path.dirname(os.path.abspath(__file__))
 def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
@@ -52,12 +53,13 @@ SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('s
  const f=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x>>>0};
  return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps}}"""
 WORDS=['a','Prueba','12','Pollo','Press','x y','0','99','Arroz','Mi plan']
-def load_map(path):
-    """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado), 'K' (clases CSS)} de un mapa «registro viejo nuevo»."""
-    m={'A':{},'C':{},'U':{},'S':{},'W':{},'K':{}}
+def load_map(path,ref):
+    """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado), 'K' (clases CSS)} de un mapa «registro viejo nuevo».
+    De las clases, solo las que la compilación ref tiene aún con el nombre viejo (tests/shots.py, class_lines)."""
+    m={'A':{},'C':{},'U':{},'S':{},'W':{},'K':dict(class_lines(path,ref))}
     for l in open(path,encoding='utf-8'):
         l=l.strip()
-        if l and not l.startswith('#'):
+        if l and not l.startswith('#') and not l.startswith('K '):
             r,o,n=l.split();m[r][o]=n
     return m
 def old_js(js,ren):
@@ -161,7 +163,7 @@ if __name__=='__main__':
     elif cmd=='run':
         # run FILE_A FILE_B seeds steps [mapa]  → traza ambos y compara (el mapa traduce los nombres de FILE_A)
         fa,fb,sd,ns=sys.argv[2],sys.argv[3],sys.argv[4].split(','),int(sys.argv[5])
-        ren=load_map(sys.argv[6]) if len(sys.argv)>6 else None
+        ren=load_map(sys.argv[6],fa) if len(sys.argv)>6 else None
         bad=0
         for s in sd:
             a=trace(fa,int(s),ns,ren);b=trace(fb,int(s),ns)

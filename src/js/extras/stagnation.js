@@ -60,7 +60,7 @@ export function stagnationCard() {
         <div class="row"><b>Posible estancamiento</b><small>${L.length}${L.length == 1 ? ' ejercicio' : ' ejercicios'}</small></div>
         <div class="muted fs-13 m-4-0-6">No superas tu mejor marca desde hace varias sesiones.</div>
         ${L.map((x, i) => html`
-          <div class="item exr cur-pointer" data-a="stagnationInfo" data-i="${i}" role="button" tabindex="0">
+          <div class="item item-split cur-pointer" data-a="stagnationInfo" data-i="${i}" role="button" tabindex="0">
             <span><b>${x.n}</b><br><small>Sin récord en ${raw(x.k)} sesiones</small></span>
             <span class="muted as-c">›</span>
           </div>`)}

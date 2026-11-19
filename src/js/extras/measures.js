@@ -90,7 +90,7 @@ function measuresTab() {
     <details class="card">
       <summary>Historial (${L.length})</summary>
       ${L.slice().reverse().map((m, i) => html`
-        <div class="item exr cur-pointer" data-a="measureDeleteAsk" data-i="${L.length - 1 - i}" role="button" tabindex="0">
+        <div class="item item-split cur-pointer" data-a="measureDeleteAsk" data-i="${L.length - 1 - i}" role="button" tabindex="0">
           <span>
             <b>${raw(fmtDateShort(m.d, { day: 'numeric', month: 'long', year: 'numeric' }))}</b><br>
             <small>${raw(MEASURES.filter(x => +m.v[x[0]] > 0).map(x => x[1] + ' ' + round1(+m.v[x[0]])).join(' · '))}</small>

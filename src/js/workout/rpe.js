@@ -18,7 +18,7 @@ const RPE_SCALE = [[6, '4 o más', 'Cómoda: te quedaban 4 o más', '#34d399'], 
 export const rpeOn = () => S.logRpe === 1;
 /* dibujo 1: la escala, cada valor con las repeticiones que quedaban en reserva */
 const rpeScaleSvg = () => html`
-  <svg class="rpxs" viewBox="0 0 300 92" role="img"
+  <svg class="rpe-scale" viewBox="0 0 300 92" role="img"
       aria-label="Escala del RPE: 6, cuatro o más repeticiones en reserva; 7, tres; 8, dos; 9, una; 10, ninguna">
     ${RPE_SCALE.map(([v, rir, , c], k) => html`
       <g transform="translate(${k * 60},0)">
@@ -33,8 +33,8 @@ const rpeExampleHtml = () => {
   /* el peso del ejemplo, en la unidad elegida en Ajustes */
   const w = usesLb() ? '135 lb' : '60 kg';
   return html`
-    <div class="rpxe" aria-hidden="true">
-      <div class="rpxr"><b>Serie 2</b><span>10 × ${w}</span><i class="check on">✓</i></div>
+    <div class="rpe-example" aria-hidden="true">
+      <div class="rpe-example-row"><b>Serie 2</b><span>10 × ${w}</span><i class="check on">✓</i></div>
       <div class="rpe"><span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<i class="chip${v == 8 ? ' on' : ''}">${raw(v)}</i>`)}</div>
       <small>10 repeticiones con ${w} y te quedaban 2: RPE 8</small>
     </div>`;
@@ -44,14 +44,14 @@ const rpeButtons = withOn => dialogButtons(withOn ? [['Cancelar', 'doNothing', '
 /** La ventana que lo explica. withOn: con «Activar» (al activarlo en Ajustes); si no, solo «Entendido». */
 const rpeExplain = withOn => {
   $('#dg').innerHTML = html`
-    <div class="dgb">
-      <div class="dgc rpx" role="dialog" aria-modal="true" aria-labelledby="dgt">
+    <div class="dialog-backdrop">
+      <div class="dialog-box rpe-help" role="dialog" aria-modal="true" aria-labelledby="dgt">
         <h3 id="dgt">Registrar el esfuerzo (RPE)</h3>
         <p>
           El RPE es lo dura que ha sido una serie, del 6 al 10, según las repeticiones que te quedaban antes de no poder hacer ni una más.
         </p>
         ${raw(rpeScaleSvg())}
-        <ul class="rpxl">${RPE_SCALE.map(([v, , t]) => html`<li><b>${raw(v)}</b> ${t}</li>`)}</ul>
+        <ul class="rpe-levels">${RPE_SCALE.map(([v, , t]) => html`<li><b>${raw(v)}</b> ${t}</li>`)}</ul>
         <h4>Cómo se marca</h4>
         <p>Al marcar una serie como hecha, debajo salen los números del 6 al 10: toca el que corresponda. Es opcional en cada serie.</p>
         ${raw(rpeExampleHtml())}

@@ -24,7 +24,7 @@
 small,.muted {
   color:var(--mu);
 }
-.dys {
+.days {
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:4px;
@@ -96,13 +96,6 @@ nav span {
   font-size:28px;
   line-height:1.2;
 }
-.r {
-  display:grid;
-  grid-template-columns:24px 1fr 1fr 44px;
-  gap:6px;
-  align-items:center;
-  margin:6px 0;
-}
 .check {
   border-radius:50%;
   width:44px;
@@ -146,13 +139,13 @@ nav span {
   display:block;
   height:100%;
 }
-.mac {
+.macros {
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:10px;
   text-align:center;
 }
-.mac b {
+.macros b {
   font-size:13px;
 }
 .item {
@@ -163,19 +156,19 @@ nav span {
   padding:7px 0;
   border-top:1px solid var(--ln);
 }
-.cal {
+.calendar {
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:4px;
   text-align:center;
 }
-.cal i {
+.calendar i {
   font-style:normal;
   padding:7px 0;
   border-radius:8px;
   font-size:13px;
 }
-.cal .on {
+.calendar .on {
   background:var(--ac);
   color:var(--ft);
 }

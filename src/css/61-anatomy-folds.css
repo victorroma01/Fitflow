@@ -46,7 +46,7 @@
   margin-right:6px;
   vertical-align:-1px;
 }
-.eqi span {
+.filter-option span {
   white-space:nowrap;
 }
 .group-grid button svg {
@@ -74,13 +74,13 @@
 .anb svg {
   display:block;
 }
-.exc {
+.exercise-cell {
   display:flex!important;
   gap:12px;
   align-items:flex-start;
   min-width:0;
 }
-.exth {
+.exercise-thumb {
   flex:none;
   width:48px;
   height:48px;
@@ -92,65 +92,57 @@
   border:1px solid #ffffff12;
   font-style:normal;
 }
-.exth svg {
+.exercise-thumb svg {
   display:block;
 }
-.ext {
+.exercise-text {
   min-width:0;
   display:block;
 }
 .row .anb {
   margin:0;
 }
-.exr {
+.item-split {
   content-visibility:auto;
   contain-intrinsic-size:auto 72px;
 }
-.eqrow {
+.filter-row {
   position:relative;
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(0,1fr));
   gap:8px;
   margin:8px 0 4px;
 }
-.eqrow .eqd {
+.filter-row .filter-box {
   position:static;
   margin:0;
   min-width:0;
 }
-.eqrow .eqb {
+.filter-row .filter-btn {
   padding:11px 12px;
   gap:8px;
 }
-.eqrow .eqb span {
+.filter-row .filter-btn span {
   letter-spacing:.06em;
   font-size:12px;
 }
-.eqp {
+.filter-panel {
   max-height:62vh;
   overflow:auto;
   -webkit-overflow-scrolling:touch;
 }
-.eqf {
+.filter-foot {
   position:sticky;
   bottom:-6px;
   background:var(--cd);
   padding-bottom:6px;
 }
-.eqg.groups .eqi span {
+.filter-grid.groups .filter-option span {
   white-space:normal;
   line-height:1.15;
   font-size:14px;
 }
-.ver {
-  text-align:center;
-  font-size:11px;
-  color:var(--mu);
-  opacity:.75;
-  margin:18px 0 8px;
-  letter-spacing:.04em;
-}
-.fdb {
+.fold-btn {
   margin-left:auto;
   flex:none;
   border:0;
@@ -160,13 +152,13 @@
   color:var(--mu);
   line-height:0;
 }
-.fdb svg {
+.fold-btn svg {
   transition:transform .2s;
 }
-.exercise.folded .fdb svg {
+.exercise.folded .fold-btn svg {
   transform:rotate(-90deg);
 }
-.xsm {
+.exercise-summary {
   display:none;
   justify-content:space-between;
   align-items:center;
@@ -175,13 +167,13 @@
   padding:2px 2px 6px;
   cursor:pointer;
 }
-.exercise.folded>.xsm {
+.exercise.folded>.exercise-summary {
   display:flex;
 }
-.xsm b {
+.exercise-summary b {
   color:var(--tx);
 }
-.exercise.folded>*:not(.series-label):not(.exercise-head):not(.xsm):not(.rest-row):not(small):not(br) {
+.exercise.folded>*:not(.series-label):not(.exercise-head):not(.exercise-summary):not(.rest-row):not(small):not(br) {
   display:none!important;
 }
 .exercise.folded .exercise-head>div:nth-child(2)>*:not(b) {

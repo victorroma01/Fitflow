@@ -115,11 +115,16 @@ const techLegend = pl => {
   }));
   const l = [...c].filter(x => TECHNIQUES[x]).map(x => [x, TECHNIQUES[x][0]]).concat(blk && !c.has('SS') ? [['SS', 'Superserie']] : []);
   return l.length ? html`
-    <div class="card tql"><b>Técnicas de intensidad</b><div>${l.map(x => html`<span><b class="tqa">${x[0]}</b>${x[1]}</span>`)}</div></div>` : '';
+    <div class="card technique-list">
+      <b>Técnicas de intensidad</b>
+      <div>${l.map(x => html`<span><b class="technique-code">${x[0]}</b>${x[1]}</span>`)}</div>
+    </div>` : '';
 };
 /** Días del plan con sus ejercicios, series, técnica y descanso (vista de un programa); en un ciclo, cómo se repite. */
 export const programDaysHtml = pl => (isCycle(pl) ? html`
-  <p class="muted cyn">Ciclo de ${raw(pl.length)} días que no se corta con la semana: cada semana empieza donde acabó la anterior.</p>
+  <p class="muted cycle-note">
+    Ciclo de ${raw(pl.length)} días que no se corta con la semana: cada semana empieza donde acabó la anterior.
+  </p>
 ` : '') + weeklySetsCard(pl) + techLegend(pl) + pl.map((d, j) => html`
   <div class="card m-8-0">
     <div class="row">
@@ -128,7 +133,7 @@ export const programDaysHtml = pl => (isCycle(pl) ? html`
     </div>
     ${raw(d.ex.length ? d.ex.map((e, i) => html`
       <div class="muted fs-13 mt-3">
-        ${raw(techLabel(e) ? html`<b class="tqa">${techLabel(e)}</b>` : '')}
+        ${raw(techLabel(e) ? html`<b class="technique-code">${techLabel(e)}</b>` : '')}
         ${e.n} · ${raw(planLine(e))} · ${raw(fmtMinSec(restAt(d, i)))}
       </div>
     `).join('') : '<div class="muted fs-13 mt-3">Descanso</div>')}
@@ -136,10 +141,10 @@ export const programDaysHtml = pl => (isCycle(pl) ? html`
 const programRowsHtml = pl => pl.map((d, j) => {
   const r = !d.ex.length;
   return html`
-    <div class="card cpr${r ? ' rest-day' : ''}">
+    <div class="card create-day${r ? ' rest-day' : ''}">
       <div class="row">
         <b>Día ${raw(j + 1)} · ${d.n}</b>
-        <span class="cpm">
+        <span class="create-move">
           <button data-a="createDayUp" data-i="${j}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button>
           <button data-a="createDayDown" data-i="${j}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>
             ${icon('chev', 18)}
@@ -151,14 +156,14 @@ const programRowsHtml = pl => pl.map((d, j) => {
           ${d.ex.length}
           ${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayMinutes(d)} min
         </div>
-        <div class="muted cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}
+        <div class="muted create-exercises">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}
     </div>`;
 }).join('');
 const createHome = () => html`
   ${pgHead('Crear programa', 'openPrograms')}
   <p class="muted m-n6-0-14">Elige cómo quieres montarlo.</p>
-  <button class="cpo" data-a="createFromRoutines">
-    <span class="cpi">${icon('log', 26)}</span>
+  <button class="create-option" data-a="createFromRoutines">
+    <span class="create-icon">${icon('log', 26)}</span>
     <span>
       <b>Con mis workouts</b>
       <small>
@@ -166,8 +171,8 @@ const createHome = () => html`
       </small>
     </span>›
   </button>
-  <button class="cpo" data-a="createGuided">
-    <span class="cpi">${icon('prog', 26)}</span>
+  <button class="create-option" data-a="createGuided">
+    <span class="create-icon">${icon('prog', 26)}</span>
     <span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›
   </button>`;
 const programNameBox = () => html`
@@ -189,7 +194,7 @@ const createFromMine = () => {
       const ex = [].concat(...r.bl.map(b => b.ex));
       const gs = [...new Set(ex.map(x => groupLabel(groupOfName(x))))];
       return html`
-        <button class="cpw${on ? ' on' : ''}" data-a="createToggleRoutine" data-i="${i}">
+        <button class="create-routine${on ? ' on' : ''}" data-a="createToggleRoutine" data-i="${i}">
           <i>${on ? icon('chk', 14) : ''}</i>
           <span>
             <b>${r.n}</b><br>
@@ -216,7 +221,7 @@ const createFromMine = () => {
 };
 const optionChips = (k, t, sub) => html`
   <div class="section-label">${raw(t)}</div>
-  <div class="cps">
+  <div class="choices">
     ${GUIDE_OPTIONS[k].map(o => html`
       <button class="chip${progDraft.o[k] == o[0] ? ' on' : ''}" data-a="guidedAnswer" data-k="${k}" data-v="${o[0]}">
         ${k == 'niv' ? levelDot(o[0]) : ''}
@@ -394,7 +399,7 @@ const guidedProposal = () => {
     ${weeklySetsCard(pl)}
     <div class="row mt-14">
       <div class="section-label m-0">Semana</div>
-      <button class="chip rgb m-0" data-a="guidedRegenerate">${icon('rgn', 16)}Volver a generar</button>
+      <button class="chip regenerate m-0" data-a="guidedRegenerate">${icon('rgn', 16)}Volver a generar</button>
     </div>
     <p class="muted fs-12 m-4-0-8">Usa las flechas para mover días y descansos a tu gusto.</p>
     ${raw(programRowsHtml(pl))}

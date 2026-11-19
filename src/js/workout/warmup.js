@@ -34,7 +34,7 @@ export const warmupHtml = (e, i) => {
     return '<div class="muted fs-12">Calentamiento: movilidad y un par de series ligeras antes de la primera serie</div>';
   W.warmupsDone = W.warmupsDone || {};
   return html`
-    <div class="wup">
+    <div class="warmup">
       <span>Calentamiento</span>
       ${st.map((x, k) => html`
         <button class="chip${W.warmupsDone[i + '_' + k] ? ' on' : ''}" data-a="toggleWarmupSet" data-i="${i}" data-k="${k}">
