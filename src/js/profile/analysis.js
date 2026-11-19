@@ -365,7 +365,7 @@ const weightCard = m => {
       <b class="anh">Peso corporal</b>
       ${w.d == null ? html`
         <p class="muted">No hay pesajes este mes. En Dashboard → Evolución del peso puedes registrarlo y activar un recordatorio.</p>
-      ` : html`<p><b class="an${w.tr == 'estable' ? 'e' : w.ok ? 'o' : 'x'}">${weightChange(w)}</b>${goalNote(w)}</p>${raw(svgLine(m))}`}
+      ` : html`<p><b class="${w.tr == 'estable' ? 'ane' : w.ok ? 'ano' : 'anx'}">${weightChange(w)}</b>${goalNote(w)}</p>${raw(svgLine(m))}`}
     </div>`;
 };
 /* alimentación: el veredicto, las medias de kcal y proteína frente al objetivo y las kcal de cada día */
