@@ -7,7 +7,7 @@
    Dónde se renombra:
      · src/css: en los selectores (y en los comentarios, las menciones «.nombre»).
      · src/js, leyendo el código (no buscando texto):
-         - el valor de class="…", en una plantilla o en un texto, con lo que lleve dentro: las ramas de una condición
+         - el valor de class="…", en una plantilla, en un texto o en una expresión regular, con lo que lleve dentro: las ramas de una condición
            (${on ? 'on' : ''}), los trozos de una suma, la constante o la tabla de la que sale (LEVEL_CLASS[v]);
          - classList.add/remove/toggle/contains/replace, className = … y setAttribute('class', …);
          - los selectores de querySelector, querySelectorAll, closest y matches.
@@ -97,7 +97,12 @@ const isText = n => ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(
 const fileOf = n => n.getSourceFile().fileName;
 const where = n => { const sf = n.getSourceFile(); return [rel(sf.fileName), sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1]; };
 // el texto de un literal, tal como está escrito, y dónde empieza
-const rawOf = n => { const sf = n.getSourceFile(), a = n.getStart(sf) + 1, b = n.end - (n.kind === ts.SyntaxKind.TemplateHead || n.kind === ts.SyntaxKind.TemplateMiddle ? 2 : 1); return [a, sf.text.slice(a, b)]; };
+const isRegex = n => n.kind === ts.SyntaxKind.RegularExpressionLiteral;
+const rawOf = n => {
+  const sf = n.getSourceFile(), a = n.getStart(sf) + 1;
+  const b = isRegex(n) ? n.getStart(sf) + n.getText(sf).lastIndexOf('/') : n.end - (n.kind === ts.SyntaxKind.TemplateHead || n.kind === ts.SyntaxKind.TemplateMiddle ? 2 : 1);
+  return [a, sf.text.slice(a, b)];
+};
 const log = [];   // «archivo:posición» de cada nombre mirado, en orden
 function renameToken(file, a, b, tok) {
   visited.get(file).push([a, b]);
@@ -251,7 +256,7 @@ function scanSequence(pieces) {
   // lo que sale de una expresión pegada a un nombre a medias ('an' + (x ? 'e' : 'o')) tampoco es una clase entera
   const halves = k => { if (k >= 0 && k < pieces.length && info.has(k)) info.get(k).tokens.forEach(t => partial.add(t)); };
   pieces.forEach((p, k) => {
-    const lit = isText(p) || p.kind === ts.SyntaxKind.TemplateHead || p.kind === ts.SyntaxKind.TemplateMiddle || p.kind === ts.SyntaxKind.TemplateTail;
+    const lit = isText(p) || isRegex(p) || p.kind === ts.SyntaxKind.TemplateHead || p.kind === ts.SyntaxKind.TemplateMiddle || p.kind === ts.SyntaxKind.TemplateTail;
     if (!lit) { if (inValue) exprInfo(k); return; }
     const [start, raw] = rawOf(p), file = fileOf(p);
     for (let i = 0; i < raw.length;) {
@@ -301,6 +306,7 @@ for (const sf of asts.values())
       const ops = addends(n);
       if (ops.some(isText)) scanSequence(ops);
     } else if (isText(n) && !(ts.isBinaryExpression(n.parent) && n.parent.operatorToken.kind === ts.SyntaxKind.PlusToken)) scanSequence([n]);
+    else if (isRegex(n)) scanSequence([n]);   // una expresión regular que busca en el HTML: /<h1 class="page-title">(.*?)<\/h1>/
     if (ts.isCallExpression(n)) {
       const f = n.expression, name = ts.isPropertyAccessExpression(f) ? f.name.text : ts.isIdentifier(f) ? f.text : '';
       if (ts.isPropertyAccessExpression(f) && ts.isPropertyAccessExpression(f.expression) && f.expression.name.text === 'classList' && ['add', 'remove', 'toggle', 'contains', 'replace'].includes(name))
@@ -317,14 +323,14 @@ for (const sf of asts.values())
   })(sf);
 /* Lo que queda: el nombre viejo escrito en un texto, fuera de lo ya mirado. Si va como «.nombre» donde empieza un selector
    ('#sh .sp', guardado en una constante o en un dato), se renombra y se apunta (SELECTOR), para verlo; si no, QUEDA. */
-const names = [...MAP.keys()].map(k => k.replace(/-/g, '\\-')).join('|');
+const names = [...MAP.keys()].join('|');   // un nombre de clase solo lleva letras, cifras, _ y -: no hay nada que escapar
 const TAGS = 'html|body|nav|div|span|button|label|input|small|svg|section|details|summary|select|textarea|img|ul|li|h[1-6]|path|circle';
 const LOOSE = MAP.size && new RegExp('(?<=(?:^|[\\s(,>+~]|\\b(?:' + TAGS + ')|[.#][\\w-]+|\\])\\.)(' + names + ')(?![\\p{L}\\p{N}_-])', 'gu');
 const OLD = MAP.size && new RegExp('(?<![\\p{L}\\p{N}_-])(' + names + ')(?![\\p{L}\\p{N}_-])', 'gu');
 if (MAP.size)
   for (const [f, sf] of asts)
     (function visit(n) {
-      if (isText(n) || n.kind === ts.SyntaxKind.TemplateHead || n.kind === ts.SyntaxKind.TemplateMiddle || n.kind === ts.SyntaxKind.TemplateTail) {
+      if (isText(n) || isRegex(n) || n.kind === ts.SyntaxKind.TemplateHead || n.kind === ts.SyntaxKind.TemplateMiddle || n.kind === ts.SyntaxKind.TemplateTail) {
         const [a, raw] = rawOf(n), free = p => !visited.get(f).some(([x, y]) => p >= x && p < y);
         for (const m of raw.matchAll(LOOSE))
           if (free(a + m.index)) { note('SELECTOR', rel(f), lineOf(sf.text, a + m.index), raw.slice(Math.max(0, m.index - 40), m.index + 40)); renameToken(f, a + m.index, a + m.index + m[0].length, m[0]); }

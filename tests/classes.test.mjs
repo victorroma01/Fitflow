@@ -26,14 +26,15 @@ test('en el CSS cambia los selectores (y las menciones de los comentarios), no l
   assert.equal(p.read('src/css/a.css'), lines('/* la tarjeta (.card) y su estado */', '.card { color:red; }', '.card.on,.row>.item:not(.fine) { margin:0; }', 'html.glass .card { content:".cd"; }', '.fine { top:.5px; }', '.keep { top:0; }'));
 });
 
-test('en el código cambia el nombre donde es una clase, y solo ahí', () => {
+test('en el código cambia el nombre donde es una clase (también dentro de una expresión regular), y solo ahí', () => {
   const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS, 'src/js/a.js': lines(
     "const view = (on, x) => html`<div class=\"cd${on ? ' on' : ''} it\" data-v=\"cd\"><b class=\"${x.ok ? 'ok' : ''}\">cd</b></div>`;",
     "const old = '<p class=\"it keep\">' + (state.ok ? 'ok' : 'cd') + '</p>';",
     "el.classList.toggle('gl', level > 0);",
     "const first = document.querySelector('#app .cd.on > .it[data-k=\"cd\"]');",
     "const data = { ok: 1, cd: 'cd' };",
-    "if (res.ok && key == 'it') save('gl');") });
+    "if (res.ok && key == 'it') save('gl');",
+    "const title = h => (/<h1 class=\"it\">(.*?)<\\/h1>/.exec(h) || [])[1];") });
   assert.equal(p.run().status, 0);
   assert.equal(p.read('src/js/a.js'), lines(
     "const view = (on, x) => html`<div class=\"card${on ? ' on' : ''} item\" data-v=\"cd\"><b class=\"${x.ok ? 'fine' : ''}\">cd</b></div>`;",
@@ -41,7 +42,8 @@ test('en el código cambia el nombre donde es una clase, y solo ahí', () => {
     "el.classList.toggle('glass', level > 0);",
     "const first = document.querySelector('#app .card.on > .item[data-k=\"cd\"]');",
     "const data = { ok: 1, cd: 'cd' };",
-    "if (res.ok && key == 'it') save('gl');"));
+    "if (res.ok && key == 'it') save('gl');",
+    "const title = h => (/<h1 class=\"item\">(.*?)<\\/h1>/.exec(h) || [])[1];"));
 });
 
 test('sigue de dónde sale una clase: una constante, una tabla, lo que se le pasa a una función y los botones de una lista', () => {
@@ -123,6 +125,17 @@ test('--check: una clase que el código pone o busca y no está en el CSS es un 
   assert.match(bad.stderr, /src\/js\/a\.js:1: la clase «cd» no está en src\/css \(se renombró: mapa\.txt\)/);
   assert.match(bad.stderr, /src\/js\/a\.js:2: la clase «it» no está en src\/css \(se renombró/);
   assert.match(bad.stderr, /src\/js\/a\.js:3: la clase «kepe» no está en src\/css\n/);
+});
+
+test('un nombre viejo con guion también se cambia (para corregir un nombre ya puesto)', () => {
+  const p = project({ 'mapa.txt': lines('K item-big item-wide'), 'src/css/a.css': lines('.item-big { top:0; }', '.item { top:1px; }', '.big { top:2px; }'),
+    'src/js/a.js': lines("const a = html`<div class=\"item item-big big\">${x}</div>`;", "const b = document.querySelector('.item.item-big');"),
+    'tests/a.py': lines("n = ev(\"document.querySelectorAll('.item-big, .item').length\")") });
+  const r = p.run();
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(p.read('src/css/a.css'), lines('.item-wide { top:0; }', '.item { top:1px; }', '.big { top:2px; }'));
+  assert.equal(p.read('src/js/a.js'), lines("const a = html`<div class=\"item item-wide big\">${x}</div>`;", "const b = document.querySelector('.item.item-wide');"));
+  assert.equal(p.read('tests/a.py'), lines("n = ev(\"document.querySelectorAll('.item-wide, .item').length\")"));
 });
 
 test('--dry cuenta y no escribe', () => {
