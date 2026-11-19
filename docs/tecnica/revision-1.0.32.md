@@ -155,8 +155,9 @@ Lo que queda de «las líneas largas», sin tocar:
 - **170 líneas de código sin plantilla**: listas de textos y tablas (los pasos de la guía, los avisos legales, los iconos) y
   HTML montado sumando textos, de antes de las plantillas. Y las 665 de `data/`, que son datos: un ejercicio o un alimento
   por línea.
-- **Los nombres de las clases CSS** (337 de 507 tienen cuatro letras o menos: `cd`, `it`, `mu`…): cambiarlos sí cambia el
-  HTML y muchas pruebas que buscan por clase. Es el siguiente paso, por partes.
+- **Los nombres de las clases CSS** (`cd`, `it`, `mu`…): cambiarlos sí cambia el HTML y muchas pruebas que buscan por clase.
+  Se hace por lotes, cada uno con su prueba de que lo que se ve no cambia: [Clases CSS](clases.md). El primero, las 53 de dos
+  letras, está hecho; quedan unas 300 de tres y cuatro letras.
 
 ## Para decidir
 

@@ -26,6 +26,7 @@ python -m playwright install chromium webkit
 | `bash tests/compare.sh vieja.html nueva.html` | Compara el comportamiento y la imagen de dos compilaciones. |
 | `npx firebase emulators:exec --only auth,firestore --project demo-stratafit "node --test tests/rules.test.mjs"` | Prueba las reglas de Firestore con el emulador (necesita Java y `npm install --no-save firebase-tools@15`). |
 | `node tools/rename.js mapa.txt` | Renombra globales (líneas «viejo nuevo») entendiendo ámbitos. |
+| `node tools/classes.js mapa.txt` | Renombra clases CSS (líneas «K viejo nuevo») en los estilos, el código, las pruebas y la documentación: [Clases CSS](clases.md). |
 | `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. Con `--html`, las plantillas HTML cuentan sin sus saltos de línea. |
 | `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo si GitHub Pages volviera a publicar desde la rama). |
 
@@ -54,9 +55,9 @@ una línea se escribe en varias, con cada etiqueta sangrada según lo que contie
 
 ```js
 return html`
-  <div class="cd">
+  <div class="card">
     <div class="row"><b>Agua</b><b>${v / 1000} / ${g / 1000} L</b></div>
-    <div class="g2 cols-3">
+    <div class="grid-2 cols-3">
       <button data-a="addWater" data-i="250">+250 ml</button>
       <button data-a="addWater" data-i="500">+500 ml</button>
     </div>
