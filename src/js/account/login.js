@@ -131,12 +131,12 @@ const loginView = () => {
   return html`
     <div id="lgw" class="login-page">
       ${loginBackdrop()}
-      <div class="login-brand">${brandLogo('lgl', 1)}</div>
+      <div class="login-brand">${brandLogo('login-logo', 1)}</div>
       <p class="login-tagline">Entrenamiento y nutrición</p>
       <div class="card login-card">${form}</div>
       ${up ? '' : html`<p class="muted login-note">¿Has olvidado la contraseña? Pídele al administrador una temporal.</p>`}
       ${appCheckOn() ? html`<p class="muted login-note fs-12">${RECAPTCHA_NOTE}</p>` : ''}
-      <button class="lgl" data-a="loginPrivacy">Privacidad</button>
+      <button class="login-link" data-a="loginPrivacy">Privacidad</button>
       <div class="login-version">V${APPV}</div>
     </div>`;
 };
@@ -144,7 +144,7 @@ const loginView = () => {
 const passwordView = () => html`
   <div id="lgw" class="login-page">
     ${loginBackdrop()}
-    <div class="login-brand">${brandLogo('lgl', 1)}</div>
+    <div class="login-brand">${brandLogo('login-logo', 1)}</div>
     <div class="card login-card">
       <h2 class="login-title">Elige una contraseña nueva</h2>
       <p class="muted m-0-0-6">Has entrado con una contraseña temporal. Para seguir, elige una nueva que solo sepas tú.</p>

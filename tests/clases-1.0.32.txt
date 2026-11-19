@@ -297,3 +297,8 @@ K srv setting-value
 K srd setting-dot
 K srk setting-check
 K srt setting-text
+
+# «lgl» eran dos piezas con los estilos mezclados: el botón «Privacidad» del inicio de sesión (login-link) y el logo
+# (login-logo), que recibía el relleno del botón y se dibujaba más pequeño que su marco. Separadas a mano
+K lgl@brand-logo login-logo
+K lgl login-link

@@ -89,6 +89,9 @@ def main(path):
         check('con el móvil en claro, el inicio de sesión sigue en oscuro (también la tarjeta)', k['theme'] == 'dark' and k['scheme'] == 'dark' and k['card'] == 'rgb(23, 23, 27)', str([k['theme'], k['scheme'], k['card']]))
         bar = pg.evaluate("(m => m ? m.content : '')(document.querySelector('meta[name=\"theme-color\"]:not([media])'))")
         check('y la barra del sistema, negra', bar == '#000000', bar)
+        # (compartía clase con el botón «Privacidad» y recibía su relleno: se dibujaba a 92 × 100 dentro de su marco de 120 × 120)
+        lg = pg.evaluate("(e => { const s = getComputedStyle(e), r = e.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), s.paddingLeft, s.paddingTop, e.naturalWidth == e.naturalHeight]; })(document.querySelector('#lgw .login-brand .brand-logo'))")
+        check('el logo llena su marco: 120 × 120, sin relleno y sin deformarse', lg == [120, 120, '0px', '0px', True], str(lg))
         # debajo de la tarjeta, poco texto: al entrar, cómo recuperar la contraseña; al crear cuenta, nada (lo que se guarda lo
         # cuenta Privacidad). Con App Check, además, una línea con reCAPTCHA, sin nombrar las condiciones de Google (desde abril
         # de 2026 sus preguntas frecuentes piden quitarlas)
@@ -99,7 +102,7 @@ def main(path):
         pg.evaluate("A.loginMode(0,{dataset:{v:'up'}})")
         check('al pasar a «Crear cuenta» la foto es la misma (no se vuelve a cargar)', pg.evaluate("(i => !!i && i.complete && i.naturalWidth == 720)(document.querySelector('#lgw .login-photo'))"))
         check('al crear cuenta no hay nota' + (', solo la línea de reCAPTCHA' if rc else ''), pg.evaluate(notes) == rc, str(pg.evaluate(notes)))
-        check('y Privacidad sigue a mano, en las dos', pg.evaluate("!!document.querySelector('#lgw button.lgl[data-a=loginPrivacy]')"))
+        check('y Privacidad sigue a mano, en las dos', pg.evaluate("!!document.querySelector('#lgw button.login-link[data-a=loginPrivacy]')"))
         if rc:
             pg.click('[data-a=loginPrivacy]')
             pg.wait_for_timeout(300)
