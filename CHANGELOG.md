@@ -121,6 +121,15 @@ línea.
   ser `null` se usa sin mirarlo. La forma de `S`, de `W` y de sus datos queda escrita en `src/types`. Solo se han añadido
   comentarios: la app compilada es idéntica, byte a byte, a la de antes de añadirlos
   ([tipos comprobados](docs/tecnica/tipos.md)).
+- Pantallas legibles: las plantillas `html` largas van en varias líneas, con cada etiqueta sangrada según lo que contiene,
+  en vez de en una sola línea de hasta 1.500 caracteres. Dentro de una plantilla `html`, un salto de línea no forma parte
+  del HTML (entre dos atributos es el espacio que los separa): `build.py` los quita de la copia que compila
+  (`tools/templates.js`), y se rechazan donde se esperaría un espacio, como entre dos palabras. `npm run format` reparte
+  solo las que pasan de 140 columnas: 429 de las 657. La app compilada es idéntica, byte a byte, a la de antes de
+  repartirlas; lo único que cambia es anterior a la regla: la pantalla del análisis mensual ya no lleva en su HTML los seis
+  saltos de línea que tenía escritos (no se veían). Quedan para cuando se resuelva la solicitud de las figuras nuevas los
+  dos módulos que esa reescribe, `extras/figure` y `extras/anatomy`
+  ([plantillas HTML](docs/tecnica/desarrollo.md#plantillas-html)).
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

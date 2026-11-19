@@ -25,7 +25,9 @@ const kcalToday = now => roundInt(dayTotals(S.meals[dayKey(now)])[0]);
 const volumeBars = logs => {
   const last = logs.filter(l => !l.k).slice(-8);
   const mx = Math.max(1, ...last.map(l => l.v));
-  const bars = last.length ? last.map(l => html`<div class="fx-1 bg-ac r-4" data-style="height:${Math.max(6, l.v / mx * 100)}%"></div>`).join('') : '<small>Completa un entreno para ver tu progreso.</small>';
+  const bars = last.length ? last.map(l => html`
+    <div class="fx-1 bg-ac r-4" data-style="height:${Math.max(6, l.v / mx * 100)}%"></div>
+  `).join('') : '<small>Completa un entreno para ver tu progreso.</small>';
   return html`<div class="cd"><b>Volumen por sesión</b><div class="d-flex ai-end gap-6 h-90 mt-8">${raw(bars)}</div></div>`;
 };
 function dashboardBase() {
@@ -35,14 +37,36 @@ function dashboardBase() {
   const from = dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 12));
   const wkc = countBetween(lg, from, dayKey(now));
   const vol = lg.reduce((s, l) => s + l.v, 0);
-  const head = html`<div class="hd"><h1>Dashboard</h1><button data-a="openWeight" aria-label="Evolución del peso" class="p-8-12">${icon('dash', 24)}</button></div>`;
-  const stats = html`<div class="g2 mt-12">${statCell(lg.length, 'Entrenos totales')}${statCell(raw(wkc), 'Últimos 7 días')}${statCell(raw(volumeText(vol)), 'Volumen total')}${statCell(kcalToday(now), 'kcal hoy')}</div>`;
+  const head = html`
+    <div class="hd">
+      <h1>Dashboard</h1>
+      <button data-a="openWeight" aria-label="Evolución del peso" class="p-8-12">${icon('dash', 24)}</button>
+    </div>`;
+  const stats = html`
+    <div class="g2 mt-12">
+      ${statCell(lg.length, 'Entrenos totales')}
+      ${statCell(raw(wkc), 'Últimos 7 días')}
+      ${statCell(raw(volumeText(vol)), 'Volumen total')}
+      ${statCell(kcalToday(now), 'kcal hoy')}
+    </div>`;
   return html`${head}${raw(weighBanner())}${stats}${volumeBars(lg)}<div class="cd">${calendarPage()}</div>`;
 }
 const recordsCard = () => {
   const ks = new Set(Object.keys(S.records || {}).concat(Object.keys(S.exerciseHistory || {})));
   const l = [...ks].map(n => [n, bestOf(n)]).filter(x => x[1]).sort((a, b) => b[1].e - a[1].e).slice(0, 6);
-  return html`<div class="cd"><b>Récords personales</b>${raw(l.length ? l.map(x => html`<div class="it cols-1fr-auto"><span>${x[0]}<br><small>${raw(x[1].d)}</small></span><span class="ta-r"><b>${toDisplayWeight(x[1].w)} ${weightUnit()} × ${raw(x[1].r)}</b><br><small>1RM est. ${roundInt(toDisplayWeight(x[1].e))} ${weightUnit()}</small></span></div>`).join('') : '<p class="mu m-8-0-0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>')}</div>`;
+  return html`
+    <div class="cd">
+      <b>Récords personales</b>
+      ${raw(l.length ? l.map(x => html`
+        <div class="it cols-1fr-auto">
+          <span>${x[0]}<br><small>${raw(x[1].d)}</small></span>
+          <span class="ta-r">
+            <b>${toDisplayWeight(x[1].w)} ${weightUnit()} × ${raw(x[1].r)}</b><br>
+            <small>1RM est. ${roundInt(toDisplayWeight(x[1].e))} ${weightUnit()}</small>
+          </span>
+        </div>
+      `).join('') : '<p class="mu m-8-0-0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>')}
+    </div>`;
 };
 export const weekStats = () => {
   const now = new Date();
@@ -92,7 +116,20 @@ export const weekStats = () => {
 };
 const weekCard = () => {
   const s = weekStats();
-  return html`<div class="cd wkc"><div class="row"><b>Esta semana</b><small>${raw(s.c)} de ${s.g}${s.g == 1 ? ' entreno' : ' entrenos'}</small></div><div class="wkd">${s.dots.map(d => html`<span class="${d.on ? 'on ' : ''}${d.td ? 'td ' : ''}${d.fu ? 'fu' : ''}"><i></i>${raw(d.l)}</span>`)}</div><div class="wks"><div><b>${s.st}</b><small>${s.st == 1 ? 'semana de racha' : 'semanas de racha'}</small></div><div><b>${s.best}</b><small>mejor racha</small></div></div><small class="mu wkn">${raw(s.any ? 'La semana cuenta con ' + s.t + ' o más entrenos.' : 'Completa tu primer entreno para empezar la racha.')}</small></div>`;
+  return html`
+    <div class="cd wkc">
+      <div class="row"><b>Esta semana</b><small>${raw(s.c)} de ${s.g}${s.g == 1 ? ' entreno' : ' entrenos'}</small></div>
+      <div class="wkd">
+        ${s.dots.map(d => html`<span class="${d.on ? 'on ' : ''}${d.td ? 'td ' : ''}${d.fu ? 'fu' : ''}"><i></i>${raw(d.l)}</span>`)}
+      </div>
+      <div class="wks">
+        <div><b>${s.st}</b><small>${s.st == 1 ? 'semana de racha' : 'semanas de racha'}</small></div>
+        <div><b>${s.best}</b><small>mejor racha</small></div>
+      </div>
+      <small class="mu wkn">
+        ${raw(s.any ? 'La semana cuenta con ' + s.t + ' o más entrenos.' : 'Completa tu primer entreno para empezar la racha.')}
+      </small>
+    </div>`;
 };
 export function dashboardTab() {
   const h = dashboardBase() + recordsCard();

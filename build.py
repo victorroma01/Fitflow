@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """StrataFit · build
 
-Compila src/ en la app. Necesita Python 3 y esbuild («npm install»), que une los módulos ES y comprime el código.
+Compila src/ en la app. Necesita Python 3, node y los paquetes de «npm install»: esbuild, que une los módulos ES y comprime
+el código, y typescript, con el que tools/templates.js lee las plantillas html`…` para dejarlas en una línea antes de compilar.
 
   python3 build.py                 → dist/app/  (index.html + js/ + sw.js + version.json + manifiesto + iconos + img/, para GitHub Pages)
                                      dist/stratafit.html  (archivo único con todo incrustado, sin service worker)
@@ -16,7 +17,8 @@ Estructura (todo vive en src/):
   src/css/NN-nombre.css   trozos de CSS; se concatenan por orden alfabético (el orden importa por la cascada)
   src/js/main.js          punto de entrada: importa los módulos en orden de carga (cada uno registra sus manejadores)
   src/js/<area>/<m>.js    módulos ES (import/export); esbuild los une: en un solo <script> (archivo único) o en js/
-                          con lo poco usado en archivos aparte que se cargan al usarlo (paquete)
+                          con lo poco usado en archivos aparte que se cargan al usarlo (paquete). Sus plantillas html`…`
+                          pueden ocupar varias líneas: esos saltos no llegan a la app (flat_js)
   src/js/data/media.js    molde que el build sustituye por las fotos de src/img/ (rutas o base64 según la variante)
   src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
@@ -292,12 +294,37 @@ def run_esbuild(args, stdin=None):
     return r.stdout
 
 
+def flat_js():
+    """Copia de src/js con cada plantilla html`…` en una línea (tools/templates.js): de ella parte cada variante.
+
+    En src/js una plantilla larga va en varias líneas, y esos saltos de línea no forman parte del HTML: aquí se quitan, así
+    que la app compilada es la misma, byte a byte, se escriba una plantilla en una línea o en veinte. Un salto de línea que
+    cambiaría el HTML (entre dos palabras, dentro del valor de un atributo) para la compilación con su archivo y su línea.
+    Se prepara una vez por compilación, en dist/.flat, que se borra al terminar."""
+    flat = os.path.join(DIST, '.flat')
+    if not FLAT_DONE:
+        shutil.rmtree(flat, ignore_errors=True)
+        shutil.copytree(os.path.join(SRC, 'js'), flat)
+        node = shutil.which('node')
+        if not node:
+            die('falta node: lo necesita tools/templates.js para preparar las plantillas html`…`')
+        r = subprocess.run([node, os.path.join(ROOT, 'tools', 'templates.js'), '--flat', flat], capture_output=True, text=True)
+        if r.returncode:
+            die('plantillas html`…` (tools/templates.js):\n' + (r.stderr or r.stdout).strip())
+        FLAT_DONE.append(1)
+    return flat
+
+
+FLAT_DONE = []
+
+
 def stage(generated, deploy, emu=False, appcheck=False):
-    """Copia src/js a una carpeta temporal con los moldes generados (data/media, data/release) y, en el paquete, FFDEP = 1."""
+    """Copia el código (flat_js) a una carpeta temporal con los moldes generados (data/media, data/release) y, en el
+    paquete, FFDEP = 1."""
     # siempre la misma carpeta: esbuild tiene en cuenta las rutas al calcular los nombres de los archivos, y así salen iguales
     st = os.path.join(DIST, '.stage')
     shutil.rmtree(st, ignore_errors=True)
-    shutil.copytree(os.path.join(SRC, 'js'), st)
+    shutil.copytree(flat_js(), st)
     for m, code in generated.items():
         p = os.path.join(st, m)
         t = read(p)
@@ -606,4 +633,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    finally:
+        shutil.rmtree(os.path.join(DIST, '.flat'), ignore_errors=True)

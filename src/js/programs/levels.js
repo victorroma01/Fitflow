@@ -164,7 +164,25 @@ export const levelPill = () => {
   if (!levelsActive())
     return '';
   const v = isLevel(S.level) ? S.level : 'int';
-  return html`<div class="lvw ${LEVEL_CLASS[v]}"><button class="lvp" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="levelMenuClose"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi ${LEVEL_CLASS[k]}${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
+  return html`
+    <div class="lvw ${LEVEL_CLASS[v]}">
+      <button class="lvp" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}"
+          aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">
+        ${levelDot(v)}
+        <span>${raw(LEVEL_NAMES[v])}</span>
+        <span class="lvc">▾</span>
+      </button>
+      ${levelMenuOpen ? html`
+        <div class="lvb" data-a="levelMenuClose"></div>
+        <div class="lvm" role="menu">
+          ${LEVEL_KEYS.map(k => html`
+            <button class="lvi ${LEVEL_CLASS[k]}${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem">
+              ${levelDot(k)}
+              <span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>
+              ${raw(k == v ? '<em>✓</em>' : '')}
+            </button>`)}
+        </div>` : ''}
+    </div>`;
 };
 A.levelMenuToggle = () => {
   levelMenuOpen = !levelMenuOpen;
@@ -238,7 +256,15 @@ A.levelConfirm = () => {
   if (isLevel(pendingLevel))
     applyLevel(pendingLevel);
 };
-export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${LEVEL_CLASS[k]}${k == previewLevel ? ' on' : ''}" data-a="previewChooseLevel" data-v="${k}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
+export const levelSegment = () => html`
+  <div class="lvs">
+    ${LEVEL_KEYS.map(k => html`
+      <button class="${LEVEL_CLASS[k]}${k == previewLevel ? ' on' : ''}" data-a="previewChooseLevel" data-v="${k}">
+        ${levelDot(k)}
+        <span>${raw(LEVEL_NAMES[k])}</span>
+      </button>`)}
+  </div>
+  <p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
 A.previewChooseLevel = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   if (isLevel(v))

@@ -28,6 +28,7 @@ run node tools/figure.js --check
 run python3 build.py --check
 run node tools/types.js
 run python3 tests/changelog.py
+run node --test --test-reporter=dot tests/templates.test.mjs
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs

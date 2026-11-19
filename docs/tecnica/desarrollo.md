@@ -5,7 +5,7 @@
 Python 3.10 o más, Node 18 o más y, para las pruebas, Playwright.
 
 ```bash
-npm install                                   # esbuild (compilar), typescript y acorn (comprobaciones y formato)
+npm install                                   # esbuild y typescript (compilar, comprobaciones y formato) y acorn (comprobaciones)
 pip install -r tests/requirements.txt
 python -m playwright install chromium webkit
 ```
@@ -18,7 +18,7 @@ python -m playwright install chromium webkit
 | `python3 build.py --check` | Además pasa las reglas de `tools/check.js`. |
 | `python3 build.py --emulador` | Solo el archivo único, en `dist/emu/`, conectado al emulador de Firebase de este ordenador (pruebas de la nube). |
 | `python3 build.py --appcheck` | Solo el archivo único, en `dist/appcheck/`, con App Check configurado con valores de prueba y la CSP que eso abre (lo usa `tests/cloud.py`). |
-| `npm run format` | Formatea JS y CSS, pone al día la línea «Define:» de cada módulo y el [mapa de módulos](modulos.md). |
+| `npm run format` | Formatea JS y CSS, reparte en líneas las [plantillas HTML](#plantillas-html) que no caben en una, y pone al día la línea «Define:» de cada módulo y el [mapa de módulos](modulos.md). |
 | `node tools/types.js` | Comprueba los tipos de todos los módulos ([Tipos comprobados](tipos.md)); con `--resumen`, lo que le falta a cada módulo para el nivel estricto. |
 | `node tools/figure.js` | Rehace `src/js/data/figure.js` (el modelo de perfil de las [figuras de ejercicio](figuras.md)) a partir de los puntos del dibujo. |
 | `bash tests/run.sh` | Formato, reglas, tipos, mapa de módulos y todas las pruebas. |
@@ -26,14 +26,14 @@ python -m playwright install chromium webkit
 | `bash tests/compare.sh vieja.html nueva.html` | Compara el comportamiento y la imagen de dos compilaciones. |
 | `npx firebase emulators:exec --only auth,firestore --project demo-stratafit "node --test tests/rules.test.mjs"` | Prueba las reglas de Firestore con el emulador (necesita Java y `npm install --no-save firebase-tools@15`). |
 | `node tools/rename.js mapa.txt` | Renombra globales (líneas «viejo nuevo») entendiendo ámbitos. |
-| `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. |
+| `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. Con `--html`, las plantillas HTML cuentan sin sus saltos de línea. |
 | `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo si GitHub Pages volviera a publicar desde la rama). |
 
 ## Añadir una función
 
 1. Crea `src/js/<área>/<nombre>.js` con su cabecera (`/* ═══ área/nombre ═══ qué hace … Define: … */`), sus `import` y sus
-   `export const` / `export function`. Los manejadores (`A.miAccion = …`) van en el mismo archivo y el HTML, con plantillas
-   ``html`…` ``.
+   `export const` / `export function`. Los manejadores (`A.miAccion = …`) van en el mismo archivo y el HTML, con
+   [plantillas ``html`…` ``](#plantillas-html).
 2. Impórtalo en `src/js/main.js` antes de `core/boot.js`. Si es algo poco usado, en lugar de eso cárgalo desde `core/lazy`.
 3. Si guarda datos nuevos, documenta la clave en [estado.md](estado.md), dale su tipo en `src/types/state.d.ts`
    ([Tipos comprobados](tipos.md)), valídala en `core/repair` (al arrancar y tras cada
@@ -46,6 +46,45 @@ python -m playwright install chromium webkit
    `tests/rules.test.mjs`.
 5. Si el usuario lo ve, descríbelo en la [documentación funcional](../funcional/README.md).
 6. `npm run format` y `bash tests/run.sh`.
+
+## Plantillas HTML
+
+Una pantalla es una plantilla ``html`…` `` (`core/html`), que escapa cada valor que se inserta. Una plantilla que no cabe en
+una línea se escribe en varias, con cada etiqueta sangrada según lo que contiene, como se escribe el HTML:
+
+```js
+return html`
+  <div class="cd">
+    <div class="row"><b>Agua</b><b>${v / 1000} / ${g / 1000} L</b></div>
+    <div class="g2 cols-3">
+      <button data-a="addWater" data-i="250">+250 ml</button>
+      <button data-a="addWater" data-i="500">+500 ml</button>
+    </div>
+  </div>`;
+```
+
+**La regla.** Dentro de una plantilla ``html`…` ``, un salto de línea, con los espacios que lo rodean, no forma parte del HTML:
+solo ordena el código. Si hace falta un espacio, va dentro de la línea. La única excepción es dentro de una etiqueta, donde un
+salto de línea separa dos atributos, como el espacio que habría entre ellos.
+
+No hace falta colocar nada a mano: `npm run format` reparte las plantillas que pasan de 140 columnas y deja enteras las que
+caben. Lo que hace:
+
+- Un elemento que no cabe pone cada hijo en su línea, sangrado; el que cabe se queda entero.
+- Una etiqueta que no cabe sigue en la línea siguiente, entre dos atributos, sangrada el doble que un hijo.
+- Una frase (un texto con los `${…}` y las etiquetas de texto, como `<b>` o `<span>`, que lleva al lado) va entera en una
+  línea. Un texto no se puede partir, porque un salto de línea no es un espacio: si es largo, su línea se pasa de ancho.
+- Las plantillas de dentro de un `${…}` se reparten igual, sangradas respecto a la línea en la que empieza ese `${…}`.
+- Si a una plantilla repartida le sigue más código (`` ` : otraCosa ``), su `` ` `` de cierre va en una línea propia.
+
+**Lo que se rechaza.** Un salto de línea donde quien lee esperaría un espacio y no lo habría: entre dos palabras, entre un texto
+y el `${…}` o la etiqueta de texto que lleva al lado, dentro del valor de un atributo, o detrás de un espacio. `build.py` y
+`npm run format` se paran ahí con el archivo y la línea. Así, lo que se ve separado en el código nunca sale unido en la pantalla.
+
+**Por qué no cambia la app.** `build.py` compila una copia del código con cada plantilla en una línea
+(`tools/templates.js --flat`), así que la app compilada es la misma, byte a byte, se escriba una plantilla en una línea o en
+veinte. El formateador, antes de guardar un módulo, comprueba que con las plantillas en una línea es el mismo código que recibió.
+Los saltos de línea de una plantilla sin la etiqueta `html` (un texto, un CSV) sí cuentan, como en cualquier JavaScript.
 
 ## Programas, técnicas y catálogo de ejercicios
 
@@ -100,7 +139,7 @@ existe, un valor de otro tipo, una función llamada con lo que no es ([Tipos com
 
 `tools/format.js` además rehace la línea «Define:» de la cabecera de cada módulo con lo que declara de verdad, y
 `tools/modindex.js` copia las cabeceras al [mapa de módulos](modulos.md). Con `--check`, una cabecera o un mapa desfasados fallan
-como un archivo sin formatear.
+como un archivo sin formatear, igual que una [plantilla HTML](#plantillas-html) larga sin repartir en líneas.
 
 ## Ramas y publicación
 

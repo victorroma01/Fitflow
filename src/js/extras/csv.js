@@ -59,11 +59,25 @@ const CSV_EXPORTS = {
     } },
   car: { t: 'Cardio', s: 'Sesiones con distancia, tiempo y ritmo', f: 'cardio', n: () => cardioLogs().length, b: () => /** @type {any[][]} */ ([['Fecha', 'Tipo', 'Distancia (km)', 'Tiempo (min)', 'Ritmo o velocidad']]).concat(cardioLogs().map(l => [l.d, cardioLabel(l.c.t), +l.c.km || '', round1((+l.c.sec || 0) / 60), cardioPace(l.c.t, +l.c.km, +l.c.sec)])) }
 };
-A.openCsvExport = () => fullPage(html`${pgHead('Exportar datos')}<p class="mu m-n6-2-10 fs-14">Archivos CSV para abrir en Excel, Numbers o Google Sheets. Los pesos van en kg. Separador «;» y decimales con coma, listos para Excel en español.</p>${Object.keys(CSV_EXPORTS).map(k => {
-  const c = CSV_EXPORTS[k];
-  const n = c.n();
-  return html`<div class="cd d-flex gap-12 ai-c jc-between"><span class="minw-0"><b>${raw(c.t)}</b><br><small>${raw(c.s)}</small></span><button data-a="csvDownload" data-v="${k}" class="fx-none ws-nowrap${n ? '' : ' op-0_45'}"${n ? '' : ' disabled'}>${icon('dwn', 16)} ${n ? 'CSV' : 'Vacío'}</button></div>`;
-})}<p class="mu fs-12 m-12-2">Para guardar todo y poder restaurarlo en StrataFit usa la copia de seguridad, no el CSV.</p><button data-a="openBackup" class="w-full">Copia de seguridad</button><div class="h-30"></div>`);
+A.openCsvExport = () => fullPage(html`
+  ${pgHead('Exportar datos')}
+  <p class="mu m-n6-2-10 fs-14">
+    Archivos CSV para abrir en Excel, Numbers o Google Sheets. Los pesos van en kg. Separador «;» y decimales con coma, listos para Excel en español.
+  </p>
+  ${Object.keys(CSV_EXPORTS).map(k => {
+    const c = CSV_EXPORTS[k];
+    const n = c.n();
+    return html`
+      <div class="cd d-flex gap-12 ai-c jc-between">
+        <span class="minw-0"><b>${raw(c.t)}</b><br><small>${raw(c.s)}</small></span>
+        <button data-a="csvDownload" data-v="${k}" class="fx-none ws-nowrap${n ? '' : ' op-0_45'}"${n ? '' : ' disabled'}>
+          ${icon('dwn', 16)} ${n ? 'CSV' : 'Vacío'}
+        </button>
+      </div>`;
+  })}
+  <p class="mu fs-12 m-12-2">Para guardar todo y poder restaurarlo en StrataFit usa la copia de seguridad, no el CSV.</p>
+  <button data-a="openBackup" class="w-full">Copia de seguridad</button>
+  <div class="h-30"></div>`);
 A.csvDownload = async (i, b) => {
   const c = CSV_EXPORTS[b.dataset.v];
   if (!c)

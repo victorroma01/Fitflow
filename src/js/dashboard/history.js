@@ -24,7 +24,13 @@ export function calendarPage() {
     c += '<i></i>';
   for (let i = 1; i <= n; i++)
     c += html`<i class="${ds.has(dayKey(new Date(d.getFullYear(), d.getMonth(), i))) ? 'on' : ''}">${i}</i>`;
-  return html`<div class="row"><button data-a="calendarMonth" data-i="-1" aria-label="Mes anterior" class="tz">‹</button><b>${fmtDate(d, MONTH_YEAR)}</b><button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente" class="tz">›</button></div><div class="cal mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
+  return html`
+    <div class="row">
+      <button data-a="calendarMonth" data-i="-1" aria-label="Mes anterior" class="tz">‹</button>
+      <b>${fmtDate(d, MONTH_YEAR)}</b>
+      <button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente" class="tz">›</button>
+    </div>
+    <div class="cal mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
 const logsPage = () => {
   /* del día más reciente al más antiguo y, dentro de un día, el último que se guardó primero: un cardio se puede apuntar con
@@ -32,7 +38,13 @@ const logsPage = () => {
   const L = S.logs.map((l, i) => ({ l, i })).reverse().sort((a, b) => a.l.d < b.l.d ? 1 : a.l.d > b.l.d ? -1 : 0);
   const tv = S.logs.reduce((s, l) => s + l.v, 0);
   const tm = S.logs.reduce((s, l) => s + (+l.m || 0), 0);
-  let h = html`${pgHead('Registros')}<div class="g2 cols-3 gap-8"><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${S.logs.length}</b><br><small>Entrenos</small></div><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${raw(volumeText(tv, 1))}</b><br><small>Volumen</small></div><div class="cd m-0 ta-c p-12-6"><b class="fs-22">${round1(tm / 60)} h</b><br><small>Tiempo</small></div></div>`;
+  let h = html`
+    ${pgHead('Registros')}
+    <div class="g2 cols-3 gap-8">
+      <div class="cd m-0 ta-c p-12-6"><b class="fs-22">${S.logs.length}</b><br><small>Entrenos</small></div>
+      <div class="cd m-0 ta-c p-12-6"><b class="fs-22">${raw(volumeText(tv, 1))}</b><br><small>Volumen</small></div>
+      <div class="cd m-0 ta-c p-12-6"><b class="fs-22">${round1(tm / 60)} h</b><br><small>Tiempo</small></div>
+    </div>`;
   let last = '';
   if (!L.length)
     return html`${raw(h)}<p class="mu mt-18">Aún no hay entrenos guardados. Se registran al pulsar «Guardar entreno».</p>`;
@@ -42,7 +54,11 @@ const logsPage = () => {
       last = m;
       h += html`<div class="ph">${m}</div>`;
     }
-    h += html`<div class="it exr cur-pointer" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0"><span><b>${o.l.n}</b><br><small>${fmtDateShort(o.l.d, WEEKDAY_DAY)}${raw(logText(o.l))}</small></span><b>${raw(logRight(o.l))}</b></div>`;
+    h += html`
+      <div class="it exr cur-pointer" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0">
+        <span><b>${o.l.n}</b><br><small>${fmtDateShort(o.l.d, WEEKDAY_DAY)}${raw(logText(o.l))}</small></span>
+        <b>${raw(logRight(o.l))}</b>
+      </div>`;
   });
   return html`${raw(h)}<p class="mu fs-12 mt-14">Toca un registro para borrarlo.</p>`;
 };
@@ -110,7 +126,10 @@ A.logDelete = () => {
   sheet(logsPage());
   R();
 };
-A.openCalendar = () => fullPage(html`${pgHead('Calendario')}<div class="cd" id="cl">${calendarPage()}</div><p class="mu fs-13">Los días marcados son los que registraste un entreno.</p>`);
+A.openCalendar = () => fullPage(html`
+  ${pgHead('Calendario')}
+  <div class="cd" id="cl">${calendarPage()}</div>
+  <p class="mu fs-13">Los días marcados son los que registraste un entreno.</p>`);
 function logText(l) {
   return l.k == 'c' && l.x ? ' · ' + X(l.x) : l.k == 'w' && l.x ? ' · ' + X(l.x) + (l.nt ? ' · ' + X(l.nt) : '') : ' · ' + l.s + ' series · ' + l.m + ' min';
 }

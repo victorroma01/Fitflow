@@ -91,7 +91,14 @@ const IMAGE_LABELS_F = { legs: 'Hip thrust' };
 export const imagePicker = r => {
   const v = routineImage(r);
   const label = k => (profileSex() == 'F' && IMAGE_LABELS_F[k]) || IMAGE_LABELS[k] || k;
-  return html`<div class="d-grid cols-4 gap-8 m-6-0-4">${Object.keys(DAY_PHOTOS).filter(k => !REST_IMAGES.includes(k)).map(k => html`<button data-a="routineSetImage" data-v="${k}" aria-label="${label(k)}" class="p-0 h-78 pos-rel ov-hidden r-14 ${v == k ? 'bd-2-solid-a2' : 'bd-2-solid-ln'}"><img src="${photoUrl(k)}" alt="" class="w-full h-full of-cover d-block${v == k ? '' : ' op-0_55'}"></button>`)}</div>`;
+  return html`
+    <div class="d-grid cols-4 gap-8 m-6-0-4">
+      ${Object.keys(DAY_PHOTOS).filter(k => !REST_IMAGES.includes(k)).map(k => html`
+        <button data-a="routineSetImage" data-v="${k}" aria-label="${label(k)}"
+            class="p-0 h-78 pos-rel ov-hidden r-14 ${v == k ? 'bd-2-solid-a2' : 'bd-2-solid-ln'}">
+          <img src="${photoUrl(k)}" alt="" class="w-full h-full of-cover d-block${v == k ? '' : ' op-0_55'}">
+        </button>`)}
+    </div>`;
 };
 A.routineSetImage = (i, b) => {
   S.routines[routineState.i].img = b.dataset.v;
