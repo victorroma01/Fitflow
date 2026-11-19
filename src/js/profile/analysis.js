@@ -307,7 +307,7 @@ const monthBar = (m, i, count, f) => html`
     <button data-a="analysisMonth" data-i="-1" aria-label="Mes anterior"${i > 0 ? '' : ' disabled'}>‹</button>
     <div>
       <b>${cap(monthName(anaYm))}</b>
-      <small class="mu">
+      <small class="muted">
         ${m.open ? 'del 1 al ' + m.nd + ' (en curso)' : 'del 1 al ' + m.nd}
         ${f && f > m.a ? ' · desde el ' + +f.slice(8, 10) : ''}
       </small>
@@ -323,11 +323,11 @@ const kpiGrid = m => {
   const hm = Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0');
   return html`
     <div class="ankg">
-      ${kpi('Entrenos', String(t.n), delta(t.n, m.pt.n), t.n >= m.pt.n ? 'up' : 'dn')}
+      ${kpi('Entrenos', String(t.n), delta(t.n, m.pt.n), t.n >= m.pt.n ? 'up' : 'down')}
       ${kpi('Tiempo', hm, '')}
-      ${kpi('Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1), t.vol >= m.pt.vol ? 'up' : 'dn')}
+      ${kpi('Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1), t.vol >= m.pt.vol ? 'up' : 'down')}
       ${kpi('Récords', String(ex.rec.length), ex.rec.length ? 'mejor 1RM estimado' : '')}
-      ${kpi('Peso', weightDelta(w), w.d == null ? 'sin pesajes' : w.tr, w.ok == null ? '' : w.ok ? 'up' : 'dn')}
+      ${kpi('Peso', weightDelta(w), w.d == null ? 'sin pesajes' : w.tr, w.ok == null ? '' : w.ok ? 'up' : 'down')}
       ${kpi('Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días', '')}
     </div>`;
 };
@@ -336,11 +336,11 @@ const trainingCard = m => {
   const t = m.t;
   const ex = m.ex;
   return html`
-    <div class="cd ans">
+    <div class="card ans">
       <b class="anh">Entrenamientos</b>
       <p>${t.n ? sessionsText(t) + '. ' + setsText(t) + '.' : 'Sin entrenos registrados este mes.'}</p>
       ${raw(svgBars(m))}
-      ${m.plan > 0 ? html`<p class="mu">${planText(m)}</p>` : ''}
+      ${m.plan > 0 ? html`<p class="muted">${planText(m)}</p>` : ''}
       ${ex.rec.length ? html`
         <div class="anr">
           <small>Récords del mes (1RM estimado)</small>
@@ -361,10 +361,10 @@ const trainingCard = m => {
 const weightCard = m => {
   const w = m.w;
   return html`
-    <div class="cd ans">
+    <div class="card ans">
       <b class="anh">Peso corporal</b>
       ${w.d == null ? html`
-        <p class="mu">No hay pesajes este mes. En Dashboard → Evolución del peso puedes registrarlo y activar un recordatorio.</p>
+        <p class="muted">No hay pesajes este mes. En Dashboard → Evolución del peso puedes registrarlo y activar un recordatorio.</p>
       ` : html`<p><b class="an${w.tr == 'estable' ? 'e' : w.ok ? 'o' : 'x'}">${weightChange(w)}</b>${goalNote(w)}</p>${raw(svgLine(m))}`}
     </div>`;
 };
@@ -373,15 +373,15 @@ const nutritionCard = m => {
   const n = m.nu;
   const vc = n.verdict == 'Cumplido' ? 'ok' : n.verdict == 'A medias' ? 'seen' : n.verdict ? 'bad' : 'off';
   return html`
-    <div class="cd ans">
+    <div class="card ans">
       <b class="anh">Alimentación</b>
       <p><span class="rps ${vc}">${n.verdict || 'Sin datos suficientes'}</span></p>
       ${n.logged ? html`
-        <div class="g2 ann">
-          <div><small>kcal de media</small><b>${fmtN(n.ak)}</b><small class="mu">objetivo ${fmtN(n.tk)}</small></div>
-          <div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="mu">objetivo ${fmtN(n.tp)} g</small></div>
+        <div class="grid-2 ann">
+          <div><small>kcal de media</small><b>${fmtN(n.ak)}</b><small class="muted">objetivo ${fmtN(n.tk)}</small></div>
+          <div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="muted">objetivo ${fmtN(n.tp)} g</small></div>
         </div>
-        <p class="mu">
+        <p class="muted">
           ${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? ' · de media ' + n.side : ''}.${n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''}
         </p>
         ${raw(svgKcal(m))}
@@ -390,12 +390,12 @@ const nutritionCard = m => {
           <span><i class="bg-xf59e0b"></i>por encima</span>
           <span><i class="bg-x4da3ff"></i>por debajo</span>
         </div>
-      ` : html`<p class="mu">No hay comidas registradas este mes.</p>`}
+      ` : html`<p class="muted">No hay comidas registradas este mes.</p>`}
     </div>`;
 };
 /* otros datos: las medidas que han cambiado y los logros conseguidos ('' si no hay ni unas ni otros) */
 const otherCard = m => m.o.ms.length || m.o.ach.length ? html`
-  <div class="cd ans">
+  <div class="card ans">
     <b class="anh">Otros datos</b>
     ${m.o.ms.length ? html`
       <div class="anr">
@@ -406,7 +406,7 @@ const otherCard = m => m.o.ms.length || m.o.ach.length ? html`
   </div>` : '';
 /* la conclusión del mes, en frases */
 const conclusionCard = m => html`
-  <div class="cd ans"><b class="anh">Conclusión</b><ul class="anu">${conclusions(m).map(c => html`<li>${c}</li>`)}</ul></div>`;
+  <div class="card ans"><b class="anh">Conclusión</b><ul class="anu">${conclusions(m).map(c => html`<li>${c}</li>`)}</ul></div>`;
 const analysisPage = () => {
   const [f, from] = analysisFrom();
   const today = dayKey(new Date());
@@ -414,9 +414,9 @@ const analysisPage = () => {
     return html`
       <div id="anp">
         ${pgHead('Análisis mensual')}
-        <div class="cd">
+        <div class="card">
           <b>Aún no hay análisis</b>
-          <p class="mu">
+          <p class="muted">
             ${from ? 'Estará disponible a partir del ' + fmtDateShort(from, { day: 'numeric', month: 'long' }) + ', cuando tengas un mes de datos.' : 'Estará disponible cuando lleves un mes registrando entrenos, comidas o tu peso.'}
           </p>
         </div>
@@ -436,7 +436,7 @@ const analysisPage = () => {
       ${otherCard(m)}
       ${conclusionCard(m)}
       <div class="h-96"></div>
-      <div class="sb"><button class="pr w-full p-15 r-16 fs-16" data-a="analysisDownloadPdf">Descargar PDF</button></div>
+      <div class="sticky-btn"><button class="primary w-full p-15 r-16 fs-16" data-a="analysisDownloadPdf">Descargar PDF</button></div>
     </div>`;
 };
 /* ── el PDF (T-15) ─────────────────────────────────────────────────────────────────────────────────────────────────── */

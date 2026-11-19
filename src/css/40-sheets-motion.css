@@ -14,18 +14,18 @@ button:focus-visible {
   outline:2px solid var(--a2);
   outline-offset:2px;
 }
-.bk {
+.backdrop {
   animation:fdi .25s ease;
 }
-.sp {
+.sheet {
   animation:upi .32s cubic-bezier(.2,.8,.2,1);
 }
 /* la hoja, el aviso, el menú y el WOD reciben el foco al abrirse (core/ui, I-06): son ventanas, no controles, así que sin marco */
-.sp:focus,.dgc:focus,.msd:focus,#f2w:focus {
+.sheet:focus,.dgc:focus,.msd:focus,#f2w:focus {
   outline:none;
 }
 /* solo para los lectores de pantalla: el nombre de una hoja que no lleva título a la vista (I-06) */
-.vh {
+.visually-hidden {
   position:absolute;
   width:1px;
   height:1px;
@@ -57,28 +57,28 @@ button:focus-visible {
     transform:translateX(100%);
   }
 }
-.sp .mb,.sp .it,.sp .cd {
+.sheet .wide-btn,.sheet .item,.sheet .card {
   animation:rsi .35s both;
 }
-.sp .mb:nth-child(2) {
+.sheet .wide-btn:nth-child(2) {
   animation-delay:.04s;
 }
-.sp .mb:nth-child(3) {
+.sheet .wide-btn:nth-child(3) {
   animation-delay:.08s;
 }
-.sp .mb:nth-child(4) {
+.sheet .wide-btn:nth-child(4) {
   animation-delay:.12s;
 }
-.sp .mb:nth-child(5) {
+.sheet .wide-btn:nth-child(5) {
   animation-delay:.16s;
 }
 details[open]>:not(summary) {
   animation:rsi .28s both;
 }
-#sh.full .bk {
+#sh.full .backdrop {
   display:none;
 }
-#sh.full .sp {
+#sh.full .sheet {
   top:0;
   height:100%;
   max-height:100%;
@@ -86,17 +86,17 @@ details[open]>:not(summary) {
   animation:slr .32s cubic-bezier(.2,.8,.2,1);
 }
 /* la página a la que se vuelve, puesta debajo de la subpágina que se desliza con el dedo (core/ui showPageBelow) */
-#sh.full .sp.spu {
+#sh.full .sheet.spu {
   z-index:8;
   animation:none;
   pointer-events:none;
 }
 /* la página que sigue al dedo, con una sombra en su borde: se ve que va por encima de lo que deja a la vista */
-html.sliding #sh.full .sp:not(.spu) {
+html.sliding #sh.full .sheet:not(.spu) {
   box-shadow:-12px 0 32px rgba(0,0,0,.3);
 }
 /* esa página, y la misma ya de verdad al soltar el dedo (.still), salen tal cual: sin las animaciones de entrada */
-.sp.spu *,.sp.spu *::before,.sp.spu *::after,.sp.still,.sp.still *,.sp.still *::before,.sp.still *::after {
+.sheet.spu *,.sheet.spu *::before,.sheet.spu *::after,.sheet.still,.sheet.still *,.sheet.still *::before,.sheet.still *::after {
   animation:none!important;
 }
 .swg {

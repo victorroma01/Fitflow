@@ -16,17 +16,17 @@ import { pendingDocs, stopSync, syncLine, syncNow, syncState } from '../cloud/sy
 import { html, raw } from '../core/html.js';
 /** Estado de la sincronización en una palabra (valor de la fila de Ajustes). */
 export const syncShort = () => account && (account.x || syncState().st == 'dead') ? 'Vuelve a entrar' : { run: 'Sincronizando…', off: 'Sin conexión', wait: 'Tras el entreno', err: 'Reintentando' }[syncState().st] || 'Al día';
-const infoRow = (l, v) => html`<div class="it cols-auto-1fr gap-12"><span>${raw(l)}</span><b class="ta-r ow-anywhere">${v}</b></div>`;
+const infoRow = (l, v) => html`<div class="item cols-auto-1fr gap-12"><span>${raw(l)}</span><b class="ta-r ow-anywhere">${v}</b></div>`;
 /** Página «Cuenta» de Ajustes. */
 export const accountPage = () => html`
-  <div class="cd acl">
+  <div class="card acl">
     ${raw(infoRow('Usuario', acctName()))}
     ${raw(infoRow('Tipo de cuenta', isAdmin() ? 'Administrador' : 'Usuario'))}
     ${raw(infoRow('Sincronización', syncLine()))}
   </div>
-  ${account && account.x ? html`<button class="pr w-full m-4-0-8" data-a="reloginShow">Volver a entrar</button>` : html`<button data-a="accountSyncNow" class="w-full m-4-0-8">Sincronizar ahora</button>`}
+  ${account && account.x ? html`<button class="primary w-full m-4-0-8" data-a="reloginShow">Volver a entrar</button>` : html`<button data-a="accountSyncNow" class="w-full m-4-0-8">Sincronizar ahora</button>`}
   <button data-a="openSettingsPage" data-v="clave" class="w-full">Cambiar contraseña</button>
-  <p class="mu fs-13 m-14-2">
+  <p class="muted fs-13 m-14-2">
     Tus datos se guardan en este móvil y en tu cuenta. Sin conexión todo sigue funcionando: lo que hagas se sube solo al volver la red.
   </p>`;
 /* el último aviso de «Cambiar contraseña» (la página se vuelve a pintar con cada R(): así no se pierde) */
@@ -40,8 +40,8 @@ export const passwordPage = () => html`
   <label for="acp2">Repite la nueva</label>
   <input id="acp2" type="password" autocomplete="new-password" maxlength="100" data-enter="accountChangePassword">
   <p id="ace" class="lge" role="alert">${pwMsg}</p>
-  <button class="pr w-full mt-8" data-a="accountChangePassword">Cambiar contraseña</button>
-  <p class="mu fs-13 m-12-2">
+  <button class="primary w-full mt-8" data-a="accountChangePassword">Cambiar contraseña</button>
+  <p class="muted fs-13 m-12-2">
     De 8 caracteres o más. Al cambiarla se cierra la sesión en tus otros móviles: allí tendrás que volver a entrar.
   </p>`;
 /* — manejadores de esta función (registros A / C / U) — */

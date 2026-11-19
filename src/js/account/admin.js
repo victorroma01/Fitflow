@@ -25,7 +25,7 @@ const osCounts = users => {
   const n = { ios: 0, android: 0, otro: 0, no: 0 };
   users.forEach(d => n[OS_NAMES[d.data.os] ? d.data.os : 'no']++);
   return html`
-    <div class="cd aos" aria-label="Cuentas por sistema del móvil">
+    <div class="card aos" aria-label="Cuentas por sistema del móvil">
       ${Object.keys(OS_NAMES).map(k => html`<div><b>${raw(n[k])}</b><small>${raw(OS_NAMES[k])}</small></div>`)}
       <div><b>${raw(n.no)}</b><small>Sin dato</small></div>
     </div>`;
@@ -34,10 +34,10 @@ const osCounts = users => {
     '' cuando ya los tiene. `failed`: «No se ha podido cargar»; `retry`: la acción que los vuelve a pedir. */
 export const waitingView = (s, failed, retry) => {
   if (s.st == 'load')
-    return html`<p class="mu m-14-2">Cargando…</p>`;
+    return html`<p class="muted m-14-2">Cargando…</p>`;
   if (s.st == 'err')
     return html`
-      <p class="mu m-14-2">${failed} (${s.err}). Comprueba la conexión.</p>
+      <p class="muted m-14-2">${failed} (${s.err}). Comprueba la conexión.</p>
       <button data-a="${retry}" class="w-full">Reintentar</button>`;
   return '';
 };
@@ -51,17 +51,17 @@ const adminView = () => {
     const h = Math.max(1, Math.round((+d.data.exp - Date.now()) / 36e5));
     const on = s.show == d.id;
     return html`
-      <div class="cd adp">
+      <div class="card adp">
         <div class="row"><b>${String(d.data.u || '')}</b><small>caduca en ${h} h</small></div>
         <div class="adk" aria-live="polite">${on ? String(d.data.p || '') : '••••••••••••'}</div>
-        <div class="g3">
+        <div class="grid-3">
           <button data-a="adminToggleSection" data-v="${d.id}">${on ? 'Ocultar' : 'Ver'}</button>
           <button data-a="adminCopyPassword" data-v="${d.id}">Copiar</button>
           <button data-a="adminDeleteAsk" data-v="${d.id}">Entregada</button>
         </div>
       </div>`;
   }).join('') : html`
-    <p class="mu m-6-2-14 fs-14">
+    <p class="muted m-6-2-14 fs-14">
       No hay ninguna. Para crear una: en GitHub, Actions → «Restablecer contraseña» → Run workflow, con el usuario. Aparece aquí durante 24 horas.
     </p>`;
   const us = s.users.slice().sort((a, b) => String(a.data.u || '').localeCompare(String(b.data.u || ''), 'es'));
@@ -69,13 +69,13 @@ const adminView = () => {
   return html`
     ${raw(head)}
     ${raw(rp)}
-    <div class="ph">Contraseñas temporales</div>
+    <div class="section-label">Contraseñas temporales</div>
     ${raw(pw)}
-    <div class="ph">Cuentas (${us.length})</div>
+    <div class="section-label">Cuentas (${us.length})</div>
     ${raw(osCounts(us))}
-    <div class="cd acl">
+    <div class="card acl">
       ${us.map(d => html`
-        <div class="it cols-1fr-auto-auto-auto gap-10">
+        <div class="item cols-1fr-auto-auto-auto gap-10">
           <b class="ow-anywhere">${String(d.data.u || '—')}</b>
           <small>${d.data.sx == 'M' ? 'Hombre' : d.data.sx == 'F' ? 'Mujer' : '—'}</small>
           <small>${osName(d.data.os) || '—'}</small>

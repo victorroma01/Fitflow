@@ -37,7 +37,7 @@ export const backTarget = () => {
   const m = $('#mn .msd');
   if (m && !m.classList.contains('out'))
     return { k: 'menu', el: m, go: () => A.closeMenu() };
-  const p = $('#sh .sp');
+  const p = $('#sh .sheet');
   if (p) {
     /* el botón de volver de la página: el que lleva un paso atrás dentro de ella (data-back: «‹ Rutinas», «‹ Grupos»), que
        puede preguntar si se guardan los cambios, o su «←» (o «Cerrar»); sin ninguno, se cierra la hoja */

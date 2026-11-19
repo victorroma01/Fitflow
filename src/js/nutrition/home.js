@@ -20,10 +20,10 @@ const MACRO_CLASSES = { c: ['c-ctx', 'bg-c'], p: ['c-ptx', 'bg-p'], g: ['c-gtx',
 const nutritionDayHead = (dt, t) => {
   const day = nutriDayOffset ? fmtDate(dt, { day: 'numeric', month: 'short' }) : 'Hoy';
   return html`
-    <div class="hd">
-      <button data-a="nutritionDay" data-i="-1" aria-label="Día anterior" class="tz">‹</button>
+    <div class="page-head">
+      <button data-a="nutritionDay" data-i="-1" aria-label="Día anterior" class="touch-target">‹</button>
       <h1>${raw(day)}</h1>
-      <button data-a="nutritionDay" data-i="1" aria-label="Día siguiente" class="tz">›</button>
+      <button data-a="nutritionDay" data-i="1" aria-label="Día siguiente" class="touch-target">›</button>
     </div>
     <div class="ndy">
       <span class="ndt">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span>
@@ -32,7 +32,7 @@ const nutritionDayHead = (dt, t) => {
 };
 /* lo comido frente al objetivo (los tres macros y las kcal), fijo arriba al desplazar */
 const nutritionTotals = (tt, tg) => html`
-  <div class="cd pos-sticky top-6 z-3">
+  <div class="card pos-sticky top-6 z-3">
     <div class="mac">
       ${macroBar('Hidratos', tt[1], tg[1], 'c')}
       ${macroBar('Proteínas', tt[2], tg[2], 'p')}
@@ -54,11 +54,11 @@ function macroBar(l, v, t, m) {
 const mealItemRow = (it, i, j) => {
   const v = itemMacros(it);
   return html`
-    <div class="it">
+    <div class="item">
       <div>${it.n}<br><small>${roundInt(v[0])} kcal · C ${round1(v[1])} P ${round1(v[2])} G ${round1(v[3])}</small></div>
       <input type="number" inputmode="decimal" min="0" max="5000" value="${it.g}" data-c="setItemGrams" data-i="${i}" data-j="${j}"
           aria-label="${'Gramos de ' + it.n}">
-      <button data-a="removeMealItem" data-i="${i}" data-j="${j}" aria-label="${'Quitar ' + it.n}" class="p-2-6 tz">✕</button>
+      <button data-a="removeMealItem" data-i="${i}" data-j="${j}" aria-label="${'Quitar ' + it.n}" class="p-2-6 touch-target">✕</button>
     </div>`;
 };
 /* los botones de una comida: añadir, guardarla como plato, buscar en internet y escanear */
@@ -83,7 +83,7 @@ const mealCard = (m, i, nm, v, goal) => {
   const of = x => goal ? ' / ' + roundInt(goal[x]) : '';
   const note = goal ? 'Objetivo ' + roundInt(goal[0]) + ' kcal' : 'Fuera de tus comidas del día';
   return html`
-    <div class="cd">
+    <div class="card">
       <div class="row"><b>${raw(nm)}</b><small>${note}</small></div>
       ${mealItems(m, i).map((it, j) => mealItemRow(it, i, j))}
       <div class="mac m-8-0">

@@ -131,12 +131,12 @@ def reload_by(pg, js, limit=10000):
 
 # lo que enseña el Dashboard, sacado de la página
 DASH = """(() => {
-  const card = t => [...document.querySelectorAll('#app .cd')].find(c => c.querySelector('b') && c.querySelector('b').textContent == t);
-  const rows = c => c ? [...c.querySelectorAll('.it')].map(r => [r.querySelector('span').firstChild.textContent, r.querySelector('.ta-r b').textContent, r.querySelector('.ta-r small').textContent, r.querySelector('span small').textContent]) : [];
+  const card = t => [...document.querySelectorAll('#app .card')].find(c => c.querySelector('b') && c.querySelector('b').textContent == t);
+  const rows = c => c ? [...c.querySelectorAll('.item')].map(r => [r.querySelector('span').firstChild.textContent, r.querySelector('.ta-r b').textContent, r.querySelector('.ta-r small').textContent, r.querySelector('span small').textContent]) : [];
   const stats = {};
-  document.querySelectorAll('#app .g2 .cd').forEach(c => { if (c.querySelector('b.fs-26')) stats[c.querySelector('small').textContent] = c.querySelector('b').textContent; });
+  document.querySelectorAll('#app .grid-2 .card').forEach(c => { if (c.querySelector('b.fs-26')) stats[c.querySelector('small').textContent] = c.querySelector('b').textContent; });
   const wk = document.querySelector('.wkc');
-  const cardio = [...document.querySelectorAll('#app .cd')].find(c => c.querySelector('.f2cs'));
+  const cardio = [...document.querySelectorAll('#app .card')].find(c => c.querySelector('.f2cs'));
   return { stats, bars: [...card('Volumen por sesión').querySelectorAll('.bg-ac')].map(b => parseFloat(b.style.height)),
     cal: [...document.querySelectorAll('.cal i.on')].map(i => +i.textContent), calAll: [...document.querySelectorAll('.cal i')].filter(i => i.textContent).length,
     month: document.querySelector('.cal').previousElementSibling.querySelector('b').textContent,
@@ -284,7 +284,7 @@ def main(path):
         ev("(w => { S.weightLog.push(w); S.biometrics.w = w.w; saveState(); A.weightBack(); })(%s)" % json.dumps(by_date[-1]))
         ev("A.openLogs()")
         run()
-        got = ev("[...document.querySelectorAll('#sh .cd b.fs-22')].map(b => b.textContent)")
+        got = ev("[...document.querySelectorAll('#sh .card b.fs-22')].map(b => b.textContent)")
         want = [str(len(logs)), round1(volume / 1000) + ' t', round1(sum(l['m'] for l in logs) / 60) + ' h']
         check('registros: entrenos, volumen y tiempo totales', got == want, '%s ≠ %s' % (got, want))
         check('y una fila por registro', ev("document.querySelectorAll('#sh [data-a=logDeleteAsk]').length") == len(logs))
@@ -293,7 +293,7 @@ def main(path):
         ev("S.logs.push({d: dayKey(new Date(Date.now() - 62 * 864e5)), n: 'Cardio · Carrera', v: 0, s: 0, m: 30, q: 0, k: 'c', x: '5 km', c: {t: 'run', km: 5, sec: 1800}}); A.openLogs()")
         run()
         days = ev("[...document.querySelectorAll('#sh [data-a=logDeleteAsk]')].map(r => S.logs[+r.dataset.i].d)")
-        months = ev("[...document.querySelectorAll('#sh .ph')].map(h => h.textContent)")
+        months = ev("[...document.querySelectorAll('#sh .section-label')].map(h => h.textContent)")
         check('registros: del día más reciente al más antiguo, aunque uno se apunte con fecha de otro día', days == sorted(days, reverse=True) and len(days) == n_logs + 1, str(days[:4]))
         check('y cada mes sale una sola vez', len(months) == len(set(months)) and len(months) > 0, str(months))
         ev("S.logs.pop(); saveState(); A.openLogs()")

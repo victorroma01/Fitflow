@@ -159,7 +159,7 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `acc` (`accent`) | Color de acento: índice en `ACCENTS` (11 de serie), o `-1` con un color propio. |
 | `acx` (`accentColor`) | El color propio, `'#rrggbb'` (con `acc: -1`); sus tonos y el color del texto encima se calculan (`customAccent`). |
 | `gm` / `gl` / `gk` (`glassLevel` / `glassOn` / `glassLastLevel`) | Estilo Cristal: nivel 0–3, activado, último nivel elegido. |
-| `rm` (`reduceMotion`) | 1 para reducir animaciones (`html.rm`). |
+| `rm` (`reduceMotion`) | 1 para reducir animaciones (`html.reduce-motion`). |
 | `st0` (`startTab`) | Pestaña al abrir la app (0–3); sin ella, la última que se usó (`core/tabbar`). |
 | `tour` (`tourSeen`) | 1 si ya se vio (o se omitió) el recorrido de la primera vez (`system/tour`). |
 | `rpe` (`logRpe`) | 1 si se registra el esfuerzo de cada serie (RPE; Ajustes avanzados, F-42). Sin él, desactivado. Va con el núcleo, no con las preferencias del perfil. |

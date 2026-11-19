@@ -308,7 +308,7 @@ def main(path):
         p1.reload()
         wait(p1, 'window.__ffok')
         sync(p1)
-        check('y el otro móvil las aplica', p1.evaluate("S.theme") == 'light' and p1.evaluate("document.documentElement.dataset.theme") == 'light' and p1.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--a2').trim()") == '#ff2d55' and p1.evaluate("document.documentElement.classList.contains('rm')"))
+        check('y el otro móvil las aplica', p1.evaluate("S.theme") == 'light' and p1.evaluate("document.documentElement.dataset.theme") == 'light' and p1.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--a2').trim()") == '#ff2d55' and p1.evaluate("document.documentElement.classList.contains('reduce-motion')"))
 
         # ── borrar en un móvil y sin tocar en el otro ──
         p2.evaluate("S.logs=S.logs.filter(l=>l.n!='Espalda');saveState()")
@@ -752,7 +752,7 @@ def main(path):
         check('Administración lista las cuentas', 'Ana_1' in txt and 'VictorAdmin_' in txt, txt[:300])
         os_n = p4.evaluate("[...document.querySelectorAll('#sh .aos > div')].map(d=>d.querySelector('small').textContent+':'+d.querySelector('b').textContent)")
         check('y cuántas usan iPhone, Android u otro sistema; las que aún no abrieron la 1.0.1, «sin dato» (T-28)', os_n == ['iPhone:1', 'Android:0', 'Otro:2', 'Sin dato:1'], str(os_n))
-        row = p4.evaluate("[...document.querySelectorAll('#sh .acl .it')].map(r=>r.innerText.replace(/\\s+/g,' ')).find(t=>t.startsWith('Ana_1'))")
+        row = p4.evaluate("[...document.querySelectorAll('#sh .acl .item')].map(r=>r.innerText.replace(/\\s+/g,' ')).find(t=>t.startsWith('Ana_1'))")
         check('con el sistema de cada cuenta en su fila', row and 'Otro' in row, str(row))
         check('un usuario con código se ve como texto (nada se ejecuta)', p4.evaluate("!document.querySelector('#sh img') && document.querySelector('#sh').innerText.includes('<img src=x')"))
         check('la contraseña temporal sale oculta hasta pulsar «Ver»', temp not in txt and 'Ana_1' in txt)

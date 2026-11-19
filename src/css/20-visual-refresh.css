@@ -13,12 +13,12 @@ button {
 button:active {
   transform:scale(.97);
 }
-.cd {
+.card {
   border:1px solid var(--ln);
   border-radius:20px;
   box-shadow:0 8px 24px #0002;
 }
-.pr {
+.primary {
   background:var(--ag);
   color:#fff;
   box-shadow:0 6px 18px color-mix(in srgb,var(--a2) 33%,transparent);
@@ -31,7 +31,7 @@ button:active {
 .hero small {
   color:#c4b5e8;
 }
-.hero button:not(.pr) {
+.hero button:not(.primary) {
   background:#ffffff1a;
   color:#fff;
   border-color:#ffffff22;
@@ -41,23 +41,23 @@ button:active {
   letter-spacing:-.03em;
   line-height:1.1;
 }
-.st b {
+.stats b {
   font-size:28px;
   font-weight:800;
 }
-.st small {
+.stats small {
   text-transform:uppercase;
   letter-spacing:.08em;
   font-size:11px;
 }
-.hd h1 {
+.page-head h1 {
   font-size:24px;
   letter-spacing:-.03em;
 }
-.dy {
+.day {
   border-radius:14px;
 }
-.dy.on {
+.day.on {
   background:var(--ag);
   box-shadow:0 4px 14px color-mix(in srgb,var(--a2) 40%,transparent);
 }
@@ -90,10 +90,10 @@ input:focus,select:focus,textarea:focus {
   color:var(--mu);
   font-weight:700;
 }
-.ck {
+.check {
   color:var(--mu);
 }
-.ck.on {
+.check.on {
   background:linear-gradient(135deg,#34d399,#10b981);
   border-color:#10b981;
   color:#052e16;
@@ -104,11 +104,11 @@ input:focus,select:focus,textarea:focus {
 .chip.on {
   background:var(--ac);
 }
-.sp {
+.sheet {
   border-radius:26px 26px 0 0;
   box-shadow:0 -10px 40px #0006;
 }
-.sp::before {
+.sheet::before {
   content:"";
   display:block;
   width:40px;
@@ -134,10 +134,10 @@ summary::after {
 details[open]>summary::after {
   transform:rotate(90deg);
 }
-.gg button {
+.group-grid button {
   border-radius:18px;
 }
-.mb {
+.wide-btn {
   border-radius:16px;
 }
 /* el color de acento de partida (Azul eléctrico, profile/appearance); la app pone el elegido al arrancar */
@@ -147,12 +147,12 @@ details[open]>summary::after {
   --a3:#0b3a9c;
   --ft:#fff;
 }
-.pr {
+.primary {
   background:var(--ag);
   color:var(--ft);
   box-shadow:0 6px 18px color-mix(in srgb,var(--a2) 35%,transparent);
 }
-.dy.on {
+.day.on {
   background:var(--ag);
   color:var(--ft);
   border-color:var(--a2);

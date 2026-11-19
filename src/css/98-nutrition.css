@@ -30,7 +30,7 @@
   place-items:center;
   flex:none;
 }
-html.gl .nmb,.nmb {
+html.glass .nmb,.nmb {
   border-radius:50%;
 }
 .nmb::after {
@@ -56,7 +56,7 @@ html.gl .nmb,.nmb {
   min-width:0;
   white-space:nowrap;
 }
-html.gl .mlp,.mlp {
+html.glass .mlp,.mlp {
   border-radius:999px;
 }
 .mlp.mli {
@@ -82,7 +82,7 @@ html.gl .mlp,.mlp {
   position:relative;
   display:grid;
 }
-.hqw .hq {
+.hqw .help-btn {
   position:absolute;
   top:-7px;
   right:-7px;
@@ -101,7 +101,7 @@ html.gl .mlp,.mlp {
   border:1px solid var(--ln);
   box-shadow:0 2px 6px #0004;
 }
-.hqw .hq::after {
+.hqw .help-btn::after {
   content:"";
   position:absolute;
   inset:-6px;
@@ -127,7 +127,7 @@ html.gl .mlp,.mlp {
   background:inherit;
   transform:rotate(45deg);
 }
-#tip.dn::before {
+#tip.down::before {
   top:-5px;
 }
 #tip.up::before {
@@ -289,7 +289,7 @@ html.gl .mlp,.mlp {
   font-weight:700;
   text-align:right;
 }
-html.gl .mnv input {
+html.glass .mnv input {
   border-radius:0;
   background:transparent;
   border-color:transparent transparent var(--ln);
@@ -327,10 +327,10 @@ html.gl .mnv input {
   font-size:16px;
 }
 /* lista de alimentos de «Añadir» (nutrition/add): los propios llevan su «✕» para borrarlos (F-44) */
-#rs .it {
+#rs .item {
   grid-template-columns:1fr auto;
 }
-#rs .it.itc {
+#rs .item.itc {
   grid-template-columns:1fr auto auto;
 }
 .cfx {

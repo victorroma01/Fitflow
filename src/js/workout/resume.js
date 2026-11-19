@@ -99,11 +99,14 @@ export const resumeBanner = () => {
   const n = t.W.x.reduce((a, b) => a + b.length, 0);
   const o = t.W.x.reduce((a, b) => a + b.filter(x => x.ok).length, 0);
   return html`
-    <div class="cd bdc-a2">
+    <div class="card bdc-a2">
       <small class="c-at fw-700 ls-0_1em">ENTRENO EN CURSO</small>
       <div class="fs-19 fw-700 m-4-0-2">${t.d.n}</div>
-      <div class="mu mb-12">${raw(o)} de ${raw(n)} series completadas</div>
-      <div class="g2"><button data-a="resumeDiscardAsk">Descartar</button><button class="pr" data-a="resumeWorkout">Reanudar</button></div>
+      <div class="muted mb-12">${raw(o)} de ${raw(n)} series completadas</div>
+      <div class="grid-2">
+        <button data-a="resumeDiscardAsk">Descartar</button>
+        <button class="primary" data-a="resumeWorkout">Reanudar</button>
+      </div>
     </div>`;
 };
 export const dropResume = () => {

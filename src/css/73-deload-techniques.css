@@ -22,7 +22,7 @@
   --do2:#ffc59a;
   --do3:#ffa25c;
 }
-.wk b.wkdl {
+.week-nav b.wkdl {
   color:var(--do3);
 }
 .dl2 {
@@ -86,7 +86,7 @@ button.dlo.dls {
   font-size:14px;
   margin:0;
 }
-button.dlp,#dg .pr.dlp {
+button.dlp,#dg .primary.dlp {
   background:linear-gradient(180deg,#ff9a4d,#f2711c)!important;
   color:#1a0d02!important;
   border:0!important;
@@ -162,7 +162,7 @@ button.dlp,#dg .pr.dlp {
 .sgb.dlsg b {
   color:var(--do3)!important;
 }
-.r2 input.dlv {
+.set-row input.dlv {
   color:var(--do2)!important;
 }
 /* programas propios: cada cuántas semanas hay descarga (F-20) */
@@ -182,7 +182,7 @@ button.dlp,#dg .pr.dlp {
   margin:8px 2px 0;
 }
 /* técnica de la serie (F-02): la abreviatura en lugar de WRK */
-.r2 .wk2.tq {
+.set-row .wk2.technique {
   color:#fff;
   background:linear-gradient(180deg,#8450ec,#6a3bcf);
   border-color:transparent;
@@ -224,11 +224,11 @@ button.dlp,#dg .pr.dlp {
   font-size:14px;
 }
 /* rotación de ejercicios: propuesta en Workout y cambios (F-06) */
-.rtc .mu {
+.rtc .muted {
   margin:4px 0 12px;
   font-size:13px;
 }
-.rtd .mu {
+.rtd .muted {
   margin-top:4px;
   font-size:13px;
 }

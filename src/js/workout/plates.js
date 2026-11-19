@@ -43,14 +43,14 @@ const plateResult = () => {
   const c = plateCalc(plateTotal, plateBar);
   const u = weightUnit();
   if (!c)
-    return '<p class="mu">El peso total es menor que la barra.</p>';
+    return '<p class="muted">El peso total es menor que la barra.</p>';
   return html`
     ${raw(c.o.length ? html`
       <div class="d-flex wrap gap-8 m-12-0">
-        ${c.o.map(x => html`<span class="tg fs-16 p-9-14"><b>${raw(x[1])} ×</b> ${raw(x[0])} ${raw(u)}</span>`)}
+        ${c.o.map(x => html`<span class="tag fs-16 p-9-14"><b>${raw(x[1])} ×</b> ${raw(x[0])} ${raw(u)}</span>`)}
       </div>
-    ` : '<p class="mu">Solo la barra.</p>')}
-    <p class="mu">
+    ` : '<p class="muted">Solo la barra.</p>')}
+    <p class="muted">
       Discos por cada lado con una barra de ${plateBar} ${raw(u)}.${raw(c.rem ? ' Sobran ' + c.rem + ' ' + u + ' por lado: ajusta el peso.' : '')}
     </p>`;
 };
@@ -59,7 +59,7 @@ const plateSheet = () => html`
   <label>Peso total (${weightUnit()})</label>
   <input type="number" inputmode="decimal" data-u="platesWeight" value="${plateTotal}" aria-label="${'Peso total (' + weightUnit() + ')'}">
   <label>Barra</label>
-  <div class="g2 cols-3">
+  <div class="grid-2 cols-3">
     ${barSizes().map(b => html`
       <button data-a="platesBar" data-i="${b}" class="${plateBar == b ? 'bdc-a2 c-at' : ''}">${b} ${weightUnit()}</button>`)}
   </div>

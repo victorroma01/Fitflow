@@ -1,5 +1,5 @@
 /* ═══ css/50-dialogs-menus ═══ Diálogos, menú lateral, avisos y chips desplazables */
-.tg {
+.tag {
   background:var(--cd);
   border:1px solid var(--ln);
   border-radius:12px;
@@ -96,7 +96,7 @@
 .msd.out {
   animation:mso .26s ease-in both;
 }
-#sh.full .sp::before {
+#sh.full .sheet::before {
   display:none;
 }
 .msb {
@@ -116,7 +116,7 @@
 :root[data-theme="light"] .msb {
   background:linear-gradient(90deg,#0000 0%,#00000008 8%,#00000018 18%,#0000002e 28%,#00000059 38%,#0000007a 48%,#00000096 58%,#000000a3 68%,#000000bb 78%,#000000cc 88%,#000000d9 100%);
 }
-.mi span,.mci .mti {
+.menu-item span,.mci .mti {
   text-shadow:0 1px 14px #000a,0 0 2px #0006;
 }
 .mci {
@@ -128,7 +128,7 @@
   padding:calc(env(safe-area-inset-top,0px) + 12px) 20px 24px;
   color:#fff;
 }
-.mci .mx {
+.mci .menu-close {
   pointer-events:auto;
   background:none;
   border:0;
@@ -145,7 +145,7 @@
   text-transform:uppercase;
   margin:18px 4px 10px;
 }
-.mi {
+.menu-item {
   pointer-events:auto;
   background:none;
   border:0;
@@ -161,10 +161,10 @@
   animation:mit .5s both;
   animation-delay:var(--d);
 }
-.mi svg {
+.menu-item svg {
   opacity:.85;
 }
-.mi:active {
+.menu-item:active {
   background:#ffffff14;
 }
 @keyframes msi {

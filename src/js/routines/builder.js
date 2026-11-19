@@ -22,18 +22,18 @@ export const routineExRows = () => {
   const bq = exAll().filter(e => !q || exSearchText(e).includes(q));
   const base = bq.filter(e => groupMatch(routineState.gs, e));
   return filterRow(groupDropdown('crg', routineState.gs, bq), equipDropdown('cr', routineState.eq, equipIn(base), base, 1)) + base.filter(e => equipMatch(routineState.eq, e)).sort(exCompare).slice(0, 100).map((e, row) => html`
-    <div class="it exr cur-pointer" data-a="routinePickExercise" data-n="${e.n}">
+    <div class="item exr cur-pointer" data-a="routinePickExercise" data-n="${e.n}">
       <span class="exc">${exCellHtml(e, row)}</span>
-      <small class="mu">Añadir +</small>
+      <small class="muted">Añadir +</small>
     </div>
-  `).join('') || '<p class="mu">Sin resultados.</p>';
+  `).join('') || '<p class="muted">Sin resultados.</p>';
 };
 const routineListPage = () => routineList();
 /* un bloque del workout (A, B, C…): si es superserie o triserie, sus ejercicios, las series (− +) y el descanso */
 const routineBlock = (block, j) => {
   const letter = String.fromCharCode(65 + j);
   const kind = block.ex.length > 1 ? html`<b class="c-wnx">${raw(BLOCK_KINDS[block.ex.length])} · 10 s</b>` : '';
-  const exercises = block.ex.map(n => html`<div class="ovx"><div class="th">${exPicture(n, 64)}</div><b class="fx-1">${n}</b></div>`);
+  const exercises = block.ex.map(n => html`<div class="ovx"><div class="thumb">${exPicture(n, 64)}</div><b class="fx-1">${n}</b></div>`);
   const sets = html`
     <span>
       <button data-a="routineBlockSets" data-i="${j}" data-v="-1" aria-label="${'Una serie menos, serie ' + letter}">−</button> ${raw(block.s)} series <button data-a="routineBlockSets"
@@ -45,7 +45,7 @@ const routineBlock = (block, j) => {
     </select>`;
   return html`
     <div class="row mt-16">
-      <b class="mu">SERIE ${raw(letter)}</b>
+      <b class="muted">SERIE ${raw(letter)}</b>
       ${kind}
       <button data-a="routineBlockDelete" data-i="${j}" class="p-4-10">Quitar</button>
     </div>
@@ -68,14 +68,16 @@ export const routineEditor = () => {
     ${routine.bl.map(routineBlock)}
     <button data-a="routineAddBlock" class="w-full mt-16">+ Añadir bloque</button>
     <div class="h-80"></div>
-    <button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineSaveAsk">${routineState.nw ? 'Crear' : 'Guardar cambios'}</button>`;
+    <button class="sticky-btn bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineSaveAsk">
+      ${routineState.nw ? 'Crear' : 'Guardar cambios'}
+    </button>`;
 };
 const routineBlockPicker = () => html`
   <button data-a="routineEdit" data-i="${routineState.i}" data-back="1">‹ Cancelar</button>
   <h3>Nuevo bloque</h3>
   ${[1, 2, 3].map(k => html`
     <button class="chip${routineState.k == k ? ' on' : ''}" data-a="routineAddBlockKind" data-i="${k}">${raw(BLOCK_KINDS[k])}</button>`)}
-  <p class="mu">
+  <p class="muted">
     Elige el ejercicio ${routineState.sel.length + 1} de ${routineState.k}
     ${raw(routineState.sel.length ? ': ' + routineState.sel.map(X).join(' + ') : '')}
   </p>
@@ -127,13 +129,13 @@ const routineCard = (routine, i) => {
     </button>`;
   const tags = html`
     <div class="d-flex gap-6 wrap">
-      <span class="tg">${roundInt(sets * 2.4)} min</span>
-      ${groups.slice(0, 2).map(g => html`<span class="tg">${raw(g)}</span>`)}
-      ${groups.length > 2 ? html`<span class="tg">+${groups.length - 2}</span>` : ''}
+      <span class="tag">${roundInt(sets * 2.4)} min</span>
+      ${groups.slice(0, 2).map(g => html`<span class="tag">${raw(g)}</span>`)}
+      ${groups.length > 2 ? html`<span class="tag">+${groups.length - 2}</span>` : ''}
     </div>`;
   const actions = routineState.m === i ? html`
-    <div class="g2 mt-10 cols-3">
-      <button class="pr" data-a="routineStart" data-i="${i}">Empezar</button>
+    <div class="grid-2 mt-10 cols-3">
+      <button class="primary" data-a="routineStart" data-i="${i}">Empezar</button>
       <button data-a="routineEdit" data-i="${i}">Editar</button>
       <button data-a="routineListDeleteAsk" data-i="${i}" class="c-ctx">Borrar</button>
     </div>` : '';
@@ -156,7 +158,7 @@ function routineRows() {
     l.sort((a, b) => a.r.n.localeCompare(b.r.n));
   else
     l.reverse();
-  return l.map(({ r, i }) => routineCard(r, i)).join('') || '<p class="mu">Aún no tienes workouts. Crea el primero con el botón de abajo.</p>';
+  return l.map(({ r, i }) => routineCard(r, i)).join('') || '<p class="muted">Aún no tienes workouts. Crea el primero con el botón de abajo.</p>';
 }
 function routineList() {
   return html`
@@ -168,7 +170,7 @@ function routineList() {
     </div>
     <div id="crl">${raw(routineRows())}</div>
     <div class="h-90"></div>
-    <button class="sb bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineNew">Crear workout</button>`;
+    <button class="sticky-btn bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="routineNew">Crear workout</button>`;
 }
 const refreshRoutineRows = () => {
   const e = $('#crl');
@@ -219,9 +221,9 @@ A.routineEditorBack = () => {
     return;
   }
   if (routineState.nw)
-    dialog('¿Descartar este workout?', 'Aún no lo has creado. Si sales, se perderá.', [['Seguir editando', 'doNothing', ''], ['Descartar', 'routineNewDiscard', 'pr']]);
+    dialog('¿Descartar este workout?', 'Aún no lo has creado. Si sales, se perderá.', [['Seguir editando', 'doNothing', ''], ['Descartar', 'routineNewDiscard', 'primary']]);
   else if (JSON.stringify(S.routines[routineEditIndex]) != routineSnapshot)
-    dialog('¿Guardar los cambios?', 'Has modificado este workout.', [['Descartar', 'routineDiscardChanges', ''], ['Guardar', 'routineKeepChanges', 'pr']]);
+    dialog('¿Guardar los cambios?', 'Has modificado este workout.', [['Descartar', 'routineDiscardChanges', ''], ['Guardar', 'routineKeepChanges', 'primary']]);
   else {
     routineSnapshot = null;
     openRoutines();
@@ -248,11 +250,11 @@ A.routineDiscardChanges = () => {
 A.routineSaveAsk = () => {
   const r = S.routines[routineState.i];
   if (!r.bl.length) {
-    dialog('Añade al menos un bloque', 'Elige uno o varios ejercicios con el botón Añadir bloque.', [['Entendido', 'doNothing', 'pr']]);
+    dialog('Añade al menos un bloque', 'Elige uno o varios ejercicios con el botón Añadir bloque.', [['Entendido', 'doNothing', 'primary']]);
     return;
   }
   if (!routineState.nw) {
-    dialog('¿Guardar los cambios?', 'Se actualizará este workout personalizado.', [['Cancelar', 'doNothing', ''], ['Guardar', 'routineSave', 'pr']]);
+    dialog('¿Guardar los cambios?', 'Se actualizará este workout personalizado.', [['Cancelar', 'doNothing', ''], ['Guardar', 'routineSave', 'primary']]);
     return;
   }
   A.routineSave();
@@ -263,7 +265,7 @@ A.routineSave = () => {
   saveState();
   openRoutines();
 };
-A.routineDeleteAsk = () => dialog('¿Borrar este workout?', 'Se eliminará de tu lista.', [['Cancelar', 'doNothing', ''], ['Borrar', 'routineDelete', 'pr']]);
+A.routineDeleteAsk = () => dialog('¿Borrar este workout?', 'Se eliminará de tu lista.', [['Cancelar', 'doNothing', ''], ['Borrar', 'routineDelete', 'primary']]);
 A.routineDelete = () => {
   routineState.nw = false;
   routineSnapshot = null;
@@ -273,7 +275,7 @@ A.routineDelete = () => {
 };
 A.routineListDeleteAsk = i => {
   routineState.dx = i;
-  dialog('¿Borrar este workout?', 'Se eliminará de tu lista.', [['Cancelar', 'doNothing', ''], ['Borrar', 'routineListDelete', 'pr']]);
+  dialog('¿Borrar este workout?', 'Se eliminará de tu lista.', [['Cancelar', 'doNothing', ''], ['Borrar', 'routineListDelete', 'primary']]);
 };
 A.routineListDelete = () => {
   S.routines.splice(routineState.dx, 1);

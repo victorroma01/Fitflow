@@ -112,7 +112,7 @@
   line-height:1.4;
 }
 /* reducir animaciones (Ajustes → Tema y estilo) */
-html.rm *,html.rm *::before,html.rm *::after {
+html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after {
   animation:none!important;
   transition:none!important;
 }
@@ -154,11 +154,11 @@ nav.nbon .nbb {
   opacity:1;
   transition:transform .34s cubic-bezier(.3,1.25,.5,1),width .34s ease;
 }
-nav.nbon button.on,html.gl nav.nbon button.on {
+nav.nbon button.on,html.glass nav.nbon button.on {
   background:none;
   box-shadow:none;
 }
-html.gl .nbb::before {
+html.glass .nbb::before {
   border-radius:26px;
   background:linear-gradient(180deg,var(--a2),var(--age,var(--a2)));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 4px 14px color-mix(in srgb,var(--a2) 45%,transparent);
@@ -170,10 +170,10 @@ nav.drag .nbb {
 nav.drag .nbb::before {
   transform:scale(1.07);
 }
-nav.drag button.on:not(.hv) {
+nav.drag button.on:not(.hover) {
   color:inherit;
 }
-nav.drag button.hv {
+nav.drag button.hover {
   color:var(--ft);
 }
 /* el paso del recorrido que enseña la barra deja usarla */
@@ -181,7 +181,7 @@ nav.trlv {
   z-index:19;
 }
 /* deslizar para volver (core/swipe): el gesto de lado es de la app; el vertical, del desplazamiento normal */
-#app,.sp,.msd {
+#app,.sheet,.msd {
   touch-action:pan-y pinch-zoom;
 }
 /* recorrido (system/tour) */

@@ -4,166 +4,166 @@ button,summary,label,select,[data-a],[data-c] {
   touch-action:manipulation;
 }
 /* esquinas más redondeadas: solo en Cristal */
-html.gl button {
+html.glass button {
   border-radius:17px;
 }
-html.gl input,html.gl select,html.gl textarea {
+html.glass input,html.glass select,html.glass textarea {
   border-radius:14px;
 }
-html.gl .cd {
+html.glass .card {
   border-radius:22px;
 }
-html.gl nav {
+html.glass nav {
   border-radius:34px;
 }
-html.gl nav button {
+html.glass nav button {
   border-radius:28px;
 }
-html.gl .sp {
+html.glass .sheet {
   border-radius:28px 28px 0 0;
 }
-html.gl .bar {
+html.glass .bar {
   border-radius:8px;
 }
-html.gl .cal i {
+html.glass .cal i {
   border-radius:11px;
 }
-html.gl .cd {
+html.glass .card {
   border-radius:28px;
 }
-html.gl .dy {
+html.glass .day {
   border-radius:20px;
 }
-html.gl input,html.gl select,html.gl textarea {
+html.glass input,html.glass select,html.glass textarea {
   border-radius:17px;
 }
-html.gl .sp {
+html.glass .sheet {
   border-radius:34px 34px 0 0;
 }
-html.gl .gg button {
+html.glass .group-grid button {
   border-radius:25px;
 }
-html.gl .mb {
+html.glass .wide-btn {
   border-radius:22px;
 }
-html.gl .th {
+html.glass .thumb {
   border-radius:20px;
 }
-html.gl .r2 {
+html.glass .set-row {
   border-radius:17px;
 }
-html.gl .wk2 {
+html.glass .wk2 {
   border-radius:11px;
 }
-html.gl .rr {
+html.glass .rest-row {
   border-radius:20px;
 }
-html.gl .pb {
+html.glass .player-bar {
   border-radius:34px 34px 0 0;
 }
-html.gl .seg {
+html.glass .seg {
   border-radius:20px;
 }
-html.gl .seg button {
+html.glass .seg button {
   border-radius:15px;
 }
-html.gl .tg {
+html.glass .tag {
   border-radius:17px;
 }
-html.gl .dgc {
+html.glass .dgc {
   border-radius:30px;
 }
-html.gl .mi {
+html.glass .menu-item {
   border-radius:20px;
 }
-html.gl .eqb {
+html.glass .eqb {
   border-radius:20px;
 }
-html.gl .eqp {
+html.glass .eqp {
   border-radius:25px;
 }
-html.gl .eqi {
+html.glass .eqi {
   border-radius:17px;
 }
-html.gl .eqi i {
+html.glass .eqi i {
   border-radius:9px;
 }
-html.gl .eqf button {
+html.glass .eqf button {
   border-radius:17px;
 }
-html.gl .anf {
+html.glass .anf {
   border-radius:28px;
 }
-html.gl .anb {
+html.glass .anb {
   border-radius:22px;
 }
-html.gl .exth {
+html.glass .exth {
   border-radius:17px;
 }
-html.gl .cpo {
+html.glass .cpo {
   border-radius:28px;
 }
-html.gl .cpi {
+html.glass .cpi {
   border-radius:20px;
 }
-html.gl .cpw {
+html.glass .cpw {
   border-radius:20px;
 }
-html.gl .cpw i {
+html.glass .cpw i {
   border-radius:9px;
 }
-html.gl .cpm button {
+html.glass .cpm button {
   border-radius:14px;
 }
-html.gl .lvm {
+html.glass .lvm {
   border-radius:28px;
 }
-html.gl .lvi {
+html.glass .lvi {
   border-radius:20px;
 }
-html.gl .lvs button {
+html.glass .lvs button {
   border-radius:20px;
 }
-html.gl .wsn {
+html.glass .wsn {
   border-radius:17px;
 }
-html.gl .sgb {
+html.glass .sgb {
   border-radius:17px;
 }
-html.gl .rpe {
+html.glass .rpe {
   border-radius:17px;
 }
-html.gl .btnl {
+html.glass .btnl {
   border-radius:17px;
 }
-html.gl .r-16 {
+html.glass .r-16 {
   border-radius:22px!important;
 }
-html.gl .r-14 {
+html.glass .r-14 {
   border-radius:20px!important;
 }
-html.gl .r-12 {
+html.glass .r-12 {
   border-radius:17px!important;
 }
-html.gl nav {
+html.glass nav {
   border-radius:34px;
 }
-html.gl nav button {
+html.glass nav button {
   border-radius:26px;
 }
-html.gl .seg button {
+html.glass .seg button {
   border-radius:15px;
 }
-html.gl .gso {
+html.glass .gso {
   border-radius:22px;
 }
-html.gl .gpv {
+html.glass .gpv {
   border-radius:15px;
 }
-html.gl .gpv.fl::after {
+html.glass .gpv.flat::after {
   border-radius:11px;
 }
-#sh>.sb {
+#sh>.sticky-btn {
   z-index:10;
   animation:fdi .3s ease;
 }

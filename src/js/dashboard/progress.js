@@ -98,7 +98,7 @@ const progressChart = (pts, m, sel, inter) => {
 export const progressBody = (stat) => {
   const L = progressExercises();
   if (!L.length)
-    return '<p class="mu m-8-0-0">Cuando registres pesos verás aquí la evolución de cada ejercicio.</p>';
+    return '<p class="muted m-8-0-0">Cuando registres pesos verás aquí la evolución de cada ejercicio.</p>';
   if (!stat && !L.includes(progressState.n))
     progressState.n = L[0];
   const n = stat || progressState.n;
@@ -110,7 +110,7 @@ export const progressBody = (stat) => {
   const ML = { e: '1RM estimado', w: 'Peso máximo', v: 'Volumen' };
   let h = '';
   if (!stat) {
-    const metric = reps ? segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"') : '<p class="mu fs-13 m-0-0-6">Se mide en tiempo o distancia: se ve el peso máximo de cada sesión.</p>';
+    const metric = reps ? segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"') : '<p class="muted fs-13 m-0-0-6">Se mide en tiempo o distancia: se ve el peso máximo de cada sesión.</p>';
     h += html`
       <select data-c="progressExercise" aria-label="Ejercicio" class="m-10-0-8">
         ${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}
@@ -118,7 +118,7 @@ export const progressBody = (stat) => {
       ${raw(metric)}`;
   }
   if (!pts.length)
-    return html`${raw(h)}<p class="mu m-10-0-0">Este ejercicio no tiene pesos registrados.</p>`;
+    return html`${raw(h)}<p class="muted m-10-0-0">Este ejercicio no tiene pesos registrados.</p>`;
   const sel = stat ? pts.length - 1 : (progressState.p >= 0 && progressState.p < pts.length ? progressState.p : pts.length - 1);
   const p = pts[sel];
   h += html`
@@ -132,7 +132,7 @@ export const progressBody = (stat) => {
     const z = pts[pts.length - 1].v;
     const dl = (z - a) / a * 100;
     h += html`
-      <div class="mu pgsum">
+      <div class="muted pgsum">
         De ${raw(progressFmt(a, m))} a ${raw(progressFmt(z, m))} · <b class="${dl >= 0 ? 'c-a1' : 'c-inherit'}">
           ${dl >= 0 ? '+' : ''}
           ${Math.round(dl * 10) / 10} %
@@ -141,7 +141,7 @@ export const progressBody = (stat) => {
       </div>`;
   }
   else
-    h += '<div class="mu pgsum">Con una segunda sesión verás la tendencia.</div>';
+    h += '<div class="muted pgsum">Con una segunda sesión verás la tendencia.</div>';
   return h;
 };
 const refreshProgress = () => {
@@ -165,7 +165,7 @@ C.progressExercise = e => {
   refreshProgress();
 };
 export const progressCard = () => html`
-  <div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">${raw(progressBody())}</div></div>`;
+  <div class="card"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">${raw(progressBody())}</div></div>`;
 /* cada vez que una sesión mejoró el 1RM estimado de un ejercicio (de los que se miden en repeticiones), de la más reciente a
    la más antigua */
 const recordEvents = () => {
@@ -189,10 +189,10 @@ export const recordsTimeline = () => {
   if (!ev.length)
     return '';
   return html`
-    <div class="cd">
+    <div class="card">
       <b>Línea de récords</b>
       ${ev.map(o => html`
-        <div class="it cols-1fr-auto">
+        <div class="item cols-1fr-auto">
           <span>${o.n}<br><small>${fmtDateShort(o.d)}</small></span>
           <span class="ta-r">
             <b>${toDisplayWeight(o.w)} ${weightUnit()} × ${raw(o.r)}</b><br>

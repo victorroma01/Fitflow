@@ -9,13 +9,16 @@ anima la burbuja de la barra de pestañas (se pone en el siguiente fotograma). A
   python3 tests/samehtml.py antes.html despues.html [pantalla,pantalla…]
   python3 tests/samehtml.py antes.html despues.html --mas     (además, las pantallas de MORE: subpáginas, avisos y estados
                                                                que no salen en las capturas, unas 50 más)
+  python3 tests/samehtml.py antes.html despues.html --mas --mapa tests/clases-1.0.32.txt
+      antes.html es de antes de renombrar (acciones, claves o clases CSS: «registro viejo nuevo», como en tests/walk.py): sus
+      pantallas se abren con los nombres viejos y sus clases se traducen a las nuevas antes de comparar.
 """
 import os, re, sys
 from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from shots import SCR, SEED, EXTRA, INIT  # noqa: E402
+from shots import SCR, SEED, EXTRA, INIT, old_names  # noqa: E402
 from browser import app_url, context_opts  # noqa: E402
 
 BODY = "(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('script,style').forEach(e=>e.remove());c.querySelectorAll('nav').forEach(n=>n.classList.remove('nbon'));return c.innerHTML})()"
@@ -94,12 +97,23 @@ MORE = {
 }
 
 
-def grab(path, screens):
+def new_classes(html, path):
+    """El HTML con las clases CSS de después del mapa (registro K; «K dn@xs done»: «dn» pasa a «done» junto a «xs»)."""
+    k = dict(l.split()[1:] for l in open(path, encoding='utf-8') if l.startswith('K '))
+
+    def value(m):
+        names = m.group(1).split()
+        return 'class="%s"' % re.sub(r'\S+', lambda c: next((k[c.group() + '@' + o] for o in names if c.group() + '@' + o in k), k.get(c.group(), c.group())), m.group(1))
+    return re.sub(r'class="([^"]*)"', value, html)
+
+
+def grab(path, screens, ren=None):
+    old = (lambda js: old_names(js, ren)) if ren else (lambda js: js)
     out, url = {}, app_url(path)
     with sync_playwright() as p:
         b = p.chromium.launch()
         c = b.new_context(viewport={'width': 390, 'height': 844}, **context_opts(path))
-        c.add_init_script(INIT)
+        c.add_init_script(old(INIT))
         pg = c.new_page()
         errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)[:160]))
@@ -108,14 +122,16 @@ def grab(path, screens):
             pg.evaluate('localStorage.clear()')
             pg.reload()
             pg.clock.set_fixed_time('2026-10-29T12:00:00')
-            pg.evaluate(SEED)
-            pg.evaluate(EXTRA)
+            pg.evaluate(old(SEED))
+            pg.evaluate(old(EXTRA))
             pg.reload()
             pg.clock.set_fixed_time('2026-10-29T12:00:00')
             try:
-                pg.evaluate(SCR[k] if k in SCR else MORE[k])
+                pg.evaluate(old(SCR[k] if k in SCR else MORE[k]))
                 pg.wait_for_timeout(900 if k in ('edit', 'overview', 'go_open') else 300)
-                out[k] = ADDRESS.sub('(dirección)', NOISE.sub(r'\1: …', pg.evaluate(BODY)))
+                out[k] = ADDRESS.sub('(dirección)', NOISE.sub(r'\1: …', pg.evaluate(old(BODY))))
+                if ren:
+                    out[k] = new_classes(out[k], ren)
             except Exception as e:
                 out[k] = 'EXC ' + str(e)[:200]
         out['(errores de JS)'] = str(errs)
@@ -123,8 +139,8 @@ def grab(path, screens):
     return out
 
 
-def main(a, b, screens):
-    x, y = grab(a, screens), grab(b, screens)
+def main(a, b, screens, ren=None):
+    x, y = grab(a, screens, ren), grab(b, screens)
     bad = 0
     for k in x:
         if x[k] == y[k]:
@@ -142,5 +158,6 @@ def main(a, b, screens):
 
 if __name__ == '__main__':
     more = '--mas' in sys.argv
-    args = [a for a in sys.argv[1:] if a != '--mas']
-    main(args[0], args[1], args[2].split(',') if len(args) > 2 else list(SCR) + (list(MORE) if more else []))
+    ren = sys.argv[sys.argv.index('--mapa') + 1] if '--mapa' in sys.argv else None
+    args = [a for a in sys.argv[1:] if a not in ('--mas', '--mapa', ren)]
+    main(args[0], args[1], args[2].split(',') if len(args) > 2 else list(SCR) + (list(MORE) if more else []), ren)

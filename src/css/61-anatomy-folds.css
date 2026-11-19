@@ -1,5 +1,5 @@
 /* ═══ css/61-anatomy-folds ═══ Mapa muscular, miniaturas de ejercicio y bloques plegables */
-.th {
+.thumb {
   background:radial-gradient(circle at 50% 30%,#2e3248,#0e0f15 80%)!important;
 }
 .anf {
@@ -49,16 +49,16 @@
 .eqi span {
   white-space:nowrap;
 }
-.gg button svg {
+.group-grid button svg {
   margin:2px auto;
 }
 /* la figura de cada grupo no pasa del ancho de su tarjeta (en pantallas estrechas encoge, cuadrada) */
-.gg .anb {
+.group-grid .anb {
   width:min(88px,100%)!important;
   height:auto!important;
   aspect-ratio:1;
 }
-.gg .anb svg {
+.group-grid .anb svg {
   width:100%;
   height:100%;
   margin:0;
@@ -137,7 +137,7 @@
   background:var(--cd);
   padding-bottom:6px;
 }
-.eqg.gr .eqi span {
+.eqg.groups .eqi span {
   white-space:normal;
   line-height:1.15;
   font-size:14px;
@@ -163,7 +163,7 @@
 .fdb svg {
   transition:transform .2s;
 }
-.xs.fd .fdb svg {
+.exercise.folded .fdb svg {
   transform:rotate(-90deg);
 }
 .xsm {
@@ -175,29 +175,29 @@
   padding:2px 2px 6px;
   cursor:pointer;
 }
-.xs.fd>.xsm {
+.exercise.folded>.xsm {
   display:flex;
 }
 .xsm b {
   color:var(--tx);
 }
-.xs.fd>*:not(.sl):not(.xh):not(.xsm):not(.rr):not(small):not(br) {
+.exercise.folded>*:not(.series-label):not(.exercise-head):not(.xsm):not(.rest-row):not(small):not(br) {
   display:none!important;
 }
-.xs.fd .xh>div:nth-child(2)>*:not(b) {
+.exercise.folded .exercise-head>div:nth-child(2)>*:not(b) {
   display:none!important;
 }
-.xs.fd .th {
+.exercise.folded .thumb {
   width:48px;
   height:48px;
   flex:none;
 }
-.xs.fd {
+.exercise.folded {
   padding-bottom:4px;
 }
-.xs.fd .xh {
+.exercise.folded .exercise-head {
   margin-bottom:2px;
 }
-.xs.dn .xh b {
+.exercise.done .exercise-head b {
   opacity:.6;
 }

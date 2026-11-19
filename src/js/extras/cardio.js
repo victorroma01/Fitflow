@@ -33,14 +33,14 @@ const cardioTypeChips = t => html`
   </div>`;
 /* la distancia (opcional) y el tiempo, en minutos y segundos: al escribir, se calcula el ritmo */
 const cardioInputs = () => html`
-  <div class="g2">
+  <div class="grid-2">
     <div>
       <label for="f2cdk">Distancia (km, opcional)</label>
       <input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cardioPaceUpdate">
     </div>
     <div>
       <label>Tiempo (min y s)</label>
-      <div class="g2 gap-6">
+      <div class="grid-2 gap-6">
         <input id="f2cdm" aria-label="Minutos" type="number" inputmode="numeric" min="0" max="999" placeholder="min"
             data-u="cardioPaceUpdate">
         <input id="f2cds" aria-label="Segundos" type="number" inputmode="numeric" min="0" max="59" placeholder="s"
@@ -50,7 +50,7 @@ const cardioInputs = () => html`
   </div>`;
 /* el ritmo (o la velocidad media), que rellena cardioPaceUpdate */
 const cardioPaceBox = t => html`
-  <div class="cd m-12-0-0 ta-c"><small id="f2cdl" class="mu">${paceLabel(t)}</small><br><b id="f2cdr" class="fs-22">—</b></div>`;
+  <div class="card m-12-0-0 ta-c"><small id="f2cdl" class="muted">${paceLabel(t)}</small><br><b id="f2cdr" class="fs-22">—</b></div>`;
 function cardioSheet() {
   const t = cardioState.t;
   const td = dayKey(new Date);
@@ -61,7 +61,7 @@ function cardioSheet() {
     <input id="f2cdd" type="date" value="${td}" max="${td}">
     ${cardioInputs()}
     ${cardioPaceBox(t)}
-    <button class="pr w-full mt-12" data-a="cardioSave">Guardar</button>`;
+    <button class="primary w-full mt-12" data-a="cardioSave">Guardar</button>`;
 }
 function readCardio() {
   const g = id => document.getElementById(id);
@@ -131,7 +131,7 @@ export function cardioCard() {
     const mx = Math.max(1, ...W4.map(w => w.km || w.sec / 600));
     const tot = kmTotal(L.map(l => l.c.km));
     return html`
-      <div class="cd">
+      <div class="card">
         <div class="row"><b>Cardio</b><small>${tot} km en total</small></div>
         <div class="f2cs">
           <div><b>${cur.km}</b><small>km esta semana</small></div>

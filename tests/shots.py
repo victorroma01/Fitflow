@@ -2,7 +2,7 @@
 
   python3 tests/shots.py snap ARCHIVO.html carpeta a,b,c,d,e,f [mapa.txt]   (genera carpeta/<cfg>_<pantalla>.png)
   Con mapa.txt («registro viejo nuevo», tests/nombres-1.0.2.txt), ARCHIVO es de antes de renombrar las acciones: las pantallas se
-  abren con sus nombres viejos.
+  abren con sus nombres viejos. Lo mismo con las clases CSS de los selectores (registro K, tests/clases-1.0.32.txt).
   python3 tests/shots.py cmp carpeta_referencia carpeta_candidata   (código de salida 1 si hay diferencias)
 Requiere:  pip install playwright pillow numpy  &&  playwright install chromium
 """
@@ -37,7 +37,7 @@ SCR={
  'logs':"A.openLogs()",
  'dlg':"confirmDialog('Prueba','Texto de prueba para el diálogo.','doNothing','Aceptar')",
  'go':"A.startWorkout()",
- 'go_rest':"A.startWorkout();document.querySelector('.ck:not(.on)').click()",
+ 'go_rest':"A.startWorkout();document.querySelector('.check:not(.on)').click()",
  'go_open':"A.startWorkout();A.openOverview&&0;document.querySelectorAll('details').forEach(d=>d.open=true)",
  'nuadd':"S.tab=1;R();A.openAddFood(0)",
  'wodcfg':"S.tab=0;R();A.openWod()",
@@ -68,14 +68,19 @@ CFG={ # nombre: (w,h,scheme,gm,gl)
  'a':(390,844,'dark',3,1),'b':(390,844,'light',3,1),'c':(390,844,'dark',0,0),'d':(390,844,'dark',1,1),'e':(320,568,'dark',3,1),'f':(430,932,'light',2,1),
 }
 def old_names(js,path):
-    """Un script con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo."""
-    back={'A':{},'C':{},'U':{},'S':{},'W':{}}
+    """Un script con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo, y las
+    clases CSS (registro K) de sus selectores."""
+    back={'A':{},'C':{},'U':{},'S':{},'W':{},'K':{}}
     for l in open(path,encoding='utf-8'):
         l=l.strip()
         if l and not l.startswith('#'):
-            r,o,n=l.split();back[r][n]=o
+            r,o,n=l.split()
+            if '@' not in o:back[r][n]=o
     js=re.sub(r'(?<![\w.$])([ACUSW])\.(\w+)',lambda m:m.group(1)+'.'+back[m.group(1)].get(m.group(2),m.group(2)),js)
-    return re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
+    js=re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
+    cls=lambda s:re.sub(r'\.(-?[A-Za-z_][\w-]*)',lambda m:'.'+back['K'].get(m.group(1),m.group(1)),s)
+    js=re.sub(r'''((?:querySelector(?:All)?|closest|matches)\((['"]))(.*?)(\2)''',lambda m:m.group(1)+cls(m.group(3))+m.group(4),js)
+    return re.sub(r'''(classList\.\w+\(['"])([\w-]+)''',lambda m:m.group(1)+back['K'].get(m.group(2),m.group(2)),js)
 def run(file,out,cfgs,ren=None):
     os.makedirs(out,exist_ok=True);res={}
     scr={k:old_names(js,ren) if ren else js for k,js in SCR.items()}

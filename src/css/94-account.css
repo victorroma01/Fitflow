@@ -129,7 +129,7 @@
   color:#cfcfd8;
 }
 /* filas de datos de la cuenta y de Administración: sin raya encima de la primera */
-.acl>.it:first-child {
+.acl>.item:first-child {
   border-top:0;
 }
 /* Ajustes: «Cerrar sesión», en su propia tarjeta al final */
@@ -168,7 +168,7 @@
   background:color-mix(in srgb,var(--tx) 6%,transparent);
   overflow-wrap:anywhere;
 }
-.adp .g3 {
+.adp .grid-3 {
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:8px;

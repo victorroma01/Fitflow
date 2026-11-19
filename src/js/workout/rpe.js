@@ -34,13 +34,13 @@ const rpeExampleHtml = () => {
   const w = usesLb() ? '135 lb' : '60 kg';
   return html`
     <div class="rpxe" aria-hidden="true">
-      <div class="rpxr"><b>Serie 2</b><span>10 × ${w}</span><i class="ck on">✓</i></div>
+      <div class="rpxr"><b>Serie 2</b><span>10 × ${w}</span><i class="check on">✓</i></div>
       <div class="rpe"><span>RPE</span>${[6, 7, 8, 9, 10].map(v => html`<i class="chip${v == 8 ? ' on' : ''}">${raw(v)}</i>`)}</div>
       <small>10 repeticiones con ${w} y te quedaban 2: RPE 8</small>
     </div>`;
 };
 /* los botones de la ventana: «Cancelar» y «Activar», o solo «Entendido» */
-const rpeButtons = withOn => dialogButtons(withOn ? [['Cancelar', 'doNothing', ''], ['Activar', 'enableRpe', 'pr']] : [['Entendido', 'doNothing', 'pr']]);
+const rpeButtons = withOn => dialogButtons(withOn ? [['Cancelar', 'doNothing', ''], ['Activar', 'enableRpe', 'primary']] : [['Entendido', 'doNothing', 'primary']]);
 /** La ventana que lo explica. withOn: con «Activar» (al activarlo en Ajustes); si no, solo «Entendido». */
 const rpeExplain = withOn => {
   $('#dg').innerHTML = html`
@@ -65,9 +65,9 @@ const rpeExplain = withOn => {
 };
 /** Ajustes → Ajustes avanzados. */
 export const rpeSettings = () => html`
-  <div class="cd">
+  <div class="card">
     <label class="srk"><input type="checkbox" data-c="toggleRpe"${rpeOn() ? ' checked' : ''}> Registrar el esfuerzo (RPE)</label>
-    <small class="mu d-block mt-n4">
+    <small class="muted d-block mt-n4">
       Tras cada serie, puntúa del 6 al 10 lo dura que ha sido. Con eso la app propone la semana de descarga y completa el análisis mensual.
     </small>
     <button data-a="explainRpe" class="w-full mt-12">¿Qué es el RPE?</button>

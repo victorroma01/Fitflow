@@ -27,8 +27,10 @@ run node tools/modindex.js --check
 run node tools/figure.js --check
 run python3 build.py --check
 run node tools/types.js
+run node tools/classes.js --check tests/clases-1.0.32.txt
 run python3 tests/changelog.py
 run node --test --test-reporter=dot tests/templates.test.mjs
+run node --test --test-reporter=dot tests/classes.test.mjs
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs

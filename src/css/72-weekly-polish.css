@@ -1,12 +1,12 @@
 /* ═══ css/72-weekly-polish ═══ Ajustes tipográficos y tarjeta semanal */
 /* v19: halo bajo el botón fijo, mejores saltos de línea, tarjeta de semana */
-.sb {
+.sticky-btn {
   box-shadow:0 0 22px 16px var(--bg);
 }
-.sb.pr {
+.sticky-btn.primary {
   box-shadow:0 6px 18px color-mix(in srgb,var(--a2) 35%,transparent),0 0 22px 16px var(--bg);
 }
-.mu,small,p,.cd small {
+.muted,small,p,.card small {
   text-wrap:pretty;
 }
 h1,h2,h3 {
@@ -50,16 +50,16 @@ h1,h2,h3 {
   border-bottom:2px solid var(--ft);
   transform:translateY(-12%) rotate(-45deg);
 }
-.wkc .wkd .td {
+.wkc .wkd .today {
   color:var(--tx);
 }
-.wkc .wkd .td i {
+.wkc .wkd .today i {
   border-color:var(--a1);
 }
-.wkc .wkd .on.td i {
+.wkc .wkd .on.today i {
   border-color:transparent;
 }
-.wkc .wkd .fu i {
+.wkc .wkd .future i {
   border-style:dashed;
   opacity:.55;
 }

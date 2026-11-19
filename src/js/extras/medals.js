@@ -63,7 +63,7 @@ export const medalSvg = (id, size, on) => {
     <path d="M42.5 44L49 61l-6.4-2.6L38.5 63l-4-15.5z" fill="${raw(fam[1])}"/>
     <path d="M21.5 44l-2.2 5.6 8.9 2.7 1.3-4.8zM42.5 44l2.2 5.6-8.9 2.7-1.3-4.8z" fill="#0003"/>` : '';
   return html`
-    <svg class="md${on ? '' : ' off'}" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true">
+    <svg class="medal${on ? '' : ' off'}" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true">
       <defs>
         <linearGradient id="${u}r" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="${raw(met[0])}"/>

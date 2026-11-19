@@ -190,7 +190,7 @@ const watchLater = root => {
     if (laterWatched.has(row))
       return;
     laterWatched.add(row);
-    const page = hole.closest('.sp') || document.documentElement;
+    const page = hole.closest('.sheet') || document.documentElement;
     let watcher = laterWatchers.get(page);
     if (!watcher) {
       watcher = new IntersectionObserver((entries, w) => entries.forEach(en => {

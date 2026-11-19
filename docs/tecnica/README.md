@@ -8,6 +8,7 @@ ver la [documentación funcional](../funcional/README.md).
 | [Este archivo](#cómo-está-hecha) | Arquitectura, principios del código, convenciones y estructura del repositorio. |
 | [Mapa de módulos](modulos.md) | Qué hace cada módulo de `src/js`, qué declara y cuántas acciones registra. Se genera solo. |
 | [Nombres de la V1.0.2](nombres.md) | Los nombres de antes y de ahora de las acciones y de las claves del estado, para leer código, issues o commits anteriores. |
+| [Clases CSS](clases.md) | Cómo se nombran las clases CSS, cómo se renombra una sin romper nada y cómo se llamaban antes las que han cambiado. |
 | [Estado y datos](estado.md) | Diccionario de datos: cada clave de `S` y del almacenamiento, y qué entra en la copia de seguridad. |
 | [Tipos comprobados](tipos.md) | Cómo se comprueban los tipos del código (JavaScript con sus tipos en comentarios), qué detecta, los dos niveles y por dónde seguir. |
 | [Servidor: Firebase](backend.md) | El servidor: cuentas, roles, documentos de Firestore, sincronización sin conexión, reglas de seguridad y administración desde GitHub. |

@@ -118,7 +118,7 @@ const setStatus = (st, code) => {
     R();
   if (st == 'dead' && !deadShown) {
     deadShown = 1;
-    dialog('Tu sesión ha caducado', 'Vuelve a entrar para subir tus datos a la nube. Mientras, todo se sigue guardando en este móvil.', [['Más tarde', 'doNothing', ''], ['Entrar', 'reloginShow', 'pr']]);
+    dialog('Tu sesión ha caducado', 'Vuelve a entrar para subir tus datos a la nube. Mientras, todo se sigue guardando en este móvil.', [['Más tarde', 'doNothing', ''], ['Entrar', 'reloginShow', 'primary']]);
   }
 };
 /** Estado de la sincronización en una línea (Ajustes y Diagnóstico). */

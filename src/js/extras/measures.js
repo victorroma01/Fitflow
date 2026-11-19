@@ -27,7 +27,7 @@ function measureChart(k) {
   const nm = (MEASURES.find(x => x[0] == k) || [0, ''])[1];
   const pts = measureList().filter(m => +m.v[k] > 0).map(m => ({ d: m.d, y: +m.v[k] }));
   if (pts.length < 2)
-    return html`<p class="mu fs-13 m-8-2">Con dos mediciones de «${raw(nm)}» verás aquí su evolución.</p>`;
+    return html`<p class="muted fs-13 m-8-2">Con dos mediciones de «${raw(nm)}» verás aquí su evolución.</p>`;
   const w = 300;
   const h = 120;
   const px = 14;
@@ -57,11 +57,11 @@ function measureChart(k) {
 function measuresTab() {
   const L = measureList();
   const has = MEASURES.filter(x => measureDelta(x[0]));
-  let h = '<button class="pr w-full mt-12" data-a="measureNew">Nueva medición</button>';
+  let h = '<button class="primary w-full mt-12" data-a="measureNew">Nueva medición</button>';
   if (!L.length)
     return html`
       ${raw(h)}
-      <p class="mu m-14-2 fs-14">
+      <p class="muted m-14-2 fs-14">
         Mide con una cinta métrica, siempre en el mismo punto y a la misma hora. Cada pocas semanas basta para ver cómo cambia tu cuerpo, aunque el peso no se mueva.
       </p>`;
   if (!has.some(x => x[0] == measureState.k))
@@ -71,15 +71,15 @@ function measuresTab() {
       ${has.map(x => html`
         <button class="chip ${measureState.k == x[0] ? 'on' : ''}" data-a="measureChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}
     </div>
-    <div class="cd mt-8">${measureChart(measureState.k)}</div>`;
+    <div class="card mt-8">${measureChart(measureState.k)}</div>`;
   h += html`
-    <div class="cd">
+    <div class="card">
       <div class="row"><b>Última medición</b><small>${raw(fmtDateShort(L[L.length - 1].d, { day: 'numeric', month: 'long' }))}</small></div>
       ${has.map(x => {
         const t = measureDelta(x[0]);
         const df = t.p != null ? Math.round((t.v - t.p) * 10) / 10 : null;
         return html`
-          <div class="it cols-1fr-auto-auto gap-12">
+          <div class="item cols-1fr-auto-auto gap-12">
             <span>${raw(x[1])}</span>
             <b>${round1(t.v)} cm</b>
             <small class="minw-52 ta-r">${raw(df == null ? '' : df == 0 ? 'igual' : (df > 0 ? '+' : '−') + Math.abs(df))}</small>
@@ -87,16 +87,16 @@ function measuresTab() {
       })}
     </div>`;
   h += html`
-    <details class="cd">
+    <details class="card">
       <summary>Historial (${L.length})</summary>
       ${L.slice().reverse().map((m, i) => html`
-        <div class="it exr cur-pointer" data-a="measureDeleteAsk" data-i="${L.length - 1 - i}" role="button" tabindex="0">
+        <div class="item exr cur-pointer" data-a="measureDeleteAsk" data-i="${L.length - 1 - i}" role="button" tabindex="0">
           <span>
             <b>${raw(fmtDateShort(m.d, { day: 'numeric', month: 'long', year: 'numeric' }))}</b><br>
             <small>${raw(MEASURES.filter(x => +m.v[x[0]] > 0).map(x => x[1] + ' ' + round1(+m.v[x[0]])).join(' · '))}</small>
           </span>
         </div>`)}
-      <p class="mu fs-12 m-8-0-0">Toca una medición para borrarla.</p>
+      <p class="muted fs-12 m-8-0-0">Toca una medición para borrarla.</p>
     </details>`;
   return h;
 }
@@ -126,8 +126,8 @@ A.measureNew = () => {
       ${pgHead('Nueva medición', 'measuresBack')}
       <label for="f2md">Fecha</label>
       <input id="f2md" type="date" value="${td}" max="${td}">
-      <p class="mu fs-13 m-10-2-0">Rellena solo lo que midas. Valores en centímetros.</p>
-      <div class="g2">
+      <p class="muted fs-13 m-10-2-0">Rellena solo lo que midas. Valores en centímetros.</p>
+      <div class="grid-2">
         ${MEASURES.map(x => html`
           <div>
             <label for="f2m_${x[0]}">${raw(x[1])} (cm)</label>
@@ -136,7 +136,7 @@ A.measureNew = () => {
           </div>`)}
       </div>
       <div class="h-90"></div>
-      <div class="sb"><button class="pr w-full p-14" data-a="measureSave">Guardar medición</button></div>
+      <div class="sticky-btn"><button class="primary w-full p-14" data-a="measureSave">Guardar medición</button></div>
     </div>`);
 };
 A.measureSave = () => {

@@ -40,7 +40,7 @@ import { spaceCheck } from '../system/space.js';
 /* los datos de este móvil no se pudieron leer (core/persist: partsLost): nada se guarda ni se sincroniza hasta que se lean */
 /* cómo recuperar los datos, en los avisos de datos dañados */
 const RESTORE_HINT = 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.';
-const lostDialog = () => dialog('No se pudieron leer tus datos', 'Tus entrenos y comidas de este móvil no se han podido leer. Para no perder nada, la app no guardará ni sincronizará hasta que se puedan leer: prueba a cerrarla y abrirla de nuevo.' + (signedIn() ? ' Si sigue igual, puedes bajar otra vez los datos de tu cuenta (lo que no se hubiera sincronizado se perderá).' : ''), signedIn() ? [['Bajar de mi cuenta', 'partsFromCloudAsk', ''], ['Reintentar', 'partsRetry', 'pr']] : [['Reintentar', 'partsRetry', 'pr']]);
+const lostDialog = () => dialog('No se pudieron leer tus datos', 'Tus entrenos y comidas de este móvil no se han podido leer. Para no perder nada, la app no guardará ni sincronizará hasta que se puedan leer: prueba a cerrarla y abrirla de nuevo.' + (signedIn() ? ' Si sigue igual, puedes bajar otra vez los datos de tu cuenta (lo que no se hubiera sincronizado se perderá).' : ''), signedIn() ? [['Bajar de mi cuenta', 'partsFromCloudAsk', ''], ['Reintentar', 'partsRetry', 'primary']] : [['Reintentar', 'partsRetry', 'primary']]);
 A.partsRetry = () => location.reload();
 A.partsFromCloudAsk = () => confirmDialog('¿Bajar los datos de tu cuenta?', 'Se borran los datos de este móvil y se bajan otra vez los de tu cuenta. Lo que no se hubiera sincronizado se perderá.', 'partsFromCloud', 'Bajar');
 /* sin la sincronización de antes, la nube no ve lo de este móvil como borrado: se baja todo de nuevo */
@@ -76,7 +76,7 @@ onInstanceStale(arriving => {
     location.reload();
     return;
   }
-  dialog('La app está abierta en otra ventana', 'Se han guardado cambios desde otra pestaña o ventana de la app. Para no mezclar los datos, esta se recarga con lo último.', [['Recargar', 'staleReload', 'pr']]);
+  dialog('La app está abierta en otra ventana', 'Se han guardado cambios desde otra pestaña o ventana de la app. Para no mezclar los datos, esta se recarga con lo último.', [['Recargar', 'staleReload', 'primary']]);
   staleDialog = $('#dg').firstChild;
   if (typeof MutationObserver != 'undefined')
     new MutationObserver(() => staleDialog.isConnected || location.reload()).observe($('#dg'), { childList: true });
@@ -198,7 +198,7 @@ const restoreNotice = () => {
             <div class="d-grid gap-6 ta-l">${(o.s || []).map(x => html`<div>· ${x}</div>`)}</div>
             ${o.f ? html`
               <div class="mt-10">Se descartaron ${raw(plural(o.f, 'elemento dañado', 'elementos dañados'))} de la copia.</div>` : ''}
-          `, [['Entendido', 'doNothing', 'pr']]);
+          `, [['Entendido', 'doNothing', 'primary']]);
         }
         catch (e) {
           logError('arranque: aviso de restauración', e);
@@ -215,9 +215,9 @@ const restoreNotice = () => {
 const afterFirstPaint = () => {
   /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
   if (stateRecovered == 1)
-    setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + RESTORE_HINT, [['Entendido', 'doNothing', 'pr']]), 600);
+    setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + RESTORE_HINT, [['Entendido', 'doNothing', 'primary']]), 600);
   else if (stateRecovered == 2)
-    setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. ' + RESTORE_HINT, [['Entendido', 'doNothing', 'pr']]), 600);
+    setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. ' + RESTORE_HINT, [['Entendido', 'doNothing', 'primary']]), 600);
   /* lo arreglado al arrancar se guarda (solo se escribe lo que cambió: core/persist) */
   setTimeout(saveState, 1000);
   if (signedIn()) {

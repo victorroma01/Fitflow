@@ -253,11 +253,11 @@ def main(path):
         check('para el aviso, la 1.0.31 es posterior a la 1.0.3, y la 1.0.32 y la 1.1.0, a la 1.0.31; la 1.0.4, no', ev("isNewerVersion('1.0.31','1.0.3') && isNewerVersion('1.0.32','1.0.31') && isNewerVersion('1.1.0','1.0.32') && !isNewerVersion('1.0.4','1.0.31') && !isNewerVersion('1.0.31','1.0.31')"))
         # y compara todas las cifras: una revisión con una cuarta (1.1.0.1) es posterior a su versión y anterior a la siguiente
         check('una cuarta cifra cuenta: 1.1.0.1 es posterior a 1.1.0 y anterior a 1.1.1, y 1.1.0.10, posterior a 1.1.0.9', ev("isNewerVersion('1.1.0.1','1.1.0') && !isNewerVersion('1.1.0','1.1.0.1') && isNewerVersion('1.1.1','1.1.0.9') && !isNewerVersion('1.1.0.9','1.1.1') && isNewerVersion('1.1.0.10','1.1.0.9') && !isNewerVersion('1.1.0.0','1.1.0') && !isNewerVersion('1.1.0','1.1.0.0')"))
-        lk = ev("(b=>{const s=getComputedStyle(b);return [b.innerText,s.textDecorationLine,parseFloat(s.fontSize),s.color==getComputedStyle(document.querySelector('.rnp small.mu')||b).color,b.getBoundingClientRect().top>document.querySelector('.rnp').getBoundingClientRect().bottom]})(document.querySelector('.rnc .lnk'))")
+        lk = ev("(b=>{const s=getComputedStyle(b);return [b.innerText,s.textDecorationLine,parseFloat(s.fontSize),s.color==getComputedStyle(document.querySelector('.rnp small.muted')||b).color,b.getBoundingClientRect().top>document.querySelector('.rnp').getBoundingClientRect().bottom]})(document.querySelector('.rnc .lnk'))")
         check('debajo, «Cerrar» pequeño, gris y subrayado', lk[0] == 'Cerrar' and 'underline' in lk[1] and lk[2] <= 14 and lk[3] and lk[4], str(lk))
         ev("document.querySelector('.rnc .lnk').click()")
         run()
-        check('que cierra la nota', ev("!document.querySelector('.rnp') && !!document.querySelector('#ajs .sr[data-a=resetAllAsk]')"))
+        check('que cierra la nota', ev("!document.querySelector('.rnp') && !!document.querySelector('#ajs .setting-row[data-a=resetAllAsk]')"))
 
         print('Copia de seguridad única (F-30, T-14)')
         ev("A.openBackup()")
