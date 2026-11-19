@@ -61,15 +61,15 @@ const deloadSheet = () => {
   const n = deloadEvery();
   const sch = !(S.deloadWeeks && S.deloadWeeks[S.week] === 1) && n > 1 && S.week % n == 0;
   return html`
-    <div class="dlw2">
-      <div class="dli dlbig">${icon('dlw', 30)}</div>
+    <div class="deload-intro">
+      <div class="deload-icon deload-icon-big">${icon('dlw', 30)}</div>
       <h3>Empieza tu semana de descarga</h3>
       <p class="muted">
         ${raw(sch ? 'Es la semana ' + n + ' de tu ciclo. ' : '')}Esta semana entrenas más suave para recuperarte y seguir progresando.
       </p>
-      <div class="dlt"><span>Peso al 65 %</span><span>2 repeticiones menos</span><span>Mismas series</span></div>
-      <button class="dlp" data-a="deloadSeen">Entendido</button>
-      <button class="dlo" data-a="deloadSkipAsk">Omitir esta descarga</button>
+      <div class="deload-tags"><span>Peso al 65 %</span><span>2 repeticiones menos</span><span>Mismas series</span></div>
+      <button class="deload-primary" data-a="deloadSeen">Entendido</button>
+      <button class="deload-skip" data-a="deloadSkipAsk">Omitir esta descarga</button>
     </div>`;
 };
 /** Tarjeta naranja de Workout: en la semana de descarga, compacta y con «Omitir»; si no, la sugerencia por esfuerzo alto. */
@@ -80,23 +80,23 @@ export const deloadCard = () => {
       sheetTimer = setTimeout(() => {
         sheetTimer = 0;
         /* sin entreno en curso, en Workout y sin otra hoja ni diálogo abiertos */
-        if (!W && S.tab == 0 && isDeloadWeek(S.week) && S.deloadSheetWeek != S.week && !$('#sh .sheet') && !$('#dg .dgb')) {
+        if (!W && S.tab == 0 && isDeloadWeek(S.week) && S.deloadSheetWeek != S.week && !$('#sh .sheet') && !$('#dg .dialog-backdrop')) {
           S.deloadSheetWeek = S.week;
           saveState();
           sheet(deloadSheet());
         }
       }, 400);
     return html`
-      <div class="dl2 dlc2">
-        <button class="dlb" data-a="deloadInfo" aria-label="Semana de descarga: qué cambia">
-          <span class="dli">${icon('dlw', 18)}</span>
+      <div class="deload-box deload-box-slim">
+        <button class="deload-btn" data-a="deloadInfo" aria-label="Semana de descarga: qué cambia">
+          <span class="deload-icon">${icon('dlw', 18)}</span>
           <b>Semana de descarga</b>
         </button>
-        <button class="dlo dls" data-a="deloadSkipAsk">Omitir</button>
+        <button class="deload-skip deload-skip-slim" data-a="deloadSkipAsk">Omitir</button>
       </div>`;
   }
   if (S.week > 1 && deloadSuggested() && !(S.deloadDeclined && S.deloadDeclined[S.week]))
-    return '<div class="card dlc"><b>Esfuerzo muy alto</b><div class="muted fs-13 mt-4">Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.</div><div class="grid-2 mt-10"><button data-a="deloadNotNow">Ahora no</button><button class="primary" data-a="deloadOn">Activar descarga</button></div></div>';
+    return '<div class="card deload-advice"><b>Esfuerzo muy alto</b><div class="muted fs-13 mt-4">Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.</div><div class="grid-2 mt-10"><button data-a="deloadNotNow">Ahora no</button><button class="primary" data-a="deloadOn">Activar descarga</button></div></div>';
   return '';
 };
 /** Franja del entreno en la semana de descarga. */
@@ -111,15 +111,15 @@ export const deloadChips = (v, k) => {
         data-v="${x}">${l}</button>`;
   return html`
     <div class="section-label">Semana de descarga</div>
-    <div class="cps">${raw(ch(4, 'Cada 4 semanas') + ch(5, 'Cada 5') + ch(6, 'Cada 6') + ch('o', 'Otra') + ch(0, 'Nunca'))}</div>
+    <div class="choices">${raw(ch(4, 'Cada 4 semanas') + ch(5, 'Cada 5') + ch(6, 'Cada 6') + ch('o', 'Otra') + ch(0, 'Nunca'))}</div>
     ${ot ? html`
-      <div class="dln">
+      <div class="deload-every">
         <span>Cada</span>
         <input type="number" inputmode="numeric" min="2" max="16" data-c="deloadEveryWeeks" data-k="${k}" value="${raw(v)}"
             aria-label="Semanas entre descargas">
         <span>semanas</span>
       </div>` : ''}
-    <p class="muted dlh">
+    <p class="muted deload-hint">
       Esa semana bajan el peso y las repeticiones, con las mismas series. Si no eliges nada: cada 6 semanas en principiante, 5 en intermedio y 4 en avanzado.
     </p>`;
 };
@@ -150,7 +150,7 @@ A.deloadSeen = () => {
 /* omitir la descarga (F-19): esta semana, normal; la siguiente llega cuando vuelva a tocar */
 A.deloadSkipAsk = () => {
   const n = nextDeload(S.week);
-  dialog('¿Omitir la semana de descarga?', 'Esta semana entrenarás con tu peso y tus repeticiones normales.' + (n ? ' La próxima descarga llegará en la semana ' + n + '.' : ''), [['Cancelar', 'doNothing', ''], ['Omitir', 'deloadSkip', 'primary dlp']]);
+  dialog('¿Omitir la semana de descarga?', 'Esta semana entrenarás con tu peso y tus repeticiones normales.' + (n ? ' La próxima descarga llegará en la semana ' + n + '.' : ''), [['Cancelar', 'doNothing', ''], ['Omitir', 'deloadSkip', 'primary deload-primary']]);
 };
 A.deloadSkip = () => {
   S.deloadWeeks = S.deloadWeeks || {};

@@ -122,7 +122,7 @@ document.addEventListener('pointermove', e => {
       s.below = showPageBelow();
     }
     else if (s.t.k == 'menu')
-      s.bk = $('#mn .mbk');
+      s.bk = $('#mn .menu-backdrop');
     else
       s.t.el.style.position = 'relative';
     [s.t.el, ...s.also].forEach(x => {

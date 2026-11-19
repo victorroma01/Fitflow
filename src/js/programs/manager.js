@@ -59,7 +59,7 @@ const presetList = () => {
   const sx = profileSex();
   if (!sx)
     return html`
-      <div class="card pgsx">
+      <div class="card sex-card">
         <b>¿Hombre o mujer?</b>
         <p class="muted">Así salen primero los programas pensados para ti. Puedes cambiarlo cuando quieras en Perfil.</p>
         <div class="grid-2">

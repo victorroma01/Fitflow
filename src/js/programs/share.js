@@ -141,7 +141,10 @@ A.openImport = () => {
     <textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea>
     <p id="ipe" class="muted c-ctx d-none m-8-0-0"></p>
     <div class="grid-2 mt-10">
-      <label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="importFile"></label>
+      <label class="file-btn">
+        Elegir archivo
+        <input type="file" accept=".json,application/json,text/plain" hidden data-c="importFile">
+      </label>
       <button class="primary" data-a="importCode">Importar</button>
     </div>`);
   sheetToTop();

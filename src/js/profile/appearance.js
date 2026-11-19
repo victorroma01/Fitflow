@@ -128,13 +128,13 @@ export const accentSwatches = () => {
   const cs = own ? sw(customAccent(S.accentColor)) : '';
   return html`
     ${accentPreview()}
-    <div class="swg">
+    <div class="swatch-grid">
       ${ACCENTS.map((a, i) => html`
-        <button class="swb${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}">
+        <button class="swatch${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}">
           <i data-style="${sw(a)}">${cur == i ? '✓' : ''}</i>
           <small>${raw(a[0])}</small>
         </button>`)}
-      <label class="swb swc${cur == -1 ? ' on' : ''}">
+      <label class="swatch swc${cur == -1 ? ' on' : ''}">
         <i class="${own ? '' : 'swr'}" data-style="${cs}">
           ${cur == -1 ? '✓' : ''}
           <input type="color" value="${own ? S.accentColor.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive"
@@ -148,7 +148,7 @@ export const accentSwatches = () => {
     </small>`;
 };
 export const themeSegment = () => html`
-  <div class="seg">
+  <div class="segmented">
     ${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`
       <button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="themeChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}
   </div>`;
@@ -177,7 +177,7 @@ export const glassCard = () => {
     </div>
     ${raw(g ? html`
       <label>Intensidad del Cristal</label>
-      <div class="seg">
+      <div class="segmented">
         ${GLASS_LEVELS.map(x => html`
           <button class="${m == /** @type {any} */ (x[0]) ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}
       </div>

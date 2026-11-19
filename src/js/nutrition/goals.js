@@ -81,7 +81,7 @@ function myNutritionPage() {
   return html`
     <div id="mny">
       ${backRow()}
-      <div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div>
+      <div class="mnh"><h1 class="page-title">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div>
       ${goalsRing(goals, targets)}
       ${goalsFields(goals, diet, activity, diff)}
       <p class="muted mnp">${raw(note)}</p>

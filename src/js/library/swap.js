@@ -120,8 +120,8 @@ export const swapBody = () => {
     h += html`
       <div class="section-label">${raw(t[0])} · ${t[1].length}</div>
       ${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`
-        <div class="item exr cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}">
-          <span class="exc">${exCellHtml(e, row++)}</span>
+        <div class="item item-split cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}">
+          <span class="exercise-cell">${exCellHtml(e, row++)}</span>
           <small class="muted">Elegir ›</small>
         </div>`)}`;
   });

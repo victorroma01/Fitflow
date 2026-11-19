@@ -186,7 +186,7 @@ const watchLater = root => {
   if (typeof IntersectionObserver == 'undefined')
     return;
   holes.forEach(hole => {
-    const row = hole.closest('.exr') || hole;
+    const row = hole.closest('.item-split') || hole;
     if (laterWatched.has(row))
       return;
     laterWatched.add(row);

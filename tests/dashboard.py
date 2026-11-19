@@ -135,12 +135,12 @@ DASH = """(() => {
   const rows = c => c ? [...c.querySelectorAll('.item')].map(r => [r.querySelector('span').firstChild.textContent, r.querySelector('.ta-r b').textContent, r.querySelector('.ta-r small').textContent, r.querySelector('span small').textContent]) : [];
   const stats = {};
   document.querySelectorAll('#app .grid-2 .card').forEach(c => { if (c.querySelector('b.fs-26')) stats[c.querySelector('small').textContent] = c.querySelector('b').textContent; });
-  const wk = document.querySelector('.wkc');
+  const wk = document.querySelector('.week-card');
   const cardio = [...document.querySelectorAll('#app .card')].find(c => c.querySelector('.f2cs'));
   return { stats, bars: [...card('Volumen por sesión').querySelectorAll('.bg-ac')].map(b => parseFloat(b.style.height)),
-    cal: [...document.querySelectorAll('.cal i.on')].map(i => +i.textContent), calAll: [...document.querySelectorAll('.cal i')].filter(i => i.textContent).length,
-    month: document.querySelector('.cal').previousElementSibling.querySelector('b').textContent,
-    week: wk.querySelector('.row small').textContent, dots: [...wk.querySelectorAll('.wkd span')].map(s => s.classList.contains('on') ? 1 : 0), streak: [...wk.querySelectorAll('.wks b')].map(b => +b.textContent),
+    cal: [...document.querySelectorAll('.calendar i.on')].map(i => +i.textContent), calAll: [...document.querySelectorAll('.calendar i')].filter(i => i.textContent).length,
+    month: document.querySelector('.calendar').previousElementSibling.querySelector('b').textContent,
+    week: wk.querySelector('.row small').textContent, dots: [...wk.querySelectorAll('.week-dots span')].map(s => s.classList.contains('on') ? 1 : 0), streak: [...wk.querySelectorAll('.week-stats b')].map(b => +b.textContent),
     records: rows(card('Récords personales')), timeline: rows(card('Línea de récords')),
     cardio: cardio ? { total: cardio.querySelector('.row small').textContent, now: [...cardio.querySelectorAll('.f2cs b')].map(b => b.textContent) } : null };
 })()"""
@@ -253,7 +253,7 @@ def main(path):
             run()
             pts = [v for v in series[m] if v > 0][-30:]
             fmt = (lambda v: '%d kg' % jsround(v)) if m == 'v' else (lambda v: round1(v) + ' kg')
-            got = ev("({ now: document.querySelector('#pgc .pgt2 b').textContent, what: document.querySelector('#pgc .pgt2 small').textContent, n: document.querySelectorAll('#pgc circle[data-a=progressPeriod]').length, sum: document.querySelector('#pgc .pgsum').textContent })")
+            got = ev("({ now: document.querySelector('#pgc .progress-total b').textContent, what: document.querySelector('#pgc .progress-total small').textContent, n: document.querySelectorAll('#pgc circle[data-a=progressPeriod]').length, sum: document.querySelector('#pgc .progress-summary').textContent })")
             change = (pts[-1] - pts[0]) / pts[0] * 100
             line = 'De %s a %s · %s%s %%' % (fmt(pts[0]), fmt(pts[-1]), '+' if change >= 0 else '', num(jsround(change * 10) / 10))
             check('progreso de Press banca, %s: un punto por sesión, el último valor y el cambio' % label.lower(),

@@ -80,7 +80,7 @@ def main(path):
                 head = ev("document.querySelector('.card.pos-sticky').innerText")
                 kcal = int(head.split('\n')[-1].split(' / ')[0])
                 grams = [int(x.split(' / ')[0]) for x in head.split('\n') if ' g' in x and ' / ' in x]
-                cards = ev("[...document.querySelectorAll('#app .card')].filter(c=>c.querySelector('.mlb')).map(c=>[...c.querySelectorAll('.mac b')].map(x=>parseInt(x.textContent)))")
+                cards = ev("[...document.querySelectorAll('#app .card')].filter(c=>c.querySelector('.mlb')).map(c=>[...c.querySelectorAll('.macros b')].map(x=>parseInt(x.textContent)))")
                 per = [[jsround(v) for v in total(day[str(i)])[1:]] for i in range(n_meals)]
                 ev('S.tab=2;R()')
                 dash = int(ev("[...document.querySelectorAll('#app .grid-2 .card')].map(x=>x.innerText.split('\\n')[0])[3]"))

@@ -62,7 +62,7 @@ const rotationDue = () => {
 };
 /** Tarjeta de Workout que propone la rotación cuando toca. */
 export const rotationCard = () => rotationDue() ? html`
-  <div class="card rtc">
+  <div class="card rotation-card">
     <b>Toca rotar los ejercicios</b>
     <div class="muted">
       Llevas ${raw(S.week - (S.rotationWeek > 0 && S.rotationWeek <= S.week ? S.rotationWeek : 1))} semanas con los mismos accesorios. Cambiarlos por otra variante del mismo movimiento sigue estimulando el músculo; los básicos se quedan para que veas tu progreso.
@@ -85,7 +85,7 @@ const rotationSheet = () => {
       ${raw(ch.length)} ${ch.length == 1 ? 'accesorio cambia' : 'accesorios cambian'} por otra variante del mismo movimiento, con las mismas series, repeticiones y descanso.
     </p>
     ${Object.keys(by).map(d => html`
-      <div class="card rtd">
+      <div class="card rotation-day">
         <b>${S.plan[d].n}</b>
         ${by[d].map(c => html`<div class="muted">${S.plan[d].ex[c.i].n} → <b>${c.n}</b></div>`)}
       </div>`)}

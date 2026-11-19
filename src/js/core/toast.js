@@ -15,7 +15,8 @@ let undoAction = null;
 export const toast = (m, undo) => {
   const e = $('#tt');
   undoAction = typeof undo == 'function' ? undo : null;
-  e.innerHTML = html`<div class="tst">${m}${undoAction ? html`<button class="tsu" data-a="toastUndo">Deshacer</button>` : ''}</div>`;
+  e.innerHTML = html`
+    <div class="toast">${m}${undoAction ? html`<button class="toast-undo" data-a="toastUndo">Deshacer</button>` : ''}</div>`;
   clearTimeout(toast.h);
   /* lo justo para leerlo: 2,6 s los cortos, hasta 6 s los largos y los que se pueden deshacer */
   toast.h = setTimeout(() => {

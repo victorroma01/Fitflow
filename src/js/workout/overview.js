@@ -59,7 +59,7 @@ const overviewExercise = (d, i, editing) => {
   const tempo = unitOf(e) ? '' : html`<br>Tempo ${raw(tempoOf(e))} · RIR ${rirOf(e)}`;
   const details = html`${raw(e.s)} series · ${raw(targetText(e))} · Descanso ${raw(fmtMinSec(inSuperset(i) ? 10 : restOf(e)))}${tempo}`;
   return html`
-    <div class="ovx">
+    <div class="exercise-row">
       <div class="thumb">${exPicture(e.n, 64)}</div>
       <div class="fx-1 minw-0"><b>${e.n}</b><div class="muted fs-13">${details}</div>${editing ? overviewEditButtons(d, e, i) : ''}</div>
     </div>`;

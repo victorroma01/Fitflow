@@ -1,6 +1,6 @@
 /* ═══ css/80-session-header ═══ Cabecera del entreno, icono animado y filas del modo edición */
 /* v20: cabecera del entreno fija */
-.wsk {
+.session-head {
   position:sticky;
   top:0;
   z-index:7;
@@ -8,7 +8,7 @@
   padding:calc(6px + env(safe-area-inset-top,0px)) 14px 2px;
   background:var(--bg);
 }
-.wsk::after {
+.session-head::after {
   content:"";
   position:absolute;
   left:0;
@@ -18,10 +18,10 @@
   background:linear-gradient(var(--bg),transparent);
   pointer-events:none;
 }
-.wsk .bar {
+.session-head .bar {
   margin:10px 0 8px!important;
 }
-.wsr {
+.rest-pill {
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -34,7 +34,7 @@
   background:color-mix(in srgb,var(--a2) 24%,var(--cd));
   border:1px solid color-mix(in srgb,var(--a2) 60%,transparent);
 }
-.wsr b {
+.rest-pill b {
   font-variant-numeric:tabular-nums;
   font-weight:750;
 }

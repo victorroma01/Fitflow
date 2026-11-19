@@ -181,7 +181,7 @@ nav.trlv {
   z-index:19;
 }
 /* deslizar para volver (core/swipe): el gesto de lado es de la app; el vertical, del desplazamiento normal */
-#app,.sheet,.msd {
+#app,.sheet,.menu-panel {
   touch-action:pan-y pinch-zoom;
 }
 /* recorrido (system/tour) */

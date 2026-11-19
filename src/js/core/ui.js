@@ -34,7 +34,7 @@ function sheetBarFix() {
    { key: clave de la página, back: a dónde lleva su «←», y: desplazamiento, nodes: su contenido (DocumentFragment) } */
 const pageTrail = [];
 /* la clave de una página es su título (el de pgHead); '' si no lo lleva */
-const pageKey = h => (/<h1 class="pgt">(.*?)<\/h1>/.exec(h) || [])[1] || '';
+const pageKey = h => (/<h1 class="page-title">(.*?)<\/h1>/.exec(h) || [])[1] || '';
 /* a dónde lleva el «←» de la página p (acción y dato), o '' si la cierra o no lo tiene: con '' es una página de primer nivel */
 const backLink = p => {
   const b = p.querySelector('[aria-label="Volver"]');
@@ -130,7 +130,7 @@ export const showPageBelow = () => {
   if (!top || !p || s.className != 'full' || !backLink(p))
     return null;
   const u = document.createElement('div');
-  u.className = 'sheet spu';
+  u.className = 'sheet sheet-under';
   u.inert = true;
   u.setAttribute('aria-hidden', 'true');
   u.append(top.nodes);
@@ -185,8 +185,8 @@ export const dialogButtons = b => html`
 export function dialog(t, p, b) {
   /* para los lectores de pantalla, una ventana que tapa la app (aria-modal) con su título */
   $('#dg').innerHTML = html`
-    <div class="dgb">
-      <div class="dgc" role="dialog" aria-modal="true" aria-labelledby="dgt">
+    <div class="dialog-backdrop">
+      <div class="dialog-box" role="dialog" aria-modal="true" aria-labelledby="dgt">
         <h3 id="dgt" class="m-0-0-6">${raw(t)}</h3>
         <p class="muted m-0-0-16 fs-14">${raw(p)}</p>
         ${dialogButtons(b)}
@@ -264,16 +264,16 @@ export const fullPage = h => {
 export const backRow = back => html`
   <div class="row"><button data-a="${back || 'closeSheet'}" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div>`;
 /** La cabecera de una página: la «←» y, debajo, el título. */
-export const pgHead = (t, back) => html`${backRow(back)}<h1 class="pgt">${raw(t)}</h1>`;
+export const pgHead = (t, back) => html`${backRow(back)}<h1 class="page-title">${raw(t)}</h1>`;
 A.openMenu = () => {
   $('#mn').innerHTML = html`
-    <div class="mbk" data-a="closeMenu"></div>
-    <div class="msd" role="dialog" aria-modal="true" aria-label="Menú">
-      <div class="msb2"></div>
-      <div class="msb"></div>
-      <div class="mci">
+    <div class="menu-backdrop" data-a="closeMenu"></div>
+    <div class="menu-panel" role="dialog" aria-modal="true" aria-label="Menú">
+      <div class="menu-blur"></div>
+      <div class="menu-shade"></div>
+      <div class="menu-items">
         <button class="menu-close" data-a="closeMenu" aria-label="Cerrar">${icon('x', 22)}</button>
-        <div class="mti">Menú</div>
+        <div class="menu-title">Menú</div>
         ${[['openPrograms', 'prog', 'Programas'], ['openCalendar', 'cal', 'Calendario'], ['openLogs', 'log', 'Registros'], ['rotationShow', 'swp', 'Rotar ejercicios'], ['resetWeek', 'reset', 'Reiniciar semana']].map((x, i) => html`
           <button class="menu-item" data-style="--d:${70 + i * 60}ms" data-a="menuItem" data-v="${x[0]}">
             <span>${raw(x[2])}</span>
@@ -284,7 +284,7 @@ A.openMenu = () => {
   applyStyles($('#mn'));
 };
 A.closeMenu = () => {
-  const s = $('.msd');
+  const s = $('.menu-panel');
   if (!s) {
     $('#mn').innerHTML = '';
     return;
@@ -295,7 +295,7 @@ A.closeMenu = () => {
   }, 240);
 };
 export const segmented = (a, cur, list) => html`
-  <div class="seg${list.length == 2 ? ' seg-2' : ''}">
+  <div class="segmented${list.length == 2 ? ' seg-2' : ''}">
     ${list.map(x => html`<button class="${cur == x[0] ? 'on' : ''}" data-a="${a}" data-v="${x[0]}">${raw(x[1])}</button>`)}
   </div>`;
 export const linkRow = (ico, t, s, a, i) => html`

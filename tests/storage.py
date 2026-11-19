@@ -329,7 +329,7 @@ def main(path):
             check('las partes pasan de localStorage a IndexedDB, sin perder nada', ev('__T.can(stateToStored(S))') == before and ev('__T.stored().then(s=>__T.can(s))') == before)
             check('el núcleo lo dice (y nombra sus partes)', core.get('_parts') == 2 and core.get('_pk') == ev('__T.pkeys()'), str(core.get('_parts')))
             check('y en localStorage ya no quedan', ev("__T.keys('ff:')") == [], str(ev("__T.keys('ff:')")))
-            check('sin avisos de datos dañados', not ev('stateRecovered') and not ev('partsLost') and not ev("!!document.querySelector('#dg .dgc')"))
+            check('sin avisos de datos dañados', not ev('stateRecovered') and not ev('partsLost') and not ev("!!document.querySelector('#dg .dialog-box')"))
             pg.clock.run_for(3000)  # lo que hace la app al arrancar (medallas…), antes de contar escrituras
 
             # ── escribir solo lo que cambia y agrupar los guardados de una acción ──
@@ -445,7 +445,7 @@ def main(path):
             reload_by(pg, "A.partsRetry()")
             pg.clock.run_for(1500)
             ev(HELPERS)
-            check('con la parte de vuelta, «Reintentar» arranca con todo', not ev('partsLost') and ev('S.logs.length') == nlogs and ev("!document.querySelector('#dg .dgc')"))
+            check('con la parte de vuelta, «Reintentar» arranca con todo', not ev('partsLost') and ev('S.logs.length') == nlogs and ev("!document.querySelector('#dg .dialog-box')"))
 
             # ── restaurar una copia con un guardado pendiente en la misma acción ──
             ev("for(let i=0;i<5;i++)S.logs.push({d:'2026-10-0'+(i+1),n:'Día '+i,v:1000,s:10,m:40,q:7});S.exerciseHistory={'Press banca':[{d:'2026-10-01',s:[[5,80,8,0]]}]};saveState()")
@@ -495,9 +495,9 @@ def main(path):
             check('con el 85 % usado, avisa', ev("/Queda poco espacio/.test(document.querySelector('#dg').innerText)&&/85 %/.test(document.querySelector('#dg').innerText)"), ev("document.querySelector('#dg').innerText.slice(0,120)"))
             check('con «Copia de seguridad» a mano', ev("!!document.querySelector('#dg [data-v=openBackup]')"))
             ev("document.querySelector('#dg').innerHTML='';spaceCheck()")
-            check('y no vuelve a avisar hasta dentro de una semana', ev("!document.querySelector('#dg .dgc')"))
+            check('y no vuelve a avisar hasta dentro de una semana', ev("!document.querySelector('#dg .dialog-box')"))
             ev("window.__mark=1;localStorage.removeItem('ffspace');window.__tr=document.createElement('div');__tr.id='tour';document.body.appendChild(__tr);spaceCheck()")
-            check('con algo delante (el recorrido), espera', ev("!document.querySelector('#dg .dgc')"))
+            check('con algo delante (el recorrido), espera', ev("!document.querySelector('#dg .dialog-box')"))
             ev("__tr.remove()")
             # (lo que la app abra sola mientras tanto, como el aviso de pesarse, también la ocupa: se cierra y se espera otra vez)
             busy = "[window.W&&'entreno',document.visibilityState=='hidden'&&'oculta',...['#lgw','#wlc','#tour','#upd','#f2w'].filter(x=>document.querySelector(x)),document.querySelector('#sh').firstChild&&'hoja',document.querySelector('#dg').firstChild&&'aviso',document.querySelector('#mn').firstChild&&'menú'].filter(Boolean)"
@@ -515,7 +515,7 @@ def main(path):
             ev("document.querySelector('#dg').innerHTML=''")
             ev("localStorage.removeItem('ffspace');StorageManager.prototype.estimate=()=>Promise.resolve({usage:50e6,quota:100e6})")
             ev('spaceCheck()')
-            check('con la mitad usada, no avisa', ev("!document.querySelector('#dg .dgc')"))
+            check('con la mitad usada, no avisa', ev("!document.querySelector('#dg .dialog-box')"))
             ev("A.openDiagnostics()")
             check('Diagnóstico dice dónde están las partes y el espacio usado', until(pg, "/Espacio usado: localStorage .*IndexedDB y caché .* \\(50 %\\)/.test(document.getElementById('diagt').value)") and '(IndexedDB)' in ev("document.getElementById('diagt').value"), ev("document.getElementById('diagt').value.split('\\n').filter(l=>/Espacio|Almacenamiento/.test(l)).join(' | ')")[:300])
             ev("StorageManager.prototype.estimate=__est;sheet()")

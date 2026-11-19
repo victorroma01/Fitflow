@@ -30,11 +30,11 @@ export const backTarget = () => {
     return { k: 'aviso', go: () => $('#dg').innerHTML = '' };
   if ($('#tour'))
     return { k: 'recorrido', go: () => A.tourSkip() };
-  if ($('.lvb'))
+  if ($('.level-backdrop'))
     return { k: 'aviso', go: () => A.levelMenuClose() };
   if ($('#f2w'))
     return { k: 'wod', go: () => A.wodExit() };
-  const m = $('#mn .msd');
+  const m = $('#mn .menu-panel');
   if (m && !m.classList.contains('out'))
     return { k: 'menu', el: m, go: () => A.closeMenu() };
   const p = $('#sh .sheet');

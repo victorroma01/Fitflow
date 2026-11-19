@@ -48,7 +48,7 @@ const welcomeView = () => html`
 /* el sexo: Hombre o Mujer, como botones de opción */
 const sexButtons = sx => html`
   <label>Sexo</label>
-  <div class="seg seg-2" role="radiogroup" aria-label="Sexo">
+  <div class="segmented seg-2" role="radiogroup" aria-label="Sexo">
     ${[['M', 'Hombre'], ['F', 'Mujer']].map(x => html`
       <button class="${sx == x[0] ? 'on' : ''}" data-a="welcomeSex" data-v="${x[0]}" role="radio"
           aria-checked="${sx == x[0] ? 'true' : 'false'}">${raw(x[1])}</button>`)}

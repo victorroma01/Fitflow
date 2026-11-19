@@ -120,7 +120,7 @@ export const checkWeighIn = () => {
   if (!signedIn() || W || !weighDue())
     return;
   const today = dayKey(new Date());
-  if (S.weighReminder.sh == today || $('#sh .sheet') || $('#dg .dgb') || $('#upd') || $('#f2w'))
+  if (S.weighReminder.sh == today || $('#sh .sheet') || $('#dg .dialog-backdrop') || $('#upd') || $('#f2w'))
     return;
   S.weighReminder.sh = today;
   saveState();
