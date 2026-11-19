@@ -167,7 +167,7 @@ function wodFrame() {
     return;
   if (!wodRun.pa)
     wodRing();
-  wodFrame.id = requestAnimationFrame(wodFrame);
+  /** @type {any} */ (wodFrame).id = requestAnimationFrame(wodFrame);
 }
 function wodTick() {
   if (!wodRun || wodRun.done)
@@ -234,12 +234,12 @@ function wodStart() {
   }
   wodSkeleton();
   o.focus({ preventScroll: true });
-  clearInterval(wodTick.iv);
-  wodTick.iv = setInterval(wodTick, 200);
+  clearInterval(/** @type {any} */ (wodTick).iv);
+  /** @type {any} */ (wodTick).iv = setInterval(wodTick, 200);
   wodTick();
   /* un solo bucle de fotogramas aunque se empiece otro WOD sin que haya acabado el anterior */
-  cancelAnimationFrame(wodFrame.id);
-  wodFrame.id = requestAnimationFrame(wodFrame);
+  cancelAnimationFrame(/** @type {any} */ (wodFrame).id);
+  /** @type {any} */ (wodFrame).id = requestAnimationFrame(wodFrame);
   beep(1);
   buzz([60]);
   keepAwake();
@@ -250,7 +250,7 @@ document.addEventListener('visibilitychange', () => {
     wodTick();
 });
 function wodClose() {
-  clearInterval(wodTick.iv);
+  clearInterval(/** @type {any} */ (wodTick).iv);
   setWodRun(null);
   const o = document.getElementById('f2w');
   if (o)
@@ -260,7 +260,7 @@ function wodClose() {
 function wodEnd(s, early) {
   if (!wodRun || wodRun.done)
     return;
-  clearInterval(wodTick.iv);
+  clearInterval(/** @type {any} */ (wodTick).iv);
   const c = wodRun.c;
   let t = s.t;
   if (early) {

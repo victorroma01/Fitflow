@@ -20,6 +20,7 @@ import { signedIn } from '../cloud/session.js';
 import { afterSync } from '../cloud/hooks.js';
 import { html } from '../core/html.js';
 /** Accesos directos: [?a=…, pestaña]. */
+/** @type {[string, number][]} */
 const LAUNCH = [['entreno', 0], ['comida', 1], ['peso', 2]];
 /** Al arrancar, antes de pintar: la pantalla del acceso directo con que se abrió la app; la dirección queda limpia. */
 export const launchAction = () => {

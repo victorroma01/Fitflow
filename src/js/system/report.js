@@ -223,6 +223,7 @@ A.reportSend = async () => {
   }
   const d = $('#rpd');
   const ca = Date.now();
+  /** @type {Report} */
   const it = { id: account.uid + '-' + ca, k: reportKind, a: reportKind == 'f' && reportArea >= 0 ? REPORT_AREAS[reportArea] : '', t, ca, s: 0 };
   if (d && d.checked)
     it.dx = reportTech();

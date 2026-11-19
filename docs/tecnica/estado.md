@@ -44,6 +44,17 @@ En IndexedDB: `ffdata` (almacén `parts`: las partes del estado, con las mismas 
 texto JSON tal cual; almacén `aside`: lo grande que no es del estado, como la copia previa a restaurar) y `ffsnap` (copias automáticas diarias, las 7 últimas; se borran al cerrar sesión). La base `ffph` de las
 fotos de progreso de la serie de prueba se borra al arrancar.
 
+### Si un guardado falla
+
+Cada guardado escribe primero las partes que cambian, después el núcleo y al final borra las que sobran: así el núcleo nunca
+nombra una parte que no esté escrita (si la nombrara, al abrir la app faltaría y saldría «No se pudieron leer tus datos»). Los
+guardados se deciden al momento, dando por escrito lo que el anterior todavía está escribiendo, y se escriben en orden. Por eso,
+si uno falla (sin sitio, sobre todo), los que se decidieron detrás ya no se escriben: contaban con lo que no llegó a escribirse.
+Lo que se sabe de cada clave vuelve a lo que hay escrito de verdad y el siguiente guardado lo mira todo otra vez (se reintenta
+solo a los 5 s, hasta tres veces seguidas, y al salir de la app). Mientras tanto consta que hay cosas sin guardar
+(`savesBroken`): la app lo avisa y la sincronización no apunta nada como sincronizado
+([Sincronización](backend.md#sincronización-cloudsync)).
+
 ### La app abierta dos veces
 
 La app puede estar abierta dos veces sobre lo mismo guardado: dos pestañas del navegador o, en Android, la app instalada y una

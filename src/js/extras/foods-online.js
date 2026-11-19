@@ -129,6 +129,7 @@ async function searchOnline(q, onRetry) {
   const kept = searchCache.get(key);
   if (kept && Date.now() - kept.t < SEARCH_KEEP_MS)
     return kept.r;
+  /** @type {any} */
   let found = null;
   let error = '';
   const tryOne = async (url, ms) => {

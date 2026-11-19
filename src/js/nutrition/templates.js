@@ -48,6 +48,7 @@ export const templateCard = k => {
   const tp = (S.mealTemplates || {})[t];
   const nm = t == 't' ? 'entreno' : 'descanso';
   const has = tp && Object.keys(tp).some(i => Array.isArray(tp[i]) && tp[i].length);
+  /** @type {string | number} */
   let kc = '';
   if (has)
     kc = roundInt(dayTotals(tp)[0]);
@@ -57,6 +58,7 @@ A.templateSave = () => {
   const k = nutriDayKey();
   const t = dayType(k);
   const m = S.meals[k] || {};
+  /** @type {DayMeals} */
   const o = {};
   let n = 0;
   for (let i = 0; i < S.nutritionGoals.n; i++) {
@@ -109,7 +111,7 @@ A.templateApply = () => {
 /* gramos de un habitual: los guardados (S.frequentFoods, que puede venir de una copia antigua o tocada) solo si son un número válido */
 const habitGrams = f => Math.min(5000, Math.max(0, Math.round(+(f && f.g) || 0))) || 100;
 export const habitsCard = m => {
-  const l = Object.keys(S.frequentFoods || {}).map(n => [n, S.frequentFoods[n]]).filter(x => x[1] && x[1].c > 0 && Array.isArray(x[1].b)).sort((a, b) => b[1].c - a[1].c || (b[1].t || 0) - (a[1].t || 0)).slice(0, 8);
+  const l = Object.keys(S.frequentFoods || {}).map(n => /** @type {[string, any]} */ ([n, S.frequentFoods[n]])).filter(x => x[1] && x[1].c > 0 && Array.isArray(x[1].b)).sort((a, b) => b[1].c - a[1].c || (b[1].t || 0) - (a[1].t || 0)).slice(0, 8);
   const yk = dayKey(nutriDate(-1));
   const ys = (S.meals[yk] || {})[m] || [];
   if (!l.length && !ys.length)

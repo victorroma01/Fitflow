@@ -99,13 +99,32 @@ pudieron leer (IndexedDB falla o falta una parte), no se sincroniza nada hasta p
 creería que se borró el resto. Desde ese aviso, «Bajar de mi cuenta» borra lo del móvil y las huellas, y la app vuelve a bajarlo
 todo, como al entrar. La pantalla de error de arranque, al «Restablecer», también olvida las huellas (V1.0.2).
 
-Las huellas solo se guardan cuando lo que describen **está guardado en el móvil** (`saveMeta`). Si el móvil no puede guardar (sin
-espacio; `savesBroken` de `core/persist`), lo nuevo sube igual a la nube, pero no se apunta; y lo que baja se apunta cuando ya
-está escrito. Así, si la app se cierra sin haber podido guardar, al abrirla otra vez al móvil le falta eso y, como no consta que
-lo tuviera, **baja de la nube en vez de borrarse de ella**. Cuando un guardado completo vuelve a salir bien, las huellas se
-guardan con normalidad. Y si la app está abierta en otra pestaña o ventana que ha guardado después
+Las huellas solo se guardan cuando lo que describen **está guardado en el móvil** (`saveMeta`): primero los datos y después las
+huellas, nunca al revés. Si el móvil no puede guardar (sin espacio; `savesBroken` de `core/persist`), lo nuevo sube igual a la
+nube, pero no se apunta; y lo que baja se apunta cuando ya está escrito. Así, si la app se cierra sin haber podido guardar, al
+abrirla otra vez al móvil le falta eso y, como no consta que lo tuviera, **baja de la nube en vez de borrarse de ella**. En
+cuanto el móvil vuelve a guardar bien, las huellas que estaban esperando se guardan (`noteWaiting`), sin adelantarse: no
+mientras haya una sincronización en marcha (que guarda las suyas cuando tiene lo suyo escrito) ni guardados a medias. Y si la
+app está abierta en otra pestaña o ventana que ha guardado después
 ([la app abierta dos veces](estado.md#la-app-abierta-dos-veces)), esta ni sincroniza ni guarda sus huellas: subiría lo suyo, que
 ya no es lo último, y la nube daría por borrado lo que le falta.
+
+### Lo que puede volver a aparecer
+
+Guardar los datos y guardar sus huellas son dos escrituras, no una: los datos van a IndexedDB y las huellas a localStorage. Con
+los datos primero, el fallo que queda es el leve. Si la app se cierra entre las dos, o mientras no puede guardar las huellas (el
+móvil sin sitio), queda algo guardado que no consta como sincronizado. La siguiente sincronización de ese móvil lo arregla sola,
+porque ve que el móvil y la nube tienen lo mismo. Solo se nota si, antes de esa sincronización, **justo eso se borra** (en ese
+móvil, sin conexión, o en otro dispositivo): el borrado no se reconoce como tal y lo borrado vuelve a aparecer. No se pierde
+nada: reaparece una vez algo que se había borrado, y basta con borrarlo de nuevo.
+
+Al revés sería grave: con las huellas por delante de los datos, al móvil le faltaría algo que consta como sincronizado, y la nube
+lo daría por borrado. Por eso las huellas nunca se guardan antes.
+
+Quitar también el caso leve pide guardar cada parte y sus huellas en la misma transacción de IndexedDB, o apuntar cada borrado
+hasta que todos los dispositivos lo hayan visto. Las dos cosas cambian el formato de lo guardado y necesitan su migración, así que
+quedan como propuesta. Las pruebas al azar (`tests/syncfuzz.py`) conocen este límite y solo lo perdonan cuando se dan esas
+condiciones: en cualquier otro caso, que vuelva algo borrado es un fallo.
 
 Al entrar, los datos del móvil se borran si son de otra cuenta, se bajan los de la cuenta y la app se abre de nuevo con ellos.
 «Cerrar sesión» intenta subir lo pendiente y avisa si no puede; después borra del móvil los datos de la cuenta. «Borrar todos los

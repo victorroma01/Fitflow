@@ -93,6 +93,34 @@ línea.
   las figuras de los ejercicios, que se mueven y se pintan poco a poco. Pasaba incluso entre dos copias de la
   misma compilación, sobre todo en GitHub. Ahora compara qué figura grande es, no su fotograma, y espera a que las pequeñas
   de las listas estén pintadas.
+- Un guardado que falla con otro esperando detrás ya no deja el núcleo nombrando una parte que no se escribió
+  (`core/persist`, `writeIdb`). Los guardados se deciden al momento, dando por escrito lo que el anterior todavía escribe; si
+  ese fallaba (el móvil sin sitio), el siguiente podía escribir el núcleo con un mes de comidas nuevo que no estaba. Al volver
+  a abrir la app salía «No se pudieron leer tus datos» y no dejaba guardar ni sincronizar. Ahora los decididos detrás de uno
+  fallido no se escriben, lo que se sabe de cada clave vuelve a lo escrito de verdad y el siguiente guardado lo mira todo
+  ([si un guardado falla](docs/tecnica/estado.md#si-un-guardado-falla)). Pasa igual en la 1.0.31 publicada (reproducido en
+  una compilación suya); el código era el mismo desde la V1.0.2. Lo encontraron las pruebas al azar del guardado y la
+  sincronización (más abajo).
+- Lo sincronizado que no se pudo apuntar (el móvil sin sitio) se apunta en cuanto el móvil vuelve a guardar bien, sin esperar
+  a la siguiente sincronización (`noteWaiting`, en `cloud/sync`), y nunca por delante de lo que todavía se está escribiendo.
+  Antes, lo bajado mientras tanto quedaba guardado sin constar como sincronizado y, si se borraba sin conexión antes de la
+  siguiente sincronización, volvía de la nube. Queda documentado el caso que no se puede cerrar sin cambiar el formato de lo
+  guardado: algo borrado puede reaparecer una vez, sin perderse nada
+  ([lo que puede volver a aparecer](docs/tecnica/backend.md#lo-que-puede-volver-a-aparecer)).
+- Pruebas al azar del guardado y la sincronización (`tests/syncfuzz.py`, en la batería con diez semillas): dos móviles de la
+  misma cuenta hacen secuencias aleatorias de acciones, sincronizaciones y recargas con fallos por medio (el móvil sin sitio de
+  seis formas, sin red, cierres de golpe, la app abierta dos veces) y al final se comprueba que no falta nada de lo guardado o
+  subido, que no vuelve nada de lo borrado y que los dos móviles y la nube tienen lo mismo. Encontraron los dos puntos
+  anteriores. Para saber si detectan fallos de verdad se quitó, una cada vez, cada protección del guardado y de la
+  sincronización (diez): las pruebas al azar fallan con las diez, y con cada una falla también una prueba fija de
+  `tests/cloud.py` o `tests/storage.py` (la de «lo subido se apunta cuando el móvil ha terminado de guardarlo» es nueva)
+  ([pruebas al azar](docs/tecnica/pruebas.md#pruebas-al-azar-del-guardado-y-la-sincronización)).
+- Tipos comprobados (`tools/types.js`, en la batería): el comprobador de TypeScript pasa por todos los módulos, que siguen
+  siendo JavaScript, con sus tipos en comentarios. Falla si se usa una clave de `S` que no existe, un valor de otro tipo o una
+  función con lo que no es; en los nueve módulos del guardado y la sincronización, además, todo lleva su tipo y nada que pueda
+  ser `null` se usa sin mirarlo. La forma de `S`, de `W` y de sus datos queda escrita en `src/types`. Solo se han añadido
+  comentarios: la app compilada es idéntica, byte a byte, a la de antes de añadirlos
+  ([tipos comprobados](docs/tecnica/tipos.md)).
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

@@ -18,7 +18,7 @@ import { html, raw } from '../core/html.js';
 import { itemMacros, sumMacros } from '../core/calc.js';
 /* alimentos de la lista y los propios (solo los que tienen nombre y sus valores: unos datos dañados no rompen la lista) */
 const ownFoods = () => (S.myFoods || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b));
-const allFoods = () => FOODS_SRC.concat(ownFoods());
+const allFoods = () => /** @type {Food[]} */ (FOODS_SRC).concat(ownFoods());
 /* Nutri-Score (F-43): la letra de la A a la E que da Open Food Facts → la clase de su color (css/98-nutrition) */
 const NUTRI_SCORE = { a: 'ns-a', b: 'ns-b', c: 'ns-c', d: 'ns-d', e: 'ns-e' };
 /** La letra del Nutri-Score ('a'…'e') si v lo es; si no, ''. */

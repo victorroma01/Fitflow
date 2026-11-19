@@ -148,7 +148,7 @@ C.photoFile = e => {
       R();
     };
     im.onerror = () => toast('No se ha podido leer la foto');
-    im.src = r.result;
+    im.src = /** @type {string} */ (r.result);
   };
   r.readAsDataURL(f);
 };

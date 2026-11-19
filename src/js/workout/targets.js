@@ -83,6 +83,7 @@ export const fixUnits = nn => {
 };
 export const newPlanEx = n => {
   const u = unitFromName(n);
+  /** @type {PlanExercise} */
   const o = { n, s: u ? (u.u == 'min' ? 1 : 3) : 3 };
   if (u) {
     o.u = u.u;
@@ -116,7 +117,7 @@ const weeklySets = pl => {
   }));
   /* en un ciclo de otra longitud que la semana (workout/week), la media por semana */
   const f = pl.length ? 7 / pl.length : 1;
-  return Object.entries(o).map(([g, n]) => [g, Math.round(n * f)]).sort((a, b) => b[1] - a[1]);
+  return Object.entries(o).map(([g, n]) => /** @type {[string, number]} */ ([g, Math.round(n * f)])).sort((a, b) => b[1] - a[1]);
 };
 export const weeklySetsCard = pl => html`<div class="cd m-8-0"><b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b><div class="d-flex wrap gap-6 mt-8">${weeklySets(pl).map(o => html`<span class="p-4-10 r-12 bg-gray-18 fs-12">${o[0]} · ${raw(o[1])}</span>`)}</div></div>`;
 export const usesWeight = e => !unitOf(e) || /Sled|Farmers|Sandbag|Carry|chaleco|con peso|con balón|arrastre|Lunges/i.test(e.n);

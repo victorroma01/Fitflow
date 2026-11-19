@@ -26,6 +26,7 @@ run node tools/format_css.js --check
 run node tools/modindex.js --check
 run node tools/figure.js --check
 run python3 build.py --check
+run node tools/types.js
 run python3 tests/changelog.py
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
@@ -57,6 +58,8 @@ run python3 tests/render.py dist/stratafit.html
 # la app con App Check configurado con valores de prueba y su CSP (dist/appcheck/): la usa tests/cloud.py
 run python3 build.py --appcheck
 run python3 tests/cloud.py dist/stratafit.html
+# pruebas al azar del guardado y la sincronización: diez semillas (cada una, una secuencia distinta de 80 pasos con fallos)
+run python3 tests/syncfuzz.py dist/stratafit.html 1-10 80
 run python3 tests/login.py dist/stratafit.html
 run python3 tests/covers.py dist/stratafit.html
 run python3 tests/deploy.py dist/app

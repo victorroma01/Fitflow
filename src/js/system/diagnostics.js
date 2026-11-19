@@ -20,7 +20,8 @@ import { backupDate } from './backup.js';
 import { offlineText } from './updates.js';
 import { html } from '../core/html.js';
 /** Tamaño aproximado (caracteres) de cada clave de Store y de cada parte del estado (las comidas, sumando los meses), con
-    dónde están las partes (core/persist: IndexedDB o localStorage). */
+    dónde están las partes (core/persist: IndexedDB o localStorage).
+    @returns {any[][]} */
 const storageUse = () => {
   const size = k => {
     try {

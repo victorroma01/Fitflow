@@ -179,6 +179,11 @@ def two_windows(b, path, url):
     q.wait_for_timeout(300)
     check('la que se quedó atrás no escribe nada, aunque algo intente guardar', saved is False and q.evaluate(stored) == 'Pecho,Pierna' and q.evaluate("JSON.parse(localStorage.getItem('ff')).rest") == 151 and q.evaluate(notice), str(saved))
     a.evaluate(log('Hombro'))
+    # (antes de recargar una ventana, la otra termina de guardar: una que arranca con un guardado de la otra a medias lee la
+    # marca del principio de ese guardado y, al ver la del final, se da por atrasada aunque tenga lo último. Es lo previsto,
+    # porque así no se queda con el núcleo de antes y las partes de después, pero aquí no es lo que se prueba. En un ordenador
+    # lento pasaba: en GitHub, con Firefox)
+    a.evaluate('savesDone()')
     ok = reload_by(q, "document.querySelector('#dg [data-v=staleReload]').click()")
     check('«Recargar» la recarga con lo último, y vuelve a poder guardar', ok and q.evaluate(names) == 'Pecho,Pierna,Hombro' and q.evaluate('S.defaultRest') == 151 and not stale(q) and q.evaluate(no_notice), '%s %s' % (ok, q.evaluate(names)))
 
@@ -192,6 +197,7 @@ def two_windows(b, path, url):
     q.evaluate("window.__mark=1;Object.defineProperty(document,'visibilityState',{get:()=>'hidden',configurable:true});0")
     a.evaluate(log('Gemelo'))
     until(q, 'instanceStale')
+    a.evaluate('savesDone()')
     q.wait_for_timeout(300)
     check('la que no se está viendo se queda atrás sin aviso y sin recargarse todavía', stale(q) == 1 and q.evaluate(no_notice) and q.evaluate('window.__mark') == 1)
     ok = reload_by(q, "delete document.visibilityState;document.dispatchEvent(new Event('visibilitychange'))")
@@ -219,12 +225,14 @@ def two_windows(b, path, url):
     check('quien empieza un entreno se queda con lo guardado: la otra ventana se queda atrás', until(q, 'instanceStale') and not stale(a))
     q.evaluate("R()")
     check('y una ventana sin entreno no borra el entreno en curso de la otra', q.evaluate(wip) == 50)
+    a.evaluate('savesDone()')
     reload_by(q, "document.querySelector('#dg [data-v=staleReload]').click()")
     check('la otra ventana, recargada, ofrece reanudarlo', q.evaluate("(S.tab=0,R(),!!document.querySelector('#app [data-a=resumeWorkout]'))") and not stale(a))
     q.evaluate("A.resumeWorkout();W.sets[0][0].w=60;R()")
     check('si se reanuda en la otra, pasa a llevarlo ella', until(a, 'instanceStale') and not stale(q) and q.evaluate(wip) == 60)
     a.evaluate("W.sets[0][0].w=1;R()")
     check('y la que se quedó atrás ya no pisa el entreno en curso', a.evaluate(wip) == 60)
+    q.evaluate('savesDone()')
     reload_by(a, "document.querySelector('#dg [data-v=staleReload]').click()")
     q.evaluate("W=null;R()")
     check('al acabar el entreno, quien lo llevaba lo borra', q.evaluate("!localStorage.getItem('ffw')"))
@@ -360,6 +368,43 @@ def main(path):
             check('al salir de la app, el repaso se hace ya', ev("savesDone().then(()=>__w.filter(k=>k!='ffsync'))") == ['ff:logs'], str(ev('__w')))
             ev("JSON.stringify=__js0;__T.unspy()")
             pg.clock.run_for(2500)
+
+            # ── un guardado que falla, con otro decidido mientras estaba a medias (lo encontró tests/syncfuzz.py) ──
+            # El primero lleva un mes nuevo de comidas. El segundo se decide con el primero aún a medias y solo cambia el
+            # núcleo, que ya nombra ese mes. Si el primero falla (sin sitio), el segundo no puede escribir: el núcleo nombraría
+            # una parte que no está y, al volver a abrir la app, no se podrían leer los datos. Aquí la escritura del primero se
+            # queda a medias (la transacción abierta, sin el commit con que la app la cierra antes) hasta que se le dice que falle
+            hold = """window.__put1=IDBObjectStore.prototype.put;window.__commit1=IDBTransaction.prototype.commit;window.__hold=1;
+              IDBTransaction.prototype.commit=function(){};
+              IDBObjectStore.prototype.put=function(){const st=this,tx=st.transaction,keep=()=>{try{if(window.__hold)st.get('__').onsuccess=keep;else tx.abort()}catch(e){}};
+                const r=st.get('__');r.onsuccess=keep;return r};0"""
+            release = "IDBObjectStore.prototype.put=__put1;IDBTransaction.prototype.commit=__commit1;0"
+            named = "JSON.parse(localStorage.getItem('ff'))._pk"
+            n_logs, rest0 = ev('S.logs.length'), ev("JSON.parse(localStorage.getItem('ff')).rest")
+            ev(hold)
+            ev("S.meals['2027-01-05']={0:[{n:'Uva',g:90,b:[60,15,.5,.2,1,0]}]};saveState(mealsPart('2027-01-05'));0")
+            ev("S.defaultRest=77;saveState('core');0")
+            ev("window.__hold=0;0")
+            ev("savesDone()")
+            check('si un guardado falla, el que se decidió mientras tanto no escribe: el núcleo no nombra la parte que no se guardó', 'ff:meals:2027-01' not in ev(named) and 'ff:meals:2027-01' not in ev('__T.pkeys()') and ev("JSON.parse(localStorage.getItem('ff')).rest") == rest0, '%s %s' % (ev(named), ev("JSON.parse(localStorage.getItem('ff')).rest")))
+            check('y consta que hay cosas sin guardar', ev('savesBroken()'))
+            # el móvil sigue sin sitio al cerrar la app: al volver a abrirla, los datos se leen (falta lo que no cupo, y nada más)
+            reload()
+            check('al volver a abrir la app, los datos se leen', not ev('partsLost') and not ev("!!document.querySelector('#dg [data-v=partsRetry]')") and ev('S.logs.length') == n_logs, str((ev('partsLost'), ev('S.logs.length'), n_logs)))
+            check('y falta solo lo que no se pudo guardar', '2027-01-05' not in ev('Object.keys(S.meals)') and ev('S.defaultRest') == rest0 and '2026-09-02' in ev('Object.keys(S.meals)'), str(ev('S.defaultRest')))
+            # y si el sitio vuelve con la app abierta, el siguiente guardado lo deja todo escrito
+            ev(hold)
+            ev("S.meals['2027-01-05']={0:[{n:'Uva',g:90,b:[60,15,.5,.2,1,0]}]};saveState(mealsPart('2027-01-05'));0")
+            ev("S.defaultRest=77;saveState('core');0")
+            ev("window.__hold=0;0")
+            ev("savesDone()")
+            ev(release)
+            ev("S.water[dayKey(new Date())]=1250;saveState('core');0")
+            check('cuando vuelve el sitio, el siguiente guardado lo escribe todo: el mes nuevo, y el núcleo que lo nombra', 'ff:meals:2027-01' in ev('savesDone().then(()=>__T.pkeys())') and 'ff:meals:2027-01' in ev(named) and ev("JSON.parse(localStorage.getItem('ff')).rest") == 77 and ev('__T.stored().then(s=>__T.can(s)===__T.can(stateToStored(S)))'), str(ev(named)))
+            pg.clock.run_for(6000)
+            check('y deja de constar que hay cosas sin guardar', ev('savesDone().then(()=>!savesBroken())'))
+            ev("delete S.meals['2027-01-05'];S.defaultRest=%d;saveState()" % (rest0 if isinstance(rest0, int) else 90))
+            ev("savesDone()")
 
             # ── datos de la serie de prueba (1.20 y anteriores: todo el estado en 'ff'): no se migran ──
             legacy = ev("JSON.stringify(Object.assign({},S,{rest:61}))")

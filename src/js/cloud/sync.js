@@ -16,9 +16,13 @@
    no cuenta como borrado: esas huellas se olvidan y se vuelve a bajar de la nube (forgetDamaged).
    Las huellas solo se guardan cuando lo que describen está también guardado en el móvil (saveMeta): si el móvil no puede
    guardar (sin espacio), lo nuevo sube igual a la nube, pero no se apunta; al volver a abrir la app, al móvil le falta y, como
-   no consta que lo tuviera, baja de la nube en vez de borrarse de ella. Y si la app está abierta en otra pestaña o ventana
-   que ha guardado después (core/persist: instanceStale), esta no sincroniza: subiría lo suyo, que ya no es lo último.
-   Define: newMeta, readMeta, meta, storeMeta, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   no consta que lo tuviera, baja de la nube en vez de borrarse de ella. En cuanto el móvil vuelve a poder guardar, se apuntan
+   (noteWaiting): lo que guarda entonces incluye lo bajado mientras tanto, y tiene que constar como sincronizado. El orden es
+   siempre ese, primero los datos y después las huellas, porque al revés se pierden datos y así, como mucho (si la app se
+   cierra entre lo uno y lo otro), algo borrado justo después vuelve a aparecer (docs/tecnica/backend.md). Y si la app está
+   abierta en otra pestaña o ventana que ha guardado después (core/persist: instanceStale), esta no sincroniza: subiría lo
+   suyo, que ya no es lo último.
+   Define: newMeta, readMeta, meta, storeMeta, metaWaiting, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, noteWaiting, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
 import { $, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
@@ -38,12 +42,15 @@ import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.
 import { hashMap, hashOf, hashText, KINDS, merge3, sameHashes } from './merge.js';
 import { afterSync } from './hooks.js';
 import { applyDoc, applyPrefs, docPath, indexPath, localDocs, okType, PREF_KEYS, prefsLocal, profilePath } from './docs.js';
+/** @param {any} fresh
+    @returns {SyncMeta} */
 const newMeta = fresh => ({ dev: newId(), base: {}, lt: {}, pt: 0, fresh: fresh ? 1 : 0, last: 0 });
 /** { dev: id del dispositivo, base: { documento: { r: versión, h: huellas } }, lt: último cambio local de cada tipo (ms), pt: de
   las preferencias, fresh: 1 tras entrar (en un conflicto gana la nube), last: última sincronización completa (ms) } */
 const readMeta = () => {
   try {
-    const m = JSON.parse(Store.get(Store.K.sync));
+    /* (sin nada guardado, JSON.parse(null) da null) */
+    const m = JSON.parse(/** @type {string} */ (Store.get(Store.K.sync)));
     if (m && typeof m == 'object' && m.base && typeof m.base == 'object' && typeof m.dev == 'string')
       return Object.assign(newMeta(0), m, { lt: m.lt && typeof m.lt == 'object' ? m.lt : {} });
   }
@@ -53,19 +60,31 @@ const readMeta = () => {
   return newMeta(0);
 };
 let meta = readMeta();
+/* false si no se pudo escribir (sin sitio) */
 const storeMeta = () => {
   try {
     Store.set(Store.K.sync, JSON.stringify(meta));
+    return true;
   }
   catch (e) {
     logError('guardar el estado de la sincronización', e);
+    return false;
   }
 };
+/* 1 si lo sincronizado no se ha podido apuntar, porque el móvil no podía guardar los datos o no había sitio para las huellas:
+   se apunta en cuanto se pueda (noteWaiting). Si no, lo que el móvil guarde entonces (lo bajado mientras tanto) quedaría sin
+   constar como sincronizado, y al borrarlo después parecería algo que este móvil nunca tuvo: volvería de la nube */
+let metaWaiting = 0;
 /* guarda lo sincronizado, si lo que describe está guardado en este móvil y esta apertura de la app sigue siendo la última (ver
    arriba). Si no, se queda lo último que se guardó, que sí corresponde a lo que hay en el móvil */
 const saveMeta = () => {
-  if (!savesBroken() && !staleNow())
-    storeMeta();
+  if (savesBroken()) {
+    metaWaiting = 1;
+    return;
+  }
+  if (staleNow())
+    return;
+  metaWaiting = storeMeta() ? 0 : 1;
 };
 /** st: idle, run, ok, off (sin conexión), err (code), wait (entreno en curso), dead (hay que volver a entrar). */
 let status = { st: 'idle', t: 0, code: '' };
@@ -80,6 +99,7 @@ let timer = 0;
 let fails = 0;
 /* 1 tras renovar el token en esta apertura: así un rol nuevo (Asignar rol, en GitHub) vale al volver a abrir la app */
 let tokenFresh = 0;
+/** @type {Promise<void> | null} */
 let running = null;
 let again = false;
 export const syncState = () => status;
@@ -88,6 +108,8 @@ export const syncState = () => status;
 export const syncBusy = () => status.st == 'idle' || status.st == 'run';
 /* 1 cuando ya se avisó en esta apertura de que la sesión caducó */
 let deadShown = 0;
+/** @param {string} st
+    @param {string} [code] */
 const setStatus = (st, code) => {
   status = { st, t: Date.now(), code: code || '' };
   if (quiet)
@@ -138,6 +160,7 @@ const syncProfile = async () => {
     return;
   const d = await getDoc(profilePath());
   const rd = d ? d.data : null;
+  /** @type {Record<string, any>} */
   const remote = {};
   if (rd) {
     const pr = rd.pr && typeof rd.pr == 'object' ? rd.pr : {};
@@ -150,6 +173,7 @@ const syncProfile = async () => {
   const Rm = new Map(Object.entries(remote));
   const M = merge3(L, Rm, meta.base.profile ? meta.base.profile.h : null, KINDS.core.both, !meta.fresh && meta.pt > (rd ? +rd.m || 0 : 0));
   const merged = Object.fromEntries(M);
+  /** @type {Record<string, any>} */
   const pr = {};
   for (const k of PREF_KEYS)
     if (k in merged)
@@ -159,19 +183,20 @@ const syncProfile = async () => {
     await afterApply();
   }
   if (!rd)
-    await commitWrites([setWrite(profilePath(), { u: account.u, sx: merged.sx || '', pr, ca: Date.now(), m: Date.now() }, { exists: false })]);
+    await commitWrites([setWrite(profilePath(), { u: /** @type {Account} */ (account).u, sx: merged.sx || '', pr, ca: Date.now(), m: Date.now() }, { exists: false })]);
   else if (!sameHashes(hashMap(M), hashMap(Rm)))
     await commitWrites([setWrite(profilePath(), { sx: merged.sx || '', pr, m: Date.now() }, null, ['sx', 'pr', 'm'])]);
   meta.base.profile = { h: hashMap(M) };
   profileAt = Date.now();
   /* el usuario tal como se registró (con sus mayúsculas), aunque se entre escribiéndolo de otra forma */
-  if (rd && typeof rd.u == 'string' && rd.u != account.u && rd.u.toLowerCase() == account.u.toLowerCase())
+  if (rd && typeof rd.u == 'string' && rd.u != /** @type {Account} */ (account).u && rd.u.toLowerCase() == /** @type {Account} */ (account).u.toLowerCase())
     acctSave({ ...account, u: rd.u });
   await syncDeviceOS(rd);
 };
 /* El sistema del último móvil que abrió la app (T-28), solo para contar en Administración cuántos usan iPhone y cuántos
    Android. Va en una escritura aparte: si las reglas aún no lo admiten (una app publicada antes que ellas), solo falla esto y
    se reintenta en la siguiente sincronización, sin parar el resto ni llenar el registro de errores. */
+/** @param {Record<string, any> | null} rd */
 const syncDeviceOS = async (rd) => {
   const os = deviceOS();
   if (rd && rd.os === os)
@@ -184,7 +209,8 @@ const syncDeviceOS = async (rd) => {
       logError('perfil: sistema del móvil', e);
   }
 };
-/* paso 2: bajar y juntar lo que cambió en la nube. 'wait' si hay un entreno en curso (se deja para cuando acabe) */
+/** Paso 2: bajar y juntar lo que cambió en la nube. 'wait' si hay un entreno en curso (se deja para cuando acabe).
+    @param {RemoteDoc | null} idx el índice, o null si la cuenta aún no tiene */
 const pull = async (idx) => {
   const rv = idx && idx.data.p && typeof idx.data.p == 'object' ? idx.data.p : {};
   const ids = [...new Set([...Object.keys(rv), ...Object.keys(meta.base).filter(k => k != 'profile')])];
@@ -208,6 +234,7 @@ const pull = async (idx) => {
       missing.push(id);
       continue;
     }
+    /** @type {any} */
     let val = {};
     if (d) {
       try {
@@ -238,13 +265,15 @@ const pull = async (idx) => {
   if (touched)
     await afterApply();
   if (missing.length)
-    await pruneIndex(idx, missing);
+    await pruneIndex(/** @type {RemoteDoc} */ (idx), missing);
   saveMeta();
   return true;
 };
 /* quita del índice los documentos que ya no existen, para no volver a pedirlos en cada sincronización (I-11). Lo de este móvil
    no se toca: si tenía algo de esos documentos, se vuelve a subir (paso 3), como si nunca se hubieran borrado. Si el índice
    cambió entretanto, se deja para la próxima vez */
+/** @param {RemoteDoc} idx
+    @param {string[]} missing */
 const pruneIndex = async (idx, missing) => {
   const p = { ...idx.data.p };
   missing.forEach(id => {
@@ -267,7 +296,9 @@ const pruneIndex = async (idx, missing) => {
 let lastHashes = new Map();
 /* los documentos con cambios del móvil aún sin subir: [{ id, m: su contenido de ahora por elementos (cloud/merge), h: sus
    huellas }]. Lo son los que no coinciden con lo de la última sincronización y los nuevos que tienen algo */
+/** @param {Record<string, any>} local */
 const unsynced = local => {
+  /** @type {{ id: string, m: Items, h: Hashes }[]} */
   const out = [];
   const seen = new Map();
   for (const id of new Set([...Object.keys(local), ...Object.keys(meta.base).filter(k => k != 'profile')])) {
@@ -276,6 +307,7 @@ const unsynced = local => {
       continue;
     const m = kind.split(local[id]);
     /* lo mismo que hashMap(m) */
+    /** @type {Hashes} */
     const h = {};
     for (const [k, v] of m) {
       const s = JSON.stringify(v);
@@ -292,7 +324,8 @@ const unsynced = local => {
   lastHashes = seen;
   return out;
 };
-/* paso 3: subir lo cambiado en el móvil, con el índice, todo o nada. false si el índice cambió entretanto */
+/** Paso 3: subir lo cambiado en el móvil, con el índice, todo o nada. false si el índice cambió entretanto.
+    @param {RemoteDoc | null} idx */
 const push = async (idx) => {
   const local = localDocs();
   const rv = { ...(idx && idx.data.p && typeof idx.data.p == 'object' ? idx.data.p : {}) };
@@ -314,6 +347,7 @@ const push = async (idx) => {
   if (!ops.length)
     return true;
   let pre = idx ? { updateTime: idx.ut } : { exists: false };
+  /** @type {any[]} */
   let chunk = [];
   let size = 0;
   const send = async () => {
@@ -415,6 +449,17 @@ const syncRound = async () => {
     retryLater(Math.min(6e5, 15e3 * 2 ** Math.min(fails, 6)));
   }
 };
+/* Apunta lo sincronizado que estaba esperando (metaWaiting), cuando es seguro: sin una vuelta en marcha (ella apunta lo suyo
+   cuando lo tiene escrito y, al terminar, se vuelve a pasar por aquí), sin guardados fallidos y con todo lo que se ha
+   decidido guardar hasta ahora ya escrito. Sin esas tres cosas, las huellas podrían ir por delante de lo guardado. Se llama
+   cada vez que un guardado termina bien (adapter.saved) y al acabar cada vuelta */
+const noteWaiting = () => {
+  if (metaWaiting && !running && !savesBroken())
+    savesDone().then(() => {
+      if (metaWaiting && !running)
+        saveMeta();
+    });
+};
 /** Sincroniza ya (si ya está en marcha, otra vuelta al terminar). Nunca lanza: el resultado queda en syncState(). */
 export const syncNow = () => {
   if (running) {
@@ -430,6 +475,7 @@ export const syncNow = () => {
     }
     finally {
       running = null;
+      noteWaiting();
     }
   })();
   return running;
@@ -440,6 +486,7 @@ export const syncNow = () => {
 const CHANGE_WAIT = 3e4;
 /* cuándo toca la sincronización programada (ms; 0 si no hay ninguna) */
 let timerAt = 0;
+/** @param {number} ms */
 const syncSoon = ms => {
   clearTimeout(timer);
   timerAt = Date.now() + ms;
@@ -453,9 +500,13 @@ const syncAfterChange = () => {
   if (!timerAt || timerAt - Date.now() > CHANGE_WAIT)
     syncSoon(CHANGE_WAIT);
 };
+/** @param {number} ms */
 const retryLater = ms => syncSoon(ms);
-/* aviso de Store (core/store) por cada clave que se escribe: solo cuentan las partes del estado */
+/* avisos de Store (core/store). changed: por cada clave que se escribe (solo cuentan las partes del estado). saved: un
+   guardado ha terminado bien y no queda nada sin escribir en el móvil */
+/** @type {RemoteAdapter} */
 const adapter = {
+  saved: noteWaiting,
   changed(k) {
     if (applying || !account || account.x)
       return;

@@ -6,7 +6,9 @@ import { loadSavedState, scheduleWrite, writeState } from './persist.js';
 import { parseProgram } from '../data/library.js';
 /** Estado de una cuenta nueva. */
 const freshState = () => ({ tab: 0, program: 0, plan: parseProgram(0), week: 1, selectedDay: 0, selectedWeekday: 0, doneDays: {}, logs: [], lastWeights: {}, defaultRest: 120, theme: '', profile: {}, nutritionGoals: { k: 1942, c: 50, p: 20, f: 30, n: 3 }, meals: {}, savedDishes: [], myFoods: [], customExercises: [] });
-export const S = Object.assign(freshState(), loadSavedState());
+/** El estado de la app. Lo que una cuenta nueva no trae (freshState) lo pone core/repair al arrancar.
+    @type {State} */
+export const S = /** @type {any} */ (Object.assign(freshState(), loadSavedState()));
 /** Una cuenta recién creada (account/login): sin programa elegido (np, I-24: la semana, toda de descanso) y con la
     bienvenida por ver (nw, I-23: system/welcome). Las cuentas que ya existían no tienen ninguna de las dos. */
 export const markNewAccount = () => {
@@ -19,18 +21,21 @@ export const markNewAccount = () => {
 /** Vuelve S al estado de una cuenta nueva, sin cambiar el objeto (al entrar con otra cuenta: account/login). */
 export const resetState = () => {
   for (const k of Object.keys(S))
-    delete S[k];
+    delete /** @type {StateByKey} */ (S)[k];
   Object.assign(S, freshState());
 };
 /** Guarda S al terminar la acción en curso; solo se escribe lo que ha cambiado (core/persist). Si la acción solo ha tocado
     el núcleo o algunas partes, decirlo ahorra pasarlo todo a texto (I-10): saveState('core'), saveState(mealsPart(día)),
-    saveState('logs', 'hist'). Sin decir nada, se mira todo. */
+    saveState('logs', 'hist'). Sin decir nada, se mira todo.
+    @param {...any} parts */
 export const saveState = (...parts) => scheduleWrite(S, parts);
 /** Guarda S ya, sin esperar al final de la acción (todo). Promesa: false si no se pudo; con IndexedDB, se cumple al quedar
     escrito. */
 export const flushState = () => writeState(S);
+/** @type {Workout | null} */
 export let W = null;
-/** Cambia `W` desde otros módulos (un módulo no puede asignar una variable importada). */
+/** Cambia `W` desde otros módulos (un módulo no puede asignar una variable importada).
+    @param {Workout | null} v */
 export const setW = v => {
   W = v;
 };
@@ -43,32 +48,42 @@ export const nutriDate = (extra = 0) => {
 };
 /** El sexo dicho en el perfil ('M' o 'F'), o '' si no se ha dicho. */
 export const profileSex = () => S.biometrics && (S.biometrics.sex == 'M' || S.biometrics.sex == 'F') ? S.biometrics.sex : '';
-/** Los alimentos de la comida `m` del día `k`: la lista de S, que se crea si aún no existe, para añadirle o devolverle uno. */
+/** Los alimentos de la comida `m` del día `k`: la lista de S, que se crea si aún no existe, para añadirle o devolverle uno.
+    @param {string} k
+    @param {string | number} m */
 export const mealList = (k, m) => {
   const day = S.meals[k] = S.meals[k] || {};
   return day[m] = day[m] || [];
 };
-/** Cambia `nutriDayOffset` desde otros módulos (un módulo no puede asignar una variable importada). */
+/** Cambia `nutriDayOffset` desde otros módulos (un módulo no puede asignar una variable importada).
+    @param {number} v */
 export const setNutriDayOffset = v => {
   nutriDayOffset = v;
 };
 export let calMonthOffset = 0;
-/** Cambia `calMonthOffset` desde otros módulos (un módulo no puede asignar una variable importada). */
+/** Cambia `calMonthOffset` desde otros módulos (un módulo no puede asignar una variable importada).
+    @param {number} v */
 export const setCalMonthOffset = v => {
   calMonthOffset = v;
 };
+/** 1 (o true) con la semana a la vista en Workout.
+    @type {number | boolean} */
 export let weekView = 0;
-/** Cambia `weekView` desde otros módulos (un módulo no puede asignar una variable importada). */
+/** Cambia `weekView` desde otros módulos (un módulo no puede asignar una variable importada).
+    @param {number | boolean} v */
 export const setWeekView = v => {
   weekView = v;
 };
+/** @type {any} */
 export let addState = null;
-/** Cambia `addState` desde otros módulos (un módulo no puede asignar una variable importada). */
+/** Cambia `addState` desde otros módulos (un módulo no puede asignar una variable importada).
+    @param {any} v */
 export const setAddState = v => {
   addState = v;
 };
 /** Pone el tema de la app: el elegido en Ajustes (S.theme: 'light', 'dark' o '', el del móvil) o, con `only`, ese sin mirar
-  el elegido (el inicio de sesión va siempre en oscuro, sobre su foto: account/login). */
+  el elegido (el inicio de sesión va siempre en oscuro, sobre su foto: account/login).
+  @param {string} [only] */
 export const applyTheme = (only) => {
   const theme = only || S.theme;
   theme ? document.documentElement.dataset.theme = theme : document.documentElement.removeAttribute('data-theme');
@@ -85,18 +100,22 @@ export const applyTheme = (only) => {
   m || document.head.insertBefore(t, document.querySelector('meta[name="theme-color"]'));
 };
 export let overviewMode = 0;
-/** Cambia `overviewMode` desde otros módulos (un módulo no puede asignar una variable importada). */
+/** Cambia `overviewMode` desde otros módulos (un módulo no puede asignar una variable importada).
+    @param {number} v */
 export const setOverviewMode = v => {
   overviewMode = v;
 };
 export let weightView = 0;
-/** Cambia `weightView` desde otros módulos (un módulo no puede asignar una variable importada). */
+/** Cambia `weightView` desde otros módulos (un módulo no puede asignar una variable importada).
+    @param {number} v */
 export const setWeightView = v => {
   weightView = v;
 };
 /** WOD en marcha (extras/wod, que se carga al usarlo) o null; workout/wake lo mira para mantener la pantalla encendida. */
+/** @type {any} */
 export let wodRun = null;
-/** Cambia `wodRun` desde otros módulos (un módulo no puede asignar una variable importada). */
+/** Cambia `wodRun` desde otros módulos (un módulo no puede asignar una variable importada).
+    @param {any} v */
 export const setWodRun = v => {
   wodRun = v;
 };

@@ -19,6 +19,7 @@ import { signedIn } from '../cloud/session.js';
 import { downloadFile } from '../system/files.js';
 import { html } from '../core/html.js';
 /** Intervalos de la lista: [cantidad, unidad, texto]. */
+/** @type {[number, string, string][]} */
 const WEIGH_STEPS = [[2, 'w', '2 semanas'], [4, 'w', '4 semanas'], [1, 'm', '1 mes'], [5, 'w', '5 semanas']];
 /** Unidades de «Otro»: [singular, plural, máximo]. */
 export const WEIGH_UNITS = { d: ['día', 'días', 90], w: ['semana', 'semanas', 26], m: ['mes', 'meses', 12] };

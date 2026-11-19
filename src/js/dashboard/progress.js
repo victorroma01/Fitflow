@@ -99,6 +99,7 @@ export const progressBody = (stat) => {
   /* un ejercicio que se mide en tiempo o distancia (un arrastre con peso) no tiene 1RM ni volumen: solo su peso máximo */
   const reps = measuredInReps(n);
   const m = !reps ? 'w' : stat ? 'e' : progressState.m;
+  /** @type {{ d: string, v: number, pr?: any }[]} */
   const pts = progressSeries(n, m);
   const ML = { e: '1RM estimado', w: 'Peso máximo', v: 'Volumen' };
   let h = '';

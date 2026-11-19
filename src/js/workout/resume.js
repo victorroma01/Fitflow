@@ -67,7 +67,7 @@ A.resumeWorkout = () => {
     S.planBackup = { sel, day: S.plan[sel] };
     S.plan[sel] = z.d;
   }
-  setW(workoutFromStored(z.W));
+  setW(/** @type {Workout} */ (workoutFromStored(z.W)));
   /* el tiempo con la app cerrada no cuenta; ni el de la pausa en la que estaba, si la había */
   W.startedAt += Date.now() - (W.pausedAt > 0 && W.pausedAt < z.t ? W.pausedAt : z.t);
   W.restEndsAt = 0;

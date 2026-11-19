@@ -68,6 +68,7 @@ const writeCloudBackup = async (old) => {
   const on = old && old.data ? Math.min(MAX_CHUNKS, +old.data.n || 0) : MAX_CHUNKS;
   const c = dataCounts();
   const meta = { at: Date.now(), v: APPV, n: parts.length, z, sz: body.length, h: hashOf(body), lg: c.lg, md: c.md };
+  /** @type {any[]} */
   const writes = parts.map((p, i) => setWrite(backupPath('c' + i), { j: p, i }));
   for (let i = parts.length; i < on; i++)
     writes.push(delWrite(backupPath('c' + i)));
