@@ -299,13 +299,7 @@ const analysisPage = () => {
   if (!L.includes(anaYm))
     anaYm = new Date().getDate() <= 7 && L.length > 1 ? L[L.length - 2] : L[L.length - 1];
   const m = monthStats(anaYm);
-  return html`<div id="anp">${pgHead('Análisis mensual')}${monthBar(m, L.indexOf(anaYm), L.length, f)}
-${kpiGrid(m)}
-${trainingCard(m)}
-${weightCard(m)}
-${nutritionCard(m)}
-${otherCard(m)}
-${conclusionCard(m)}<div class="h-96"></div><div class="sb"><button class="pr w-full p-15 r-16 fs-16" data-a="analysisDownloadPdf">Descargar PDF</button></div></div>`;
+  return html`<div id="anp">${pgHead('Análisis mensual')}${monthBar(m, L.indexOf(anaYm), L.length, f)}${kpiGrid(m)}${trainingCard(m)}${weightCard(m)}${nutritionCard(m)}${otherCard(m)}${conclusionCard(m)}<div class="h-96"></div><div class="sb"><button class="pr w-full p-15 r-16 fs-16" data-a="analysisDownloadPdf">Descargar PDF</button></div></div>`;
 };
 /* ── el PDF (T-15) ─────────────────────────────────────────────────────────────────────────────────────────────────── */
 const analysisPdf = async (ym) => {
