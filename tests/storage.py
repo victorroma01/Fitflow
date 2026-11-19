@@ -179,6 +179,11 @@ def two_windows(b, path, url):
     q.wait_for_timeout(300)
     check('la que se quedó atrás no escribe nada, aunque algo intente guardar', saved is False and q.evaluate(stored) == 'Pecho,Pierna' and q.evaluate("JSON.parse(localStorage.getItem('ff')).rest") == 151 and q.evaluate(notice), str(saved))
     a.evaluate(log('Hombro'))
+    # (antes de recargar una ventana, la otra termina de guardar: una que arranca con un guardado de la otra a medias lee la
+    # marca del principio de ese guardado y, al ver la del final, se da por atrasada aunque tenga lo último. Es lo previsto,
+    # porque así no se queda con el núcleo de antes y las partes de después, pero aquí no es lo que se prueba. En un ordenador
+    # lento pasaba: en GitHub, con Firefox)
+    a.evaluate('savesDone()')
     ok = reload_by(q, "document.querySelector('#dg [data-v=staleReload]').click()")
     check('«Recargar» la recarga con lo último, y vuelve a poder guardar', ok and q.evaluate(names) == 'Pecho,Pierna,Hombro' and q.evaluate('S.defaultRest') == 151 and not stale(q) and q.evaluate(no_notice), '%s %s' % (ok, q.evaluate(names)))
 
@@ -192,6 +197,7 @@ def two_windows(b, path, url):
     q.evaluate("window.__mark=1;Object.defineProperty(document,'visibilityState',{get:()=>'hidden',configurable:true});0")
     a.evaluate(log('Gemelo'))
     until(q, 'instanceStale')
+    a.evaluate('savesDone()')
     q.wait_for_timeout(300)
     check('la que no se está viendo se queda atrás sin aviso y sin recargarse todavía', stale(q) == 1 and q.evaluate(no_notice) and q.evaluate('window.__mark') == 1)
     ok = reload_by(q, "delete document.visibilityState;document.dispatchEvent(new Event('visibilitychange'))")
@@ -219,12 +225,14 @@ def two_windows(b, path, url):
     check('quien empieza un entreno se queda con lo guardado: la otra ventana se queda atrás', until(q, 'instanceStale') and not stale(a))
     q.evaluate("R()")
     check('y una ventana sin entreno no borra el entreno en curso de la otra', q.evaluate(wip) == 50)
+    a.evaluate('savesDone()')
     reload_by(q, "document.querySelector('#dg [data-v=staleReload]').click()")
     check('la otra ventana, recargada, ofrece reanudarlo', q.evaluate("(S.tab=0,R(),!!document.querySelector('#app [data-a=resumeWorkout]'))") and not stale(a))
     q.evaluate("A.resumeWorkout();W.sets[0][0].w=60;R()")
     check('si se reanuda en la otra, pasa a llevarlo ella', until(a, 'instanceStale') and not stale(q) and q.evaluate(wip) == 60)
     a.evaluate("W.sets[0][0].w=1;R()")
     check('y la que se quedó atrás ya no pisa el entreno en curso', a.evaluate(wip) == 60)
+    q.evaluate('savesDone()')
     reload_by(a, "document.querySelector('#dg [data-v=staleReload]').click()")
     q.evaluate("W=null;R()")
     check('al acabar el entreno, quien lo llevaba lo borra', q.evaluate("!localStorage.getItem('ffw')"))
