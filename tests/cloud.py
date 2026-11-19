@@ -455,6 +455,28 @@ def main(path):
         sync(p1)
         saved = sorted(saved + ['Antebrazo', 'Glúteo'])
         check('lo sincronizado no se apunta antes de que lo recién bajado esté escrito: nada se borra de la nube', st == 'ok' and names(p2) == saved and cloud() == saved and names(p1) == saved, '%s %s %s %s' % (st, names(p2), cloud(), names(p1)))
+        # Y lo que sube tampoco se apunta hasta que el móvil ha terminado de guardarlo. Aquí el guardado del entreno sigue a
+        # medias (su transacción se retiene abierta) mientras el entreno sube, y al final falla
+        p2.evaluate("""window.__hold=1;IDBTransaction.prototype.commit=function(){};
+          IDBObjectStore.prototype.put=function(){const st=this,tx=st.transaction,keep=()=>{try{if(window.__hold)st.get('__').onsuccess=keep;else tx.abort()}catch(e){}};
+            const r=st.get('__');r.onsuccess=keep;return r};0""")
+        p2.evaluate(one(15, 'Trapecio'))
+        p2.evaluate("syncNow();0")
+        for _ in range(100):
+            if 'Trapecio' in cloud():
+                break
+            p2.wait_for_timeout(100)
+        p2.wait_for_timeout(300)
+        p2.evaluate("window.__hold=0;0")
+        wait(p2, "syncState().st!='run'")
+        p2.evaluate('savesDone()')
+        check('(preparado: el entreno ha subido con su guardado a medias, que al final ha fallado)', 'Trapecio' in cloud() and p2.evaluate('savesBroken()'), str(cloud()))
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        sync(p1)
+        saved = sorted(saved + ['Trapecio'])
+        check('lo subido no se apunta hasta que el móvil termina de guardarlo: al volver a abrir, baja de la nube en vez de borrarse', st == 'ok' and names(p2) == saved and cloud() == saved and names(p1) == saved, '%s %s %s %s' % (st, names(p2), cloud(), names(p1)))
 
         # ── la app abierta dos veces en el mismo móvil (dos pestañas): la que se queda atrás ni guarda ni sincroniza, así que no
         #    borra de la nube lo que guardó la otra (core/persist: instanceStale; lo del propio móvil, en tests/storage.py) ──
