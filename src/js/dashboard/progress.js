@@ -19,10 +19,12 @@ const progressExercises = () => Object.keys(S.exerciseHistory || {}).filter(n =>
   return da < db ? 1 : da > db ? -1 : 0;
 });
 /* los puntos de la gráfica del ejercicio `n`: por sesión, el mejor 1RM estimado ('e'), el peso máximo ('w') o el volumen ('v').
-   El 1RM y el volumen son de series en repeticiones (core/calc: liftScore); las filas extra no cuentan para el máximo */
+   El 1RM y el volumen son de series en repeticiones (core/calc: liftScore); las filas extra no cuentan para el máximo.
+   Un punto es récord (pr) si supera a todos los anteriores de la gráfica; el volumen no tiene récords */
 const progressSeries = (n, m) => {
   const h = ((S.exerciseHistory || {})[n] || []).slice().reverse();
-  return h.map(x => {
+  /** @type {{ d: string, v: number, pr?: boolean }[]} */
+  const pts = h.map(x => {
     let v = 0;
     if (m == 'v')
       v = x.s.reduce((a, y) => a + (+y[0] || 0) * (+y[1] || 0), 0);
@@ -32,6 +34,13 @@ const progressSeries = (n, m) => {
       v = Math.max(0, ...x.s.map(liftScore));
     return v > 0 ? { d: x.d, v } : null;
   }).filter(Boolean).slice(-30);
+  let best = 0;
+  pts.forEach(p => {
+    p.pr = m != 'v' && best > 0 && p.v > best + 1e-6;
+    if (p.v > best)
+      best = p.v;
+  });
+  return pts;
 };
 const progressFmt = (v, m) => m == 'v' ? roundInt(toDisplayWeight(v)) + ' ' + weightUnit() : (Math.round(toDisplayWeight(v) * 10) / 10) + ' ' + weightUnit();
 const axisLabel = v => v >= 10000 ? round1(v / 1000) + 'k' : Math.round(v) + '';
@@ -61,12 +70,6 @@ const progressChart = (pts, m, sel, inter) => {
   const t1 = t[t.length - 1];
   const xx = i => pts.length < 2 || t1 == t0 ? pl + iw / 2 : pl + (t[i] - t0) / (t1 - t0) * iw;
   const yy = v => pt + ih - (v - lo) / (hi - lo) * ih;
-  let b = 0;
-  pts.forEach(p => {
-    p.pr = m != 'v' && b > 0 && p.v > b + 1e-6;
-    if (p.v > b)
-      b = p.v;
-  });
   const tk = [lo, (lo + hi) / 2, hi];
   let s = html`<svg viewBox="0 0 ${W0} ${H0}" role="img" aria-label="Evolución del ejercicio">`;
   tk.forEach(v => {
@@ -105,7 +108,6 @@ export const progressBody = (stat) => {
   /* un ejercicio que se mide en tiempo o distancia (un arrastre con peso) no tiene 1RM ni volumen: solo su peso máximo */
   const reps = measuredInReps(n);
   const m = !reps ? 'w' : stat ? 'e' : progressState.m;
-  /** @type {{ d: string, v: number, pr?: any }[]} */
   const pts = progressSeries(n, m);
   const ML = { e: '1RM estimado', w: 'Peso máximo', v: 'Volumen' };
   let h = '';
@@ -123,7 +125,7 @@ export const progressBody = (stat) => {
   const p = pts[sel];
   h += html`
     <div class="progress-total">
-      <span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="pgr">RÉCORD</em>' : '')}</span>
+      <span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="record-tag">RÉCORD</em>' : '')}</span>
       <small>${raw(ML[m])} · ${fmtDateShort(p.d)}</small>
     </div>
     ${progressChart(pts, m, sel, !stat)}`;

@@ -258,6 +258,19 @@ def main(path):
             line = 'De %s a %s · %s%s %%' % (fmt(pts[0]), fmt(pts[-1]), '+' if change >= 0 else '', num(jsround(change * 10) / 10))
             check('progreso de Press banca, %s: un punto por sesión, el último valor y el cambio' % label.lower(),
                   got['n'] == len(pts) and got['now'] == fmt(pts[-1]) and got['what'].startswith(label) and got['sum'].startswith(line), '%s ≠ %d puntos, %s, %s' % (got, len(pts), fmt(pts[-1]), line))
+            # un punto es récord si supera a todos los anteriores de la gráfica; el volumen no tiene récords
+            rec, best = [], 0
+            for v in pts:
+                rec.append(m != 'v' and best > 0 and v > best + 1e-6)
+                best = max(best, v)
+            # de cada punto, al elegirlo: si sale la etiqueta, si va en la línea de la cifra y a su derecha, y si el punto va relleno
+            marks = ev("""n => { const out = []; for (let i = 0; i < n; i++) { A.progressPeriod(i);
+                  const t = document.querySelector('#pgc .progress-total'), b = t.querySelector('b').getBoundingClientRect(), e = t.querySelector('.record-tag'), r = e && e.getBoundingClientRect();
+                  out.push([!!e && e.textContent == 'RÉCORD', !e || (r.left >= b.right - 1 && r.top >= b.top - 2 && r.bottom <= b.bottom + 2),
+                    document.querySelectorAll('#pgc circle[stroke-width="2"]')[i].getAttribute('fill') == 'var(--a2)']); }
+                  A.progressPeriod(n - 1); return out; }""", len(pts))
+            check('progreso de Press banca, %s: al elegir un punto que es récord sale «RÉCORD» junto a la cifra, y solo en esos' % label.lower(),
+                  [x[0] for x in marks] == rec and all(x[1] for x in marks) and [x[2] for x in marks] == rec and (m == 'v' or any(rec)), '%s ≠ %s' % (marks, rec))
 
         print('Cardio, peso y registros')
         cardio = [l for l in logs if l.get('k') == 'c']

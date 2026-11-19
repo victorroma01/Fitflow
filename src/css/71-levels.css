@@ -197,20 +197,20 @@
     height:7px;
   }
 }
-.pgr {
+.program-row {
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
   margin-bottom:3px;
 }
-.pgr b {
+.program-row b {
   min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-.pgr .level-tag {
+.program-row .level-tag {
   font-size:11.5px;
   font-weight:600;
   color:var(--mu);

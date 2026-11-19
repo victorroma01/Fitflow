@@ -125,7 +125,7 @@
 .progress-total small {
   color:var(--mu);
 }
-.pgr {
+.record-tag {
   font-style:normal;
   font-size:10px;
   font-weight:800;
