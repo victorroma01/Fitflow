@@ -7,4 +7,8 @@
 import { BRAND_LOGOS } from '../data/photos.js';
 import { html } from './html.js';
 /** El logo, con la clase cls (tamaño y sitio). dark: siempre el del tema oscuro (el inicio de sesión, con su fondo oscuro). */
-export const brandLogo = (cls, dark) => dark ? html`<img class="brl ${cls}" src="${BRAND_LOGOS.oscuro}" alt="StrataFit">` : html`<span class="brl ${cls}" role="img" aria-label="StrataFit"><img class="brl-c" src="${BRAND_LOGOS.claro}" alt=""><img class="brl-o" src="${BRAND_LOGOS.oscuro}" alt=""></span>`;
+export const brandLogo = (cls, dark) => dark ? html`<img class="brl ${cls}" src="${BRAND_LOGOS.oscuro}" alt="StrataFit">` : html`
+  <span class="brl ${cls}" role="img" aria-label="StrataFit">
+    <img class="brl-c" src="${BRAND_LOGOS.claro}" alt="">
+    <img class="brl-o" src="${BRAND_LOGOS.oscuro}" alt="">
+  </span>`;

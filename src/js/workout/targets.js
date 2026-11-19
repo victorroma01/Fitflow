@@ -119,7 +119,13 @@ const weeklySets = pl => {
   const f = pl.length ? 7 / pl.length : 1;
   return Object.entries(o).map(([g, n]) => /** @type {[string, number]} */ ([g, Math.round(n * f)])).sort((a, b) => b[1] - a[1]);
 };
-export const weeklySetsCard = pl => html`<div class="cd m-8-0"><b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b><div class="d-flex wrap gap-6 mt-8">${weeklySets(pl).map(o => html`<span class="p-4-10 r-12 bg-gray-18 fs-12">${o[0]} · ${raw(o[1])}</span>`)}</div></div>`;
+export const weeklySetsCard = pl => html`
+  <div class="cd m-8-0">
+    <b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b>
+    <div class="d-flex wrap gap-6 mt-8">
+      ${weeklySets(pl).map(o => html`<span class="p-4-10 r-12 bg-gray-18 fs-12">${o[0]} · ${raw(o[1])}</span>`)}
+    </div>
+  </div>`;
 export const usesWeight = e => !unitOf(e) || /Sled|Farmers|Sandbag|Carry|chaleco|con peso|con balón|arrastre|Lunges/i.test(e.n);
 /** Repeticiones de cada serie de una pirámide: del tope del rango al mínimo (12, 10, 8, 6 con un rango de 6-12). */
 export const pyramidReps = (rg, n) => Array.from({ length: n }, (_, j) => n < 2 ? rg[1] : Math.round(rg[1] - (rg[1] - rg[0]) * j / (n - 1)));
@@ -157,15 +163,23 @@ export const targetLine = (e, i) => {
     p.push(['', 'Tempo ' + tempoOf(e)]);
   /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */
   const [a, b] = targetRange(e).map(x => Math.max(1, x - 2));
-  const ob = U ? planLine(e) : dl ? html`${thenDot(e.s + ' × ' + (a == b ? a : a + '-' + b) + ' reps')}${together('RIR 3-4')}` : html`${thenDot(planLine(e))}${together('RIR ' + rirOf(e))}`;
-  return html`<div class="mu">Objetivo: ${ob}</div>${p.length ? html`<div class="mu">${p.map(([head, pair], k) => html`${head}${together(pair, k < p.length - 1)}`)}</div>` : ''}${raw(warmupHtml(e, i))}`;
+  const ob = U ? planLine(e) : dl ? html`${thenDot(e.s + ' × ' + (a == b ? a : a + '-' + b) + ' reps')}${together('RIR 3-4')}` : html`
+    ${thenDot(planLine(e))}
+    ${together('RIR ' + rirOf(e))}`;
+  return html`
+    <div class="mu">Objetivo: ${ob}</div>
+    ${p.length ? html`<div class="mu">${p.map(([head, pair], k) => html`${head}${together(pair, k < p.length - 1)}`)}</div>` : ''}
+    ${raw(warmupHtml(e, i))}`;
 };
 const RANGE_OPTIONS = ['3-5', '5-8', '6-10', '8-10', '8-12', '10-12', '10-15', '12-15', '15-20'];
 export const rangeSelect = (e, i) => {
   if (unitOf(e))
     return '';
   const c = targetRange(e).join('-');
-  return html`<select data-c="setRepRange" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" class="w-auto p-5-10 fs-13">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
+  return html`
+    <select data-c="setRepRange" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" class="w-auto p-5-10 fs-13">
+      ${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}
+    </select>`;
 };
 C.setRepRange = (e, i) => {
   const x = S.plan[S.selectedDay].ex[i];

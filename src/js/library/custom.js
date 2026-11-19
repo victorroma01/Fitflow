@@ -76,13 +76,24 @@ const deleteExercise = (n, withHistory) => {
   saveState();
 };
 /** En la ficha de un ejercicio propio (`i`: su índice en la librería): «Renombrar» y «Eliminar». */
-export const customTools = i => html`<h4 class="ph">Ejercicio propio</h4><div class="g2"><button data-a="customRenamePage" data-i="${i}">Renombrar</button><button data-a="customDeleteAsk" data-i="${i}" class="c-ctx">Eliminar</button></div>`;
+export const customTools = i => html`
+  <h4 class="ph">Ejercicio propio</h4>
+  <div class="g2">
+    <button data-a="customRenamePage" data-i="${i}">Renombrar</button>
+    <button data-a="customDeleteAsk" data-i="${i}" class="c-ctx">Eliminar</button>
+  </div>`;
 /* — manejadores de esta función (registros A / C / U) — */
 A.customRenamePage = i => {
   const e = exAll()[i];
   if (!e || !isCustomExercise(e.n) || trainingNow())
     return;
-  sheet(html`<div class="row"><button data-a="exerciseDetail" data-i="${i}" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div><h1 class="pgt">Renombrar ejercicio</h1><label for="cxn">Nombre</label><input id="cxn" maxlength="80" value="${e.n}" data-enter="customRename" data-i="${i}"><p class="mu fs-13">Su historial, sus récords y sus notas pasan al nombre nuevo, igual que los días y los workouts en los que está.</p><button class="pr w-full mt-10" data-a="customRename" data-i="${i}">Guardar</button>`);
+  sheet(html`
+    <div class="row"><button data-a="exerciseDetail" data-i="${i}" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div>
+    <h1 class="pgt">Renombrar ejercicio</h1>
+    <label for="cxn">Nombre</label>
+    <input id="cxn" maxlength="80" value="${e.n}" data-enter="customRename" data-i="${i}">
+    <p class="mu fs-13">Su historial, sus récords y sus notas pasan al nombre nuevo, igual que los días y los workouts en los que está.</p>
+    <button class="pr w-full mt-10" data-a="customRename" data-i="${i}">Guardar</button>`);
 };
 /* (desde el botón o con Intro en el campo: el índice va en el propio elemento) */
 A.customRename = (i, b) => {
@@ -116,13 +127,17 @@ A.customDeleteAsk = i => {
     return;
   const uses = exerciseUses(e.n);
   if (uses.length) {
-    dialog('Antes, quítalo de donde está', html`«${e.n}» está en ${uses.length > 1 ? uses.slice(0, -1).join(', ') + ' y ' + uses[uses.length - 1] : uses[0]}. Quítalo de ahí o cámbialo por otro y vuelve a eliminarlo.`, [['Entendido', 'doNothing', 'pr']]);
+    dialog('Antes, quítalo de donde está', html`
+      «${e.n}» está en ${uses.length > 1 ? uses.slice(0, -1).join(', ') + ' y ' + uses[uses.length - 1] : uses[0]}. Quítalo de ahí o cámbialo por otro y vuelve a eliminarlo.
+    `, [['Entendido', 'doNothing', 'pr']]);
     return;
   }
   deleting = e.n;
   const n = ((S.exerciseHistory || {})[e.n] || []).length;
   if (n)
-    dialog(html`¿Eliminar «${e.n}»?`, 'Tiene ' + n + (n == 1 ? ' sesión registrada' : ' sesiones registradas') + '. Puedes eliminar solo el ejercicio y conservar su historial en tus gráficas y récords, o eliminarlo con su historial.', [['Cancelar', 'doNothing', ''], ['Solo el ejercicio', 'customDelete', ''], ['Con su historial', 'customDeleteAll', 'c-ctx']]);
+    dialog(html`
+      ¿Eliminar «${e.n}»?
+    `, 'Tiene ' + n + (n == 1 ? ' sesión registrada' : ' sesiones registradas') + '. Puedes eliminar solo el ejercicio y conservar su historial en tus gráficas y récords, o eliminarlo con su historial.', [['Cancelar', 'doNothing', ''], ['Solo el ejercicio', 'customDelete', ''], ['Con su historial', 'customDeleteAll', 'c-ctx']]);
   else
     confirmDialog(html`¿Eliminar «${e.n}»?`, 'Dejará de salir en la librería.', 'customDelete', 'Eliminar');
 };

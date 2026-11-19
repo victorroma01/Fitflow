@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* StrataFit · formateador de módulos (sin dependencias externas salvo typescript)
    Reimprime cada módulo de src/js con una instrucción por línea y bloques sangrados, conservando comentarios,
-   comillas y literales. Divide «const a=…,b=…;» en una declaración por línea.
+   comillas y literales. Divide «const a=…,b=…;» en una declaración por línea. Las plantillas html`…` que no caben
+   en la línea las reparte en varias, con cada etiqueta sangrada según lo que contiene (tools/templates.js).
    Uso:  node tools/format.js            (formatea main.js y todos los módulos que importa)
          node tools/format.js --check    (falla si alguno no está formateado)
          node tools/format.js archivo.js (solo ese)
@@ -14,6 +15,11 @@ function loadTS() {
 }
 const ts = loadTS();
 const ROOT = path.join(__dirname, '..'), JS = path.join(ROOT, 'src/js');
+const { layout } = require('./templates');
+// Módulos cuyas plantillas se quedan como están por ahora: los reescribe una solicitud de fusión abierta (las figuras
+// nuevas, #59 y #60), y ordenarlas aquí solo serviría para cruzarse con ella. Al fusionarla o descartarla, esta lista
+// se vacía y se pasa el formateador.
+const TEMPLATES_LATER = ['extras/figure.js', 'extras/anatomy.js'];
 
 function format(src, name) {
   const sf = ts.createSourceFile(name || 'm.js', src, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS);
@@ -67,6 +73,9 @@ function format(src, name) {
   out = lines.map((l, i) => shift.has(i) ? l.slice(Math.min(shift.get(i), indent(l))) : keep.has(i) ? l : to2(l)).join('\n');
   // plantillas etiquetadas sin espacio entre la etiqueta y la plantilla: html`…` (el impresor pone «html `…`»)
   out = out.replace(/\bhtml `/g, 'html`');
+  // y las plantillas html`…` que no caben en la línea, repartidas en varias (tools/templates.js)
+  const rel = name && path.relative(JS, name).split(path.sep).join('/');
+  if (!TEMPLATES_LATER.includes(rel)) out = layout(out, rel);
   return syncHeader(out.replace(/\s+$/, '') + '\n');
 }
 // cabecera del módulo: la línea «Define: …  · acciones/registros: N» se rehace siempre con lo que el módulo declara de

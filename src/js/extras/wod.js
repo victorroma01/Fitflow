@@ -27,19 +27,53 @@ const wodTotal = c => c.m == 'amrap' ? c.a * 60 : c.m == 'emom' ? c.en * c.ei : 
 const wodSetup = () => {
   const c = wodConfig();
   const m = c.m;
-  const num = (l, k, mn, mx) => html`<div><label>${raw(l)}</label><input type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${c[k]}" data-c="wodValue" data-k="${k}" aria-label="${l}"></div>`;
-  const sel = (l, k, o) => html`<div><label>${raw(l)}</label><select data-c="wodValue" data-k="${k}" aria-label="${l}">${o.map(x => html`<option value="${x[0]}"${c[k] == x[0] ? ' selected' : ''}>${raw(x[1])}</option>`)}</select></div>`;
+  const num = (l, k, mn, mx) => html`
+    <div>
+      <label>${raw(l)}</label>
+      <input type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${c[k]}" data-c="wodValue" data-k="${k}" aria-label="${l}">
+    </div>`;
+  const sel = (l, k, o) => html`
+    <div>
+      <label>${raw(l)}</label>
+      <select data-c="wodValue" data-k="${k}" aria-label="${l}">
+        ${o.map(x => html`<option value="${x[0]}"${c[k] == x[0] ? ' selected' : ''}>${raw(x[1])}</option>`)}
+      </select>
+    </div>`;
   let f = '';
   if (m == 'amrap')
     f = num('Duración (min)', 'a', 1, 180);
   else if (m == 'emom')
-    f = html`<div class="g2">${raw(num('Rondas', 'en', 1, 120))}${raw(sel('Intervalo', 'ei', [[30, '30 s'], [45, '45 s'], [60, '1 min'], [90, '1:30'], [120, '2 min'], [180, '3 min']]))}</div>`;
+    f = html`
+      <div class="g2">
+        ${raw(num('Rondas', 'en', 1, 120))}
+        ${raw(sel('Intervalo', 'ei', [[30, '30 s'], [45, '45 s'], [60, '1 min'], [90, '1:30'], [120, '2 min'], [180, '3 min']]))}
+      </div>`;
   else if (m == 'tabata')
-    f = html`<div class="g2 cols-3">${raw(num('Trabajo (s)', 'tw', 5, 600))}${raw(num('Descanso (s)', 'tr', 0, 600))}${raw(num('Rondas', 'tn', 1, 99))}</div>`;
+    f = html`
+      <div class="g2 cols-3">
+        ${raw(num('Trabajo (s)', 'tw', 5, 600))}
+        ${raw(num('Descanso (s)', 'tr', 0, 600))}
+        ${raw(num('Rondas', 'tn', 1, 99))}
+      </div>`;
   else
     f = num('Tiempo límite (min, 0 = sin límite)', 'ct', 0, 180);
   const t = wodTotal(c);
-  return html`${pgHead('Temporizador WOD')}<div class="seg cols-4">${WOD_MODES.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="wodMode" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><p class="mu fs-13 m-10-2-4">${raw(WOD_INFO[m])}</p>${raw(f)}<div class="g2 mt-2">${raw(sel('Cuenta atrás inicial', 'pre', [[0, 'Sin cuenta atrás'], [5, '5 s'], [10, '10 s'], [15, '15 s'], [30, '30 s']]))}<div><label>Duración total</label><div class="cd m-0 p-10 ta-c"><b id="f2tt">${raw(t ? fmtClock(t) : 'Sin límite')}</b></div></div></div><p class="mu fs-12 m-12-2-0">Suena un aviso en los últimos 3 segundos de cada tramo y al empezar el siguiente. La pantalla se mantiene encendida. Si bloqueas el móvil, el tiempo sigue corriendo pero el sonido solo se oye con la app abierta.</p><div class="h-90"></div><div class="sb"><button class="pr w-full p-14" data-a="wodGo">Empezar</button></div>`;
+  return html`
+    ${pgHead('Temporizador WOD')}
+    <div class="seg cols-4">
+      ${WOD_MODES.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="wodMode" data-v="${x[0]}">${raw(x[1])}</button>`)}
+    </div>
+    <p class="mu fs-13 m-10-2-4">${raw(WOD_INFO[m])}</p>
+    ${raw(f)}
+    <div class="g2 mt-2">
+      ${raw(sel('Cuenta atrás inicial', 'pre', [[0, 'Sin cuenta atrás'], [5, '5 s'], [10, '10 s'], [15, '15 s'], [30, '30 s']]))}
+      <div><label>Duración total</label><div class="cd m-0 p-10 ta-c"><b id="f2tt">${raw(t ? fmtClock(t) : 'Sin límite')}</b></div></div>
+    </div>
+    <p class="mu fs-12 m-12-2-0">
+      Suena un aviso en los últimos 3 segundos de cada tramo y al empezar el siguiente. La pantalla se mantiene encendida. Si bloqueas el móvil, el tiempo sigue corriendo pero el sonido solo se oye con la app abierta.
+    </p>
+    <div class="h-90"></div>
+    <div class="sb"><button class="pr w-full p-14" data-a="wodGo">Empezar</button></div>`;
 };
 A.openWod = () => fullPage(wodSetup());
 A.wodMode = (i, b) => {
@@ -107,16 +141,33 @@ function wodSkeleton() {
   const m = c.m;
   o.dataset.ph = wodRun.done ? 'done' : wodRun.ph || 'pre';
   o.classList.toggle('pz', !!wodRun.pa);
-  let h = html`<div class="f2hd"><button data-a="wodExit" aria-label="Cerrar" class="f2cl">${icon('x', 22)}</button><b id="f2wt">${wodName(c)}</b><span></span></div>`;
+  let h = html`
+    <div class="f2hd">
+      <button data-a="wodExit" aria-label="Cerrar" class="f2cl">${icon('x', 22)}</button>
+      <b id="f2wt">${wodName(c)}</b>
+      <span></span>
+    </div>`;
   if (wodRun.done) {
     const f = wodRun.fin;
     h += '<div class="f2dn"><small>Terminado</small>';
     if (m == 'amrap')
-      h += html`<b class="f2rs" id="f2rs">${raw(wodRun.r)}${wodRun.r == 1 ? ' ronda' : ' rondas'}</b><div class="g2 w-full mt-6"><div><label for="f2r">Rondas</label><input id="f2r" type="number" inputmode="numeric" min="0" max="999" value="${wodRun.r}"></div><div><label for="f2e">Repeticiones extra</label><input id="f2e" type="number" inputmode="numeric" min="0" max="999" value="0"></div></div>`;
+      h += html`
+        <b class="f2rs" id="f2rs">${raw(wodRun.r)}${wodRun.r == 1 ? ' ronda' : ' rondas'}</b>
+        <div class="g2 w-full mt-6">
+          <div><label for="f2r">Rondas</label><input id="f2r" type="number" inputmode="numeric" min="0" max="999" value="${wodRun.r}"></div>
+          <div>
+            <label for="f2e">Repeticiones extra</label>
+            <input id="f2e" type="number" inputmode="numeric" min="0" max="999" value="0">
+          </div>
+        </div>`;
     else if (m == 'ft')
-      h += html`<b class="f2rs">${raw(fmtClock(Math.round(f.t)))}</b><small>${raw(f.cap ? 'Tiempo límite alcanzado' : wodRun.r ? wodRun.r + (wodRun.r == 1 ? ' vuelta' : ' vueltas') : '')}</small>`;
+      h += html`
+        <b class="f2rs">${raw(fmtClock(Math.round(f.t)))}</b>
+        <small>${raw(f.cap ? 'Tiempo límite alcanzado' : wodRun.r ? wodRun.r + (wodRun.r == 1 ? ' vuelta' : ' vueltas') : '')}</small>`;
     else
-      h += html`<b class="f2rs">${raw(f.rd || '')}${f.rd ? (f.rd == 1 ? ' ronda' : ' rondas') : ''}</b><small>${f.early ? 'Terminado antes de tiempo' : 'Completado'} · ${raw(fmtClock(Math.round(f.t)))}</small>`;
+      h += html`
+        <b class="f2rs">${raw(f.rd || '')}${f.rd ? (f.rd == 1 ? ' ronda' : ' rondas') : ''}</b>
+        <small>${f.early ? 'Terminado antes de tiempo' : 'Completado'} · ${raw(fmtClock(Math.round(f.t)))}</small>`;
     h += '<input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" class="mt-12"><div class="g2 w-full mt-12"><button data-a="wodDiscard">Descartar</button><button class="pr" data-a="wodSave">Guardar</button></div></div>';
   }
   else {
@@ -124,10 +175,27 @@ function wodSkeleton() {
     if (wodRun.ph == 'pre' && !wodRun.pa)
       h += '<div class="ta-c"><button class="f2sk" data-a="wodSkipCountdown" id="f2sk">Saltar la cuenta atrás</button></div>';
     if (m == 'amrap')
-      h += html`<button class="f2big" data-a="wodRound" aria-label="Sumar una ronda"><small>Rondas</small><b id="f2rn">${raw(wodRun.r)}</b><small>Toca para sumar una</small></button><div class="ta-c"><button data-a="wodRoundUndo" class="f2sm">Restar una ronda</button></div>`;
+      h += html`
+        <button class="f2big" data-a="wodRound" aria-label="Sumar una ronda">
+          <small>Rondas</small>
+          <b id="f2rn">${raw(wodRun.r)}</b>
+          <small>Toca para sumar una</small>
+        </button>
+        <div class="ta-c"><button data-a="wodRoundUndo" class="f2sm">Restar una ronda</button></div>`;
     else if (m == 'ft')
-      h += html`<button class="f2big" data-a="wodRound" aria-label="Marcar vuelta"><small>Vueltas</small><b id="f2rn">${raw(wodRun.r)}</b><small id="f2lp">${raw(wodRun.laps.length ? 'Última: ' + fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0)) : 'Toca para marcar una vuelta')}</small></button>`;
-    h += html`<div class="g2 f2ct"><button data-a="wodPause" id="f2pb">${wodRun.pa ? 'Seguir' : 'Pausa'}</button><button data-a="wodFinish">Terminar</button></div>`;
+      h += html`
+        <button class="f2big" data-a="wodRound" aria-label="Marcar vuelta">
+          <small>Vueltas</small>
+          <b id="f2rn">${raw(wodRun.r)}</b>
+          <small id="f2lp">
+            ${raw(wodRun.laps.length ? 'Última: ' + fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0)) : 'Toca para marcar una vuelta')}
+          </small>
+        </button>`;
+    h += html`
+      <div class="g2 f2ct">
+        <button data-a="wodPause" id="f2pb">${wodRun.pa ? 'Seguir' : 'Pausa'}</button>
+        <button data-a="wodFinish">Terminar</button>
+      </div>`;
   }
   o.innerHTML = h;
 }

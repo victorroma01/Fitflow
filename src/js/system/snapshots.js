@@ -68,7 +68,15 @@ export const startSnapshots = () => {
       dailySnapshot();
   });
 };
-const snapshotRows = l => l.length ? l.map(x => html`<div class="row p-8-0 bdt-1-solid-ln"><span><b>${backupDate(x.t, 1)}</b><br><small class="mu">${raw(plural(x.n || 0, 'entreno', 'entrenos'))} · versión ${x.v || ''}</small></span><button data-a="snapshotRestore" data-v="${x.d}">Restaurar</button></div>`).join('') : '<p class="mu fs-13 m-8-0-0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>';
+const snapshotRows = l => l.length ? l.map(x => html`
+  <div class="row p-8-0 bdt-1-solid-ln">
+    <span>
+      <b>${backupDate(x.t, 1)}</b><br>
+      <small class="mu">${raw(plural(x.n || 0, 'entreno', 'entrenos'))} · versión ${x.v || ''}</small>
+    </span>
+    <button data-a="snapshotRestore" data-v="${x.d}">Restaurar</button>
+  </div>
+`).join('') : '<p class="mu fs-13 m-8-0-0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>';
 /** Rellena la lista de copias automáticas de la hoja de copia de seguridad (se carga aparte porque IndexedDB es asíncrono). */
 export const fillSnapshots = () => snapList().then(l => {
   const e = $('#snapl');

@@ -71,19 +71,25 @@ const progressChart = (pts, m, sel, inter) => {
   let s = html`<svg viewBox="0 0 ${W0} ${H0}" role="img" aria-label="Evolución del ejercicio">`;
   tk.forEach(v => {
     const y = yy(v);
-    s += html`<line x1="${pl}" x2="${W0 - pr}" y1="${y}" y2="${y}" stroke="var(--ln)" stroke-width="1"/><text x="${pl - 6}" y="${y + 3.5}" text-anchor="end" class="pga">${raw(axisLabel(v))}</text>`;
+    s += html`
+      <line x1="${pl}" x2="${W0 - pr}" y1="${y}" y2="${y}" stroke="var(--ln)" stroke-width="1"/>
+      <text x="${pl - 6}" y="${y + 3.5}" text-anchor="end" class="pga">${raw(axisLabel(v))}</text>`;
   });
   s += html`<text x="${pl}" y="${H0 - 6}" class="pga">${fmtDateShort(pts[0].d)}</text>`;
   if (pts.length > 1)
     s += html`<text x="${W0 - pr}" y="${H0 - 6}" text-anchor="end" class="pga">${fmtDateShort(pts[pts.length - 1].d)}</text>`;
   if (pts.length > 1)
-    s += html`<path d="${pts.map((p, i) => (i ? 'L' : 'M') + xx(i).toFixed(1) + ' ' + yy(toDisplayWeight(p.v)).toFixed(1)).join(' ')}" fill="none" stroke="var(--a2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    s += html`
+      <path d="${pts.map((p, i) => (i ? 'L' : 'M') + xx(i).toFixed(1) + ' ' + yy(toDisplayWeight(p.v)).toFixed(1)).join(' ')}" fill="none"
+          stroke="var(--a2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
   pts.forEach((p, i) => {
     const cx = xx(i).toFixed(1);
     const cy = yy(toDisplayWeight(p.v)).toFixed(1);
     if (i == sel)
       s += html`<circle cx="${cx}" cy="${cy}" r="9" fill="var(--a2)" opacity=".18"/>`;
-    s += html`<circle cx="${cx}" cy="${cy}" r="${i == sel ? 5 : 3.6}" fill="${p.pr ? 'var(--a2)' : 'var(--cd)'}" stroke="${p.pr ? 'var(--cd)' : 'var(--a2)'}" stroke-width="2"/>`;
+    s += html`
+      <circle cx="${cx}" cy="${cy}" r="${i == sel ? 5 : 3.6}" fill="${p.pr ? 'var(--a2)' : 'var(--cd)'}"
+          stroke="${p.pr ? 'var(--cd)' : 'var(--a2)'}" stroke-width="2"/>`;
     if (inter)
       s += html`<circle cx="${cx}" cy="${cy}" r="15" fill="transparent" data-a="progressPeriod" data-i="${i}" class="cur-pointer"/>`;
   });
@@ -105,18 +111,34 @@ export const progressBody = (stat) => {
   let h = '';
   if (!stat) {
     const metric = reps ? segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="seg"', 'class="seg pgm"') : '<p class="mu fs-13 m-0-0-6">Se mide en tiempo o distancia: se ve el peso máximo de cada sesión.</p>';
-    h += html`<select data-c="progressExercise" aria-label="Ejercicio" class="m-10-0-8">${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}</select>${raw(metric)}`;
+    h += html`
+      <select data-c="progressExercise" aria-label="Ejercicio" class="m-10-0-8">
+        ${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}
+      </select>
+      ${raw(metric)}`;
   }
   if (!pts.length)
     return html`${raw(h)}<p class="mu m-10-0-0">Este ejercicio no tiene pesos registrados.</p>`;
   const sel = stat ? pts.length - 1 : (progressState.p >= 0 && progressState.p < pts.length ? progressState.p : pts.length - 1);
   const p = pts[sel];
-  h += html`<div class="pgt2"><span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="pgr">RÉCORD</em>' : '')}</span><small>${raw(ML[m])} · ${fmtDateShort(p.d)}</small></div>${progressChart(pts, m, sel, !stat)}`;
+  h += html`
+    <div class="pgt2">
+      <span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="pgr">RÉCORD</em>' : '')}</span>
+      <small>${raw(ML[m])} · ${fmtDateShort(p.d)}</small>
+    </div>
+    ${progressChart(pts, m, sel, !stat)}`;
   if (pts.length > 1) {
     const a = pts[0].v;
     const z = pts[pts.length - 1].v;
     const dl = (z - a) / a * 100;
-    h += html`<div class="mu pgsum">De ${raw(progressFmt(a, m))} a ${raw(progressFmt(z, m))} · <b class="${dl >= 0 ? 'c-a1' : 'c-inherit'}">${dl >= 0 ? '+' : ''}${Math.round(dl * 10) / 10} %</b>${raw(m != 'v' ? '<br><span class="fs-11_5">Punto relleno = récord personal</span>' : '')}</div>`;
+    h += html`
+      <div class="mu pgsum">
+        De ${raw(progressFmt(a, m))} a ${raw(progressFmt(z, m))} · <b class="${dl >= 0 ? 'c-a1' : 'c-inherit'}">
+          ${dl >= 0 ? '+' : ''}
+          ${Math.round(dl * 10) / 10} %
+        </b>
+        ${raw(m != 'v' ? '<br><span class="fs-11_5">Punto relleno = récord personal</span>' : '')}
+      </div>`;
   }
   else
     h += '<div class="mu pgsum">Con una segunda sesión verás la tendencia.</div>';
@@ -142,7 +164,8 @@ C.progressExercise = e => {
   progressState.p = -1;
   refreshProgress();
 };
-export const progressCard = () => html`<div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">${raw(progressBody())}</div></div>`;
+export const progressCard = () => html`
+  <div class="cd"><b>Progreso por ejercicio</b><div id="pgc" class="pgs">${raw(progressBody())}</div></div>`;
 /* cada vez que una sesión mejoró el 1RM estimado de un ejercicio (de los que se miden en repeticiones), de la más reciente a
    la más antigua */
 const recordEvents = () => {
@@ -165,5 +188,16 @@ export const recordsTimeline = () => {
   const ev = recordEvents().slice(0, 8);
   if (!ev.length)
     return '';
-  return html`<div class="cd"><b>Línea de récords</b>${ev.map(o => html`<div class="it cols-1fr-auto"><span>${o.n}<br><small>${fmtDateShort(o.d)}</small></span><span class="ta-r"><b>${toDisplayWeight(o.w)} ${weightUnit()} × ${raw(o.r)}</b><br><small>1RM est. ${Math.round(toDisplayWeight(o.e) * 10) / 10} (+${Math.round(toDisplayWeight(o.up) * 10) / 10})</small></span></div>`)}</div>`;
+  return html`
+    <div class="cd">
+      <b>Línea de récords</b>
+      ${ev.map(o => html`
+        <div class="it cols-1fr-auto">
+          <span>${o.n}<br><small>${fmtDateShort(o.d)}</small></span>
+          <span class="ta-r">
+            <b>${toDisplayWeight(o.w)} ${weightUnit()} × ${raw(o.r)}</b><br>
+            <small>1RM est. ${Math.round(toDisplayWeight(o.e) * 10) / 10} (+${Math.round(toDisplayWeight(o.up) * 10) / 10})</small>
+          </span>
+        </div>`)}
+    </div>`;
 };

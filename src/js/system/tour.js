@@ -35,7 +35,11 @@ const tourRoot = () => {
   return r;
 };
 /* la bienvenida y «¡Listo!»: una hoja como las de la app, que no se cierra tocando fuera */
-const tourSheet = (ic, t, p, buttons) => html`<div class="bk"></div><div class="sp" role="dialog" aria-modal="true" aria-labelledby="trh"><div class="trw"><div class="trbg">${icon(ic, 30)}</div><h3 id="trh">${t}</h3><p class="mu">${p}</p>${raw(buttons)}</div></div>`;
+const tourSheet = (ic, t, p, buttons) => html`
+  <div class="bk"></div>
+  <div class="sp" role="dialog" aria-modal="true" aria-labelledby="trh">
+    <div class="trw"><div class="trbg">${icon(ic, 30)}</div><h3 id="trh">${t}</h3><p class="mu">${p}</p>${raw(buttons)}</div>
+  </div>`;
 /* pinta el punto del recorrido en el que se está */
 const tourShow = () => {
   const r = tourRoot();
@@ -59,7 +63,20 @@ const tourShow = () => {
     }
     const tx = st.np && $('#app .npc') ? st.np : st.rest && $('#app .cd.hero [data-a=completeRestDay]') ? st.rest : st.p;
     r.className = 'trp';
-    r.innerHTML = html`<div class="trbk"></div><div class="trsp"></div><div class="trtp" role="dialog" aria-modal="true" aria-labelledby="trh"><i class="trar"></i><div class="trst">Paso ${i + 1} de ${n}</div><b id="trh">${st.t}</b><p>${tx}</p><div class="trft"><div class="trdt">${TOUR_STEPS.map((x, k) => html`<i class="${k == i ? 'on' : ''}"></i>`)}</div><button class="trsk" data-a="tourSkip">Omitir</button><button class="pr trnx" data-a="tourNext">${i == n - 1 ? 'Terminar' : 'Siguiente'}</button></div></div>`;
+    r.innerHTML = html`
+      <div class="trbk"></div>
+      <div class="trsp"></div>
+      <div class="trtp" role="dialog" aria-modal="true" aria-labelledby="trh">
+        <i class="trar"></i>
+        <div class="trst">Paso ${i + 1} de ${n}</div>
+        <b id="trh">${st.t}</b>
+        <p>${tx}</p>
+        <div class="trft">
+          <div class="trdt">${TOUR_STEPS.map((x, k) => html`<i class="${k == i ? 'on' : ''}"></i>`)}</div>
+          <button class="trsk" data-a="tourSkip">Omitir</button>
+          <button class="pr trnx" data-a="tourNext">${i == n - 1 ? 'Terminar' : 'Siguiente'}</button>
+        </div>
+      </div>`;
     tourPlace();
     /* por si algo de la página termina de colocarse después (una imagen) */
     setTimeout(tourPlace, 350);

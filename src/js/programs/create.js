@@ -114,36 +114,130 @@ const techLegend = pl => {
       blk = true;
   }));
   const l = [...c].filter(x => TECHNIQUES[x]).map(x => [x, TECHNIQUES[x][0]]).concat(blk && !c.has('SS') ? [['SS', 'Superserie']] : []);
-  return l.length ? html`<div class="cd tql"><b>Técnicas de intensidad</b><div>${l.map(x => html`<span><b class="tqa">${x[0]}</b>${x[1]}</span>`)}</div></div>` : '';
+  return l.length ? html`
+    <div class="cd tql"><b>Técnicas de intensidad</b><div>${l.map(x => html`<span><b class="tqa">${x[0]}</b>${x[1]}</span>`)}</div></div>` : '';
 };
 /** Días del plan con sus ejercicios, series, técnica y descanso (vista de un programa); en un ciclo, cómo se repite. */
-export const programDaysHtml = pl => (isCycle(pl) ? html`<p class="mu cyn">Ciclo de ${raw(pl.length)} días que no se corta con la semana: cada semana empieza donde acabó la anterior.</p>` : '') + weeklySetsCard(pl) + techLegend(pl) + pl.map((d, j) => html`<div class="cd m-8-0"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b>${d.ex.length ? html`<small>${raw(d.ex.reduce((s, e) => s + e.s, 0))} series</small>` : ''}</div>${raw(d.ex.length ? d.ex.map((e, i) => html`<div class="mu fs-13 mt-3">${raw(techLabel(e) ? html`<b class="tqa">${techLabel(e)}</b>` : '')}${e.n} · ${raw(planLine(e))} · ${raw(fmtMinSec(restAt(d, i)))}</div>`).join('') : '<div class="mu fs-13 mt-3">Descanso</div>')}</div>`).join('');
+export const programDaysHtml = pl => (isCycle(pl) ? html`
+  <p class="mu cyn">Ciclo de ${raw(pl.length)} días que no se corta con la semana: cada semana empieza donde acabó la anterior.</p>
+` : '') + weeklySetsCard(pl) + techLegend(pl) + pl.map((d, j) => html`
+  <div class="cd m-8-0">
+    <div class="row">
+      <b>Día ${raw(j + 1)} · ${d.n}</b>
+      ${d.ex.length ? html`<small>${raw(d.ex.reduce((s, e) => s + e.s, 0))} series</small>` : ''}
+    </div>
+    ${raw(d.ex.length ? d.ex.map((e, i) => html`
+      <div class="mu fs-13 mt-3">
+        ${raw(techLabel(e) ? html`<b class="tqa">${techLabel(e)}</b>` : '')}
+        ${e.n} · ${raw(planLine(e))} · ${raw(fmtMinSec(restAt(d, i)))}
+      </div>
+    `).join('') : '<div class="mu fs-13 mt-3">Descanso</div>')}
+  </div>`).join('');
 const programRowsHtml = pl => pl.map((d, j) => {
   const r = !d.ex.length;
-  return html`<div class="cd cpr${r ? ' rs' : ''}"><div class="row"><b>Día ${raw(j + 1)} · ${d.n}</b><span class="cpm"><button data-a="createDayUp" data-i="${j}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button><button data-a="createDayDown" data-i="${j}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>${icon('chev', 18)}</button></span></div>${raw(r ? '<div class="mu fs-13">Descanso</div>' : html`<div class="mu fs-12 mt-2">${d.ex.length}${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayMinutes(d)} min</div><div class="mu cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}</div>`;
+  return html`
+    <div class="cd cpr${r ? ' rs' : ''}">
+      <div class="row">
+        <b>Día ${raw(j + 1)} · ${d.n}</b>
+        <span class="cpm">
+          <button data-a="createDayUp" data-i="${j}" aria-label="Subir"${j ? '' : ' disabled'}>${icon('chev', 18)}</button>
+          <button data-a="createDayDown" data-i="${j}" aria-label="Bajar"${j < pl.length - 1 ? '' : ' disabled'}>
+            ${icon('chev', 18)}
+          </button>
+        </span>
+      </div>
+      ${raw(r ? '<div class="mu fs-13">Descanso</div>' : html`
+        <div class="mu fs-12 mt-2">
+          ${d.ex.length}
+          ${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayMinutes(d)} min
+        </div>
+        <div class="mu cpe">${raw(d.ex.map(e => X(e.n)).join(' · '))}</div>`)}
+    </div>`;
 }).join('');
-const createHome = () => html`${pgHead('Crear programa', 'openPrograms')}<p class="mu m-n6-0-14">Elige cómo quieres montarlo.</p><button class="cpo" data-a="createFromRoutines"><span class="cpi">${icon('log', 26)}</span><span><b>Con mis workouts</b><small>${raw(S.routines.length ? S.routines.length + (S.routines.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}</small></span>›</button><button class="cpo" data-a="createGuided"><span class="cpi">${icon('prog', 26)}</span><span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›</button>`;
-const programNameBox = () => html`<div class="ph">Nombre del programa</div><input data-u="programName" value="${progDraft.name}" aria-label="Nombre del programa" placeholder="Mi programa" maxlength="60">`;
+const createHome = () => html`
+  ${pgHead('Crear programa', 'openPrograms')}
+  <p class="mu m-n6-0-14">Elige cómo quieres montarlo.</p>
+  <button class="cpo" data-a="createFromRoutines">
+    <span class="cpi">${icon('log', 26)}</span>
+    <span>
+      <b>Con mis workouts</b>
+      <small>
+        ${raw(S.routines.length ? S.routines.length + (S.routines.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}
+      </small>
+    </span>›
+  </button>
+  <button class="cpo" data-a="createGuided">
+    <span class="cpi">${icon('prog', 26)}</span>
+    <span><b>Programa guiado</b><small>Personalizado y asistido: casa o gimnasio, estilo de entrenamiento y objetivo.</small></span>›
+  </button>`;
+const programNameBox = () => html`
+  <div class="ph">Nombre del programa</div>
+  <input data-u="programName" value="${progDraft.name}" aria-label="Nombre del programa" placeholder="Mi programa" maxlength="60">`;
 const createFromMine = () => {
   const n = S.routines.length;
   let h = pgHead('Con mis workouts', 'createProgram');
   if (!n)
-    return html`${raw(h)}<p class="mu">Aún no tienes workouts personalizados. Crea alguno y vuelve aquí para montar tu semana.</p><button class="pr w-full mt-10 p-15 r-16" data-a="routineEditorBack">Ir a Workouts personalizados</button>`;
-  h += html`<p class="mu m-n6-0-12">Marca los que quieras (hasta 6). Te propongo el orden y dónde poner los días de descanso.</p><div class="ph">Tus workouts</div>${S.routines.map((r, i) => {
-    const on = progDraft.sel.includes(i);
-    const ex = [].concat(...r.bl.map(b => b.ex));
-    const gs = [...new Set(ex.map(x => groupLabel(groupOfName(x))))];
-    return html`<button class="cpw${on ? ' on' : ''}" data-a="createToggleRoutine" data-i="${i}"><i>${on ? icon('chk', 14) : ''}</i><span><b>${r.n}</b><br><small class="mu">${raw(r.bl.length ? X(gs.slice(0, 3).join(' · ')) + ' · ' + ex.length + (ex.length == 1 ? ' ejercicio' : ' ejercicios') : 'Sin ejercicios')}</small></span></button>`;
-  })}`;
+    return html`
+      ${raw(h)}
+      <p class="mu">Aún no tienes workouts personalizados. Crea alguno y vuelve aquí para montar tu semana.</p>
+      <button class="pr w-full mt-10 p-15 r-16" data-a="routineEditorBack">Ir a Workouts personalizados</button>`;
+  h += html`
+    <p class="mu m-n6-0-12">Marca los que quieras (hasta 6). Te propongo el orden y dónde poner los días de descanso.</p>
+    <div class="ph">Tus workouts</div>
+    ${S.routines.map((r, i) => {
+      const on = progDraft.sel.includes(i);
+      const ex = [].concat(...r.bl.map(b => b.ex));
+      const gs = [...new Set(ex.map(x => groupLabel(groupOfName(x))))];
+      return html`
+        <button class="cpw${on ? ' on' : ''}" data-a="createToggleRoutine" data-i="${i}">
+          <i>${on ? icon('chk', 14) : ''}</i>
+          <span>
+            <b>${r.n}</b><br>
+            <small class="mu">
+              ${raw(r.bl.length ? X(gs.slice(0, 3).join(' · ')) + ' · ' + ex.length + (ex.length == 1 ? ' ejercicio' : ' ejercicios') : 'Sin ejercicios')}
+            </small>
+          </span>
+        </button>`;
+    })}`;
   if (progDraft.plan) {
-    h += html`<div class="row mt-20"><div class="ph m-0">Estructura sugerida</div><button class="chip m-0" data-a="createRebuild">Reordenar</button></div><p class="mu fs-12 m-4-0-8">Alterno grupos musculares para que descanses cada zona. Usa las flechas para cambiar el orden.</p>${raw(programRowsHtml(progDraft.plan))}${programNameBox()}${raw(deloadChips(progDraft.dl, 'd'))}<div class="h-96"></div><button class="sb pr p-16 fs-16 r-16" data-a="createSave">Crear programa</button>`;
+    h += html`
+      <div class="row mt-20">
+        <div class="ph m-0">Estructura sugerida</div>
+        <button class="chip m-0" data-a="createRebuild">Reordenar</button>
+      </div>
+      <p class="mu fs-12 m-4-0-8">Alterno grupos musculares para que descanses cada zona. Usa las flechas para cambiar el orden.</p>
+      ${raw(programRowsHtml(progDraft.plan))}
+      ${programNameBox()}
+      ${raw(deloadChips(progDraft.dl, 'd'))}
+      <div class="h-96"></div>
+      <button class="sb pr p-16 fs-16 r-16" data-a="createSave">Crear programa</button>`;
   }
   return html`${raw(h)}<div class="h-30"></div>`;
 };
-const optionChips = (k, t, sub) => html`<div class="ph">${raw(t)}</div><div class="cps">${GUIDE_OPTIONS[k].map(o => html`<button class="chip${progDraft.o[k] == o[0] ? ' on' : ''}" data-a="guidedAnswer" data-k="${k}" data-v="${o[0]}">${k == 'niv' ? levelDot(o[0]) : ''}${raw(o[1])}</button>`)}</div>${sub ? html`<p class="mu fs-12 m-6-2-0">${raw(sub)}</p>` : ''}`;
+const optionChips = (k, t, sub) => html`
+  <div class="ph">${raw(t)}</div>
+  <div class="cps">
+    ${GUIDE_OPTIONS[k].map(o => html`
+      <button class="chip${progDraft.o[k] == o[0] ? ' on' : ''}" data-a="guidedAnswer" data-k="${k}" data-v="${o[0]}">
+        ${k == 'niv' ? levelDot(o[0]) : ''}
+        ${raw(o[1])}
+      </button>`)}
+  </div>
+  ${sub ? html`<p class="mu fs-12 m-6-2-0">${raw(sub)}</p>` : ''}`;
 const guidedForm = () => {
   const o = progDraft.o;
-  return html`${pgHead('Programa guiado', 'createProgram')}<p class="mu m-n6-0-4">Responde cuatro cosas y te monto un programa a medida.</p>${optionChips('lug', 'Dónde entrenas')}${o.lug == 'home' ? optionChips('mat', 'Material en casa') : ''}${optionChips('est', 'Estilo de entrenamiento', STYLE_INFO[o.est])}${optionChips('obj', 'Objetivo', GOAL_INFO[o.obj])}${optionChips('dias', 'Días por semana')}${optionChips('niv', 'Nivel', LEVEL_DETAILS[o.niv])}${raw(deloadChips(progDraft.dl, 'd'))}<div class="h-96"></div><button class="sb pr p-16 fs-16 r-16" data-a="guidedGenerate">Ver propuesta</button>`;
+  return html`
+    ${pgHead('Programa guiado', 'createProgram')}
+    <p class="mu m-n6-0-4">Responde cuatro cosas y te monto un programa a medida.</p>
+    ${optionChips('lug', 'Dónde entrenas')}
+    ${o.lug == 'home' ? optionChips('mat', 'Material en casa') : ''}
+    ${optionChips('est', 'Estilo de entrenamiento', STYLE_INFO[o.est])}
+    ${optionChips('obj', 'Objetivo', GOAL_INFO[o.obj])}
+    ${optionChips('dias', 'Días por semana')}
+    ${optionChips('niv', 'Nivel', LEVEL_DETAILS[o.niv])}
+    ${raw(deloadChips(progDraft.dl, 'd'))}
+    <div class="h-96"></div>
+    <button class="sb pr p-16 fs-16 r-16" data-a="guidedGenerate">Ver propuesta</button>`;
 };
 const makeEx = (tok, o) => {
   let sp = '';
@@ -293,9 +387,27 @@ const guidedProposal = () => {
   const o = progDraft.o;
   const pl = progDraft.plan;
   const lab = [o.lug == 'gym' ? 'Gimnasio' : 'Casa' + (o.mat == 'db' ? ' · mancuernas y bandas' : ' · peso corporal'), GUIDE_OPTIONS.est.find(x => x[0] == o.est)[1], GUIDE_OPTIONS.obj.find(x => x[0] == o.obj)[1], o.dias + ' días', GUIDE_OPTIONS.niv.find(x => x[0] == o.niv)[1]];
-  return html`${pgHead('Tu propuesta', 'createGuided')}<div class="d-flex wrap gap-6 m-n4-0-12">${lab.map(x => html`<span class="tg">${x}</span>`)}</div><div class="cd m-8-0"><b>Cómo sacarle partido</b><p class="mu m-6-0-0 fs-13 lh-1_5">${progDraft.txt}</p></div>${weeklySetsCard(pl)}<div class="row mt-14"><div class="ph m-0">Semana</div><button class="chip rgb m-0" data-a="guidedRegenerate">${icon('rgn', 16)}Volver a generar</button></div><p class="mu fs-12 m-4-0-8">Usa las flechas para mover días y descansos a tu gusto.</p>${raw(programRowsHtml(pl))}${programNameBox()}<div class="h-96"></div><button class="sb pr p-16 fs-16 r-16" data-a="createSave">Crear programa</button>`;
+  return html`
+    ${pgHead('Tu propuesta', 'createGuided')}
+    <div class="d-flex wrap gap-6 m-n4-0-12">${lab.map(x => html`<span class="tg">${x}</span>`)}</div>
+    <div class="cd m-8-0"><b>Cómo sacarle partido</b><p class="mu m-6-0-0 fs-13 lh-1_5">${progDraft.txt}</p></div>
+    ${weeklySetsCard(pl)}
+    <div class="row mt-14">
+      <div class="ph m-0">Semana</div>
+      <button class="chip rgb m-0" data-a="guidedRegenerate">${icon('rgn', 16)}Volver a generar</button>
+    </div>
+    <p class="mu fs-12 m-4-0-8">Usa las flechas para mover días y descansos a tu gusto.</p>
+    ${raw(programRowsHtml(pl))}
+    ${programNameBox()}
+    <div class="h-96"></div>
+    <button class="sb pr p-16 fs-16 r-16" data-a="createSave">Crear programa</button>`;
 };
-const orderWeekPage = () => html`${pgHead('Ordenar semana', 'ownProgramShow')}<p class="mu m-n6-0-8">Mueve días y descansos con las flechas.</p>${raw(programRowsHtml(progDraft.plan))}<div class="h-96"></div><button class="sb pr p-16 fs-16 r-16" data-a="ownProgramEditSave">Guardar orden</button>`;
+const orderWeekPage = () => html`
+  ${pgHead('Ordenar semana', 'ownProgramShow')}
+  <p class="mu m-n6-0-8">Mueve días y descansos con las flechas.</p>
+  ${raw(programRowsHtml(progDraft.plan))}
+  <div class="h-96"></div>
+  <button class="sb pr p-16 fs-16 r-16" data-a="ownProgramEditSave">Guardar orden</button>`;
 const refreshCreate = () => fullPage(progDraft.m == 'mine' ? createFromMine() : progDraft.m == 'guide' ? guidedProposal() : orderWeekPage());
 A.createProgram = () => {
   progDraft = { m: '', name: '', sel: [], plan: null, o: progDraft.o, vr: 0, k: -1, txt: '', dl: null };
@@ -391,7 +503,18 @@ A.ownProgramShow = () => {
     return A.openPrograms();
   const act = S.ownProgramIndex == k;
   const pl = act ? S.plan : p.plan;
-  sheet(html`${pgHead(X(p.n), 'openPrograms')}<p class="mu m-n6-0-10">${p.d || ''}${raw(act ? ' · <b class="c-at">Plan actual</b>' : '')}</p>${raw(programDaysHtml(pl))}${raw(deloadChips(p.dl, 'p'))}<div class="g2 mt-12"><button data-a="ownProgramEdit">Ordenar días</button><button data-a="ownProgramDeleteAsk" class="c-ctx">Borrar</button></div><button data-a="ownProgramShare" class="w-full mt-8">Compartir programa</button><div class="h-84"></div>${raw(act ? '' : '<button class="sb pr p-16 fs-16 r-16" data-a="ownProgramApplyAsk">Usar este programa</button>')}`);
+  sheet(html`
+    ${pgHead(X(p.n), 'openPrograms')}
+    <p class="mu m-n6-0-10">${p.d || ''}${raw(act ? ' · <b class="c-at">Plan actual</b>' : '')}</p>
+    ${raw(programDaysHtml(pl))}
+    ${raw(deloadChips(p.dl, 'p'))}
+    <div class="g2 mt-12">
+      <button data-a="ownProgramEdit">Ordenar días</button>
+      <button data-a="ownProgramDeleteAsk" class="c-ctx">Borrar</button>
+    </div>
+    <button data-a="ownProgramShare" class="w-full mt-8">Compartir programa</button>
+    <div class="h-84"></div>
+    ${raw(act ? '' : '<button class="sb pr p-16 fs-16 r-16" data-a="ownProgramApplyAsk">Usar este programa</button>')}`);
   sheetToTop();
 };
 A.ownProgramApplyAsk = () => {

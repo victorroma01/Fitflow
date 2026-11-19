@@ -110,16 +110,48 @@ export function applyAccent() {
   setAccentVars(document.documentElement, a);
 }
 /* lo principal que cambia con el color: cabecera de un día, botón, chip, barra de progreso y la burbuja de las pestañas */
-const accentPreview = () => html`<div class="acp" aria-hidden="true"><div class="acph"><small>Vista previa</small><b>Pecho</b><span class="acpr"><i></i></span><span class="acpk"><span class="acpb">Empezar</span><span class="chip on">Hoy</span><span class="chip">Mañana</span></span></div><div class="acpn"><span class="on">Workout</span><span>Nutrición</span><span>Dashboard</span><span>Perfil</span></div></div>`;
+const accentPreview = () => html`
+  <div class="acp" aria-hidden="true">
+    <div class="acph">
+      <small>Vista previa</small>
+      <b>Pecho</b>
+      <span class="acpr"><i></i></span>
+      <span class="acpk"><span class="acpb">Empezar</span><span class="chip on">Hoy</span><span class="chip">Mañana</span></span>
+    </div>
+    <div class="acpn"><span class="on">Workout</span><span>Nutrición</span><span>Dashboard</span><span>Perfil</span></div>
+  </div>`;
 export const accentSwatches = () => {
   const own = HEX.test(S.accentColor || '');
   const cur = S.accent == -1 && own ? -1 : S.accent >= 0 && S.accent < ACCENTS.length ? S.accent : DEFAULT_ACCENT;
   const sw = a => 'background:linear-gradient(135deg,' + a[1] + ',' + a[2] + ');color:' + a[4];
   /* sin color propio todavía, el círculo de «Personalizado» lleva todos los colores */
   const cs = own ? sw(customAccent(S.accentColor)) : '';
-  return html`${accentPreview()}<div class="swg">${ACCENTS.map((a, i) => html`<button class="swb${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}"><i data-style="${sw(a)}">${cur == i ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`)}<label class="swb swc${cur == -1 ? ' on' : ''}"><i class="${own ? '' : 'swr'}" data-style="${cs}">${cur == -1 ? '✓' : ''}<input type="color" value="${own ? S.accentColor.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive" aria-label="Elegir un color propio"></i><small>Personalizado</small></label></div><small class="mu acn">Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.</small>`;
+  return html`
+    ${accentPreview()}
+    <div class="swg">
+      ${ACCENTS.map((a, i) => html`
+        <button class="swb${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}">
+          <i data-style="${sw(a)}">${cur == i ? '✓' : ''}</i>
+          <small>${raw(a[0])}</small>
+        </button>`)}
+      <label class="swb swc${cur == -1 ? ' on' : ''}">
+        <i class="${own ? '' : 'swr'}" data-style="${cs}">
+          ${cur == -1 ? '✓' : ''}
+          <input type="color" value="${own ? S.accentColor.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive"
+              aria-label="Elegir un color propio">
+        </i>
+        <small>Personalizado</small>
+      </label>
+    </div>
+    <small class="mu acn">
+      Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.
+    </small>`;
 };
-export const themeSegment = () => html`<div class="seg">${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`<button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="themeChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
+export const themeSegment = () => html`
+  <div class="seg">
+    ${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`
+      <button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="themeChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}
+  </div>`;
 export const glassMode = () => {
   const m = S.glassLevel;
   return (m === 0 || m === 1 || m === 2 || m === 3) ? m : (S.glassOn === 0 ? 0 : 2);
@@ -129,10 +161,36 @@ const GLASS_INFO = { 3: 'Más transparencia, desenfoque y brillo. Es el más vis
 export const glassCard = () => {
   const m = glassMode();
   const g = m > 0;
-  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == /** @type {any} */ (x[0]) ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><small class="mu d-block mt-4">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu d-block mt-4">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
+  return html`
+    <label>Estilo</label>
+    <div class="gst">
+      <button class="gso${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}">
+        <i class="gpv gc"></i>
+        <b>Cristal</b>
+        <small>Translúcido y con brillos</small>
+      </button>
+      <button class="gso${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}">
+        <i class="gpv fl"></i>
+        <b>Clásico</b>
+        <small>Sólido, sin transparencias</small>
+      </button>
+    </div>
+    ${raw(g ? html`
+      <label>Intensidad del Cristal</label>
+      <div class="seg">
+        ${GLASS_LEVELS.map(x => html`
+          <button class="${m == /** @type {any} */ (x[0]) ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}
+      </div>
+      <small class="mu d-block mt-4">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>
+    ` : '<small class="mu d-block mt-4">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
 };
 /** «Reducir animaciones» (S.reduceMotion): sin deslizamientos ni fundidos al abrir páginas y ventanas. */
-export const motionCard = () => html`<label>Animaciones</label><label class="srk"><input type="checkbox" data-c="reduceMotion"${S.reduceMotion ? ' checked' : ''}> Reducir animaciones</label><small class="mu d-block mt-n4">Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.</small>`;
+export const motionCard = () => html`
+  <label>Animaciones</label>
+  <label class="srk"><input type="checkbox" data-c="reduceMotion"${S.reduceMotion ? ' checked' : ''}> Reducir animaciones</label>
+  <small class="mu d-block mt-n4">
+    Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.
+  </small>`;
 /** Tras cada R(): las clases de <html> del estilo Cristal (gl, data-gm) y de reducir animaciones (rm), como diga S. */
 export const lookSync = () => {
   try {

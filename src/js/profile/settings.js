@@ -26,7 +26,13 @@ import { rpeOn, rpeSettings } from '../workout/rpe.js';
 import { html, raw } from '../core/html.js';
 /* página abierta: '' la principal, una clave de SETTINGS_PAGES o null si Ajustes está cerrado */
 let settingsSub = null;
-const settingsRow = (ic, label, val, a, o) => html`<button class="sr" data-a="${a}"${raw(o && o.v ? ' data-v="' + o.v + '"' : '')}><span class="sri${o && o.red ? ' red' : ''}">${icon(ic, 20)}</span><span class="srl${o && o.red ? ' red' : ''}">${raw(label)}</span>${val ? html`<span class="srv">${val}</span>` : ''}${o && o.act ? '' : icon('chr', 18)}</button>`;
+const settingsRow = (ic, label, val, a, o) => html`
+  <button class="sr" data-a="${a}"${raw(o && o.v ? ' data-v="' + o.v + '"' : '')}>
+    <span class="sri${o && o.red ? ' red' : ''}">${icon(ic, 20)}</span>
+    <span class="srl${o && o.red ? ' red' : ''}">${raw(label)}</span>
+    ${val ? html`<span class="srv">${val}</span>` : ''}
+    ${o && o.act ? '' : icon('chr', 18)}
+  </button>`;
 const ago = t => {
   const d = Math.floor((Date.now() - t) / 864e5);
   return d <= 0 ? 'Hoy' : d == 1 ? 'Ayer' : 'Hace ' + d + ' días';
@@ -44,7 +50,11 @@ const SETTINGS_PAGES = {
   acento: () => ['Color de acento', accentSwatches()],
   inicio: () => ['Al abrir la app', startTabCard()],
   unidades: () => ['Unidades', unitsCard()],
-  sonido: () => ['Sonido y avisos', html`<label class="srk"><input type="checkbox" ${S.sound === 0 ? '' : 'checked'} data-c="soundToggle"> Sonidos del descanso</label><button data-a="soundTest" class="w-full m-8-0-6">Probar sonido</button>${alertSettings()}${badgeCard()}`],
+  sonido: () => ['Sonido y avisos', html`
+    <label class="srk"><input type="checkbox" ${S.sound === 0 ? '' : 'checked'} data-c="soundToggle"> Sonidos del descanso</label>
+    <button data-a="soundTest" class="w-full m-8-0-6">Probar sonido</button>
+    ${alertSettings()}
+    ${badgeCard()}`],
   cuenta: () => ['Cuenta', accountPage()],
   clave: () => ['Cambiar contraseña', passwordPage()],
   privacidad: () => ['Privacidad', html`<div class="srt">${privacyText().map(p => html`<p>${p}</p>`)}</div>`],
@@ -61,7 +71,9 @@ const accountRows = () => [settingsRow('user', 'Cuenta', acctName(), 'openSettin
 const appearanceRows = () => {
   const theme = S.theme == 'dark' ? 'Oscuro' : S.theme == 'light' ? 'Claro' : 'Automático';
   const accent = accentNow();
-  const swatch = html`<i class="srd" data-style="background:linear-gradient(135deg,${raw(accent[1])},${raw(accent[2])})"></i>${raw(accent[0])}`;
+  const swatch = html`
+    <i class="srd" data-style="background:linear-gradient(135deg,${raw(accent[1])},${raw(accent[2])})"></i>
+    ${raw(accent[0])}`;
   return [settingsRow('pal', 'Tema y estilo', theme + ' · ' + (glassMode() > 0 ? 'Cristal' : 'Clásico'), 'openSettingsPage', { v: 'tema' }), settingsRow('drop', 'Color de acento', swatch, 'openSettingsPage', { v: 'acento' }), settingsRow('home', 'Al abrir la app', startTabName(), 'openSettingsPage', { v: 'inicio' })];
 };
 /* Entreno: unidades y sonido */
@@ -80,7 +92,20 @@ const advancedRows = () => [settingsRow('gear', 'Esfuerzo (RPE)', rpeOn() ? 'Act
 const infoRows = () => [settingsRow('shd', 'Privacidad', '', 'openSettingsPage', { v: 'privacidad' }), settingsRow('doc', 'Aviso legal', '', 'openSettingsPage', { v: 'legal' })];
 /* la página principal de Ajustes, por secciones, y al final «Cerrar sesión» */
 function settingsMain() {
-  return html`<div id="ajs">${pgHead('Ajustes')}${settingsSection('Cuenta', accountRows())}${settingsSection('Apariencia', appearanceRows())}${settingsSection('Entreno', workoutRows())}${settingsSection('Datos', dataRows())}${settingsSection('App', appRows())}${offlineNote()}${settingsSection('Ajustes avanzados', advancedRows())}${settingsSection('Información', infoRows())}<div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div><div class="h-40"></div></div>`;
+  return html`
+    <div id="ajs">
+      ${pgHead('Ajustes')}
+      ${settingsSection('Cuenta', accountRows())}
+      ${settingsSection('Apariencia', appearanceRows())}
+      ${settingsSection('Entreno', workoutRows())}
+      ${settingsSection('Datos', dataRows())}
+      ${settingsSection('App', appRows())}
+      ${offlineNote()}
+      ${settingsSection('Ajustes avanzados', advancedRows())}
+      ${settingsSection('Información', infoRows())}
+      <div class="cd srg sro">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div>
+      <div class="h-40"></div>
+    </div>`;
 }
 const settingsPage = k => {
   if (!k || !Object.prototype.hasOwnProperty.call(SETTINGS_PAGES, k))

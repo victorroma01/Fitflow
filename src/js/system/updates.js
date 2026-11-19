@@ -75,7 +75,9 @@ export const offlineText = () => {
   const on = typeof navigator != 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller;
   return swState < 0 ? 'Uso sin conexión: no disponible en este entorno. Tus datos sí quedan guardados en el dispositivo, pero la app necesita internet para abrirse.' : on ? 'Uso sin conexión: activo. Si pierdes la cobertura, StrataFit se abre con la última versión que cargaste.' : 'Uso sin conexión: se prepara tras cargar la app una vez con conexión y volver a abrirla.';
 };
-export const offlineNote = () => html`<small class="mu d-block mt-10">${offlineText()}</small>${raw(isStandalone() ? '' : '<small class="mu d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
+export const offlineNote = () => html`
+  <small class="mu d-block mt-10">${offlineText()}</small>
+  ${raw(isStandalone() ? '' : '<small class="mu d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
 export let updatesOn = FFDEP;
 let updateReady = 0;
 let updateCheckedAt = 0;
@@ -113,7 +115,10 @@ const releaseNotesHtml = (info, current) => {
   const all = info && Array.isArray(info.history) && info.history.length ? info.history : (info ? [info] : []);
   const list = current ? all : all.filter(v => isNewerVersion(v.version, APPV));
   const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
-  const notes = shown.map(v => (shown.length > 1 ? html`<p class="upv">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).slice(0, 8).map(i => html`<li>${i}</li>`)}</ul>`).join('')).join('');
+  const notes = shown.map(v => (shown.length > 1 ? html`<p class="upv">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`
+    <p class="ups">${s.title}</p>
+    <ul>${(s.items || []).slice(0, 8).map(i => html`<li>${i}</li>`)}</ul>
+  `).join('')).join('');
   return notes || '<ul><li>Mejoras y correcciones.</li></ul>';
 };
 /** Ajustes → «Ver nota de actualización» (F-28): la nota de la versión instalada, solo la última, con todos sus cambios y,
@@ -121,13 +126,29 @@ const releaseNotesHtml = (info, current) => {
 export const releaseNotePage = () => {
   const r = RELEASE;
   const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-  const body = (r.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
-  return html`<div class="cd rnp"><b class="rnv">Versión ${r.version || APPV}</b>${d ? html`<small class="mu">${d}</small>` : ''}${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}</div><div class="rnc"><button class="lnk" data-a="openSettings">Cerrar</button></div>`;
+  const body = (r.sections || []).map(s => html`
+    <p class="ups">${s.title}</p>
+    <ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
+  return html`
+    <div class="cd rnp">
+      <b class="rnv">Versión ${r.version || APPV}</b>
+      ${d ? html`<small class="mu">${d}</small>` : ''}
+      ${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}
+    </div>
+    <div class="rnc"><button class="lnk" data-a="openSettings">Cerrar</button></div>`;
 };
 /** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
 const updatePopupHtml = (info, mode) => {
   const v = info && info.version ? info.version : '';
-  return html`<div class="updb" data-a="updateLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt"><button class="updx" data-a="updateLater" aria-label="Cerrar">×</button><small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small><h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3><div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div><button class="upb" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button></div>`;
+  return html`
+    <div class="updb" data-a="updateLater"></div>
+    <div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt">
+      <button class="updx" data-a="updateLater" aria-label="Cerrar">×</button>
+      <small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small>
+      <h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3>
+      <div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div>
+      <button class="upb" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button>
+    </div>`;
 };
 const showPopup = (info, mode) => {
   const old = document.getElementById('upd');
