@@ -115,6 +115,12 @@ línea.
   sincronización (diez): las pruebas al azar fallan con las diez, y con cada una falla también una prueba fija de
   `tests/cloud.py` o `tests/storage.py` (la de «lo subido se apunta cuando el móvil ha terminado de guardarlo» es nueva)
   ([pruebas al azar](docs/tecnica/pruebas.md#pruebas-al-azar-del-guardado-y-la-sincronización)).
+- Tipos comprobados (`tools/types.js`, en la batería): el comprobador de TypeScript pasa por todos los módulos, que siguen
+  siendo JavaScript, con sus tipos en comentarios. Falla si se usa una clave de `S` que no existe, un valor de otro tipo o una
+  función con lo que no es; en los nueve módulos del guardado y la sincronización, además, todo lleva su tipo y nada que pueda
+  ser `null` se usa sin mirarlo. La forma de `S`, de `W` y de sus datos queda escrita en `src/types`. Solo se han añadido
+  comentarios: la app compilada es idéntica, byte a byte, a la de antes de añadirlos
+  ([tipos comprobados](docs/tecnica/tipos.md)).
 - El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
   revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
   primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.

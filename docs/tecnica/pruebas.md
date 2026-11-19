@@ -1,7 +1,7 @@
 # Pruebas
 
-`bash tests/run.sh` compila y pasa, en este orden, el formato, el mapa de módulos, las reglas de `tools/check.js` y todas las
-pruebas. Cualquier fallo hace que falle entero. Cada prueba tiene un tiempo máximo (15 minutos; `SF_LIMIT`, en segundos, lo
+`bash tests/run.sh` compila y pasa, en este orden, el formato, el mapa de módulos, las reglas de `tools/check.js`, los tipos
+(`tools/types.js`) y todas las pruebas. Cualquier fallo hace que falle entero. Cada prueba tiene un tiempo máximo (15 minutos; `SF_LIMIT`, en segundos, lo
 cambia): una que se quede colgada se para y falla con su nombre, en vez de agotar el tiempo del trabajo de GitHub sin decir
 cuál era (pasó una vez con `tests/contrast.py`, sin que se haya podido repetir). Las pruebas abren la app en un navegador de verdad con Playwright: Chrome (Chromium)
 por defecto o, con `SF_BROWSER=webkit`, el motor de Safari (con `SF_BROWSER=firefox`, el de Firefox), sirviendo la app por HTTP
@@ -19,6 +19,7 @@ antes de pintar y las guarda sin esperar (I-04), `page.goto` y `page.reload` esp
 | `tools/modindex.js --check` | Que el [mapa de módulos](modulos.md) está al día. |
 | `tools/figure.js --check` | Que `data/figure.js` (el modelo de perfil de las [figuras](figuras.md)) está al día con los puntos del dibujo. |
 | `tools/check.js` | Sintaxis, importaciones, orden de carga, identificadores sin declarar, duplicados, acciones sin manejador, botones sin nombre, código muerto y CSS sin usar ([reglas](desarrollo.md#reglas-de-calidad)). |
+| `tools/types.js` | Los tipos de todos los módulos, con el comprobador de TypeScript ([Tipos comprobados](tipos.md)): claves de `S` y campos de los datos que existen y con su tipo, funciones llamadas con lo que piden y, en el guardado y la sincronización (nivel estricto), todo con su tipo y nada que pueda ser `null` sin mirarlo. |
 | `tests/changelog.py` | Cómo lee `build.py` el [historial de cambios](../../CHANGELOG.md) y compone la tarjeta de cada versión, sin navegador: los apartados que ve el usuario, las revisiones (la 1.1.0.1, con su cuarta cifra, enseña lo que arregla y, debajo, lo de la 1.1.0, que ya no sale aparte; las de la 1.0.3, que lo dicen en su entrada), lo que detiene la compilación y el historial de verdad. |
 | `tests/merge.test.mjs` | La fusión de datos entre dispositivos (`cloud/merge`), sin navegador: cada lado gana lo suyo, comidas e historial se juntan, lo borrado se borra. |
 | `tests/exinfo.test.mjs` | El catálogo de ejercicios (T-05), sin navegador: cada ejercicio de la librería tiene su consejo y su ejecución, y no hay dos iguales ni parecidos (más de la mitad de las secuencias de tres palabras en común), ni un consejo igual a una ejecución. |

@@ -233,7 +233,7 @@ A.removePlanExercise = i => {
 /* «Reiniciar semana» quita las marcas de hecho de la semana (los entrenos guardados no se tocan). No pregunta: se puede deshacer */
 A.resetWeek = () => {
   const marks = Object.keys(S.doneDays).filter(k => k.startsWith(S.week + '-'));
-  const before = marks.map(k => [k, S.doneDays[k]]);
+  const before = marks.map(k => /** @type {[string, any]} */ ([k, S.doneDays[k]]));
   marks.forEach(k => delete S.doneDays[k]);
   saveState('core');
   sheet();

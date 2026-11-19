@@ -8,7 +8,8 @@
    descritas en docs/tecnica/estado.md.
    Define: STATE_KEYS, WORKOUT_KEYS, nameOf, storedOf, STATE_NAME, STATE_STORED, WORKOUT_NAME, WORKOUT_STORED, translate, stateName, stateToStored, stateFromStored, workoutToStored, workoutFromStored, SCHEMA_TABLES
 */
-/** S: [clave guardada, nombre en el programa]. Lo que ya se llamaba bien (plan, logs, meals…) se queda igual. */
+/** S: [clave guardada, nombre en el programa]. Lo que ya se llamaba bien (plan, logs, meals…) se queda igual.
+    @type {[string, string][]} */
 const STATE_KEYS = [
   /* Workout */
   ['tab', 'tab'], ['prog', 'program'], ['np', 'noProgram'], ['nw', 'welcomePending'], ['cpi', 'ownProgramIndex'], ['lv', 'level'],
@@ -31,33 +32,44 @@ const STATE_KEYS = [
   /* copias de seguridad */
   ['bkd', 'lastBackupDate'], ['cb', 'cloudBackup'], ['nbk', 'backupNoticeOff']
 ];
-/** W, el entreno en curso: [clave guardada, nombre en el programa]. */
+/** W, el entreno en curso: [clave guardada, nombre en el programa].
+    @type {[string, string][]} */
 const WORKOUT_KEYS = [
   ['t0', 'startedAt'], ['re', 'restEndsAt'], ['p', 'pausedAt'], ['x', 'sets'], ['o', 'openPanels'], ['fd', 'folded'],
   ['wu', 'warmupsDone'], ['ri', 'restAfter'], ['lb', 'lastBeep'], ['lc', 'lastCurrent'], ['dl', 'deload']
 ];
+/** @param {[string, string][]} list */
 const nameOf = list => new Map(list.map(k => [k[0], k[1]]));
+/** @param {[string, string][]} list */
 const storedOf = list => new Map(list.map(k => [k[1], k[0]]));
 const STATE_NAME = nameOf(STATE_KEYS);
 const STATE_STORED = storedOf(STATE_KEYS);
 const WORKOUT_NAME = nameOf(WORKOUT_KEYS);
 const WORKOUT_STORED = storedOf(WORKOUT_KEYS);
-/* un objeto con sus claves traducidas, en el mismo orden; las que no están en la tabla, tal cual */
+/** Un objeto con sus claves traducidas, en el mismo orden; las que no están en la tabla, tal cual.
+    @param {Record<string, any>} o
+    @param {Map<string, string>} map */
 const translate = (o, map) => {
+  /** @type {Record<string, any>} */
   const out = {};
   for (const k of Object.keys(o))
     out[map.get(k) || k] = o[k];
   return out;
 };
-/** Nombre en el programa de una clave guardada de S: stateName('sel') → 'selectedDay'. */
+/** Nombre en el programa de una clave guardada de S: stateName('sel') → 'selectedDay'.
+    @param {string} stored */
 export const stateName = stored => STATE_NAME.get(stored) || stored;
-/** S (o una parte) con las claves guardadas, para escribirlo en el móvil, en la nube o en una copia. */
+/** S (o una parte) con las claves guardadas, para escribirlo en el móvil, en la nube o en una copia.
+    @param {Record<string, any>} s */
 export const stateToStored = s => translate(s, STATE_STORED);
-/** Lo guardado (en el móvil, en la nube o en una copia), con los nombres del programa. */
+/** Lo guardado (en el móvil, en la nube o en una copia), con los nombres del programa.
+    @param {Record<string, any>} o */
 export const stateFromStored = o => translate(o, STATE_NAME);
-/** W con las claves guardadas (workout/resume). */
+/** W con las claves guardadas (workout/resume).
+    @param {Record<string, any>} w */
 export const workoutToStored = w => translate(w, WORKOUT_STORED);
-/** Un entreno a medias guardado, con los nombres del programa. */
+/** Un entreno a medias guardado, con los nombres del programa.
+    @param {Record<string, any>} o */
 export const workoutFromStored = o => translate(o, WORKOUT_NAME);
 /** Las dos tablas, para las pruebas (core/debug): cada lado sin repetidos y ningún nombre igual a la clave guardada de otra. */
 export const SCHEMA_TABLES = { state: STATE_KEYS, workout: WORKOUT_KEYS };

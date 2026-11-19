@@ -74,7 +74,7 @@ novedades.
 | [Perfil y Ajustes](docs/funcional/perfil-y-ajustes.md) | [Servidor: Firebase](docs/tecnica/backend.md) |
 | [Cuenta](docs/funcional/cuenta.md) | [Desarrollo](docs/tecnica/desarrollo.md) |
 | [En el móvil](docs/funcional/experiencia.md) | [Pruebas](docs/tecnica/pruebas.md) |
-| [Datos y privacidad](docs/funcional/datos-y-privacidad.md) | |
+| [Datos y privacidad](docs/funcional/datos-y-privacidad.md) | [Tipos comprobados](docs/tecnica/tipos.md) |
 
 ## Desarrollo
 

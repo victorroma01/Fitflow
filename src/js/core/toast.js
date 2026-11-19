@@ -9,7 +9,9 @@ import { A } from './registry.js';
 import { html } from './html.js';
 /* lo que hace «Deshacer» en el aviso que se ve, si lo lleva */
 let undoAction = null;
-/** Enseña el aviso `m`. Con `undo` (una función), lleva el botón «Deshacer», que la llama. */
+/** Enseña el aviso `m`. Con `undo` (una función), lleva el botón «Deshacer», que la llama. En `toast.h` guarda el
+    temporizador que lo quita.
+    @type {{ (m: any, undo?: any): void, h?: any }} */
 export const toast = (m, undo) => {
   const e = $('#tt');
   undoAction = typeof undo == 'function' ? undo : null;

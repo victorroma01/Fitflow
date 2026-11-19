@@ -19,6 +19,7 @@ const LIB_EXTRA = "Culturismo|Pecho|Press banca declinado,Press banca mancuernas
 export const GROUPS = ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Antebrazos', 'Abdomen', 'Cuádriceps', 'Isquios y glúteos', 'Gemelos', 'CrossFit', 'Hyrox', 'Funcional', 'Cardio', 'Propio'];
 export const groupOf = e => e.g == 'Propio' ? 'Propio' : e.c == 'Culturismo' ? e.g : e.c;
 export const groupLabel = g => g == 'Propio' ? 'Mis ejercicios' : g;
+/** @returns {[any, boolean]} el ejercicio que dice el texto `t` de un programa y si empieza por «+» (va en bloque con el anterior) */
 export const parseExToken = t => {
   const b = t[0] == '+';
   if (b)

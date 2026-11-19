@@ -60,6 +60,7 @@ const GLOW_MIN_LIGHT = .165;
 /* el tono oscuro de un color propio, como mucho así de claro: encima va texto blanco (la cabecera del día) */
 const DARK_TONE_MAX = .06;
 /* el último color propio calculado: [#rrggbb, sus tonos]. Se pide en cada pintado (Ajustes, análisis…) y casi siempre es el mismo */
+/** @type {[string, string[]]} */
 let customAccentLast = ['', null];
 /** Los tonos de un color elegido a mano, como los de serie. El principal es ese color, aclarado u oscurecido solo si hace falta
   para que se vea sobre el fondo oscuro y sobre el claro, o para que el texto de encima se lea. */
@@ -128,7 +129,7 @@ const GLASS_INFO = { 3: 'Más transparencia, desenfoque y brillo. Es el más vis
 export const glassCard = () => {
   const m = glassMode();
   const g = m > 0;
-  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><small class="mu d-block mt-4">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu d-block mt-4">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
+  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == /** @type {any} */ (x[0]) ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><small class="mu d-block mt-4">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu d-block mt-4">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
 };
 /** «Reducir animaciones» (S.reduceMotion): sin deslizamientos ni fundidos al abrir páginas y ventanas. */
 export const motionCard = () => html`<label>Animaciones</label><label class="srk"><input type="checkbox" data-c="reduceMotion"${S.reduceMotion ? ' checked' : ''}> Reducir animaciones</label><small class="mu d-block mt-n4">Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.</small>`;
@@ -140,8 +141,8 @@ export const lookSync = () => {
     if (d.classList.contains('gl') !== (m > 0))
       d.classList.toggle('gl', m > 0);
     if (m > 0) {
-      if (d.dataset.gm != m)
-        d.dataset.gm = m;
+      if (d.dataset.gm != /** @type {any} */ (m))
+        d.dataset.gm = /** @type {any} */ (m);
     }
     else if (d.hasAttribute('data-gm'))
       d.removeAttribute('data-gm');

@@ -17,6 +17,7 @@ import { R } from '../core/render.js';
 import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS } from '../nutrition/diet.js';
 import { html, raw } from '../core/html.js';
 /** Los datos con número: [clave en S.biometrics, rótulo, unidad, mínimo, máximo]. */
+/** @type {[string, string, string, number, number][]} */
 const BIO_NUMBERS = [['age', 'Edad', 'años', 14, 99], ['h', 'Altura', 'cm', 120, 230], ['w', 'Peso', 'kg', 30, 300]];
 /* la bienvenida abierta: { step: 1 la bienvenida | 2 los datos, sex: el elegido, done: lo que se hace al acabar } */
 let welcome = null;

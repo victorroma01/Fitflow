@@ -18,8 +18,10 @@ export const LOGIN_PHOTO = MEDIA.login;
 /** La portada de un día por su nombre: la primera regla que encaja. Primero lo de CrossFit, Hyrox y funcional (la simulación
     de una carrera, el SkiErg, el trineo…), que puede nombrar también un grupo («Sled pull»), y la carrera; después los grupos.
     Un día que no encaja con ninguna lleva la de sus ejercicios (workout/images). */
+/** @type {[RegExp, string][]} */
 export const DAY_PHOTO_RULES = [[/descanso/i, 'descanso'], [/^(core|abs\b|abdom)/i, 'core'], [/simulaci|competici|competencia/i, 'competencia'], [/ski ?erg|^remo\b|erg[oó]metro/i, 'skierg'], [/trineo|sled/i, 'trineo'], [/wall ?balls?/i, 'wallballs'], [/snatch|arrancada|halterofilia|ol[ií]mpic/i, 'snatch'], [/thruster/i, 'thrusters'], [/box ?jumps?|burpee/i, 'boxjumps'], [/granjero|farmer|funcional/i, 'granjero'], [/hyrox/i, 'trineo'], [/wod|crossfit|metcon|amrap|emom|for time|tabata/i, 'thrusters'], [/carrera|rodaje|intervalos|zona 2|cardio|cuestas/i, 'cardio'], [/pecho|push/i, 'pecho'], [/espalda|pull|jal/i, 'espalda'], [/hombro/i, 'hombros'], [/brazo|b[ií]ceps|tr[ií]ceps/i, 'brazos'], [/legs|inferior|gl[uú]teo|isquio/i, 'legs'], [/pierna/i, 'piernas'], [/torso|superior/i, 'torso']];
 /** La portada de un ejercicio de CrossFit, Hyrox, funcional o cardio por su nombre, si tiene una suya: el SkiErg y el remo
     (el de ergómetro, no el de espalda), el trineo, los wall balls, los levantamientos olímpicos, el thruster, los saltos al
     cajón y los burpees, y las cargas. */
+/** @type {[RegExp, string][]} */
 export const EXERCISE_PHOTO_RULES = [[/ski ?erg|^remo (\d|erg|zona)/i, 'skierg'], [/sled|trineo/i, 'trineo'], [/wall ?balls?/i, 'wallballs'], [/snatch|clean|jerk|arrancada|cargada|envi[oó]n/i, 'snatch'], [/thruster/i, 'thrusters'], [/box (jump|step)|burpee|caj[oó]n/i, 'boxjumps'], [/farmer|granjero|carry/i, 'granjero']];

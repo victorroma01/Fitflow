@@ -9,6 +9,7 @@ ver la [documentación funcional](../funcional/README.md).
 | [Mapa de módulos](modulos.md) | Qué hace cada módulo de `src/js`, qué declara y cuántas acciones registra. Se genera solo. |
 | [Nombres de la V1.0.2](nombres.md) | Los nombres de antes y de ahora de las acciones y de las claves del estado, para leer código, issues o commits anteriores. |
 | [Estado y datos](estado.md) | Diccionario de datos: cada clave de `S` y del almacenamiento, y qué entra en la copia de seguridad. |
+| [Tipos comprobados](tipos.md) | Cómo se comprueban los tipos del código (JavaScript con sus tipos en comentarios), qué detecta, los dos niveles y por dónde seguir. |
 | [Servidor: Firebase](backend.md) | El servidor: cuentas, roles, documentos de Firestore, sincronización sin conexión, reglas de seguridad y administración desde GitHub. |
 | [Desarrollo](desarrollo.md) | Requisitos, comandos, cómo añadir una función, reglas de calidad y cómo se publica una versión. |
 | [Pruebas](pruebas.md) | Qué comprueba cada prueba, en qué navegadores y cuándo se pasan. |
@@ -84,6 +85,9 @@ el que usan la mayoría de las pruebas.
   borra los datos de otra cuenta.
 - **Sin código muerto**: `tools/check.js` falla si algo declarado, exportado, registrado o dibujado no se usa, incluido el CSS
   ([reglas](desarrollo.md#reglas-de-calidad)).
+- **Tipos comprobados**: `tools/types.js` falla si un módulo usa una clave del estado que no existe, le da un valor de otro
+  tipo o llama a una función con lo que no es; en el guardado y la sincronización, además, todo lleva su tipo
+  ([cómo](tipos.md)).
 
 ## Convenciones
 

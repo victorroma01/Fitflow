@@ -43,6 +43,7 @@ const loadNum = v => usesLb() ? toDisplayWeight(v) : v;
 const volNum = v => loadNum(v) / 1000;
 const volUnit = () => usesLb() ? ' k lb' : ' t';
 /** [primer día, último día (hoy si es el mes en curso), si está en curso, días que lleva]. */
+/** @returns {[string, string, boolean, number]} el primer día del mes `ym`, el último (hoy, si el mes no ha acabado), si sigue abierto y cuántos días van */
 const monthRange = ym => {
   const [y, m] = ym.split('-').map(Number);
   const a = ym + '-01';
@@ -370,7 +371,7 @@ const analysisPdf = async (ym) => {
   need(130);
   {
     const R = m.weeks;
-    const mx = Math.max(1, m.pwk, ...R.map(r => r[1]));
+    const mx = Math.max(1, m.pwk, ...R.map((/** @type {any[]} */ r) => r[1]));
     const ch = 92;
     const top = y + 14;
     const bw = (WD - 40) / R.length;
@@ -415,7 +416,7 @@ const analysisPdf = async (ym) => {
   else {
     para(weightChange(w) + goalNote(w) + ' · último: ' + fmtN(w.last, 1) + ' kg.', { bold: true });
     need(120);
-    const P = (w.before ? [{ d: m.a, w: w.before.w, pre: 1 }] : []).concat(w.pts);
+    const P = /** @type {any[]} */ (w.before ? [{ d: m.a, w: w.before.w, pre: 1 }] : []).concat(w.pts);
     const v = P.map(p => p.w);
     const lo = Math.min(...v) - .5;
     const hi = Math.max(...v) + .5;
@@ -474,7 +475,7 @@ const analysisPdf = async (ym) => {
   /* otros datos y conclusión */
   if (m.o.ms.length || m.o.ach.length) {
     section('Otros datos');
-    rows('Medidas', m.o.ms.map(([k, v]) => [k, (v > 0 ? '+' : '−') + fmtN(Math.abs(v), 1) + ' cm']));
+    rows('Medidas', m.o.ms.map((/** @type {[string, number]} */ [k, v]) => [k, (v > 0 ? '+' : '−') + fmtN(Math.abs(v), 1) + ' cm']));
     if (m.o.ach.length) {
       y += 4;
       para('Logros conseguidos: ' + m.o.ach.join(' · ') + '.', { size: 9.5 });

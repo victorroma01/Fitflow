@@ -10,7 +10,8 @@ import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
 import { dropSavedState } from '../core/persist.js';
 /** { uid, u: usuario, it: token de sesión, rt: token de renovación, exp: caducidad del token (ms), x: 1 si la sesión ya no
-  vale y hay que volver a entrar } o null. */
+  vale y hay que volver a entrar } o null.
+  @type {Account | null} */
 export let account = null;
 const readAccount = () => {
   try {

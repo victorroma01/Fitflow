@@ -97,6 +97,35 @@ le haya pasado a nadie: R1 necesita un móvil sin sitio y R2, la app abierta dos
 - **Un móvil sin sitio de verdad**: se simula haciendo fallar las escrituras de IndexedDB con el mismo error
   (`QuotaExceededError`).
 
+## Después de la revisión: pruebas al azar y tipos
+
+Al día siguiente (19 de noviembre de 2026), en la rama `tipos-y-pruebas`, se añadieron dos cosas que salieron de valorar el
+código: pruebas al azar del guardado y la sincronización ([cómo son](pruebas.md#pruebas-al-azar-del-guardado-y-la-sincronización))
+y tipos comprobados ([cómo](tipos.md)). Las pruebas al azar encontraron dos casos más, los dos con el móvil sin sitio:
+
+| Id | Prioridad | Qué pasaba | Corrección |
+| --- | --- | --- | --- |
+| R4 | High | **Un guardado que fallaba con otro esperando detrás podía dejar la app sin poder leer sus datos.** Los guardados se deciden al momento, dando por escrito lo que el anterior todavía escribe. Si ese fallaba (sin sitio), el siguiente podía escribir el núcleo nombrando un mes de comidas que no llegó a escribirse: al volver a abrir la app faltaba esa parte, salía «No se pudieron leer tus datos» y la app no guardaba ni sincronizaba hasta «Bajar de mi cuenta». Reproducido en una compilación de la 1.0.31 publicada; el código era el mismo desde la V1.0.2. | `core/persist` (`writeIdb`): si un guardado falla, los decididos detrás ya no se escriben, lo que se sabe de cada clave vuelve a lo escrito de verdad y el siguiente guardado lo mira todo ([si un guardado falla](estado.md#si-un-guardado-falla)). Prueba fija en `tests/storage.py`. |
+| R5 | Low | **Algo borrado sin conexión justo después de volver el sitio podía reaparecer.** Lo que bajaba de la nube mientras el móvil no podía guardar no se apuntaba como sincronizado (bien: es la corrección de R1), pero tampoco al volver el sitio, hasta la siguiente sincronización. Si entre medias se borraba sin conexión y se cerraba la app, al sincronizar parecía algo que el móvil nunca tuvo, y volvía. No se perdía nada. | `cloud/sync` (`noteWaiting`): lo que esperaba se apunta en cuanto un guardado sale bien, sin adelantarse a una sincronización en marcha ni a guardados a medias (una primera versión de este arreglo sí se adelantaba: lo vio el repaso, y tiene su prueba fija). Queda un caso que no se cierra sin cambiar el formato de lo guardado, documentado en [lo que puede volver a aparecer](backend.md#lo-que-puede-volver-a-aparecer). Pruebas fijas en `tests/cloud.py`. |
+
+Para saber si las pruebas al azar detectan fallos de verdad, se quitó cada protección del guardado y de la sincronización, una
+cada vez (diez): fallan con las diez, y con cada una falla también una prueba fija
+([la tabla](pruebas.md#qué-fallos-detectan)). Una de esas protecciones no tenía prueba fija (lo subido se apunta cuando el móvil ha
+terminado de guardarlo) y ahora la tiene.
+
+Los tipos no encontraron fallos: sirven para que no entren. Para añadirlos solo se tocaron comentarios, y la app compilada es
+idéntica, byte a byte, a la de antes.
+
+Dos cosas más, para decidir:
+
+- **Guardar cada parte junto a sus huellas**, en la misma transacción de IndexedDB (hoy las huellas van en localStorage), o
+  apuntar los borrados uno a uno. Quitaría el caso que queda de R5. Cambia el formato de lo guardado y necesita su migración:
+  mejor en una versión propia.
+- **Si la sincronización falla a mitad de juntar lo bajado** (un error del código al aplicar un documento, no de la red), las
+  huellas de los documentos ya juntados se guardan antes que sus datos, que se escriben con el siguiente guardado. Sale de leer
+  el código; no se ha intentado provocar (haría falta un fallo del propio código en ese punto), así que queda anotado y sin
+  tocar.
+
 ## Para decidir
 
 No son fallos; son mejoras que tocan cosas que decide el propietario.
