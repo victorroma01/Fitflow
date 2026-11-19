@@ -28,6 +28,11 @@ quedaría sin estilo, o el código sin encontrarlo, y nada más lo diría.
 Unas pocas clases no tienen estilo propio: el código las pone solo para encontrar el elemento (el recorrido, las pruebas). Están
 apuntadas en `HOOKS`, en la misma herramienta.
 
+Mira también **las pruebas**: toda clase que buscan (`querySelector`, `closest`, `matches` y los ayudantes que reciben un
+selector, como `txt` o `click`) tiene que estar en `src/css`. Una prueba que busca una clase que no existe no siempre falla:
+si comprueba que algo «no está», pasaría siempre. Las que buscan a propósito una clase que ya no existe, para ver que no
+vuelve (la foto de una ficha, el pie con el copyright), están apuntadas en `GONE`.
+
 ## Cómo se renombra una clase
 
 Una clase se llama igual en cuatro sitios: el selector del CSS, el HTML que pinta el código, lo que el código busca o cambia
@@ -68,6 +73,10 @@ La prueba no es un trámite. En el segundo lote, el HTML salió distinto en 55 d
 saca del HTML con una expresión regular que llevaba escrito el nombre viejo de su clase, y con el nuevo ya no lo encontraba. La
 app habría dejado de distinguir una página de otra, y con eso el camino para volver atrás. Desde entonces la herramienta lee
 también las expresiones regulares.
+
+Y en las pruebas quedó un selector con el nombre viejo, `b.wkdl`: la herramienta no tomaba por clase un nombre pegado a una
+etiqueta de una letra, porque fuera de un selector eso es código (`b.on`). Ahora, en lo que recibe un selector, todo `.nombre`
+es una clase, y `--check` mira también las pruebas.
 
 ## Clases renombradas en la V1.0.32
 
