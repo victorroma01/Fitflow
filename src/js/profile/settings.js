@@ -28,9 +28,9 @@ import { html, raw } from '../core/html.js';
 let settingsSub = null;
 const settingsRow = (ic, label, val, a, o) => html`
   <button class="setting-row" data-a="${a}"${raw(o && o.v ? ' data-v="' + o.v + '"' : '')}>
-    <span class="sri${o && o.red ? ' red' : ''}">${icon(ic, 20)}</span>
-    <span class="srl${o && o.red ? ' red' : ''}">${raw(label)}</span>
-    ${val ? html`<span class="srv">${val}</span>` : ''}
+    <span class="setting-icon${o && o.red ? ' red' : ''}">${icon(ic, 20)}</span>
+    <span class="setting-label${o && o.red ? ' red' : ''}">${raw(label)}</span>
+    ${val ? html`<span class="setting-value">${val}</span>` : ''}
     ${o && o.act ? '' : icon('chr', 18)}
   </button>`;
 const ago = t => {
@@ -51,20 +51,20 @@ const SETTINGS_PAGES = {
   inicio: () => ['Al abrir la app', startTabCard()],
   unidades: () => ['Unidades', unitsCard()],
   sonido: () => ['Sonido y avisos', html`
-    <label class="srk"><input type="checkbox" ${S.sound === 0 ? '' : 'checked'} data-c="soundToggle"> Sonidos del descanso</label>
+    <label class="setting-check"><input type="checkbox" ${S.sound === 0 ? '' : 'checked'} data-c="soundToggle"> Sonidos del descanso</label>
     <button data-a="soundTest" class="w-full m-8-0-6">Probar sonido</button>
     ${alertSettings()}
     ${badgeCard()}`],
   cuenta: () => ['Cuenta', accountPage()],
   clave: () => ['Cambiar contraseña', passwordPage()],
-  privacidad: () => ['Privacidad', html`<div class="srt">${privacyText().map(p => html`<p>${p}</p>`)}</div>`],
-  legal: () => ['Aviso legal', html`<div class="srt">${LEGAL_TEXT.map(p => html`<p>${p}</p>`)}</div>`],
+  privacidad: () => ['Privacidad', html`<div class="setting-text">${privacyText().map(p => html`<p>${p}</p>`)}</div>`],
+  legal: () => ['Aviso legal', html`<div class="setting-text">${LEGAL_TEXT.map(p => html`<p>${p}</p>`)}</div>`],
   nota: () => ['Nota de actualización', releaseNotePage()],
   icono: () => ['El icono nuevo', iconNoticeBody(0)],
   avanzado: () => ['Ajustes avanzados', rpeSettings()]
 };
 /* una sección de Ajustes: su título y sus filas */
-const settingsSection = (title, rows) => html`<div class="section-label">${raw(title)}</div><div class="card srg">${rows}</div>`;
+const settingsSection = (title, rows) => html`<div class="section-label">${raw(title)}</div><div class="card setting-group">${rows}</div>`;
 /* Cuenta: el usuario y la sincronización */
 const accountRows = () => [settingsRow('user', 'Cuenta', acctName(), 'openSettingsPage', { v: 'cuenta' }), settingsRow('cloud', 'Sincronización', syncShort(), 'accountSyncNow', { act: 1 })];
 /* Apariencia: tema y estilo, color de acento (con su muestra) y la pestaña al abrir la app */
@@ -72,7 +72,7 @@ const appearanceRows = () => {
   const theme = S.theme == 'dark' ? 'Oscuro' : S.theme == 'light' ? 'Claro' : 'Automático';
   const accent = accentNow();
   const swatch = html`
-    <i class="srd" data-style="background:linear-gradient(135deg,${raw(accent[1])},${raw(accent[2])})"></i>
+    <i class="setting-dot" data-style="background:linear-gradient(135deg,${raw(accent[1])},${raw(accent[2])})"></i>
     ${raw(accent[0])}`;
   return [settingsRow('pal', 'Tema y estilo', theme + ' · ' + (glassMode() > 0 ? 'Cristal' : 'Clásico'), 'openSettingsPage', { v: 'tema' }), settingsRow('drop', 'Color de acento', swatch, 'openSettingsPage', { v: 'acento' }), settingsRow('home', 'Al abrir la app', startTabName(), 'openSettingsPage', { v: 'inicio' })];
 };
@@ -103,7 +103,7 @@ function settingsMain() {
       ${offlineNote()}
       ${settingsSection('Ajustes avanzados', advancedRows())}
       ${settingsSection('Información', infoRows())}
-      <div class="card srg sro">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div>
+      <div class="card setting-group setting-signout">${settingsRow('out', 'Cerrar sesión', '', 'signOut', { red: 1, act: 1 })}</div>
       <div class="h-40"></div>
     </div>`;
 }

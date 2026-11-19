@@ -152,7 +152,7 @@ const LATER_MARGIN = '700px 0px';
 const LATER_BATCH = 8;
 const LATER_EVERY = 40;
 const LATER_FIRST = 150;
-/* quien vigila las filas de cada página que se desliza (el .sp de la hoja; fuera de una hoja, la ventana) y las filas que
+/* quien vigila las filas de cada página que se desliza (el .sheet de la hoja; fuera de una hoja, la ventana) y las filas que
    ya vigila */
 const laterWatchers = new WeakMap();
 const laterWatched = new WeakSet();

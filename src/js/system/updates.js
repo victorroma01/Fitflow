@@ -115,8 +115,8 @@ const releaseNotesHtml = (info, current) => {
   const all = info && Array.isArray(info.history) && info.history.length ? info.history : (info ? [info] : []);
   const list = current ? all : all.filter(v => isNewerVersion(v.version, APPV));
   const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
-  const notes = shown.map(v => (shown.length > 1 ? html`<p class="upv">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`
-    <p class="ups">${s.title}</p>
+  const notes = shown.map(v => (shown.length > 1 ? html`<p class="update-version">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`
+    <p class="notes-heading">${s.title}</p>
     <ul>${(s.items || []).slice(0, 8).map(i => html`<li>${i}</li>`)}</ul>
   `).join('')).join('');
   return notes || '<ul><li>Mejoras y correcciones.</li></ul>';
@@ -127,27 +127,29 @@ export const releaseNotePage = () => {
   const r = RELEASE;
   const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const body = (r.sections || []).map(s => html`
-    <p class="ups">${s.title}</p>
+    <p class="notes-heading">${s.title}</p>
     <ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
   return html`
-    <div class="card rnp">
-      <b class="rnv">Versión ${r.version || APPV}</b>
+    <div class="card release-notes">
+      <b class="release-version">Versión ${r.version || APPV}</b>
       ${d ? html`<small class="muted">${d}</small>` : ''}
       ${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}
     </div>
-    <div class="rnc"><button class="lnk" data-a="openSettings">Cerrar</button></div>`;
+    <div class="release-close"><button class="link-btn" data-a="openSettings">Cerrar</button></div>`;
 };
 /** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
 const updatePopupHtml = (info, mode) => {
   const v = info && info.version ? info.version : '';
   return html`
-    <div class="updb" data-a="updateLater"></div>
-    <div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt">
-      <button class="updx" data-a="updateLater" aria-label="Cerrar">×</button>
-      <small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small>
+    <div class="update-backdrop" data-a="updateLater"></div>
+    <div class="update-box" role="dialog" aria-modal="true" aria-labelledby="updt">
+      <button class="update-close" data-a="updateLater" aria-label="Cerrar">×</button>
+      <small class="update-label">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small>
       <h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3>
-      <div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div>
-      <button class="upb" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button>
+      <div class="update-notes">${raw(releaseNotesHtml(info, mode == 'news'))}</div>
+      <button class="update-btn" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">
+        ${mode == 'news' ? 'Entendido' : 'Actualizar'}
+      </button>
     </div>`;
 };
 const showPopup = (info, mode) => {
@@ -269,7 +271,7 @@ A.updateCheck = async (i, b) => {
     return;
   }
   /* en la fila de Ajustes cambia solo el valor de la derecha; en un botón normal, su texto */
-  const tx = b && (b.querySelector('.srv') || b);
+  const tx = b && (b.querySelector('.setting-value') || b);
   const label = tx ? tx.textContent : '';
   if (b) {
     b.disabled = true;

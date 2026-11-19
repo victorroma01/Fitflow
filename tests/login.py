@@ -40,10 +40,10 @@ def wait(pg, expr, timeout=20000):
 
 
 LOOK = """() => { const q = s => document.querySelector(s), r = e => { const b = e.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)]; };
-  const i = q('#lgw .lgbg'), cs = e => getComputedStyle(e), card = q('#lgw .lgc');
+  const i = q('#lgw .login-photo'), cs = e => getComputedStyle(e), card = q('#lgw .login-card');
   return { theme: document.documentElement.dataset.theme || '', scheme: cs(document.documentElement).colorScheme, img: !!i, loaded: !!i && i.complete && i.naturalWidth > 0, natural: i ? [i.naturalWidth, i.naturalHeight] : null,
     rect: i ? r(i) : null, view: [innerWidth, innerHeight], fit: i ? cs(i).objectFit : '', pos: i ? cs(i).objectPosition : '', fixed: i ? cs(i).position : '', events: i ? cs(i).pointerEvents : '',
-    alt: i ? i.getAttribute('alt') : null, hidden: i ? i.getAttribute('aria-hidden') : null, card: cs(card).backgroundColor, cardBox: r(card), logo: r(q('#lgw .lgbr .brl')), btn: r(q('#lgw .lgb')),
+    alt: i ? i.getAttribute('alt') : null, hidden: i ? i.getAttribute('aria-hidden') : null, card: cs(card).backgroundColor, cardBox: r(card), logo: r(q('#lgw .login-brand .brand-logo')), btn: r(q('#lgw .login-submit')),
     over: document.documentElement.scrollWidth - innerWidth, top: i ? document.elementFromPoint(innerWidth / 2, 4) !== i : false }; }"""
 
 
@@ -56,7 +56,7 @@ def open_login(b, path, w, h, scheme='light', fb=None):
     pg = c.new_page()
     pg.goto(app_url(path))
     wait(pg, 'window.__ffok')
-    wait(pg, "(i => !i || (i.complete && i.naturalWidth > 0))(document.querySelector('#lgw .lgbg'))", 10000)
+    wait(pg, "(i => !i || (i.complete && i.naturalWidth > 0))(document.querySelector('#lgw .login-photo'))", 10000)
     return c, pg
 
 
@@ -92,12 +92,12 @@ def main(path):
         # debajo de la tarjeta, poco texto: al entrar, cómo recuperar la contraseña; al crear cuenta, nada (lo que se guarda lo
         # cuenta Privacidad). Con App Check, además, una línea con reCAPTCHA, sin nombrar las condiciones de Google (desde abril
         # de 2026 sus preguntas frecuentes piden quitarlas)
-        notes = "[...document.querySelectorAll('#lgw .lgn')].map(p => p.textContent.trim())"
+        notes = "[...document.querySelectorAll('#lgw .login-note')].map(p => p.textContent.trim())"
         rc = ['Protegido por reCAPTCHA.'] if pg.evaluate('appCheckOn()') else []
         check('al entrar, debajo de la tarjeta: cómo recuperar la contraseña' + (' y «Protegido por reCAPTCHA.»' if rc else ''),
               pg.evaluate(notes) == ['¿Has olvidado la contraseña? Pídele al administrador una temporal.'] + rc, str(pg.evaluate(notes)))
         pg.evaluate("A.loginMode(0,{dataset:{v:'up'}})")
-        check('al pasar a «Crear cuenta» la foto es la misma (no se vuelve a cargar)', pg.evaluate("(i => !!i && i.complete && i.naturalWidth == 720)(document.querySelector('#lgw .lgbg'))"))
+        check('al pasar a «Crear cuenta» la foto es la misma (no se vuelve a cargar)', pg.evaluate("(i => !!i && i.complete && i.naturalWidth == 720)(document.querySelector('#lgw .login-photo'))"))
         check('al crear cuenta no hay nota' + (', solo la línea de reCAPTCHA' if rc else ''), pg.evaluate(notes) == rc, str(pg.evaluate(notes)))
         check('y Privacidad sigue a mano, en las dos', pg.evaluate("!!document.querySelector('#lgw button.lgl[data-a=loginPrivacy]')"))
         if rc:
@@ -131,7 +131,7 @@ def main(path):
         pg.click('[data-a=loginSubmit]')
         wait(pg, "window.__ffok && !document.getElementById('lgw') && document.querySelector('nav').style.display != 'none'", 30000)
         check('ya dentro, la app va con el tema del móvil (claro): el oscuro era solo del inicio de sesión',
-              pg.evaluate("!document.documentElement.dataset.theme && getComputedStyle(document.documentElement).colorScheme == 'light' && !document.querySelector('.lgbg')"),
+              pg.evaluate("!document.documentElement.dataset.theme && getComputedStyle(document.documentElement).colorScheme == 'light' && !document.querySelector('.login-photo')"),
               str(pg.evaluate("[document.documentElement.dataset.theme, getComputedStyle(document.documentElement).colorScheme]")))
         c.close()
         b.close()

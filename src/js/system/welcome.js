@@ -34,14 +34,14 @@ const welcomeRoot = () => {
 const welcomeView = () => html`
   <div class="backdrop"></div>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="wlh">
-    <div class="trw">
-      ${brandLogo('wlg')}
+    <div class="intro-panel">
+      ${brandLogo('welcome-logo')}
       <h3 id="wlh">Te damos la bienvenida a StrataFit</h3>
       <p class="muted">Gracias por instalar la app y por apoyar su desarrollo.</p>
       <p class="muted">
         StrataFit está en fase de pruebas, así que puede haber errores. Si encuentras alguno, cuéntanoslo en Ajustes → Informar de un fallo: nos ayuda mucho a mejorarla.
       </p>
-      <p class="muted wlw">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p>
+      <p class="muted welcome-warning">Durante la fase de pruebas existe el riesgo de pérdida total o parcial de los datos.</p>
       <button class="primary" data-a="welcomeNext">Siguiente</button>
     </div>
   </div>`;
@@ -55,7 +55,7 @@ const sexButtons = sx => html`
   </div>`;
 /* edad, altura y peso, con lo ya guardado */
 const bioNumbers = b => html`
-  <div class="wln3">
+  <div class="welcome-numbers">
     ${BIO_NUMBERS.map(([k, l, u]) => html`
       <div>
         <label for="wl_${k}">${l}</label>
@@ -75,7 +75,7 @@ const bioFormView = () => {
     </select>`;
   return html`
     <div class="backdrop"></div>
-    <div class="sheet wlb" role="dialog" aria-modal="true" aria-labelledby="wlh">
+    <div class="sheet welcome-form" role="dialog" aria-modal="true" aria-labelledby="wlh">
       <h3 id="wlh">Tus datos</h3>
       <p class="muted">
         Antes de empezar, la app necesita unos datos básicos. Con ellos calcula tus calorías y tus macros de cada día y te recomienda los programas que mejor encajan contigo. Puedes cambiarlos cuando quieras en Perfil.
@@ -84,7 +84,7 @@ const bioFormView = () => {
       ${bioNumbers(b)}
       ${raw(sel('act', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1])))}
       ${raw(sel('goal', 'Objetivo físico', GOAL_LABELS))}
-      <p id="wle" class="wle" role="alert"></p>
+      <p id="wle" class="welcome-error" role="alert"></p>
       <button class="primary" data-a="welcomeSave">Guardar y continuar</button>
     </div>`;
 };

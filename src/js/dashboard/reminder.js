@@ -64,8 +64,8 @@ export const weighBanner = () => {
     return '';
   const l = lastWeighIn();
   return html`
-    <div class="card wrb" role="status">
-      <span class="wri">${icon('scale', 26)}</span>
+    <div class="card weigh-banner" role="status">
+      <span class="weigh-icon">${icon('scale', 26)}</span>
       <span>
         <b>Día de pesarse</b>
         <small>${l ? 'Último pesaje: ' + fmtDateShort(l) + ' · ' : ''}cada ${weighEvery(S.weighReminder)}</small>
@@ -78,15 +78,15 @@ export const reminderCard = () => {
   const r = S.weighReminder;
   if (!r)
     return html`
-      <div class="card wrc">
-        <label class="srk"><input type="checkbox" data-c="weighReminderToggle"> Recordatorio de pesaje</label>
-        <p class="muted wrt">Te avisamos cuando toque pesarte: cada 2 semanas, 4 semanas, un mes, 5 semanas o cada lo que elijas.</p>
+      <div class="card weigh-card">
+        <label class="setting-check"><input type="checkbox" data-c="weighReminderToggle"> Recordatorio de pesaje</label>
+        <p class="muted weigh-note">Te avisamos cuando toque pesarte: cada 2 semanas, 4 semanas, un mes, 5 semanas o cada lo que elijas.</p>
       </div>`;
   const cur = weighCustom ? -1 : WEIGH_STEPS.findIndex(x => x[0] == r.n && x[1] == r.u);
   const nx = weighNext();
   const u = WEIGH_UNITS[r.u];
   const other = cur < 0 ? html`
-    <div class="grid-2 wro">
+    <div class="grid-2 weigh-custom">
       <input type="number" inputmode="numeric" min="1" max="${u[2]}" value="${r.n}" data-c="weighReminderEvery" aria-label="Cada cuántos">
       <select data-c="weighReminderUnit" aria-label="Unidad">
         ${Object.keys(WEIGH_UNITS).map(k => html`<option value="${k}"${k == r.u ? ' selected' : ''}>${WEIGH_UNITS[k][1]}</option>`)}
@@ -97,17 +97,17 @@ export const reminderCard = () => {
     <button class="chip${i == cur ? ' on' : ''}" data-a="weighReminderInterval" data-i="${i}" role="radio"
         aria-checked="${i == cur ? 'true' : 'false'}">${label}</button>`;
   const steps = html`
-    <div class="wrs" role="radiogroup" aria-label="Cada cuánto">${WEIGH_STEPS.map((x, i) => step(i, x[2]))}${step(-1, 'Otro')}</div>`;
+    <div class="weigh-steps" role="radiogroup" aria-label="Cada cuánto">${WEIGH_STEPS.map((x, i) => step(i, x[2]))}${step(-1, 'Otro')}</div>`;
   const next = html`
-    <p class="wrt">
+    <p class="weigh-note">
       ${nx ? html`Próximo aviso: <b>${fmtDateShort(nx, { weekday: 'long', day: 'numeric', month: 'long' })}</b>` : ''} · cada ${weighEvery(r)}
     </p>`;
   const calendar = html`
-    <button data-a="weighReminderCalendar" class="wrk">${icon('cal', 18)} Añadir al calendario del móvil</button>
-    <small class="muted wrt">Así te avisa también con la app cerrada. Si cambias el intervalo, vuelve a añadirlo.</small>`;
+    <button data-a="weighReminderCalendar" class="weigh-calendar">${icon('cal', 18)} Añadir al calendario del móvil</button>
+    <small class="muted weigh-note">Así te avisa también con la app cerrada. Si cambias el intervalo, vuelve a añadirlo.</small>`;
   return html`
-    <div class="card wrc">
-      <label class="srk"><input type="checkbox" data-c="weighReminderToggle" checked> Recordatorio de pesaje</label>
+    <div class="card weigh-card">
+      <label class="setting-check"><input type="checkbox" data-c="weighReminderToggle" checked> Recordatorio de pesaje</label>
       ${steps}
       ${other}
       ${next}

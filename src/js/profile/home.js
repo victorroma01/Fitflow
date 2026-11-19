@@ -24,7 +24,8 @@ import { html, raw } from '../core/html.js';
 import { perWeekText } from '../workout/week.js';
 import { BIO_RANGES } from '../core/calc.js';
 /* cabecera de un desplegable de Perfil con su icono y una línea que dice qué hay dentro, como las filas de Medidas o Logros */
-const pfSummary = (ic, t, s) => html`<summary class="pfs">${icon(ic, 30)}<span><b>${raw(t)}</b><br><small>${s}</small></span></summary>`;
+const pfSummary = (ic, t, s) => html`
+  <summary class="profile-summary">${icon(ic, 30)}<span><b>${raw(t)}</b><br><small>${s}</small></span></summary>`;
 function profileHead() {
   const p = S.profile;
   const img = safeImage(p.img);
@@ -40,11 +41,11 @@ function profileHead() {
     <input type="file" accept="image/*" data-c="photoFile" hidden id="avf">`;
   return html`
     <div class="page-head"><h1>Perfil</h1></div>
-    <div class="card pfh">
+    <div class="card profile-head">
       ${raw(av)}
-      <b class="pfn">${acctName()}</b>
-      ${isAdmin() ? html`<small class="pfa">Administrador</small>` : ''}
-      ${img ? html`<button class="pfq" data-a="photoDeleteAsk">Quitar foto</button>` : ''}
+      <b class="profile-name">${acctName()}</b>
+      ${isAdmin() ? html`<small class="profile-role">Administrador</small>` : ''}
+      ${img ? html`<button class="photo-remove" data-a="photoDeleteAsk">Quitar foto</button>` : ''}
     </div>`;
 }
 A.resetAllConfirmed = async () => {

@@ -41,7 +41,7 @@ const tabGeometry = () => {
 };
 /* la burbuja en x (dentro de la barra), con ancho w; solo se toca lo que cambia */
 const placeBubble = (x, w) => {
-  const b = $('nav .nbb');
+  const b = $('nav .nav-bubble');
   const bx = x + 'px';
   const bw = w + 'px';
   if (b.style.getPropertyValue('--bx') != bx)
@@ -53,7 +53,7 @@ const placeBubble = (x, w) => {
   ventana). Sin medidas (barra oculta), se queda el fondo de siempre del botón. */
 export const tabbarSync = () => {
   const n = $('nav');
-  if (!n || !n.querySelector('.nbb'))
+  if (!n || !n.querySelector('.nav-bubble'))
     return;
   tabButtons().forEach((e, i) => e.classList.toggle('on', i == S.tab));
   if (tabDrag && tabDrag.on)
@@ -61,13 +61,13 @@ export const tabbarSync = () => {
   /* la barra oculta (en el entreno: core/render) no tiene medidas; al volver, la burbuja se coloca sin deslizarse */
   const g = n.style.display == 'none' ? null : tabGeometry();
   if (!g) {
-    n.classList.remove('nbon');
+    n.classList.remove('bubble-on');
     return;
   }
   placeBubble(g.xs[S.tab], g.w);
   /* la primera vez se coloca sin deslizarse; después, cada cambio se anima */
-  if (!n.classList.contains('nbon'))
-    requestAnimationFrame(() => n.classList.add('nbon'));
+  if (!n.classList.contains('bubble-on'))
+    requestAnimationFrame(() => n.classList.add('bubble-on'));
 };
 /** Pinta la barra (al arrancar). */
 export const buildTabbar = () => {
@@ -75,7 +75,7 @@ export const buildTabbar = () => {
   $('nav').innerHTML = html`
     ${TABS.map((t, i) => html`
       <button data-a="selectTab" data-i="${i}"><span class="d-block lh-0 pb-4">${icon(t[0], 28)}</span>${raw(t[1])}</button>`)}
-    <i class="nbb" aria-hidden="true"></i>`;
+    <i class="nav-bubble" aria-hidden="true"></i>`;
 };
 /* la burbuja se despega de su pestaña y va hacia el dedo (en la posición x de la pantalla) */
 const dragStart = x => {
@@ -209,10 +209,10 @@ const startOf = () => S.startTab >= 0 && S.startTab < TABS.length ? S.startTab :
 export const startTabName = () => START_TABS.find(x => x[0] == startOf())[1];
 export const startTabCard = () => html`
   <p class="muted m-0-2-12 fs-14">La pestaña que ves al abrir StrataFit.</p>
-  <div class="card srg" role="radiogroup" aria-label="Pestaña al abrir la app">
+  <div class="card setting-group" role="radiogroup" aria-label="Pestaña al abrir la app">
     ${START_TABS.map(x => html`
       <button class="setting-row" data-a="setStartTab" data-v="${x[0]}" role="radio" aria-checked="${x[0] == startOf() ? 'true' : 'false'}">
-        <span class="srl">${raw(x[2])}</span>
+        <span class="setting-label">${raw(x[2])}</span>
         ${x[0] == startOf() ? raw(icon('chk', 20)) : ''}
       </button>`)}
   </div>`;

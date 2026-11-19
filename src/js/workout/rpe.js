@@ -66,7 +66,7 @@ const rpeExplain = withOn => {
 /** Ajustes → Ajustes avanzados. */
 export const rpeSettings = () => html`
   <div class="card">
-    <label class="srk"><input type="checkbox" data-c="toggleRpe"${rpeOn() ? ' checked' : ''}> Registrar el esfuerzo (RPE)</label>
+    <label class="setting-check"><input type="checkbox" data-c="toggleRpe"${rpeOn() ? ' checked' : ''}> Registrar el esfuerzo (RPE)</label>
     <small class="muted d-block mt-n4">
       Tras cada serie, puntúa del 6 al 10 lo dura que ha sido. Con eso la app propone la semana de descarga y completa el análisis mensual.
     </small>

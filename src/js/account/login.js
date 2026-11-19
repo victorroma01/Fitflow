@@ -84,9 +84,9 @@ let waitTimer = 0;
 const loginField = (id, label, o) => html`
   <label for="${id}">${label}</label>
   ${raw(o.pw ? html`
-    <div class="lgpw">
+    <div class="password-field">
       <input id="${id}" type="${loginState.eye ? 'text' : 'password'}" autocomplete="${o.ac}" maxlength="100" data-enter="${o.go}">
-      <button type="button" class="lgey" data-a="loginToggleEye"
+      <button type="button" class="password-eye" data-a="loginToggleEye"
           aria-label="${loginState.eye ? 'Ocultar la contraseña' : 'Ver la contraseña'}">
         ${icon(loginState.eye ? 'eyeoff' : 'eye', 20)}
       </button>
@@ -105,12 +105,12 @@ const loginModeTabs = up => html`
 const signUpExtra = () => html`
   <label for="lgp2">Repite la contraseña</label>
   <input id="lgp2" type="${loginState.eye ? 'text' : 'password'}" autocomplete="new-password" maxlength="100" data-enter="loginSubmit">
-  <p class="muted lgh">
+  <p class="muted login-hint">
     Usuario de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo. Contraseña de 8 caracteres o más.
   </p>`;
 /** El fondo del inicio de sesión (F-33): la foto de un gimnasio visto desde arriba, ya en gris y desenfocada (data/photos);
   la oscurece css/94-account. Es un adorno: sin texto alternativo. */
-const loginBackdrop = () => LOGIN_PHOTO ? html`<img class="lgbg" src="${LOGIN_PHOTO}" alt="" aria-hidden="true">` : '';
+const loginBackdrop = () => LOGIN_PHOTO ? html`<img class="login-photo" src="${LOGIN_PHOTO}" alt="" aria-hidden="true">` : '';
 /** Lo que pide reCAPTCHA cuando su sello no se ve (cloud/appcheck): decir que se usa. Desde el 2 de abril de 2026, sin nombrar
     las condiciones de Google, como piden sus preguntas frecuentes. Qué hace lo cuenta Privacidad. */
 const RECAPTCHA_NOTE = 'Protegido por reCAPTCHA.';
@@ -126,38 +126,38 @@ const loginView = () => {
     ${raw(loginField('lgu', 'Usuario', { ac: 'username', go: 'loginSubmit' }))}
     ${raw(loginField('lgp', 'Contraseña', { pw: 1, ac: up ? 'new-password' : 'current-password', go: 'loginSubmit' }))}
     ${up ? signUpExtra() : ''}
-    <p id="lge" class="lge" role="alert">${loginState.err}</p>
-    <button class="primary lgb" data-a="loginSubmit"${raw(loginState.busy || wait ? ' disabled' : '')}>${label}</button>`;
+    <p id="lge" class="form-error" role="alert">${loginState.err}</p>
+    <button class="primary login-submit" data-a="loginSubmit"${raw(loginState.busy || wait ? ' disabled' : '')}>${label}</button>`;
   return html`
-    <div id="lgw" class="lgw">
+    <div id="lgw" class="login-page">
       ${loginBackdrop()}
-      <div class="lgbr">${brandLogo('lgl', 1)}</div>
-      <p class="lgs">Entrenamiento y nutrición</p>
-      <div class="card lgc">${form}</div>
-      ${up ? '' : html`<p class="muted lgn">¿Has olvidado la contraseña? Pídele al administrador una temporal.</p>`}
-      ${appCheckOn() ? html`<p class="muted lgn fs-12">${RECAPTCHA_NOTE}</p>` : ''}
+      <div class="login-brand">${brandLogo('lgl', 1)}</div>
+      <p class="login-tagline">Entrenamiento y nutrición</p>
+      <div class="card login-card">${form}</div>
+      ${up ? '' : html`<p class="muted login-note">¿Has olvidado la contraseña? Pídele al administrador una temporal.</p>`}
+      ${appCheckOn() ? html`<p class="muted login-note fs-12">${RECAPTCHA_NOTE}</p>` : ''}
       <button class="lgl" data-a="loginPrivacy">Privacidad</button>
-      <div class="lgv">V${APPV}</div>
+      <div class="login-version">V${APPV}</div>
     </div>`;
 };
 /** Cambio obligatorio de una contraseña temporal (account.mc: 1 al entrar, 2 al volver a entrar con la sesión caducada). */
 const passwordView = () => html`
-  <div id="lgw" class="lgw">
+  <div id="lgw" class="login-page">
     ${loginBackdrop()}
-    <div class="lgbr">${brandLogo('lgl', 1)}</div>
-    <div class="card lgc">
-      <h2 class="lgt">Elige una contraseña nueva</h2>
+    <div class="login-brand">${brandLogo('lgl', 1)}</div>
+    <div class="card login-card">
+      <h2 class="login-title">Elige una contraseña nueva</h2>
       <p class="muted m-0-0-6">Has entrado con una contraseña temporal. Para seguir, elige una nueva que solo sepas tú.</p>
       ${raw(loginField('lgp', 'Contraseña nueva', { pw: 1, ac: 'new-password', go: 'loginCreatePassword' }))}
       <label for="lgp2">Repite la contraseña</label>
       <input id="lgp2" type="${loginState.eye ? 'text' : 'password'}" autocomplete="new-password" maxlength="100"
           data-enter="loginCreatePassword">
-      <p id="lge" class="lge" role="alert">${loginState.err}</p>
-      <button class="primary lgb" data-a="loginCreatePassword"${raw(loginState.busy ? ' disabled' : '')}>
+      <p id="lge" class="form-error" role="alert">${loginState.err}</p>
+      <button class="primary login-submit" data-a="loginCreatePassword"${raw(loginState.busy ? ' disabled' : '')}>
         ${loginState.busy || 'Guardar y entrar'}
       </button>
     </div>
-    <div class="lgv">V${APPV}</div>
+    <div class="login-version">V${APPV}</div>
   </div>`;
 /** Pinta el inicio de sesión en #app (desde core/render, en lugar de la app). Si ya estaba, cambia solo lo distinto y
   conserva lo escrito. */
@@ -296,7 +296,7 @@ A.loginCreatePassword = async () => {
 };
 A.loginPrivacy = () => sheet(html`
   ${pgHead('Privacidad')}
-  <div class="srt">${privacyText().map(p => html`<p>${p}</p>`)}</div>
+  <div class="setting-text">${privacyText().map(p => html`<p>${p}</p>`)}</div>
   <div class="h-30"></div>`);
 /* sesión caducada (contraseña restablecida, otro dispositivo la cambió…): volver a entrar sin perder lo del móvil */
 A.reloginShow = () => sheet(html`
@@ -306,7 +306,7 @@ A.reloginShow = () => sheet(html`
   </p>
   <label for="lrp">Contraseña de ${account ? account.u : ''}</label>
   <input id="lrp" type="password" autocomplete="current-password" maxlength="100" data-enter="reloginSubmit">
-  <p id="lre" class="lge" role="alert"></p>
+  <p id="lre" class="form-error" role="alert"></p>
   <button class="primary w-full mt-6" data-a="reloginSubmit">Entrar</button>`);
 /* volver a entrar: una petición a la vez y la misma espera tras cinco intentos fallidos que en el inicio de sesión */
 let reloginBusy = false;

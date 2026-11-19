@@ -52,7 +52,7 @@ const reportTech = () => {
 /* el tipo: fallo o sugerencia */
 const reportKindChips = () => html`
   <label>Tipo</label>
-  <div class="rpk" role="radiogroup" aria-label="Tipo">
+  <div class="report-kinds" role="radiogroup" aria-label="Tipo">
     ${REPORT_KINDS.map(k => html`
       <button class="chip${reportKind == k[0] ? ' on' : ''}" data-a="reportChooseKind" data-v="${k[0]}" role="radio"
           aria-checked="${reportKind == k[0] ? 'true' : 'false'}">${k[1]}</button>`)}
@@ -60,7 +60,7 @@ const reportKindChips = () => html`
 /* en un fallo, dónde ha pasado (opcional) */
 const reportAreaChips = () => reportKind == 'f' ? html`
   <label>Dónde (si lo sabes)</label>
-  <div class="rpt" role="radiogroup" aria-label="Dónde">
+  <div class="report-areas" role="radiogroup" aria-label="Dónde">
     ${REPORT_AREAS.map((t, i) => html`
       <button class="chip${i == reportArea ? ' on' : ''}" data-a="reportChooseArea" data-i="${i}" role="radio"
           aria-checked="${i == reportArea ? 'true' : 'false'}">${t}</button>`)}
@@ -74,10 +74,10 @@ const reportTextField = () => html`
   <small id="rpn" class="muted d-block ta-r mt-4">0 / ${REPORT_MAX}</small>`;
 /* adjuntar los datos técnicos (en un fallo, marcado), con lo que se adjunta a la vista */
 const reportTechField = () => html`
-  <label class="srk">
+  <label class="setting-check">
     <input type="checkbox" id="rpd"${reportKind == 's' ? '' : ' checked'}> Adjuntar datos técnicos (versión, navegador y últimos errores; nada personal)
   </label>
-  <details class="card mt-6"><summary>Ver los datos técnicos</summary><pre class="rpv">${reportTech()}</pre></details>`;
+  <details class="card mt-6"><summary>Ver los datos técnicos</summary><pre class="report-tech">${reportTech()}</pre></details>`;
 /* «Informar de un fallo» */
 const reportPage = () => html`
   <div id="rpp">
@@ -190,12 +190,12 @@ const reportListPage = () => {
     const [sl, sc] = reportStatus(x);
     const kd = (REPORT_KINDS.find(k => k[0] == x.k) || REPORT_KINDS[0])[1];
     return html`
-      <div class="card rpi">
-        <div class="row"><span class="rpkd">${kd}${x.a ? ' · ' + x.a : ''}</span><span class="rps ${sc}">${sl}</span></div>
+      <div class="card report-item">
+        <div class="row"><span class="report-kind">${kd}${x.a ? ' · ' + x.a : ''}</span><span class="status-pill ${sc}">${sl}</span></div>
         <small class="muted">${fmtDateShort(dayKey(new Date(+x.ca)), { day: 'numeric', month: 'long', year: 'numeric' })}</small>
-        <p class="rptx">${x.t}</p>
+        <p class="report-text">${x.t}</p>
         ${x.rp ? html`
-          <div class="rpr${x.sn ? '' : ' unread'}">
+          <div class="report-reply${x.sn ? '' : ' unread'}">
             <b>Respuesta${x.ra ? ' · ' + fmtDateShort(dayKey(new Date(+x.ra))) : ''}</b>
             <p>${x.rp}</p>
           </div>` : ''}
@@ -242,7 +242,7 @@ A.reportChooseKind = (i, b) => {
 };
 A.reportChooseArea = i => {
   reportArea = reportArea == i ? -1 : i;
-  document.querySelectorAll('.rpt button').forEach(b => {
+  document.querySelectorAll('.report-areas button').forEach(b => {
     const on = +b.dataset.i == reportArea;
     b.classList.toggle('on', on);
     b.setAttribute('aria-checked', on ? 'true' : 'false');

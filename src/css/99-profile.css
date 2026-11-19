@@ -1,42 +1,42 @@
 /* ═══ css/99-profile ═══ Perfil: foto y nombre, desplegables con icono, pie con nombre y versión; página de Ajustes con filas */
-.pfh {
+.profile-head {
   display:grid;
   justify-items:center;
   gap:10px;
   padding:18px 14px;
 }
-.pfh .avatar {
+.profile-head .avatar {
   margin:0;
 }
-.pfn {
+.profile-name {
   font-size:19px;
   letter-spacing:-.01em;
 }
 /* desplegables de Perfil con la misma pinta que las filas de Medidas o Logros: icono, título y una línea */
-summary.pfs {
+summary.profile-summary {
   display:flex;
   align-items:center;
   gap:14px;
   font-weight:400;
 }
-summary.pfs::after {
+summary.profile-summary::after {
   margin-left:auto;
   float:none;
   align-self:center;
 }
-.pfs>span {
+.profile-summary>span {
   min-width:0;
 }
-.pfs b {
+.profile-summary b {
   font-size:17px;
 }
-.pfs small {
+.profile-summary small {
   color:var(--mu);
 }
-.pfs svg {
+.profile-summary svg {
   flex:none;
 }
-details[open]>summary.pfs {
+details[open]>summary.profile-summary {
   margin-bottom:6px;
 }
 /* pie: nombre y versión, en mayúsculas, con el color de acento */
@@ -67,7 +67,7 @@ details[open]>summary.pfs {
   background:color-mix(in srgb,var(--a2) 12%,transparent);
 }
 /* Ajustes: tarjetas con filas (icono en un cuadrado redondeado, nombre, valor y flecha) */
-.srg {
+.setting-group {
   padding:4px 14px;
   margin-top:6px;
 }
@@ -103,7 +103,7 @@ html.glass .setting-row {
   flex:none;
   color:var(--mu);
 }
-.sri {
+.setting-icon {
   flex:none;
   width:42px;
   height:42px;
@@ -113,15 +113,15 @@ html.glass .setting-row {
   color:var(--tx);
   background:color-mix(in srgb,var(--tx) 8%,transparent);
 }
-.sri.red,.srl.red {
+.setting-icon.red,.setting-label.red {
   color:var(--ctx);
 }
-.srl {
+.setting-label {
   flex:1 0 auto;
   font-size:16.5px;
   white-space:nowrap;
 }
-.srv {
+.setting-value {
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -133,13 +133,13 @@ html.glass .setting-row {
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.srd {
+.setting-dot {
   flex:none;
   width:14px;
   height:14px;
   border-radius:50%;
 }
-.srk {
+.setting-check {
   display:flex;
   gap:10px;
   align-items:center;
@@ -148,14 +148,14 @@ html.glass .setting-row {
   color:var(--tx);
 }
 /* la casilla, de 20 px y del color de acento (la de serie del navegador mide 13 y casi no se veía junto al texto) */
-.srk input {
+.setting-check input {
   flex:none;
   width:20px;
   height:20px;
   margin:0;
   accent-color:var(--a2);
 }
-.srt p {
+.setting-text p {
   margin:0 0 12px;
   line-height:1.5;
   color:var(--tx);
@@ -182,7 +182,7 @@ html.glass .setting-row {
   opacity:.5;
 }
 /* vitrina: las medallas conseguidas, bajo el recuento */
-.mdv {
+.medal-row {
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
@@ -190,17 +190,17 @@ html.glass .setting-row {
   margin-top:14px;
 }
 /* Informar de un fallo (system/report) */
-.rpt {
+.report-areas {
   display:flex;
   flex-wrap:wrap;
   gap:8px;
   margin:4px 0 12px;
 }
-.rpt .chip {
+.report-areas .chip {
   margin:0;
   padding:8px 12px;
 }
-.rpv {
+.report-tech {
   margin:8px 0 0;
   max-height:200px;
   overflow:auto;

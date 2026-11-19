@@ -45,7 +45,7 @@ const MOTIFS = {
 /* logro → [familia, metal, dibujo, cifra] */
 const MEDALS = { e1: ['e', 'b', 'dumbbell', '1'], e2: ['e', 's', 'dumbbell', '10'], e3: ['e', 'g', 'dumbbell', '50'], e4: ['e', 'p', 'dumbbell', '100'], e5: ['e', 'l', 'dumbbell', '250'], v1: ['v', 'b', 'kettle', '10 t'], v2: ['v', 's', 'kettle', '100 t'], v3: ['v', 'g', 'kettle', '500 t'], v4: ['v', 'p', 'kettle', '1000 t'], s1: ['s', 'b', 'flame', '4'], s2: ['s', 's', 'flame', '12'], s3: ['s', 'g', 'flame', '26'], p1: ['p', 'b', 'record', '1'], p2: ['p', 's', 'record', '10'], p3: ['p', 'g', 'record', '25'], c1: ['c', 'b', 'pulse', ''], c2: ['c', 's', 'shoe', '50 km'], c3: ['c', 'g', 'shoe', '200 km'], w1: ['w', 'b', 'watch', '1'], w2: ['w', 'g', 'watch', '10'], n1: ['n', 's', 'apple', '7'], n2: ['n', 'g', 'apple', '30'], m1: ['m', 's', 'ruler', ''], b1: ['b', 's', 'scale', ''], k1: ['k', 'g', 'check', ''] };
 let medalN = 0;
-/** Medalla del logro `id` (SVG de `size` px). Sin conseguir, la misma en gris (css/99-profile, .md.off). */
+/** Medalla del logro `id` (SVG de `size` px). Sin conseguir, la misma en gris (css/99-profile, .medal.off). */
 export const medalSvg = (id, size, on) => {
   const m = MEDALS[id] || ['e', 's', 'dumbbell', ''];
   const fam = FAMILIES[m[0]];

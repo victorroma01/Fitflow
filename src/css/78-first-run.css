@@ -1,16 +1,16 @@
 /* ═══ css/78-first-run ═══ Primera vez (V1.0.1): Workout sin programa elegido (I-24) y bienvenida con los datos biométricos (I-23) */
 /* sin programa: un día de ejemplo difuminado detrás y la tarjeta para elegir uno encima */
-.npw {
+.no-program {
   position:relative;
   margin-top:12px;
 }
-.npd {
+.no-program-demo {
   filter:blur(6px) saturate(.8);
   opacity:.55;
   pointer-events:none;
   user-select:none;
 }
-.npc {
+.no-program-card {
   position:absolute;
   left:50%;
   top:50%;
@@ -21,16 +21,16 @@
   text-align:center;
   box-shadow:0 18px 40px rgba(0,0,0,.35);
 }
-.npc b {
+.no-program-card b {
   display:block;
   font-size:20px;
 }
-.npc p {
+.no-program-card p {
   margin:8px 0 16px;
   font-size:14.5px;
   line-height:1.45;
 }
-.npc button {
+.no-program-card button {
   width:100%;
   padding:15px;
   border-radius:16px;
@@ -42,92 +42,92 @@
   inset:0;
   z-index:18;
 }
-#wlc .trw p {
+#wlc .intro-panel p {
   margin:0 0 12px;
 }
-#wlc .trw .wlw {
+#wlc .intro-panel .welcome-warning {
   margin-bottom:18px;
   color:var(--tx);
   font-weight:600;
 }
-.wlb h3 {
+.welcome-form h3 {
   margin:4px 0 6px;
   font-size:22px;
 }
-.wlb>p.muted {
+.welcome-form>p.muted {
   margin:0 0 6px;
   font-size:14px;
   line-height:1.45;
 }
-.wln3 {
+.welcome-numbers {
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:8px;
 }
-.wlb input.bad,.wlb select.bad {
+.welcome-form input.bad,.welcome-form select.bad {
   border-color:var(--erx);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--erx) 25%,transparent);
 }
-.wle {
+.welcome-error {
   min-height:20px;
   margin:10px 2px 8px;
   font-size:14px;
   font-weight:600;
   color:var(--erx);
 }
-.wlb>button.primary {
+.welcome-form>button.primary {
   width:100%;
   padding:15px;
   border-radius:16px;
   font-size:16px;
 }
 /* el logo (core/brand): el del tema claro o el del oscuro, según el tema que se ve */
-.brl {
+.brand-logo {
   display:block;
   overflow:hidden;
   border-radius:23%;
   box-shadow:0 10px 28px rgba(0,0,0,.28);
 }
-.brl img,img.brl {
+.brand-logo img,img.brand-logo {
   display:block;
   width:100%;
   height:100%;
 }
-.brl .brl-c {
+.brand-logo .brand-logo-light {
   display:none;
 }
 @media(prefers-color-scheme:light) {
-  :root:not([data-theme="dark"]) .brl .brl-c {
+  :root:not([data-theme="dark"]) .brand-logo .brand-logo-light {
     display:block;
   }
-  :root:not([data-theme="dark"]) .brl .brl-o {
+  :root:not([data-theme="dark"]) .brand-logo .brand-logo-dark {
     display:none;
   }
 }
-:root[data-theme="light"] .brl .brl-c {
+:root[data-theme="light"] .brand-logo .brand-logo-light {
   display:block;
 }
-:root[data-theme="light"] .brl .brl-o {
+:root[data-theme="light"] .brand-logo .brand-logo-dark {
   display:none;
 }
-.brl.wlg {
+.brand-logo.welcome-logo {
   width:84px;
   height:84px;
   margin:4px auto 14px;
 }
 /* el aviso del icono nuevo en el iPhone (F-48, system/iconnotice): el icono, los pasos numerados y el estado de la sincronización */
-.icnw img.icn {
+.icon-notice img.icon-notice-logo {
   width:72px;
   height:72px;
   margin:4px auto 12px;
   border-radius:22%;
   box-shadow:0 6px 18px rgba(0,0,0,.28);
 }
-.icnw h3 {
+.icon-notice h3 {
   text-align:center;
   margin:0 0 6px;
 }
-.icns {
+.icon-notice-steps {
   margin:12px 0 16px;
   padding-left:22px;
   display:grid;
@@ -135,22 +135,22 @@
   font-size:14px;
   line-height:1.45;
 }
-.icns li::marker {
+.icon-notice-steps li::marker {
   color:var(--at);
   font-weight:800;
 }
-.icst {
+.icon-notice-status {
   display:block;
   margin-top:4px;
   font-size:13px;
 }
-.icst.ok {
+.icon-notice-status.ok {
   color:var(--okx);
 }
-.icst.bad {
+.icon-notice-status.bad {
   color:var(--wnx);
 }
-.icns button {
+.icon-notice-steps button {
   margin-top:8px;
   width:100%;
 }

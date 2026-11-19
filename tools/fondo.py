@@ -5,7 +5,7 @@
 La foto es vertical (un gimnasio visto desde arriba). Sale src/img/login/fondo.webp: en gris, desenfocada y a 720 px de ancho.
 La de la app la hizo el propietario con Gemini: ni el sitio ni la gente son reales. El desenfoque va en el archivo, no en la
 app: así no hace falta un filtro que el móvil tenga que calcular en cada pintada, y el archivo pesa poco (no hay detalle fino
-que guardar). El original no hace falta en el repositorio. El oscurecido lo pone la app encima (css/94-account: .lgw::before),
+que guardar). El original no hace falta en el repositorio. El oscurecido lo pone la app encima (css/94-account: .login-page::before),
 para poder ajustarlo sin volver a preparar la imagen.
 Requiere Pillow.
 """

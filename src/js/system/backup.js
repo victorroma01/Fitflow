@@ -291,7 +291,7 @@ A.backupDownload = async () => {
 };
 /* el archivo en el móvil: siempre con el mismo nombre; guardar o importar */
 const backupFileCard = () => html`
-  <div class="card cbk">
+  <div class="card backup-card">
     <b>Archivo en el móvil</b>
     <p class="muted">
       Siempre con el mismo nombre, ${BACKUP_FILE}: cada archivo nuevo sustituye al anterior y no se acumulan copias en el teléfono.
