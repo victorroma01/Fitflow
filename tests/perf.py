@@ -82,6 +82,16 @@ def measure(path):
         out['buscar en la Librería (ms)'] = round(pg.evaluate(TIMED % (15, "const i=document.querySelector('#sh input');window.__q=(window.__q||0)+1;"
                                                                       "i.value=['press','sentadilla','remo','curl','pecho'][window.__q%5];i.dispatchEvent(new Event('input',{bubbles:true}))")), 1)
         pg.evaluate('sheet()')
+        # abrir la hoja «Cómo se hace» de un ejercicio, con su figura grande (desde la V1.0.32): cinco de clases distintas, por
+        # turnos; y de cuántas piezas es la figura de la sentadilla (lo que el navegador tiene que pintar en cada fotograma)
+        if pg.evaluate("typeof A.exerciseHowTo=='function'"):
+            # (la primera vez se descarga el catálogo con los textos: se abre una antes, sin contarla)
+            pg.evaluate("A.exerciseHowTo(0,{dataset:{n:'Sentadilla'}})")
+            pg.wait_for_timeout(800)
+            out['abrir «Cómo se hace» (ms)'] = round(pg.evaluate(TIMED_AFTER % (15, 'sheet()', "A.exerciseHowTo(0,{dataset:{n:['Sentadilla','Burpees','Remo 1000 m','Elevaciones laterales','Dominadas'][(window.__h=(window.__h||0)+1)%5]}})")), 1)
+            pg.evaluate("sheet();A.exerciseHowTo(0,{dataset:{n:'Sentadilla'}})")
+            out['piezas de la figura, sentadilla'] = pg.evaluate("[...document.querySelectorAll('#sh .fgs svg use')].reduce((n, u) => n + 1 + (document.querySelector(u.getAttribute('href')) || {querySelectorAll: () => []}).querySelectorAll('*').length, 0)")
+            pg.evaluate('sheet()')
         # la página más larga de la app: Registros, con una fila por entreno (desde la V1.0.2, que es cuando se llama así)
         if pg.evaluate("typeof A.openLogs=='function'"):
             out['abrir Registros (ms)'] = round(pg.evaluate(TIMED_AFTER % (9, 'sheet()', 'A.openLogs()')), 1)

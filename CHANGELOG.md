@@ -165,6 +165,24 @@ línea.
   parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.
 - Documentación: la V1.0.31 comprobada en el iPhone del propietario, las versiones 1.0.3 y 1.0.31 en la documentación
   funcional y el estado de App Check (en marcha, sin exigir); el pendiente 7 de la auditoría (el nombre de «Log out»), hecho.
+- Figuras de ejercicio, repaso de su aspecto (a petición del propietario, en la rama `desarrollo-animaciones`): la figura
+  grande es el mismo maniquí limpio que la miniatura (la silueta clara y lo que trabaja en color, sin los músculos en reposo
+  con su rayado); la cabeza, las manos y los pies, que enseñaban la silueta desnuda casi del color del fondo, se ven, y el
+  brazo y la pierna de atrás son macizos (antes, un contorno transparente). En los 68 ejercicios de cuerpo completo la figura
+  ya no sale entera en rojo: la silueta va en un rojo apagado y encima, más vivo, lo que más trabaja; el mapa muscular, igual.
+  De frente, una sola luz para todo el cuerpo (los discos de las articulaciones salían como manchas). El recuadro, más oscuro
+  y liso, con el suelo que se desvanece hacia los lados, un poco de luz y aire alrededor; la miniatura, con un 6 % de aire
+  para que las esquinas no corten la cabeza. Arreglos de gesto: correr ya no parece una zancada agachada (21 ejercicios);
+  colgado de la barra, el poste va lejos del cuerpo, también con kipping; y la cuerda de la comba se ve como un lazo. Después,
+  más humana: manos con pulgar y dedos (abiertas o en puño; antes, muñones), la cara de perfil con su oreja, los pies con talón
+  y arco, y de frente las manos y las orejas (`tools/figure.js`, `FG_F`); el borde de las piezas, translúcido, ya no marca las
+  juntas como en un muñeco; al correr, las manos cerradas. Y el material que es una línea de acero (la barra del remo en T y
+  del landmine, la toalla, la marca del wall ball) iba casi negro y ahora se ve; en el salto lateral se salta un cono. Pesa
+  menos: la figura de la sentadilla, de 81 a 46 piezas que pintar en cada fotograma; las piezas en `<defs>`, de 102 a 93 KB;
+  abrir «Cómo se hace», de 5,1 a 3,7 ms. Pruebas: `tests/rig.test.mjs` (el poste, la carrera, la cuerda y los detalles de
+  manos, cara y orejas), `tests/figures.py` (el maniquí, el cuerpo completo, la luz de frente, el suelo, las manos y la cara,
+  y ningún trazo del material casi negro) y `tests/perf.py` (abrir «Cómo se hace» y las piezas de la figura)
+  ([figuras](docs/tecnica/figuras.md#el-aspecto)).
 
 ## [1.0.31] — 2026-11-16
 

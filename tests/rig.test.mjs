@@ -24,7 +24,7 @@ for (const f of ['data/figure.js', 'data/figposes.js', 'data/aliases.js', 'extra
   writeFileSync(join(dir, f), readFileSync(new URL('../src/js/' + f, import.meta.url), 'utf8'));
 }
 appendFileSync(join(dir, 'extras/rig.js'), '\nexport { rigPose, framePoints };\n');
-const { FG_J, FG_P } = await import(pathToFileURL(join(dir, 'data/figure.js')));
+const { FG_J, FG_P, FG_F } = await import(pathToFileURL(join(dir, 'data/figure.js')));
 const { FIG_POSES } = await import(pathToFileURL(join(dir, 'data/figposes.js')));
 const { EX_ALIASES } = await import(pathToFileURL(join(dir, 'data/aliases.js')));
 const R = await import(pathToFileURL(join(dir, 'extras/rig.js')));
@@ -560,6 +560,60 @@ test('dominadas: el cuerpo sube recto', () => {
   hip.forEach((q, i) => near(q[0], a[0] + (b[0] - a[0]) * (q[1] - a[1]) / (b[1] - a[1]), 4, 'la cadera se aparta de la recta en t=' + STEPS[i]));
   // y el codo va por delante, no por detrás de la espalda
   assert.ok(spot(def, .5, ['UA', 99, 150])[0] > spot(def, .5, ['UA', 99, 82])[0], 'el codo queda detrás del hombro');
+});
+
+test('colgado de la barra: el poste queda lejos del cuerpo, también si las piernas se balancean hacia atrás', () => {
+  // la barra va como una de pared: el poste, detrás; antes bajaba pegado a la espalda y parecía que el cuerpo se deslizaba
+  // por él
+  for (const n of ['Dominadas', 'Dominadas lastradas', 'Pull-ups kipping', 'Toes to bar', 'Elevación de piernas colgado', 'Bar muscle-up']) {
+    const def = figPose(n);
+    const post = def.props.map(p => p[0] == 'L' && /^M(-?[\d.]+) -?[\d.]+L(-?[\d.]+) 398$/.exec(p[2])).find(m => m && m[1] == m[2]);
+    assert.ok(post, n + ': el poste de la barra');
+    let back = 1e9;
+    for (let i = 0; i <= 40 * (def.cycle ? 2 : 1); i++)
+      for (const [k, q, m] of R.framePoints(def, i / 40))
+        if (/^(head|body|x?arm|x?leg)$/.test(k))
+          back = Math.min(back, q[0] - m);
+    assert.ok(back - Number(post[1]) > 12, n + ': el poste, a ' + Math.round(back - Number(post[1])) + ' del cuerpo');
+  }
+});
+
+test('correr: erguido y apoyando el pie en el suelo a media zancada, no agachado como en una zancada', () => {
+  for (const n of ['Carrera continua', 'Cuestas', 'Trote en cinta']) {
+    const def = figPose(n);
+    // el pie que apoya (talón o punta), en el suelo
+    near(Math.max(spot(def, .5, ['FT', 83, 402])[1], spot(def, .5, ['FT', 137, 402])[1]), 402, 1.5, n + ': el pie que apoya');
+    // la cadera, poco más baja que de pie (199): antes iba a 218, con la rodilla de delante muy doblada
+    for (const t of [0, .5, 1])
+      assert.ok(spot(def, t, ['PV', 99, 196])[1] <= 215, n + ': la cadera, baja en t=' + t);
+    // y la rodilla que apoya, doblada lo justo para amortiguar
+    const o = layersAt(def, .5);
+    assert.ok(Math.abs(norm(placed(o.SH)[2] - placed(o.TH)[2])) <= 40, n + ': la rodilla que apoya, muy doblada');
+  }
+});
+
+test('la figura es más humana: manos con pulgar y dedos, la cara de perfil con su oreja, y de frente manos y orejas', () => {
+  // de perfil, la mano abierta, el puño y la cabeza llevan detalles (curvas abiertas, sin relleno) además de su silueta
+  for (const k of ['HA', 'HG', 'HD'])
+    assert.ok(typeof FG_P[k][3] == 'string' && /^M[^Z]+$/.test(FG_P[k][3]) && (FG_P[k][3].match(/M/g) || []).length >= 1, k + ': sus detalles');
+  // los dedos: tres líneas entre los cuatro y el pliegue del pulgar
+  assert.equal((FG_P.HA[3].match(/M/g) || []).length, 4, 'la mano abierta: los dedos y el pulgar');
+  // la mano abierta llega a donde el encuadre la espera (la punta de los dedos, en reposo, hacia y=246)
+  const tips = FG_P.HA[1].match(/-?\d*\.?\d+/g).map(Number).filter((n, i) => i % 2);
+  assert.ok(Math.max(...tips) > 244 && Math.max(...tips) < 250, 'la punta de los dedos, a ' + Math.max(...tips));
+  // de frente: la mano y las orejas de cada lado, una el reflejo de la otra
+  for (const k of ['H', 'L', 'E']) {
+    const a = FG_F[k + '0'].match(/-?\d*\.?\d+/g).map(Number);
+    const b = FG_F[k + '1'].match(/-?\d*\.?\d+/g).map(Number);
+    assert.ok(a.length == b.length && a.every((n, i) => Math.abs((i % 2 ? n : 200 - n) - b[i]) < .01), k + ': un lado es el reflejo del otro');
+  }
+});
+
+test('comba: la cuerda se ve como un lazo, con sus dos cabos, no como un látigo', () => {
+  for (const n of ['Comba', 'Double unders', 'Comba boxeo']) {
+    const rope = figPose(n).props.find(p => p[0] == 'by' && p[4]);
+    assert.equal((rope[3][2].match(/Q/g) || []).length, 2, n + ': los dos cabos');
+  }
 });
 
 test('un ciclo no tiene costuras: acaba como empieza, con los lados cambiados', () => {

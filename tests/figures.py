@@ -26,15 +26,15 @@ MOVING = ['Press banca', 'Sentadilla', 'Curl con mancuernas', 'Jalón al pecho',
 # con postura intermedia (tres posturas quietas) y que se mantienen (una sola, quieta)
 THREE = ['Clean & jerk', 'Burpees', 'Saco de boxeo']
 HELD = ['Plancha', 'Pino contra la pared']
-# la figura de un ejercicio se reconoce por sus piezas (<use href="#fs…"> en pequeño, "#fb…" en grande)
-IS_FIGURE = "(el => !!el && !!el.querySelector('use[href^=\"#fs\"],use[href^=\"#fb\"]'))"
+# la figura de un ejercicio se reconoce por sus piezas (<use href="#fq…"> de perfil, "#fs…" de frente)
+IS_FIGURE = "(el => !!el && !!el.querySelector('use[href^=\"#fq\"],use[href^=\"#fs\"]'))"
 # las transformaciones de las capas de la figura grande, tal como están ahora
 LAYERS = "[...document.querySelectorAll('#sh svg[data-fig] > g')].map(g => g.getAttribute('transform') || '').join('|')"
 
 
 def painted(png):
     """Qué hay pintado en una captura: fracción de píxeles rojos (músculo principal), naranjas (secundario) y del gris azulado
-    de los músculos en reposo, y cuántos píxeles claros (el material) hay en el quinto izquierdo y en el derecho. Los
+    de la silueta (el resto del cuerpo), y cuántos píxeles claros (el material o las manos) hay en el quinto izquierdo y en el derecho. Los
     umbrales de las comprobaciones son menos de la mitad de lo medido en Chromium (queda en el registro), para que el
     suavizado de otro motor no las haga fallar; si no se pinta la figura, todo sale a cero."""
     a = np.asarray(Image.open(io.BytesIO(png)).convert('RGB')).astype(int)
@@ -125,14 +125,20 @@ def main(path, shots=None):
         bad = ev("""(() => { const bad = []; const box = document.createElement('div');
           exAll().forEach(e => { if (!figPose(e.n)) return; box.innerHTML = String(exPicture(e.n, 64));
             const uses = [...box.querySelectorAll('use')].map(u => u.getAttribute('href'));
-            if (!uses.some(h => /^#f[sb]/.test(h))) bad.push(e.n + ': no es la figura');
+            if (!uses.some(h => /^#f[qs]/.test(h))) bad.push(e.n + ': no es la figura');
             else if (/NaN|undefined/.test(box.innerHTML)) bad.push(e.n + ': fuera de sitio');
             else if (uses.some(h => !document.querySelector(h))) bad.push(e.n + ': usa ' + uses.find(h => !document.querySelector(h)));
             else if (!/^-?\\d+ -?\\d+ \\d+ \\d+$/.test(box.querySelector('svg').getAttribute('viewBox'))) bad.push(e.n + ': encuadre'); });
           return bad; })()""")
         check('las 551 miniaturas son la figura del ejercicio, enteras', not bad, str(bad[:6]))
-        check('las piezas de los modelos están en la página, una sola vez', ev("['fbTXs','fsTXs','fbPVi','fbUA','fqHG','fbFB','fbBB','fbFU0','fbBU1','fcB','frBI','frFDL0','frBDP1','gSm'].every(i=>document.querySelectorAll('[id=\"'+i+'\"]').length==1)"),
-              str(ev("['fbTXs','fsTXs','fbPVi','fbUA','fqHG','fbFB','fbBB','fbFU0','fbBU1','fcB','frBI','frFDL0','frBDP1','gSm'].filter(i=>document.querySelectorAll('[id=\"'+i+'\"]').length!=1)")))
+        PIECES = "['fqTX','fqPV','fqUA','fqHD','fqHG','fsB','fsU0','fsT1','fcB','fpBI','frBI','frFDL0','frBDP1','gSm','gSw','gSmF','gSwF','gFl','gPo','gWa']"
+        check('las piezas de los modelos están en la página, una sola vez', ev(PIECES + ".every(i=>document.querySelectorAll('[id=\"'+i+'\"]').length==1)"),
+              str(ev(PIECES + ".filter(i=>document.querySelectorAll('[id=\"'+i+'\"]').length!=1)")))
+        # y ya no están las de antes: la pieza grande con los músculos en reposo (fb…) ni una por vista de frente y de espaldas
+        check('una sola silueta para las dos vistas, sin los músculos en reposo', ev("![...document.querySelectorAll('[id^=\"fb\"]')].some(e => /^fb[A-Z]/.test(e.id)) && !document.querySelector('#fsFB,#fsBB')"))
+        # más humana: la mano abierta y el puño con su pulgar y sus dedos, y la cabeza con su perfil y su oreja (la silueta y,
+        # aparte, sus detalles, sin relleno); de frente, cada mano dibujada bajo el antebrazo y las dos orejas
+        check('el maniquí tiene manos, cara y orejas', ev("['fqHA','fqHG','fqHD'].every(i => (g => g.tagName == 'g' && g.querySelectorAll('path').length == 2 && g.querySelectorAll('path')[1].getAttribute('fill') == 'none')(document.getElementById(i))) && document.querySelectorAll('#fsB > path').length == 2 && document.querySelectorAll('#fsF0 > path, #fsF1 > path').length == 4"))
 
         # la hoja «Cómo se hace» de todos: cada una con su figura grande, entera
         bad = ev("""(async () => { const bad = []; const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -149,6 +155,8 @@ def main(path, shots=None):
             else if (!!st.querySelector('svg[data-fig]') == held) bad.push(e.n + (held ? ': se mantiene y se mueve' : ': no se mueve'));
             else if (document.querySelector('#sh .howto-title').textContent != e.n || document.querySelector('#sh .howto-text').innerText.length < 80) bad.push(e.n + ': el nombre o el texto');
             else if (document.querySelector('#sh img')) bad.push(e.n + ': lleva una foto');
+            // una barra o un trazo del material, casi negro, no se ve sobre el fondo (la barra del remo en T se veía así)
+            else if (st.querySelector('path[fill="none"][stroke="#0a0b10"], path[fill="none"][stroke="#0c0d14"], path[d="M0 0H1"][stroke="#0a0b10"], path[d="M0 0H1"][stroke="#0c0d14"]')) bad.push(e.n + ': un trazo del material casi negro');
             // de perfil, ninguna pieza del cuerpo ni del material se sale del recuadro (se cortaría en el borde); en
             // unidades del dibujo, con el margen de lo que una pieza girada abulta de más en su caja
             else if (figPose(e.n).v == 'S') { let over = 0;
@@ -280,6 +288,18 @@ def main(path, shots=None):
             pg.clock.run_for(8000)
             check('hoja de «%s»: y sigue en su sitio tras varios ciclos' % n, 'NaN' not in ev(LAYERS) and ev("document.querySelectorAll('#sh svg[data-fig] > g').length") >= 3)
             shot('hoja_' + n.split()[0].lower())
+        # el maniquí: la silueta clara, también la cabeza, y el brazo y la pierna de atrás pintados en un tono más oscuro (no
+        # huecos); si el ejercicio trabaja el cuerpo entero, la silueta va en rojo apagado y lo que más trabaja, encima, en
+        # rojo y naranja, como en su mapa muscular. Y el suelo, a lo ancho del recuadro
+        STAGE = "document.querySelector('#sh .fgs svg')"
+        how('Sentadilla')
+        check('hoja de «Sentadilla»: la silueta clara, con su cabeza, y el brazo y la pierna de atrás más oscuros', ev("(s => s.querySelector('use[href=\"#fqHD\"]').getAttribute('fill') == 'url(#gSm)' && s.querySelector('use[href=\"#fqTX\"]').getAttribute('fill') == 'url(#gSm)' && [...s.querySelectorAll('use[href=\"#fqTH\"]')].map(u => u.getAttribute('fill')).sort().join() == '#3b4162,url(#gSm)')(" + STAGE + ")"))
+        check('hoja de «Sentadilla»: el suelo va a lo ancho del recuadro', ev("(s => { const r = s.querySelector('rect[fill=\"url(#gFl)\"]'), v = s.viewBox.baseVal; return !!r && Math.abs(+r.getAttribute('x') - v.x) <= 1 && Math.abs(+r.getAttribute('width') - v.width) <= 1; })(" + STAGE + ")"))
+        how('Burpees')
+        check('hoja de «Burpees»: trabaja el cuerpo entero: la silueta en rojo apagado y lo que más trabaja, encima', ev("(s => [...s.querySelectorAll('use[href^=\"#fq\"]')].every(u => ['url(#gSw)', '#4f2a35'].includes(u.getAttribute('fill'))) && !!s.querySelector('use[fill=\"url(#gOr)\"]'))(" + STAGE + ")"))
+        check('hoja de «Burpees»: y su mapa muscular, igual', ev("!!document.querySelector('#sh .hwf use[fill=\"url(#gWa)\"]') && !!document.querySelector('#sh .hwf use[fill=\"url(#gOr)\"]')"))
+        how('Elevaciones laterales')
+        check('hoja de «Elevaciones laterales»: de frente, la silueta con una sola luz para todo el cuerpo', ev("(s => [...s.querySelectorAll('use[href^=\"#fs\"]')].length == 9 && [...s.querySelectorAll('use[href^=\"#fs\"]')].every(u => u.getAttribute('fill') == 'url(#gSmF)'))(" + STAGE + ")"))
         # un ciclo (pedalear, subir peldaños, correr) no para ni vuelve atrás: en dos ciclos y medio no hay dos momentos
         # seguidos iguales, y a mitad de ciclo las piernas han cambiado los papeles
         for n, half in [('Bicicleta', 760), ('Escaladora', 1000), ('Carrera 1 km', 430), ('Assault bike calorías', 680), ('Comba', 460), ('Double unders', 640), ('Comba boxeo', 400)]:
