@@ -302,3 +302,71 @@ K srt setting-text
 # (login-logo), que recibía el relleno del botón y se dibujaba más pequeño que su marco. Separadas a mano
 K lgl@brand-logo login-logo
 K lgl login-link
+
+# cuarto lote: el WOD, el resumen del entreno, el cardio, las medidas, los logros, el escáner y la nutrición
+# WOD
+K f2hd wod-head
+K f2cl wod-close
+K f2rg wod-ring
+K f2rb wod-ring-track
+K f2rp wod-ring-progress
+K f2rc wod-ring-center
+K f2p wod-phase
+K f2t wod-time
+K f2s wod-status
+K f2nx wod-next
+K f2sp wod-spacer
+K f2sk wod-skip
+K f2big wod-count-btn
+K f2sm wod-undo
+K f2ct wod-controls
+K f2dn wod-done
+K f2rs wod-result
+# resumen del entreno, cardio, medidas, logros y escáner
+K f2tl summary-totals
+K f2cmp summary-compare
+K f2dc delta-chip
+K f2prc summary-records
+K f2cs cardio-stats
+K f2ch measure-chart
+K f2ac achievement
+K f2ai achievement-medal
+K f2sv scan-view
+K f2gd scan-guide
+K f2lk link-card
+# nutrición: el día
+K ndy nutri-day
+K ndt day-type
+K nmb my-nutrition-btn
+K mlb meal-actions
+K mlp meal-btn
+K mli meal-btn-icon
+K hqw help-wrap
+K tpw template-note
+K fgc food-groups
+K itc own-food
+K cfx own-food-delete
+K nsb nutri-score
+K nsr nutri-score-scale
+# nutrición: «Mi nutrición»
+K mnh goals-head
+K mnm goals-mode
+K mnr goals-summary
+K mnk goals-ring
+K mnc goals-ring-center
+K mnx goals-macros
+K mnq goals-macro
+K mnl goals-list
+K mnw goals-row
+K mnv goals-value
+K mnd goals-diff
+K mnp goals-note
+K mnb goals-actions
+# nutrición: la semana
+K nwr nutri-week
+K nws nutri-week-stats
+K nwb nutri-week-bars
+K nwd nutri-week-day
+K nwt nutri-week-bar
+K nwl nutri-week-goal
+K sel selected

@@ -27,7 +27,7 @@ const showTip = (b, text) => {
   hideTip();
   /* en vertical, bajo (o sobre) el botón al que acompaña el «?», para no taparlo; en horizontal, apuntando al «?» */
   const d = b.getBoundingClientRect();
-  const a = (b.closest('.hqw') || b).getBoundingClientRect();
+  const a = (b.closest('.help-wrap') || b).getBoundingClientRect();
   const r = { left: d.left, width: d.width, top: a.top, bottom: a.bottom };
   const t = document.createElement('div');
   t.id = 'tip';

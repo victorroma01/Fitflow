@@ -33,7 +33,11 @@ const ringSvg = n => {
 };
 /* un macro bajo el anillo: su % de las kcal, los gramos y el nombre, con el color de su parte del anillo */
 const macroCell = (label, percent, grams, color) => html`
-  <div class="mnq"><small class="${color}">${icon('tgt', 13)}${percent} %</small><b>${roundInt(grams)}</b><small>${raw(label)}</small></div>`;
+  <div class="goals-macro">
+    <small class="${color}">${icon('tgt', 13)}${percent} %</small>
+    <b>${roundInt(grams)}</b>
+    <small>${raw(label)}</small>
+  </div>`;
 /* un desplegable de «Mi nutrición» (C: goalsDiet, goalsActivity, goalsMeals) */
 const goalSelect = (change, label, options, current) => html`
   <select data-c="${change}" aria-label="${label}">
@@ -41,9 +45,9 @@ const goalSelect = (change, label, options, current) => html`
   </select>`;
 /* el anillo con las kcal del día y los tres macros */
 const goalsRing = (goals, targets) => html`
-  <div class="mnr">
-    <div class="mnk">${ringSvg(goals)}<div class="mnc"><b>${roundInt(goals.k)}</b><small>kcal</small></div></div>
-    <div class="mnx">
+  <div class="goals-summary">
+    <div class="goals-ring">${ringSvg(goals)}<div class="goals-ring-center"><b>${roundInt(goals.k)}</b><small>kcal</small></div></div>
+    <div class="goals-macros">
       ${macroCell('Hidratos', goals.c, targets[1], 'c-ctx')}
       ${macroCell('Proteínas', goals.p, targets[2], 'c-ptx')}
       ${macroCell('Grasas', goals.f, targets[3], 'c-gtx')}
@@ -51,22 +55,26 @@ const goalsRing = (goals, targets) => html`
   </div>`;
 /* una fila con desplegable: su nombre, lo elegido (y, tras ello, `extra`) y el desplegable, que va encima, transparente */
 const goalRow = (label, value, select, extra = '') => html`
-  <div class="mnw"><span>${label}</span><span class="mnv" aria-hidden="true"><b>${value}</b>${extra}${icon('chr', 16)}</span>${select}</div>`;
+  <div class="goals-row">
+    <span>${label}</span>
+    <span class="goals-value" aria-hidden="true"><b>${value}</b>${extra}${icon('chr', 16)}</span>
+    ${select}
+  </div>`;
 /* lo que cambia los objetivos: peso, tipo de dieta (con la diferencia con el gasto), actividad y comidas al día */
 const goalsFields = (goals, diet, activity, diff) => {
   const weight = html`
-    <label class="mnw">
+    <label class="goals-row">
       <span>Peso</span>
-      <span class="mnv">
+      <span class="goals-value">
         <input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="goalsWeight" value="${S.biometrics.w || ''}"
             placeholder="—" aria-label="Peso en kg"> kg
       </span>
     </label>`;
-  const gap = diff == null ? '' : html`<i class="mnd">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`;
+  const gap = diff == null ? '' : html`<i class="goals-diff">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`;
   const dietRow = goalRow('Objetivo', raw(DIET_TYPES[diet][0]), goalSelect('goalsDiet', 'Objetivo: tipo de dieta', DIET_TYPES.map(d => d[0]), diet), gap);
   const activityRow = goalRow('Actividad', raw(ACTIVITY_LEVELS[activity][0]), goalSelect('goalsActivity', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1]), activity));
   const mealsRow = goalRow('Comidas al día', goals.n, goalSelect('goalsMeals', 'Comidas al día', [2, 3, 4, 5, 6, 7, 8].map(String), goals.n - 2));
-  return html`<div class="mnl">${weight}${dietRow}${activityRow}${mealsRow}</div>`;
+  return html`<div class="goals-list">${weight}${dietRow}${activityRow}${mealsRow}</div>`;
 };
 /* «Mi nutrición»: los objetivos del día, de dónde salen (según el plan, a mano o por defecto) y lo que los cambia */
 function myNutritionPage() {
@@ -81,12 +89,12 @@ function myNutritionPage() {
   return html`
     <div id="mny">
       ${backRow()}
-      <div class="mnh"><h1 class="page-title">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div>
+      <div class="goals-head"><h1 class="page-title">Mi nutrición</h1><span class="goals-mode">${raw(mode)}${icon('fk', 18)}</span></div>
       ${goalsRing(goals, targets)}
       ${goalsFields(goals, diet, activity, diff)}
-      <p class="muted mnp">${raw(note)}</p>
+      <p class="muted goals-note">${raw(note)}</p>
       <div class="h-120"></div>
-      <div class="sticky-btn mnb">
+      <div class="sticky-btn goals-actions">
         <button data-a="openManualGoals">Ajustar a mano</button>
         <button class="primary" data-a="goalsRecalculate">Recalcular con mis datos</button>
       </div>

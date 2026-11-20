@@ -422,7 +422,7 @@ A.openScanner = () => {
   addState.pick = null;
   sheet(html`
     <h3>Escanear código de barras</h3>
-    <div class="f2sv"><video id="f2v" playsinline muted autoplay></video><div class="f2gd"></div></div>
+    <div class="scan-view"><video id="f2v" playsinline muted autoplay></video><div class="scan-guide"></div></div>
     <p id="f2sm" class="muted m-8-2 fs-13">Abriendo la cámara…</p>
     <label>O escribe el código (8 a 14 cifras)</label>
     <div class="grid-2 cols-1fr-auto">

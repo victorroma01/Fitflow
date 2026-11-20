@@ -142,17 +142,17 @@ function wodSkeleton() {
   o.dataset.ph = wodRun.done ? 'done' : wodRun.ph || 'pre';
   o.classList.toggle('paused', !!wodRun.pa);
   let h = html`
-    <div class="f2hd">
-      <button data-a="wodExit" aria-label="Cerrar" class="f2cl">${icon('x', 22)}</button>
+    <div class="wod-head">
+      <button data-a="wodExit" aria-label="Cerrar" class="wod-close">${icon('x', 22)}</button>
       <b id="f2wt">${wodName(c)}</b>
       <span></span>
     </div>`;
   if (wodRun.done) {
     const f = wodRun.fin;
-    h += '<div class="f2dn"><small>Terminado</small>';
+    h += '<div class="wod-done"><small>Terminado</small>';
     if (m == 'amrap')
       h += html`
-        <b class="f2rs" id="f2rs">${raw(wodRun.r)}${wodRun.r == 1 ? ' ronda' : ' rondas'}</b>
+        <b class="wod-result" id="f2rs">${raw(wodRun.r)}${wodRun.r == 1 ? ' ronda' : ' rondas'}</b>
         <div class="grid-2 w-full mt-6">
           <div><label for="f2r">Rondas</label><input id="f2r" type="number" inputmode="numeric" min="0" max="999" value="${wodRun.r}"></div>
           <div>
@@ -162,29 +162,29 @@ function wodSkeleton() {
         </div>`;
     else if (m == 'ft')
       h += html`
-        <b class="f2rs">${raw(fmtClock(Math.round(f.t)))}</b>
+        <b class="wod-result">${raw(fmtClock(Math.round(f.t)))}</b>
         <small>${raw(f.cap ? 'Tiempo límite alcanzado' : wodRun.r ? wodRun.r + (wodRun.r == 1 ? ' vuelta' : ' vueltas') : '')}</small>`;
     else
       h += html`
-        <b class="f2rs">${raw(f.rd || '')}${f.rd ? (f.rd == 1 ? ' ronda' : ' rondas') : ''}</b>
+        <b class="wod-result">${raw(f.rd || '')}${f.rd ? (f.rd == 1 ? ' ronda' : ' rondas') : ''}</b>
         <small>${f.early ? 'Terminado antes de tiempo' : 'Completado'} · ${raw(fmtClock(Math.round(f.t)))}</small>`;
     h += '<input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" class="mt-12"><div class="grid-2 w-full mt-12"><button data-a="wodDiscard">Descartar</button><button class="primary" data-a="wodSave">Guardar</button></div></div>';
   }
   else {
-    h += '<div class="f2rg"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="f2rb" cx="60" cy="60" r="54"/><circle class="f2rp" id="f2rp" cx="60" cy="60" r="54"/></svg><div class="f2rc"><div class="f2p" id="f2p" aria-live="polite"></div><div class="f2t" id="f2t">0:00</div><div class="f2s" id="f2s"></div></div></div><div class="f2nx" id="f2nx"></div><div class="f2sp"></div>';
+    h += '<div class="wod-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="wod-ring-track" cx="60" cy="60" r="54"/><circle class="wod-ring-progress" id="f2rp" cx="60" cy="60" r="54"/></svg><div class="wod-ring-center"><div class="wod-phase" id="f2p" aria-live="polite"></div><div class="wod-time" id="f2t">0:00</div><div class="wod-status" id="f2s"></div></div></div><div class="wod-next" id="f2nx"></div><div class="wod-spacer"></div>';
     if (wodRun.ph == 'pre' && !wodRun.pa)
-      h += '<div class="ta-c"><button class="f2sk" data-a="wodSkipCountdown" id="f2sk">Saltar la cuenta atrás</button></div>';
+      h += '<div class="ta-c"><button class="wod-skip" data-a="wodSkipCountdown" id="f2sk">Saltar la cuenta atrás</button></div>';
     if (m == 'amrap')
       h += html`
-        <button class="f2big" data-a="wodRound" aria-label="Sumar una ronda">
+        <button class="wod-count-btn" data-a="wodRound" aria-label="Sumar una ronda">
           <small>Rondas</small>
           <b id="f2rn">${raw(wodRun.r)}</b>
           <small>Toca para sumar una</small>
         </button>
-        <div class="ta-c"><button data-a="wodRoundUndo" class="f2sm">Restar una ronda</button></div>`;
+        <div class="ta-c"><button data-a="wodRoundUndo" class="wod-undo">Restar una ronda</button></div>`;
     else if (m == 'ft')
       h += html`
-        <button class="f2big" data-a="wodRound" aria-label="Marcar vuelta">
+        <button class="wod-count-btn" data-a="wodRound" aria-label="Marcar vuelta">
           <small>Vueltas</small>
           <b id="f2rn">${raw(wodRun.r)}</b>
           <small id="f2lp">
@@ -192,7 +192,7 @@ function wodSkeleton() {
           </small>
         </button>`;
     h += html`
-      <div class="grid-2 f2ct">
+      <div class="grid-2 wod-controls">
         <button data-a="wodPause" id="f2pb">${wodRun.pa ? 'Seguir' : 'Pausa'}</button>
         <button data-a="wodFinish">Terminar</button>
       </div>`;

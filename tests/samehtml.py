@@ -130,6 +130,12 @@ def grab(path, screens, ren=None):
             try:
                 pg.evaluate(old(SCR[k] if k in SCR else MORE[k]))
                 pg.wait_for_timeout(900 if k in ('edit', 'overview', 'go_open') else 300)
+                # las figuras de una lista larga se pintan después, por tandas (extras/anatomy): hasta que no queda ninguna por
+                # pintar, el HTML depende de cuándo se mire
+                try:
+                    pg.wait_for_function("!document.querySelector('#sh svg[data-pic]')", timeout=8000)
+                except Exception:
+                    pass
                 out[k] = ADDRESS.sub('(dirección)', NOISE.sub(r'\1: …', pg.evaluate(old(BODY))))
                 if ren:
                     out[k] = new_classes(out[k], ren, path)

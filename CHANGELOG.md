@@ -134,11 +134,13 @@ línea.
   Segundo lote: 104 de las piezas comunes, el entreno, la librería, los programas y la descarga (`dgc` → `dialog-box`,
   `eqb` → `filter-btn`, `lvp` → `level-pill`, `dlo` → `deload-skip`…). Tercer lote: 117 del seguimiento, la apariencia, el
   recorrido, el primer arranque, la cuenta y el perfil (`rnp` → `release-notes`, `trtp` → `tour-tip`, `lgc` → `login-card`,
-  `srl` → `setting-label`…).
+  `srl` → `setting-label`…). Cuarto lote: 61 del WOD, el resumen del entreno, las medidas y la nutrición (`f2t` → `wod-time`,
+  `f2dc` → `delta-chip`, `mnk` → `goals-ring`, `nwd` → `nutri-week-day`…). Quedan las siete de las figuras, que reescribe
+  la solicitud de las figuras nuevas, y cinco que no tienen estilo.
   `tools/classes.js` las cambia a la vez en los estilos, el código y las pruebas, y solo donde el nombre es una clase. Lo que
   se ve no cambia: con el mapa `tests/clases-1.0.32.txt`, que traduce los nombres de la versión anterior, el HTML de las 106
   pantallas es el mismo, el paseo al azar no encuentra diferencias y las 282 capturas salen iguales, píxel a píxel. La app
-  pesa 12 KB más entre los tres lotes. Fuera, de paso, siete reglas de estilo que ya no usaba nadie (`.r` y `.ver`) y que
+  pesa 14 KB más entre los cuatro lotes. Fuera, de paso, siete reglas de estilo que ya no usaba nadie (`.r` y `.ver`) y que
   `tools/check.js` no veía, porque sus nombres son también palabras del código. Y una comprobación nueva en la batería
   (`tools/classes.js --check`): toda clase que el código pone o busca, y toda la que buscan las pruebas, tiene que estar en
   `src/css`, así que una mal escrita, o una renombrada que vuelva con su nombre viejo al fusionar una rama anterior, ya no

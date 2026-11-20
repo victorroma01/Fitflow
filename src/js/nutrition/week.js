@@ -22,19 +22,19 @@ const dayNumber = k => {
    nutritionPeriod; `seen`, la clave del día que se está viendo, y `today`, la de hoy (que aún no ha terminado) */
 const weekDayColumn = (d, i, top, seen, today) => {
   const kcal = roundInt(d.v[0]);
-  /* en objetivo, anotado fuera de objetivo o sin anotar (las clases, enteras: nwd ok · nwd on · nwd) */
-  const cls = (d.ok ? 'nwd ok' : d.on ? 'nwd on' : 'nwd') + (d.k == seen ? ' sel' : '');
+  /* en objetivo, anotado fuera de objetivo o sin anotar (las clases, enteras: nutri-week-day ok · nutri-week-day on · nutri-week-day) */
+  const cls = (d.ok ? 'nutri-week-day ok' : d.on ? 'nutri-week-day on' : 'nutri-week-day') + (d.k == seen ? ' selected' : '');
   const what = !d.on ? 'sin anotar' : d.k == today ? kcal + ' kcal por ahora' : kcal + ' kcal, ' + (d.ok ? 'en objetivo' : 'fuera de objetivo');
   const said = DAY_NAMES[i] + ' ' + (+d.k.slice(8)) + (d.k == today ? ' (hoy)' : '') + ': ' + what;
   return html`
     <button class="${cls}" data-a="nutritionGoDay" data-v="${d.k}" aria-label="${said}" aria-current="${d.k == seen ? 'date' : 'false'}">
-      <span class="nwt"><i data-style="height:${d.on ? Math.max(4, Math.min(100, d.v[0] / top * 100)) : 0}%"></i></span>
+      <span class="nutri-week-bar"><i data-style="height:${d.on ? Math.max(4, Math.min(100, d.v[0] / top * 100)) : 0}%"></i></span>
       <small>${DAY_LETTERS[i]}</small>
     </button>`;
 };
 /* las tres cifras de la semana: kcal y proteína de media (de los días anotados) frente al objetivo, y días en objetivo */
 const weekFigures = (p, kcalGoal, proteinGoal) => html`
-  <div class="nws">
+  <div class="nutri-week-stats">
     <div><b>${roundInt(p.avg[0])}</b><small>kcal de media</small><small>Objetivo ${roundInt(kcalGoal)}</small></div>
     <div><b>${roundInt(p.avg[2])} g</b><small>proteína de media</small><small>Objetivo ${roundInt(proteinGoal)} g</small></div>
     <div><b>${p.ok} de ${p.logged}</b><small>${p.logged == 1 ? 'día' : 'días'} en objetivo</small><small>±10 % de las kcal</small></div>
@@ -60,9 +60,9 @@ export const nutritionWeekCard = () => {
   return html`
     <div class="card nwk">
       <div class="row"><b>${title}</b><small>${note}</small></div>
-      <div class="nwb">
+      <div class="nutri-week-bars">
         ${week.days.map((d, i) => weekDayColumn(d, i, top, seen, today))}
-        <span class="nwl" aria-hidden="true"><i data-style="bottom:${kcalGoal / top * 100}%"></i></span>
+        <span class="nutri-week-goal" aria-hidden="true"><i data-style="bottom:${kcalGoal / top * 100}%"></i></span>
       </div>
       ${p.logged ? weekFigures(p, kcalGoal, kcalGoal * (+n.p || 0) / 400) : html`<p class="muted fs-13 m-0">${empty}</p>`}
     </div>`;
@@ -78,7 +78,7 @@ export const nutritionRecentCard = () => {
   if (!p.logged)
     return '';
   return html`
-    <button class="card w-full ta-l nwr" data-a="nutritionOpen">
+    <button class="card w-full ta-l nutri-week" data-a="nutritionOpen">
       <span class="row"><b>Nutrición · 7 días</b><small>Hasta ayer, ${p.logged} de 7 anotados</small></span>
       ${weekFigures(p, kcalGoal, kcalGoal * (+n.p || 0) / 400)}
     </button>`;

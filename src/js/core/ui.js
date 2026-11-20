@@ -299,7 +299,7 @@ export const segmented = (a, cur, list) => html`
     ${list.map(x => html`<button class="${cur == x[0] ? 'on' : ''}" data-a="${a}" data-v="${x[0]}">${raw(x[1])}</button>`)}
   </div>`;
 export const linkRow = (ico, t, s, a, i) => html`
-  <button class="card f2lk" data-a="${a}"${raw(i != null ? ' data-i="' + i + '"' : '')}>
+  <button class="card link-card" data-a="${a}"${raw(i != null ? ' data-i="' + i + '"' : '')}>
     ${icon(ico, 30)}
     <span><b>${raw(t)}</b><br><small>${raw(s)}</small></span>
   </button>`;

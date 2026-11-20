@@ -25,9 +25,11 @@ const nutritionDayHead = (dt, t) => {
       <h1>${raw(day)}</h1>
       <button data-a="nutritionDay" data-i="1" aria-label="Día siguiente" class="touch-target">›</button>
     </div>
-    <div class="ndy">
-      <span class="ndt">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span>
-      <button class="nmb" data-a="openMyNutrition" aria-label="Mi nutrición: objetivo de kcal y macros">${icon('fk', 22)}</button>
+    <div class="nutri-day">
+      <span class="day-type">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span>
+      <button class="my-nutrition-btn" data-a="openMyNutrition" aria-label="Mi nutrición: objetivo de kcal y macros">
+        ${icon('fk', 22)}
+      </button>
     </div>`;
 };
 /* lo comido frente al objetivo (los tres macros y las kcal), fijo arriba al desplazar */
@@ -63,16 +65,17 @@ const mealItemRow = (it, i, j) => {
 };
 /* los botones de una comida: añadir, guardarla como plato, buscar en internet y escanear */
 const mealButtons = (i, nm) => html`
-  <div class="mlb">
-    <button class="mlp mli" data-a="openAddFood" data-i="${i}" aria-label="${'Añadir alimento, ' + nm}">${icon('plus', 20)}</button>
-    <button class="mlp mli" data-a="saveDishAsk" data-i="${i}" data-n="${nm}" aria-label="${'Guardar ' + nm + ' como plato'}">
-      ${icon('bkm', 18)}
+  <div class="meal-actions">
+    <button class="meal-btn meal-btn-icon" data-a="openAddFood" data-i="${i}" aria-label="${'Añadir alimento, ' + nm}">
+      ${icon('plus', 20)}
     </button>
-    <button class="mlp" data-a="openFoodSearch" data-i="${i}" aria-label="${'Buscar alimento en internet, ' + nm}">
+    <button class="meal-btn meal-btn-icon" data-a="saveDishAsk" data-i="${i}" data-n="${nm}"
+        aria-label="${'Guardar ' + nm + ' como plato'}">${icon('bkm', 18)}</button>
+    <button class="meal-btn" data-a="openFoodSearch" data-i="${i}" aria-label="${'Buscar alimento en internet, ' + nm}">
       ${icon('srch', 17)}
       <span>Buscar</span>
     </button>
-    <button class="mlp" data-a="openMealScanner" data-i="${i}" aria-label="${'Escanear código de barras, ' + nm}">
+    <button class="meal-btn" data-a="openMealScanner" data-i="${i}" aria-label="${'Escanear código de barras, ' + nm}">
       ${icon('bar', 17)}
       <span>Scan</span>
     </button>

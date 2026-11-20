@@ -421,7 +421,7 @@ def main(path):
         run()
         check('«Empezar el recorrido» también lo da por visto', ev('S.tourSeen') == 1)
         steps = [(0, 'Tu entreno de hoy', "document.querySelector('#app .card.hero')"), (0, 'Cambia de pestaña', "document.querySelector('nav')"),
-                 (1, 'Anota lo que comes', "document.querySelector('#app .mlb').closest('.card')"), (2, 'Mira tu progreso', "document.querySelector('#app .week-card')"),
+                 (1, 'Anota lo que comes', "document.querySelector('#app .meal-actions').closest('.card')"), (2, 'Mira tu progreso', "document.querySelector('#app .week-card')"),
                  (3, 'Tu perfil', "document.querySelector('#app [data-a=openAchievements]')")]
         for k, (tb, tt, el) in enumerate(steps):
             run(400)
@@ -448,7 +448,7 @@ def main(path):
         pg.set_viewport_size({'width': 320, 'height': 568})
         ev("S.meals[dayKey(new Date())]={0:[{n:'Arroz',g:150,b:[130,28,2.7,.3,0,0]},{n:'Pollo',g:180,b:[165,0,31,3.6,0,0]}]};saveState();S.tab=0;R();A.tourReplay();A.tourNext();A.tourNext()")
         run(400)
-        o = ev("""(()=>{const t=document.querySelector('#app .mlb'),r=t.getBoundingClientRect(),s=document.querySelector('#tour .tour-spot').style,p=document.querySelector('#tour .tour-tip');
+        o = ev("""(()=>{const t=document.querySelector('#app .meal-actions'),r=t.getBoundingClientRect(),s=document.querySelector('#tour .tour-spot').style,p=document.querySelector('#tour .tour-tip');
           const l=parseFloat(s.left),tp=parseFloat(s.top),w=parseFloat(s.width),h=parseFloat(s.height);
           return {st:document.querySelector('#tour .tour-step').textContent,inside:l<=r.left+.5&&tp<=r.top+.5&&l+w>=r.right-.5&&tp+h>=r.bottom-.5,seen:tp>=0&&tp+h<=innerHeight,
             clear:p.offsetTop+p.offsetHeight<=tp+1||p.offsetTop>=tp+h-1,

@@ -6,7 +6,8 @@ código, issues o commits anteriores.
 Hasta la V1.0.32 casi todas las clases tenían de dos a cuatro letras (`cd`, `it`, `mu`, `sp`). Con las acciones y las claves del
 estado se hizo lo mismo en la V1.0.2 ([Nombres de la V1.0.2](nombres.md)); las clases eran lo que quedaba. Se renombran por
 lotes: el primero, las 53 de dos letras; el segundo, 104 de las piezas comunes, el entreno, la librería, los programas y la
-descarga; el tercero, 117 del seguimiento, la apariencia, el recorrido, el primer arranque, la cuenta y el perfil.
+descarga; el tercero, 117 del seguimiento, la apariencia, el recorrido, el primer arranque, la cuenta y el perfil; el cuarto,
+61 del WOD, el resumen del entreno, las medidas y la nutrición.
 
 ## Cómo se nombran
 
@@ -97,7 +98,7 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `dy` | `day` | Botón de un día en la tira de la semana. |
 | `dn` | `down` | Baja: una tendencia a peor, o la ayuda que se abre hacia abajo. En un ejercicio con todas sus series hechas era otra cosa y pasa a `done`. |
 | `xs` | `exercise` | Un ejercicio dentro del entreno en curso. |
-| `xh` | `exercise-head` | Cabecera de ese ejercicio: miniatura, nombre y botones. |
+| `xh` | `exercise-head` | Cabecera de un ejercicio del entreno: miniatura, nombre y botones. |
 | `fl` | `flat` | Muestra del aspecto Clásico, en Ajustes. |
 | `fd` | `folded` | Ejercicio plegado. |
 | `fu` | `future` | Un día que aún no ha llegado, en los puntos de la semana. |
@@ -150,8 +151,8 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `psel` | `chip-select` | Desplegable con forma de chip. |
 | `cps` | `choices` | Grupo de chips para elegir una respuesta. |
 | `cpr` | `create-day` | Día del programa que se está creando. |
-| `cpe` | `create-exercises` | Ejercicios de ese día, en dos líneas como mucho. |
-| `cpi` | `create-icon` | El icono de esa opción. |
+| `cpe` | `create-exercises` | Ejercicios de un día del programa que se está creando, en dos líneas como mucho. |
+| `cpi` | `create-icon` | Icono de una opción grande al crear un programa. |
 | `cpm` | `create-move` | Botones para subir o bajar un día. |
 | `cpo` | `create-option` | Opción grande al crear un programa. |
 | `cpw` | `create-routine` | Workout que se puede elegir al crear un programa. |
@@ -160,20 +161,20 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `dys` | `days` | Tira de los siete días de la semana. |
 | `dlc` | `deload-advice` | Tarjeta que aconseja una descarga. |
 | `dl2` | `deload-box` | Aviso de la semana de descarga. |
-| `dlc2` | `deload-box-slim` | Ese aviso, en una línea. |
+| `dlc2` | `deload-box-slim` | El aviso de la semana de descarga, en una línea. |
 | `dlb` | `deload-btn` | Botón que explica la descarga. |
 | `dln` | `deload-every` | Fila «Cada N semanas». |
 | `dlh` | `deload-hint` | Nota sobre la descarga. |
 | `dli` | `deload-icon` | Icono de la descarga. |
-| `dlbig` | `deload-icon-big` | Ese icono, en grande. |
+| `dlbig` | `deload-icon-big` | El icono de la descarga, en grande. |
 | `dlw2` | `deload-intro` | Presentación de la semana de descarga. |
 | `dlp` | `deload-primary` | Botón principal de la descarga. |
 | `dlo` | `deload-skip` | Botón «Omitir esta descarga». |
-| `dls` | `deload-skip-slim` | Ese botón, pequeño. |
-| `dlt` | `deload-tags` | Lo que cambia esa semana, en etiquetas. |
+| `dls` | `deload-skip-slim` | El botón «Omitir esta descarga», pequeño. |
+| `dlt` | `deload-tags` | Lo que cambia en la semana de descarga, en etiquetas. |
 | `wkdl` | `deload-week` | La semana en curso es de descarga. |
 | `dlv` | `deload-weight` | Peso rebajado por la descarga. |
-| `dgb` | `dialog-backdrop` | Fondo oscuro detrás de esa ventana. |
+| `dgb` | `dialog-backdrop` | Fondo oscuro detrás de la ventana de un aviso o de una pregunta. |
 | `dgc` | `dialog-box` | Ventana de un aviso o de una pregunta. |
 | `exc` | `exercise-cell` | Celda de un ejercicio en una lista: miniatura y texto. |
 | `ovx` | `exercise-row` | Fila de un ejercicio con su miniatura (vista previa del día, constructor de workouts). |
@@ -185,7 +186,7 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `eqd` | `filter-box` | Un filtro desplegable (material o grupo muscular). |
 | `eqb` | `filter-btn` | Botón que abre el filtro. |
 | `eqf` | `filter-foot` | Pie del panel: borrar y listo. |
-| `eqg` | `filter-grid` | Rejilla de esas opciones. |
+| `eqg` | `filter-grid` | Rejilla de las opciones de un filtro de la librería. |
 | `eqi` | `filter-option` | Una opción del filtro. |
 | `eqp` | `filter-panel` | Panel con las opciones del filtro. |
 | `eqrow` | `filter-row` | Fila con los filtros de la librería. |
@@ -196,11 +197,11 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `hwt` | `howto-title` | Título de «Cómo se hace». |
 | `exr` | `item-split` | Fila de una lista en dos columnas: el contenido y, a la derecha, un valor o un botón. |
 | `lvb` | `level-backdrop` | Fondo que cierra el menú de niveles. |
-| `lvc` | `level-caret` | Flecha de esa píldora. |
+| `lvc` | `level-caret` | Flecha de la píldora del nivel. |
 | `lvd` | `level-dot` | Punto de color de un nivel. |
 | `lvm` | `level-menu` | Menú de niveles. |
 | `lvn` | `level-note` | Explicación del nivel elegido. |
-| `lvi` | `level-option` | Un nivel de ese menú. |
+| `lvi` | `level-option` | Un nivel del menú de niveles. |
 | `lvp` | `level-pill` | Píldora con el nivel actual. |
 | `lvs` | `level-tabs` | Pestañas de nivel en la vista previa de un programa. |
 | `lvt` | `level-tag` | Etiqueta con el punto y el nombre del nivel. |
@@ -213,7 +214,7 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `msb` | `menu-shade` | Sombra degradada del menú. |
 | `mti` | `menu-title` | Rótulo «Menú». |
 | `pgt` | `page-title` | Título de una página. |
-| `pga` | `progress-axis` | Rótulos de los ejes de esa gráfica. |
+| `pga` | `progress-axis` | Rótulos de los ejes de la gráfica de progreso. |
 | `pgs` | `progress-chart` | Gráfica de progreso de un ejercicio. |
 | `pgsum` | `progress-summary` | Resumen de la tendencia, bajo la gráfica. |
 | `pgt2` | `progress-total` | Cifra y fecha del punto elegido de la gráfica. |
@@ -221,9 +222,9 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `rgb` | `regenerate` | Chip «Volver a generar». |
 | `wsr` | `rest-pill` | Píldora con el descanso que queda. |
 | `rtc` | `rotation-card` | Tarjeta «Toca rotar los ejercicios». |
-| `rtd` | `rotation-day` | Un día de esa rotación. |
-| `rpxe` | `rpe-example` | Serie de ejemplo de esa explicación. |
-| `rpxr` | `rpe-example-row` | Fila de esa serie. |
+| `rtd` | `rotation-day` | Un día de la tarjeta «Toca rotar los ejercicios». |
+| `rpxe` | `rpe-example` | Serie de ejemplo de la explicación del RPE. |
+| `rpxr` | `rpe-example-row` | Fila de la serie de ejemplo del RPE. |
 | `rpx` | `rpe-help` | Explicación del RPE. |
 | `rpxl` | `rpe-levels` | Lista de los niveles del RPE. |
 | `rpxs` | `rpe-scale` | La escala del RPE, dibujada. |
@@ -236,17 +237,17 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `spu` | `sheet-under` | Copia de la hoja que se queda debajo mientras entra otra página. |
 | `sug` | `suggested` | Peso sugerido, aún sin confirmar. |
 | `sgb` | `suggestion` | Sugerencia de progresión bajo un ejercicio. |
-| `dlsg` | `suggestion-deload` | Esa sugerencia, en semana de descarga. |
+| `dlsg` | `suggestion-deload` | La sugerencia de progresión, en semana de descarga. |
 | `swb` | `swatch` | Un color de acento. |
 | `swg` | `swatch-grid` | Rejilla de los colores de acento. |
 | `tqa` | `technique-code` | Siglas de una técnica de intensidad. |
 | `tql` | `technique-list` | Lista de las técnicas de un programa. |
 | `tst` | `toast` | Aviso breve que aparece arriba. |
-| `tsu` | `toast-undo` | Botón «Deshacer» de ese aviso. |
+| `tsu` | `toast-undo` | Botón «Deshacer» del aviso breve. |
 | `wup` | `warmup` | Series de calentamiento. |
 | `wkc` | `week-card` | Tarjeta «Esta semana». |
-| `wkd` | `week-dots` | Sus siete puntos. |
-| `wkn` | `week-note` | Nota de esa tarjeta. |
+| `wkd` | `week-dots` | Los siete puntos de la tarjeta «Esta semana». |
+| `wkn` | `week-note` | Nota de la tarjeta «Esta semana». |
 | `wks` | `week-stats` | Racha y entrenos de la semana. |
 
 ### Tercer lote: el seguimiento, la apariencia, el recorrido, el primer arranque, la cuenta y el perfil
@@ -257,19 +258,19 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `acp` | `accent-preview` | Vista previa del color de acento. |
 | `acpr` | `accent-preview-bar` | Barra de progreso de ejemplo. |
 | `acpb` | `accent-preview-btn` | Botón de ejemplo. |
-| `acph` | `accent-preview-hero` | Su tarjeta de ejemplo. |
+| `acph` | `accent-preview-hero` | Tarjeta de ejemplo de la vista previa del color de acento. |
 | `acpn` | `accent-preview-nav` | Barra de pestañas de ejemplo. |
 | `acpk` | `accent-preview-row` | Fila con el botón y los chips de ejemplo. |
 | `acl` | `account-list` | Tarjeta con una lista de datos de la cuenta. |
 | `adr` | `admin-report` | Tarjeta de un aviso en la bandeja del administrador. |
 | `adrf` | `admin-report-filter` | Pestañas para filtrar la bandeja por estado. |
-| `adrh` | `admin-report-head` | Su cabecera, que la abre y la cierra. |
+| `adrh` | `admin-report-head` | Cabecera de un aviso de la bandeja del administrador, que lo abre y lo cierra. |
 | `anx` | `analysis-bad` | Cambio de peso: en contra del objetivo. |
 | `anc` | `analysis-chart` | Gráfica de un apartado. |
-| `ann` | `analysis-figures` | Las dos cifras de nutrición. |
+| `ann` | `analysis-figures` | Las dos cifras de nutrición del análisis: kcal y proteína de media. |
 | `ano` | `analysis-good` | Cambio de peso: hacia el objetivo. |
 | `anh` | `analysis-heading` | Título de un apartado. |
-| `ank` | `analysis-kpi` | Una de esas cifras. |
+| `ank` | `analysis-kpi` | Una de las tres cifras del mes, en el análisis. |
 | `ankg` | `analysis-kpis` | Rejilla de las tres cifras del mes. |
 | `anlg` | `analysis-legend` | Leyenda de una gráfica. |
 | `anu` | `analysis-list` | Lista de conclusiones. |
@@ -280,50 +281,50 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `cbk` | `backup-card` | Tarjeta de una copia de seguridad. |
 | `cbl` | `backup-line` | Línea con el estado de la copia en la nube. |
 | `brl` | `brand-logo` | El logo de StrataFit. |
-| `brl-o` | `brand-logo-dark` | La del tema oscuro. |
+| `brl-o` | `brand-logo-dark` | La imagen del logo para el tema oscuro. |
 | `brl-c` | `brand-logo-light` | La imagen del logo para el tema claro. |
-| `nbon` | `bubble-on` | La barra, con la burbuja ya colocada. |
+| `nbon` | `bubble-on` | La barra de pestañas, con la burbuja ya colocada. |
 | `lge` | `form-error` | Línea de error de un formulario (inicio de sesión, cambio de contraseña). |
-| `gso` | `glass-option` | Una de las dos. |
+| `gso` | `glass-option` | Una de las dos opciones de estilo. |
 | `gst` | `glass-options` | Las dos opciones de estilo: Cristal y Clásico. |
-| `gpv` | `glass-preview` | Su muestra. |
+| `gpv` | `glass-preview` | Muestra de una opción de estilo. |
 | `icnw` | `icon-notice` | Aviso del icono nuevo de la app. |
-| `icn` | `icon-notice-logo` | El icono, en ese aviso. |
+| `icn` | `icon-notice-logo` | El icono, en el aviso del icono nuevo. |
 | `icst` | `icon-notice-status` | Línea que dice si los datos están sincronizados. |
 | `icns` | `icon-notice-steps` | Lista de pasos del aviso. |
-| `trbg` | `intro-icon` | Su icono. |
+| `trbg` | `intro-icon` | Icono del panel de la bienvenida y del recorrido. |
 | `trw` | `intro-panel` | Panel centrado de la bienvenida y del principio y el final del recorrido. |
 | `lnk` | `link-btn` | Botón con aspecto de enlace. |
-| `lgbr` | `login-brand` | El logo, arriba. |
+| `lgbr` | `login-brand` | El logo, arriba, en el inicio de sesión. |
 | `lgc` | `login-card` | Tarjeta con el formulario. |
 | `lgh` | `login-hint` | Nota sobre el usuario y la contraseña. |
 | `lgn` | `login-note` | Nota bajo la tarjeta. |
 | `lgw` | `login-page` | Pantalla de inicio de sesión. |
-| `lgbg` | `login-photo` | La foto de fondo. |
+| `lgbg` | `login-photo` | La foto de fondo del inicio de sesión. |
 | `lgb` | `login-submit` | Botón «Entrar» o «Crear cuenta». |
 | `lgs` | `login-tagline` | Lema bajo el logo. |
-| `lgt` | `login-title` | Título de esa tarjeta. |
+| `lgt` | `login-title` | Título de la tarjeta del inicio de sesión. |
 | `lgv` | `login-version` | Número de versión, abajo. |
 | `mdv` | `medal-row` | Fila de medallas conseguidas. |
 | `nbb` | `nav-bubble` | Burbuja que marca la pestaña elegida. |
 | `npw` | `no-program` | Workout sin programa elegido. |
 | `npc` | `no-program-card` | Tarjeta «Elige un programa». |
-| `npd` | `no-program-demo` | El día de ejemplo que se ve detrás, borroso. |
+| `npd` | `no-program-demo` | El día de ejemplo que se ve detrás, borroso, en Workout sin programa. |
 | `ups` | `notes-heading` | Título de un apartado de las novedades (Novedades, Mejoras, Correcciones). |
 | `aos` | `os-counts` | Cuentas por sistema del móvil. |
-| `lgey` | `password-eye` | Ese botón. |
+| `lgey` | `password-eye` | Botón de ver la contraseña. |
 | `lgpw` | `password-field` | Casilla de contraseña con su botón de ver. |
 | `pfq` | `photo-remove` | Botón «Quitar foto». |
 | `pfh` | `profile-head` | Tarjeta con la foto y el nombre. |
-| `pfn` | `profile-name` | El nombre de usuario. |
+| `pfn` | `profile-name` | El nombre de usuario, en el perfil. |
 | `pfa` | `profile-role` | Rótulo «Administrador». |
 | `pfs` | `profile-summary` | Cabecera de una tarjeta del perfil: icono, título y resumen. |
 | `rnc` | `release-close` | Fila del botón «Cerrar» de las novedades. |
 | `rnp` | `release-notes` | Tarjeta con las novedades de una versión. |
-| `rnv` | `release-version` | El número de versión, en esa tarjeta. |
+| `rnv` | `release-version` | El número de versión, en la tarjeta de las novedades. |
 | `rpt` | `report-areas` | Chips para elegir dónde ocurre. |
 | `rpi` | `report-item` | Tarjeta de un aviso enviado. |
-| `rpkd` | `report-kind` | Tipo y sitio de ese aviso. |
+| `rpkd` | `report-kind` | Tipo y sitio de un aviso enviado. |
 | `rpk` | `report-kinds` | Chips para elegir el tipo: fallo o sugerencia. |
 | `rpr` | `report-reply` | Respuesta a un aviso. |
 | `rpv` | `report-tech` | Datos técnicos de un aviso. |
@@ -335,10 +336,10 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `srl` | `setting-label` | Nombre de un ajuste. |
 | `sro` | `setting-signout` | El grupo de «Cerrar sesión», separado del resto. |
 | `srt` | `setting-text` | Texto largo de una página de ajustes (privacidad, aviso legal). |
-| `srv` | `setting-value` | Su valor actual. |
+| `srv` | `setting-value` | Valor actual de un ajuste. |
 | `rps` | `status-pill` | Píldora con un estado (de un aviso enviado; del veredicto del análisis). |
 | `swc` | `swatch-custom` | El color «Personalizado». |
-| `swr` | `swatch-rainbow` | Su círculo de colores, mientras no se ha elegido ninguno. |
+| `swr` | `swatch-rainbow` | Círculo de colores de «Personalizado», mientras no se ha elegido ninguno. |
 | `adk` | `temp-password` | La contraseña temporal. |
 | `adp` | `temp-password-card` | Tarjeta de una contraseña temporal por entregar. |
 | `trar` | `tour-arrow` | Flecha del globo. |
@@ -354,24 +355,90 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `updb` | `update-backdrop` | Fondo oscuro del aviso de versión nueva. |
 | `updk` | `update-box` | Tarjeta negra del aviso de versión nueva. |
 | `upb` | `update-btn` | Botón «Actualizar» o «Entendido». |
-| `updx` | `update-close` | Su botón de cerrar. |
+| `updx` | `update-close` | Botón de cerrar el aviso de versión nueva. |
 | `upe` | `update-label` | Rótulo de arriba: «Novedades» o «Nueva versión disponible». |
-| `upn` | `update-notes` | Las novedades, que se deslizan dentro del aviso. |
+| `upn` | `update-notes` | Las novedades, que se deslizan dentro del aviso de versión nueva. |
 | `upv` | `update-version` | Número de versión, cuando el aviso junta varias. |
 | `wrb` | `weigh-banner` | Aviso «Día de pesarse». |
 | `wrk` | `weigh-calendar` | Botón «Añadir al calendario del móvil». |
 | `wrc` | `weigh-card` | Tarjeta para activar el aviso de pesarse. |
 | `wro` | `weigh-custom` | Casillas del intervalo a medida. |
-| `wri` | `weigh-icon` | Su icono. |
-| `wrt` | `weigh-note` | Nota de esa tarjeta. |
+| `wri` | `weigh-icon` | Icono del aviso «Día de pesarse». |
+| `wrt` | `weigh-note` | Nota de la tarjeta del aviso de pesarse. |
 | `wrs` | `weigh-steps` | Chips con cada cuánto avisa. |
-| `wle` | `welcome-error` | Su línea de error. |
+| `wle` | `welcome-error` | Línea de error de la hoja «Tus datos». |
 | `wlb` | `welcome-form` | Hoja «Tus datos» de la bienvenida. |
 | `wlg` | `welcome-logo` | El logo, en la bienvenida. |
 | `wln3` | `welcome-numbers` | Fila de edad, altura y peso. |
 | `wlw` | `welcome-warning` | Aviso de la fase de pruebas. |
 
 Tres nombres del análisis (`ane`, `ano`, `anx`) se montaban a trozos (`'an' + x`); antes de renombrarlos se escribieron enteros.
+
+### Cuarto lote: el WOD, el resumen del entreno, las medidas y la nutrición
+
+| Antes | Ahora | Qué es |
+| --- | --- | --- |
+| `f2ac` | `achievement` | Fila de un logro: medalla, nombre y progreso. |
+| `f2ai` | `achievement-medal` | Medalla de un logro, en su fila. |
+| `f2cs` | `cardio-stats` | Cifras de cardio de la semana. |
+| `ndt` | `day-type` | Etiqueta «Día de entreno» o «Día de descanso». |
+| `f2dc` | `delta-chip` | Chip con una subida o una bajada. |
+| `fgc` | `food-groups` | Chips de los grupos de alimentos, que se deslizan a los lados. |
+| `mnb` | `goals-actions` | Botones fijos de «Mi nutrición». |
+| `mnd` | `goals-diff` | Diferencia de kcal del objetivo elegido. |
+| `mnh` | `goals-head` | Cabecera de «Mi nutrición»: título y modo. |
+| `mnl` | `goals-list` | Lista de datos de «Mi nutrición»: peso, dieta, actividad y comidas. |
+| `mnq` | `goals-macro` | Un macro de «Mi nutrición»: porcentaje y gramos. |
+| `mnx` | `goals-macros` | Rejilla de los tres macros de «Mi nutrición». |
+| `mnm` | `goals-mode` | Modo de los objetivos: a mano, según tu plan o por defecto. |
+| `mnp` | `goals-note` | Nota al pie de «Mi nutrición». |
+| `mnk` | `goals-ring` | Anillo de kcal de «Mi nutrición». |
+| `mnc` | `goals-ring-center` | Cifra de kcal en el centro del anillo. |
+| `mnw` | `goals-row` | Fila de un dato de «Mi nutrición», con su casilla o su desplegable. |
+| `mnr` | `goals-summary` | Anillo de kcal y macros de «Mi nutrición». |
+| `mnv` | `goals-value` | Valor de una fila de «Mi nutrición». |
+| `hqw` | `help-wrap` | Envoltorio de un botón con su «?» de ayuda en la esquina. |
+| `f2lk` | `link-card` | Tarjeta que es un botón: icono, título y una línea. |
+| `mlb` | `meal-actions` | Botones de una comida: añadir, guardar como plato, buscar y escanear. |
+| `mlp` | `meal-btn` | Uno de los botones de una comida. |
+| `mli` | `meal-btn-icon` | Botón de una comida que solo lleva icono. |
+| `f2ch` | `measure-chart` | Gráfica de una medida corporal. |
+| `nmb` | `my-nutrition-btn` | Botón redondo que abre «Mi nutrición». |
+| `ndy` | `nutri-day` | Fila con el tipo de día y el botón de «Mi nutrición». |
+| `nsb` | `nutri-score` | Letra del Nutri-Score de un alimento. |
+| `nsr` | `nutri-score-scale` | Escala del Nutri-Score, de la A a la E. |
+| `nwr` | `nutri-week` | Tarjeta «Nutrición · 7 días». |
+| `nwt` | `nutri-week-bar` | Barra de kcal de un día. |
+| `nwb` | `nutri-week-bars` | Las siete barras de la semana de nutrición. |
+| `nwd` | `nutri-week-day` | Columna de un día en la semana de nutrición. |
+| `nwl` | `nutri-week-goal` | Línea del objetivo de kcal sobre las barras. |
+| `nws` | `nutri-week-stats` | Medias de la semana de nutrición. |
+| `itc` | `own-food` | Fila de un alimento propio, con su botón de borrar. |
+| `cfx` | `own-food-delete` | Botón de borrar un alimento propio. |
+| `f2gd` | `scan-guide` | Marco que dice dónde poner el código de barras. |
+| `f2sv` | `scan-view` | Imagen de la cámara en el escáner de códigos. |
+| `sel` | `selected` | El día que se está viendo, en la semana de nutrición. |
+| `f2cmp` | `summary-compare` | Comparación con el entreno anterior, en el resumen. |
+| `f2prc` | `summary-records` | Tarjeta de récords personales del resumen. |
+| `f2tl` | `summary-totals` | Cifras del resumen del entreno: series, volumen, tiempo y esfuerzo. |
+| `tpw` | `template-note` | Texto que explica una plantilla de comidas. |
+| `f2cl` | `wod-close` | Botón de cerrar el WOD. |
+| `f2ct` | `wod-controls` | Botones de pausa y de terminar el WOD. |
+| `f2big` | `wod-count-btn` | Botón grande para sumar una ronda o marcar una vuelta. |
+| `f2dn` | `wod-done` | Pantalla de WOD terminado. |
+| `f2hd` | `wod-head` | Cabecera del WOD en marcha: cerrar y nombre. |
+| `f2nx` | `wod-next` | Lo que viene después, en el WOD. |
+| `f2p` | `wod-phase` | Fase del WOD: «Trabajo», «Descanso», «Prepárate». |
+| `f2rs` | `wod-result` | Resultado del WOD: rondas o tiempo. |
+| `f2rg` | `wod-ring` | Anillo del tiempo del WOD. |
+| `f2rc` | `wod-ring-center` | Centro del anillo del WOD: fase, reloj y estado. |
+| `f2rp` | `wod-ring-progress` | Parte del anillo del WOD que avanza. |
+| `f2rb` | `wod-ring-track` | Fondo del anillo del WOD. |
+| `f2sk` | `wod-skip` | Botón «Saltar la cuenta atrás». |
+| `f2sp` | `wod-spacer` | Hueco que empuja los botones del WOD hacia abajo. |
+| `f2s` | `wod-status` | Línea bajo el reloj del WOD: «Ronda 2 de 5». |
+| `f2t` | `wod-time` | Reloj del WOD. |
+| `f2sm` | `wod-undo` | Botón «Restar una ronda». |
 
 ### `pgr` y `lgl`: dos clases que eran dos piezas cada una
 
@@ -394,5 +461,7 @@ imagen con las dos opciones).
 
 ### Sin renombrar todavía
 
-- Las del **WOD, el resumen del entreno, las medidas y la nutrición** (`f2…`, `mn…`, `nw…`): el cuarto lote.
-- Las de **las figuras** (`fgs`, `hwf`, `anf`…): las reescribe la solicitud de las figuras nuevas (#59).
+- Las siete de **las figuras** (`fgs`, `hwf`, `hwl`, `hwm`, `anb`, `anf`, `anl`): las reescribe la solicitud de las figuras
+  nuevas (#59).
+- Cinco **sin estilo** (`nwk`, `pgc`, `pgm`, `trp`, `trs`), de las apuntadas en `HOOKS`: no están en el CSS, que es por donde
+  la herramienta y las comparaciones saben qué es una clase.

@@ -40,7 +40,7 @@ function measureChart(k) {
   const yy = y => h - py - (y - lo) / sp * (h - 2 * py);
   const d = pts.map((p, i) => (i ? 'L' : 'M') + xx(i).toFixed(1) + ' ' + yy(p.y).toFixed(1)).join(' ');
   return html`
-    <svg viewBox="0 0 ${w} ${h}" class="f2ch" role="img" aria-label="Evolución de ${nm}">
+    <svg viewBox="0 0 ${w} ${h}" class="measure-chart" role="img" aria-label="Evolución de ${nm}">
       <path d="${d}" fill="none" stroke="var(--a1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       ${pts.map((p, i) => html`
         <circle cx="${xx(i).toFixed(1)}" cy="${yy(p.y).toFixed(1)}" r="${i == pts.length - 1 ? 4.5 : 3}"

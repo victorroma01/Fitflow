@@ -136,13 +136,13 @@ DASH = """(() => {
   const stats = {};
   document.querySelectorAll('#app .grid-2 .card').forEach(c => { if (c.querySelector('b.fs-26')) stats[c.querySelector('small').textContent] = c.querySelector('b').textContent; });
   const wk = document.querySelector('.week-card');
-  const cardio = [...document.querySelectorAll('#app .card')].find(c => c.querySelector('.f2cs'));
+  const cardio = [...document.querySelectorAll('#app .card')].find(c => c.querySelector('.cardio-stats'));
   return { stats, bars: [...card('Volumen por sesión').querySelectorAll('.bg-ac')].map(b => parseFloat(b.style.height)),
     cal: [...document.querySelectorAll('.calendar i.on')].map(i => +i.textContent), calAll: [...document.querySelectorAll('.calendar i')].filter(i => i.textContent).length,
     month: document.querySelector('.calendar').previousElementSibling.querySelector('b').textContent,
     week: wk.querySelector('.row small').textContent, dots: [...wk.querySelectorAll('.week-dots span')].map(s => s.classList.contains('on') ? 1 : 0), streak: [...wk.querySelectorAll('.week-stats b')].map(b => +b.textContent),
     records: rows(card('Récords personales')), timeline: rows(card('Línea de récords')),
-    cardio: cardio ? { total: cardio.querySelector('.row small').textContent, now: [...cardio.querySelectorAll('.f2cs b')].map(b => b.textContent) } : null };
+    cardio: cardio ? { total: cardio.querySelector('.row small').textContent, now: [...cardio.querySelectorAll('.cardio-stats b')].map(b => b.textContent) } : null };
 })()"""
 
 
@@ -318,11 +318,11 @@ def main(path):
         days_ = [[sum(it['b'][i] * it['g'] / 100 for m in meals.get(day(n), {}).values() for it in m) for i in range(4)] for n in range(1, 8)]
         on = [t for t in days_ if t[0] > 50]
         in_goal = sum(1 for t in on if abs(t[0] - goals['k']) <= goals['k'] * .1)
-        card = text('.nwr')
+        card = text('.nutri-week')
         want = ['Hasta ayer, %d de 7 anotados' % len(on), '%d\nkcal de media\nObjetivo %d' % (jsround(sum(t[0] for t in on) / len(on)), goals['k']),
                 '%d g\nproteína de media\nObjetivo %d g' % (jsround(sum(t[2] for t in on) / len(on)), jsround(goals['k'] * goals['p'] / 400)), '%d de %d\ndías en objetivo' % (in_goal, len(on))]
         check('la media de kcal y de proteína de los días anotados y cuántos quedaron en objetivo', len(on) == 5 and all(w in card for w in want), '%s en %s' % (want, card))
-        ev("scrollTo(0, 400); document.querySelector('.nwr').click()")
+        ev("scrollTo(0, 400); document.querySelector('.nutri-week').click()")
         run()
         check('al tocarla se va a Nutrición, al día de hoy y arriba', ev("S.tab == 1 && nutriDayOffset == 0 && scrollY == 0"))
 

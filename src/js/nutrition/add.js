@@ -25,10 +25,10 @@ const NUTRI_SCORE = { a: 'ns-a', b: 'ns-b', c: 'ns-c', d: 'ns-d', e: 'ns-e' };
 export const nutriScore = v => typeof v == 'string' && Object.prototype.hasOwnProperty.call(NUTRI_SCORE, v) ? v : '';
 /** La letra del Nutri-Score, pequeña (en las listas), o '' si no la hay. */
 export const nutriScoreBadge = v => nutriScore(v) ? html`
-  <i class="nsb ${NUTRI_SCORE[v]}" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">${v.toUpperCase()}</i>` : '';
+  <i class="nutri-score ${NUTRI_SCORE[v]}" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">${v.toUpperCase()}</i>` : '';
 /** El Nutri-Score con sus cinco letras y la del alimento destacada, o '' si no lo tiene. */
 const nutriScoreRow = v => nutriScore(v) ? html`
-  <div class="nsr" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">
+  <div class="nutri-score-scale" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">
     <span>Nutri-Score</span>
     ${Object.keys(NUTRI_SCORE).map(x => html`<i class="${NUTRI_SCORE[x]}${x == v ? ' on' : ''}">${x.toUpperCase()}</i>`)}
   </div>` : '';
@@ -72,19 +72,18 @@ function foodList(q) {
       L = L.filter(o => groupOfFood(o.f) == cat);
     L.sort((a, b) => a.n.localeCompare(b.n, 'es'));
   }
-  document.querySelectorAll('.fgc button').forEach(b => {
+  document.querySelectorAll('.food-groups button').forEach(b => {
     b.classList.toggle('on', !ws.length && +b.dataset.i == cat);
     b.disabled = !!ws.length;
   });
   const own = FOODS_SRC.length;
   e.innerHTML = L.slice(0, ws.length ? 80 : 1000).map(o => html`
-    <div class="item${o.i >= own ? ' itc' : ''}" data-a="pickFood" data-i="${o.i}" role="button" tabindex="0">
+    <div class="item${o.i >= own ? ' own-food' : ''}" data-a="pickFood" data-i="${o.i}" role="button" tabindex="0">
       <span>${o.f.n}${raw(nutriScoreBadge(o.f.ns))}</span>
       <small>${o.f.b[0]} kcal/100 g</small>
       ${o.i >= own ? html`
-        <button class="cfx" data-a="ownFoodDeleteAsk" data-i="${o.i - own}" aria-label="${'Borrar ' + o.f.n + ' de Mis alimentos'}">
-          ✕
-        </button>` : ''}
+        <button class="own-food-delete" data-a="ownFoodDeleteAsk" data-i="${o.i - own}"
+            aria-label="${'Borrar ' + o.f.n + ' de Mis alimentos'}">✕</button>` : ''}
     </div>
   `).join('') + (ws.length && !L.length ? html`
     <p class="muted fs-13 m-10-2">No está en la lista. Búscalo en internet o créalo en «Nuevo».</p>
@@ -113,7 +112,7 @@ function addSheetBase() {
   if (a.tab == 0)
     return h + habitsCard(a.m) + html`
       <input placeholder="Buscar alimento" aria-label="Buscar alimento" data-u="foodSearch">
-      <div class="fgc" role="group" aria-label="Grupos de alimentos">
+      <div class="food-groups" role="group" aria-label="Grupos de alimentos">
         ${[-1].concat(groupNames().map((x, i) => i)).map(i => html`
           <button class="chip${(a.cat >= 0 ? a.cat : -1) == i ? ' on' : ''}" data-a="foodGroup" data-i="${i}">
             ${i < 0 ? 'Todos' : groupNames()[i]}

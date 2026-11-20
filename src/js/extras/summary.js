@@ -55,7 +55,7 @@ function summaryData() {
   }
   return o;
 }
-const deltaChip = (txt, cl) => html`<span class="f2dc ${cl || ''}">${raw(txt)}</span>`;
+const deltaChip = (txt, cl) => html`<span class="delta-chip ${cl || ''}">${raw(txt)}</span>`;
 export function showSummary() {
   try {
     const o = summaryData();
@@ -67,7 +67,7 @@ export function showSummary() {
     let h = html`
       <h3 class="m-0">Entreno guardado</h3>
       <small class="muted">${l.n} · ${raw(fmtDateShort(l.d, { weekday: 'long', day: 'numeric', month: 'long' }))}</small>
-      <div class="grid-2 f2tl">
+      <div class="grid-2 summary-totals">
         <div class="card"><b>${raw(l.s)}</b><small>${l.s == 1 ? 'Serie' : 'Series'}</small></div>
         <div class="card"><b>${raw(volumeText(l.v, 1))}</b><small>Volumen</small></div>
         <div class="card"><b>${raw(l.m)} min</b><small>Tiempo</small></div>
@@ -83,10 +83,10 @@ export function showSummary() {
     if (o.volRec)
       ch.push(deltaChip('Más volumen que nunca en este entreno', 'up'));
     if (ch.length)
-      h += html`<div class="f2cmp"><small class="muted">Frente al entreno anterior</small><div>${raw(ch.join(''))}</div></div>`;
+      h += html`<div class="summary-compare"><small class="muted">Frente al entreno anterior</small><div>${raw(ch.join(''))}</div></div>`;
     if (o.pr.length)
       h += html`
-        <div class="card f2prc">
+        <div class="card summary-records">
           <b>${raw(o.pr.length == 1 ? 'Récord personal' : o.pr.length + ' récords personales')}</b>
           ${o.pr.map(p => html`
             <div class="item cols-1fr-auto">
