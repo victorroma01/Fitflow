@@ -133,7 +133,7 @@ export function cardioCard() {
     return html`
       <div class="card">
         <div class="row"><b>Cardio</b><small>${tot} km en total</small></div>
-        <div class="f2cs">
+        <div class="cardio-stats">
           <div><b>${cur.km}</b><small>km esta semana</small></div>
           <div><b>${raw(fmtClock(cur.sec))}</b><small>tiempo</small></div>
           <div><b>${raw(cur.n)}</b><small>${cur.n == 1 ? 'sesión' : 'sesiones'}</small></div>

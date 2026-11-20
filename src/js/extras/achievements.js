@@ -78,8 +78,8 @@ function achievementsPage() {
   const dn = ACHIEVEMENTS.filter(x => a[x[0]]);
   const pd = ACHIEVEMENTS.filter(x => !a[x[0]]);
   const row = (x, on) => html`
-    <div class="f2ac${on ? ' on' : ''}">
-      <span class="f2ai">${medalSvg(x[0], 58, on)}</span>
+    <div class="achievement${on ? ' on' : ''}">
+      <span class="achievement-medal">${medalSvg(x[0], 58, on)}</span>
       <span class="minw-0">
         <b>${raw(x[1])}</b><br>
         <small>${raw(x[2])}</small>

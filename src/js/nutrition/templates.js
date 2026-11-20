@@ -55,10 +55,13 @@ export const templateCard = k => {
   return html`
     <details class="card">
       <summary>Plantillas · día de ${raw(nm)}</summary>
-      <p class="muted tpw">${why}</p>
+      <p class="muted template-note">${why}</p>
       <div class="grid-2 mt-10">
-        <div class="hqw"><button data-a="templateApply">Aplicar plantilla</button>${helpDot('tpa', 'Qué hace «Aplicar plantilla»')}</div>
-        <div class="hqw">
+        <div class="help-wrap">
+          <button data-a="templateApply">Aplicar plantilla</button>
+          ${helpDot('tpa', 'Qué hace «Aplicar plantilla»')}
+        </div>
+        <div class="help-wrap">
           <button data-a="templateSave">Guardar día como plantilla</button>
           ${helpDot('tps', 'Qué hace «Guardar día como plantilla»')}
         </div>
