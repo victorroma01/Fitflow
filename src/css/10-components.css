@@ -1,42 +1,42 @@
 /* ═══ css/10-components ═══ Componentes base: tarjetas, cabeceras, hero, navegación, filas, barras, calendario, chips */
-.pr {
+.primary {
   background:var(--tx);
   color:var(--bg);
   font-weight:700;
   border:0;
 }
-.cd {
+.card {
   background:var(--cd);
   border-radius:16px;
   padding:14px;
   margin:12px 0;
 }
-.hd,.row,.wk {
+.page-head,.row,.week-nav {
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:8px;
 }
-.hd h1 {
+.page-head h1 {
   font-size:22px;
   margin:0;
 }
-small,.mu {
+small,.muted {
   color:var(--mu);
 }
-.dys {
+.days {
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:4px;
   margin:10px 0;
 }
-.dy {
+.day {
   padding:10px 0;
   font-size:13px;
   text-align:center;
   line-height:1.7;
 }
-.dy.on {
+.day.on {
   background:var(--ac);
   color:#fff;
   border-color:var(--ac);
@@ -49,17 +49,17 @@ small,.mu {
   font-size:28px;
   margin:0 0 6px;
 }
-.st {
+.stats {
   display:grid;
   grid-template-columns:repeat(3,1fr);
   text-align:center;
   margin:14px 0;
 }
-.st b {
+.stats b {
   font-size:26px;
   display:block;
 }
-.g2 {
+.grid-2 {
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
@@ -96,32 +96,25 @@ nav span {
   font-size:28px;
   line-height:1.2;
 }
-.r {
-  display:grid;
-  grid-template-columns:24px 1fr 1fr 44px;
-  gap:6px;
-  align-items:center;
-  margin:6px 0;
-}
-.ck {
+.check {
   border-radius:50%;
   width:44px;
   height:44px;
   padding:0;
   font-size:20px;
 }
-.ck.on {
+.check.on {
   background:#2f6bff;
   border-color:#2f6bff;
   color:#fff;
 }
-.bk {
+.backdrop {
   position:fixed;
   inset:0;
   background:#0008;
   z-index:8;
 }
-.sp {
+.sheet {
   position:fixed;
   left:0;
   right:0;
@@ -146,16 +139,16 @@ nav span {
   display:block;
   height:100%;
 }
-.mac {
+.macros {
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:10px;
   text-align:center;
 }
-.mac b {
+.macros b {
   font-size:13px;
 }
-.it {
+.item {
   display:grid;
   grid-template-columns:1fr 70px 24px;
   gap:6px;
@@ -163,23 +156,23 @@ nav span {
   padding:7px 0;
   border-top:1px solid var(--ln);
 }
-.cal {
+.calendar {
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:4px;
   text-align:center;
 }
-.cal i {
+.calendar i {
   font-style:normal;
   padding:7px 0;
   border-radius:8px;
   font-size:13px;
 }
-.cal .on {
+.calendar .on {
   background:var(--ac);
   color:var(--ft);
 }
-.av {
+.avatar {
   width:84px;
   height:84px;
   border-radius:50%;
@@ -210,13 +203,13 @@ label {
 }
 /* los grupos de la librería, en tres columnas iguales que encogen con la pantalla (con 1fr a secas no bajaban del ancho de
    su figura y, a 320 px, la tercera columna se salía por la derecha) */
-.gg {
+.group-grid {
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:8px;
   margin-top:8px;
 }
-.gg button {
+.group-grid button {
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -225,10 +218,10 @@ label {
   padding:10px 4px;
   font-size:12px;
 }
-.gg b {
+.group-grid b {
   font-size:13px;
 }
-.mb {
+.wide-btn {
   display:flex;
   gap:12px;
   align-items:center;

@@ -35,7 +35,7 @@ SCAN = """(() => {
   // (lo de dentro de un desplegable cerrado tiene tamaño pero no se pinta: checkVisibility lo sabe)
   const vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility != 'hidden' && s.display != 'none' && (!e.checkVisibility || e.checkVisibility()); };
   const desc = e => (e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (typeof e.className == 'string' && e.className ? '.' + e.className.trim().split(/\\s+/).slice(0, 3).join('.') : '')) + ' «' + (e.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 40) + '»';
-  const top = document.querySelector('#dg .dgc') || document.querySelector('#mn .msd') || document.querySelector('#f2w') || document.querySelector('#sh > .sp:not(.spu)') || document.querySelector('#app');
+  const top = document.querySelector('#dg .dialog-box') || document.querySelector('#mn .menu-panel') || document.querySelector('#f2w') || document.querySelector('#sh > .sheet:not(.sheet-under)') || document.querySelector('#app');
   if (document.documentElement.scrollWidth > W + 1) {
     // quién la ensancha: lo que pasa del borde derecho sin que nada lo recorte, contando las zonas táctiles (::before y ::after)
     const clipped = e => { for (let p = e.parentElement; p && p != document.documentElement; p = p.parentElement) { if (/(auto|scroll|hidden|clip)/.test(getComputedStyle(p).overflowX)) return true; } return false; };
@@ -85,7 +85,7 @@ SCAN = """(() => {
       out.push(['texto cortado a lo alto', desc(e) + ' ' + e.scrollHeight + ' > ' + e.clientHeight]);
   }
   // el ancho de la columna de contenido (la tarjeta más ancha de la pestaña) y dónde queda su centro
-  const col = [...document.querySelectorAll('#app .cd')].filter(vis).map(c => c.getBoundingClientRect()).sort((a, b) => b.width - a.width)[0];
+  const col = [...document.querySelectorAll('#app .card')].filter(vis).map(c => c.getBoundingClientRect()).sort((a, b) => b.width - a.width)[0];
   return { out, col: col ? [Math.round(col.width), Math.round(col.left + col.width / 2)] : null };
 })()"""
 # los saltos de la pantalla (layout shift) que no vienen de un toque, desde que se abre la página

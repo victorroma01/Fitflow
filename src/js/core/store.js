@@ -26,26 +26,36 @@ import { logError } from './errors.js';
           (cloud/sync)
    lgn  → intentos fallidos de entrar, para la espera creciente (account/login)
    space → cuándo se avisó por última vez de que queda poco espacio (system/space; no se sincroniza)
+   rev  → marca de lo último guardado: cada apertura de la app la cambia al guardar, y así otra pestaña o ventana sabe que lo
+          suyo ya no es lo último (core/persist; no se sincroniza)
    Las copias automáticas viven en IndexedDB (base "ffsnap"; ver system/snapshots). */
 export const Store = {
-  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn', space: 'ffspace' },
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn', space: 'ffspace', rev: 'ffrev' },
+  /** @type {RemoteAdapter | null} */
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…).
      Con quiet no se avisa a Store.remote (core/persist ya avisó al decidir el cambio) */
+  /** @param {string} k */
   get(k) {
     return localStorage.getItem(k);
   },
+  /** @param {string} k
+      @param {string} v
+      @param {any} [quiet] */
   set(k, v, quiet) {
     localStorage.setItem(k, v);
     if (!quiet)
       Store.note(k, v);
   },
+  /** @param {string} k
+      @param {any} [quiet] */
   del(k, quiet) {
     localStorage.removeItem(k);
     if (!quiet)
       Store.note(k, null);
   },
-  /** Claves guardadas que empiezan por `prefix` (las partes del estado: core/persist). */
+  /** Claves guardadas que empiezan por `prefix` (las partes del estado: core/persist).
+      @param {string} prefix */
   keys(prefix) {
     const out = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -55,7 +65,9 @@ export const Store = {
     }
     return out;
   },
-  /* aviso a un adaptador remoto (si hay); un fallo del adaptador nunca debe impedir guardar en local */
+  /** Aviso a un adaptador remoto (si hay); un fallo del adaptador nunca debe impedir guardar en local.
+      @param {string} k
+      @param {string | null} v */
   note(k, v) {
     try {
       if (Store.remote && Store.remote.changed)
@@ -63,6 +75,18 @@ export const Store = {
     }
     catch (e) {
       if (k != Store.K.err && typeof logError == 'function')
+        logError('Store.remote', e);
+    }
+  },
+  /* aviso al adaptador de que un guardado ha terminado bien y no queda nada del estado sin escribir en este dispositivo
+     (core/persist): lo que esperaba a eso para apuntarse (lo sincronizado, en cloud/sync) ya puede */
+  noteSaved() {
+    try {
+      if (Store.remote && Store.remote.saved)
+        Store.remote.saved();
+    }
+    catch (e) {
+      if (typeof logError == 'function')
         logError('Store.remote', e);
     }
   }

@@ -21,10 +21,10 @@ function sheetBarFix() {
     if (!s)
       return;
     [...s.children].forEach(c => {
-      if (c.classList && c.classList.contains('sb'))
+      if (c.classList && c.classList.contains('sticky-btn'))
         c.remove();
     });
-    s.querySelectorAll('.sp .sb').forEach(b => s.appendChild(b));
+    s.querySelectorAll('.sheet .sticky-btn').forEach(b => s.appendChild(b));
   }
   catch (e) {
     logError('barra de la hoja', e);
@@ -34,7 +34,7 @@ function sheetBarFix() {
    { key: clave de la página, back: a dónde lleva su «←», y: desplazamiento, nodes: su contenido (DocumentFragment) } */
 const pageTrail = [];
 /* la clave de una página es su título (el de pgHead); '' si no lo lleva */
-const pageKey = h => (/<h1 class="pgt">(.*?)<\/h1>/.exec(h) || [])[1] || '';
+const pageKey = h => (/<h1 class="page-title">(.*?)<\/h1>/.exec(h) || [])[1] || '';
 /* a dónde lleva el «←» de la página p (acción y dato), o '' si la cierra o no lo tiene: con '' es una página de primer nivel */
 const backLink = p => {
   const b = p.querySelector('[aria-label="Volver"]');
@@ -125,12 +125,12 @@ const swapPage = (p, h) => {
     función que la quita. null si lo abierto no es una subpágina (debajo se ve la pestaña). */
 export const showPageBelow = () => {
   const s = $('#sh');
-  const p = s.querySelector('.sp');
+  const p = s.querySelector('.sheet');
   const top = pageTrail[pageTrail.length - 1];
   if (!top || !p || s.className != 'full' || !backLink(p))
     return null;
   const u = document.createElement('div');
-  u.className = 'sp spu';
+  u.className = 'sheet sheet-under';
   u.inert = true;
   u.setAttribute('aria-hidden', 'true');
   u.append(top.nodes);
@@ -143,7 +143,7 @@ export const showPageBelow = () => {
 };
 export const sheet = h => {
   const s = $('#sh');
-  const p = s.querySelector('.sp');
+  const p = s.querySelector('.sheet');
   if (h && p && s.className == 'full') {
     swapPage(p, h);
     return;
@@ -156,11 +156,13 @@ export const sheet = h => {
   /* si el foco estaba dentro de la hoja que se vuelve a pintar (o se acaba de tocar algo en ella), pasa a la nueva y no al
      fondo de la pantalla */
   const hadFocus = !!p && (p.contains(document.activeElement) || p.contains(recentTouch()));
-  s.innerHTML = h ? html`<div class="bk" data-a="closeSheet"></div><div class="sp" data-pg="${pageKey(h)}" role="dialog" aria-modal="true" tabindex="-1">${raw(h)}</div>` : '';
+  s.innerHTML = h ? html`
+    <div class="backdrop" data-a="closeSheet"></div>
+    <div class="sheet" data-pg="${pageKey(h)}" role="dialog" aria-modal="true" tabindex="-1">${raw(h)}</div>` : '';
   applyStyles(s);
   sheetBarFix();
   if (h)
-    sheetDialog(s.querySelector('.sp'), opening || hadFocus);
+    sheetDialog(s.querySelector('.sheet'), opening || hadFocus);
   else if (p) {
     /* al cerrar, el foco vuelve a lo que la abrió */
     focusBack(openers['#sh']);
@@ -171,15 +173,25 @@ export const sheet = h => {
     de sesión, la bienvenida, el recorrido, el aviso de versión nueva o el temporizador de WOD. Lo que sale solo (el recorrido,
     el aviso del icono nuevo, el de espacio) espera a que no haya nada. */
 export const appBusy = () => !!(W || document.visibilityState == 'hidden' || $('#lgw') || $('#wlc') || $('#tour') || $('#upd') || $('#f2w') || $('#sh').firstChild || $('#dg').firstChild || $('#mn').firstChild);
-export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'pr']]);
+export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'primary']]);
 /* (#tt, los avisos breves: una región que los lectores de pantalla leen al cambiar, sin quitar el foco de donde está) */
 document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt" role="status" aria-live="polite"></div>');
 /** Los botones de una ventana de aviso, en una fila con tantas columnas como botones. `b`: [[texto, acción, clase]…]; al tocar
     uno, la ventana se cierra y se hace su acción (A.dialogAnswer). */
-export const dialogButtons = b => html`<div class="g2 ${['cols-1', 'cols-2', 'cols-3', 'cols-4'][b.length - 1] || ''}">${b.map(x => html`<button class="${x[2]}" data-a="dialogAnswer" data-v="${x[1]}">${raw(x[0])}</button>`)}</div>`;
+export const dialogButtons = b => html`
+  <div class="grid-2 ${['cols-1', 'cols-2', 'cols-3', 'cols-4'][b.length - 1] || ''}">
+    ${b.map(x => html`<button class="${x[2]}" data-a="dialogAnswer" data-v="${x[1]}">${raw(x[0])}</button>`)}
+  </div>`;
 export function dialog(t, p, b) {
   /* para los lectores de pantalla, una ventana que tapa la app (aria-modal) con su título */
-  $('#dg').innerHTML = html`<div class="dgb"><div class="dgc" role="dialog" aria-modal="true" aria-labelledby="dgt"><h3 id="dgt" class="m-0-0-6">${raw(t)}</h3><p class="mu m-0-0-16 fs-14">${raw(p)}</p>${dialogButtons(b)}</div></div>`;
+  $('#dg').innerHTML = html`
+    <div class="dialog-backdrop">
+      <div class="dialog-box" role="dialog" aria-modal="true" aria-labelledby="dgt">
+        <h3 id="dgt" class="m-0-0-6">${raw(t)}</h3>
+        <p class="muted m-0-0-16 fs-14">${raw(p)}</p>
+        ${dialogButtons(b)}
+      </div>
+    </div>`;
   applyStyles($('#dg'));
 }
 /* el aviso y el menú se abren y se cierran escribiendo en #dg y #mn (también desde workout/rpe, core/back y core/swipe): al
@@ -232,14 +244,14 @@ A.closeSheet = () => {
   sheet();
 };
 export const sheetToTop = () => {
-  const p = $('#sh .sp');
+  const p = $('#sh .sheet');
   if (p)
     p.scrollTop = 0;
 };
 /** Abre h a pantalla completa, o lo pone en la página ya abierta: arriba del todo, salvo al volver a la página de antes. */
 export const fullPage = h => {
   const s = $('#sh');
-  const p = s.querySelector('.sp');
+  const p = s.querySelector('.sheet');
   if (p && s.className == 'full') {
     if (!swapPage(p, h))
       p.scrollTop = 0;
@@ -249,15 +261,30 @@ export const fullPage = h => {
   s.className = 'full';
 };
 /** La fila con la «←» de una página. `back`: la acción a la que vuelve; si no se dice, cierra la hoja. */
-export const backRow = back => html`<div class="row"><button data-a="${back || 'closeSheet'}" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div>`;
+export const backRow = back => html`
+  <div class="row"><button data-a="${back || 'closeSheet'}" aria-label="Volver" class="bd-0 bg-none fs-24 p-6-10">←</button></div>`;
 /** La cabecera de una página: la «←» y, debajo, el título. */
-export const pgHead = (t, back) => html`${backRow(back)}<h1 class="pgt">${raw(t)}</h1>`;
+export const pgHead = (t, back) => html`${backRow(back)}<h1 class="page-title">${raw(t)}</h1>`;
 A.openMenu = () => {
-  $('#mn').innerHTML = html`<div class="mbk" data-a="closeMenu"></div><div class="msd" role="dialog" aria-modal="true" aria-label="Menú"><div class="msb2"></div><div class="msb"></div><div class="mci"><button class="mx" data-a="closeMenu" aria-label="Cerrar">${icon('x', 22)}</button><div class="mti">Menú</div>${[['openPrograms', 'prog', 'Programas'], ['openCalendar', 'cal', 'Calendario'], ['openLogs', 'log', 'Registros'], ['rotationShow', 'swp', 'Rotar ejercicios'], ['resetWeek', 'reset', 'Reiniciar semana']].map((x, i) => html`<button class="mi" data-style="--d:${70 + i * 60}ms" data-a="menuItem" data-v="${x[0]}"><span>${raw(x[2])}</span>${icon(x[1], 22)}</button>`)}</div></div>`;
+  $('#mn').innerHTML = html`
+    <div class="menu-backdrop" data-a="closeMenu"></div>
+    <div class="menu-panel" role="dialog" aria-modal="true" aria-label="Menú">
+      <div class="menu-blur"></div>
+      <div class="menu-shade"></div>
+      <div class="menu-items">
+        <button class="menu-close" data-a="closeMenu" aria-label="Cerrar">${icon('x', 22)}</button>
+        <div class="menu-title">Menú</div>
+        ${[['openPrograms', 'prog', 'Programas'], ['openCalendar', 'cal', 'Calendario'], ['openLogs', 'log', 'Registros'], ['rotationShow', 'swp', 'Rotar ejercicios'], ['resetWeek', 'reset', 'Reiniciar semana']].map((x, i) => html`
+          <button class="menu-item" data-style="--d:${70 + i * 60}ms" data-a="menuItem" data-v="${x[0]}">
+            <span>${raw(x[2])}</span>
+            ${icon(x[1], 22)}
+          </button>`)}
+      </div>
+    </div>`;
   applyStyles($('#mn'));
 };
 A.closeMenu = () => {
-  const s = $('.msd');
+  const s = $('.menu-panel');
   if (!s) {
     $('#mn').innerHTML = '';
     return;
@@ -267,5 +294,12 @@ A.closeMenu = () => {
     $('#mn').innerHTML = '';
   }, 240);
 };
-export const segmented = (a, cur, list) => html`<div class="seg${list.length == 2 ? ' s2' : ''}">${list.map(x => html`<button class="${cur == x[0] ? 'on' : ''}" data-a="${a}" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
-export const linkRow = (ico, t, s, a, i) => html`<button class="cd f2lk" data-a="${a}"${raw(i != null ? ' data-i="' + i + '"' : '')}>${icon(ico, 30)}<span><b>${raw(t)}</b><br><small>${raw(s)}</small></span></button>`;
+export const segmented = (a, cur, list) => html`
+  <div class="segmented${list.length == 2 ? ' seg-2' : ''}">
+    ${list.map(x => html`<button class="${cur == x[0] ? 'on' : ''}" data-a="${a}" data-v="${x[0]}">${raw(x[1])}</button>`)}
+  </div>`;
+export const linkRow = (ico, t, s, a, i) => html`
+  <button class="card link-card" data-a="${a}"${raw(i != null ? ' data-i="' + i + '"' : '')}>
+    ${icon(ico, 30)}
+    <span><b>${raw(t)}</b><br><small>${raw(s)}</small></span>
+  </button>`;

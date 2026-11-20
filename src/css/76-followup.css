@@ -1,11 +1,11 @@
 /* ═══ css/76-followup ═══ Perfil, ajustes y seguimiento (M5): nota de actualización (F-28), recordatorio de pesaje (F-25), copia en la nube (F-30), fallos y sugerencias (F-27) y análisis mensual (F-26) */
 /* nota de actualización: la de la versión instalada y, debajo, «Cerrar» pequeño, gris y subrayado */
-.rnp .rnv {
+.release-notes .release-version {
   display:block;
   font-size:20px;
   letter-spacing:-.01em;
 }
-.rnp .ups {
+.release-notes .notes-heading {
   margin:14px 0 4px;
   font-size:12px;
   font-weight:700;
@@ -13,19 +13,19 @@
   text-transform:uppercase;
   color:var(--mu);
 }
-.rnp ul {
+.release-notes ul {
   margin:0;
   padding:0 0 0 18px;
 }
-.rnp li {
+.release-notes li {
   margin:6px 0;
   font-size:14px;
   line-height:1.4;
 }
-.rnc {
+.release-close {
   text-align:center;
 }
-button.lnk {
+button.link-btn {
   min-height:44px;
   padding:8px 14px;
   border:0;
@@ -37,28 +37,28 @@ button.lnk {
   text-underline-offset:3px;
 }
 /* recordatorio de pesaje (dashboard/reminder) */
-.wrc .srk {
+.weigh-card .setting-check {
   margin:0;
 }
-.wrs {
+.weigh-steps {
   display:flex;
   flex-wrap:wrap;
   gap:8px;
   margin:10px 0 4px;
 }
-.wrs .chip {
+.weigh-steps .chip {
   margin:0;
 }
-.wro {
+.weigh-custom {
   margin-top:8px;
 }
-.wrt {
+.weigh-note {
   display:block;
   margin:8px 0 0;
   font-size:13px;
   line-height:1.4;
 }
-.wrk {
+.weigh-calendar {
   display:flex;
   align-items:center;
   justify-content:center;
@@ -66,7 +66,7 @@ button.lnk {
   width:100%;
   margin-top:10px;
 }
-.wrb {
+.weigh-banner {
   display:grid;
   grid-template-columns:auto 1fr auto;
   align-items:center;
@@ -74,7 +74,7 @@ button.lnk {
   margin-top:12px;
   border-color:color-mix(in srgb,var(--ac) 45%,var(--ln));
 }
-.wrb .wri {
+.weigh-banner .weigh-icon {
   display:grid;
   place-items:center;
   width:42px;
@@ -83,43 +83,43 @@ button.lnk {
   background:color-mix(in srgb,var(--ac) 18%,transparent);
   color:var(--at);
 }
-.wrb small {
+.weigh-banner small {
   display:block;
   color:var(--mu);
   font-size:12.5px;
 }
-.wrb button {
+.weigh-banner button {
   min-height:44px;
 }
 /* copia en la nube (cloud/backup) */
-.cbk p {
+.backup-card p {
   margin:6px 0 10px;
   font-size:13px;
   line-height:1.4;
 }
-.cbk .cbl {
+.backup-card .backup-line {
   font-size:13px;
 }
 /* fallos y sugerencias (system/report y account/reports) */
-.rpk {
+.report-kinds {
   display:flex;
   gap:8px;
   margin:4px 0 12px;
 }
-.rpk .chip {
+.report-kinds .chip {
   flex:1;
   margin:0;
   padding:10px 12px;
 }
-.rpi .row {
+.report-item .row {
   gap:10px;
   align-items:flex-start;
 }
-.rpkd {
+.report-kind {
   font-weight:700;
   font-size:14px;
 }
-.rps {
+.status-pill {
   flex:none;
   padding:3px 10px;
   border-radius:999px;
@@ -129,23 +129,23 @@ button.lnk {
   /* sobre var(--ln), el gris de --mu no llegaba al contraste de 4,5 */
   color:color-mix(in srgb,var(--tx) 72%,transparent);
 }
-.rps.wait {
+.status-pill.wait {
   background:color-mix(in srgb,#f59e0b 20%,transparent);
   color:var(--wnx);
 }
-.rps.seen {
+.status-pill.seen {
   background:color-mix(in srgb,#4da3ff 20%,transparent);
   color:var(--snx);
 }
-.rps.ok {
+.status-pill.ok {
   background:color-mix(in srgb,#2ecc71 20%,transparent);
   color:var(--okx);
 }
-.rps.bad {
+.status-pill.bad {
   background:color-mix(in srgb,#e5484d 20%,transparent);
   color:var(--erx);
 }
-.rptx {
+.report-text {
   display:block;
   margin:8px 0 0;
   font-size:14px;
@@ -153,40 +153,40 @@ button.lnk {
   white-space:pre-wrap;
   overflow-wrap:anywhere;
 }
-.rptx.cl {
+.report-text.clamp {
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
   overflow:hidden;
   white-space:normal;
 }
-.rpr {
+.report-reply {
   margin-top:10px;
   padding:10px 12px;
   border-radius:12px;
   background:color-mix(in srgb,#2ecc71 10%,transparent);
   border:1px solid color-mix(in srgb,#2ecc71 35%,transparent);
 }
-.rpr.nw {
+.report-reply.unread {
   border-color:#2ecc71;
 }
-.rpr p {
+.report-reply p {
   margin:4px 0 0;
   font-size:14px;
   line-height:1.45;
   white-space:pre-wrap;
   overflow-wrap:anywhere;
 }
-.adrf {
+.admin-report-filter {
   grid-template-columns:repeat(4,1fr);
   margin-bottom:12px;
 }
-.adrf button {
+.admin-report-filter button {
   padding-left:4px;
   padding-right:4px;
   font-size:12px;
 }
-.adr .adrh {
+.admin-report .admin-report-head {
   display:block;
   width:100%;
   padding:0;
@@ -194,17 +194,17 @@ button.lnk {
   background:none;
   text-align:left;
 }
-.adr .adrh .row {
+.admin-report .admin-report-head .row {
   gap:10px;
 }
-.adr.on .seg {
+.admin-report.on .segmented {
   margin-bottom:10px;
 }
-.adr details {
+.admin-report details {
   margin:10px 0;
 }
 /* análisis mensual (profile/analysis) */
-.anm {
+.analysis-month {
   display:grid;
   grid-template-columns:44px 1fr 44px;
   align-items:center;
@@ -212,38 +212,38 @@ button.lnk {
   margin:0 0 12px;
   text-align:center;
 }
-.anm button {
+.analysis-month button {
   min-height:44px;
   padding:0;
   font-size:22px;
 }
-.anm b {
+.analysis-month b {
   display:block;
   font-size:18px;
 }
-.anm small {
+.analysis-month small {
   font-size:12.5px;
 }
-.ankg {
+.analysis-kpis {
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:8px;
   margin-bottom:12px;
 }
-.ank {
+.analysis-kpi {
   min-width:0;
   padding:10px;
   border-radius:14px;
   background:var(--cd);
   border:1px solid var(--ln);
 }
-.ank small {
+.analysis-kpi small {
   display:block;
   color:var(--mu);
   font-size:11px;
   line-height:1.3;
 }
-.ank b {
+.analysis-kpi b {
   display:block;
   margin:2px 0;
   font-size:19px;
@@ -252,34 +252,34 @@ button.lnk {
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.ank small.up,.anr .up,b.ano {
+.analysis-kpi small.up,.analysis-ranking .up,b.analysis-good {
   color:var(--okx);
 }
-.ank small.dn,b.anx {
+.analysis-kpi small.down,b.analysis-bad {
   color:var(--wnx);
 }
-b.ane {
+b.analysis-steady {
   color:var(--tx);
 }
-.ans p {
+.analysis-section p {
   margin:8px 0;
   font-size:14px;
   line-height:1.45;
 }
-.ans .anh {
+.analysis-section .analysis-heading {
   font-size:16px;
 }
-.anc {
+.analysis-chart {
   display:block;
   width:100%;
   height:auto;
   margin:6px 0;
   color:var(--tx);
 }
-.anr {
+.analysis-ranking {
   margin-top:10px;
 }
-.anr>small {
+.analysis-ranking>small {
   display:block;
   margin-bottom:4px;
   color:var(--mu);
@@ -288,37 +288,37 @@ b.ane {
   text-transform:uppercase;
   letter-spacing:.05em;
 }
-.anr .row {
+.analysis-ranking .row {
   gap:10px;
   padding:6px 0;
   border-bottom:1px solid var(--ln);
   font-size:14px;
 }
-.anr .row b {
+.analysis-ranking .row b {
   text-align:right;
   white-space:nowrap;
 }
-.ann>div {
+.analysis-figures>div {
   padding:10px;
   border-radius:12px;
   background:var(--ib);
 }
-.ann small {
+.analysis-figures small {
   display:block;
   font-size:11.5px;
 }
-.ann b {
+.analysis-figures b {
   display:block;
   font-size:18px;
 }
-.anlg {
+.analysis-legend {
   display:flex;
   flex-wrap:wrap;
   gap:12px;
   color:var(--mu);
   font-size:12px;
 }
-.anlg i {
+.analysis-legend i {
   display:inline-block;
   width:10px;
   height:10px;
@@ -326,11 +326,11 @@ b.ane {
   border-radius:3px;
   vertical-align:-1px;
 }
-.anu {
+.analysis-list {
   margin:8px 0 0;
   padding-left:18px;
 }
-.anu li {
+.analysis-list li {
   margin:6px 0;
   font-size:14px;
   line-height:1.45;

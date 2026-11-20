@@ -8,11 +8,11 @@
 import { APPV, dayKey, FFDEP } from './util.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
+import { instanceStale, partSizes, partsLost, savesBroken, savesDone, stateRecovered } from './persist.js';
 import { mealsPart } from './parts.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
-import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
+import { EXERCISES, groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_ALIASES } from '../data/aliases.js';
 import { FIG_POSES } from '../data/figposes.js';
 import { figPose } from '../extras/moves.js';
@@ -21,11 +21,13 @@ import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, overv
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
-import { exAll, exSearchText } from '../library/model.js';
+import { exAll, exByName, exSearchText } from '../library/model.js';
 import { libBody, libState } from '../library/browse.js';
 import { clone, progDraft } from '../programs/create.js';
 import { levelPlan } from '../programs/levels.js';
 import { isDeloadWeek } from '../workout/deload.js';
+import { dayImage, photoUrl, routineImage } from '../workout/images.js';
+import { MEDIA } from '../data/media.js';
 import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
@@ -73,6 +75,8 @@ const DEBUG_NAMES = {
   errorLog: [() => errorLog],
   EX_ALIASES: [() => EX_ALIASES],
   exAll: [() => exAll],
+  exByName: [() => exByName],
+  EXERCISES: [() => EXERCISES],
   exPicture: [() => exPicture],
   exSearchText: [() => exSearchText],
   FFDEP: [() => FFDEP],
@@ -96,6 +100,8 @@ const DEBUG_NAMES = {
   parseProgram: [() => parseProgram],
   partSizes: [() => partSizes],
   partsLost: [() => partsLost],
+  instanceStale: [() => instanceStale],
+  savesBroken: [() => savesBroken],
   PROGRAM_NAMES: [() => PROGRAM_NAMES],
   PROGRAMS: [() => PROGRAMS],
   pendingDocs: [() => pendingDocs],
@@ -137,7 +143,11 @@ const DEBUG_NAMES = {
   workoutToStored: [() => workoutToStored],
   iconNoticeApplies: [() => iconNoticeApplies],
   iconNoticeCheck: [() => iconNoticeCheck],
-  isNewerVersion: [() => isNewerVersion]
+  isNewerVersion: [() => isNewerVersion],
+  dayImage: [() => dayImage],
+  photoUrl: [() => photoUrl],
+  routineImage: [() => routineImage],
+  MEDIA: [() => MEDIA],
 };
 for (const k in DEBUG_NAMES)
   Object.defineProperty(window, k, { get: DEBUG_NAMES[k][0], set: DEBUG_NAMES[k][1], configurable: true });

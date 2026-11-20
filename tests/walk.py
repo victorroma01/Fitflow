@@ -3,13 +3,15 @@ paso a paso, el DOM, el estado guardado y los pitidos. Sirve para demostrar que 
 
   python3 tests/walk.py run REFERENCIA.html CANDIDATA.html 0,1,2,3 150 [mapa.txt]
   Con mapa.txt (líneas «registro viejo nuevo», registro A, C o U), la referencia es de antes de renombrar acciones: sus nombres
-  se traducen a los nuevos para elegir lo mismo y comparar el mismo DOM.
+  se traducen a los nuevos para elegir lo mismo y comparar el mismo DOM. Con el registro K son clases CSS (tests/clases-1.0.32.txt):
+  las de la referencia se traducen antes de comparar («K dn@xs done»: «dn» pasa a «done» en un elemento que lleva también «xs»).
   python3 tests/walk.py trace ARCHIVO.html SEMILLA PASOS salida.json ; python3 tests/walk.py cmp a.json b.json
 Requiere:  pip install playwright  &&  playwright install chromium
 """
 import os,sys,json,random,hashlib,datetime,re
 from playwright.sync_api import sync_playwright
 from browser import app_url, context_opts
+from shots import class_lines
 HERE=os.path.dirname(os.path.abspath(__file__))
 def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
@@ -33,8 +35,14 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
  else e.value=txt;
  e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}"""
 SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
+ /* las figuras grandes se mueven (extras/figure) y su contenido se carga aparte: la postura en la que se las pilla depende de
+    si llegó antes o después de avanzar el reloj, y dos pasadas de la misma compilación daban HTML distinto. Se compara qué
+    figura es (data-fig), no su fotograma; cómo se dibujan lo prueban tests/figures.py y las capturas */
+ b.querySelectorAll('svg[data-fig]').forEach(x=>{x.innerHTML=''});
  if(ren){for(const [at,r] of [['data-a','A'],['data-enter','A'],['data-c','C'],['data-u','U']])b.querySelectorAll('['+at+']').forEach(e=>{const v=e.getAttribute(at);if(ren[r][v])e.setAttribute(at,ren[r][v])});
-  b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])})}
+  b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])});
+  /* las clases CSS renombradas (registro K): cada nombre por el nuevo, sin tocar los espacios */
+  b.querySelectorAll('[class]').forEach(e=>{const v=e.getAttribute('class'),t=v.split(/\\s+/);e.setAttribute('class',v.replace(/\\S+/g,c=>{const k=t.map(o=>c+'@'+o).find(x=>ren.K[x]);return k?ren.K[k]:ren.K[c]||c}))})}
  /* lo que mide el tiempo de verdad (Diagnóstico e informe de un fallo: «Tiempo de pintado») cambia en cada ejecución; y lo que
     ocupa cada dato y el espacio usado, según dónde se guarde (localStorage o IndexedDB: core/persist, I-04) */
  const h=b.innerHTML.replace(/Tiempo de pintado: [^\\n<]*/g,'Tiempo de pintado: …').replace(/(Almacenamiento|Espacio usado): [^\\n<]*\\n?/g,'');let ls='';try{const g=k=>localStorage.getItem(k);
@@ -45,21 +53,28 @@ SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('s
  const f=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x>>>0};
  return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps}}"""
 WORDS=['a','Prueba','12','Pollo','Press','x y','0','99','Arroz','Mi plan']
-def load_map(path):
-    """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado)} de un mapa «registro viejo nuevo»."""
-    m={'A':{},'C':{},'U':{},'S':{},'W':{}}
+def load_map(path,ref):
+    """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado), 'K' (clases CSS)} de un mapa «registro viejo nuevo».
+    De las clases, solo las que la compilación ref tiene aún con el nombre viejo (tests/shots.py, class_lines)."""
+    m={'A':{},'C':{},'U':{},'S':{},'W':{},'K':dict(class_lines(path,ref))}
     for l in open(path,encoding='utf-8'):
         l=l.strip()
-        if l and not l.startswith('#'):
+        if l and not l.startswith('#') and not l.startswith('K '):
             r,o,n=l.split();m[r][o]=n
     return m
 def old_js(js,ren):
     """Un script de prueba con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo."""
     if not ren:
         return js
-    back={r:{n:o for o,n in d.items()} for r,d in ren.items()}
+    back={r:{n:o for o,n in d.items() if '@' not in o} for r,d in ren.items()}
     js=re.sub(r'(?<![\w.$])([ACUSW])\.(\w+)',lambda m:m.group(1)+'.'+back[m.group(1)].get(m.group(2),m.group(2)),js)
-    return re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
+    js=re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
+    return old_classes(js,back['K'])
+def old_classes(js,back):
+    """Los selectores y los classList de un script, con las clases CSS de antes del mapa (back: nueva → vieja)."""
+    cls=lambda s:re.sub(r'\.(-?[A-Za-z_][\w-]*)',lambda m:'.'+back.get(m.group(1),m.group(1)),s)
+    js=re.sub(r'''((?:querySelector(?:All)?|closest|matches)\((['"]))(.*?)(\2)''',lambda m:m.group(1)+cls(m.group(3))+m.group(4),js)
+    return re.sub(r'''(classList\.\w+\(['"])([\w-]+)''',lambda m:m.group(1)+back.get(m.group(2),m.group(2)),js)
 def trace(file,seed,steps,ren=None):
     reg={'a':'A','c':'C','u':'U'}
     fwd=lambda k,v:ren[reg[k]].get(v,v) if ren else v                           # nombre de esta compilación → nuevo
@@ -109,6 +124,13 @@ def trace(file,seed,steps,ren=None):
             try:pg.clock.run_for(adv)
             except Exception as e:res['errs'].append('CLOCK '+str(e)[:100])
             pg.wait_for_timeout(25)  # tiempo real para lo asíncrono que no depende del reloj (IndexedDB: copias, fotos)
+            # las figuras pequeñas de las listas se pintan al acercarse a lo que se ve (extras/anatomy: IntersectionObserver), cuando
+            # el navegador avisa y no cuando lo dice el reloj: se espera a que haya avisado. Un vigilante nuevo recibe su primer
+            # aviso en la misma vuelta que los de la app, y después de ellos (se atienden por orden de creación)
+            pg.evaluate("(()=>{window.__io=0;const o=new IntersectionObserver(()=>{o.disconnect();window.__io=1});o.observe(document.documentElement)})()")
+            for _ in range(60):
+                if pg.evaluate("window.__io===1"):break
+                pg.wait_for_timeout(10)
             for _ in range(20):  # la lista de copias automáticas se rellena desde IndexedDB: esperar a que deje de decir «Cargando…»
                 if not pg.evaluate("(()=>{const e=document.querySelector('#snapl');return !!e&&/Cargando/.test(e.textContent)})()"):break
                 pg.wait_for_timeout(25)
@@ -141,7 +163,7 @@ if __name__=='__main__':
     elif cmd=='run':
         # run FILE_A FILE_B seeds steps [mapa]  → traza ambos y compara (el mapa traduce los nombres de FILE_A)
         fa,fb,sd,ns=sys.argv[2],sys.argv[3],sys.argv[4].split(','),int(sys.argv[5])
-        ren=load_map(sys.argv[6]) if len(sys.argv)>6 else None
+        ren=load_map(sys.argv[6],fa) if len(sys.argv)>6 else None
         bad=0
         for s in sd:
             a=trace(fa,int(s),ns,ren);b=trace(fb,int(s),ns)

@@ -20,7 +20,7 @@ import { welcomeShow } from './welcome.js';
 import { html, raw } from '../core/html.js';
 /** Pasos: pestaña (-1: la que esté), qué se ilumina (alt: algo más pequeño si no cabe con la tarjeta, en un móvil pequeño),
   título y texto (rest: el texto si hoy es día de descanso; np: si aún no hay programa, I-24). */
-const TOUR_STEPS = [{ tab: 0, el: () => $('#app .npc') || $('#app .cd.hero'), t: 'Tu entreno de hoy', p: 'Aquí está el día que toca. Pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.', rest: 'Hoy toca descansar. Los días de entreno, aquí está el que toca: pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.', np: 'Primero, elige tu programa con «Seleccionar programa». Después, aquí verás el día que toca: pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.' }, { tab: -1, el: () => $('nav'), t: 'Cambia de pestaña', p: 'Toca una pestaña, o mantén pulsada la burbuja y arrástrala hasta otra.', live: 1 }, { tab: 1, el: () => ($('#app .mlb') || { closest: () => null }).closest('.cd'), alt: () => $('#app .mlb'), t: 'Anota lo que comes', p: '«+» añade un alimento, «Buscar» lo busca en internet y «Scan» lee el código de barras. La app sabe sola si hoy entrenas o descansas.' }, { tab: 2, el: () => $('#app .wkc'), t: 'Mira tu progreso', p: 'Tus entrenos, el volumen y las rachas, semana a semana.' }, { tab: 3, el: () => $('#app [data-a=openAchievements]'), t: 'Tu perfil', p: 'Logros, medidas y ajustes. En las páginas de dentro, desliza hacia la derecha para volver.' }];
+const TOUR_STEPS = [{ tab: 0, el: () => $('#app .no-program-card') || $('#app .card.hero'), t: 'Tu entreno de hoy', p: 'Aquí está el día que toca. Pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.', rest: 'Hoy toca descansar. Los días de entreno, aquí está el que toca: pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.', np: 'Primero, elige tu programa con «Seleccionar programa». Después, aquí verás el día que toca: pulsa «Empezar» y la app te guía serie a serie, con pesos sugeridos y descansos.' }, { tab: -1, el: () => $('nav'), t: 'Cambia de pestaña', p: 'Toca una pestaña, o mantén pulsada la burbuja y arrástrala hasta otra.', live: 1 }, { tab: 1, el: () => ($('#app .meal-actions') || { closest: () => null }).closest('.card'), alt: () => $('#app .meal-actions'), t: 'Anota lo que comes', p: '«+» añade un alimento, «Buscar» lo busca en internet y «Scan» lee el código de barras. La app sabe sola si hoy entrenas o descansas.' }, { tab: 2, el: () => $('#app .week-card'), t: 'Mira tu progreso', p: 'Tus entrenos, el volumen y las rachas, semana a semana.' }, { tab: 3, el: () => $('#app [data-a=openAchievements]'), t: 'Tu perfil', p: 'Logros, medidas y ajustes. En las páginas de dentro, desliza hacia la derecha para volver.' }];
 /* recorrido abierto: { i: -1 la bienvenida, 0-4 los pasos, 5 «¡Listo!»; again: visto desde Ajustes; from: pestaña de antes } */
 let tour = null;
 /* intentos de sacarlo al arrancar, esperando a que la app esté libre (uno por segundo) */
@@ -35,20 +35,29 @@ const tourRoot = () => {
   return r;
 };
 /* la bienvenida y «¡Listo!»: una hoja como las de la app, que no se cierra tocando fuera */
-const tourSheet = (ic, t, p, buttons) => html`<div class="bk"></div><div class="sp" role="dialog" aria-modal="true" aria-labelledby="trh"><div class="trw"><div class="trbg">${icon(ic, 30)}</div><h3 id="trh">${t}</h3><p class="mu">${p}</p>${raw(buttons)}</div></div>`;
+const tourSheet = (ic, t, p, buttons) => html`
+  <div class="backdrop"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="trh">
+    <div class="intro-panel">
+      <div class="intro-icon">${icon(ic, 30)}</div>
+      <h3 id="trh">${t}</h3>
+      <p class="muted">${p}</p>
+      ${raw(buttons)}
+    </div>
+  </div>`;
 /* pinta el punto del recorrido en el que se está */
 const tourShow = () => {
   const r = tourRoot();
   const n = TOUR_STEPS.length;
   const i = tour.i;
-  $('nav').classList.toggle('trlv', i >= 0 && i < n && !!TOUR_STEPS[i].live);
+  $('nav').classList.toggle('tour-live', i >= 0 && i < n && !!TOUR_STEPS[i].live);
   if (i < 0) {
     r.className = 'trs';
-    r.innerHTML = tourSheet('workout', 'Te damos la bienvenida a StrataFit', '¿Te enseñamos lo principal? Son 5 pasos y menos de un minuto.', '<button class="pr" data-a="tourStart">Empezar el recorrido</button><button data-a="tourSkip">Omitir</button>');
+    r.innerHTML = tourSheet('workout', 'Te damos la bienvenida a StrataFit', '¿Te enseñamos lo principal? Son 5 pasos y menos de un minuto.', '<button class="primary" data-a="tourStart">Empezar el recorrido</button><button data-a="tourSkip">Omitir</button>');
   }
   else if (i >= n) {
     r.className = 'trs';
-    r.innerHTML = tourSheet('chk', '¡Listo!', tour.again ? 'Ya conoces lo principal. Puedes volver a verlo cuando quieras en Ajustes.' : 'Ya conoces lo principal. Este recorrido no vuelve a salir; si quieres verlo otra vez, está en Ajustes.', S.noProgram ? '<button class="pr" data-a="tourDone">Seleccionar programa</button>' : '<button class="pr" data-a="tourDone">Empezar a entrenar</button>');
+    r.innerHTML = tourSheet('chk', '¡Listo!', tour.again ? 'Ya conoces lo principal. Puedes volver a verlo cuando quieras en Ajustes.' : 'Ya conoces lo principal. Este recorrido no vuelve a salir; si quieres verlo otra vez, está en Ajustes.', S.noProgram ? '<button class="primary" data-a="tourDone">Seleccionar programa</button>' : '<button class="primary" data-a="tourDone">Empezar a entrenar</button>');
   }
   else {
     const st = TOUR_STEPS[i];
@@ -57,14 +66,27 @@ const tourShow = () => {
       /* al momento (la página se desplaza suave, y el foco se mide enseguida) */
       scrollTo({ top: 0, behavior: 'instant' });
     }
-    const tx = st.np && $('#app .npc') ? st.np : st.rest && $('#app .cd.hero [data-a=completeRestDay]') ? st.rest : st.p;
+    const tx = st.np && $('#app .no-program-card') ? st.np : st.rest && $('#app .card.hero [data-a=completeRestDay]') ? st.rest : st.p;
     r.className = 'trp';
-    r.innerHTML = html`<div class="trbk"></div><div class="trsp"></div><div class="trtp" role="dialog" aria-modal="true" aria-labelledby="trh"><i class="trar"></i><div class="trst">Paso ${i + 1} de ${n}</div><b id="trh">${st.t}</b><p>${tx}</p><div class="trft"><div class="trdt">${TOUR_STEPS.map((x, k) => html`<i class="${k == i ? 'on' : ''}"></i>`)}</div><button class="trsk" data-a="tourSkip">Omitir</button><button class="pr trnx" data-a="tourNext">${i == n - 1 ? 'Terminar' : 'Siguiente'}</button></div></div>`;
+    r.innerHTML = html`
+      <div class="tour-backdrop"></div>
+      <div class="tour-spot"></div>
+      <div class="tour-tip" role="dialog" aria-modal="true" aria-labelledby="trh">
+        <i class="tour-arrow"></i>
+        <div class="tour-step">Paso ${i + 1} de ${n}</div>
+        <b id="trh">${st.t}</b>
+        <p>${tx}</p>
+        <div class="tour-foot">
+          <div class="tour-dots">${TOUR_STEPS.map((x, k) => html`<i class="${k == i ? 'on' : ''}"></i>`)}</div>
+          <button class="tour-skip" data-a="tourSkip">Omitir</button>
+          <button class="primary tour-next" data-a="tourNext">${i == n - 1 ? 'Terminar' : 'Siguiente'}</button>
+        </div>
+      </div>`;
     tourPlace();
     /* por si algo de la página termina de colocarse después (una imagen) */
     setTimeout(tourPlace, 350);
   }
-  const b = r.querySelector('button.pr');
+  const b = r.querySelector('button.primary');
   if (b)
     b.focus({ preventScroll: true });
 };
@@ -72,10 +94,10 @@ const tourShow = () => {
 const tourPlace = () => {
   if (!tour || tour.i < 0 || tour.i >= TOUR_STEPS.length)
     return;
-  const sp = $('#tour .trsp');
-  const tp = $('#tour .trtp');
+  const sp = $('#tour .tour-spot');
+  const tp = $('#tour .tour-tip');
   const st = TOUR_STEPS[tour.i];
-  let el = st.el() || $('#app .cd') || $('#app');
+  let el = st.el() || $('#app .card') || $('#app');
   if (!sp || !tp || !el)
     return;
   const pad = 6;
@@ -101,12 +123,12 @@ const tourPlace = () => {
   tp.classList.toggle('up', !below);
   const tl = tp.getBoundingClientRect().left;
   const cx = Math.min(Math.max(r.left + r.width / 2, tl + 30), tl + tp.offsetWidth - 30);
-  tp.querySelector('.trar').style.left = cx - tl - 7 + 'px';
+  tp.querySelector('.tour-arrow').style.left = cx - tl - 7 + 'px';
 };
 /* cierra el recorrido; tab: la pestaña que se abre después (-1: la que esté) */
 const tourEnd = tab => {
   tour = null;
-  $('nav').classList.remove('trlv');
+  $('nav').classList.remove('tour-live');
   const r = $('#tour');
   if (r)
     r.remove();

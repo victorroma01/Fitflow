@@ -74,7 +74,7 @@ def _settled(nav):
 
 
 # Firefox (Gecko) da '' al leer innerText de #sh, la capa de las hojas y páginas: mide 0 de alto y su contenido va con posición
-# fija. Las páginas de dentro (.sp) sí lo dan. Como las pruebas leen «lo que se ve en la hoja» con #sh, en Firefox se lee de sus
+# fija. Las páginas de dentro (.sheet) sí lo dan. Como las pruebas leen «lo que se ve en la hoja» con #sh, en Firefox se lee de sus
 # hijos. La app no usa innerText: es solo cómo miran las pruebas.
 GECKO_TEXT_JS = """(() => { const d = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerText');
   Object.defineProperty(HTMLElement.prototype, 'innerText', { configurable: true, set(v) { d.set.call(this, v); },

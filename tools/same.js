@@ -3,7 +3,9 @@
    mismo árbol sintáctico (sin posiciones ni comillas; «const a,b» cuenta igual que «const a; const b») y mismos comentarios.
    Uso:  node tools/same.js antes.js despues.js
          node tools/same.js --dirs carpeta_antes carpeta_despues   (todos los .js con la misma ruta relativa)
-   Opcional: --map renombres.json  ({"viejo":"nuevo"}) para aceptar identificadores renombrados. */
+   Opcional: --map renombres.json  ({"viejo":"nuevo"}) para aceptar identificadores renombrados.
+             --html  las plantillas html`…` cuentan sin sus saltos de línea, que no forman parte del HTML (la regla de
+                     tools/templates.js): un módulo con las plantillas repartidas en líneas es el mismo programa. */
 const fs = require('fs'), path = require('path');
 function req(n) {
   for (const c of [n, path.join(__dirname, '../node_modules', n), '/opt/npm-tools/node_modules/' + n]) { try { return require(c); } catch (e) {} }
@@ -11,6 +13,7 @@ function req(n) {
 }
 const acorn = req('acorn');
 let MAP = null;
+let FLAT = null;
 function norm(node) {
   if (Array.isArray(node)) return node.map(norm);
   if (!node || typeof node !== 'object') return node;
@@ -33,7 +36,8 @@ function norm(node) {
   }
   return o;
 }
-function parse(code) {
+function parse(code, name) {
+  if (FLAT) code = FLAT(code, name);
   const comments = [];
   const ast = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module', onComment: (block, text) => comments.push((block ? 'B:' : 'L:') + text.replace(/\s+/g, ' ').trim()) });
   return { ast: norm(ast), comments: comments.sort() };
@@ -49,7 +53,7 @@ function diffPath(a, b, p) {
   return a === b ? null : p + ' (' + JSON.stringify(a).slice(0, 60) + ' ≠ ' + JSON.stringify(b).slice(0, 60) + ')';
 }
 function same(fa, fb) {
-  const A = parse(fs.readFileSync(fa, 'utf8')), B = parse(fs.readFileSync(fb, 'utf8'));
+  const A = parse(fs.readFileSync(fa, 'utf8'), fa), B = parse(fs.readFileSync(fb, 'utf8'), fb);
   const d = diffPath(A.ast, B.ast, '');
   if (d) return 'código distinto en ' + d;
   if (JSON.stringify(A.comments) !== JSON.stringify(B.comments)) {
@@ -61,6 +65,7 @@ function same(fa, fb) {
 const args = process.argv.slice(2);
 const mi = args.indexOf('--map');
 if (mi >= 0) { MAP = JSON.parse(fs.readFileSync(args[mi + 1], 'utf8')); args.splice(mi, 2); }
+if (args.includes('--html')) { FLAT = require('./templates').flatten; args.splice(args.indexOf('--html'), 1); }
 let bad = 0, n = 0;
 if (args[0] === '--dirs') {
   const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name)) : e.name.endsWith('.js') ? [path.join(d, e.name)] : []);

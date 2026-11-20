@@ -21,7 +21,29 @@ export const equipDropdown = (k, cur, items, base, sh) => {
     return '';
   const open = !!filterOpen[k];
   const cnt = n => base.filter(e => e.q == n).length;
-  return html`<div class="eqd"><button class="eqb${cur.length ? ' on' : ''}" data-a="filterToggleOpen" data-k="${k}" aria-haspopup="true" aria-expanded="${open}"><span>Equipo</span><b>${raw(cur.length ? X(sh && cur.length > 1 ? cur[0] + ' +' + (cur.length - 1) : cur.join(', ')) : 'Todos')}</b>${icon('chev', 16)}</button><div class="eqp"${open ? '' : ' hidden'}><div class="eqg">${items.map(x => html`<button class="eqi${cur.includes(x) ? ' on' : ''}" data-a="filterToggleEquipment" data-k="${k}" data-v="${x}"><i>${cur.includes(x) ? icon('chk', 14) : ''}</i><span>${x}</span><small>${raw(cnt(x))}</small></button>`)}</div><div class="eqf"><button data-a="filterClearEquipment" data-k="${k}"${cur.length ? '' : ' disabled'}>Limpiar</button><button class="pr" data-a="filterToggleOpen" data-k="${k}">Listo</button></div></div></div>`;
+  return html`
+    <div class="filter-box">
+      <button class="filter-btn${cur.length ? ' on' : ''}" data-a="filterToggleOpen" data-k="${k}" aria-haspopup="true"
+          aria-expanded="${open}">
+        <span>Equipo</span>
+        <b>${raw(cur.length ? X(sh && cur.length > 1 ? cur[0] + ' +' + (cur.length - 1) : cur.join(', ')) : 'Todos')}</b>
+        ${icon('chev', 16)}
+      </button>
+      <div class="filter-panel"${open ? '' : ' hidden'}>
+        <div class="filter-grid">
+          ${items.map(x => html`
+            <button class="filter-option${cur.includes(x) ? ' on' : ''}" data-a="filterToggleEquipment" data-k="${k}" data-v="${x}">
+              <i>${cur.includes(x) ? icon('chk', 14) : ''}</i>
+              <span>${x}</span>
+              <small>${raw(cnt(x))}</small>
+            </button>`)}
+        </div>
+        <div class="filter-foot">
+          <button data-a="filterClearEquipment" data-k="${k}"${cur.length ? '' : ' disabled'}>Limpiar</button>
+          <button class="primary" data-a="filterToggleOpen" data-k="${k}">Listo</button>
+        </div>
+      </div>
+    </div>`;
 };
 const filterRefresh = { lb: () => {
     const e = $('#lr');
@@ -43,15 +65,15 @@ const filterRefresh = { lb: () => {
 const filterStateOf = k => ({ lb: libState, sw: swapState, pk: pickState, cr: routineState })[k];
 A.filterToggleOpen = (i, b) => {
   const k = b.dataset.k;
-  const d = b.closest('.eqd');
+  const d = b.closest('.filter-box');
   Object.keys(filterOpen).forEach(x => {
     if (x != k)
       filterOpen[x] = 0;
   });
-  document.querySelectorAll('.eqd').forEach(o => {
+  document.querySelectorAll('.filter-box').forEach(o => {
     if (o !== d) {
-      const p = o.querySelector('.eqp');
-      const t = o.querySelector('.eqb');
+      const p = o.querySelector('.filter-panel');
+      const t = o.querySelector('.filter-btn');
       if (p)
         p.hidden = true;
       if (t)
@@ -59,8 +81,8 @@ A.filterToggleOpen = (i, b) => {
     }
   });
   filterOpen[k] = !filterOpen[k];
-  const p = d.querySelector('.eqp');
-  const t = d.querySelector('.eqb');
+  const p = d.querySelector('.filter-panel');
+  const t = d.querySelector('.filter-btn');
   p.hidden = !filterOpen[k];
   t.setAttribute('aria-expanded', !!filterOpen[k]);
 };
@@ -79,13 +101,19 @@ A.filterClearEquipment = (i, b) => {
 document.addEventListener('click', e => {
   if (!Object.keys(filterOpen).some(k => filterOpen[k]))
     return;
-  if (e.target.closest('.eqd'))
+  if (e.target.closest('.filter-box'))
     return;
   Object.keys(filterOpen).forEach(k => filterOpen[k] = 0);
-  document.querySelectorAll('.eqp').forEach(p => p.hidden = true);
-  document.querySelectorAll('.eqb').forEach(t => t.setAttribute('aria-expanded', 'false'));
+  document.querySelectorAll('.filter-panel').forEach(p => p.hidden = true);
+  document.querySelectorAll('.filter-btn').forEach(t => t.setAttribute('aria-expanded', 'false'));
 }, true);
-export const groupChips = (cur, act) => html`<div class="chs">${['Todos'].concat(GROUPS.filter(x => exAll().some(e => groupOf(e) == x))).map(x => html`<button class="chip${(x == 'Todos' ? '' : x) == cur ? ' on' : ''}" data-a="${act}" data-v="${x == 'Todos' ? '' : x}">${raw(x == 'Propio' ? 'Mis ejercicios' : x)}</button>`)}</div>`;
+export const groupChips = (cur, act) => html`
+  <div class="chip-row">
+    ${['Todos'].concat(GROUPS.filter(x => exAll().some(e => groupOf(e) == x))).map(x => html`
+      <button class="chip${(x == 'Todos' ? '' : x) == cur ? ' on' : ''}" data-a="${act}" data-v="${x == 'Todos' ? '' : x}">
+        ${raw(x == 'Propio' ? 'Mis ejercicios' : x)}
+      </button>`)}
+  </div>`;
 export const groupMatch = (c, e) => !c || !c.length || c.includes(groupOf(e));
 export const groupDropdown = (k, cur, list) => {
   cur = cur || [];
@@ -94,11 +122,33 @@ export const groupDropdown = (k, cur, list) => {
     return '';
   const open = !!filterOpen[k];
   const cnt = n => list.filter(e => groupOf(e) == n).length;
-  return html`<div class="eqd"><button class="eqb${cur.length ? ' on' : ''}" data-a="filterToggleOpen" data-k="${k}" aria-haspopup="true" aria-expanded="${open}"><span>Músculo</span><b>${raw(cur.length ? X(cur.length > 1 ? groupLabel(cur[0]) + ' +' + (cur.length - 1) : groupLabel(cur[0])) : 'Todos')}</b>${icon('chev', 16)}</button><div class="eqp"${open ? '' : ' hidden'}><div class="eqg gr">${gs.map(x => html`<button class="eqi${cur.includes(x) ? ' on' : ''}" data-a="filterToggleGroup" data-k="${k}" data-v="${x}"><i>${cur.includes(x) ? icon('chk', 14) : ''}</i><span>${groupLabel(x)}</span><small>${raw(cnt(x))}</small></button>`)}</div><div class="eqf"><button data-a="filterClearGroups" data-k="${k}"${cur.length ? '' : ' disabled'}>Limpiar</button><button class="pr" data-a="filterToggleOpen" data-k="${k}">Listo</button></div></div></div>`;
+  return html`
+    <div class="filter-box">
+      <button class="filter-btn${cur.length ? ' on' : ''}" data-a="filterToggleOpen" data-k="${k}" aria-haspopup="true"
+          aria-expanded="${open}">
+        <span>Músculo</span>
+        <b>${raw(cur.length ? X(cur.length > 1 ? groupLabel(cur[0]) + ' +' + (cur.length - 1) : groupLabel(cur[0])) : 'Todos')}</b>
+        ${icon('chev', 16)}
+      </button>
+      <div class="filter-panel"${open ? '' : ' hidden'}>
+        <div class="filter-grid groups">
+          ${gs.map(x => html`
+            <button class="filter-option${cur.includes(x) ? ' on' : ''}" data-a="filterToggleGroup" data-k="${k}" data-v="${x}">
+              <i>${cur.includes(x) ? icon('chk', 14) : ''}</i>
+              <span>${groupLabel(x)}</span>
+              <small>${raw(cnt(x))}</small>
+            </button>`)}
+        </div>
+        <div class="filter-foot">
+          <button data-a="filterClearGroups" data-k="${k}"${cur.length ? '' : ' disabled'}>Limpiar</button>
+          <button class="primary" data-a="filterToggleOpen" data-k="${k}">Listo</button>
+        </div>
+      </div>
+    </div>`;
 };
 export const filterRow = (...l) => {
   l = l.filter(Boolean);
-  return l.length ? html`<div class="eqrow">${raw(l.join(''))}</div>` : '';
+  return l.length ? html`<div class="filter-row">${raw(l.join(''))}</div>` : '';
 };
 A.filterToggleGroup = (i, b) => {
   const k = b.dataset.k.slice(0, -1);

@@ -23,6 +23,7 @@ const errorCode = (j, status) => {
 export async function fetchJson(url, o = {}) {
   const ctl = new AbortController();
   const tm = setTimeout(() => ctl.abort(), o.timeout || 2e4);
+  /** @type {Record<string, string>} */
   const headers = {};
   let body;
   if (o.token)

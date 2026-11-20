@@ -1,11 +1,13 @@
 /* StrataFit · «Comprobar Firebase» (GitHub Actions): que el secreto, Authentication y Firestore están bien configurados,
    sin cambiar nada. Escribe una tabla en el resumen del flujo y termina con error si falla algo imprescindible.
      node tools/admin/comprobar.mjs
-   Comprueba: el secreto FIREBASE_SERVICE_ACCOUNT (y que es de stratafit-960ec), Authentication (cuántas cuentas hay y si
-   el acceso con correo y contraseña está activo), que existe la base de datos de Firestore y en qué ubicación, y que la
-   cuenta de servicio puede desplegar las reglas. */
+   Comprueba: el secreto FIREBASE_SERVICE_ACCOUNT (y que es de stratafit-960ec), Authentication (cuántas cuentas hay, con
+   qué dominio tienen el correo técnico y si el acceso con correo y contraseña está activo), que existe la base de datos de
+   Firestore y en qué ubicación, y que la cuenta de servicio puede desplegar las reglas. Del dominio solo escribe recuentos:
+   el registro de GitHub es público. */
 import { appendFileSync, readFileSync } from 'node:fs';
-import { connect, PROJECT } from './firebase.mjs';
+import { allAccounts, sortAccounts } from './cuentas.mjs';
+import { connect, liveRules, PROJECT } from './firebase.mjs';
 
 const rows = [];
 let bad = 0;
@@ -20,13 +22,14 @@ const { app, auth, db } = connect();
 row('Secreto FIREBASE_SERVICE_ACCOUNT', true, 'cuenta de servicio de ' + PROJECT);
 
 try {
-  let n = 0;
-  let page;
-  do {
-    page = await auth.listUsers(1000, page && page.pageToken);
-    n += page.users.length;
-  } while (page.pageToken);
+  const users = await allAccounts(auth);
+  const n = users.length;
   row('Authentication', true, n + (n == 1 ? ' cuenta' : ' cuentas'));
+  /* el dominio del correo técnico: el de ahora o, hasta que se pasen (Actions → «Pasar las cuentas al dominio nuevo»), el anterior */
+  const by = sortAccounts(users);
+  const old = by.move.length + by.clash.length;
+  row('Dominio de las cuentas', !old, by.done.length + ' con el de ahora' + (old ? ' · ' + old + ' con el anterior, por pasar (Actions → «Pasar las cuentas al dominio nuevo»)' : '')
+    + (by.other.length ? ' · ' + by.other.length + ' con otro correo (no entran en nada)' : ''), false);
 }
 catch (e) {
   row('Authentication', false, why(e));
@@ -67,15 +70,9 @@ catch (e) {
 }
 
 try {
-  const r = await google('https://firebaserules.googleapis.com/v1/projects/' + PROJECT + '/releases');
-  const rel = (r.releases || []).find(x => /cloud\.firestore/.test(x.name));
-  let same = false;
-  if (rel) {
-    const rs = await google('https://firebaserules.googleapis.com/v1/' + rel.rulesetName);
-    const src = ((rs.source && rs.source.files) || []).map(f => f.content).join('\n').trim();
-    same = src == readFileSync(new URL('../../firestore.rules', import.meta.url), 'utf8').trim();
-  }
-  const when = rel ? ' (desplegadas el ' + String(rel.updateTime || rel.createTime).slice(0, 10) + ')' : '';
+  const live = await liveRules(app);
+  const same = !!live && live.source.trim() == readFileSync(new URL('../../firestore.rules', import.meta.url), 'utf8').trim();
+  const when = live ? ' (desplegadas el ' + live.when + ')' : '';
   row('Reglas de Firestore', true, same ? 'las de este repositorio' + when : 'aún no son las de este repositorio' + when + ': se despliegan al fusionar en main');
 }
 catch (e) {

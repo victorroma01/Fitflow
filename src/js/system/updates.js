@@ -36,7 +36,7 @@ let swState = 0;
           x.drawImage(im, 0, 0, 180, 180);
           const ic = c.toDataURL('image/png');
           mk('link', { rel: 'apple-touch-icon', href: ic });
-          const mf = { name: 'StrataFit', short_name: 'StrataFit', display: 'standalone', start_url: location.href.split('#')[0], background_color: '#0b0b0d', theme_color: '#0b0b0d', icons: [{ src: ic, sizes: '180x180', type: 'image/png' }] };
+          const mf = { name: 'StrataFit', short_name: 'StrataFit', display: 'standalone', start_url: location.href.split('#')[0], background_color: '#000000', theme_color: '#000000', icons: [{ src: ic, sizes: '180x180', type: 'image/png' }] };
           mk('link', { rel: 'manifest', href: URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/manifest+json' })) });
         }
         catch (e) {
@@ -75,17 +75,21 @@ export const offlineText = () => {
   const on = typeof navigator != 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller;
   return swState < 0 ? 'Uso sin conexión: no disponible en este entorno. Tus datos sí quedan guardados en el dispositivo, pero la app necesita internet para abrirse.' : on ? 'Uso sin conexión: activo. Si pierdes la cobertura, StrataFit se abre con la última versión que cargaste.' : 'Uso sin conexión: se prepara tras cargar la app una vez con conexión y volver a abrirla.';
 };
-export const offlineNote = () => html`<small class="mu d-block mt-10">${offlineText()}</small>${raw(isStandalone() ? '' : '<small class="mu d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
+export const offlineNote = () => html`
+  <small class="muted d-block mt-10">${offlineText()}</small>
+  ${raw(isStandalone() ? '' : '<small class="muted d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
 export let updatesOn = FFDEP;
 let updateReady = 0;
 let updateCheckedAt = 0;
 /** Versión publicada que se está anunciando (contenido de version.json) o null si no se pudo leer. */
 let updateInfo = null;
-/** ¿La versión a es posterior a b? Compara número a número: 1.10.0 es posterior a 1.9.3. */
+/** ¿La versión a es posterior a b? Compara número a número, tengan los que tengan: 1.10.0 es posterior a 1.9.3, y la
+    revisión de una versión, que lleva una cuarta cifra (1.1.0.1), es posterior a ella (1.1.0) y anterior a la siguiente
+    (1.1.1). Hasta la V1.0.31 solo se miraban tres. */
 export const isNewerVersion = (a, b) => {
   const x = String(a || '').split('.').map(Number);
   const y = String(b || '').split('.').map(Number);
-  for (let i = 0; i < 3; i++)
+  for (let i = 0; i < Math.max(x.length, y.length); i++)
     if ((x[i] || 0) != (y[i] || 0))
       return (x[i] || 0) > (y[i] || 0);
   return false;
@@ -111,7 +115,10 @@ const releaseNotesHtml = (info, current) => {
   const all = info && Array.isArray(info.history) && info.history.length ? info.history : (info ? [info] : []);
   const list = current ? all : all.filter(v => isNewerVersion(v.version, APPV));
   const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
-  const notes = shown.map(v => (shown.length > 1 ? html`<p class="upv">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).slice(0, 8).map(i => html`<li>${i}</li>`)}</ul>`).join('')).join('');
+  const notes = shown.map(v => (shown.length > 1 ? html`<p class="update-version">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`
+    <p class="notes-heading">${s.title}</p>
+    <ul>${(s.items || []).slice(0, 8).map(i => html`<li>${i}</li>`)}</ul>
+  `).join('')).join('');
   return notes || '<ul><li>Mejoras y correcciones.</li></ul>';
 };
 /** Ajustes → «Ver nota de actualización» (F-28): la nota de la versión instalada, solo la última, con todos sus cambios y,
@@ -119,13 +126,31 @@ const releaseNotesHtml = (info, current) => {
 export const releaseNotePage = () => {
   const r = RELEASE;
   const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-  const body = (r.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
-  return html`<div class="cd rnp"><b class="rnv">Versión ${r.version || APPV}</b>${d ? html`<small class="mu">${d}</small>` : ''}${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}</div><div class="rnc"><button class="lnk" data-a="openSettings">Cerrar</button></div>`;
+  const body = (r.sections || []).map(s => html`
+    <p class="notes-heading">${s.title}</p>
+    <ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
+  return html`
+    <div class="card release-notes">
+      <b class="release-version">Versión ${r.version || APPV}</b>
+      ${d ? html`<small class="muted">${d}</small>` : ''}
+      ${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}
+    </div>
+    <div class="release-close"><button class="link-btn" data-a="openSettings">Cerrar</button></div>`;
 };
 /** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
 const updatePopupHtml = (info, mode) => {
   const v = info && info.version ? info.version : '';
-  return html`<div class="updb" data-a="updateLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt"><button class="updx" data-a="updateLater" aria-label="Cerrar">×</button><small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small><h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3><div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div><button class="upb" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button></div>`;
+  return html`
+    <div class="update-backdrop" data-a="updateLater"></div>
+    <div class="update-box" role="dialog" aria-modal="true" aria-labelledby="updt">
+      <button class="update-close" data-a="updateLater" aria-label="Cerrar">×</button>
+      <small class="update-label">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small>
+      <h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3>
+      <div class="update-notes">${raw(releaseNotesHtml(info, mode == 'news'))}</div>
+      <button class="update-btn" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">
+        ${mode == 'news' ? 'Entendido' : 'Actualizar'}
+      </button>
+    </div>`;
 };
 const showPopup = (info, mode) => {
   const old = document.getElementById('upd');
@@ -246,7 +271,7 @@ A.updateCheck = async (i, b) => {
     return;
   }
   /* en la fila de Ajustes cambia solo el valor de la derecha; en un botón normal, su texto */
-  const tx = b && (b.querySelector('.srv') || b);
+  const tx = b && (b.querySelector('.setting-value') || b);
   const label = tx ? tx.textContent : '';
   if (b) {
     b.disabled = true;

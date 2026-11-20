@@ -4,8 +4,12 @@
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
-export const APPV = '1.0.31';
+export const APPV = '1.0.32';
 export const FFDEP = 0; /* 1 en el paquete instalable (dist/app): lo fija build.py; 0 en el archivo único */
+/** El primer elemento de la página que encaja con el selector `q`, o null. Para el comprobador de tipos vale por cualquier
+    elemento (un <input>, un <video>…): quien lo pide sabe cuál es.
+    @param {string} q
+    @returns {any} */
 export const $ = q => document.querySelector(q);
 export const X = s => String(s).replace(/[&<>"]/g, c => '&#' + c.charCodeAt(0) + ';');
 /** La imagen `u` si es una foto incrustada válida (data:image/jpeg, png o webp en base64); si no, ''. Para lo que viene de

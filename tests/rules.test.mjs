@@ -10,6 +10,10 @@ const AUTH = 'http://127.0.0.1:9099';
 const FS = 'http://127.0.0.1:8080';
 const ROOT = 'projects/' + P + '/databases/(default)/documents';
 const DOCS = FS + '/v1/' + ROOT;
+// el dominio del correo técnico de las cuentas (cloud/config: TECH_DOMAIN) y el de antes de la V1.0.32, que las reglas siguen
+// admitiendo mientras las cuentas se pasan al de ahora (tools/admin/dominio.mjs)
+const NEW = '@stratafit-960ec.firebaseapp.com';
+const OLD = '@stratafit.app';
 
 const call = async (url, { method = 'GET', body, token } = {}) => {
   const headers = { 'Content-Type': 'application/json' };
@@ -42,17 +46,18 @@ const part = (j, extra = {}) => Object.assign({ j, m: Date.now(), r: 'v1', v: 1,
 const allowed = r => r.status == 200;
 const denied = r => r.status == 403 || r.status == 401;
 
-let ana, bea, adm, ext;
+let ana, bea, adm, ext, old;
 before(async () => {
   await call(FS + '/emulator/v1/projects/' + P + '/databases/(default)/documents', { method: 'DELETE' });
   await call(AUTH + '/emulator/v1/projects/' + P + '/accounts', { method: 'DELETE' });
-  ana = await account('ana_1@stratafit.app');
-  bea = await account('bea@stratafit.app');
-  adm = await account('victoradmin_@stratafit.app');
+  ana = await account('ana_1' + NEW);
+  bea = await account('bea' + NEW);
+  adm = await account('victoradmin_' + NEW);
   ext = await account('alguien@gmail.com');
+  old = await account('vieja_1' + OLD);
   const r = await call(AUTH + '/identitytoolkit.googleapis.com/v1/projects/' + P + '/accounts:update', { method: 'POST', token: 'owner', body: { localId: adm.uid, customAttributes: JSON.stringify({ role: 'admin' }) } });
   assert.equal(r.status, 200, JSON.stringify(r.j));
-  adm.t = (await account('victoradmin_@stratafit.app', 'contraseña-1', false)).t;
+  adm.t = (await account('victoradmin_' + NEW, 'contraseña-1', false)).t;
 });
 
 test('perfil: se crea con el usuario de la propia cuenta y nada más', async () => {
@@ -219,4 +224,49 @@ test('fallos y sugerencias: cada uno lee los suyos; el admin, todos, y solo camb
   assert.ok(denied(await set('reports/' + id, { rp: 'x'.repeat(1501), m: Date.now() }, adm.t, { mask: ['rp', 'm'] })), 'respuesta de más de 1500');
   assert.ok(denied(await del('reports/' + id, bea.t)), 'el usuario no lo borra');
   assert.ok(allowed(await del('reports/' + id, adm.t)), 'el admin, sí');
+});
+
+test('una cuenta que sigue con el dominio anterior entra en lo suyo como antes, y solo en lo suyo', async () => {
+  const now = Date.now();
+  assert.ok(denied(await set('users/' + old.uid, { u: 'Otra', ca: now, m: now }, old.t, { pre: { exists: false } })), 'con otro usuario');
+  assert.ok(denied(await set('users/' + old.uid, { u: 'Ana_1', ca: now, m: now }, old.t, { pre: { exists: false } })), 'con el usuario de una cuenta del dominio de ahora');
+  assert.ok(allowed(await set('users/' + old.uid, { u: 'Vieja_1', sx: 'F', pr: {}, ca: now, m: now }, old.t, { pre: { exists: false } })), 'su perfil, con su usuario');
+  assert.ok(allowed(await get('users/' + old.uid, old.t)));
+  const core = 'users/' + old.uid + '/data/core';
+  assert.ok(allowed(await set(core, part('{"plan":[]}'), old.t)));
+  assert.ok(allowed(await get(core, old.t)));
+  assert.ok(denied(await get('users/' + ana.uid, old.t)), 'el perfil de otra cuenta, no');
+  assert.ok(denied(await get(core, ana.t)), 'ni otra cuenta lo suyo');
+  assert.ok(allowed(await get('users/' + old.uid, adm.t)), 'el admin ve su perfil, como el de todas');
+  const [id, d] = report(old, 'Vieja_1');
+  assert.ok(allowed(await set('reports/' + id, d, old.t, { pre: { exists: false } })), 'un aviso con su usuario');
+  const [id2, d2] = report(old, 'Ana_1');
+  assert.ok(denied(await set('reports/' + id2, d2, old.t)), 'un aviso con el usuario de otra cuenta');
+});
+
+test('al pasarla al dominio de ahora (mismo identificador, otro correo) sigue con lo suyo', async () => {
+  // lo que hace tools/admin/dominio.mjs con cada cuenta
+  const r = await call(AUTH + '/identitytoolkit.googleapis.com/v1/projects/' + P + '/accounts:update', { method: 'POST', token: 'owner', body: { localId: old.uid, email: 'vieja_1' + NEW } });
+  assert.equal(r.status, 200, JSON.stringify(r.j));
+  const now = await account('vieja_1' + NEW, 'contraseña-1', false);
+  assert.equal(now.uid, old.uid, 'la misma cuenta, con la misma contraseña');
+  const core = 'users/' + old.uid + '/data/core';
+  assert.ok(allowed(await get(core, now.t)), 'lee lo que escribió con el dominio anterior');
+  assert.ok(allowed(await set(core, part('{"plan":[1]}'), now.t)), 'y lo cambia');
+  assert.ok(allowed(await set('users/' + old.uid, { sx: 'M', m: Date.now() }, now.t, { mask: ['sx', 'm'] })), 'su perfil, que se creó con el dominio anterior');
+  const [id, d] = report(now, 'Vieja_1');
+  assert.ok(allowed(await set('reports/' + id, d, now.t, { pre: { exists: false } })), 'un aviso con su usuario');
+});
+
+test('un correo que solo se parece al técnico no entra en nada', async () => {
+  for (const email of ['ana_1' + NEW + '.otro.com', 'ana_1@otro-proyecto.firebaseapp.com', 'ana_1@firebaseapp.com', 'ana_1' + OLD + '.es', 'ana_1@stratafit-960ecxfirebaseappxcom.com',
+    'zz-prueba-del-dominio-1a2b3c4d' + NEW, 'ab' + NEW]) {
+    const x = await account(email);
+    const name = email.split('@')[0];
+    assert.ok(denied(await set('users/' + x.uid, { u: name, ca: 1, m: 1 }, x.t, { pre: { exists: false } })), email + ': perfil');
+    assert.ok(denied(await get('users/' + x.uid, x.t)), email + ': leer');
+    assert.ok(denied(await set('users/' + x.uid + '/data/core', part('{}'), x.t)), email + ': datos');
+    const [id, d] = report(x, name);
+    assert.ok(denied(await set('reports/' + id, d, x.t)), email + ': aviso');
+  }
 });

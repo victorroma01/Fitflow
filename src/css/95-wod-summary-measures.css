@@ -1,6 +1,6 @@
 /* ═══ css/95-wod-summary-measures ═══ Temporizadores WOD, resumen, medidas, logros y exportación */
 /* ===== v1.17 ===== */
-.f2lk {
+.link-card {
   width:100%;
   text-align:left;
   display:flex;
@@ -8,13 +8,13 @@
   align-items:center;
   font-weight:400;
 }
-.f2lk>span {
+.link-card>span {
   min-width:0;
 }
-.f2lk b {
+.link-card b {
   font-size:17px;
 }
-.f2lk svg {
+.link-card svg {
   flex:none;
 }
 #f2w {
@@ -49,10 +49,10 @@
 #f2w[data-ph="done"] {
   background:radial-gradient(130% 80% at 50% 0,color-mix(in srgb,var(--a2) 70%,#0b0b0d),#0b0b0d 78%);
 }
-#f2w.pz {
+#f2w.paused {
   filter:saturate(.4);
 }
-.f2hd {
+.wod-head {
   display:grid;
   grid-template-columns:44px 1fr 44px;
   align-items:center;
@@ -60,11 +60,11 @@
   gap:6px;
   min-height:48px;
 }
-.f2hd b {
+.wod-head b {
   font-size:15px;
   letter-spacing:.02em;
 }
-#f2w .f2cl {
+#f2w .wod-close {
   width:44px;
   height:44px;
   padding:0;
@@ -75,13 +75,13 @@
   place-items:center;
 }
 /* reloj circular (F-22): el anillo se vacía con lo que queda del tramo (o se llena en el For time) y la cuenta va dentro */
-.f2rg {
+.wod-ring {
   position:relative;
   width:min(84vw,52vh,380px);
   aspect-ratio:1;
   margin:clamp(8px,3vh,28px) auto 0;
 }
-.f2rg svg {
+.wod-ring svg {
   position:absolute;
   inset:0;
   width:100%;
@@ -90,30 +90,30 @@
   /* el brillo va en el svg y no en el círculo: Safari no aplica filtros CSS a las figuras de dentro */
   filter:drop-shadow(0 0 6px #ffffff40);
 }
-.f2rb,.f2rp {
+.wod-ring-track,.wod-ring-progress {
   fill:none;
   stroke-width:7;
 }
-.f2rb {
+.wod-ring-track {
   stroke:#ffffff1f;
 }
-.f2rp {
+.wod-ring-progress {
   stroke:#fff;
   stroke-linecap:round;
   /* la longitud del anillo, 2π · 54 (RING en extras/wod) */
   stroke-dasharray:339.29;
   stroke-dashoffset:0;
 }
-#f2w[data-ph="pre"] .f2rp {
+#f2w[data-ph="pre"] .wod-ring-progress {
   stroke:color-mix(in srgb,var(--a2) 55%,#fff);
 }
-#f2w[data-ph="work"] .f2rp {
+#f2w[data-ph="work"] .wod-ring-progress {
   stroke:#5eead4;
 }
-#f2w[data-ph="rest"] .f2rp {
+#f2w[data-ph="rest"] .wod-ring-progress {
   stroke:#fcd34d;
 }
-.f2rc {
+.wod-ring-center {
   position:absolute;
   inset:0;
   display:flex;
@@ -122,14 +122,14 @@
   justify-content:center;
   text-align:center;
 }
-.f2p {
+.wod-phase {
   font-size:14px;
   font-weight:800;
   letter-spacing:.18em;
   text-transform:uppercase;
   opacity:.9;
 }
-.f2t {
+.wod-time {
   font-size:clamp(56px,19vw,112px);
   font-weight:800;
   letter-spacing:-.045em;
@@ -137,14 +137,14 @@
   line-height:1.02;
   margin:4px 0 2px;
 }
-.f2s {
+.wod-status {
   font-size:17px;
   font-weight:700;
   min-height:24px;
   opacity:.92;
 }
 /* lo que viene después y el total (F-24), y saltar la cuenta atrás de inicio (F-23) */
-.f2nx {
+.wod-next {
   min-height:22px;
   margin:12px 4px 0;
   text-align:center;
@@ -153,7 +153,7 @@
   color:#ffffffc7;
   font-variant-numeric:tabular-nums;
 }
-#f2w .f2sk {
+#f2w .wod-skip {
   margin-top:10px;
   padding:12px 20px;
   border-radius:999px;
@@ -162,11 +162,11 @@
   color:#fff;
   font-weight:700;
 }
-.f2sp {
+.wod-spacer {
   flex:1;
   min-height:12px;
 }
-#f2w .f2big {
+#f2w .wod-count-btn {
   width:100%;
   display:flex;
   flex-direction:column;
@@ -181,30 +181,30 @@
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
-#f2w .f2big b {
+#f2w .wod-count-btn b {
   font-size:clamp(54px,20vw,84px);
   line-height:1;
   font-weight:800;
   font-variant-numeric:tabular-nums;
 }
-#f2w .f2big small {
+#f2w .wod-count-btn small {
   color:#ffffffcc;
   font-size:14px;
 }
-#f2w .f2big:active {
+#f2w .wod-count-btn:active {
   background:#ffffff38;
 }
-#f2w .f2sm {
+#f2w .wod-undo {
   background:none;
   border:0;
   color:#ffffffb8;
   font-size:14px;
   padding:8px 14px;
 }
-#f2w .f2ct {
+#f2w .wod-controls {
   margin-top:8px;
 }
-#f2w .f2ct button {
+#f2w .wod-controls button {
   padding:15px;
   font-size:16px;
   border-radius:18px;
@@ -212,7 +212,7 @@
   border-color:#ffffff30;
   color:#fff;
 }
-.f2dn {
+.wod-done {
   flex:1;
   display:flex;
   flex-direction:column;
@@ -222,67 +222,67 @@
   gap:6px;
   padding:10px 0 20px;
 }
-.f2dn>small {
+.wod-done>small {
   font-size:14px;
   letter-spacing:.16em;
   text-transform:uppercase;
   font-weight:800;
   opacity:.9;
 }
-.f2rs {
+.wod-result {
   font-size:clamp(44px,15vw,72px);
   font-weight:800;
   letter-spacing:-.03em;
   line-height:1.05;
 }
-#f2w .f2dn input {
+#f2w .wod-done input {
   text-align:center;
   background:#00000055;
   border-color:#ffffff33;
   color:#fff;
 }
-#f2w .f2dn label {
+#f2w .wod-done label {
   color:#ffffffcc;
 }
-#f2w .f2dn button {
+#f2w .wod-done button {
   padding:14px;
   border-radius:16px;
   background:#ffffff1a;
   border-color:#ffffff30;
   color:#fff;
 }
-#f2w .f2dn button.pr {
+#f2w .wod-done button.primary {
   background:#fff;
   color:#111;
   border:0;
   box-shadow:none;
 }
-.f2tl {
+.summary-totals {
   margin:12px 0 4px;
 }
-.f2tl .cd {
+.summary-totals .card {
   margin:0;
   text-align:center;
   padding:14px 6px;
 }
-.f2tl b {
+.summary-totals b {
   font-size:24px;
   display:block;
   font-weight:800;
 }
-.f2tl small {
+.summary-totals small {
   color:var(--mu);
 }
-.f2cmp {
+.summary-compare {
   margin:6px 2px 4px;
 }
-.f2cmp>div {
+.summary-compare>div {
   display:flex;
   flex-wrap:wrap;
   gap:6px;
   margin-top:6px;
 }
-.f2dc {
+.delta-chip {
   display:inline-block;
   padding:5px 11px;
   border-radius:999px;
@@ -291,32 +291,32 @@
   border:1px solid var(--ln);
   background:var(--cd);
 }
-.f2dc.up {
+.delta-chip.up {
   color:#34d399;
   border-color:#34d39955;
 }
-.f2dc.dn {
+.delta-chip.down {
   color:var(--ctx);
   border-color:color-mix(in srgb,var(--c) 45%,transparent);
 }
-.f2prc {
+.summary-records {
   border-color:color-mix(in srgb,var(--a2) 55%,var(--ln));
 }
-.f2prc>b {
+.summary-records>b {
   color:var(--at);
 }
-.f2cs {
+.cardio-stats {
   display:grid;
   grid-template-columns:repeat(3,1fr);
   text-align:center;
   margin:12px 0 4px;
 }
-.f2cs b {
+.cardio-stats b {
   font-size:24px;
   display:block;
   font-weight:800;
 }
-.f2cs small {
+.cardio-stats small {
   color:var(--mu);
 }
 .f2bars {
@@ -347,7 +347,7 @@
   font-size:11px;
   color:var(--mu);
 }
-.f2ac {
+.achievement {
   display:grid;
   grid-template-columns:44px 1fr auto;
   gap:12px;
@@ -355,7 +355,7 @@
   padding:12px 0;
   border-top:1px solid var(--ln);
 }
-.f2ai {
+.achievement-medal {
   width:44px;
   height:44px;
   border-radius:14px;
@@ -364,22 +364,22 @@
   background:var(--ln);
   color:var(--mu);
 }
-.f2ac.on .f2ai {
+.achievement.on .achievement-medal {
   background:var(--ag);
   color:var(--ft);
 }
-.f2ac .bar {
+.achievement .bar {
   margin-top:6px;
 }
-.f2ac:not(.on) b {
+.achievement:not(.on) b {
   color:var(--tx);
 }
-.f2ch {
+.measure-chart {
   width:100%;
   height:auto;
   display:block;
 }
-.f2sv {
+.scan-view {
   position:relative;
   border-radius:18px;
   overflow:hidden;
@@ -387,13 +387,13 @@
   aspect-ratio:4/3;
   margin-top:8px;
 }
-.f2sv video {
+.scan-view video {
   width:100%;
   height:100%;
   object-fit:cover;
   display:block;
 }
-.f2gd {
+.scan-guide {
   position:absolute;
   left:10%;
   right:10%;

@@ -1,5 +1,5 @@
 """Prueba de la cuenta y la nube (M2 y M5): inicio de sesión y registro, sincronización entre dos móviles (también sin conexión y
-con cambios en los dos), cerrar sesión, espera tras fallos, Administración, contraseña temporal, fallos y sugerencias (enviar,
+con cambios en los dos, sin poder guardar en el móvil y con la app abierta dos veces), cerrar sesión, espera tras fallos, Administración, contraseña temporal, fallos y sugerencias (enviar,
 sin conexión, vista, respuesta y arreglado), copia de seguridad en la nube (a mano, semanal, sin pisar una copia con más datos,
 restaurar), foto con consentimiento, borrar todos los datos y seguridad (sin código inyectado ni choques con la CSP).
 
@@ -10,7 +10,7 @@ Con el emulador, la contraseña temporal la crea el script de verdad (tools/admi
 import os, re, sys, json, time, base64, subprocess, urllib.request
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts, RECAPTCHA, recaptcha_route
-from fakefb import FakeFirebase
+from fakefb import FakeFirebase, DOMAIN, OLD_DOMAIN
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -59,9 +59,52 @@ class EmuFirebase:
         self._req('%s/emulator/v1/projects/%s/databases/(default)/documents' % (self.FS, self.P), method='DELETE')
         self._req('%s/emulator/v1/projects/%s/accounts' % (self.AUTH, self.P), method='DELETE')
 
+    def _account(self, user):
+        """La cuenta de un usuario, esté en el dominio de ahora o en el anterior."""
+        for d in (DOMAIN, OLD_DOMAIN):
+            r = self._req('%s/identitytoolkit.googleapis.com/v1/projects/%s/accounts:lookup' % (self.AUTH, self.P), {'email': [user.lower() + '@' + d]})
+            if r.get('users'):
+                return r['users'][0]
+        raise KeyError(user)
+
     def uid_of(self, user):
-        r = self._req('%s/identitytoolkit.googleapis.com/v1/projects/%s/accounts:lookup' % (self.AUTH, self.P), {'email': [user.lower() + '@stratafit.app']})
-        return r['users'][0]['localId']
+        return self._account(user)['localId']
+
+    def domain_of(self, user):
+        return self._account(user)['email'].split('@')[1]
+
+    def to_old_domain(self, user):
+        """Deja la cuenta como las de antes de la V1.0.32, con el dominio anterior: una que aún no se ha pasado."""
+        self._req('%s/identitytoolkit.googleapis.com/v1/projects/%s/accounts:update' % (self.AUTH, self.P),
+                  {'localId': self.uid_of(user), 'email': user.lower() + '@' + OLD_DOMAIN})
+
+    def _tool(self, *args):
+        """Un script de administración de verdad (tools/admin, con firebase-admin) contra el emulador: (código de salida, salida)."""
+        env = dict(os.environ, FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099', FIRESTORE_EMULATOR_HOST='127.0.0.1:8080')
+        r = subprocess.run(['node', os.path.join(ROOT, 'tools', 'admin', args[0])] + list(args[1:]), env=env, capture_output=True, text=True, timeout=120)
+        return r.returncode, r.stdout + r.stderr
+
+    def tool_finds(self, user):
+        """¿Encuentran la cuenta los scripts de administración? («Asignar rol», que la deja como estaba: usuario)."""
+        return self._tool('rol.mjs', user, 'usuario')[0] == 0
+
+    def dry_run(self):
+        """El simulacro de pasar las cuentas: (¿ha ido bien?, cuántas dice que quedan por pasar, ¿dice que las sesiones
+        abiertas se conservan?)."""
+        code, out = self._tool('dominio.mjs', 'simulacro')
+        m = re.search(r'Por pasar \| (\d+)', out)
+        return code == 0, int(m.group(1)) if m else -1, bool(re.search(r'Las sesiones abiertas se conservan \| Sí', out))
+
+    def move_accounts(self, keep=True):
+        """Pasa las cuentas con el script de verdad (tools/admin/dominio.mjs): «aplicar», que solo las pasa si las sesiones se
+        conservan, o, sin `keep`, «aplicar-todo». Devuelve cuántas ha pasado."""
+        code, out = self._tool('dominio.mjs', 'aplicar' if keep else 'aplicar-todo')
+        if code:
+            raise RuntimeError(out)
+        m = re.search(r'Pasadas ahora \| (\d+)', out)
+        if not m:
+            raise RuntimeError('tools/admin/dominio.mjs no dice cuántas cuentas ha pasado:\n' + out)
+        return int(m.group(1))
 
     def set_role(self, user, role):
         self._req('%s/identitytoolkit.googleapis.com/v1/projects/%s/accounts:update' % (self.AUTH, self.P),
@@ -163,7 +206,7 @@ def main(path):
             pg.select_option('#wl_act', '1')
             pg.select_option('#wl_goal', '1')
             pg.click('#wlc [data-a=welcomeSave]')
-            wait(pg, "!document.getElementById('wlc') && !!document.querySelector('#tour .trst')")
+            wait(pg, "!document.getElementById('wlc') && !!document.querySelector('#tour .tour-step')")
 
         def sync(pg):
             pg.evaluate('syncNow()')
@@ -187,7 +230,7 @@ def main(path):
         # ── un móvil sin cuenta: solo el inicio de sesión ──
         c1, p1 = device()
         check('sin sesión, solo el inicio de sesión (sin la barra de pestañas)', p1.evaluate("!!document.getElementById('lgw') && document.querySelector('nav').style.display=='none'"))
-        check('el inicio de sesión lleva el logo (F-40)', p1.evaluate("(i=>!!i&&i.alt=='StrataFit'&&i.complete&&i.naturalWidth==288)(document.querySelector('#lgw img.brl'))"))
+        check('el inicio de sesión lleva el logo (F-40)', p1.evaluate("(i=>!!i&&i.alt=='StrataFit'&&i.complete&&i.naturalWidth==288)(document.querySelector('#lgw img.brand-logo'))"))
         check('sin datos personales en el registro: solo usuario y contraseña', p1.evaluate("(A.loginMode(0,{dataset:{v:'up'}}),[...document.querySelectorAll('#lgw input')].map(i=>i.id).join())") == 'lgu,lgp,lgp2')
         p1.fill('#lgu', 'Ana_1'); p1.fill('#lgp', 'contraseña-1'); p1.fill('#lgp2', 'otra-cosa')
         p1.click('[data-a=loginSubmit]')
@@ -201,16 +244,17 @@ def main(path):
         prof = fb.data('users/' + uid) or {}
         check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm', 'os'}, str(prof))
         check('y se suben el índice y el núcleo', fb.data('users/%s/data/index' % uid) is not None and fb.part('users/%s/data/core' % uid) is not None)
-        check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.pfn').textContent)") == 'Ana_1')
-        check('el correo técnico no aparece en la app', '@stratafit.app' not in p1.content())
+        check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.profile-name').textContent)") == 'Ana_1')
+        check('la cuenta nueva se crea con el dominio de ahora (el del proyecto de Firebase)', fb.domain_of('Ana_1') == DOMAIN, fb.domain_of('Ana_1'))
+        check('el correo técnico no aparece en la app', '@' + DOMAIN not in p1.content() and '@' + OLD_DOMAIN not in p1.content())
 
         # ── cuenta nueva (I-23, I-24): sin programa y, tras la primera sincronización, la bienvenida con sus datos; después, el
         #    recorrido de la primera vez (F-36). Visto en un móvil, no vuelve a salir en otro ──
-        check('la cuenta nueva empieza sin programa: «Seleccionar programa»', p1.evaluate("S.noProgram===1 && S.plan.every(d=>!d.ex.length) && (S.tab=0,R(),!!document.querySelector('#app .npc'))"))
+        check('la cuenta nueva empieza sin programa: «Seleccionar programa»', p1.evaluate("S.noProgram===1 && S.plan.every(d=>!d.ex.length) && (S.tab=0,R(),!!document.querySelector('#app .no-program-card'))"))
         wait(p1, "!!document.getElementById('wlc')", 30000)
         check('cuenta nueva: tras la primera sincronización sale la bienvenida', 'Gracias por instalar la app' in p1.inner_text('#wlc') and p1.evaluate("!document.getElementById('tour')"))
         new_account_bio(p1, 'F')
-        check('con los datos guardados, el recorrido empieza por su primer paso', p1.evaluate("document.querySelector('#tour .trst').textContent") == 'Paso 1 de 5' and p1.evaluate('S.welcomePending') is None)
+        check('con los datos guardados, el recorrido empieza por su primer paso', p1.evaluate("document.querySelector('#tour .tour-step').textContent") == 'Paso 1 de 5' and p1.evaluate('S.welcomePending') is None)
         p1.click('#tour [data-a=tourSkip]')
         check('«Omitir» lo da por visto', p1.evaluate("!document.getElementById('tour') && S.tourSeen") == 1)
         sync(p1)
@@ -251,6 +295,10 @@ def main(path):
         sync(p2)
         check('el móvil 2 recibe lo del móvil 1', sorted(p2.evaluate('S.logs.map(l=>l.n)')) == ['Espalda', 'Pecho', 'Pierna'] and p2.evaluate("S.meals['%s'][0].length" % today) == 2)
         check('sin nada pendiente en ninguno', p1.evaluate('pendingDocs()') == 0 and p2.evaluate('pendingDocs()') == 0)
+        # cloud/sync recuerda la huella de cada elemento con su texto: un cambio hecho en su sitio (sin cambiar el objeto) se
+        # nota igual, y deshacerlo deja otra vez nada pendiente
+        changed = p1.evaluate("(()=>{const l=S.logs[0];l.v+=1;const a=pendingDocs();l.v-=1;return [a,pendingDocs()]})()")
+        check('un entreno cambiado en su sitio cuenta como pendiente, y al dejarlo como estaba, ya no', changed == [1, 0], str(changed))
 
         # ── preferencias: van en el perfil y pasan al otro móvil al abrir la app ──
         p2.evaluate("S.theme='light';S.accent=-1;S.accentColor='#ff2d55';S.reduceMotion=1;saveState()")
@@ -260,7 +308,7 @@ def main(path):
         p1.reload()
         wait(p1, 'window.__ffok')
         sync(p1)
-        check('y el otro móvil las aplica', p1.evaluate("S.theme") == 'light' and p1.evaluate("document.documentElement.dataset.theme") == 'light' and p1.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--a2').trim()") == '#ff2d55' and p1.evaluate("document.documentElement.classList.contains('rm')"))
+        check('y el otro móvil las aplica', p1.evaluate("S.theme") == 'light' and p1.evaluate("document.documentElement.dataset.theme") == 'light' and p1.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--a2').trim()") == '#ff2d55' and p1.evaluate("document.documentElement.classList.contains('reduce-motion')"))
 
         # ── borrar en un móvil y sin tocar en el otro ──
         p2.evaluate("S.logs=S.logs.filter(l=>l.n!='Espalda');saveState()")
@@ -313,6 +361,165 @@ def main(path):
         wait(p2, 'S.logs.length==2', 20000)
         check('«Bajar de mi cuenta» vuelve a bajar los datos de la cuenta', sorted(p2.evaluate('S.logs.map(l=>l.n)')) == ['Pecho', 'Pierna'] and not p2.evaluate('partsLost') and len(fb.part(lpath) or []) == 2)
         sync(p2)
+
+        # ── el móvil no puede guardar (sin espacio), pero la sincronización sí funciona: lo que el móvil no tiene guardado no se
+        #    apunta como sincronizado, así que al volver a abrir la app baja de la nube en vez de borrarse de ella (core/persist:
+        #    savesBroken; cloud/sync: saveMeta) ──
+        no_space = "window.__put=window.__put||IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(){throw new DOMException('sin espacio','QuotaExceededError')};0"
+        base_r = "((JSON.parse(localStorage.getItem('ffsync')||'{}').base||{})['logs:2026']||{}).r"
+        names = lambda pg: sorted(pg.evaluate('S.logs.map(l=>l.n)'))
+        cloud = lambda: sorted(l['n'] for l in fb.part(lpath) or [])
+        one = lambda day, n: "S.logs.push({d:'2026-11-%02d',n:'%s',v:3000,s:12,m:40,q:7});saveState('logs')" % (day, n)
+        r0 = p2.evaluate(base_r)
+        p2.evaluate(no_space)
+        p2.evaluate(one(7, 'Hombro'))
+        wait(p2, 'savesBroken()')
+        check('si el móvil no puede guardar, lo dice', 'No se ha podido guardar' in p2.inner_text('#tt'), p2.inner_text('#tt'))
+        st = sync(p2)
+        check('lo que el móvil no ha podido guardar sube igual a la nube', st == 'ok' and cloud() == ['Hombro', 'Pecho', 'Pierna'], '%s %s' % (st, cloud()))
+        check('pero no se apunta como sincronizado, porque el móvil no lo tiene guardado', bool(r0) and p2.evaluate(base_r) == r0, '%s %s' % (r0, p2.evaluate(base_r)))
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        check('(al volver a abrir la app, al móvil le falta lo que no pudo guardar)', names(p2) == ['Pecho', 'Pierna'] and not p2.evaluate('savesBroken()'), str(names(p2)))
+        st = sync(p2)
+        check('y lo baja de la nube, en vez de borrarlo de ella', st == 'ok' and names(p2) == ['Hombro', 'Pecho', 'Pierna'] and cloud() == ['Hombro', 'Pecho', 'Pierna'], '%s %s %s' % (st, names(p2), cloud()))
+        # lo que baja de la nube y el móvil no puede guardar tampoco se apunta como bajado: se baja otra vez
+        sync(p1)
+        p1.evaluate(one(8, 'Brazos'))
+        sync(p1)
+        r1 = p2.evaluate(base_r)
+        p2.evaluate(no_space)
+        st = sync(p2)
+        check('lo que baja de la nube sin poder guardarlo se ve en la app, pero no se apunta como bajado', st == 'ok' and names(p2) == ['Brazos', 'Hombro', 'Pecho', 'Pierna'] and p2.evaluate('savesBroken()') and r1 != r0 and p2.evaluate(base_r) == r1, '%s %s %s' % (st, names(p2), [r0, r1, p2.evaluate(base_r)]))
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        check('al volver a abrir, se baja otra vez y la nube no pierde nada', st == 'ok' and names(p2) == ['Brazos', 'Hombro', 'Pecho', 'Pierna'] and cloud() == ['Brazos', 'Hombro', 'Pecho', 'Pierna'], '%s %s %s' % (st, names(p2), cloud()))
+        # y si vuelve a haber sitio sin cerrar la app, el siguiente guardado lo escribe todo y lo sincronizado se apunta
+        r2 = p2.evaluate(base_r)
+        p2.evaluate(no_space)
+        p2.evaluate(one(9, 'Core'))
+        wait(p2, 'savesBroken()')
+        p2.evaluate("IDBObjectStore.prototype.put=window.__put;saveState();0")
+        wait(p2, '!savesBroken()')
+        st = sync(p2)
+        saved = sorted(l['n'] for l in p2.evaluate("savesDone().then(()=>__stored()).then(s=>s.logs)"))
+        check('cuando vuelve a poder guardar, queda todo guardado, subido y apuntado', st == 'ok' and saved == ['Brazos', 'Core', 'Hombro', 'Pecho', 'Pierna'] and cloud() == saved and p2.evaluate(base_r) not in (None, r2), '%s %s %s' % (st, saved, cloud()))
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        check('y al volver a abrir sigue todo, en el móvil y en la nube', st == 'ok' and names(p2) == saved and cloud() == saved, '%s %s %s' % (st, names(p2), cloud()))
+        # lo que bajó sin poder guardarse queda apuntado como sincronizado en cuanto el móvil vuelve a guardar. Si no, al borrarlo
+        # después sin conexión parecería algo que este móvil nunca tuvo, y volvería de la nube (lo encontró tests/syncfuzz.py)
+        p1.evaluate(one(12, 'Abdomen'))
+        sync(p1)
+        p2.evaluate(no_space)
+        sync(p2)
+        noted = "(id=>id!=null&&id in ((JSON.parse(localStorage.getItem('ffsync')||'{}').base||{})['logs:2026']||{h:{}}).h)((S.logs.find(l=>l.n=='Abdomen')||{}).id)"
+        check('(preparado: un entreno bajado de la nube que el móvil no ha podido guardar ni apuntar)', 'Abdomen' in names(p2) and p2.evaluate('savesBroken()') and not p2.evaluate(noted))
+        p2.evaluate("IDBObjectStore.prototype.put=window.__put;saveState();0")
+        wait(p2, '!savesBroken()')
+        check('al volver a poder guardar, lo bajado queda guardado y apuntado como sincronizado', p2.evaluate(noted) and 'Abdomen' in [l['n'] for l in p2.evaluate("savesDone().then(()=>__stored()).then(s=>s.logs)")])
+        # (sin conexión solo mientras se borra: con el emulador, sin conexión tampoco se puede recargar la página. La app deja de
+        # sincronizar antes de que vuelva la red, para que no suba el borrado ella sola antes de cerrarse)
+        fb.set_offline(c2, True)
+        p2.evaluate("S.logs=S.logs.filter(l=>l.n!='Abdomen');saveState('logs')")
+        p2.evaluate('savesDone()')
+        p2.evaluate('stopSync()')
+        fb.set_offline(c2, False)
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        sync(p1)
+        check('y si después se borra sin conexión, sigue borrado al sincronizar, en los dos móviles y en la nube', st == 'ok' and names(p2) == saved and cloud() == saved and names(p1) == saved, '%s %s %s %s' % (st, names(p2), cloud(), names(p1)))
+        # Y eso, sin adelantarse: si en ese momento hay una sincronización a medias que acaba de bajar algo, lo sincronizado no se
+        # apunta hasta que eso también está escrito. Si se apuntara antes y el móvil dejara de poder guardar justo entonces, al
+        # volver a abrir la app faltaría lo bajado, constaría como sincronizado, y se borraría de la nube. Aquí el guardado con
+        # el que el móvil vuelve a guardar tarda (su transacción se retiene abierta) mientras baja un entreno nuevo, y el sitio
+        # se acaba en cuanto se apunta lo sincronizado
+        p1.evaluate(one(13, 'Glúteo'))
+        sync(p1)
+        p2.evaluate(no_space)
+        sync(p2)
+        p1.evaluate(one(14, 'Antebrazo'))
+        sync(p1)
+        check('(preparado: el móvil sin poder guardar, con lo sincronizado esperando a apuntarse, y algo nuevo en la nube)', 'Glúteo' in names(p2) and p2.evaluate('savesBroken()') and 'Antebrazo' in cloud() and 'Antebrazo' not in names(p2))
+        p2.evaluate("""window.__commit=window.__commit||IDBTransaction.prototype.commit;window.__si=window.__si||Storage.prototype.setItem;window.__hold=1;
+          IDBTransaction.prototype.commit=function(){};
+          IDBObjectStore.prototype.put=function(){const st=this,r=window.__put.apply(this,arguments),keep=()=>{try{if(window.__hold)st.get('__').onsuccess=keep}catch(e){}};keep();return r};0""")
+        p2.evaluate("saveState();0")
+        p2.evaluate("syncNow();0")
+        wait(p2, "S.logs.some(l=>l.n=='Antebrazo')")
+        p2.evaluate("Storage.prototype.setItem=function(k){const r=window.__si.apply(this,arguments);if(k=='ffsync')IDBObjectStore.prototype.put=function(){throw new DOMException('sin espacio','QuotaExceededError')};return r};window.__hold=0;0")
+        wait(p2, "syncState().st!='run'")
+        p2.evaluate('savesDone()')
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        sync(p1)
+        saved = sorted(saved + ['Antebrazo', 'Glúteo'])
+        check('lo sincronizado no se apunta antes de que lo recién bajado esté escrito: nada se borra de la nube', st == 'ok' and names(p2) == saved and cloud() == saved and names(p1) == saved, '%s %s %s %s' % (st, names(p2), cloud(), names(p1)))
+        # Y lo que sube tampoco se apunta hasta que el móvil ha terminado de guardarlo. Aquí el guardado del entreno sigue a
+        # medias (su transacción se retiene abierta) mientras el entreno sube, y al final falla
+        p2.evaluate("""window.__hold=1;IDBTransaction.prototype.commit=function(){};
+          IDBObjectStore.prototype.put=function(){const st=this,tx=st.transaction,keep=()=>{try{if(window.__hold)st.get('__').onsuccess=keep;else tx.abort()}catch(e){}};
+            const r=st.get('__');r.onsuccess=keep;return r};0""")
+        p2.evaluate(one(15, 'Trapecio'))
+        p2.evaluate("syncNow();0")
+        for _ in range(100):
+            if 'Trapecio' in cloud():
+                break
+            p2.wait_for_timeout(100)
+        p2.wait_for_timeout(300)
+        p2.evaluate("window.__hold=0;0")
+        wait(p2, "syncState().st!='run'")
+        p2.evaluate('savesDone()')
+        check('(preparado: el entreno ha subido con su guardado a medias, que al final ha fallado)', 'Trapecio' in cloud() and p2.evaluate('savesBroken()'), str(cloud()))
+        p2.reload()
+        wait(p2, 'window.__ffok')
+        st = sync(p2)
+        sync(p1)
+        saved = sorted(saved + ['Trapecio'])
+        check('lo subido no se apunta hasta que el móvil termina de guardarlo: al volver a abrir, baja de la nube en vez de borrarse', st == 'ok' and names(p2) == saved and cloud() == saved and names(p1) == saved, '%s %s %s %s' % (st, names(p2), cloud(), names(p1)))
+
+        # ── la app abierta dos veces en el mismo móvil (dos pestañas): la que se queda atrás ni guarda ni sincroniza, así que no
+        #    borra de la nube lo que guardó la otra (core/persist: instanceStale; lo del propio móvil, en tests/storage.py) ──
+        # (antes, que la app haya guardado lo que guarda sola al arrancar con datos nuevos, como un logro: unos 2,5 s después)
+        sync(p1)
+        p1.reload()
+        wait(p1, 'window.__ffok')
+        p1.wait_for_timeout(3200)
+        sync(p1)
+        q1 = c1.new_page()
+        q1.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200] + ' (tras «%s»)' % LAST[0]))
+        q1.on('console', lambda m: errs.append('CONSOLE ' + brief(m.text)) if m.type == 'error' and not offline_noise(m.text) else None)
+        q1.goto(url)
+        wait(q1, 'window.__ffok')
+        wait(q1, "syncState().st=='ok'")
+        q1.wait_for_timeout(3200)
+        check('(preparado: la misma cuenta, abierta en dos pestañas del mismo móvil)', q1.evaluate('account.u') == 'Ana_1' and names(q1) == saved and not p1.evaluate('instanceStale') and not q1.evaluate('instanceStale'), str([names(q1), p1.evaluate('instanceStale'), q1.evaluate('instanceStale')]))
+        p1.evaluate(one(10, 'Gemelo'))
+        st = sync(p1)
+        wait(q1, 'instanceStale')
+        check('una pestaña guarda y sube un entreno; la otra se queda atrás y lo dice', st == 'ok' and 'Gemelo' in cloud() and 'abierta en otra ventana' in q1.inner_text('#dg'), '%s %s' % (st, cloud()))
+        # la que se quedó atrás no tiene ese entreno: si guardara y sincronizara lo suyo, la nube lo daría por borrado
+        meta0 = q1.evaluate("localStorage.getItem('ffsync')")
+        q1.evaluate("S.logs=S.logs.filter(l=>l.n!='Pecho');" + one(11, 'Tibial'))
+        sync(q1)
+        q1.wait_for_timeout(300)
+        check('la que se quedó atrás no sube lo suyo ni toca lo sincronizado: la nube no pierde nada', cloud() == sorted(saved + ['Gemelo']) and q1.evaluate("localStorage.getItem('ffsync')") == meta0 and sorted(l['n'] for l in p1.evaluate("savesDone().then(()=>__stored()).then(s=>s.logs)")) == sorted(saved + ['Gemelo']), str(cloud()))
+        # (la acción del botón «Recargar», sin cerrar el aviso con el historial, como arriba)
+        with q1.expect_navigation(timeout=20000):
+            q1.evaluate("A.staleReload()")
+        wait(q1, 'window.__ffok')
+        st = sync(q1)
+        check('recargada, tiene lo último, sincroniza y la nube sigue entera', st == 'ok' and names(q1) == sorted(saved + ['Gemelo']) and cloud() == sorted(saved + ['Gemelo']) and not q1.evaluate('instanceStale'), '%s %s %s' % (st, names(q1), cloud()))
+        q1.close()
+        # (se deja la cuenta como estaba, con sus dos entrenos, para lo que sigue)
+        p1.evaluate("S.logs=S.logs.filter(l=>['Pecho','Pierna'].includes(l.n));saveState()")
+        sync(p1)
+        sync(p2)
+        check('(y los entrenos de estas pruebas, borrados en los dos móviles y en la nube)', names(p1) == ['Pecho', 'Pierna'] and names(p2) == ['Pecho', 'Pierna'] and cloud() == ['Pecho', 'Pierna'] and not p1.evaluate('instanceStale'), str([names(p1), names(p2), cloud()]))
 
         # ── App Check (I-05): sin configurar no hace nada; configurado, cada petición a Firebase lleva su token, la CSP de la app
         #    admite reCAPTCHA y, si reCAPTCHA falla, tarda o no hay conexión, la app sigue sin token. reCAPTCHA (tests/browser.py) y
@@ -475,7 +682,7 @@ def main(path):
         # ── foto de perfil: primero el consentimiento ──
         jpeg = base64.b64decode(p1.evaluate("(()=>{const c=document.createElement('canvas');c.width=c.height=8;const x=c.getContext('2d');x.fillStyle='#c33';x.fillRect(0,0,8,8);return c.toDataURL('image/jpeg',.8).split(',')[1]})()"))
         p1.evaluate('S.tab=3;R()')
-        p1.click('.pfh [data-a=photoConsentAsk]')
+        p1.click('.profile-head [data-a=photoConsentAsk]')
         check('la foto pide consentimiento antes de subirla', 'Solo la ves tú' in p1.inner_text('#dg'))
         with p1.expect_file_chooser() as fc:
             p1.click('#dg [data-v=photoConsentOk]')
@@ -506,6 +713,22 @@ def main(path):
         left = p1.evaluate("Object.keys(localStorage).filter(k=>k=='ff'||k.startsWith('ff:')||k=='ffacct'||k=='ffsync')")
         check('al cerrar sesión se vuelve al inicio y los datos de la cuenta se borran del móvil', p1.evaluate("!!document.getElementById('lgw')") and left == [], str(left))
         check('y siguen en la nube', len(fb.part('users/%s/logs/2026' % uid) or []) == 2 and (fb.part('users/%s/data/core' % uid) or {}).get('wl') == [{'d': today, 'w': 80}])
+        # cerrar sesión con un guardado todavía en marcha (V1.0.32): ese guardado ya no deja escrito el núcleo con sus partes
+        # borradas. Antes, la siguiente apertura se quedaba en «No se pudieron leer tus datos», sin poder entrar
+        login(p1, 'Ana_1', 'contraseña-1')
+        with p1.expect_navigation():
+            p1.evaluate("S.tab=2;flushState();A.signOutConfirmed()")
+        wait(p1, 'window.__ffok')
+        p1.wait_for_timeout(300)
+        left = p1.evaluate("({core: !!localStorage.getItem('ff'), lost: !!document.querySelector('#dg [data-v=partsRetry]'), login: !!document.getElementById('lgw')})")
+        check('cerrar sesión con un guardado en marcha no deja datos a medias en el móvil: sale el inicio de sesión, sin avisos', left == {'core': False, 'lost': False, 'login': True}, str(left))
+        login(p1, 'Ana_1', 'contraseña-1')
+        check('y se vuelve a entrar con los datos de la cuenta', p1.evaluate('S.logs.length') == 2 and sync(p1) == 'ok', str(p1.evaluate('S.logs.length')))
+        p1.evaluate('A.signOut()')
+        wait(p1, "!!document.querySelector('#dg [data-v=signOutConfirmed]')", 30000)
+        with p1.expect_navigation():
+            p1.evaluate("document.querySelector('#dg [data-v=signOutConfirmed]').click()")
+        wait(p1, 'window.__ffok')
 
         # ── el admin: Administración, cuentas y contraseña temporal ──
         c4, p4 = device()
@@ -527,14 +750,21 @@ def main(path):
         wait(p4, "document.querySelector('#sh') && !document.querySelector('#sh').innerText.includes('Cargando')", 15000)
         txt = p4.inner_text('#sh')
         check('Administración lista las cuentas', 'Ana_1' in txt and 'VictorAdmin_' in txt, txt[:300])
-        os_n = p4.evaluate("[...document.querySelectorAll('#sh .aos > div')].map(d=>d.querySelector('small').textContent+':'+d.querySelector('b').textContent)")
+        os_n = p4.evaluate("[...document.querySelectorAll('#sh .os-counts > div')].map(d=>d.querySelector('small').textContent+':'+d.querySelector('b').textContent)")
         check('y cuántas usan iPhone, Android u otro sistema; las que aún no abrieron la 1.0.1, «sin dato» (T-28)', os_n == ['iPhone:1', 'Android:0', 'Otro:2', 'Sin dato:1'], str(os_n))
-        row = p4.evaluate("[...document.querySelectorAll('#sh .acl .it')].map(r=>r.innerText.replace(/\\s+/g,' ')).find(t=>t.startsWith('Ana_1'))")
+        row = p4.evaluate("[...document.querySelectorAll('#sh .account-list .item')].map(r=>r.innerText.replace(/\\s+/g,' ')).find(t=>t.startsWith('Ana_1'))")
         check('con el sistema de cada cuenta en su fila', row and 'Otro' in row, str(row))
         check('un usuario con código se ve como texto (nada se ejecuta)', p4.evaluate("!document.querySelector('#sh img') && document.querySelector('#sh').innerText.includes('<img src=x')"))
         check('la contraseña temporal sale oculta hasta pulsar «Ver»', temp not in txt and 'Ana_1' in txt)
         p4.click('#sh [data-a=adminToggleSection]')
-        check('«Ver» la enseña', temp in p4.inner_text('#sh'))
+        # (el cambio es inmediato. Falló una vez en Firefox, en GitHub, sin dejar rastro: ahora se le da un momento y, si no
+        # sale, se anota lo que enseña la tarjeta)
+        try:
+            wait(p4, "document.querySelector('#sh .temp-password').textContent != '••••••••••••'", 2000)
+        except AssertionError:
+            pass
+        card = p4.evaluate("(()=>{const k=document.querySelector('#sh .temp-password-card');return k?k.innerText.replace(/\\s+/g,' '):'no hay tarjeta de contraseña temporal'})()")
+        check('«Ver» la enseña', temp in p4.inner_text('#sh'), 'la tarjeta: ' + card.replace(temp, '(la contraseña)'))
 
         # ── entrar con la contraseña temporal (en un móvil nuevo): hay que elegir una nueva ──
         n_logs = p2.evaluate('S.logs.length')
@@ -577,6 +807,71 @@ def main(path):
         p4.wait_for_timeout(800)
         check('«Entregada» la borra de Administración', temp not in p4.inner_text('#sh'))
 
+        # ── el dominio de las cuentas (V1.0.32): se registran con el del proyecto de Firebase. Una de antes, con el dominio
+        #    anterior, entra igual; cuando se pasa (tools/admin/dominio.mjs), su sesión sigue abierta y el móvil no nota nada. Si
+        #    las sesiones no se pudieran conservar, vuelve a entrar una vez y no pierde nada ──
+        c6, p6 = device()
+        login(p6, 'Dora_7', 'clave-dora-7', new=True)
+        wait(p6, "!!document.getElementById('wlc')", 30000)
+        new_account_bio(p6, 'F')
+        p6.click('#tour [data-a=tourSkip]')
+        p6.evaluate("S.logs.push({d:'%s',n:'Espalda',v:3600,s:14,m:50,q:7});saveState()" % today)
+        sync(p6)
+        dora = fb.uid_of('Dora_7')
+        check('otra cuenta nueva, con un entreno en la nube', fb.domain_of('Dora_7') == DOMAIN and len(fb.part('users/%s/logs/2026' % dora) or []) == 1)
+        # (como estaban todas las cuentas al publicarse la V1.0.32)
+        fb.to_old_domain('Dora_7')
+        p6.evaluate('A.signOut()')
+        wait(p6, "!!document.querySelector('#dg [data-v=signOutConfirmed]')", 30000)
+        with p6.expect_navigation():
+            p6.evaluate("document.querySelector('#dg [data-v=signOutConfirmed]').click()")
+        wait(p6, 'window.__ffok')
+        tries = len([c for c in fb.calls if c == ('auth', 'signInWithPassword')]) if not EMU else 0
+        login(p6, 'Dora_7', 'clave-dora-7')
+        check('una cuenta que sigue con el dominio anterior entra igual, con su usuario y su contraseña', p6.evaluate('account.uid') == dora and fb.domain_of('Dora_7') == OLD_DOMAIN, str(p6.evaluate('account.uid')))
+        check('y baja sus datos y sincroniza', p6.evaluate('S.logs.length') == 1 and sync(p6) == 'ok', str(p6.evaluate('S.logs.length')))
+        if not EMU:
+            check('la app prueba primero el dominio de ahora y después el anterior', len([c for c in fb.calls if c == ('auth', 'signInWithPassword')]) - tries == 2)
+        if EMU:
+            # (con los scripts de verdad de tools/admin, contra el emulador)
+            check('«Asignar rol» y «Restablecer contraseña» encuentran una cuenta que sigue con el dominio anterior', fb.tool_finds('Dora_7'))
+            dry = fb.dry_run()
+            check('el simulacro va bien, dice que queda una por pasar y que las sesiones se conservan, y no la pasa', dry == (True, 1, True) and fb.domain_of('Dora_7') == OLD_DOMAIN, str(dry))
+        # un entreno hecho antes de que la cuenta se pase, sin subir todavía
+        p6.evaluate("stopSync();S.logs.push({d:'2026-11-05',n:'Pierna',v:5200,s:18,m:60,q:8});saveState();flushState()")
+        moved = fb.move_accounts()
+        check('pasar las cuentas mueve la que quedaba al dominio de ahora, con su mismo identificador', moved == 1 and fb.domain_of('Dora_7') == DOMAIN and fb.uid_of('Dora_7') == dora, '%s %s' % (moved, fb.domain_of('Dora_7')))
+        check('y no toca las que ya estaban en él', fb.uid_of('Ana_1') == uid and fb.domain_of('VictorAdmin_') == DOMAIN)
+        p6.reload()
+        wait(p6, 'window.__ffok')
+        st = sync(p6)
+        check('la sesión del móvil sigue abierta: ni aviso ni contraseña, y lo que no se había subido llega a la nube',
+              st == 'ok' and p6.evaluate("!document.querySelector('#dg [data-v=reloginShow]') && !account.x") and p6.evaluate('account.uid') == dora and p6.evaluate('S.logs.length') == 2
+              and len(fb.part('users/%s/logs/2026' % dora) or []) == 2, '%s %s' % (st, p6.evaluate('S.logs.length')))
+        check('y sigue sincronizando después, ya con el dominio de ahora', sync(p6) == 'ok' and fb.domain_of('Dora_7') == DOMAIN)
+        # si las sesiones no se pudieran conservar («aplicar-todo»): el móvil vuelve a entrar una vez, con la contraseña de siempre
+        fb.to_old_domain('Dora_7')
+        p6.evaluate("stopSync();S.logs.push({d:'2026-11-06',n:'Hombro',v:2800,s:12,m:45,q:7});saveState();flushState()")
+        moved = fb.move_accounts(keep=False)
+        p6.reload()
+        wait(p6, 'window.__ffok')
+        st = sync(p6)
+        if not EMU:
+            check('sin poder conservarlas, la sesión de su móvil caduca y la app lo avisa', moved == 1 and st == 'dead' and p6.evaluate("!!document.querySelector('#dg [data-v=reloginShow]')"), '%s %s' % (moved, st))
+        if st == 'dead':
+            wait(p6, "!!document.querySelector('#dg [data-v=reloginShow]')")
+            check('con lo hecho todavía en el móvil', p6.evaluate('S.logs.length') == 3, str(p6.evaluate('S.logs.length')))
+            p6.evaluate("document.querySelector('#dg [data-v=reloginShow]').click()")
+            p6.fill('#lrp', 'clave-dora-7')
+            p6.click('[data-a=reloginSubmit]')
+            wait(p6, "!document.querySelector('#sh #lrp')", 15000)
+        check('se vuelve a entrar con la contraseña de siempre y lo que no se había subido llega a la nube',
+              p6.evaluate('account.uid') == dora and p6.evaluate('S.logs.length') == 3 and sync(p6) == 'ok' and len(fb.part('users/%s/logs/2026' % dora) or []) == 3 and fb.domain_of('Dora_7') == DOMAIN,
+              '%s %s' % (p6.evaluate('S.logs.length'), len(fb.part('users/%s/logs/2026' % dora) or [])))
+        p6.evaluate('S.tab=3;R();A.openSettings()')
+        check('el correo técnico no aparece en la app, ni con el dominio de ahora ni con el anterior', '@' + DOMAIN not in p6.content() and '@' + OLD_DOMAIN not in p6.content() and 'firebaseapp' not in p6.inner_text('body'))
+        close(c6, p6)
+
         # ── fallos y sugerencias (M5, F-27): los envía el usuario; el admin los ve, los marca y los contesta ──
         sync(p2)
         p2.evaluate("A.openReport();document.querySelector('[data-a=reportChooseKind][data-v=f]').click()")
@@ -585,7 +880,7 @@ def main(path):
         rid = p2.evaluate('S.reports[0].id')
         rdoc = fb.data('reports/' + rid) or {}
         check('el aviso llega a la nube: pendiente, con el usuario y el id de la cuenta', rdoc.get('st') == 'p' and rdoc.get('u') == 'Ana_1' and rdoc.get('uid') == uid and rid.startswith(uid + '-') and rdoc.get('k') == 'f' and rdoc.get('a') == 'Algo se ve mal', str(rdoc))
-        check('con los datos técnicos (versión y navegador; nada personal)', ('StrataFit ' + p2.evaluate('APPV')) in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@stratafit.app' not in json.dumps(rdoc))
+        check('con los datos técnicos (versión y navegador; nada personal)', ('StrataFit ' + p2.evaluate('APPV')) in (rdoc.get('dx') or '') and 'Navegador' in (rdoc.get('dx') or '') and '@' + DOMAIN not in json.dumps(rdoc) and '@' + OLD_DOMAIN not in json.dumps(rdoc))
         fb.set_offline(c2, True)
         p2.evaluate("A.openReport();document.querySelector('[data-a=reportChooseKind][data-v=s]').click()")
         p2.evaluate("document.getElementById('rpx').value='Poder exportar el análisis también en Excel';A.reportSend()")
@@ -598,13 +893,13 @@ def main(path):
         check('al volver la red se envía sola, una vez', (fb.data('reports/' + sid) or {}).get('k') == 's' and sync(p2) == 'ok')
         p4.evaluate('A.openAdmin()')
         txt = p4.inner_text('#sh')
-        check('al abrir Administración otra vez se ve lo ya cargado mientras se actualiza, sin la pantalla de «Cargando…» (I-20)', 'Cargando' not in txt and 'Ana_1' in txt and p4.evaluate("!document.querySelector('#sh .adk')||!/[A-Za-z0-9]/.test(document.querySelector('#sh .adk').textContent)"), txt[:200])
+        check('al abrir Administración otra vez se ve lo ya cargado mientras se actualiza, sin la pantalla de «Cargando…» (I-20)', 'Cargando' not in txt and 'Ana_1' in txt and p4.evaluate("!document.querySelector('#sh .temp-password')||!/[A-Za-z0-9]/.test(document.querySelector('#sh .temp-password').textContent)"), txt[:200])
         wait(p4, "(document.querySelector('#sh [data-a=openReports]')||{innerText:''}).innerText.includes('2 pendientes')", 15000)
         check('Administración dice cuántos hay pendientes', '2 pendientes' in p4.inner_text('#sh [data-a=openReports]'), p4.inner_text('#sh')[:200])
         p4.evaluate('A.openReports()')
-        wait(p4, "!!document.querySelector('#sh .adrf')", 15000)
-        check('el admin ve los dos, con su usuario y el tipo', p4.evaluate("document.querySelectorAll('#sh .adr').length") == 2 and 'Sugerencia de mejora' in p4.inner_text('#sh') and 'Ana_1' in p4.inner_text('#sh'))
-        check('el texto con código se ve como texto', p4.evaluate("!document.querySelector('#sh .rptx b') && document.querySelector('#sh').innerText.includes('<b>bien</b>')"))
+        wait(p4, "!!document.querySelector('#sh .admin-report-filter')", 15000)
+        check('el admin ve los dos, con su usuario y el tipo', p4.evaluate("document.querySelectorAll('#sh .admin-report').length") == 2 and 'Sugerencia de mejora' in p4.inner_text('#sh') and 'Ana_1' in p4.inner_text('#sh'))
+        check('el texto con código se ve como texto', p4.evaluate("!document.querySelector('#sh .report-text b') && document.querySelector('#sh').innerText.includes('<b>bien</b>')"))
         p4.evaluate("document.querySelector('#sh [data-a=reportsToggle][data-v=\"%s\"]').click()" % rid)
         wait(p4, "!document.querySelector('#sh [data-a=reportsSetState][disabled]')", 15000)
         check('al abrir uno pendiente pasa a «vista»', (fb.data('reports/' + rid) or {}).get('st') == 'v')

@@ -1,0 +1,182 @@
+// El renombrado de clases CSS (tools/classes.js), sin navegador:  node --test tests/classes.test.mjs
+// Sobre un proyecto de juguete: cambia el nombre en los estilos, en el código (solo donde es una clase) y en las pruebas, sigue
+// de dónde sale una clase (una condición, una constante, lo que se le pasa a una función) y avisa de lo que no sabe decidir.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const TOOL = join(fileURLToPath(new URL('..', import.meta.url)), 'tools', 'classes.js');
+const lines = (...l) => l.join('\n') + '\n';
+function project(files) {
+  const root = mkdtempSync(join(tmpdir(), 'sf-cls-'));
+  for (const d of ['src/css', 'src/js', 'tests', 'docs']) mkdirSync(join(root, d), { recursive: true });
+  for (const [f, text] of Object.entries(files)) { mkdirSync(dirname(join(root, f)), { recursive: true }); writeFileSync(join(root, f), text); }
+  return { root, read: f => readFileSync(join(root, f), 'utf8'), run: (...args) => spawnSync(process.execPath, [TOOL, join(root, 'mapa.txt'), '--root=' + root, ...args], { encoding: 'utf8' }) };
+}
+const CSS = lines('/* la tarjeta (.cd) y su estado */', '.cd { color:red; }', '.cd.on,.row>.it:not(.ok) { margin:0; }', 'html.gl .cd { content:".cd"; }', '.ok { top:.5px; }', '.keep { top:0; }');
+const MAPA = lines('# de prueba', 'K cd card', 'K it item', 'K gl glass', 'K ok fine');
+
+test('en el CSS cambia los selectores (y las menciones de los comentarios), no los valores', () => {
+  const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS });
+  assert.equal(p.run().status, 0);
+  assert.equal(p.read('src/css/a.css'), lines('/* la tarjeta (.card) y su estado */', '.card { color:red; }', '.card.on,.row>.item:not(.fine) { margin:0; }', 'html.glass .card { content:".cd"; }', '.fine { top:.5px; }', '.keep { top:0; }'));
+});
+
+test('en el código cambia el nombre donde es una clase (también dentro de una expresión regular), y solo ahí', () => {
+  const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS, 'src/js/a.js': lines(
+    "const view = (on, x) => html`<div class=\"cd${on ? ' on' : ''} it\" data-v=\"cd\"><b class=\"${x.ok ? 'ok' : ''}\">cd</b></div>`;",
+    "const old = '<p class=\"it keep\">' + (state.ok ? 'ok' : 'cd') + '</p>';",
+    "el.classList.toggle('gl', level > 0);",
+    "const first = document.querySelector('#app .cd.on > .it[data-k=\"cd\"]');",
+    "const data = { ok: 1, cd: 'cd' };",
+    "if (res.ok && key == 'it') save('gl');",
+    "const title = h => (/<h1 class=\"it\">(.*?)<\\/h1>/.exec(h) || [])[1];") });
+  assert.equal(p.run().status, 0);
+  assert.equal(p.read('src/js/a.js'), lines(
+    "const view = (on, x) => html`<div class=\"card${on ? ' on' : ''} item\" data-v=\"cd\"><b class=\"${x.ok ? 'fine' : ''}\">cd</b></div>`;",
+    "const old = '<p class=\"item keep\">' + (state.ok ? 'ok' : 'cd') + '</p>';",
+    "el.classList.toggle('glass', level > 0);",
+    "const first = document.querySelector('#app .card.on > .item[data-k=\"cd\"]');",
+    "const data = { ok: 1, cd: 'cd' };",
+    "if (res.ok && key == 'it') save('gl');",
+    "const title = h => (/<h1 class=\"item\">(.*?)<\\/h1>/.exec(h) || [])[1];"));
+});
+
+test('sigue de dónde sale una clase: una constante, una tabla, lo que se le pasa a una función y los botones de una lista', () => {
+  const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS, 'src/js/a.js': lines(
+    "const BASE = 'cd';",
+    "const KIND = { a: 'it', b: 'keep' };",
+    "const chip = (text, cls) => html`<span class=\"${cls || ''}\">${text}</span>`;",
+    "const box = k => html`<div class=\"${BASE} ${KIND[k]}\">${chip('uno', 'ok')}${chip('dos', k ? 'it' : '')}</div>`;",
+    "const dialog = (title, buttons) => html`<h3>${title}</h3>${buttons.map(b => html`<button class=\"${b[2]}\" data-a=\"${b[1]}\">${b[0]}</button>`)}`;",
+    "dialog('cd', [['No', 'close', ''], ['ok', 'save', 'ok']]);") });
+  const r = p.run();
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(p.read('src/js/a.js'), lines(
+    "const BASE = 'card';",
+    "const KIND = { a: 'item', b: 'keep' };",
+    "const chip = (text, cls) => html`<span class=\"${cls || ''}\">${text}</span>`;",
+    "const box = k => html`<div class=\"${BASE} ${KIND[k]}\">${chip('uno', 'fine')}${chip('dos', k ? 'item' : '')}</div>`;",
+    "const dialog = (title, buttons) => html`<h3>${title}</h3>${buttons.map(b => html`<button class=\"${b[2]}\" data-a=\"${b[1]}\">${b[0]}</button>`)}`;",
+    "dialog('cd', [['No', 'close', ''], ['ok', 'save', 'fine']]);"));
+  assert.match(r.stdout, /TABLA src\/js\/a\.js:2: KIND/);
+});
+
+test('lo que no sabe decidir lo dice y no lo toca', () => {
+  const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS, 'src/js/a.js': lines(
+    "const a = html`<i class=\"${row.kind}\"></i>`;",
+    "const b = html`<i class=\"it${n}\"></i>`;",
+    "const c = { state: 'ok', label: 'El lote está ok' };") });
+  const r = p.run();
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(p.read('src/js/a.js').split('\n')[1], 'const b = html`<i class="it${n}"></i>`;');
+  assert.match(r.stdout, /SIN RESOLVER src\/js\/a\.js:1: row\.kind/);
+  assert.match(r.stdout, /A TROZOS src\/js\/a\.js:2: it /);
+  assert.match(r.stdout, /QUEDA src\/js\/a\.js:3: ok en ok/);
+  assert.match(r.stdout, /QUEDA src\/js\/a\.js:3: ok en El lote está ok/);
+});
+
+test('en las pruebas cambia los selectores y los classList, no el código que se les parece', () => {
+  const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS, 'tests/a.py': lines(
+    "n = ev(\"document.querySelectorAll('#app .cd.on, button.it').length\")",
+    "check('cristal', ev(\"document.documentElement.classList.contains('gl')\") and r.ok and o.dataset.it == 'x')",
+    "rows = [P.ok, P.cd]",
+    "html = '<div class=\"cd it\">' + CSS + '}.cd.hero{top:0}'",
+    // en lo que recibe un selector, la clase va detrás de la etiqueta que sea; fuera, «b.it» es código (y se avisa)
+    "check('en negrita', ev(\"!!document.querySelector('.row b.it')\") and txt('#app em.cd') == '' and ev(\"(b => b.it)(x)\"))",
+    // un método que empieza como una clase del mapa no es esa clase
+    "js = '''fetch(u)",
+    "  .okx(r => r)'''",
+    // ni un nombre que se completa fuera del texto
+    "more = ev(\"document.querySelector('.row .it' + n)\") or click('.cd-%d' % n)") });
+  const r = p.run();
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(p.read('tests/a.py'), lines(
+    "n = ev(\"document.querySelectorAll('#app .card.on, button.item').length\")",
+    "check('cristal', ev(\"document.documentElement.classList.contains('glass')\") and r.ok and o.dataset.it == 'x')",
+    "rows = [P.ok, P.cd]",
+    "html = '<div class=\"card item\">' + CSS + '}.card.hero{top:0}'",
+    "check('en negrita', ev(\"!!document.querySelector('.row b.item')\") and txt('#app em.card') == '' and ev(\"(b => b.it)(x)\"))",
+    "js = '''fetch(u)",
+    "  .okx(r => r)'''",
+    "more = ev(\"document.querySelector('.row .it' + n)\") or click('.cd-%d' % n)"));
+  assert.match(r.stdout, /QUEDA tests\/a\.py:5: b\.it en /);
+  assert.match(r.stdout, /QUEDA tests\/a\.py:8: \.it en /);
+});
+
+test('el mapa crece por lotes: lo ya aplicado no se repite, y se niega si un nombre nuevo ya existe', () => {
+  const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS, 'src/js/a.js': "const a = html`<i class=\"cd\"></i>`;\n" });
+  assert.equal(p.run().status, 0);
+  const again = p.run();
+  assert.equal(again.status, 0);
+  assert.match(again.stdout, /0 clases · 0 archivos cambiados/);
+  assert.equal(p.read('src/js/a.js'), "const a = html`<i class=\"card\"></i>`;\n");
+  writeFileSync(join(p.root, 'mapa.txt'), MAPA + 'K keep card\n');
+  const clash = p.run();
+  assert.equal(clash.status, 1);
+  assert.match(clash.stderr, /«card» \(para «keep»\) ya es una clase/);
+});
+
+test('--check: una clase que el código pone o busca y no está en el CSS es un error, con su archivo y su línea', () => {
+  const good = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS, 'src/js/a.js': lines(
+    "const a = html`<div class=\"cd${on ? ' on' : ''} keep\">${x}</div>`;",
+    "const b = document.querySelector('.row > .it');") });
+  const ok = good.run('--check');
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(ok.stdout, /^Clases correctas/);
+  assert.equal(good.read('src/js/a.js').split('\n')[1], "const b = document.querySelector('.row > .it');", '--check no cambia nada');
+  // tras renombrar el CSS, el código que sigue con los nombres viejos (una rama de antes, fusionada después) y una errata
+  const stale = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS.replace(/\.cd\b/g, '.card').replace(/\.it\b/g, '.item').replace(/\.gl\b/g, '.glass').replace(/\.ok\b/g, '.fine'), 'src/js/a.js': lines(
+    "const a = html`<div class=\"cd keep\">${x}</div>`;",
+    "const b = document.querySelector('.row > .it');",
+    "const c = html`<b class=\"kepe\"></b>`;") });
+  const bad = stale.run('--check');
+  assert.equal(bad.status, 1);
+  assert.match(bad.stderr, /src\/js\/a\.js:1: la clase «cd» no está en src\/css \(se renombró: mapa\.txt\)/);
+  assert.match(bad.stderr, /src\/js\/a\.js:2: la clase «it» no está en src\/css \(se renombró/);
+  assert.match(bad.stderr, /src\/js\/a\.js:3: la clase «kepe» no está en src\/css\n/);
+});
+
+test('--check: una clase que una prueba busca y no está en el CSS también es un error', () => {
+  const css = CSS.replace(/\.cd\b/g, '.card').replace(/\.it\b/g, '.item').replace(/\.gl\b/g, '.glass').replace(/\.ok\b/g, '.fine');
+  const tests = (...more) => lines(
+    "check('la tarjeta', ev(\"!!document.querySelector('#app .card.on')\") and txt('.row > b.item') == 'x')",
+    // una clase que ya no existe: se busca que no vuelva
+    "check('sin foto', ev(\"!document.querySelector('.phi')\"))",
+    // un nombre a trozos y el código que se parece a un selector no se miran
+    "check('la fila', ev(\"document.querySelector('.row .item-' + k)\") and click('.day-%d' % i) and a.cd and fill('#em', 'ana.cd@x.es'))",
+    ...more);
+  const good = project({ 'mapa.txt': MAPA, 'src/css/a.css': css, 'tests/a.py': tests() });
+  const ok = good.run('--check');
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(ok.stdout, /y las 5 que buscan las pruebas están en src\/css/);
+  // con el nombre viejo, «no está marcada» pasaría siempre
+  const stale = project({ 'mapa.txt': MAPA, 'src/css/a.css': css, 'tests/a.py': tests("check('no está marcada', ev(\"!document.querySelector('.row b.it')\"))") });
+  const bad = stale.run('--check');
+  assert.equal(bad.status, 1);
+  assert.match(bad.stderr, /tests\/a\.py:4: la prueba busca la clase «it», que no está en src\/css \(se renombró: mapa\.txt\)/);
+  assert.match(bad.stderr, /\n1 clases que no existen/);
+});
+
+test('un nombre viejo con guion también se cambia (para corregir un nombre ya puesto)', () => {
+  const p = project({ 'mapa.txt': lines('K item-big item-wide'), 'src/css/a.css': lines('.item-big { top:0; }', '.item { top:1px; }', '.big { top:2px; }'),
+    'src/js/a.js': lines("const a = html`<div class=\"item item-big big\">${x}</div>`;", "const b = document.querySelector('.item.item-big');"),
+    'tests/a.py': lines("n = ev(\"document.querySelectorAll('.item-big, .item').length\")") });
+  const r = p.run();
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(p.read('src/css/a.css'), lines('.item-wide { top:0; }', '.item { top:1px; }', '.big { top:2px; }'));
+  assert.equal(p.read('src/js/a.js'), lines("const a = html`<div class=\"item item-wide big\">${x}</div>`;", "const b = document.querySelector('.item.item-wide');"));
+  assert.equal(p.read('tests/a.py'), lines("n = ev(\"document.querySelectorAll('.item-wide, .item').length\")"));
+});
+
+test('--dry cuenta y no escribe', () => {
+  const p = project({ 'mapa.txt': MAPA, 'src/css/a.css': CSS });
+  const r = p.run('--dry');
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /cd → card: 3 \/ 0 \/ 0 \/ 0/);
+  assert.equal(p.read('src/css/a.css'), CSS);
+});

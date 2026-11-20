@@ -20,6 +20,7 @@ import { signedIn } from '../cloud/session.js';
 import { afterSync } from '../cloud/hooks.js';
 import { html } from '../core/html.js';
 /** Accesos directos: [?a=…, pestaña]. */
+/** @type {[string, number][]} */
 const LAUNCH = [['entreno', 0], ['comida', 1], ['peso', 2]];
 /** Al arrancar, antes de pintar: la pantalla del acceso directo con que se abrió la app; la dirección queda limpia. */
 export const launchAction = () => {
@@ -72,7 +73,13 @@ const badgeSync = () => {
   }
 };
 /** Opción de Ajustes → Sonido y avisos (solo donde el sistema tiene globos). */
-export const badgeCard = () => badgeOk() ? html`<label class="srk"><input type="checkbox" data-c="toggleBadge"${S.iconBadge ? ' checked' : ''}> Globo en el icono de la app</label><small class="mu d-block m-n4-0-8">Al salir de la app, el icono enseña cuántas cosas tienes pendientes: el pesaje de hoy y las respuestas nuevas a tus fallos y sugerencias. En iPhone, la primera vez pide permiso de avisos.</small>` : '';
+export const badgeCard = () => badgeOk() ? html`
+  <label class="setting-check">
+    <input type="checkbox" data-c="toggleBadge"${S.iconBadge ? ' checked' : ''}> Globo en el icono de la app
+  </label>
+  <small class="muted d-block m-n4-0-8">
+    Al salir de la app, el icono enseña cuántas cosas tienes pendientes: el pesaje de hoy y las respuestas nuevas a tus fallos y sugerencias. En iPhone, la primera vez pide permiso de avisos.
+  </small>` : '';
 afterSync.push(badgeSync);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState == 'hidden')

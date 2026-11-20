@@ -2,7 +2,7 @@
 
   python3 tests/shots.py snap ARCHIVO.html carpeta a,b,c,d,e,f [mapa.txt]   (genera carpeta/<cfg>_<pantalla>.png)
   Con mapa.txt («registro viejo nuevo», tests/nombres-1.0.2.txt), ARCHIVO es de antes de renombrar las acciones: las pantallas se
-  abren con sus nombres viejos.
+  abren con sus nombres viejos. Lo mismo con las clases CSS de los selectores (registro K, tests/clases-1.0.32.txt).
   python3 tests/shots.py cmp carpeta_referencia carpeta_candidata   (código de salida 1 si hay diferencias)
 Requiere:  pip install playwright pillow numpy  &&  playwright install chromium
 """
@@ -37,7 +37,7 @@ SCR={
  'logs':"A.openLogs()",
  'dlg':"confirmDialog('Prueba','Texto de prueba para el diálogo.','doNothing','Aceptar')",
  'go':"A.startWorkout()",
- 'go_rest':"A.startWorkout();document.querySelector('.ck:not(.on)').click()",
+ 'go_rest':"A.startWorkout();document.querySelector('.check:not(.on)').click()",
  'go_open':"A.startWorkout();A.openOverview&&0;document.querySelectorAll('details').forEach(d=>d.open=true)",
  'nuadd':"S.tab=1;R();A.openAddFood(0)",
  'wodcfg':"S.tab=0;R();A.openWod()",
@@ -67,19 +67,34 @@ SCR={
 CFG={ # nombre: (w,h,scheme,gm,gl)
  'a':(390,844,'dark',3,1),'b':(390,844,'light',3,1),'c':(390,844,'dark',0,0),'d':(390,844,'dark',1,1),'e':(320,568,'dark',3,1),'f':(430,932,'light',2,1),
 }
-def old_names(js,path):
-    """Un script con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo."""
-    back={'A':{},'C':{},'U':{},'S':{},'W':{}}
+def build_classes(file):
+    """Las clases CSS de una compilación de archivo único: las de los selectores de su <style>."""
+    css=''.join(re.findall(r'<style[^>]*>(.*?)</style>',open(file,encoding='utf-8').read(),flags=re.S))
+    return set(re.findall(r'\.(-?[A-Za-z_][\w-]*)',re.sub(r'\{[^{}]*\}','{}',css)))
+def class_lines(path,ref):
+    """Las líneas K del mapa («K viejo nuevo») que valen para la compilación ref: las de las clases que ref tiene aún con su nombre
+    viejo. El mapa crece con cada lote, y una compilación que ya tiene renombrados los primeros no debe volver a traducirlos."""
+    have=build_classes(ref)
+    return [l.split()[1:] for l in open(path,encoding='utf-8') if l.startswith('K ') and l.split()[1].split('@')[0] in have]
+def old_names(js,path,ref=None):
+    """Un script con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo, y las
+    clases CSS (registro K) de sus selectores, las que la compilación ref tiene con el nombre viejo."""
+    back={'A':{},'C':{},'U':{},'S':{},'W':{},'K':{}}
+    if ref:back['K']={n:o for o,n in class_lines(path,ref) if '@' not in o}
     for l in open(path,encoding='utf-8'):
         l=l.strip()
         if l and not l.startswith('#'):
-            r,o,n=l.split();back[r][n]=o
+            r,o,n=l.split()
+            if r!='K':back[r][n]=o
     js=re.sub(r'(?<![\w.$])([ACUSW])\.(\w+)',lambda m:m.group(1)+'.'+back[m.group(1)].get(m.group(2),m.group(2)),js)
-    return re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
+    js=re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
+    cls=lambda s:re.sub(r'\.(-?[A-Za-z_][\w-]*)',lambda m:'.'+back['K'].get(m.group(1),m.group(1)),s)
+    js=re.sub(r'''((?:querySelector(?:All)?|closest|matches)\((['"]))(.*?)(\2)''',lambda m:m.group(1)+cls(m.group(3))+m.group(4),js)
+    return re.sub(r'''(classList\.\w+\(['"])([\w-]+)''',lambda m:m.group(1)+back['K'].get(m.group(2),m.group(2)),js)
 def run(file,out,cfgs,ren=None):
     os.makedirs(out,exist_ok=True);res={}
-    scr={k:old_names(js,ren) if ren else js for k,js in SCR.items()}
-    extra,init=(old_names(x,ren) for x in (EXTRA,INIT)) if ren else (EXTRA,INIT)
+    scr={k:old_names(js,ren,file) if ren else js for k,js in SCR.items()}
+    extra,init=(old_names(x,ren,file) for x in (EXTRA,INIT)) if ren else (EXTRA,INIT)
     # por HTTP, como el resto de pruebas (tests/browser.py): con file://, Chromium a veces recarga con el almacenamiento vacío
     url=app_url(file)
     with sync_playwright() as p:
@@ -98,7 +113,7 @@ def run(file,out,cfgs,ren=None):
                 pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(250)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')
                 sd=SEED.replace("S.glassLevel=3;S.glassOn=1;S.theme='dark';","S.glassLevel=%d;S.glassOn=%d;S.theme='%s';"%(gm,gl,sch))
-                pg.evaluate(old_names(sd,ren) if ren else sd)
+                pg.evaluate(old_names(sd,ren,file) if ren else sd)
                 # (pg.reload espera a que lo guardado quede escrito: con IndexedDB, location.reload() podía cortarlo)
                 pg.evaluate(extra);pg.reload();pg.wait_for_timeout(350)
                 pg.clock.set_fixed_time('2026-10-29T12:00:00')

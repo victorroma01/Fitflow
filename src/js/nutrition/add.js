@@ -18,15 +18,20 @@ import { html, raw } from '../core/html.js';
 import { itemMacros, sumMacros } from '../core/calc.js';
 /* alimentos de la lista y los propios (solo los que tienen nombre y sus valores: unos datos dañados no rompen la lista) */
 const ownFoods = () => (S.myFoods || []).filter(f => f && typeof f.n == 'string' && f.n && Array.isArray(f.b));
-const allFoods = () => FOODS_SRC.concat(ownFoods());
+const allFoods = () => /** @type {Food[]} */ (FOODS_SRC).concat(ownFoods());
 /* Nutri-Score (F-43): la letra de la A a la E que da Open Food Facts → la clase de su color (css/98-nutrition) */
 const NUTRI_SCORE = { a: 'ns-a', b: 'ns-b', c: 'ns-c', d: 'ns-d', e: 'ns-e' };
 /** La letra del Nutri-Score ('a'…'e') si v lo es; si no, ''. */
 export const nutriScore = v => typeof v == 'string' && Object.prototype.hasOwnProperty.call(NUTRI_SCORE, v) ? v : '';
 /** La letra del Nutri-Score, pequeña (en las listas), o '' si no la hay. */
-export const nutriScoreBadge = v => nutriScore(v) ? html`<i class="nsb ${NUTRI_SCORE[v]}" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">${v.toUpperCase()}</i>` : '';
+export const nutriScoreBadge = v => nutriScore(v) ? html`
+  <i class="nutri-score ${NUTRI_SCORE[v]}" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">${v.toUpperCase()}</i>` : '';
 /** El Nutri-Score con sus cinco letras y la del alimento destacada, o '' si no lo tiene. */
-const nutriScoreRow = v => nutriScore(v) ? html`<div class="nsr" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}"><span>Nutri-Score</span>${Object.keys(NUTRI_SCORE).map(x => html`<i class="${NUTRI_SCORE[x]}${x == v ? ' on' : ''}">${x.toUpperCase()}</i>`)}</div>` : '';
+const nutriScoreRow = v => nutriScore(v) ? html`
+  <div class="nutri-score-scale" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">
+    <span>Nutri-Score</span>
+    ${Object.keys(NUTRI_SCORE).map(x => html`<i class="${NUTRI_SCORE[x]}${x == v ? ' on' : ''}">${x.toUpperCase()}</i>`)}
+  </div>` : '';
 /* Guarda en «Mis alimentos» un alimento de Open Food Facts (F-44): sin repetirlo (mismo código de barras o mismo nombre); si
    ya estaba, se pone al día con lo último que dio Open Food Facts */
 const saveOwnFood = f => {
@@ -67,27 +72,69 @@ function foodList(q) {
       L = L.filter(o => groupOfFood(o.f) == cat);
     L.sort((a, b) => a.n.localeCompare(b.n, 'es'));
   }
-  document.querySelectorAll('.fgc button').forEach(b => {
+  document.querySelectorAll('.food-groups button').forEach(b => {
     b.classList.toggle('on', !ws.length && +b.dataset.i == cat);
     b.disabled = !!ws.length;
   });
   const own = FOODS_SRC.length;
-  e.innerHTML = L.slice(0, ws.length ? 80 : 1000).map(o => html`<div class="it${o.i >= own ? ' itc' : ''}" data-a="pickFood" data-i="${o.i}" role="button" tabindex="0"><span>${o.f.n}${raw(nutriScoreBadge(o.f.ns))}</span><small>${o.f.b[0]} kcal/100 g</small>${o.i >= own ? html`<button class="cfx" data-a="ownFoodDeleteAsk" data-i="${o.i - own}" aria-label="${'Borrar ' + o.f.n + ' de Mis alimentos'}">✕</button>` : ''}</div>`).join('') + (ws.length && !L.length ? html`<p class="mu fs-13 m-10-2">No está en la lista. Búscalo en internet o créalo en «Nuevo».</p><button data-a="searchListOnline" class="w-full">${icon('srch', 16)} Buscar «${raw0.slice(0, 40)}» en internet</button>` : '');
+  e.innerHTML = L.slice(0, ws.length ? 80 : 1000).map(o => html`
+    <div class="item${o.i >= own ? ' own-food' : ''}" data-a="pickFood" data-i="${o.i}" role="button" tabindex="0">
+      <span>${o.f.n}${raw(nutriScoreBadge(o.f.ns))}</span>
+      <small>${o.f.b[0]} kcal/100 g</small>
+      ${o.i >= own ? html`
+        <button class="own-food-delete" data-a="ownFoodDeleteAsk" data-i="${o.i - own}"
+            aria-label="${'Borrar ' + o.f.n + ' de Mis alimentos'}">✕</button>` : ''}
+    </div>
+  `).join('') + (ws.length && !L.length ? html`
+    <p class="muted fs-13 m-10-2">No está en la lista. Búscalo en internet o créalo en «Nuevo».</p>
+    <button data-a="searchListOnline" class="w-full">${icon('srch', 16)} Buscar «${raw0.slice(0, 40)}» en internet</button>` : '');
 }
 function addSheetBase() {
   const a = addState;
-  const tabs = html`<div class="mb-8">${['Alimentos', 'Librería', 'Nuevo'].map((x, i) => html`<button class="chip ${a.tab == i ? 'on' : ''}" data-a="addTab" data-i="${i}">${raw(x)}</button>`)}</div>`;
+  const tabs = html`
+    <div class="mb-8">
+      ${['Alimentos', 'Librería', 'Nuevo'].map((x, i) => html`
+        <button class="chip ${a.tab == i ? 'on' : ''}" data-a="addTab" data-i="${i}">${raw(x)}</button>`)}
+    </div>`;
   if (a.pick) {
     const f = a.pick;
-    return html`${tabs}<h3>${f.n}</h3>${raw(nutriScoreRow(f.ns))}<label for="gr">Gramos</label><input id="gr" type="number" value="100" data-u="foodGrams"><p id="pv" class="mu"></p><button class="pr w-full" data-a="addFood">Añadir</button>`;
+    return html`
+      ${tabs}
+      <h3>${f.n}</h3>
+      ${raw(nutriScoreRow(f.ns))}
+      <label for="gr">Gramos</label>
+      <input id="gr" type="number" value="100" data-u="foodGrams">
+      <p id="pv" class="muted"></p>
+      <button class="primary w-full" data-a="addFood">Añadir</button>`;
   }
   /* sin título a la vista: el nombre de la hoja para los lectores de pantalla (core/ui, I-06) */
-  const h = html`<h3 class="vh">Añadir alimento</h3>${tabs}`;
+  const h = html`<h3 class="visually-hidden">Añadir alimento</h3>${tabs}`;
   if (a.tab == 0)
-    return h + habitsCard(a.m) + html`<input placeholder="Buscar alimento" aria-label="Buscar alimento" data-u="foodSearch"><div class="fgc" role="group" aria-label="Grupos de alimentos">${[-1].concat(groupNames().map((x, i) => i)).map(i => html`<button class="chip${(a.cat >= 0 ? a.cat : -1) == i ? ' on' : ''}" data-a="foodGroup" data-i="${i}">${i < 0 ? 'Todos' : groupNames()[i]}</button>`)}</div><div id="rs"></div>`;
+    return h + habitsCard(a.m) + html`
+      <input placeholder="Buscar alimento" aria-label="Buscar alimento" data-u="foodSearch">
+      <div class="food-groups" role="group" aria-label="Grupos de alimentos">
+        ${[-1].concat(groupNames().map((x, i) => i)).map(i => html`
+          <button class="chip${(a.cat >= 0 ? a.cat : -1) == i ? ' on' : ''}" data-a="foodGroup" data-i="${i}">
+            ${i < 0 ? 'Todos' : groupNames()[i]}
+          </button>`)}
+      </div>
+      <div id="rs"></div>`;
   if (a.tab == 1)
-    return h + (S.savedDishes.length ? S.savedDishes.map((p, i) => html`<div class="it cols-1fr-auto-auto"><span>${p.n}<br><small>${roundInt(sumMacros(p.it.map(itemMacros))[0])} kcal</small></span><button data-a="addLibraryDish" data-i="${i}">Añadir</button><button data-a="libraryDishDelete" data-i="${i}" aria-label="${'Borrar ' + p.n}" class="p-6">✕</button></div>`).join('') : '<p class="mu">Aún no hay platos. Pulsa el icono de guardar de una comida para guardarla como plato.</p>');
-  return html`${raw(h)}<label for="n0">Nombre</label><input id="n0" maxlength="80">${[['Kcal', 'k'], ['Hidratos g', 'c'], ['Proteínas g', 'p'], ['Grasas g', 'f'], ['Fibra g', 'fi'], ['Sal g', 's']].map(x => html`<label for="n_${x[1]}">${raw(x[0])} (por 100 g)</label><input type="number" id="n_${x[1]}">`)}<button class="pr w-full mt-10" data-a="newFoodSave">Guardar alimento</button>`;
+    return h + (S.savedDishes.length ? S.savedDishes.map((p, i) => html`
+      <div class="item cols-1fr-auto-auto">
+        <span>${p.n}<br><small>${roundInt(sumMacros(p.it.map(itemMacros))[0])} kcal</small></span>
+        <button data-a="addLibraryDish" data-i="${i}">Añadir</button>
+        <button data-a="libraryDishDelete" data-i="${i}" aria-label="${'Borrar ' + p.n}" class="p-6">✕</button>
+      </div>
+    `).join('') : '<p class="muted">Aún no hay platos. Pulsa el icono de guardar de una comida para guardarla como plato.</p>');
+  return html`
+    ${raw(h)}
+    <label for="n0">Nombre</label>
+    <input id="n0" maxlength="80">
+    ${[['Kcal', 'k'], ['Hidratos g', 'c'], ['Proteínas g', 'p'], ['Grasas g', 'f'], ['Fibra g', 'fi'], ['Sal g', 's']].map(x => html`
+      <label for="n_${x[1]}">${raw(x[0])} (por 100 g)</label>
+      <input type="number" id="n_${x[1]}">`)}
+    <button class="primary w-full mt-10" data-a="newFoodSave">Guardar alimento</button>`;
 }
 A.addLibraryDish = i => {
   const k = dayKey(nutriDate());
@@ -124,7 +171,15 @@ A.addFood = () => {
 };
 export const addSheet = () => addSheetBase();
 /** Hoja «Buscar alimento» de una comida: busca en Open Food Facts (extras/foods-online, que se carga al usarlo). */
-const onlineSheet = q => html`<h3>Buscar alimento</h3><p class="mu m-n4-0-10 fs-13">Por nombre o marca, en Open Food Facts. Solo se envía el texto que buscas.</p><div class="g2 cols-1fr-auto"><input id="f2q" type="search" enterkeyhint="search" autocomplete="off" placeholder="Por ejemplo: yogur proteico" aria-label="Alimento o marca" value="${q || ''}" data-enter="searchFoodOnline"><button class="pr" data-a="searchFoodOnline">Buscar</button></div><div id="rs"></div>`;
+const onlineSheet = q => html`
+  <h3>Buscar alimento</h3>
+  <p class="muted m-n4-0-10 fs-13">Por nombre o marca, en Open Food Facts. Solo se envía el texto que buscas.</p>
+  <div class="grid-2 cols-1fr-auto">
+    <input id="f2q" type="search" enterkeyhint="search" autocomplete="off" placeholder="Por ejemplo: yogur proteico"
+        aria-label="Alimento o marca" value="${q || ''}" data-enter="searchFoodOnline">
+    <button class="primary" data-a="searchFoodOnline">Buscar</button>
+  </div>
+  <div id="rs"></div>`;
 /* — manejadores de esta función (registros A / C / U) — */
 A.openAddFood = i => {
   setAddState({ m: i, tab: 0 });

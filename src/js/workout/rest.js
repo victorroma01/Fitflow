@@ -4,16 +4,16 @@
 */
 import { fmtMinSec } from '../core/util.js';
 import { C } from '../core/registry.js';
-import { EXERCISES, groupOf } from '../data/library.js';
+import { groupOf } from '../data/library.js';
 import { S, saveState } from '../core/state.js';
 import { R } from '../core/render.js';
-import { exAll } from '../library/model.js';
+import { exByName } from '../library/model.js';
 import { unitFromName } from '../core/calc.js';
 import { html, raw } from '../core/html.js';
 export const COMPOUND_RE = /^(Press banca|Press militar|Sentadilla|Peso muerto|Dominadas|Remo con barra|Remo T|Remo Pendlay|Prensa|Hack|Hip thrust|Clean|Snatch|Thruster|Power|Overhead|Push press|Buenos)/;
 export const REST_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180, 210, 240, 300];
 function restByName(n) {
-  const e = EXERCISES.concat(S.customExercises).find(x => x.n == n);
+  const e = exByName(n);
   const g = e ? groupOf(e) : '';
   if (COMPOUND_RE.test(n))
     return 150;
@@ -52,11 +52,15 @@ export const restSelect = (e, short) => {
   const i = d.ex.indexOf(e);
   const r = restAt(d, i);
   const l = blockEnd(d, i) ? 'Descanso de la ronda, ' : 'Descanso, ';
-  return html`<select data-c="setRest" data-i="${i}" aria-label="${l + e.n}"${raw(short ? '' : ' class="w-auto p-5-10 fs-13"')}>${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`<option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : 'Descanso ' + fmtMinSec(v) + ' por serie')}</option>`)}</select>`;
+  return html`
+    <select data-c="setRest" data-i="${i}" aria-label="${l + e.n}"${raw(short ? '' : ' class="w-auto p-5-10 fs-13"')}>
+      ${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`
+        <option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : 'Descanso ' + fmtMinSec(v) + ' por serie')}</option>`)}
+    </select>`;
 };
 const HEAVY_TYPES = new Set(['Press plano', 'Press inclinado', 'Press declinado', 'Press vertical', 'Dominadas', 'Remo horizontal', 'Cadena posterior', 'Sentadilla', 'Prensa y hack', 'Bisagra de cadera', 'Empuje de cadera', 'Halterofilia']);
 export function restDefault(n) {
-  const e = exAll().find(x => x.n == n);
+  const e = exByName(n);
   const u = unitFromName(n);
   if (u)
     return u.u == 'min' ? 60 : u.u == 's' ? 45 : u.u == 'cal' ? 90 : u.rg[0] >= 400 ? 120 : 90;

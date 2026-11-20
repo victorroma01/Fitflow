@@ -68,6 +68,7 @@ const writeCloudBackup = async (old) => {
   const on = old && old.data ? Math.min(MAX_CHUNKS, +old.data.n || 0) : MAX_CHUNKS;
   const c = dataCounts();
   const meta = { at: Date.now(), v: APPV, n: parts.length, z, sz: body.length, h: hashOf(body), lg: c.lg, md: c.md };
+  /** @type {any[]} */
   const writes = parts.map((p, i) => setWrite(backupPath('c' + i), { j: p, i }));
   for (let i = parts.length; i < on; i++)
     writes.push(delWrite(backupPath('c' + i)));
@@ -110,8 +111,10 @@ const autoBackup = async () => {
     const c = dataCounts();
     /* el aviso no tapa otra ventana: si hay una abierta, espera a la próxima vez que se abra la app */
     if (old && shrinks(old.data, c)) {
-      if (!$('#dg .dgb') && !$('#sh .sp'))
-        dialog('Tu copia en la nube tiene más datos', html`La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. No la hemos sustituido por si es la buena: en Copia de seguridad puedes restaurarla o guardar la de ahora.`, [['Ahora no', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'pr']]);
+      if (!$('#dg .dialog-backdrop') && !$('#sh .sheet'))
+        dialog('Tu copia en la nube tiene más datos', html`
+          La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. No la hemos sustituido por si es la buena: en Copia de seguridad puedes restaurarla o guardar la de ahora.
+        `, [['Ahora no', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'primary']]);
     }
     else
       await writeCloudBackup(old);
@@ -128,8 +131,21 @@ afterSync.push(autoBackup);
 /** Apartado «Copia en la nube» de Copia de seguridad (system/backup). */
 export const cloudBackupCard = () => {
   const c = S.cloudBackup;
-  const line = c && +c.at > 0 ? html`Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas` : 'Aún no hay ninguna copia en la nube.';
-  return html`<div class="cd cbk" id="cbk"><b>Copia en la nube</b><p class="mu">Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.</p><p class="cbl" id="cbl">${raw(line)}</p><div class="g2"><button class="pr" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button><button data-a="cloudBackupRestore"${cloudBusy ? ' disabled' : ''}>Restaurar</button></div></div>`;
+  const line = c && +c.at > 0 ? html`
+    Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas
+  ` : 'Aún no hay ninguna copia en la nube.';
+  return html`
+    <div class="card backup-card" id="cbk">
+      <b>Copia en la nube</b>
+      <p class="muted">
+        Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.
+      </p>
+      <p class="backup-line" id="cbl">${raw(line)}</p>
+      <div class="grid-2">
+        <button class="primary" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button>
+        <button data-a="cloudBackupRestore"${cloudBusy ? ' disabled' : ''}>Restaurar</button>
+      </div>
+    </div>`;
 };
 /** «Borrar todos los datos» (profile/home): también la copia de la nube. */
 export const wipeCloudBackup = async () => {
@@ -177,7 +193,9 @@ A.cloudBackupSave = async () => {
   const c = dataCounts();
   if (old && shrinks(old.data, c)) {
     pendingOld = old;
-    confirmDialog('¿Sustituir la copia de la nube?', html`La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. Solo hay una copia: la de ahora sustituirá a esa.`, 'cloudBackupSaveConfirmed', 'Sustituir');
+    confirmDialog('¿Sustituir la copia de la nube?', html`
+      La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. Solo hay una copia: la de ahora sustituirá a esa.
+    `, 'cloudBackupSaveConfirmed', 'Sustituir');
     return;
   }
   saveNow(old);

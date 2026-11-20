@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """StrataFit · build
 
-Compila src/ en la app. Necesita Python 3 y esbuild («npm install»), que une los módulos ES y comprime el código.
+Compila src/ en la app. Necesita Python 3, node y los paquetes de «npm install»: esbuild, que une los módulos ES y comprime
+el código, y typescript, con el que tools/templates.js lee las plantillas html`…` para dejarlas en una línea antes de compilar.
 
   python3 build.py                 → dist/app/  (index.html + js/ + sw.js + version.json + manifiesto + iconos + img/, para GitHub Pages)
                                      dist/stratafit.html  (archivo único con todo incrustado, sin service worker)
@@ -16,12 +17,14 @@ Estructura (todo vive en src/):
   src/css/NN-nombre.css   trozos de CSS; se concatenan por orden alfabético (el orden importa por la cascada)
   src/js/main.js          punto de entrada: importa los módulos en orden de carga (cada uno registra sus manejadores)
   src/js/<area>/<m>.js    módulos ES (import/export); esbuild los une: en un solo <script> (archivo único) o en js/
-                          con lo poco usado en archivos aparte que se cargan al usarlo (paquete)
+                          con lo poco usado en archivos aparte que se cargan al usarlo (paquete). Sus plantillas html`…`
+                          pueden ocupar varias líneas: esos saltos no llegan a la app (flat_js)
   src/js/data/media.js    molde que el build sustituye por las fotos de src/img/ (rutas o base64 según la variante)
   src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
                           (la revisión de una versión enseña sus arreglos junto con las novedades de la que revisa)
-  src/img/day/            portadas de los días (.jpg) y order.txt
+  src/img/day/            portadas de los días (.webp o .jpg), en el orden de order.txt; las de mujer, en mujer/ (tools/portadas.py)
+  src/img/login/          fondo del inicio de sesión (fondo.webp, que prepara tools/fondo.py)
   static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
 
 Las dos variantes solo se diferencian en:
@@ -41,6 +44,7 @@ MEDIA_MODULE = 'data/media.js'
 RELEASE_MODULE = 'data/release.js'
 CHANGELOG = os.path.join(ROOT, 'CHANGELOG.md')
 USER_SECTIONS = ('Novedades', 'Mejoras', 'Correcciones')  # apartados que la app enseña al usuario
+VERSION = r'\d+\.\d+\.\d+(?:\.\d+)?'  # 1.1.0 o, la revisión de una versión, 1.1.0.1
 
 
 def read(p):
@@ -104,28 +108,49 @@ def list_lines(p):
 
 
 BRAND_LOGOS = ('claro', 'oscuro')
+LOGIN_PHOTO = 'img/login/fondo.webp'
+
+
+def cover_file(folder, k):
+    """El archivo de la portada `k` en una carpeta de src/img/day: <k>.webp o <k>.jpg (None si no está)."""
+    found = [k + ext for ext in ('.webp', '.jpg') if os.path.isfile(os.path.join(folder, k + ext))]
+    if len(found) > 1:
+        die('la portada %s está dos veces en %s (%s): deja una' % (k, folder, ' y '.join(found)))
+    return found[0] if found else None
 
 
 def media():
-    """Lee src/img: las portadas de día (order.txt) y el logo. Devuelve la lista de fotos y los enlaces."""
-    files, day = [], []
-    for k in list_lines(os.path.join(IMG, 'day', 'order.txt')):
-        p = os.path.join(IMG, 'day', k + '.jpg')
-        if not os.path.isfile(p):
-            die('falta la portada ' + p)
-        day.append(k)
-        files.append(('img/day/' + k + '.jpg', p))
+    """Lee src/img: las portadas de día (order.txt; las de mujer, en src/img/day/mujer, las que haya), el logo y el fondo del
+    inicio de sesión. Devuelve la lista de fotos y los enlaces de cada portada (clave → img/…)."""
+    files, day, day_f = [], {}, {}
+    base = os.path.join(IMG, 'day')
+    for k in list_lines(os.path.join(base, 'order.txt')):
+        f = cover_file(base, k)
+        if not f:
+            die('falta la portada src/img/day/%s.webp (o .jpg)' % k)
+        day[k] = 'img/day/' + f
+        files.append((day[k], os.path.join(base, f)))
+        f = cover_file(os.path.join(base, 'mujer'), k)
+        if f:
+            day_f[k] = 'img/day/mujer/' + f
+            files.append((day_f[k], os.path.join(base, 'mujer', f)))
     # el logo dentro de la app (core/brand): claro y oscuro. Las fuentes (fuente-*.png) no se publican: son de tools/marca.py
     for k in BRAND_LOGOS:
         p = os.path.join(IMG, 'brand', 'logo-%s.webp' % k)
         if not os.path.isfile(p):
             die('falta el logo %s (python3 tools/marca.py)' % p)
         files.append(('img/brand/logo-%s.webp' % k, p))
-    used = {os.path.basename(p) for _, p in files}
-    for f in sorted(os.listdir(os.path.join(IMG, 'day'))):
-        if f.endswith('.jpg') and f not in used:
-            print('  aviso: src/img/day/%s no está en su lista y no se usa' % f)
-    return {'files': files, 'day': day}
+    # el fondo del inicio de sesión (account/login, F-33): ya desenfocado y en gris (tools/fondo.py)
+    p = os.path.join(SRC, *LOGIN_PHOTO.split('/'))
+    if not os.path.isfile(p):
+        die('falta el fondo del inicio de sesión %s (python3 tools/fondo.py foto.jpg)' % p)
+    files.append((LOGIN_PHOTO, p))
+    used = {p for _, p in files}
+    for folder in (base, os.path.join(base, 'mujer')):
+        for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            if f.endswith(('.jpg', '.webp')) and os.path.join(folder, f) not in used:
+                print('  aviso: %s no está en su lista y no se usa' % os.path.relpath(os.path.join(folder, f), ROOT))
+    return {'files': files, 'day': day, 'dayF': day_f}
 
 
 def media_js(m, inline):
@@ -137,8 +162,10 @@ def media_js(m, inline):
             return 'data:%s;base64,%s' % (mime, base64.b64encode(f.read()).decode('ascii'))
     src = dict(m['files'])
     obj = {
-        'day': {k: url('img/day/%s.jpg' % k, src['img/day/%s.jpg' % k]) for k in m['day']},
+        'day': {k: url(rel, src[rel]) for k, rel in m['day'].items()},
+        'dayF': {k: url(rel, src[rel]) for k, rel in m['dayF'].items()},
         'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
+        'login': url(LOGIN_PHOTO, src[LOGIN_PHOTO]),
     }
     return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 
@@ -153,16 +180,19 @@ def plain(s):
 
 def changelog():
     """Versiones de CHANGELOG.md, de la más nueva a la más antigua: [{version, date, sections: [{title, items}]}].
-    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. La revisión de una versión dice cuál
-    revisa antes de su primer apartado («Revisión de la [1.0.3]…») y lo lleva en `base`."""
+    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. La revisión de una versión lleva en
+    `base` la que revisa: la de sus tres primeras cifras si tiene cuatro (1.1.0.1 revisa la 1.1.0) o la que diga antes de su
+    primer apartado («Revisión de la [1.0.3]…»: las de la 1.0.3, que se numeraron 1.0.31 y 1.0.32)."""
     out, cur, sec, head = [], None, None, False
     for raw in read(CHANGELOG).splitlines():
         l = raw.rstrip()
         if l.startswith('## '):
-            m = re.match(r'^## \[(\d+\.\d+\.\d+)\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})$', l)
+            m = re.match(r'^## \[(' + VERSION + r')\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})$', l)
             cur = {'version': m.group(1), 'date': m.group(2), 'sections': []} if m else None
             if cur:
                 out.append(cur)
+                if cur['version'].count('.') == 3:
+                    cur['base'] = cur['version'].rsplit('.', 1)[0]
             sec, head = None, True
         elif cur is None:
             continue
@@ -172,8 +202,11 @@ def changelog():
             if sec:
                 cur['sections'].append(sec)
             head = False
-        elif head and re.match(r'^Revisión de la \[(\d+\.\d+\.\d+)\]', l):
-            cur['base'] = re.match(r'^Revisión de la \[(\d+\.\d+\.\d+)\]', l).group(1)
+        elif head and re.match(r'^Revisión de la \[(' + VERSION + r')\]', l):
+            said = re.match(r'^Revisión de la \[(' + VERSION + r')\]', l).group(1)
+            if cur.get('base', said) != said:
+                die('CHANGELOG.md: la %s es, por su número, una revisión de la %s, y dice que lo es de la %s' % (cur['version'], cur['base'], said))
+            cur['base'] = said
         elif sec is not None and re.match(r'^[-*] ', l):
             sec['items'].append(plain(l[2:]))
         elif sec is not None and l.strip() and sec['items'] and raw.startswith('  '):
@@ -261,12 +294,37 @@ def run_esbuild(args, stdin=None):
     return r.stdout
 
 
+def flat_js():
+    """Copia de src/js con cada plantilla html`…` en una línea (tools/templates.js): de ella parte cada variante.
+
+    En src/js una plantilla larga va en varias líneas, y esos saltos de línea no forman parte del HTML: aquí se quitan, así
+    que la app compilada es la misma, byte a byte, se escriba una plantilla en una línea o en veinte. Un salto de línea que
+    cambiaría el HTML (entre dos palabras, dentro del valor de un atributo) para la compilación con su archivo y su línea.
+    Se prepara una vez por compilación, en dist/.flat, que se borra al terminar."""
+    flat = os.path.join(DIST, '.flat')
+    if not FLAT_DONE:
+        shutil.rmtree(flat, ignore_errors=True)
+        shutil.copytree(os.path.join(SRC, 'js'), flat)
+        node = shutil.which('node')
+        if not node:
+            die('falta node: lo necesita tools/templates.js para preparar las plantillas html`…`')
+        r = subprocess.run([node, os.path.join(ROOT, 'tools', 'templates.js'), '--flat', flat], capture_output=True, text=True)
+        if r.returncode:
+            die('plantillas html`…` (tools/templates.js):\n' + (r.stderr or r.stdout).strip())
+        FLAT_DONE.append(1)
+    return flat
+
+
+FLAT_DONE = []
+
+
 def stage(generated, deploy, emu=False, appcheck=False):
-    """Copia src/js a una carpeta temporal con los moldes generados (data/media, data/release) y, en el paquete, FFDEP = 1."""
+    """Copia el código (flat_js) a una carpeta temporal con los moldes generados (data/media, data/release) y, en el
+    paquete, FFDEP = 1."""
     # siempre la misma carpeta: esbuild tiene en cuenta las rutas al calcular los nombres de los archivos, y así salen iguales
     st = os.path.join(DIST, '.stage')
     shutil.rmtree(st, ignore_errors=True)
-    shutil.copytree(os.path.join(SRC, 'js'), st)
+    shutil.copytree(flat_js(), st)
     for m, code in generated.items():
         p = os.path.join(st, m)
         t = read(p)
@@ -353,7 +411,7 @@ HEAD_TAGS = '''<link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="StrataFit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f3f3f7" media="(prefers-color-scheme: light)">'''
 # theme-color: el color de la barra del sistema sigue al tema del móvil (el primero cuyo media encaja); si el tema se elige
 # a mano en Ajustes, core/state applyTheme() pone delante otra etiqueta sin media con el color de ese tema
@@ -563,8 +621,8 @@ def main():
         later = sum(os.path.getsize(os.path.join(out, f)) for f in js_files) - start
         print('  dist/app/            index.html %d bytes + js/ (%d KB al arrancar, %d KB al usarlo, %d archivos) + sw.js, version.json, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
             os.path.getsize(os.path.join(out, 'index.html')), start // 1024, later // 1024, len(js_files), len(m['files']), size // 1024))
-    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas de día' % (
-        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day'])))
+    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas de día (%d de mujer)' % (
+        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day']), len(m['dayF'])))
     if a.check:
         tool = os.path.join(ROOT, 'tools', 'check.js')
         if not os.path.isfile(tool):
@@ -575,4 +633,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    finally:
+        shutil.rmtree(os.path.join(DIST, '.flat'), ignore_errors=True)

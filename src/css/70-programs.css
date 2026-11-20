@@ -1,5 +1,5 @@
 /* ═══ css/70-programs ═══ Crear programa y gestor de programas */
-.cpo {
+.create-option {
   width:100%;
   display:flex;
   align-items:center;
@@ -11,22 +11,22 @@
   border:1px solid var(--ln);
   background:var(--cd);
 }
-.cpo>span:nth-child(2) {
+.create-option>span:nth-child(2) {
   flex:1;
   min-width:0;
 }
-.cpo b {
+.create-option b {
   font-size:18px;
   display:block;
   margin-bottom:3px;
 }
-.cpo small {
+.create-option small {
   color:var(--mu);
   font-size:13px;
   line-height:1.4;
   display:block;
 }
-.cpi {
+.create-icon {
   width:48px;
   height:48px;
   border-radius:14px;
@@ -36,7 +36,7 @@
   background:color-mix(in srgb,var(--a2) 18%,transparent);
   color:var(--at);
 }
-.cpw {
+.create-routine {
   width:100%;
   display:flex;
   align-items:center;
@@ -46,7 +46,7 @@
   border-radius:14px;
   text-align:left;
 }
-.cpw i {
+.create-routine i {
   width:22px;
   height:22px;
   border-radius:7px;
@@ -57,27 +57,27 @@
   color:var(--ft);
   font-style:normal;
 }
-.cpw.on {
+.create-routine.on {
   border-color:var(--a2);
 }
-.cpw.on i {
+.create-routine.on i {
   background:var(--a2);
   border-color:var(--a2);
 }
-.cpw span {
+.create-routine span {
   min-width:0;
 }
-.cpr {
+.create-day {
   margin:8px 0;
 }
-.cpr.rs {
+.create-day.rest-day {
   opacity:.7;
 }
-.cpm {
+.create-move {
   display:flex;
   gap:6px;
 }
-.cpm button {
+.create-move button {
   width:36px;
   height:36px;
   border-radius:10px;
@@ -85,13 +85,13 @@
   display:grid;
   place-items:center;
 }
-.cpm button:first-child svg {
+.create-move button:first-child svg {
   transform:rotate(180deg);
 }
-.cpm button:disabled {
+.create-move button:disabled {
   opacity:.3;
 }
-.cpe {
+.create-exercises {
   font-size:12px;
   margin-top:4px;
   display:-webkit-box;
@@ -99,15 +99,15 @@
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
-.cps {
+.choices {
   display:flex;
   flex-wrap:wrap;
   gap:6px;
 }
-.cps .chip {
+.choices .chip {
   margin:0;
 }
-.msb2 {
+.menu-blur {
   position:absolute;
   inset:0;
   -webkit-backdrop-filter:blur(20px);
@@ -115,12 +115,12 @@
   -webkit-mask-image:linear-gradient(90deg,transparent 0%,transparent 32%,#000 100%);
   mask-image:linear-gradient(90deg,transparent 0%,transparent 32%,#000 100%);
 }
-.msd,.msd.out {
+.menu-panel,.menu-panel.out {
   animation:none;
 }
-.msb,.msb2,.mci {
+.menu-shade,.menu-blur,.menu-items {
   animation:msi .45s cubic-bezier(.2,.9,.25,1) both;
 }
-.msd.out .msb,.msd.out .msb2,.msd.out .mci {
+.menu-panel.out .menu-shade,.menu-panel.out .menu-blur,.menu-panel.out .menu-items {
   animation:mso .26s ease-in both;
 }

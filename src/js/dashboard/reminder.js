@@ -19,6 +19,7 @@ import { signedIn } from '../cloud/session.js';
 import { downloadFile } from '../system/files.js';
 import { html } from '../core/html.js';
 /** Intervalos de la lista: [cantidad, unidad, texto]. */
+/** @type {[number, string, string][]} */
 const WEIGH_STEPS = [[2, 'w', '2 semanas'], [4, 'w', '4 semanas'], [1, 'm', '1 mes'], [5, 'w', '5 semanas']];
 /** Unidades de «Otro»: [singular, plural, máximo]. */
 export const WEIGH_UNITS = { d: ['día', 'días', 90], w: ['semana', 'semanas', 26], m: ['mes', 'meses', 12] };
@@ -62,23 +63,56 @@ export const weighBanner = () => {
   if (!weighDue())
     return '';
   const l = lastWeighIn();
-  return html`<div class="cd wrb" role="status"><span class="wri">${icon('scale', 26)}</span><span><b>Día de pesarse</b><small>${l ? 'Último pesaje: ' + fmtDateShort(l) + ' · ' : ''}cada ${weighEvery(S.weighReminder)}</small></span><button class="pr" data-a="weighReminderGo">Registrar</button></div>`;
+  return html`
+    <div class="card weigh-banner" role="status">
+      <span class="weigh-icon">${icon('scale', 26)}</span>
+      <span>
+        <b>Día de pesarse</b>
+        <small>${l ? 'Último pesaje: ' + fmtDateShort(l) + ' · ' : ''}cada ${weighEvery(S.weighReminder)}</small>
+      </span>
+      <button class="primary" data-a="weighReminderGo">Registrar</button>
+    </div>`;
 };
 /** Tarjeta del recordatorio en Evolución del peso, debajo de «Registrar peso». */
 export const reminderCard = () => {
   const r = S.weighReminder;
   if (!r)
-    return html`<div class="cd wrc"><label class="srk"><input type="checkbox" data-c="weighReminderToggle"> Recordatorio de pesaje</label><p class="mu wrt">Te avisamos cuando toque pesarte: cada 2 semanas, 4 semanas, un mes, 5 semanas o cada lo que elijas.</p></div>`;
+    return html`
+      <div class="card weigh-card">
+        <label class="setting-check"><input type="checkbox" data-c="weighReminderToggle"> Recordatorio de pesaje</label>
+        <p class="muted weigh-note">Te avisamos cuando toque pesarte: cada 2 semanas, 4 semanas, un mes, 5 semanas o cada lo que elijas.</p>
+      </div>`;
   const cur = weighCustom ? -1 : WEIGH_STEPS.findIndex(x => x[0] == r.n && x[1] == r.u);
   const nx = weighNext();
   const u = WEIGH_UNITS[r.u];
-  const other = cur < 0 ? html`<div class="g2 wro"><input type="number" inputmode="numeric" min="1" max="${u[2]}" value="${r.n}" data-c="weighReminderEvery" aria-label="Cada cuántos"><select data-c="weighReminderUnit" aria-label="Unidad">${Object.keys(WEIGH_UNITS).map(k => html`<option value="${k}"${k == r.u ? ' selected' : ''}>${WEIGH_UNITS[k][1]}</option>`)}</select></div>` : '';
+  const other = cur < 0 ? html`
+    <div class="grid-2 weigh-custom">
+      <input type="number" inputmode="numeric" min="1" max="${u[2]}" value="${r.n}" data-c="weighReminderEvery" aria-label="Cada cuántos">
+      <select data-c="weighReminderUnit" aria-label="Unidad">
+        ${Object.keys(WEIGH_UNITS).map(k => html`<option value="${k}"${k == r.u ? ' selected' : ''}>${WEIGH_UNITS[k][1]}</option>`)}
+      </select>
+    </div>` : '';
   /* un intervalo para elegir: `i` es su sitio en WEIGH_STEPS (-1, «Otro») */
-  const step = (i, label) => html`<button class="chip${i == cur ? ' on' : ''}" data-a="weighReminderInterval" data-i="${i}" role="radio" aria-checked="${i == cur ? 'true' : 'false'}">${label}</button>`;
-  const steps = html`<div class="wrs" role="radiogroup" aria-label="Cada cuánto">${WEIGH_STEPS.map((x, i) => step(i, x[2]))}${step(-1, 'Otro')}</div>`;
-  const next = html`<p class="wrt">${nx ? html`Próximo aviso: <b>${fmtDateShort(nx, { weekday: 'long', day: 'numeric', month: 'long' })}</b>` : ''} · cada ${weighEvery(r)}</p>`;
-  const calendar = html`<button data-a="weighReminderCalendar" class="wrk">${icon('cal', 18)} Añadir al calendario del móvil</button><small class="mu wrt">Así te avisa también con la app cerrada. Si cambias el intervalo, vuelve a añadirlo.</small>`;
-  return html`<div class="cd wrc"><label class="srk"><input type="checkbox" data-c="weighReminderToggle" checked> Recordatorio de pesaje</label>${steps}${other}${next}${calendar}</div>`;
+  const step = (i, label) => html`
+    <button class="chip${i == cur ? ' on' : ''}" data-a="weighReminderInterval" data-i="${i}" role="radio"
+        aria-checked="${i == cur ? 'true' : 'false'}">${label}</button>`;
+  const steps = html`
+    <div class="weigh-steps" role="radiogroup" aria-label="Cada cuánto">${WEIGH_STEPS.map((x, i) => step(i, x[2]))}${step(-1, 'Otro')}</div>`;
+  const next = html`
+    <p class="weigh-note">
+      ${nx ? html`Próximo aviso: <b>${fmtDateShort(nx, { weekday: 'long', day: 'numeric', month: 'long' })}</b>` : ''} · cada ${weighEvery(r)}
+    </p>`;
+  const calendar = html`
+    <button data-a="weighReminderCalendar" class="weigh-calendar">${icon('cal', 18)} Añadir al calendario del móvil</button>
+    <small class="muted weigh-note">Así te avisa también con la app cerrada. Si cambias el intervalo, vuelve a añadirlo.</small>`;
+  return html`
+    <div class="card weigh-card">
+      <label class="setting-check"><input type="checkbox" data-c="weighReminderToggle" checked> Recordatorio de pesaje</label>
+      ${steps}
+      ${other}
+      ${next}
+      ${calendar}
+    </div>`;
 };
 /** Al abrir la app o volver a ella: si toca pesarse, lo dice una vez al día, nunca en mitad de un entreno ni encima de otra
     ventana (la tarjeta del Dashboard sigue ahí). */
@@ -86,12 +120,14 @@ export const checkWeighIn = () => {
   if (!signedIn() || W || !weighDue())
     return;
   const today = dayKey(new Date());
-  if (S.weighReminder.sh == today || $('#sh .sp') || $('#dg .dgb') || $('#upd') || $('#f2w'))
+  if (S.weighReminder.sh == today || $('#sh .sheet') || $('#dg .dialog-backdrop') || $('#upd') || $('#f2w'))
     return;
   S.weighReminder.sh = today;
   saveState();
   const l = lastWeighIn();
-  dialog('Día de pesarse', html`Toca pesarse: ${l ? 'tu último pesaje fue el ' + fmtDateShort(l, { day: 'numeric', month: 'long' }) : 'aún no has registrado tu peso'}. Pésate a la misma hora, mejor por la mañana y en ayunas, para comparar bien.`, [['Mañana', 'weighReminderLater', ''], ['Registrar peso', 'weighReminderGo', 'pr']]);
+  dialog('Día de pesarse', html`
+    Toca pesarse: ${l ? 'tu último pesaje fue el ' + fmtDateShort(l, { day: 'numeric', month: 'long' }) : 'aún no has registrado tu peso'}. Pésate a la misma hora, mejor por la mañana y en ayunas, para comparar bien.
+  `, [['Mañana', 'weighReminderLater', ''], ['Registrar peso', 'weighReminderGo', 'primary']]);
 };
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState == 'visible')

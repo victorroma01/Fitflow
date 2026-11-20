@@ -350,6 +350,7 @@ No son fallos: son requisitos que el propietario ha dejado para más adelante, h
 | --- | --- | --- | --- |
 | F-16 · Una sola imagen por ejercicio | Quitar la foto anatómica y dejar la del modelo, con una de respaldo si falta. | 15 | 6 + imágenes |
 | F-17 y T-17 · Modelo masculino y femenino | La imagen según el sexo (F-05). Junto con F-16, toca las mismas funciones. | 0 más | 2 + imágenes |
-| F-33 y T-18 · Fondo del login | La imagen del gimnasio desde arriba, en gris, detrás del inicio de sesión. | 0 | 1 + imagen |
+| ~~F-33 y T-18 · Fondo del login~~ | Hecho en la V1.0.32, con una foto del propietario: el gimnasio desde arriba, en gris y desenfocado, detrás del inicio de sesión (`tools/fondo.py`, `tests/login.py`). | 0 | 1 + imagen |
+| ~~Portadas de los días por sexo y de CrossFit / Hyrox~~ | Hecho en la V1.0.32, con imágenes del propietario: las de una modelo con el perfil de mujer (F-05), las de los días de CrossFit, Hyrox y funcional y un descanso propio para esos programas (`tools/portadas.py`, `workout/images`, `tests/covers.py`). Las imágenes de los ejercicios (F-16, F-17) siguen pospuestas. | 0 | 3 + imágenes |
 
 F-16: EQ cambiada «Ficha del ejercicio» (media, 4) + EQ cambiada «Librería» (media, 4) + EO cambiada «Entreno en curso» (alta, 7).

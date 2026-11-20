@@ -45,7 +45,7 @@ const MOTIFS = {
 /* logro → [familia, metal, dibujo, cifra] */
 const MEDALS = { e1: ['e', 'b', 'dumbbell', '1'], e2: ['e', 's', 'dumbbell', '10'], e3: ['e', 'g', 'dumbbell', '50'], e4: ['e', 'p', 'dumbbell', '100'], e5: ['e', 'l', 'dumbbell', '250'], v1: ['v', 'b', 'kettle', '10 t'], v2: ['v', 's', 'kettle', '100 t'], v3: ['v', 'g', 'kettle', '500 t'], v4: ['v', 'p', 'kettle', '1000 t'], s1: ['s', 'b', 'flame', '4'], s2: ['s', 's', 'flame', '12'], s3: ['s', 'g', 'flame', '26'], p1: ['p', 'b', 'record', '1'], p2: ['p', 's', 'record', '10'], p3: ['p', 'g', 'record', '25'], c1: ['c', 'b', 'pulse', ''], c2: ['c', 's', 'shoe', '50 km'], c3: ['c', 'g', 'shoe', '200 km'], w1: ['w', 'b', 'watch', '1'], w2: ['w', 'g', 'watch', '10'], n1: ['n', 's', 'apple', '7'], n2: ['n', 'g', 'apple', '30'], m1: ['m', 's', 'ruler', ''], b1: ['b', 's', 'scale', ''], k1: ['k', 'g', 'check', ''] };
 let medalN = 0;
-/** Medalla del logro `id` (SVG de `size` px). Sin conseguir, la misma en gris (css/99-profile, .md.off). */
+/** Medalla del logro `id` (SVG de `size` px). Sin conseguir, la misma en gris (css/99-profile, .medal.off). */
 export const medalSvg = (id, size, on) => {
   const m = MEDALS[id] || ['e', 's', 'dumbbell', ''];
   const fam = FAMILIES[m[0]];
@@ -58,6 +58,40 @@ export const medalSvg = (id, size, on) => {
   const dy = cy - 28 - (lab ? 5.5 : 0);
   const sc = lab ? .82 : 1;
   const by = cy + 9;
-  const ribbon = fam[2] == 'medal' ? html`<path d="M21.5 44L15 61l6.4-2.6L25.5 63l4-15.5z" fill="${raw(fam[1])}"/><path d="M42.5 44L49 61l-6.4-2.6L38.5 63l-4-15.5z" fill="${raw(fam[1])}"/><path d="M21.5 44l-2.2 5.6 8.9 2.7 1.3-4.8zM42.5 44l2.2 5.6-8.9 2.7-1.3-4.8z" fill="#0003"/>` : '';
-  return html`<svg class="md${on ? '' : ' off'}" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="${u}r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${raw(met[0])}"/><stop offset=".55" stop-color="${raw(met[1])}"/><stop offset="1" stop-color="${raw(met[2])}"/></linearGradient><radialGradient id="${u}f" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="${raw(fam[0])}"/><stop offset="1" stop-color="${raw(fam[1])}"/></radialGradient><linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>${ribbon}<path d="${raw(sh[0])}" fill="url(#${raw(u)}r)"/><path d="${raw(sh[0])}" fill="none" stroke="#0004" stroke-width="1"/><path d="${raw(sh[1])}" fill="url(#${raw(u)}f)"/><path d="${raw(sh[1])}" fill="none" stroke="${raw(met[2])}" stroke-opacity=".7" stroke-width="1.2"/><g fill="#fff" transform="translate(32 ${(28 + dy).toFixed(2)}) scale(${sc}) translate(-32 -28)" class="flt-shadow">${raw(MOTIFS[m[2]].split('var(--md-f)').join(fam[1]))}</g>${lab ? html`<path d="M11 ${by}h42l-3.2 5.2L53 ${by + 10.4}H11l3.2-5.2z" fill="url(#${raw(u)}r)"/><path d="M14.5 ${by + 1.6}h35v7.2h-35z" fill="${raw(fam[1])}"/><text x="32" y="${by + 7.6}" text-anchor="middle" font-size="${lab.length > 4 ? 6.4 : 7.4}" font-weight="800" fill="#fff" class="ff-inherit ls-0_04em">${lab}</text>` : ''}<path d="M17 20c4-8 13-12 22-10-9 0-16 4-20 13z" fill="url(#${raw(u)}s)" opacity=".8"/></svg>`;
+  const ribbon = fam[2] == 'medal' ? html`
+    <path d="M21.5 44L15 61l6.4-2.6L25.5 63l4-15.5z" fill="${raw(fam[1])}"/>
+    <path d="M42.5 44L49 61l-6.4-2.6L38.5 63l-4-15.5z" fill="${raw(fam[1])}"/>
+    <path d="M21.5 44l-2.2 5.6 8.9 2.7 1.3-4.8zM42.5 44l2.2 5.6-8.9 2.7-1.3-4.8z" fill="#0003"/>` : '';
+  return html`
+    <svg class="medal${on ? '' : ' off'}" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true">
+      <defs>
+        <linearGradient id="${u}r" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="${raw(met[0])}"/>
+          <stop offset=".55" stop-color="${raw(met[1])}"/>
+          <stop offset="1" stop-color="${raw(met[2])}"/>
+        </linearGradient>
+        <radialGradient id="${u}f" cx=".38" cy=".3" r=".85">
+          <stop offset="0" stop-color="${raw(fam[0])}"/>
+          <stop offset="1" stop-color="${raw(fam[1])}"/>
+        </radialGradient>
+        <linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${ribbon}
+      <path d="${raw(sh[0])}" fill="url(#${raw(u)}r)"/>
+      <path d="${raw(sh[0])}" fill="none" stroke="#0004" stroke-width="1"/>
+      <path d="${raw(sh[1])}" fill="url(#${raw(u)}f)"/>
+      <path d="${raw(sh[1])}" fill="none" stroke="${raw(met[2])}" stroke-opacity=".7" stroke-width="1.2"/>
+      <g fill="#fff" transform="translate(32 ${(28 + dy).toFixed(2)}) scale(${sc}) translate(-32 -28)" class="flt-shadow">
+        ${raw(MOTIFS[m[2]].split('var(--md-f)').join(fam[1]))}
+      </g>
+      ${lab ? html`
+        <path d="M11 ${by}h42l-3.2 5.2L53 ${by + 10.4}H11l3.2-5.2z" fill="url(#${raw(u)}r)"/>
+        <path d="M14.5 ${by + 1.6}h35v7.2h-35z" fill="${raw(fam[1])}"/>
+        <text x="32" y="${by + 7.6}" text-anchor="middle" font-size="${lab.length > 4 ? 6.4 : 7.4}" font-weight="800" fill="#fff"
+            class="ff-inherit ls-0_04em">${lab}</text>` : ''}
+      <path d="M17 20c4-8 13-12 22-10-9 0-16 4-20 13z" fill="url(#${raw(u)}s)" opacity=".8"/>
+    </svg>`;
 };

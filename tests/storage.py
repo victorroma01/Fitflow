@@ -1,8 +1,8 @@
 """Prueba del guardado por partes (core/persist): formato (núcleo en localStorage, partes en IndexedDB: I-04), paso desde
 localStorage (la V1.0.1), datos de la serie de prueba (no se migran), escribir solo lo que cambia y agrupar guardados, partes
 que la acción dice haber tocado y repaso de después (I-10), partes dañadas o que faltan (sin guardar ni sincronizar nada
-hasta poder leerlas), sin IndexedDB, falta de espacio y su aviso, restaurar y deshacer, borrar todo (sin conexión) y la
-pantalla de error.
+hasta poder leerlas), sin IndexedDB, falta de espacio y su aviso, restaurar y deshacer, borrar todo (sin conexión), la
+pantalla de error y la app abierta dos veces (solo guarda una cada vez).
 
   python3 tests/storage.py dist/stratafit.html
 Requiere:  pip install playwright  &&  playwright install chromium
@@ -24,7 +24,8 @@ fails = []
 
 # Utilidades dentro de la página, independientes del código de la app: claves de localStorage, las partes de IndexedDB (leer,
 # escribir y borrar a mano), estado completo guardado (__stored, de tests/init.js), forma canónica (claves ordenadas) para
-# comparar, y espía de escrituras (en localStorage y en IndexedDB).
+# comparar, y espía de escrituras (en localStorage y en IndexedDB): en __w, las de los datos; en __wa, todas, también la marca
+# que deja cada guardado (ffrev: core/persist, «una sola apertura de la app guarda cada vez»).
 HELPERS = """window.__T={
  keys:p=>{const o=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith(p))o.push(k)}return o.sort()},
  idb:(fn,mode,name)=>new Promise((res,rej)=>{const r=indexedDB.open('ffdata',1);r.onerror=()=>rej(r.error);r.onsuccess=()=>{const db=r.result,tx=db.transaction(name||'parts',mode||'readonly'),q=fn(tx.objectStore(name||'parts'));tx.oncomplete=()=>{db.close();res(q&&q.result)};tx.onerror=()=>{db.close();rej(tx.error)}}}),
@@ -35,10 +36,11 @@ HELPERS = """window.__T={
  del:k=>__T.idb(st=>st.delete(k),'readwrite'),
  stored:()=>savesDone().then(()=>__stored()),
  can:v=>Array.isArray(v)?'['+v.map(__T.can).join(',')+']':v&&typeof v=='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+__T.can(v[k])).join(',')+'}':JSON.stringify(v),
- spy:()=>{window.__w=[];if(!window.__set0){window.__set0=Store.set;window.__del0=Store.del;window.__put0=IDBObjectStore.prototype.put;window.__idel0=IDBObjectStore.prototype.delete}
-   Store.set=(k,v,q)=>{__w.push(k);return __set0(k,v,q)};Store.del=(k,q)=>{__w.push('-'+k);return __del0(k,q)};
-   IDBObjectStore.prototype.put=function(v,k){if(this.name=='parts')__w.push(k);return __put0.apply(this,arguments)};
-   IDBObjectStore.prototype.delete=function(k){if(this.name=='parts')__w.push('-'+k);return __idel0.apply(this,arguments)}},
+ spy:()=>{window.__w=[];window.__wa=[];if(!window.__set0){window.__set0=Store.set;window.__del0=Store.del;window.__put0=IDBObjectStore.prototype.put;window.__idel0=IDBObjectStore.prototype.delete}
+   const note=k=>{__wa.push(k);if(k!='ffrev')__w.push(k)};
+   Store.set=(k,v,q)=>{note(k);return __set0(k,v,q)};Store.del=(k,q)=>{note('-'+k);return __del0(k,q)};
+   IDBObjectStore.prototype.put=function(v,k){if(this.name=='parts')note(k);return __put0.apply(this,arguments)};
+   IDBObjectStore.prototype.delete=function(k){if(this.name=='parts')note('-'+k);return __idel0.apply(this,arguments)}},
  unspy:()=>{if(window.__set0){Store.set=__set0;Store.del=__del0;IDBObjectStore.prototype.put=__put0;IDBObjectStore.prototype.delete=__idel0}}
 };0"""
 
@@ -123,6 +125,122 @@ def without_idb(b, path, url):
     pg.evaluate("S.defaultRest=44;saveState()")
     check('y se sigue guardando', pg.evaluate("JSON.parse(localStorage.getItem('ff')).rest") == 44)
     check('sin errores de JS sin IndexedDB', not errs, '; '.join(errs[:3]))
+    c.close()
+
+
+def two_windows(b, path, url):
+    """La app abierta dos veces sobre lo mismo guardado (dos pestañas o ventanas): guarda una sola cada vez. La que se queda
+    atrás no escribe nada (ni el estado ni el entreno en curso) y se recarga con lo último (core/persist: instanceStale;
+    core/boot). Lo de la nube, en tests/cloud.py."""
+    c = b.new_context(viewport={'width': 390, 'height': 844}, **context_opts(path))
+    c.add_init_script(INIT)
+    errs = []
+
+    def window():
+        pg = c.new_page()
+        pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
+        pg.goto(url)
+        booted(pg)
+        return pg
+
+    day = [0]
+
+    def log(n):
+        day[0] += 1
+        return "S.logs.push({d:'2026-10-%02d',n:'%s',v:4000,s:16,m:55,q:7});saveState('logs')" % (day[0], n)
+
+    names = "S.logs.map(l=>l.n).join()"
+    stored = "savesDone().then(()=>__stored()).then(s=>s.logs.map(l=>l.n).join())"
+    notice = "/abierta en otra ventana/.test(document.querySelector('#dg').innerText)"
+    no_notice = "!document.querySelector('#dg').firstChild"
+    stale = lambda pg: pg.evaluate('instanceStale')
+
+    a = window()
+    a.evaluate("S.logs=[];S.defaultRest=150;" + log('Pecho'))
+    a.reload()
+    booted(a)
+    # (lo que la app guarda sola al arrancar con datos nuevos: los logros, la primera vez, unos 2,5 s después. Que quede hecho)
+    until(a, '!!S.achievements', 8000)
+    rev = a.evaluate("savesDone().then(()=>localStorage.getItem('ffrev'))")
+    check('cada guardado deja su marca', bool(rev) and a.evaluate("S.defaultRest=151;flushState().then(()=>localStorage.getItem('ffrev'))") != rev, str(rev))
+    q = window()
+    # (lo que cada una hace sola al arrancar: la primera sincronización, sin conexión, a los 1,5 s, y mirar los logros, a los 2,5 s)
+    q.wait_for_timeout(3200)
+    check('abrir la app otra vez no deja atrás a la que ya estaba: arrancar no guarda nada', not stale(a) and not stale(q) and q.evaluate(names) == 'Pecho' and a.evaluate(no_notice), str([stale(a), stale(q), q.evaluate(names), a.evaluate("document.querySelector('#dg').innerText")[:150]]))
+
+    # ── una guarda: la otra se queda atrás, lo dice y deja de sincronizar ──
+    a.evaluate(log('Pierna'))
+    check('si otra ventana guarda, esta se queda atrás', until(q, 'instanceStale'))
+    check('y lo dice, con «Recargar»', q.evaluate(notice) and q.evaluate("document.querySelector('#dg [data-v=staleReload]').textContent") == 'Recargar', q.evaluate("document.querySelector('#dg').innerText")[:120])
+    check('y deja de sincronizar', q.evaluate('!Store.remote'))
+    check('la que guardó sigue como estaba', not stale(a) and a.evaluate(no_notice) and a.evaluate(stored) == 'Pecho,Pierna')
+    # lo que intente guardar la que se quedó atrás no se escribe (pisaría lo de la otra), y el aviso sigue puesto
+    saved = q.evaluate("(S.logs=[],S.defaultRest=99,flushState())")
+    q.wait_for_timeout(300)
+    check('la que se quedó atrás no escribe nada, aunque algo intente guardar', saved is False and q.evaluate(stored) == 'Pecho,Pierna' and q.evaluate("JSON.parse(localStorage.getItem('ff')).rest") == 151 and q.evaluate(notice), str(saved))
+    a.evaluate(log('Hombro'))
+    # (antes de recargar una ventana, la otra termina de guardar: una que arranca con un guardado de la otra a medias lee la
+    # marca del principio de ese guardado y, al ver la del final, se da por atrasada aunque tenga lo último. Es lo previsto,
+    # porque así no se queda con el núcleo de antes y las partes de después, pero aquí no es lo que se prueba. En un ordenador
+    # lento pasaba: en GitHub, con Firefox)
+    a.evaluate('savesDone()')
+    ok = reload_by(q, "document.querySelector('#dg [data-v=staleReload]').click()")
+    check('«Recargar» la recarga con lo último, y vuelve a poder guardar', ok and q.evaluate(names) == 'Pecho,Pierna,Hombro' and q.evaluate('S.defaultRest') == 151 and not stale(q) and q.evaluate(no_notice), '%s %s' % (ok, q.evaluate(names)))
+
+    # ── ahora guarda la otra: la primera es la que se queda atrás. El aviso solo se quita recargando ──
+    q.evaluate(log('Espalda'))
+    check('la última que guarda es la que vale: ahora se queda atrás la otra', until(a, 'instanceStale') and a.evaluate(notice) and not stale(q) and q.evaluate(stored) == 'Pecho,Pierna,Hombro,Espalda')
+    ok = reload_by(a, "document.querySelector('#dg').innerHTML=''")
+    check('si el aviso se cierra de otra forma (el gesto de volver), se recarga igual', ok and a.evaluate(names) == 'Pecho,Pierna,Hombro,Espalda' and not stale(a))
+
+    # ── sin estar a la vista, no hay aviso: se recarga sola al volver a ella ──
+    q.evaluate("window.__mark=1;Object.defineProperty(document,'visibilityState',{get:()=>'hidden',configurable:true});0")
+    a.evaluate(log('Gemelo'))
+    until(q, 'instanceStale')
+    a.evaluate('savesDone()')
+    q.wait_for_timeout(300)
+    check('la que no se está viendo se queda atrás sin aviso y sin recargarse todavía', stale(q) == 1 and q.evaluate(no_notice) and q.evaluate('window.__mark') == 1)
+    ok = reload_by(q, "delete document.visibilityState;document.dispatchEvent(new Event('visibilitychange'))")
+    check('y se recarga sola, con lo último, al volver a ella', ok and q.evaluate(names) == 'Pecho,Pierna,Hombro,Espalda,Gemelo' and not stale(q) and q.evaluate(no_notice))
+    q.close()
+
+    # ── una ventana que el navegador tenía parada no se entera cuando la otra guarda (aquí, la marca cambiada a mano): lo ve al
+    #    volver a ella, o al ir a guardar ──
+    a.evaluate("localStorage.setItem('ffrev','otra')")
+    check('(preparado: otra ha guardado y esta no se ha enterado)', not stale(a))
+    ok = reload_by(a, "document.dispatchEvent(new Event('visibilitychange'))")
+    check('al volver a una ventana que se quedó atrás sin enterarse, se recarga sola', ok and not stale(a) and a.evaluate(no_notice))
+    a.evaluate(log('Core'))
+    check('y, recargada, guarda con normalidad', a.evaluate(stored) == 'Pecho,Pierna,Hombro,Espalda,Gemelo,Core' and not stale(a))
+    a.evaluate("localStorage.setItem('ffrev','otra')")
+    a.evaluate("S.defaultRest=77;saveState()")
+    check('y si va a guardar sin haberse enterado, no guarda y lo dice', until(a, 'instanceStale') and a.evaluate(notice) and a.evaluate("savesDone().then(()=>JSON.parse(localStorage.getItem('ff')).rest)") == 151)
+    reload_by(a, "document.querySelector('#dg [data-v=staleReload]').click()")
+
+    # ── el entreno en curso lo lleva una sola: quien lo empieza o lo reanuda ──
+    q = window()
+    a.evaluate("S.selectedDay=S.plan.findIndex(d=>d.ex.length);A.startWorkout();W.sets[0][0].w=50;R()")
+    wip = "(z=>z&&z.W?(z.W.x||[[{}]])[0][0].w:null)(JSON.parse(localStorage.getItem('ffw')||'null'))"
+    check('al empezar un entreno, queda guardado para reanudarlo', a.evaluate(wip) == 50, str(a.evaluate("localStorage.getItem('ffw')"))[:200])
+    check('quien empieza un entreno se queda con lo guardado: la otra ventana se queda atrás', until(q, 'instanceStale') and not stale(a))
+    q.evaluate("R()")
+    check('y una ventana sin entreno no borra el entreno en curso de la otra', q.evaluate(wip) == 50)
+    a.evaluate('savesDone()')
+    reload_by(q, "document.querySelector('#dg [data-v=staleReload]').click()")
+    check('la otra ventana, recargada, ofrece reanudarlo', q.evaluate("(S.tab=0,R(),!!document.querySelector('#app [data-a=resumeWorkout]'))") and not stale(a))
+    q.evaluate("A.resumeWorkout();W.sets[0][0].w=60;R()")
+    check('si se reanuda en la otra, pasa a llevarlo ella', until(a, 'instanceStale') and not stale(q) and q.evaluate(wip) == 60)
+    a.evaluate("W.sets[0][0].w=1;R()")
+    check('y la que se quedó atrás ya no pisa el entreno en curso', a.evaluate(wip) == 60)
+    q.evaluate('savesDone()')
+    reload_by(a, "document.querySelector('#dg [data-v=staleReload]').click()")
+    q.evaluate("W=null;R()")
+    check('al acabar el entreno, quien lo llevaba lo borra', q.evaluate("!localStorage.getItem('ffw')"))
+    # un entreno en curso que no escribió esta ventana (el de otra que aún no ha guardado nada más) no se borra al pintar
+    q.evaluate("localStorage.setItem('ffw','{\"de\":\"otra\"}');R()")
+    check('una ventana no borra un entreno en curso que no es suyo', q.evaluate("localStorage.getItem('ffw')") == '{"de":"otra"}')
+    q.evaluate("localStorage.removeItem('ffw')")
+    check('sin errores de JS con la app abierta dos veces', not errs, '; '.join(errs[:3]))
     c.close()
 
 
@@ -211,20 +329,22 @@ def main(path):
             check('las partes pasan de localStorage a IndexedDB, sin perder nada', ev('__T.can(stateToStored(S))') == before and ev('__T.stored().then(s=>__T.can(s))') == before)
             check('el núcleo lo dice (y nombra sus partes)', core.get('_parts') == 2 and core.get('_pk') == ev('__T.pkeys()'), str(core.get('_parts')))
             check('y en localStorage ya no quedan', ev("__T.keys('ff:')") == [], str(ev("__T.keys('ff:')")))
-            check('sin avisos de datos dañados', not ev('stateRecovered') and not ev('partsLost') and not ev("!!document.querySelector('#dg .dgc')"))
+            check('sin avisos de datos dañados', not ev('stateRecovered') and not ev('partsLost') and not ev("!!document.querySelector('#dg .dialog-box')"))
             pg.clock.run_for(3000)  # lo que hace la app al arrancar (medallas…), antes de contar escrituras
 
             # ── escribir solo lo que cambia y agrupar los guardados de una acción ──
             ev("__T.spy();S.water[dayKey(new Date())]=750;saveState();saveState();saveState()")
             check('un cambio de ajustes escribe solo el núcleo, una vez', ev('savesDone().then(()=>__w)') == ['ff'], str(ev('__w')))
+            check('y cada guardado deja su marca antes de escribir y al terminar', ev('__wa') == ['ffrev', 'ff', 'ffrev'], str(ev('__wa')))
             ev("__w.length=0;S.meals['2026-09-02'][1]=[{n:'Kiwi',g:80,b:[61,15,1,.5,3,0]}];saveState()")
             check('una comida escribe solo su mes', ev('savesDone().then(()=>__w)') == ['ff:meals:2026-09'], str(ev('__w')))
             ev("__w.length=0;S.logs.push({d:dayKey(new Date()),n:'Extra',v:100,s:3,m:20,q:7});saveState()")
             check('un entreno escribe solo los entrenos', ev('savesDone().then(()=>__w)') == ['ff:logs'], str(ev('__w')))
-            ev("__w.length=0;saveState()")
-            check('sin cambios no escribe nada', ev('savesDone().then(()=>__w)') == [], str(ev('__w')))
-            ev("__w.length=0;delete S.meals['2026-08-14'];saveState()")
+            ev("__w.length=0;__wa.length=0;saveState()")
+            check('sin cambios no escribe nada (ni la marca)', ev('savesDone().then(()=>__wa)') == [], str(ev('__wa')))
+            ev("__w.length=0;__wa.length=0;delete S.meals['2026-08-14'];saveState()")
             check('un mes que se queda sin comidas se borra, después de quitarlo del núcleo', ev('savesDone().then(()=>__w)') == ['ff', '-ff:meals:2026-08'] and 'ff:meals:2026-08' not in ev('__T.pkeys()') and 'ff:meals:2026-08' not in ev("JSON.parse(localStorage.getItem('ff'))._pk"), str(ev('__w')))
+            check('y la marca de haber terminado va en cuanto está lo que se lee al abrir la app (las partes y el núcleo)', ev('__wa') == ['ffrev', 'ff', 'ffrev', '-ff:meals:2026-08'], str(ev('__wa')))
             ev("__w.length=0;S.meals['2026-11-02']={0:[{n:'Pera',g:120,b:[57,15,.4,.1,3,0]}]};saveState()")
             check('un mes nuevo se guarda antes de nombrarlo en el núcleo', ev('savesDone().then(()=>__w)') == ['ff:meals:2026-11', 'ff'], str(ev('__w')))
             ev("__w.length=0;Store.remote={changed:(k,v)=>__w.push('remoto '+k)};S.meals['2026-09-30'][0][0].g=120;saveState()")
@@ -248,6 +368,43 @@ def main(path):
             check('al salir de la app, el repaso se hace ya', ev("savesDone().then(()=>__w.filter(k=>k!='ffsync'))") == ['ff:logs'], str(ev('__w')))
             ev("JSON.stringify=__js0;__T.unspy()")
             pg.clock.run_for(2500)
+
+            # ── un guardado que falla, con otro decidido mientras estaba a medias (lo encontró tests/syncfuzz.py) ──
+            # El primero lleva un mes nuevo de comidas. El segundo se decide con el primero aún a medias y solo cambia el
+            # núcleo, que ya nombra ese mes. Si el primero falla (sin sitio), el segundo no puede escribir: el núcleo nombraría
+            # una parte que no está y, al volver a abrir la app, no se podrían leer los datos. Aquí la escritura del primero se
+            # queda a medias (la transacción abierta, sin el commit con que la app la cierra antes) hasta que se le dice que falle
+            hold = """window.__put1=IDBObjectStore.prototype.put;window.__commit1=IDBTransaction.prototype.commit;window.__hold=1;
+              IDBTransaction.prototype.commit=function(){};
+              IDBObjectStore.prototype.put=function(){const st=this,tx=st.transaction,keep=()=>{try{if(window.__hold)st.get('__').onsuccess=keep;else tx.abort()}catch(e){}};
+                const r=st.get('__');r.onsuccess=keep;return r};0"""
+            release = "IDBObjectStore.prototype.put=__put1;IDBTransaction.prototype.commit=__commit1;0"
+            named = "JSON.parse(localStorage.getItem('ff'))._pk"
+            n_logs, rest0 = ev('S.logs.length'), ev("JSON.parse(localStorage.getItem('ff')).rest")
+            ev(hold)
+            ev("S.meals['2027-01-05']={0:[{n:'Uva',g:90,b:[60,15,.5,.2,1,0]}]};saveState(mealsPart('2027-01-05'));0")
+            ev("S.defaultRest=77;saveState('core');0")
+            ev("window.__hold=0;0")
+            ev("savesDone()")
+            check('si un guardado falla, el que se decidió mientras tanto no escribe: el núcleo no nombra la parte que no se guardó', 'ff:meals:2027-01' not in ev(named) and 'ff:meals:2027-01' not in ev('__T.pkeys()') and ev("JSON.parse(localStorage.getItem('ff')).rest") == rest0, '%s %s' % (ev(named), ev("JSON.parse(localStorage.getItem('ff')).rest")))
+            check('y consta que hay cosas sin guardar', ev('savesBroken()'))
+            # el móvil sigue sin sitio al cerrar la app: al volver a abrirla, los datos se leen (falta lo que no cupo, y nada más)
+            reload()
+            check('al volver a abrir la app, los datos se leen', not ev('partsLost') and not ev("!!document.querySelector('#dg [data-v=partsRetry]')") and ev('S.logs.length') == n_logs, str((ev('partsLost'), ev('S.logs.length'), n_logs)))
+            check('y falta solo lo que no se pudo guardar', '2027-01-05' not in ev('Object.keys(S.meals)') and ev('S.defaultRest') == rest0 and '2026-09-02' in ev('Object.keys(S.meals)'), str(ev('S.defaultRest')))
+            # y si el sitio vuelve con la app abierta, el siguiente guardado lo deja todo escrito
+            ev(hold)
+            ev("S.meals['2027-01-05']={0:[{n:'Uva',g:90,b:[60,15,.5,.2,1,0]}]};saveState(mealsPart('2027-01-05'));0")
+            ev("S.defaultRest=77;saveState('core');0")
+            ev("window.__hold=0;0")
+            ev("savesDone()")
+            ev(release)
+            ev("S.water[dayKey(new Date())]=1250;saveState('core');0")
+            check('cuando vuelve el sitio, el siguiente guardado lo escribe todo: el mes nuevo, y el núcleo que lo nombra', 'ff:meals:2027-01' in ev('savesDone().then(()=>__T.pkeys())') and 'ff:meals:2027-01' in ev(named) and ev("JSON.parse(localStorage.getItem('ff')).rest") == 77 and ev('__T.stored().then(s=>__T.can(s)===__T.can(stateToStored(S)))'), str(ev(named)))
+            pg.clock.run_for(6000)
+            check('y deja de constar que hay cosas sin guardar', ev('savesDone().then(()=>!savesBroken())'))
+            ev("delete S.meals['2027-01-05'];S.defaultRest=%d;saveState()" % (rest0 if isinstance(rest0, int) else 90))
+            ev("savesDone()")
 
             # ── datos de la serie de prueba (1.20 y anteriores: todo el estado en 'ff'): no se migran ──
             legacy = ev("JSON.stringify(Object.assign({},S,{rest:61}))")
@@ -288,7 +445,7 @@ def main(path):
             reload_by(pg, "A.partsRetry()")
             pg.clock.run_for(1500)
             ev(HELPERS)
-            check('con la parte de vuelta, «Reintentar» arranca con todo', not ev('partsLost') and ev('S.logs.length') == nlogs and ev("!document.querySelector('#dg .dgc')"))
+            check('con la parte de vuelta, «Reintentar» arranca con todo', not ev('partsLost') and ev('S.logs.length') == nlogs and ev("!document.querySelector('#dg .dialog-box')"))
 
             # ── restaurar una copia con un guardado pendiente en la misma acción ──
             ev("for(let i=0;i<5;i++)S.logs.push({d:'2026-10-0'+(i+1),n:'Día '+i,v:1000,s:10,m:40,q:7});S.exerciseHistory={'Press banca':[{d:'2026-10-01',s:[[5,80,8,0]]}]};saveState()")
@@ -338,9 +495,9 @@ def main(path):
             check('con el 85 % usado, avisa', ev("/Queda poco espacio/.test(document.querySelector('#dg').innerText)&&/85 %/.test(document.querySelector('#dg').innerText)"), ev("document.querySelector('#dg').innerText.slice(0,120)"))
             check('con «Copia de seguridad» a mano', ev("!!document.querySelector('#dg [data-v=openBackup]')"))
             ev("document.querySelector('#dg').innerHTML='';spaceCheck()")
-            check('y no vuelve a avisar hasta dentro de una semana', ev("!document.querySelector('#dg .dgc')"))
+            check('y no vuelve a avisar hasta dentro de una semana', ev("!document.querySelector('#dg .dialog-box')"))
             ev("window.__mark=1;localStorage.removeItem('ffspace');window.__tr=document.createElement('div');__tr.id='tour';document.body.appendChild(__tr);spaceCheck()")
-            check('con algo delante (el recorrido), espera', ev("!document.querySelector('#dg .dgc')"))
+            check('con algo delante (el recorrido), espera', ev("!document.querySelector('#dg .dialog-box')"))
             ev("__tr.remove()")
             # (lo que la app abra sola mientras tanto, como el aviso de pesarse, también la ocupa: se cierra y se espera otra vez)
             busy = "[window.W&&'entreno',document.visibilityState=='hidden'&&'oculta',...['#lgw','#wlc','#tour','#upd','#f2w'].filter(x=>document.querySelector(x)),document.querySelector('#sh').firstChild&&'hoja',document.querySelector('#dg').firstChild&&'aviso',document.querySelector('#mn').firstChild&&'menú'].filter(Boolean)"
@@ -358,7 +515,7 @@ def main(path):
             ev("document.querySelector('#dg').innerHTML=''")
             ev("localStorage.removeItem('ffspace');StorageManager.prototype.estimate=()=>Promise.resolve({usage:50e6,quota:100e6})")
             ev('spaceCheck()')
-            check('con la mitad usada, no avisa', ev("!document.querySelector('#dg .dgc')"))
+            check('con la mitad usada, no avisa', ev("!document.querySelector('#dg .dialog-box')"))
             ev("A.openDiagnostics()")
             check('Diagnóstico dice dónde están las partes y el espacio usado', until(pg, "/Espacio usado: localStorage .*IndexedDB y caché .* \\(50 %\\)/.test(document.getElementById('diagt').value)") and '(IndexedDB)' in ev("document.getElementById('diagt').value"), ev("document.getElementById('diagt').value.split('\\n').filter(l=>/Espacio|Almacenamiento/.test(l)).join(' | ')")[:300])
             ev("StorageManager.prototype.estimate=__est;sheet()")
@@ -394,6 +551,7 @@ def main(path):
             print('  FALLA excepción; últimos sucesos de la página:', ' | '.join(log[-14:]))
             raise
         without_idb(b, path, url)
+        two_windows(b, path, url)
         b.close()
     print('\n%s' % ('TODO CORRECTO' if not fails else 'FALLAN: ' + ', '.join(fails)))
     sys.exit(1 if fails else 0)

@@ -22,13 +22,18 @@ const encFields = o => {
   return f;
 };
 const decValue = v => !v || typeof v != 'object' ? undefined : 'stringValue' in v ? v.stringValue : 'integerValue' in v ? +v.integerValue : 'doubleValue' in v ? +v.doubleValue : 'booleanValue' in v ? v.booleanValue : 'nullValue' in v ? null : 'timestampValue' in v ? Date.parse(v.timestampValue) : 'mapValue' in v ? decFields(v.mapValue.fields) : 'arrayValue' in v ? (v.arrayValue.values || []).map(decValue) : undefined;
+/** @param {any} f
+    @returns {Record<string, any>} */
 const decFields = f => {
+  /** @type {Record<string, any>} */
   const o = {};
   for (const k of Object.keys(f || {}))
     o[k] = decValue(f[k]);
   return o;
 };
-/** Documento de la API → { data, ut: updateTime (la versión, para escribir con condición) }. */
+/** Documento de la API → { data, ut: updateTime (la versión, para escribir con condición) }.
+    @param {any} d
+    @returns {RemoteDoc} */
 const fsDoc = d => ({ data: decFields(d.fields), ut: d.updateTime });
 /* con el token de la sesión (y el de App Check, si está activado); si Firestore lo da por caducado (401), se renueva una vez y
    se repite */
@@ -42,7 +47,9 @@ const fsCall = async (url, o = {}) => {
     return fetchJson(url, { ...o, token: await idToken(true), appCheck: await appCheckToken() });
   }
 };
-/** Documento `path` o null si no existe. */
+/** Documento `path` o null si no existe.
+    @param {string} path
+    @returns {Promise<RemoteDoc | null>} */
 export const getDoc = async (path) => {
   try {
     return fsDoc(await fsCall(fsUrl(docName(path))));
@@ -53,8 +60,10 @@ export const getDoc = async (path) => {
     throw e;
   }
 };
-/** Varios documentos de una vez: { path: documento o null }. */
+/** Varios documentos de una vez: { path: documento o null }.
+    @param {string[]} paths */
 export const batchGet = async (paths) => {
+  /** @type {Record<string, RemoteDoc | null>} */
   const out = {};
   if (!paths.length)
     return out;
@@ -81,15 +90,22 @@ export const listDocs = async (path) => {
   return out;
 };
 /** Escribe varios documentos a la vez: o todos o ninguno. Si una condición no se cumple, lanza un error de cloud/net
-  (FAILED_PRECONDITION, ALREADY_EXISTS o NOT_FOUND). Devuelve la versión (updateTime) de cada escritura, en orden. */
+  (FAILED_PRECONDITION, ALREADY_EXISTS o NOT_FOUND). Devuelve la versión (updateTime) de cada escritura, en orden.
+  @param {any[]} writes
+  @returns {Promise<string[]>} */
 export const commitWrites = async (writes) => {
   const r = await fsCall(fsUrl(DB_PATH + ':commit'), { method: 'POST', body: { writes } });
   return (r.writeResults || []).map(w => w.updateTime || '');
 };
 export const deleteDoc = path => fsCall(fsUrl(docName(path)), { method: 'DELETE' });
 /** Escritura de commitWrites que deja el documento `path` con `data`. `pre`: condición ({ updateTime } o { exists }).
-  `fields`: solo esos campos (los demás del documento se conservan). */
+  `fields`: solo esos campos (los demás del documento se conservan).
+  @param {string} path
+  @param {Record<string, any>} data
+  @param {any} [pre]
+  @param {string[]} [fields] */
 export const setWrite = (path, data, pre, fields) => {
+  /** @type {any} */
   const w = { update: { name: docName(path), fields: encFields(data) } };
   if (pre)
     w.currentDocument = pre;
@@ -97,4 +113,7 @@ export const setWrite = (path, data, pre, fields) => {
     w.updateMask = { fieldPaths: fields };
   return w;
 };
+/** Escritura de commitWrites que borra el documento `path`.
+    @param {string} path
+    @returns {any} */
 export const delWrite = path => ({ delete: docName(path) });

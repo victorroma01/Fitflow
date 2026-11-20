@@ -22,10 +22,10 @@
   --do2:#ffc59a;
   --do3:#ffa25c;
 }
-.wk b.wkdl {
+.week-nav b.deload-week {
   color:var(--do3);
 }
-.dl2 {
+.deload-box {
   position:relative;
   border-radius:22px;
   padding:16px;
@@ -35,7 +35,7 @@
   box-shadow:0 10px 30px rgba(255,120,30,.16);
   color:var(--tx);
 }
-.dl2.dlc2 {
+.deload-box.deload-box-slim {
   display:flex;
   align-items:center;
   gap:10px;
@@ -43,7 +43,7 @@
   margin:12px 0;
   border-radius:18px;
 }
-.dlb {
+.deload-btn {
   flex:1;
   min-width:0;
   display:flex;
@@ -57,11 +57,11 @@
   text-align:left;
   color:inherit;
 }
-.dlb b {
+.deload-btn b {
   font-size:16px;
   color:var(--do1);
 }
-.dli {
+.deload-icon {
   flex:none;
   width:32px;
   height:32px;
@@ -71,7 +71,7 @@
   background:rgba(255,138,48,.25);
   color:var(--do3);
 }
-button.dlo {
+button.deload-skip {
   width:100%;
   background:rgba(255,138,48,.10)!important;
   border:1px solid rgba(255,154,77,.7)!important;
@@ -79,14 +79,14 @@ button.dlo {
   font-weight:700;
   box-shadow:none!important;
 }
-button.dlo.dls {
+button.deload-skip.deload-skip-slim {
   width:auto;
   padding:8px 14px;
   border-radius:12px;
   font-size:14px;
   margin:0;
 }
-button.dlp,#dg .pr.dlp {
+button.deload-primary,#dg .primary.deload-primary {
   background:linear-gradient(180deg,#ff9a4d,#f2711c)!important;
   color:#1a0d02!important;
   border:0!important;
@@ -94,33 +94,33 @@ button.dlp,#dg .pr.dlp {
   box-shadow:none!important;
 }
 /* hoja de inicio de la semana de descarga */
-.dlw2 {
+.deload-intro {
   text-align:center;
   padding:6px 4px 4px;
 }
-.dlw2 .dlbig {
+.deload-intro .deload-icon-big {
   width:60px;
   height:60px;
   border-radius:20px;
   margin:4px auto 12px;
 }
-.dlw2 h3 {
+.deload-intro h3 {
   margin:0 0 6px;
   font-size:22px;
 }
-.dlw2 p {
+.deload-intro p {
   margin:0 0 14px;
   font-size:14.5px;
   line-height:1.45;
 }
-.dlt {
+.deload-tags {
   display:flex;
   gap:6px;
   flex-wrap:wrap;
   justify-content:center;
   margin:0 0 12px;
 }
-.dlt span {
+.deload-tags span {
   font-size:12.5px;
   font-weight:700;
   color:var(--do2);
@@ -129,14 +129,14 @@ button.dlp,#dg .pr.dlp {
   border-radius:999px;
   padding:5px 10px;
 }
-.dlw2 .dlp {
+.deload-intro .deload-primary {
   width:100%;
   padding:15px;
   border-radius:16px;
   font-size:16px;
   margin-top:4px;
 }
-.dlw2 .dlo {
+.deload-intro .deload-skip {
   margin-top:10px;
   padding:14px;
   border-radius:16px;
@@ -155,40 +155,40 @@ button.dlp,#dg .pr.dlp {
   font-size:13px;
   font-weight:700;
 }
-.sgb.dlsg {
+.suggestion.suggestion-deload {
   background:rgba(255,138,48,.16)!important;
   border:1px solid rgba(255,154,77,.55)!important;
 }
-.sgb.dlsg b {
+.suggestion.suggestion-deload b {
   color:var(--do3)!important;
 }
-.r2 input.dlv {
+.set-row input.deload-weight {
   color:var(--do2)!important;
 }
 /* programas propios: cada cuántas semanas hay descarga (F-20) */
-.dln {
+.deload-every {
   display:flex;
   align-items:center;
   gap:10px;
   margin:12px 2px 0;
   font-size:15px;
 }
-.dln input {
+.deload-every input {
   width:76px;
   text-align:center;
 }
-.dlh {
+.deload-hint {
   font-size:12px;
   margin:8px 2px 0;
 }
 /* técnica de la serie (F-02): la abreviatura en lugar de WRK */
-.r2 .wk2.tq {
+.set-row .set-kind.technique {
   color:#fff;
   background:linear-gradient(180deg,#8450ec,#6a3bcf);
   border-color:transparent;
 }
 /* técnica de cada ejercicio en la vista del programa */
-.tqa {
+.technique-code {
   display:inline-block;
   margin-right:5px;
   padding:1px 6px;
@@ -201,34 +201,34 @@ button.dlp,#dg .pr.dlp {
   vertical-align:1px;
 }
 /* leyenda de técnicas y ciclo en la vista del programa */
-.tql div {
+.technique-list div {
   display:flex;
   flex-wrap:wrap;
   gap:6px 12px;
   margin-top:8px;
   font-size:13px;
 }
-.cyn {
+.cycle-note {
   margin:-4px 2px 8px;
   font-size:13px;
 }
 /* «Volver a generar» con su icono (F-07) */
-.chip.rgb {
+.chip.regenerate {
   display:inline-flex;
   align-items:center;
   gap:6px;
 }
 /* Programas: pregunta del sexo para ordenar los predefinidos (F-05) */
-.pgsx p {
+.sex-card p {
   margin:6px 0 12px;
   font-size:14px;
 }
 /* rotación de ejercicios: propuesta en Workout y cambios (F-06) */
-.rtc .mu {
+.rotation-card .muted {
   margin:4px 0 12px;
   font-size:13px;
 }
-.rtd .mu {
+.rotation-day .muted {
   margin-top:4px;
   font-size:13px;
 }
@@ -238,22 +238,22 @@ button.dlp,#dg .pr.dlp {
   line-height:1.45;
   margin:0 2px 8px;
 }
-.hwh2 {
+.howto-hint {
   margin:-2px 2px 6px;
   font-size:12px;
 }
 .anb[data-a] {
   cursor:pointer;
 }
-.hwa {
+.howto-anatomy {
   display:grid;
   place-items:center;
   padding:8px 0 4px;
 }
-.hwt {
+.howto-title {
   margin:12px 0 4px;
 }
-.hwp {
+.howto-text {
   margin:6px 2px 12px;
   font-size:15px;
   line-height:1.55;

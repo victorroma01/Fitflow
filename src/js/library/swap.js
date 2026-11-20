@@ -8,7 +8,7 @@ import { groupOf } from '../data/library.js';
 import { S, saveState, W } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { exAll, exCellHtml, exOrder, exSearchText, overlapCount } from './model.js';
+import { exAll, exByName, exCellHtml, exOrder, exSearchText, overlapCount } from './model.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
 import { fixUnits } from '../workout/targets.js';
 import { prefillSets } from '../workout/progression.js';
@@ -106,7 +106,7 @@ const swapTiers = (c, l) => {
 };
 export const swapBody = () => {
   const cur = S.plan[S.selectedDay].ex[swapState.i];
-  const c = exAll().find(x => x.n == cur.n) || { n: cur.n, p: [], s: [] };
+  const c = exByName(cur.n) || { n: cur.n, p: [], s: [] };
   const cand = swapCandidates(c);
   const eqs = equipIn(cand);
   const l = cand.filter(e => equipMatch(swapState.eq, e));
@@ -117,16 +117,28 @@ export const swapBody = () => {
   T.forEach(t => {
     if (!t[1].length)
       return;
-    h += html`<div class="ph">${raw(t[0])} · ${t[1].length}</div>${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`<div class="it exr cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}"><span class="exc">${exCellHtml(e, row++)}</span><small class="mu">Elegir ›</small></div>`)}`;
+    h += html`
+      <div class="section-label">${raw(t[0])} · ${t[1].length}</div>
+      ${t[1].slice(0, swapState.q ? 60 : t[0] == 'Mismo enfoque' ? 30 : 14).map(e => html`
+        <div class="item item-split cur-pointer" data-a="swapDo" data-i="${swapState.i}" data-n="${e.n}">
+          <span class="exercise-cell">${exCellHtml(e, row++)}</span>
+          <small class="muted">Elegir ›</small>
+        </div>`)}`;
   });
-  return h || '<p class="mu">No hay alternativas con esos filtros.</p>';
+  return h || '<p class="muted">No hay alternativas con esos filtros.</p>';
 };
-const swapScope = () => ['Este día', 'Todo el programa'].map((x, i) => html`<button class="chip${!!swapState.all == !!i ? ' on' : ''}" data-a="swapScopeChoose" data-i="${i}">${raw(x)}</button>`).join('');
+const swapScope = () => ['Este día', 'Todo el programa'].map((x, i) => html`
+  <button class="chip${!!swapState.all == !!i ? ' on' : ''}" data-a="swapScopeChoose" data-i="${i}">${raw(x)}</button>`).join('');
 A.openSwap = i => {
   swapState = { i, q: '', eq: [], all: 0 };
   filterOpen.sw = 0;
   const e = S.plan[S.selectedDay].ex[i];
-  sheet(html`<h3>Swap</h3><p class="mu m-n4-0-8">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p><div id="swh">${raw(swapScope())}</div><input placeholder="Buscar alternativa" aria-label="Buscar alternativa" data-u="swapSearch" class="mt-8"><div id="swb">${raw(swapBody())}</div>`);
+  sheet(html`
+    <h3>Swap</h3>
+    <p class="muted m-n4-0-8">Sustituir «${e.n}» por otra opción. Primero verás las más parecidas.</p>
+    <div id="swh">${raw(swapScope())}</div>
+    <input placeholder="Buscar alternativa" aria-label="Buscar alternativa" data-u="swapSearch" class="mt-8">
+    <div id="swb">${raw(swapBody())}</div>`);
 };
 A.swapScopeChoose = i => {
   swapState.all = i;

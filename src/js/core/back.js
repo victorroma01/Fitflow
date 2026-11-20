@@ -30,14 +30,14 @@ export const backTarget = () => {
     return { k: 'aviso', go: () => $('#dg').innerHTML = '' };
   if ($('#tour'))
     return { k: 'recorrido', go: () => A.tourSkip() };
-  if ($('.lvb'))
+  if ($('.level-backdrop'))
     return { k: 'aviso', go: () => A.levelMenuClose() };
   if ($('#f2w'))
     return { k: 'wod', go: () => A.wodExit() };
-  const m = $('#mn .msd');
+  const m = $('#mn .menu-panel');
   if (m && !m.classList.contains('out'))
     return { k: 'menu', el: m, go: () => A.closeMenu() };
-  const p = $('#sh .sp');
+  const p = $('#sh .sheet');
   if (p) {
     /* el botón de volver de la página: el que lleva un paso atrás dentro de ella (data-back: «‹ Rutinas», «‹ Grupos»), que
        puede preguntar si se guardan los cambios, o su «←» (o «Cerrar»); sin ninguno, se cierra la hoja */
@@ -45,7 +45,7 @@ export const backTarget = () => {
     return { k: 'hoja', el: p, go: () => b && A[b.dataset.a] ? A[b.dataset.a](+b.dataset.i, b) : A.closeSheet() };
   }
   if (W)
-    return { k: 'entreno', go: () => toast('El entreno sigue en marcha. Para salir, usa «Salir y descartar» o «Log out»') };
+    return { k: 'entreno', go: () => toast('El entreno sigue en marcha. Para salir, usa «Salir y descartar» o «Guardar entreno»') };
   if (overviewMode)
     return { k: 'página', el: $('#app'), go: () => A.overviewBack() };
   if (weightView && S.tab == 2)

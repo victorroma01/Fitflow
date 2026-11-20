@@ -6,7 +6,7 @@ import { $ } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { W } from '../core/state.js';
 import { sheet } from '../core/ui.js';
-import { exAll } from '../library/model.js';
+import { exByName } from '../library/model.js';
 import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
 import { html, raw } from '../core/html.js';
 let plateTotal = 60;
@@ -20,7 +20,7 @@ export const setPlateBar = v => {
   plateBar = v;
 };
 export const usesBarbell = n => {
-  const e = exAll().find(x => x.n == n);
+  const e = exByName(n);
   return e && e.q ? ['Barra', 'Barra Z'].includes(e.q) && !/Plancha|Giro|Hiperext|Superman|Encog/.test(n) : /barra|banca|sentadilla|peso muerto/i.test(n);
 };
 const plateSizes = () => usesLb() ? [45, 35, 25, 10, 5, 2.5] : [25, 20, 15, 10, 5, 2.5, 1.25];
@@ -43,10 +43,27 @@ const plateResult = () => {
   const c = plateCalc(plateTotal, plateBar);
   const u = weightUnit();
   if (!c)
-    return '<p class="mu">El peso total es menor que la barra.</p>';
-  return html`${raw(c.o.length ? html`<div class="d-flex wrap gap-8 m-12-0">${c.o.map(x => html`<span class="tg fs-16 p-9-14"><b>${raw(x[1])} ×</b> ${raw(x[0])} ${raw(u)}</span>`)}</div>` : '<p class="mu">Solo la barra.</p>')}<p class="mu">Discos por cada lado con una barra de ${plateBar} ${raw(u)}.${raw(c.rem ? ' Sobran ' + c.rem + ' ' + u + ' por lado: ajusta el peso.' : '')}</p>`;
+    return '<p class="muted">El peso total es menor que la barra.</p>';
+  return html`
+    ${raw(c.o.length ? html`
+      <div class="d-flex wrap gap-8 m-12-0">
+        ${c.o.map(x => html`<span class="tag fs-16 p-9-14"><b>${raw(x[1])} ×</b> ${raw(x[0])} ${raw(u)}</span>`)}
+      </div>
+    ` : '<p class="muted">Solo la barra.</p>')}
+    <p class="muted">
+      Discos por cada lado con una barra de ${plateBar} ${raw(u)}.${raw(c.rem ? ' Sobran ' + c.rem + ' ' + u + ' por lado: ajusta el peso.' : '')}
+    </p>`;
 };
-const plateSheet = () => html`<h3>Calculadora de discos</h3><label>Peso total (${weightUnit()})</label><input type="number" inputmode="decimal" data-u="platesWeight" value="${plateTotal}" aria-label="${'Peso total (' + weightUnit() + ')'}"><label>Barra</label><div class="g2 cols-3">${barSizes().map(b => html`<button data-a="platesBar" data-i="${b}" class="${plateBar == b ? 'bdc-a2 c-at' : ''}">${b} ${weightUnit()}</button>`)}</div><div id="zpr">${raw(plateResult())}</div>`;
+const plateSheet = () => html`
+  <h3>Calculadora de discos</h3>
+  <label>Peso total (${weightUnit()})</label>
+  <input type="number" inputmode="decimal" data-u="platesWeight" value="${plateTotal}" aria-label="${'Peso total (' + weightUnit() + ')'}">
+  <label>Barra</label>
+  <div class="grid-2 cols-3">
+    ${barSizes().map(b => html`
+      <button data-a="platesBar" data-i="${b}" class="${plateBar == b ? 'bdc-a2 c-at' : ''}">${b} ${weightUnit()}</button>`)}
+  </div>
+  <div id="zpr">${raw(plateResult())}</div>`;
 A.openPlates = i => {
   const a = W.sets[i];
   const q = a.find(x => !x.ok && +x.w > 0) || a.find(x => +x.w > 0);

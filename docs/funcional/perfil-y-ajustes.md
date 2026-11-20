@@ -45,7 +45,9 @@ Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesió
 - **Tema y estilo**: tema claro, oscuro o automático (el del móvil); estilo Cristal (con tres intensidades) o Clásico; y **Reducir
   animaciones**, para que las páginas y ventanas aparezcan sin deslizarse (si el móvil tiene «Reducir movimiento», la app ya lo hace).
   Con cualquier combinación de tema, estilo y color, todo texto tiene el contraste que pide la norma de accesibilidad (WCAG AA):
-  con Cristal, el texto gris es algo más claro en el tema oscuro y más oscuro en el claro, para leerse sobre el vidrio.
+  con Cristal, el texto gris es algo más claro en el tema oscuro y más oscuro en el claro, para leerse sobre el vidrio. El fondo
+  es liso con cualquier estilo y color: negro en el tema oscuro y gris muy claro en el claro (hasta la V1.0.32, con Cristal
+  llevaba detrás un brillo del color de acento).
 - **Al abrir la app**: la pestaña con la que se abre StrataFit: la última que usaste (lo de siempre) o una fija (Workout, Nutrición,
   Dashboard o Perfil).
 

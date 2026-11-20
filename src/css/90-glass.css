@@ -1,6 +1,6 @@
 /* ═══ css/90-glass ═══ Estilo Cristal (niveles de vidrio) */
 /* ===== Estilo Cristal (Liquid Glass) v2 · niveles: 3 máximo, 2 medio, 1 mínimo ===== */
-html.gl[data-gm="1"] {
+html.glass[data-gm="1"] {
   --pn:84%;
   --pp:90%;
   --pw:98%;
@@ -22,7 +22,7 @@ html.gl[data-gm="1"] {
   --dd:0.5;
   --gk:0.85;
 }
-html.gl[data-gm="2"] {
+html.glass[data-gm="2"] {
   --pn:52%;
   --pp:68%;
   --pw:95%;
@@ -44,7 +44,7 @@ html.gl[data-gm="2"] {
   --dd:0.45;
   --gk:1;
 }
-html.gl[data-gm="3"] {
+html.glass[data-gm="3"] {
   --pn:30%;
   --pp:46%;
   --pw:92%;
@@ -66,18 +66,17 @@ html.gl[data-gm="3"] {
   --dd:0.38;
   --gk:1.25;
 }
-html.gl {
+html.glass {
   --gsc:0,0,0;
   --gf:rgba(255,255,255,var(--gfa));
   --gb:rgba(255,255,255,var(--gba));
   --gh:rgba(255,255,255,var(--gha));
   --gs:0 12px 34px rgba(var(--gsc),var(--gss));
-  --gtop:var(--a3);
   --gw:rgba(255,255,255,calc(var(--gba)*.35));
   --gsh:linear-gradient(155deg,rgba(255,255,255,var(--s1)) 0%,rgba(255,255,255,var(--s2)) 46%,rgba(255,255,255,var(--s3)) 100%);
   --grim:inset 0 1.5px 0 var(--gh),inset 0 -1px 0 var(--gw),inset 0 26px 28px -26px rgba(255,255,255,calc(var(--gha)*.5));
 }
-html.gl[data-gm="1"] {
+html.glass[data-gm="1"] {
   --mu:#bebec8;
   --at:color-mix(in srgb,var(--a1) 60%,#fff);
   --ctx:#f794ad;
@@ -88,13 +87,12 @@ html.gl[data-gm="1"] {
   --gfa:0.05;
   --gba:0.12;
   --gha:0.2;
-  --gz:0.35;
   --gss:0.22;
   --s1:0.09;
   --s2:0.03;
   --s3:0.06;
 }
-html.gl[data-gm="2"] {
+html.glass[data-gm="2"] {
   --mu:#bebec8;
   --at:color-mix(in srgb,var(--a1) 60%,#fff);
   --ctx:#f794ad;
@@ -105,13 +103,12 @@ html.gl[data-gm="2"] {
   --gfa:0.09;
   --gba:0.2;
   --gha:0.38;
-  --gz:0.8;
   --gss:0.3;
   --s1:0.17;
   --s2:0.05;
   --s3:0.1;
 }
-html.gl[data-gm="3"] {
+html.glass[data-gm="3"] {
   --mu:#d6d6de;
   --at:color-mix(in srgb,var(--a1) 40%,#fff);
   --ctx:#fbb9c9;
@@ -124,20 +121,19 @@ html.gl[data-gm="3"] {
   --gfa:0.14;
   --gba:0.34;
   --gha:0.65;
-  --gz:1;
   --gss:0.4;
   --s1:0.22;
   --s2:0.07;
   --s3:0.14;
 }
 /* el texto sobre vidrio: el gris del texto secundario (--mu) y los colores que hacen de texto (--at, --ctx, --ptx…) son más
-   claros en el tema oscuro y más oscuros en el claro que sin Cristal, y más aún en el nivel 3: detrás del vidrio va el brillo
-   de color del fondo y, con el gris de serie, el contraste no llegaba a 4,5 (tests/contrast.py) */
+   claros en el tema oscuro y más oscuros en el claro que sin Cristal, y más aún en el nivel 3: el vidrio lleva su propio brillo
+   y deja ver lo que pasa por debajo y, con el gris de serie, el contraste no llegaba a 4,5 (tests/contrast.py) */
 /* tema claro: el diálogo (--pd), las hojas (--ps) y las páginas (--pf), casi opacos en todos los niveles. Su texto es oscuro
-   y lo de detrás se oscurece (.dgb, .bk): con el vidrio más fino quedaban grises y, sobre una foto oscura, el texto no se
+   y lo de detrás se oscurece (.dialog-backdrop, .backdrop): con el vidrio más fino quedaban grises y, sobre una foto oscura, el texto no se
    leía (tests/contrast.py) */
 @media(prefers-color-scheme:light) {
-  html.gl[data-gm="1"]:not([data-theme="dark"]) {
+  html.glass[data-gm="1"]:not([data-theme="dark"]) {
     --gsc:70,50,140;
     --mu:#53535d;
     --at:var(--a3);
@@ -148,19 +144,17 @@ html.gl[data-gm="3"] {
     --wnx:#7a4e08;
     --erx:#922a2e;
     --snx:#1a5294;
-    --gtop:var(--a1);
     --ps:92%;
     --pf:95%;
     --gfa:0.78;
     --gba:0.75;
     --gha:0.95;
-    --gz:0.14;
     --gss:0.08;
     --s1:0.86;
     --s2:0.72;
     --s3:0.8;
   }
-  html.gl[data-gm="2"]:not([data-theme="dark"]) {
+  html.glass[data-gm="2"]:not([data-theme="dark"]) {
     --gsc:70,50,140;
     --mu:#53535d;
     --at:var(--a3);
@@ -171,20 +165,18 @@ html.gl[data-gm="3"] {
     --wnx:#7a4e08;
     --erx:#922a2e;
     --snx:#1a5294;
-    --gtop:var(--a1);
     --ps:90%;
     --pf:93%;
     --pd:84%;
     --gfa:0.55;
     --gba:0.85;
     --gha:1;
-    --gz:0.36;
     --gss:0.13;
     --s1:0.72;
     --s2:0.46;
     --s3:0.62;
   }
-  html.gl[data-gm="3"]:not([data-theme="dark"]) {
+  html.glass[data-gm="3"]:not([data-theme="dark"]) {
     --gsc:70,50,140;
     --mu:#404049;
     --at:var(--a3);
@@ -195,21 +187,19 @@ html.gl[data-gm="3"] {
     --wnx:#6b4406;
     --erx:#822428;
     --snx:#164780;
-    --gtop:var(--a1);
     --ps:88%;
     --pf:92%;
     --pd:84%;
     --gfa:0.4;
     --gba:0.95;
     --gha:1;
-    --gz:0.6;
     --gss:0.18;
     --s1:0.6;
     --s2:0.28;
     --s3:0.5;
   }
 }
-html.gl[data-gm="1"][data-theme="light"] {
+html.glass[data-gm="1"][data-theme="light"] {
   --gsc:70,50,140;
   --mu:#53535d;
   --at:var(--a3);
@@ -220,19 +210,17 @@ html.gl[data-gm="1"][data-theme="light"] {
   --wnx:#7a4e08;
   --erx:#922a2e;
   --snx:#1a5294;
-  --gtop:var(--a1);
   --ps:92%;
   --pf:95%;
   --gfa:0.78;
   --gba:0.75;
   --gha:0.95;
-  --gz:0.14;
   --gss:0.08;
   --s1:0.86;
   --s2:0.72;
   --s3:0.8;
 }
-html.gl[data-gm="2"][data-theme="light"] {
+html.glass[data-gm="2"][data-theme="light"] {
   --gsc:70,50,140;
   --mu:#53535d;
   --at:var(--a3);
@@ -243,20 +231,18 @@ html.gl[data-gm="2"][data-theme="light"] {
   --wnx:#7a4e08;
   --erx:#922a2e;
   --snx:#1a5294;
-  --gtop:var(--a1);
   --ps:90%;
   --pf:93%;
   --pd:84%;
   --gfa:0.55;
   --gba:0.85;
   --gha:1;
-  --gz:0.36;
   --gss:0.13;
   --s1:0.72;
   --s2:0.46;
   --s3:0.62;
 }
-html.gl[data-gm="3"][data-theme="light"] {
+html.glass[data-gm="3"][data-theme="light"] {
   --gsc:70,50,140;
   --mu:#404049;
   --at:var(--a3);
@@ -267,79 +253,62 @@ html.gl[data-gm="3"][data-theme="light"] {
   --wnx:#6b4406;
   --erx:#822428;
   --snx:#164780;
-  --gtop:var(--a1);
   --ps:88%;
   --pf:92%;
   --pd:84%;
   --gfa:0.4;
   --gba:0.95;
   --gha:1;
-  --gz:0.6;
   --gss:0.18;
   --s1:0.6;
   --s2:0.28;
   --s3:0.5;
 }
-html.gl body::before {
-  content:"";
-  position:fixed;
-  inset:-8% -8%;
-  z-index:-1;
-  pointer-events:none;
-}
-html.gl[data-gm="1"] body::before {
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -157.37% -14.54%/75.9% 31.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 187.54% 6.21%/63.6% 26.9% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 178.87% 91.06%/61.2% 26.9% no-repeat;
-}
-html.gl[data-gm="2"] body::before {
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) -416.42% -20.33%/89.3% 37.4% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 249.04% 3.16%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gmid) min(100%,calc(var(--gz)*100%)),transparent),transparent) -149.04% 70.49%/74.9% 31.7% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 228.57% 93.91%/72.0% 31.7% no-repeat;
-}
-html.gl[data-gm="3"] body::before {
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*100%)),transparent),transparent) 0.00% -32.71%/100.0% 46.8% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gtop) min(100%,calc(var(--gz)*90%)),transparent),transparent) 831.25% -2.98%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--gmid) min(100%,calc(var(--gz)*100%)),transparent),transparent) -731.25% 73.18%/93.6% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*70%)),transparent),transparent) 550.00% 99.67%/90.0% 39.6% no-repeat,radial-gradient(closest-side,color-mix(in srgb,var(--c) min(100%,calc(var(--gz)*85%)),transparent),transparent) 0.00% 151.50%/100.0% 46.8% no-repeat;
-}
-:where(html.gl) button {
+/* el fondo va liso, el de --bg (negro en el tema oscuro): sin los brillos de color que Cristal ponía detrás hasta la V1.0.32 */
+:where(html.glass) button {
   background:color-mix(in srgb,var(--tx) 8%,transparent);
   border-color:var(--gb);
 }
-html.gl .cd:not(.hero),html.gl .cpo,html.gl .mb,html.gl .tg,html.gl .eqb,html.gl .cpw,html.gl .gg button {
+html.glass .card:not(.hero),html.glass .create-option,html.glass .wide-btn,html.glass .tag,html.glass .filter-btn,html.glass .create-routine,html.glass .group-grid button {
   background:var(--gsh);
   border-color:var(--gb);
   box-shadow:var(--gs),var(--grim);
 }
-html.gl .hero {
+html.glass .hero {
   box-shadow:var(--gs),var(--grim);
 }
-html.gl .cd:not(.hero) .cd:not(.hero),html.gl .sp .cd:not(.hero) {
+html.glass .card:not(.hero) .card:not(.hero),html.glass .sheet .card:not(.hero) {
   background:color-mix(in srgb,var(--tx) 6%,transparent);
   box-shadow:inset 0 1px 0 var(--gh);
 }
-html.gl .lvp {
+html.glass .level-pill {
   background:linear-gradient(var(--lb),var(--lb)),color-mix(in srgb,var(--bg) 92%,transparent);
 }
-html.gl .dy:not(.on) {
+html.glass .day:not(.on) {
   box-shadow:inset 0 1px 0 var(--gh);
 }
-html.gl .r2.cur {
+html.glass .set-row.current {
   box-shadow:inset 3px 0 0 var(--a2),inset 0 1px 0 var(--gh);
 }
-html.gl nav {
+html.glass nav {
   background:color-mix(in srgb,var(--cd) var(--pn),transparent);
   border-color:var(--gb);
   -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   box-shadow:var(--gs),inset 0 1px 0 var(--gh),inset 0 -1px 0 var(--gw);
 }
-html.gl nav button.on {
+html.glass nav button.on {
   background:linear-gradient(180deg,var(--a2),var(--age,var(--a2)));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 4px 14px color-mix(in srgb,var(--a2) 45%,transparent);
 }
-html.gl .pb {
+html.glass .player-bar {
   background:color-mix(in srgb,var(--cd) var(--pp),transparent);
   border-color:var(--gb);
   -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   box-shadow:inset 0 1px 0 var(--gh);
 }
-html.gl .wsk {
+html.glass .session-head {
   background:color-mix(in srgb,var(--bg) var(--pw),transparent);
   -webkit-backdrop-filter:blur(var(--bw)) saturate(var(--sa));
   backdrop-filter:blur(var(--bw)) saturate(var(--sa));
@@ -348,14 +317,14 @@ html.gl .wsk {
 /* en una pantalla más ancha que la columna (tableta, ordenador) la cabecera fija del entreno no va de lado a lado: es una
    pieza, con las esquinas de abajo redondeadas y sin el fundido de debajo, que es recto */
 @media(min-width:600px) {
-  html.gl .wsk {
+  html.glass .session-head {
     border-radius:0 0 20px 20px;
   }
-  html.gl .wsk::after {
+  html.glass .session-head::after {
     display:none;
   }
 }
-html.gl .sp {
+html.glass .sheet {
   background:color-mix(in srgb,var(--bg) var(--ps),transparent);
   -webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));
   backdrop-filter:blur(var(--bs)) saturate(var(--sa));
@@ -363,54 +332,54 @@ html.gl .sp {
   border-bottom:0;
   box-shadow:0 -10px 40px rgba(0,0,0,.32),inset 0 1px 0 var(--gh);
 }
-html.gl #sh.full .sp {
+html.glass #sh.full .sheet {
   background:color-mix(in srgb,var(--bg) var(--pf),transparent);
   border:0;
 }
 /* mientras una página o una ventana siguen al dedo (core/swipe): sin desenfoque de fondo ni transparencia. En iPhone, mover
    una capa con desenfoque la deja en negro a ratos (I-20) */
-html.gl.sliding #sh .sp {
+html.glass.sliding #sh .sheet {
   background:var(--bg);
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
 }
-html.gl.sliding #sh .bk {
+html.glass.sliding #sh .backdrop {
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
 }
-html.gl .bk {
+html.glass .backdrop {
   background:rgba(0,0,0,var(--dk));
   -webkit-backdrop-filter:blur(var(--bb));
   backdrop-filter:blur(var(--bb));
 }
-html.gl .dgb {
+html.glass .dialog-backdrop {
   background:rgba(0,0,0,var(--dd));
   -webkit-backdrop-filter:blur(var(--bd));
   backdrop-filter:blur(var(--bd));
 }
-html.gl .dgc {
+html.glass .dialog-box {
   background:color-mix(in srgb,var(--cd) var(--pd),transparent);
   border-color:var(--gb);
   -webkit-backdrop-filter:blur(var(--bs)) saturate(var(--sa));
   backdrop-filter:blur(var(--bs)) saturate(var(--sa));
   box-shadow:0 24px 60px rgba(0,0,0,.45),inset 0 1px 0 var(--gh);
 }
-html.gl .eqp {
+html.glass .filter-panel {
   background:color-mix(in srgb,var(--cd) var(--pe),transparent);
   border-color:var(--gb);
   -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   box-shadow:0 18px 44px rgba(0,0,0,.4),inset 0 1px 0 var(--gh);
 }
-html.gl .eqf {
+html.glass .filter-foot {
   background:color-mix(in srgb,var(--cd) 86%,transparent);
 }
-html.gl .cd.pos-sticky {
+html.glass .card.pos-sticky {
   background:color-mix(in srgb,var(--cd) var(--pk),transparent);
   -webkit-backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   backdrop-filter:blur(var(--bn)) saturate(var(--sa));
 }
-html.gl .tst {
+html.glass .toast {
   background:color-mix(in srgb,var(--cd) var(--pt),transparent);
   color:var(--tx);
   border:1px solid var(--gb);
@@ -418,36 +387,33 @@ html.gl .tst {
   backdrop-filter:blur(var(--bn)) saturate(var(--sa));
   box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 var(--gh);
 }
-html.gl .pr {
+html.glass .primary {
   box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.22),inset 0 -10px 18px rgba(0,0,0,.12),0 8px 24px color-mix(in srgb,var(--a2) 42%,transparent);
 }
-html.gl .dy.on,html.gl .chip.on,html.gl .ck.on,html.gl .cal .on,html.gl .seg button.on,html.gl .r2.cur .wk2 {
+html.glass .day.on,html.glass .chip.on,html.glass .check.on,html.glass .calendar .on,html.glass .segmented button.on,html.glass .set-row.current .set-kind {
   box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 12px color-mix(in srgb,var(--a2) 35%,transparent);
 }
-html.gl input,html.gl select,html.gl textarea {
+html.glass input,html.glass select,html.glass textarea {
   background:color-mix(in srgb,var(--tx) 6%,transparent);
   border-color:var(--gb);
 }
-html.gl .seg {
+html.glass .segmented {
   background:color-mix(in srgb,var(--tx) 7%,transparent);
   border-color:var(--gb);
 }
-html.gl .mc:not(.on) {
+html.glass .muscle-chip:not(.on) {
   background:color-mix(in srgb,var(--tx) 6%,transparent);
   border-color:var(--gb);
 }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
-  html.gl nav,html.gl .pb,html.gl .wsk,html.gl .sp,html.gl .dgc,html.gl .eqp,html.gl .tst {
+  html.glass nav,html.glass .player-bar,html.glass .session-head,html.glass .sheet,html.glass .dialog-box,html.glass .filter-panel,html.glass .toast {
     background:var(--cd);
   }
 }
 @media(prefers-reduced-transparency:reduce) {
-  html.gl nav,html.gl .pb,html.gl .wsk,html.gl .sp,html.gl .dgc,html.gl .eqp,html.gl .tst,html.gl .cd:not(.hero) {
+  html.glass nav,html.glass .player-bar,html.glass .session-head,html.glass .sheet,html.glass .dialog-box,html.glass .filter-panel,html.glass .toast,html.glass .card:not(.hero) {
     background:var(--cd);
     -webkit-backdrop-filter:none;
     backdrop-filter:none;
-  }
-  html.gl body::before {
-    display:none;
   }
 }

@@ -7,15 +7,164 @@ Cada versión se divide en **Novedades**, **Mejoras**, **Correcciones** e **Inte
 aviso de versión nueva y en Ajustes (por eso se escriben para el usuario, en frases cortas); **Interno** es solo para desarrollo.
 `build.py` lee este archivo: la versión de `APPV` debe tener aquí su entrada o la compilación se detiene.
 
-Una **revisión** arregla una versión ya publicada sin ser otra: lleva su número con una cifra más (la 1.0.31 es la primera
-revisión de la 1.0.3) y, antes de su primer apartado, una línea que empieza por «Revisión de la [1.0.3]». La app enseña entonces
-una sola tarjeta: los apartados de la revisión y, debajo, los de la versión que revisa, cada uno con el número de la suya
-(«Correcciones de la 1.0.31», «Novedades de la 1.0.3»). Para el aviso de versión nueva los números se comparan uno a uno, así que
-1.0.31 es posterior a 1.0.3, pero también a 1.0.4: lo que venga después de una revisión tiene que llevar un número mayor que
-ella (1.0.32, 1.1.0…).
+Una **revisión** arregla una versión ya publicada sin ser otra. La app enseña entonces una sola tarjeta: los apartados de la
+revisión y, debajo, los de la versión que revisa (y los de sus revisiones anteriores), cada uno con el número de la suya
+(«Correcciones de la 1.0.31», «Novedades de la 1.0.3»).
+
+- **Desde la versión que siga a la 1.0.32**, una revisión lleva una cuarta cifra: 1.1.0.1 es la primera revisión de la 1.1.0, y
+  no hace falta decir más. El aviso de versión nueva compara todas las cifras: 1.1.0.1 es posterior a 1.1.0 y anterior a 1.1.1.
+- **Las revisiones de la 1.0.3** se numeraron añadiendo una cifra al tercer número (1.0.31 y 1.0.32) y dicen, antes de su primer
+  apartado, «Revisión de la [1.0.3]». Entonces el aviso solo comparaba tres números, y para él 1.0.31 es posterior a 1.0.3 pero
+  también a 1.0.4: por eso la versión que siga a la 1.0.32 tiene que ser mayor que ella (1.1.0).
 
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
+
+## [1.0.32] — 2026-11-16
+
+Revisión de la [1.0.3]. No tiene tarjeta propia ni detalla sus cambios en la app: va delante en la de la 1.0.3, con una sola
+línea.
+
+### Mejoras
+- Corrección y mejoras de la app.
+
+### Interno
+- Entreno: el botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out», que suena a cerrar la sesión de la
+  cuenta), también en los textos que lo nombran.
+- Inicio de sesión (F-33, T-18, que estaba pospuesto): detrás va la imagen de un gimnasio visto desde arriba, del propietario
+  (hecha con Gemini: ni el sitio ni la gente son reales), en gris y desenfocada, a media luz, como en su ejemplo
+  (`tools/fondo.py`). La pantalla va siempre en oscuro, también su tarjeta, tenga el móvil el tema que tenga, y cada texto
+  suelto lleva su propio velo para leerse también sobre la parte clara de la imagen. Debajo de la tarjeta, menos texto: al
+  crear cuenta ya no hay nota (lo que se guarda lo cuenta Privacidad) y el aviso de reCAPTCHA es una línea, «Protegido por
+  reCAPTCHA.». Desde el 2 de abril de 2026, con el sello de reCAPTCHA oculto, sus preguntas frecuentes solo piden decir que
+  se usa y piden quitar las referencias a las condiciones de Google, que tampoco nombra ya Privacidad.
+- Fondo de la app: liso, negro (`#000`) en el tema oscuro y gris muy claro en el claro, con cualquier estilo y color. Con
+  Cristal llevaba detrás unos brillos del color de acento (`body::before`, en `css/90-glass`), que ya no están; la vista previa
+  de Cristal en Tema y estilo, igual. La barra del sistema (`theme-color`) y el manifiesto, también en negro.
+- Portadas de los días, con imágenes del propietario (hechas con Gemini; `tools/portadas.py`): las de los días de CrossFit,
+  Hyrox y funcional (SkiErg y remo, trineo, wall balls, arrancada, thrusters, box jumps y burpees, carga de granjero y, en la
+  simulación de Hyrox, una competición), un descanso propio para las semanas que los tienen (Hyrox / CrossFit, Híbrido) y, con
+  el perfil de mujer, las de una modelo para todas; la de competición, la del trineo mientras no haya otra (`workout/images`).
+  Un día cuyo nombre no dice nada lleva la de su primer ejercicio, sin repetir la de otro día así de la semana (el Full Body C
+  empieza por pierna, como el A: lleva la de pecho): los de Full Body, «Glúteo (fuerza)» y «Glúteo e isquios» se quedaban sin
+  ninguna. Los workouts personalizados pueden elegir cualquiera; sin elegir, la de sus ejercicios. La tarjeta del
+  día se oscurece más arriba: con el 13 % de antes, su nombre no llegaba al contraste AA sobre la foto de espalda ni sobre las
+  nuevas más claras. Van en WebP, a 704 × 440 y en gris (unos 10 KB cada una): `build.py` admite .webp y la carpeta de mujer.
+- Repaso técnico: las reglas de las portadas, sus nombres y sus grupos (`data/photos`, `workout/images`) y los programas que se
+  añadieron después (Híbrido, Full Body y Glúteo y pierna, en `data/library`) están ya en su sitio, sin parches encima; el
+  contenido es el mismo.
+- Rendimiento: la sincronización recuerda la huella de cada elemento con su texto y solo la vuelve a calcular si cambió
+  (`cloud/sync`): mirar qué hay que subir tarda la mitad con años de datos, y se hace en cada sincronización. Buscar un
+  ejercicio por su nombre ya no junta y recorre la lista entera cada vez (`exByName`, en `library/model`): lo hacían las
+  figuras, las listas y el entreno en curso, una vez por fila. El texto en el que busca el buscador de la Librería se calcula
+  una vez por ejercicio. Lo que se pinta es lo mismo carácter a carácter (`tests/samehtml.py`, 106 pantallas).
+- Cuentas: el correo técnico de cada cuenta, que nadie ve, pasa a ser `usuario@stratafit-960ec.firebaseapp.com`, con el dominio
+  del propio proyecto de Firebase. La app registra con él y entra con él o, si la cuenta aún no se ha pasado, con el anterior
+  (`cloud/auth`); las reglas de Firestore admiten los dos mientras tanto. Publicar la versión no cambia nada para nadie. Las
+  cuentas se pasan desde GitHub Actions («Pasar las cuentas al dominio nuevo», `tools/admin/dominio.mjs`) conservando sus
+  sesiones abiertas: Firebase las da por caducadas al cambiar el correo, y al pasar cada cuenta se le devuelve la validez que
+  tenían. Antes de tocar ninguna se ensaya con una cuenta de prueba, que dice si de verdad se conservan; «aplicar» solo las
+  pasa si es así ([cómo](docs/tecnica/backend.md#el-dominio-de-las-cuentas)). «Restablecer contraseña» y «Asignar rol»
+  encuentran la cuenta con cualquiera de los dos, y «Comprobar Firebase» dice cuántas quedan por pasar.
+- Cerrar sesión con un guardado todavía en marcha ya no deja en el móvil el núcleo escrito con sus partes borradas
+  (`core/persist`: un guardado pedido antes de borrar el estado ya no escribe nada). Antes, la siguiente apertura se quedaba
+  en «No se pudieron leer tus datos» sobre el inicio de sesión, sin poder entrar. Salió al probar el paso de las cuentas con el
+  emulador de Firebase.
+- Sin sitio en el móvil y con la sincronización en marcha, ya no se pierde nada: lo que el móvil no ha podido guardar sube
+  igual a la nube, pero la sincronización no lo apunta como sincronizado hasta que está guardado (`savesBroken`, en
+  `core/persist`; `saveMeta`, en `cloud/sync`), y lo que baja de la nube se apunta cuando ya está escrito. Antes, al volver a
+  abrir la app, al móvil le faltaba ese entreno y, como constaba que lo había tenido, la nube lo daba por borrado y lo borraba
+  también allí. Pasaba igual en la 1.0.31 publicada.
+- La app abierta dos veces sobre lo mismo guardado (dos pestañas o, en Android, la app instalada y una pestaña; en el iPhone,
+  la app instalada guarda aparte de Safari): guarda una sola cada vez. Cada guardado deja una marca (`ffrev`) y, antes de
+  escribir, se mira que siga siendo la que esta apertura conoce; si otra ha guardado después, esta se queda atrás: no guarda,
+  no sincroniza, no toca el entreno en curso y se recarga con lo último, sola si no se estaba viendo y con el aviso «La app
+  está abierta en otra ventana» si sí (`core/persist`, `core/boot`). Antes, la segunda pisaba lo de la primera y la
+  sincronización borraba de la nube lo que a esa le faltaba; también en la 1.0.31. El entreno en curso lo lleva quien lo
+  empieza o lo reanuda, y una ventana sin entreno ya no borra el de otra (`workout/resume`)
+  ([la app abierta dos veces](docs/tecnica/estado.md#la-app-abierta-dos-veces)).
+- Arranque (`core/boot`): `start` es ahora la lista de sus pasos, cada uno con su nombre (los relojes del entreno, lo que quedó
+  a medias, el entreno por reanudar y lo de después del primer pintado). Hace lo mismo y en el mismo orden.
+- Revisión de la versión antes de publicarla: qué se miró, lo encontrado (lo de los dos puntos anteriores), lo comprobado y lo
+  que queda por decidir, en [docs/tecnica/revision-1.0.32.md](docs/tecnica/revision-1.0.32.md). Pruebas nuevas en
+  `tests/cloud.py` (el móvil sin poder guardar y la misma cuenta en dos pestañas) y en `tests/storage.py` (la app abierta dos
+  veces); cada una falla si se quita su parte de la corrección.
+- `tests/walk.py`: el paseo que compara dos compilaciones ya no da por distinta la misma pantalla según el momento en que mira
+  las figuras de los ejercicios, que se mueven y se pintan poco a poco. Pasaba incluso entre dos copias de la
+  misma compilación, sobre todo en GitHub. Ahora compara qué figura grande es, no su fotograma, y espera a que las pequeñas
+  de las listas estén pintadas.
+- Un guardado que falla con otro esperando detrás ya no deja el núcleo nombrando una parte que no se escribió
+  (`core/persist`, `writeIdb`). Los guardados se deciden al momento, dando por escrito lo que el anterior todavía escribe; si
+  ese fallaba (el móvil sin sitio), el siguiente podía escribir el núcleo con un mes de comidas nuevo que no estaba. Al volver
+  a abrir la app salía «No se pudieron leer tus datos» y no dejaba guardar ni sincronizar. Ahora los decididos detrás de uno
+  fallido no se escriben, lo que se sabe de cada clave vuelve a lo escrito de verdad y el siguiente guardado lo mira todo
+  ([si un guardado falla](docs/tecnica/estado.md#si-un-guardado-falla)). Pasa igual en la 1.0.31 publicada (reproducido en
+  una compilación suya); el código era el mismo desde la V1.0.2. Lo encontraron las pruebas al azar del guardado y la
+  sincronización (más abajo).
+- Lo sincronizado que no se pudo apuntar (el móvil sin sitio) se apunta en cuanto el móvil vuelve a guardar bien, sin esperar
+  a la siguiente sincronización (`noteWaiting`, en `cloud/sync`), y nunca por delante de lo que todavía se está escribiendo.
+  Antes, lo bajado mientras tanto quedaba guardado sin constar como sincronizado y, si se borraba sin conexión antes de la
+  siguiente sincronización, volvía de la nube. Queda documentado el caso que no se puede cerrar sin cambiar el formato de lo
+  guardado: algo borrado puede reaparecer una vez, sin perderse nada
+  ([lo que puede volver a aparecer](docs/tecnica/backend.md#lo-que-puede-volver-a-aparecer)).
+- Pruebas al azar del guardado y la sincronización (`tests/syncfuzz.py`, en la batería con diez semillas): dos móviles de la
+  misma cuenta hacen secuencias aleatorias de acciones, sincronizaciones y recargas con fallos por medio (el móvil sin sitio de
+  seis formas, sin red, cierres de golpe, la app abierta dos veces) y al final se comprueba que no falta nada de lo guardado o
+  subido, que no vuelve nada de lo borrado y que los dos móviles y la nube tienen lo mismo. Encontraron los dos puntos
+  anteriores. Para saber si detectan fallos de verdad se quitó, una cada vez, cada protección del guardado y de la
+  sincronización (diez): las pruebas al azar fallan con las diez, y con cada una falla también una prueba fija de
+  `tests/cloud.py` o `tests/storage.py` (la de «lo subido se apunta cuando el móvil ha terminado de guardarlo» es nueva)
+  ([pruebas al azar](docs/tecnica/pruebas.md#pruebas-al-azar-del-guardado-y-la-sincronización)).
+- Tipos comprobados (`tools/types.js`, en la batería): el comprobador de TypeScript pasa por todos los módulos, que siguen
+  siendo JavaScript, con sus tipos en comentarios. Falla si se usa una clave de `S` que no existe, un valor de otro tipo o una
+  función con lo que no es; en los nueve módulos del guardado y la sincronización, además, todo lleva su tipo y nada que pueda
+  ser `null` se usa sin mirarlo. La forma de `S`, de `W` y de sus datos queda escrita en `src/types`. Solo se han añadido
+  comentarios: la app compilada es idéntica, byte a byte, a la de antes de añadirlos
+  ([tipos comprobados](docs/tecnica/tipos.md)).
+- Pantallas legibles: las plantillas `html` largas van en varias líneas, con cada etiqueta sangrada según lo que contiene,
+  en vez de en una sola línea de hasta 1.500 caracteres. Dentro de una plantilla `html`, un salto de línea no forma parte
+  del HTML (entre dos atributos es el espacio que los separa): `build.py` los quita de la copia que compila
+  (`tools/templates.js`), y se rechazan donde se esperaría un espacio, como entre dos palabras. `npm run format` reparte
+  solo las que pasan de 140 columnas: 429 de las 657. La app compilada es idéntica, byte a byte, a la de antes de
+  repartirlas; lo único que cambia es anterior a la regla: la pantalla del análisis mensual ya no lleva en su HTML los seis
+  saltos de línea que tenía escritos (no se veían). Quedan para cuando se resuelva la solicitud de las figuras nuevas los
+  dos módulos que esa reescribe, `extras/figure` y `extras/anatomy`
+  ([plantillas HTML](docs/tecnica/desarrollo.md#plantillas-html)).
+- Nombres legibles para las clases CSS. Primer lote: las 53 de dos letras (`cd` → `card`, `sp` → `sheet`, `mu` → `muted`…).
+  Segundo lote: 104 de las piezas comunes, el entreno, la librería, los programas y la descarga (`dgc` → `dialog-box`,
+  `eqb` → `filter-btn`, `lvp` → `level-pill`, `dlo` → `deload-skip`…). Tercer lote: 117 del seguimiento, la apariencia, el
+  recorrido, el primer arranque, la cuenta y el perfil (`rnp` → `release-notes`, `trtp` → `tour-tip`, `lgc` → `login-card`,
+  `srl` → `setting-label`…). Cuarto lote: 61 del WOD, el resumen del entreno, las medidas y la nutrición (`f2t` → `wod-time`,
+  `f2dc` → `delta-chip`, `mnk` → `goals-ring`, `nwd` → `nutri-week-day`…). Quedan las siete de las figuras, que reescribe
+  la solicitud de las figuras nuevas, y cinco que no tienen estilo.
+  `tools/classes.js` las cambia a la vez en los estilos, el código y las pruebas, y solo donde el nombre es una clase. Lo que
+  se ve no cambia: con el mapa `tests/clases-1.0.32.txt`, que traduce los nombres de la versión anterior, el HTML de las 106
+  pantallas es el mismo, el paseo al azar no encuentra diferencias y las 282 capturas salen iguales, píxel a píxel. La app
+  pesa 14 KB más entre los cuatro lotes. Fuera, de paso, siete reglas de estilo que ya no usaba nadie (`.r` y `.ver`) y que
+  `tools/check.js` no veía, porque sus nombres son también palabras del código. Y una comprobación nueva en la batería
+  (`tools/classes.js --check`): toda clase que el código pone o busca, y toda la que buscan las pruebas, tiene que estar en
+  `src/css`, así que una mal escrita, o una renombrada que vuelva con su nombre viejo al fusionar una rama anterior, ya no
+  pasa sin que nadie lo vea ([clases CSS](docs/tecnica/clases.md)).
+- Gráfica de progreso: al elegir un punto que es récord sale «RÉCORD» junto a la cifra. No salía nunca: la cifra se pintaba
+  antes de calcular qué puntos son récord. Ahora se calcula al sacar los puntos (`progressSeries`).
+- Programas y Perfil: el nombre de un programa va como el resto de títulos, en el color del texto y sin las letras separadas.
+  Su clase se llamaba igual que la de la etiqueta «RÉCORD» (`pgr`) y los dos estilos se mezclaban; ahora son `program-row` y
+  `record-tag`.
+- Inicio de sesión: el logo llena su marco. Se dibujaba más pequeño y algo estrecho (92 × 100 en un marco de 120 × 120): su
+  clase se llamaba igual que la del botón «Privacidad» (`lgl`) y recibía su relleno. Ahora son `login-logo` y `login-link`.
+- El aviso de versión nueva compara todas las cifras de la versión (`isNewerVersion`), no solo tres: a partir de ahora la
+  revisión de una versión lleva una cuarta cifra (1.1.0.1), que `build.py` reconoce sin más como revisión de la de sus tres
+  primeras. La cuenta la hace la app ya instalada, así que vale para lo que se publique después de esta.
+- Pruebas: `tests/login.py` (el fondo del inicio de sesión a diez tamaños, con el contraste de cada texto, y lo que va debajo
+  de la tarjeta), `tests/covers.py` (la portada de cada día por programa y por sexo, los descansos, los workouts personalizados
+  y el texto de la tarjeta del día sobre las 22 portadas), `tests/smoke.py` (el fondo de la app, liso, con Cristal y sin él),
+  `tests/cloud.py` (un cambio hecho en su sitio cuenta como pendiente), `tests/training.py` (buscar por nombre da lo mismo que
+  recorrer la lista), `tests/perf.py` (mide también el buscador de la Librería),
+  `tests/dominio.test.mjs` (el paso de las cuentas, con una Authentication de mentira), `tests/cloud.py` (una cuenta con el
+  dominio anterior entra, se pasa y su sesión sigue abierta), `tests/rules.test.mjs` (los dos dominios, y ninguno que solo se
+  parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.
+- Documentación: la V1.0.31 comprobada en el iPhone del propietario, las versiones 1.0.3 y 1.0.31 en la documentación
+  funcional y el estado de App Check (en marcha, sin exigir); el pendiente 7 de la auditoría (el nombre de «Log out»), hecho.
 
 ## [1.0.31] — 2026-11-16
 

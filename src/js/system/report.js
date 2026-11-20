@@ -50,15 +50,48 @@ const reportTech = () => {
   }
 };
 /* el tipo: fallo o sugerencia */
-const reportKindChips = () => html`<label>Tipo</label><div class="rpk" role="radiogroup" aria-label="Tipo">${REPORT_KINDS.map(k => html`<button class="chip${reportKind == k[0] ? ' on' : ''}" data-a="reportChooseKind" data-v="${k[0]}" role="radio" aria-checked="${reportKind == k[0] ? 'true' : 'false'}">${k[1]}</button>`)}</div>`;
+const reportKindChips = () => html`
+  <label>Tipo</label>
+  <div class="report-kinds" role="radiogroup" aria-label="Tipo">
+    ${REPORT_KINDS.map(k => html`
+      <button class="chip${reportKind == k[0] ? ' on' : ''}" data-a="reportChooseKind" data-v="${k[0]}" role="radio"
+          aria-checked="${reportKind == k[0] ? 'true' : 'false'}">${k[1]}</button>`)}
+  </div>`;
 /* en un fallo, dónde ha pasado (opcional) */
-const reportAreaChips = () => reportKind == 'f' ? html`<label>Dónde (si lo sabes)</label><div class="rpt" role="radiogroup" aria-label="Dónde">${REPORT_AREAS.map((t, i) => html`<button class="chip${i == reportArea ? ' on' : ''}" data-a="reportChooseArea" data-i="${i}" role="radio" aria-checked="${i == reportArea ? 'true' : 'false'}">${t}</button>`)}</div>` : '';
+const reportAreaChips = () => reportKind == 'f' ? html`
+  <label>Dónde (si lo sabes)</label>
+  <div class="report-areas" role="radiogroup" aria-label="Dónde">
+    ${REPORT_AREAS.map((t, i) => html`
+      <button class="chip${i == reportArea ? ' on' : ''}" data-a="reportChooseArea" data-i="${i}" role="radio"
+          aria-checked="${i == reportArea ? 'true' : 'false'}">${t}</button>`)}
+  </div>` : '';
 /* el texto, con su contador */
-const reportTextField = () => html`<label for="rpx">${reportKind == 's' ? 'Tu idea' : 'Qué ha pasado'}</label><textarea id="rpx" rows="6" maxlength="${REPORT_MAX}" placeholder="${reportKind == 's' ? 'Qué mejorarías y para qué te serviría' : 'Qué estabas haciendo, qué esperabas y qué ocurrió'}" data-u="reportText"></textarea><small id="rpn" class="mu d-block ta-r mt-4">0 / ${REPORT_MAX}</small>`;
+const reportTextField = () => html`
+  <label for="rpx">${reportKind == 's' ? 'Tu idea' : 'Qué ha pasado'}</label>
+  <textarea id="rpx" rows="6" maxlength="${REPORT_MAX}"
+      placeholder="${reportKind == 's' ? 'Qué mejorarías y para qué te serviría' : 'Qué estabas haciendo, qué esperabas y qué ocurrió'}"
+      data-u="reportText"></textarea>
+  <small id="rpn" class="muted d-block ta-r mt-4">0 / ${REPORT_MAX}</small>`;
 /* adjuntar los datos técnicos (en un fallo, marcado), con lo que se adjunta a la vista */
-const reportTechField = () => html`<label class="srk"><input type="checkbox" id="rpd"${reportKind == 's' ? '' : ' checked'}> Adjuntar datos técnicos (versión, navegador y últimos errores; nada personal)</label><details class="cd mt-6"><summary>Ver los datos técnicos</summary><pre class="rpv">${reportTech()}</pre></details>`;
+const reportTechField = () => html`
+  <label class="setting-check">
+    <input type="checkbox" id="rpd"${reportKind == 's' ? '' : ' checked'}> Adjuntar datos técnicos (versión, navegador y últimos errores; nada personal)
+  </label>
+  <details class="card mt-6"><summary>Ver los datos técnicos</summary><pre class="report-tech">${reportTech()}</pre></details>`;
 /* «Informar de un fallo» */
-const reportPage = () => html`<div id="rpp">${pgHead('Informar de un fallo', reportBack)}<p class="mu m-n6-0-14">Cuéntanos qué ha fallado o qué mejorarías. Te contestamos aquí: verás el estado y la respuesta en Perfil → Fallos y sugerencias.</p>${reportKindChips()}${reportAreaChips()}${reportTextField()}${reportTechField()}<div class="h-110"></div><div class="sb"><button class="pr w-full p-15 r-16 fs-16" data-a="reportSend">Enviar</button></div></div>`;
+const reportPage = () => html`
+  <div id="rpp">
+    ${pgHead('Informar de un fallo', reportBack)}
+    <p class="muted m-n6-0-14">
+      Cuéntanos qué ha fallado o qué mejorarías. Te contestamos aquí: verás el estado y la respuesta en Perfil → Fallos y sugerencias.
+    </p>
+    ${reportKindChips()}
+    ${reportAreaChips()}
+    ${reportTextField()}
+    ${reportTechField()}
+    <div class="h-110"></div>
+    <div class="sticky-btn"><button class="primary w-full p-15 r-16 fs-16" data-a="reportSend">Enviar</button></div>
+  </div>`;
 /** Estado de un aviso para quien lo envió: [texto, clase]. */
 const reportStatus = x => !x.s ? ['Sin enviar', 'off'] : x.rp ? ['Contestada', 'ok'] : x.st == 'v' || x.st == 'a' ? ['Vista', 'seen'] : ['Pendiente', 'wait'];
 /* el documento de Firestore de un aviso (las reglas exigen esta forma, el usuario de la cuenta y el id uid-ms) */
@@ -156,9 +189,25 @@ const reportListPage = () => {
   const items = L.map(x => {
     const [sl, sc] = reportStatus(x);
     const kd = (REPORT_KINDS.find(k => k[0] == x.k) || REPORT_KINDS[0])[1];
-    return html`<div class="cd rpi"><div class="row"><span class="rpkd">${kd}${x.a ? ' · ' + x.a : ''}</span><span class="rps ${sc}">${sl}</span></div><small class="mu">${fmtDateShort(dayKey(new Date(+x.ca)), { day: 'numeric', month: 'long', year: 'numeric' })}</small><p class="rptx">${x.t}</p>${x.rp ? html`<div class="rpr${x.sn ? '' : ' nw'}"><b>Respuesta${x.ra ? ' · ' + fmtDateShort(dayKey(new Date(+x.ra))) : ''}</b><p>${x.rp}</p></div>` : ''}</div>`;
+    return html`
+      <div class="card report-item">
+        <div class="row"><span class="report-kind">${kd}${x.a ? ' · ' + x.a : ''}</span><span class="status-pill ${sc}">${sl}</span></div>
+        <small class="muted">${fmtDateShort(dayKey(new Date(+x.ca)), { day: 'numeric', month: 'long', year: 'numeric' })}</small>
+        <p class="report-text">${x.t}</p>
+        ${x.rp ? html`
+          <div class="report-reply${x.sn ? '' : ' unread'}">
+            <b>Respuesta${x.ra ? ' · ' + fmtDateShort(dayKey(new Date(+x.ra))) : ''}</b>
+            <p>${x.rp}</p>
+          </div>` : ''}
+      </div>`;
   }).join('');
-  return html`<div id="rpl">${pgHead('Fallos y sugerencias')}<p class="mu m-n6-0-12">Lo que nos has enviado, con su estado: pendiente, vista o contestada.</p><button class="pr w-full mb-12" data-a="reportNew">Nuevo aviso</button>${raw(items || '<p class="mu">Aún no has enviado ninguno.</p>')}</div>`;
+  return html`
+    <div id="rpl">
+      ${pgHead('Fallos y sugerencias')}
+      <p class="muted m-n6-0-12">Lo que nos has enviado, con su estado: pendiente, vista o contestada.</p>
+      <button class="primary w-full mb-12" data-a="reportNew">Nuevo aviso</button>
+      ${raw(items || '<p class="muted">Aún no has enviado ninguno.</p>')}
+    </div>`;
 };
 /* con la lista abierta, se pinta de nuevo al llegar estados nuevos; las respuestas a la vista quedan vistas */
 const reportListSync = () => {
@@ -193,7 +242,7 @@ A.reportChooseKind = (i, b) => {
 };
 A.reportChooseArea = i => {
   reportArea = reportArea == i ? -1 : i;
-  document.querySelectorAll('.rpt button').forEach(b => {
+  document.querySelectorAll('.report-areas button').forEach(b => {
     const on = +b.dataset.i == reportArea;
     b.classList.toggle('on', on);
     b.setAttribute('aria-checked', on ? 'true' : 'false');
@@ -223,6 +272,7 @@ A.reportSend = async () => {
   }
   const d = $('#rpd');
   const ca = Date.now();
+  /** @type {Report} */
   const it = { id: account.uid + '-' + ca, k: reportKind, a: reportKind == 'f' && reportArea >= 0 ? REPORT_AREAS[reportArea] : '', t, ca, s: 0 };
   if (d && d.checked)
     it.dx = reportTech();

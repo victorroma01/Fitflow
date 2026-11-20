@@ -5,12 +5,12 @@
 import { A } from '../core/registry.js';
 import { S, W } from '../core/state.js';
 import { R } from '../core/render.js';
-import { exAll } from '../library/model.js';
+import { exByName } from '../library/model.js';
 import { COMPOUND_RE } from './rest.js';
 import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
 import { html } from '../core/html.js';
 const isWarmupLift = e => {
-  const x = exAll().find(y => y.n == e.n);
+  const x = exByName(e.n);
   return x && ['Barra', 'Smith'].includes(x.q) && COMPOUND_RE.test(e.n) && !/Hip thrust/i.test(e.n);
 };
 export const warmupHtml = (e, i) => {
@@ -19,7 +19,7 @@ export const warmupHtml = (e, i) => {
     return '';
   const w = +W.sets[i][0].w || 0;
   if (!w)
-    return '<div class="mu fs-12">Calentamiento: 2-3 series de aproximación al 50 %, 70 % y 85 % de tu peso de trabajo</div>';
+    return '<div class="muted fs-12">Calentamiento: 2-3 series de aproximación al 50 %, 70 % y 85 % de tu peso de trabajo</div>';
   const lb = usesLb();
   const wl = toDisplayWeight(w);
   const bar = lb ? 45 : 20;
@@ -31,9 +31,16 @@ export const warmupHtml = (e, i) => {
   /* sin repetir pesos y siempre por debajo del de trabajo (con menos que la barra, no hay aproximación que proponer) */
   st = st.filter((x, k) => (!k || x[0] != st[k - 1][0]) && x[0] < wl);
   if (!st.length)
-    return '<div class="mu fs-12">Calentamiento: movilidad y un par de series ligeras antes de la primera serie</div>';
+    return '<div class="muted fs-12">Calentamiento: movilidad y un par de series ligeras antes de la primera serie</div>';
   W.warmupsDone = W.warmupsDone || {};
-  return html`<div class="wup"><span>Calentamiento</span>${st.map((x, k) => html`<button class="chip${W.warmupsDone[i + '_' + k] ? ' on' : ''}" data-a="toggleWarmupSet" data-i="${i}" data-k="${k}">${x[1]} × ${x[0]} ${weightUnit()}</button>`)}</div>`;
+  return html`
+    <div class="warmup">
+      <span>Calentamiento</span>
+      ${st.map((x, k) => html`
+        <button class="chip${W.warmupsDone[i + '_' + k] ? ' on' : ''}" data-a="toggleWarmupSet" data-i="${i}" data-k="${k}">
+          ${x[1]} × ${x[0]} ${weightUnit()}
+        </button>`)}
+    </div>`;
 };
 A.toggleWarmupSet = (i, b) => {
   W.warmupsDone = W.warmupsDone || {};

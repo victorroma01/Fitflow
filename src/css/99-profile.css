@@ -1,42 +1,42 @@
 /* ═══ css/99-profile ═══ Perfil: foto y nombre, desplegables con icono, pie con nombre y versión; página de Ajustes con filas */
-.pfh {
+.profile-head {
   display:grid;
   justify-items:center;
   gap:10px;
   padding:18px 14px;
 }
-.pfh .av {
+.profile-head .avatar {
   margin:0;
 }
-.pfn {
+.profile-name {
   font-size:19px;
   letter-spacing:-.01em;
 }
 /* desplegables de Perfil con la misma pinta que las filas de Medidas o Logros: icono, título y una línea */
-summary.pfs {
+summary.profile-summary {
   display:flex;
   align-items:center;
   gap:14px;
   font-weight:400;
 }
-summary.pfs::after {
+summary.profile-summary::after {
   margin-left:auto;
   float:none;
   align-self:center;
 }
-.pfs>span {
+.profile-summary>span {
   min-width:0;
 }
-.pfs b {
+.profile-summary b {
   font-size:17px;
 }
-.pfs small {
+.profile-summary small {
   color:var(--mu);
 }
-.pfs svg {
+.profile-summary svg {
   flex:none;
 }
-details[open]>summary.pfs {
+details[open]>summary.profile-summary {
   margin-bottom:6px;
 }
 /* pie: nombre y versión, en mayúsculas, con el color de acento */
@@ -47,7 +47,7 @@ details[open]>summary.pfs {
   gap:9px;
   margin:28px 0 12px;
 }
-.bw {
+.brand-word {
   font-size:16px;
   font-weight:900;
   letter-spacing:.26em;
@@ -56,7 +56,7 @@ details[open]>summary.pfs {
   background-clip:text;
   color:transparent;
 }
-.bv {
+.brand-version {
   font-size:11.5px;
   font-weight:800;
   letter-spacing:.08em;
@@ -67,11 +67,11 @@ details[open]>summary.pfs {
   background:color-mix(in srgb,var(--a2) 12%,transparent);
 }
 /* Ajustes: tarjetas con filas (icono en un cuadrado redondeado, nombre, valor y flecha) */
-.srg {
+.setting-group {
   padding:4px 14px;
   margin-top:6px;
 }
-.sr {
+.setting-row {
   width:100%;
   display:flex;
   align-items:center;
@@ -86,24 +86,24 @@ details[open]>summary.pfs {
   color:var(--tx);
   font-weight:500;
 }
-html.gl .sr {
+html.glass .setting-row {
   border-radius:0;
   background:none;
   border:0;
   box-shadow:none;
 }
-.sr+.sr {
+.setting-row+.setting-row {
   border-top:1px solid var(--ln);
 }
-.sr:active {
+.setting-row:active {
   transform:none;
   opacity:.7;
 }
-.sr>svg {
+.setting-row>svg {
   flex:none;
   color:var(--mu);
 }
-.sri {
+.setting-icon {
   flex:none;
   width:42px;
   height:42px;
@@ -113,15 +113,15 @@ html.gl .sr {
   color:var(--tx);
   background:color-mix(in srgb,var(--tx) 8%,transparent);
 }
-.sri.red,.srl.red {
+.setting-icon.red,.setting-label.red {
   color:var(--ctx);
 }
-.srl {
+.setting-label {
   flex:1 0 auto;
   font-size:16.5px;
   white-space:nowrap;
 }
-.srv {
+.setting-value {
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -133,13 +133,13 @@ html.gl .sr {
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.srd {
+.setting-dot {
   flex:none;
   width:14px;
   height:14px;
   border-radius:50%;
 }
-.srk {
+.setting-check {
   display:flex;
   gap:10px;
   align-items:center;
@@ -148,41 +148,41 @@ html.gl .sr {
   color:var(--tx);
 }
 /* la casilla, de 20 px y del color de acento (la de serie del navegador mide 13 y casi no se veía junto al texto) */
-.srk input {
+.setting-check input {
   flex:none;
   width:20px;
   height:20px;
   margin:0;
   accent-color:var(--a2);
 }
-.srt p {
+.setting-text p {
   margin:0 0 12px;
   line-height:1.5;
   color:var(--tx);
 }
-#ajs>small.mu {
+#ajs>small.muted {
   padding:0 4px;
 }
 /* Logros: medallas (extras/medals) en lugar de un icono; las que faltan, en gris */
-.f2ac {
+.achievement {
   grid-template-columns:58px 1fr auto;
 }
-.f2ac .f2ai,.f2ac.on .f2ai {
+.achievement .achievement-medal,.achievement.on .achievement-medal {
   width:58px;
   height:58px;
   background:none;
   border-radius:0;
 }
-.md {
+.medal {
   display:block;
   overflow:visible;
 }
-.md.off {
+.medal.off {
   filter:grayscale(1) brightness(.8);
   opacity:.5;
 }
 /* vitrina: las medallas conseguidas, bajo el recuento */
-.mdv {
+.medal-row {
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
@@ -190,17 +190,17 @@ html.gl .sr {
   margin-top:14px;
 }
 /* Informar de un fallo (system/report) */
-.rpt {
+.report-areas {
   display:flex;
   flex-wrap:wrap;
   gap:8px;
   margin:4px 0 12px;
 }
-.rpt .chip {
+.report-areas .chip {
   margin:0;
   padding:8px 12px;
 }
-.rpv {
+.report-tech {
   margin:8px 0 0;
   max-height:200px;
   overflow:auto;

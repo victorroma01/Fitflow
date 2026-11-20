@@ -9,7 +9,7 @@ import { html } from './html.js';
 /** Textos de ayuda de los «?» (helpDot): cada módulo añade los suyos, HELP.clave = 'texto'. */
 export const HELP = {};
 /** Botón «?» pequeño que, al tocarlo, explica en una frase para qué sirve lo que tiene al lado (HELP[clave]). */
-export const helpDot = (k, label) => html`<button class="hq" data-a="helpTip" data-v="${k}" aria-label="${label}">?</button>`;
+export const helpDot = (k, label) => html`<button class="help-btn" data-a="helpTip" data-v="${k}" aria-label="${label}">?</button>`;
 let tipFor = null;
 let tipOff = null;
 /** Cierra la ayuda abierta (si hay). */
@@ -27,7 +27,7 @@ const showTip = (b, text) => {
   hideTip();
   /* en vertical, bajo (o sobre) el botón al que acompaña el «?», para no taparlo; en horizontal, apuntando al «?» */
   const d = b.getBoundingClientRect();
-  const a = (b.closest('.hqw') || b).getBoundingClientRect();
+  const a = (b.closest('.help-wrap') || b).getBoundingClientRect();
   const r = { left: d.left, width: d.width, top: a.top, bottom: a.bottom };
   const t = document.createElement('div');
   t.id = 'tip';
@@ -41,7 +41,7 @@ const showTip = (b, text) => {
   t.style.left = x + 'px';
   t.style.top = (below ? r.bottom + 10 : r.top - 10 - t.offsetHeight) + 'px';
   t.style.setProperty('--ax', Math.round(r.left + r.width / 2 - x) + 'px');
-  t.className = below ? 'dn' : 'up';
+  t.className = below ? 'down' : 'up';
   tipFor = b;
   const off = e => {
     if (!t.contains(e.target) && !b.contains(e.target))

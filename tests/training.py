@@ -268,7 +268,7 @@ def main(path):
         set_day([dict(press, s=3)], history={'Press banca': [{'d': '2026-11-05', 's': [[8, 60, 0, 0]]}]})
         start()
         toast = lambda: text('#tt')
-        click_done = lambda j: (ev("document.querySelector('.ck[data-i=\"0\"][data-j=\"%d\"]').click()" % j), run(200))
+        click_done = lambda j: (ev("document.querySelector('.check[data-i=\"0\"][data-j=\"%d\"]').click()" % j), run(200))
         ev("W.sets[0].forEach(s => { s.w = 70; s.r = 8; s.ws = 0; }); R()")
         click_done(0)
         first = toast()
@@ -329,11 +329,11 @@ def main(path):
         run()
         set_day([{'n': 'Press militar barra', 's': 3, 'rg': [6, 10]}], history={'Press militar barra': [{'d': '2026-11-05', 's': [[8, 15, 0, 0]]}]})
         start()
-        check('con menos peso que la barra no se proponen aproximaciones más pesadas que la serie', ev("!document.querySelector('.wup')") and 'movilidad' in text('#ex0'), text('#ex0')[:200])
+        check('con menos peso que la barra no se proponen aproximaciones más pesadas que la serie', ev("!document.querySelector('.warmup')") and 'movilidad' in text('#ex0'), text('#ex0')[:200])
         ev("A.discardWorkout()")
         set_day([{'n': 'Press militar barra', 's': 3, 'rg': [6, 10]}], history={'Press militar barra': [{'d': '2026-11-05', 's': [[8, 60, 0, 0]]}]})
         start()
-        chips = ev("[...document.querySelectorAll('.wup .chip')].map(b => b.textContent)")
+        chips = ev("[...document.querySelectorAll('.warmup .chip')].map(b => b.textContent)")
         check('y con 60 kg, de menos a más y todas por debajo', chips == ['10 × 20 kg', '8 × 30 kg', '5 × 42.5 kg', '2 × 50 kg'], str(chips))
         ev("A.discardWorkout()")
         run()
@@ -406,6 +406,19 @@ def main(path):
         check('con un entreno en curso no se toca un ejercicio', 'Termina o descarta antes el entreno en curso' in text('#tt') and idx('Mi ejercicio') >= 0 and ev("!document.querySelector('#dg').firstChild"))
         ev("A.discardWorkout()")
         run()
+        # library/model: exByName es lo mismo que buscar en exAll(), con la biblioteca por delante, también con un propio
+        # renombrado en su sitio y con uno que se llama como uno de la biblioteca
+        same = ev("""(() => { const all = exAll(), names = all.map(e => e.n).concat(['No existe', '']);
+          const ok = () => names.every(n => exByName(n) === all.find(x => x.n == n));
+          const before = ok(); const c = S.customExercises[0]; const was = c && c.n;
+          if (c) { c.n = 'Renombrado en su sitio'; names.push(c.n, was); }
+          const after = names.every(n => exByName(n) === exAll().find(x => x.n == n));
+          if (c) c.n = was;
+          S.customExercises.push({ n: 'Press banca', c: 'Propio', g: 'Propio' });
+          const dup = exByName('Press banca') === EXERCISES.find(x => x.n == 'Press banca');
+          S.customExercises.pop();
+          return [before, after, dup, !!c]; })()""")
+        check('buscar un ejercicio por su nombre da lo mismo que recorrer la lista (también un propio renombrado y uno repetido)', same == [True, True, True, True], str(same))
 
         print('Workouts propios y días')
         n_routines = ev("S.routines.length")

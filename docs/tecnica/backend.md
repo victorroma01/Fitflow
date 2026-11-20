@@ -11,7 +11,7 @@ gimnasio sin cobertura (*offline-first*).
 | Plan | **Spark**: gratis y sin tarjeta. Solo Authentication y Firestore; sin Cloud Functions ni Cloud Storage. |
 | Proyecto | `stratafit-960ec`, con Firestore en `europe-southwest1` (Madrid). La configuración web no es secreta: va en el código (`cloud/config`). La clave de la API está limitada a `https://victorroma01.github.io/*` (Google Cloud → Credenciales). |
 | Cliente | La API REST de Firebase, **sin SDK**: ninguna dependencia en tiempo de ejecución, la CSP abre solo tres dominios y todo se prueba sin red (`tests/fakefb.py`) y con el emulador. |
-| Cuentas | Registro libre con usuario y contraseña. Authentication usa un correo técnico interno, `usuario@stratafit.app`, que el usuario nunca ve y al que nunca se envía nada. |
+| Cuentas | Registro libre con usuario y contraseña. Authentication usa un correo técnico interno, `usuario@stratafit-960ec.firebaseapp.com`, que el usuario nunca ve y al que nunca se envía nada: su dominio es el del propio proyecto de Firebase, que no tiene buzones. Hasta la V1.0.31 fue `usuario@stratafit.app` ([el cambio](#el-dominio-de-las-cuentas)). |
 | Usuario | Único, de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo, sin punto al principio, al final ni dos seguidos (no valdría como correo); sin distinguir mayúsculas (se guarda como se registró). |
 | Contraseña | 8 caracteres o más. Firebase bloquea un rato los intentos fallidos repetidos y la app añade una espera que se dobla a partir del quinto fallo (5 s, 10 s… hasta 5 min). |
 | Roles | Admin y Usuario, con *custom claims* (`role: "admin"`) en el token de la sesión: la app no puede cambiarlos. Admin: `VictorAdmin_`. |
@@ -99,6 +99,33 @@ pudieron leer (IndexedDB falla o falta una parte), no se sincroniza nada hasta p
 creería que se borró el resto. Desde ese aviso, «Bajar de mi cuenta» borra lo del móvil y las huellas, y la app vuelve a bajarlo
 todo, como al entrar. La pantalla de error de arranque, al «Restablecer», también olvida las huellas (V1.0.2).
 
+Las huellas solo se guardan cuando lo que describen **está guardado en el móvil** (`saveMeta`): primero los datos y después las
+huellas, nunca al revés. Si el móvil no puede guardar (sin espacio; `savesBroken` de `core/persist`), lo nuevo sube igual a la
+nube, pero no se apunta; y lo que baja se apunta cuando ya está escrito. Así, si la app se cierra sin haber podido guardar, al
+abrirla otra vez al móvil le falta eso y, como no consta que lo tuviera, **baja de la nube en vez de borrarse de ella**. En
+cuanto el móvil vuelve a guardar bien, las huellas que estaban esperando se guardan (`noteWaiting`), sin adelantarse: no
+mientras haya una sincronización en marcha (que guarda las suyas cuando tiene lo suyo escrito) ni guardados a medias. Y si la
+app está abierta en otra pestaña o ventana que ha guardado después
+([la app abierta dos veces](estado.md#la-app-abierta-dos-veces)), esta ni sincroniza ni guarda sus huellas: subiría lo suyo, que
+ya no es lo último, y la nube daría por borrado lo que le falta.
+
+### Lo que puede volver a aparecer
+
+Guardar los datos y guardar sus huellas son dos escrituras, no una: los datos van a IndexedDB y las huellas a localStorage. Con
+los datos primero, el fallo que queda es el leve. Si la app se cierra entre las dos, o mientras no puede guardar las huellas (el
+móvil sin sitio), queda algo guardado que no consta como sincronizado. La siguiente sincronización de ese móvil lo arregla sola,
+porque ve que el móvil y la nube tienen lo mismo. Solo se nota si, antes de esa sincronización, **justo eso se borra** (en ese
+móvil, sin conexión, o en otro dispositivo): el borrado no se reconoce como tal y lo borrado vuelve a aparecer. No se pierde
+nada: reaparece una vez algo que se había borrado, y basta con borrarlo de nuevo.
+
+Al revés sería grave: con las huellas por delante de los datos, al móvil le faltaría algo que consta como sincronizado, y la nube
+lo daría por borrado. Por eso las huellas nunca se guardan antes.
+
+Quitar también el caso leve pide guardar cada parte y sus huellas en la misma transacción de IndexedDB, o apuntar cada borrado
+hasta que todos los dispositivos lo hayan visto. Las dos cosas cambian el formato de lo guardado y necesitan su migración, así que
+quedan como propuesta. Las pruebas al azar (`tests/syncfuzz.py`) conocen este límite y solo lo perdonan cuando se dan esas
+condiciones: en cualquier otro caso, que vuelva algo borrado es un fallo.
+
 Al entrar, los datos del móvil se borran si son de otra cuenta, se bajan los de la cuenta y la app se abre de nuevo con ellos.
 «Cerrar sesión» intenta subir lo pendiente y avisa si no puede; después borra del móvil los datos de la cuenta. «Borrar todos los
 datos» los borra primero de la nube (sin conexión no borra nada: si no, la siguiente sincronización los volvería a bajar).
@@ -110,7 +137,8 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
   los perfiles, `adminInbox` y los fallos y sugerencias, nunca los datos ni la copia de nadie; un aviso solo lo crea su dueño (id con
   su uid, su usuario, pendiente y sin respuesta) y el admin solo le cambia el estado y la respuesta; en el perfil, solo las
   preferencias que conoce la app (el color propio como `#rrggbb`, la pestaña al abrir de 0 a 3, el recorrido y las animaciones 0 o 1);
-  solo valen cuentas con correo técnico; lo demás está denegado.
+  solo valen cuentas con correo técnico (con el dominio de ahora o, mientras [se pasan](#el-dominio-de-las-cuentas), con el
+  anterior; un correo que solo se les parezca no entra en nada); lo demás está denegado.
 - **Pruebas**: `tests/rules.test.mjs` las comprueba con el emulador en cada cambio (CI, «Reglas y nube»), junto con la app entera
   contra el emulador (`tests/cloud.py`). Se despliegan desde GitHub Actions al fusionar en `main` («Desplegar reglas»), antes de publicar la app.
 - La clave de administrador (cuenta de servicio) solo existe como secreto de GitHub, `FIREBASE_SERVICE_ACCOUNT`: nunca en el código,
@@ -174,9 +202,82 @@ Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run wor
 | Restablecer contraseña | `admin-contrasena.yml` | Se escribe el usuario. Le pone una contraseña temporal, cierra sus sesiones y marca `mc` en su perfil; la contraseña solo se guarda en `adminInbox`, que el admin ve en Perfil → Administración durante 24 h. No aparece en el registro, que es público. |
 | Asignar rol | `admin-rol.yml` | Usuario y rol (admin o usuario). Vale la próxima vez que esa persona abra la app. |
 | Desplegar reglas | `firebase-reglas.yml` | Reglas de Firestore (`tools/admin/reglas.mjs`, con la API de reglas de Firebase; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Al publicar, `pruebas.yml` lo llama tras las pruebas si cambian las reglas o el flujo, y la app no se publica hasta que termina bien (T-24). También a mano, desde `main`. |
-| Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuentas y acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
+| Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuántas cuentas hay, cuántas tienen el correo técnico con el dominio de ahora y cuántas con el anterior, y el acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
+| Pasar las cuentas al dominio nuevo | `admin-dominio.yml` | `simulacro`, `aplicar` (solo si nadie lo va a notar) o `aplicar-todo` ([El dominio de las cuentas](#el-dominio-de-las-cuentas)). Solo desde `main`. No escribe usuarios ni correos, solo recuentos: el registro es público. |
 
 Los flujos manuales solo aparecen en Actions cuando están en `main`.
+
+## El dominio de las cuentas
+
+Firebase identifica cada cuenta por un correo. El de StrataFit es técnico, `usuario@dominio`: nadie lo ve y nunca se le envía
+nada. Hasta la V1.0.31 el dominio fue `stratafit.app`; desde la V1.0.32 es `stratafit-960ec.firebaseapp.com`, el del propio
+proyecto de Firebase, que es de la app y no tiene buzones. Las cuentas que ya existían se pasan de uno a otro sin que cambie
+nada más: el mismo identificador (uid), la misma contraseña, el mismo rol y los mismos datos.
+
+**Publicar la V1.0.32 no cambia nada para nadie**: las cuentas siguen como estaban y la app entra con ellas igual. Lo único
+que podría notarse es el paso de las cuentas, y está hecho para que no se note.
+
+| Pieza | Durante el cambio |
+| --- | --- |
+| La app (`cloud/auth`, `cloud/config`) | Registra con el dominio de ahora. Al entrar prueba el de ahora y, si no hay tal cuenta, el anterior: una cuenta que aún no se ha pasado entra igual, con su usuario y su contraseña. |
+| Las reglas (`firestore.rules`) | Admiten los dos (`techUser`, `ownName`), y ninguno que solo se les parezca. |
+| `tools/admin` | «Restablecer contraseña» y «Asignar rol» buscan la cuenta con los dos (`findUser`). «Comprobar Firebase» dice cuántas hay con cada uno. |
+| «Pasar las cuentas al dominio nuevo» (`tools/admin/dominio.mjs`, `cuentas.mjs`) | Cambia el correo de cada cuenta que sigue con el anterior, conservando sus sesiones abiertas. Antes comprueba que las reglas publicadas ya admiten el de ahora y ensaya con una cuenta de prueba: si algo de eso falla, no toca ninguna. |
+
+### Las sesiones abiertas
+
+Firebase da por caducadas las sesiones de una cuenta cuando cambia su correo: apunta el momento en «válidas desde»
+(`validSince`, que firebase-admin enseña como `tokensValidAfterTime`) y ya no renueva las que se abrieron antes. Dejado así,
+cada móvil tendría que volver a entrar, y uno con una versión anterior a la 1.0.32, que no conoce el dominio nuevo, no podría
+hasta actualizar.
+
+Por eso, al pasar una cuenta se le devuelve ese dato a su valor de antes (`moveOne`), en la misma petición que cambia el
+correo, y después se lee la cuenta para comprobarlo. Si Firebase no lo respeta ahí, o no admite las dos cosas juntas, va en
+otra petición justo después: entonces, durante unas décimas de segundo, esa cuenta no podría renovar su sesión (un móvil la
+renueva una vez por hora; si cayese justo en ese momento, pediría volver a entrar). El ensayo averigua cuál de las dos
+maneras funciona, y las cuentas de verdad se pasan de esa. Las sesiones que valían siguen valiendo, las que ya no valían
+siguen sin valer y el móvil no nota nada: sigue sincronizando, ahora con el correo nuevo, tenga la versión que tenga.
+
+Como esto depende de cómo se porte Firebase de verdad, **antes de tocar ninguna cuenta se ensaya** con una de prueba
+(`rehearse`): se crea con el dominio anterior, entra por la API pública como entraría un móvil, se pasa como las de verdad y se
+intenta renovar su sesión. El resumen lo dice en «Las sesiones abiertas se conservan». La cuenta de prueba se borra; su nombre
+tiene más de 20 caracteres, así que no puede ser la de ningún usuario ni entrar en nada.
+
+### Pasar las cuentas
+
+Con la V1.0.32 ya publicada (al publicarse, las reglas nuevas se despliegan antes que la app). En GitHub, Actions → **Pasar
+las cuentas al dominio nuevo** → *Run workflow*, con uno de estos modos:
+
+| Modo | Qué hace |
+| --- | --- |
+| `simulacro` | No cambia ninguna cuenta. Comprueba las reglas publicadas, hace el ensayo y cuenta. El resumen dice si las sesiones se conservan y cuántas cuentas quedan «Por pasar». |
+| `aplicar` | Pasa las cuentas **solo si el ensayo dice que las sesiones se conservan**. Si no, no pasa ninguna y lo dice. |
+| `aplicar-todo` | Las pasa aunque las sesiones no se conserven: en cada móvil sale **Tu sesión ha caducado** y hay que volver a entrar una vez, con la contraseña de siempre (lo que haya en el móvil se conserva y se sube al entrar). Un móvil con una versión anterior a la 1.0.32 tiene que actualizar antes. |
+
+1. `simulacro`. Tienen que salir «Reglas de Firestore publicadas: Correcto», «Ensayo con una cuenta de prueba: Correcto» y
+   «Las sesiones abiertas se conservan: Sí».
+2. `aplicar`. En el resumen: «Pasadas ahora», las que había por pasar, y «Quedan en el dominio anterior: 0». Nadie tiene que
+   hacer nada.
+3. «Comprobar Firebase» confirma el final: «Dominio de las cuentas», todas con el de ahora.
+
+Se puede lanzar las veces que haga falta: las cuentas ya pasadas no se tocan. Lo que puede salir en el resumen:
+
+- **Las sesiones abiertas se conservan: No** (o «Sin comprobar»): Firebase no deja devolver la validez de las sesiones, o no se
+  ha podido entrar con la cuenta de prueba (por ejemplo, con App Check exigido: el ensayo no lleva su token). `aplicar` no pasa
+  ninguna. Queda decidir entre dejarlas como están o pasarlas con `aplicar-todo`, avisando antes a quien use la app.
+- **Las reglas publicadas aún no aceptan el dominio nuevo**: la versión no está publicada, o el despliegue de las reglas falló
+  (Actions → «Pruebas», el trabajo «Desplegar reglas de Firestore»). No se pasa ninguna cuenta.
+- **Con el usuario ya ocupado en el dominio nuevo**: alguien se registró con ese nombre entre la publicación y el paso. Esa
+  cuenta no se pasa sola (sigue entrando con el dominio anterior); el resumen da su identificador para decidir en la consola de
+  Firebase (Authentication → Usuarios) cuál de las dos se queda, borrar la otra y volver a lanzarlo.
+- **Pasadas, pero con la sesión cerrada**: en esas cuentas no se pudo devolver la validez; en sus móviles hay que volver a
+  entrar una vez.
+- **La cuenta de prueba no se ha podido borrar**: se borra a mano en la consola, por el identificador que da el resumen.
+
+### Después
+
+Con todas las cuentas pasadas, el dominio anterior ya no hace falta: una versión posterior lo quita de las reglas y de la
+app (`OLD_TECH_DOMAIN`), y «Comprobar Firebase» avisa si aparece alguna cuenta con él.
 
 ## Límites del plan Spark
 

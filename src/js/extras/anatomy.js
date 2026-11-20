@@ -10,7 +10,7 @@ import { figureStage, figureStill, figureSvg } from './figure.js';
 import { figPose } from './moves.js';
 import { sideRegions } from './rig.js';
 import { groupIcon } from '../core/icons.js';
-import { exAll } from '../library/model.js';
+import { exByName } from '../library/model.js';
 import { html, raw } from '../core/html.js';
 import { logError } from '../core/errors.js';
 document.body.insertAdjacentHTML('afterbegin', '<svg width="0" height="0" class="pos-abs"><defs><linearGradient id="gB" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#a7adba"/><stop offset=".6" stop-color="#6b7080"/><stop offset="1" stop-color="#3b3f4b"/></linearGradient><linearGradient id="gR" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#d11f3a"/><stop offset="1" stop-color="#7d0d21"/></linearGradient><linearGradient id="gO" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ffb26b"/><stop offset="1" stop-color="#b8501a"/></linearGradient><pattern id="fb" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><rect width="1" height="2.2" fill="#000" opacity=".3"/></pattern><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs></svg>');
@@ -86,7 +86,7 @@ const exWork = e => {
   return [has ? e.p : (a ? a[1] : []), has ? (e.s || []) : (a ? a[2] : [])];
 };
 export const exAnatomy = (n, s) => {
-  const e = exAll().find(x => x.n == n);
+  const e = exByName(n);
   const g = e ? groupOf(e) : '';
   const a = GROUP_ANATOMY[g];
   const has = e && e.p && e.p.length;
@@ -133,7 +133,7 @@ export const exPicture = (n, s) => {
   if (!pictures.has(key)) {
     if (pictures.size >= PICTURES_MAX)
       pictures.clear();
-    const [p, q] = figRegions(f, exAll().find(x => x.n == n));
+    const [p, q] = figRegions(f, exByName(n));
     pictures.set(key, figureStill(f, p, q, big));
   }
   return figureSvg(pictures.get(key), s);
@@ -152,7 +152,7 @@ const LATER_MARGIN = '700px 0px';
 const LATER_BATCH = 8;
 const LATER_EVERY = 40;
 const LATER_FIRST = 150;
-/* quien vigila las filas de cada página que se desliza (el .sp de la hoja; fuera de una hoja, la ventana) y las filas que
+/* quien vigila las filas de cada página que se desliza (el .sheet de la hoja; fuera de una hoja, la ventana) y las filas que
    ya vigila */
 const laterWatchers = new WeakMap();
 const laterWatched = new WeakSet();
@@ -186,11 +186,11 @@ const watchLater = root => {
   if (typeof IntersectionObserver == 'undefined')
     return;
   holes.forEach(hole => {
-    const row = hole.closest('.exr') || hole;
+    const row = hole.closest('.item-split') || hole;
     if (laterWatched.has(row))
       return;
     laterWatched.add(row);
-    const page = hole.closest('.sp') || document.documentElement;
+    const page = hole.closest('.sheet') || document.documentElement;
     let watcher = laterWatchers.get(page);
     if (!watcher) {
       watcher = new IntersectionObserver((entries, w) => entries.forEach(en => {
@@ -214,12 +214,12 @@ export const exMotion = (n, still) => {
   const f = figPose(n);
   if (!f)
     return '';
-  const [p, q] = figRegions(f, exAll().find(x => x.n == n));
+  const [p, q] = figRegions(f, exByName(n));
   return figureStage(f, p, q, still);
 };
 /** Los músculos de un ejercicio en pequeño, de frente y de espaldas; '' si no hay datos. */
 export const exMusclesSmall = n => {
-  const [P, S] = exWork(exAll().find(x => x.n == n));
+  const [P, S] = exWork(exByName(n));
   if (!regionsFor(P.concat(S), 'F').length && !regionsFor(P.concat(S), 'B').length)
     return '';
   return html`<span class="hwf" aria-hidden="true">${anatomySvg('F', P, S, '0 0 200 410', 40, 82)}${anatomySvg('B', P, S, '0 0 200 410', 40, 82)}</span>`;

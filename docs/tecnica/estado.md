@@ -38,10 +38,41 @@ historial por año, las comidas por mes, las preferencias en el perfil y la foto
 | `ffsync` (`sync`) | Sincronización (`cloud/sync`): `{ dev: id del dispositivo, base: { parte: { r: versión, h: huellas de cada elemento } }, lt: último cambio local por tipo, pt: de las preferencias, fresh: 1 tras entrar, last: última sincronización }`. |
 | `fflgn` (`lgn`) | Intentos fallidos de entrar `{ n, t }`, para la espera creciente (`account/login`). |
 | `ffspace` (`space`) | Cuándo se avisó por última vez de que queda poco espacio (`system/space`, I-04): como mucho, una vez a la semana. No se sincroniza. |
+| `ffrev` (`rev`) | Marca de lo último guardado: cambia con cada guardado, y por ella una apertura de la app sabe si otra ha guardado después ([la app abierta dos veces](#la-app-abierta-dos-veces)). No es un dato: no se sincroniza ni entra en las copias. |
 
 En IndexedDB: `ffdata` (almacén `parts`: las partes del estado, con las mismas claves `ff:logs`, `ff:hist` y `ff:meals:AAAA-MM`, su
 texto JSON tal cual; almacén `aside`: lo grande que no es del estado, como la copia previa a restaurar) y `ffsnap` (copias automáticas diarias, las 7 últimas; se borran al cerrar sesión). La base `ffph` de las
 fotos de progreso de la serie de prueba se borra al arrancar.
+
+### Si un guardado falla
+
+Cada guardado escribe primero las partes que cambian, después el núcleo y al final borra las que sobran: así el núcleo nunca
+nombra una parte que no esté escrita (si la nombrara, al abrir la app faltaría y saldría «No se pudieron leer tus datos»). Los
+guardados se deciden al momento, dando por escrito lo que el anterior todavía está escribiendo, y se escriben en orden. Por eso,
+si uno falla (sin sitio, sobre todo), los que se decidieron detrás ya no se escriben: contaban con lo que no llegó a escribirse.
+Lo que se sabe de cada clave vuelve a lo que hay escrito de verdad y el siguiente guardado lo mira todo otra vez (se reintenta
+solo a los 5 s, hasta tres veces seguidas, y al salir de la app). Mientras tanto consta que hay cosas sin guardar
+(`savesBroken`): la app lo avisa y la sincronización no apunta nada como sincronizado
+([Sincronización](backend.md#sincronización-cloudsync)).
+
+### La app abierta dos veces
+
+La app puede estar abierta dos veces sobre lo mismo guardado: dos pestañas del navegador o, en Android, la app instalada y una
+pestaña (en el iPhone, la app instalada guarda aparte de Safari). Cada apertura tiene su `S` en memoria, así que si las dos
+guardaran, la segunda pisaría con lo suyo lo que guardó la primera. Por eso **guarda una sola cada vez** (`core/persist`):
+
+- Lo guardado lleva una marca (`ffrev`) y cada apertura recuerda la última que leyó o dejó ella. Antes de escribir mira que la
+  marca siga siendo esa y deja una nueva, al empezar a escribir y al terminar; si no lo es, otra ha guardado después y esta
+  **se queda atrás** (`instanceStale`).
+- La que se queda atrás no vuelve a escribir nada de lo que comparten: ni el estado, ni lo sincronizado (`ffsync`), ni el
+  entreno en curso (`ffw`), ni la copia automática del día. Tampoco sincroniza.
+- Se entera al momento (el evento `storage`, que llega a las demás ventanas cuando una escribe) o, si el navegador la tenía
+  parada, al volver a ella o al ir a guardar. `core/boot` la recarga con lo último: sola, si no se estaba viendo; si se está
+  viendo, con el aviso «La app está abierta en otra ventana», que solo se quita recargando.
+- El entreno en curso lo lleva una sola: la que lo empieza o lo reanuda se queda con lo guardado (como si acabara de guardar)
+  y la otra se queda atrás; al recargarse, se le ofrece reanudarlo, como cuando el móvil cierra la app.
+
+Con una sola apertura, que es lo normal, nada de esto se nota: la marca son dos escrituras de 12 caracteres por guardado.
 
 ## El estado `S`
 
@@ -128,7 +159,7 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `acc` (`accent`) | Color de acento: índice en `ACCENTS` (11 de serie), o `-1` con un color propio. |
 | `acx` (`accentColor`) | El color propio, `'#rrggbb'` (con `acc: -1`); sus tonos y el color del texto encima se calculan (`customAccent`). |
 | `gm` / `gl` / `gk` (`glassLevel` / `glassOn` / `glassLastLevel`) | Estilo Cristal: nivel 0–3, activado, último nivel elegido. |
-| `rm` (`reduceMotion`) | 1 para reducir animaciones (`html.rm`). |
+| `rm` (`reduceMotion`) | 1 para reducir animaciones (`html.reduce-motion`). |
 | `st0` (`startTab`) | Pestaña al abrir la app (0–3); sin ella, la última que se usó (`core/tabbar`). |
 | `tour` (`tourSeen`) | 1 si ya se vio (o se omitió) el recorrido de la primera vez (`system/tour`). |
 | `rpe` (`logRpe`) | 1 si se registra el esfuerzo de cada serie (RPE; Ajustes avanzados, F-42). Sin él, desactivado. Va con el núcleo, no con las preferencias del perfil. |
@@ -155,7 +186,8 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 ## El entreno en curso `W`
 
 `W` (`core/state`) solo existe durante un entreno. Se guarda en `ffw` con el día y la semana para reanudarlo (`workout/resume`),
-con las claves cortas (`core/schema`).
+con las claves cortas (`core/schema`). Con [la app abierta dos veces](#la-app-abierta-dos-veces), lo escribe y lo borra solo la
+que lo lleva.
 
 | Clave guardada (nombre en el programa) | Qué es |
 |---|---|

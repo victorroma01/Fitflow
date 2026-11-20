@@ -16,7 +16,7 @@ import { loadExInfo } from '../core/lazy.js';
 import { groupOf } from '../data/library.js';
 import { sheet, sheetToTop } from '../core/ui.js';
 import { S } from '../core/state.js';
-import { exAll, exMuscles } from './model.js';
+import { exAll, exByName, exMuscles } from './model.js';
 import { exAnatomy, exMotion, exMusclesSmall } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 /* consejo de los ejercicios propios (no están en el catálogo), según su grupo */
@@ -46,7 +46,7 @@ export const exTip = n => {
   const x = info.get(n);
   if (x)
     return x.t;
-  const e = exAll().find(y => y.n == n);
+  const e = exByName(n);
   return GROUP_TIPS[e ? groupOf(e) : 'Propio'] || GROUP_TIPS.Propio;
 };
 const exHow = n => (info && info.get(n) || {}).h || '';
@@ -54,16 +54,33 @@ const exHow = n => (info && info.get(n) || {}).h || '';
 const stillFigures = () => !!S.reduceMotion || typeof matchMedia == 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* bajo la imagen grande: a la izquierda, los músculos en pequeño (de frente y de espaldas); a su lado, el nombre y cuáles son */
 const howHead = n => {
-  const e = exAll().find(x => x.n == n);
+  const e = exByName(n);
   const small = exMusclesSmall(n);
-  const line = (k, label, cls) => e && exMuscles(e, k).length ? html`<p class="hwl"><i class="${cls}"></i><b>${label}</b> ${exMuscles(e, k).join(', ')}</p>` : '';
-  return small ? html`<div class="hwm">${small}<div class="fx-1 minw-0"><h3 class="hwt">${n}</h3>${line('p', 'Principal', 'bg-grad-red')}${line('s', 'Secundario', 'bg-grad-amber')}</div></div>` : html`<h3 class="hwt">${n}</h3>`;
+  const line = (k, label, cls) => e && exMuscles(e, k).length ? html`
+    <p class="hwl"><i class="${cls}"></i><b>${label}</b> ${exMuscles(e, k).join(', ')}</p>` : '';
+  return small ? html`
+    <div class="hwm">
+      ${small}
+      <div class="fx-1 minw-0">
+        <h3 class="howto-title">${n}</h3>
+        ${line('p', 'Principal', 'bg-grad-red')}
+        ${line('s', 'Secundario', 'bg-grad-amber')}
+      </div>
+    </div>
+  ` : html`<h3 class="howto-title">${n}</h3>`;
 };
 /** Hoja de la ejecución; `back`, la vuelta a la ficha de la librería (si se abrió desde ella); si no, un enlace a la ficha.
     La imagen grande es el modelo haciendo el ejercicio; en un ejercicio propio, que no tiene postura, sus músculos. */
 const howSheet = (n, back) => {
   const top = exMotion(n, stillFigures());
-  return html`${raw(back || '')}${raw(top || html`<div class="hwa">${raw(exAnatomy(n, 132))}</div>`)}${top ? howHead(n) : html`<h3 class="hwt">${n}</h3>`}<div class="ph">Cómo se hace</div><p class="hwp">${exHow(n) || 'Es un ejercicio tuyo: muévete con control, en todo el recorrido que tu técnica permita.'}</p>${raw(back || !exAll().some(e => e.n == n) ? '' : html`<button data-a="exerciseDetailByName" data-n="${n}" class="w-full mt-6">Ver la ficha del ejercicio</button>`)}`;
+  return html`
+    ${raw(back || '')}
+    ${raw(top || html`<div class="howto-anatomy">${raw(exAnatomy(n, 132))}</div>`)}
+    ${top ? howHead(n) : html`<h3 class="howto-title">${n}</h3>`}
+    <div class="section-label">Cómo se hace</div>
+    <p class="howto-text">${exHow(n) || 'Es un ejercicio tuyo: muévete con control, en todo el recorrido que tu técnica permita.'}</p>
+    ${raw(back || !exAll().some(e => e.n == n) ? '' : html`
+      <button data-a="exerciseDetailByName" data-n="${n}" class="w-full mt-6">Ver la ficha del ejercicio</button>`)}`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
 /* al tocar la imagen del ejercicio (F-14): su ejecución; desde la ficha de la librería, con vuelta a la ficha (data-i) */

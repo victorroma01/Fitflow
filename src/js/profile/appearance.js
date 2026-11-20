@@ -11,7 +11,7 @@ import { R } from '../core/render.js';
 import { html, raw } from '../core/html.js';
 /** Colores de serie: [nombre, claro (a1), principal (a2), oscuro (a3), texto sobre el principal (ft)]. El orden no cambia
   (S.accent es la posición); los nuevos van al final. El texto de encima (ft) tiene un contraste de 4,5 o más con el principal
-  (WCAG AA) y el oscuro es lo bastante oscuro para que el texto gris se lea sobre su brillo de fondo (tests/contrast.py). */
+  (WCAG AA) y el oscuro es lo bastante oscuro para que el texto de encima se lea (la cabecera del día: tests/contrast.py). */
 export const ACCENTS = [['Morado', '#b183ff', '#7a45ee', '#4b2a90', '#fff'], ['Azul eléctrico', '#4da3ff', '#1565ff', '#0b3a9c', '#fff'], ['Azul oscuro', '#5a7be0', '#2443b0', '#0f1f66', '#fff'], ['Verde oscuro', '#3fbf7f', '#14804a', '#0c4a2b', '#fff'], ['Amarillo', '#ffd84d', '#e8b400', '#523e00', '#1a1400'], ['Rojo', '#ff7a7a', '#d62839', '#6a1020', '#fff'], ['Naranja', '#ffa04d', '#c64c0a', '#702a05', '#fff'], ['Rosa', '#ff8fc8', '#d6337f', '#6b1440', '#fff'], ['Turquesa', '#4fd6cf', '#0c817c', '#064a47', '#fff'], ['Lima', '#c8ee62', '#8cc61b', '#2f4505', '#142000'], ['Grafito', '#b9bdc9', '#5b6170', '#2a2e37', '#fff']];
 /** El color con el que empieza la app, mientras no se elija otro: Azul eléctrico, el del logo (F-40; hasta la V1.0.0, Morado). */
 const DEFAULT_ACCENT = 1;
@@ -52,14 +52,15 @@ const toneBetween = (hex, lo, hi) => {
     c = c.map(v => v + (255 - v) * .04);
   return rgbHex(c);
 };
-/** Hasta dónde puede brillar el color de acento detrás del texto (el brillo de fondo del estilo Cristal y la fila de la serie en
-  curso): en el tema oscuro, algo menos que el azul de serie tal cual; en el claro, no menos que él. Con un amarillo o un lima
+/** Hasta dónde puede brillar el color de acento detrás del texto (la fila de la serie en curso; hasta la V1.0.32, también el
+  brillo de fondo del estilo Cristal): en el tema oscuro, algo menos que el azul de serie tal cual; en el claro, no menos que él. Con un amarillo o un lima
   tal cual, el texto gris de encima no llegaba al contraste (tests/contrast.py). */
 const GLOW_MAX_DARK = .13;
 const GLOW_MIN_LIGHT = .165;
 /* el tono oscuro de un color propio, como mucho así de claro: encima va texto blanco (la cabecera del día) */
 const DARK_TONE_MAX = .06;
 /* el último color propio calculado: [#rrggbb, sus tonos]. Se pide en cada pintado (Ajustes, análisis…) y casi siempre es el mismo */
+/** @type {[string, string[]]} */
 let customAccentLast = ['', null];
 /** Los tonos de un color elegido a mano, como los de serie. El principal es ese color, aclarado u oscurecido solo si hace falta
   para que se vea sobre el fondo oscuro y sobre el claro, o para que el texto de encima se lea. */
@@ -109,16 +110,52 @@ export function applyAccent() {
   setAccentVars(document.documentElement, a);
 }
 /* lo principal que cambia con el color: cabecera de un día, botón, chip, barra de progreso y la burbuja de las pestañas */
-const accentPreview = () => html`<div class="acp" aria-hidden="true"><div class="acph"><small>Vista previa</small><b>Pecho</b><span class="acpr"><i></i></span><span class="acpk"><span class="acpb">Empezar</span><span class="chip on">Hoy</span><span class="chip">Mañana</span></span></div><div class="acpn"><span class="on">Workout</span><span>Nutrición</span><span>Dashboard</span><span>Perfil</span></div></div>`;
+const accentPreview = () => html`
+  <div class="accent-preview" aria-hidden="true">
+    <div class="accent-preview-hero">
+      <small>Vista previa</small>
+      <b>Pecho</b>
+      <span class="accent-preview-bar"><i></i></span>
+      <span class="accent-preview-row">
+        <span class="accent-preview-btn">Empezar</span>
+        <span class="chip on">Hoy</span>
+        <span class="chip">Mañana</span>
+      </span>
+    </div>
+    <div class="accent-preview-nav"><span class="on">Workout</span><span>Nutrición</span><span>Dashboard</span><span>Perfil</span></div>
+  </div>`;
 export const accentSwatches = () => {
   const own = HEX.test(S.accentColor || '');
   const cur = S.accent == -1 && own ? -1 : S.accent >= 0 && S.accent < ACCENTS.length ? S.accent : DEFAULT_ACCENT;
   const sw = a => 'background:linear-gradient(135deg,' + a[1] + ',' + a[2] + ');color:' + a[4];
   /* sin color propio todavía, el círculo de «Personalizado» lleva todos los colores */
   const cs = own ? sw(customAccent(S.accentColor)) : '';
-  return html`${accentPreview()}<div class="swg">${ACCENTS.map((a, i) => html`<button class="swb${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}"><i data-style="${sw(a)}">${cur == i ? '✓' : ''}</i><small>${raw(a[0])}</small></button>`)}<label class="swb swc${cur == -1 ? ' on' : ''}"><i class="${own ? '' : 'swr'}" data-style="${cs}">${cur == -1 ? '✓' : ''}<input type="color" value="${own ? S.accentColor.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive" aria-label="Elegir un color propio"></i><small>Personalizado</small></label></div><small class="mu acn">Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.</small>`;
+  return html`
+    ${accentPreview()}
+    <div class="swatch-grid">
+      ${ACCENTS.map((a, i) => html`
+        <button class="swatch${cur == i ? ' on' : ''}" data-a="accentChoose" data-i="${i}" aria-pressed="${cur == i ? 'true' : 'false'}">
+          <i data-style="${sw(a)}">${cur == i ? '✓' : ''}</i>
+          <small>${raw(a[0])}</small>
+        </button>`)}
+      <label class="swatch swatch-custom${cur == -1 ? ' on' : ''}">
+        <i class="${own ? '' : 'swatch-rainbow'}" data-style="${cs}">
+          ${cur == -1 ? '✓' : ''}
+          <input type="color" value="${own ? S.accentColor.toLowerCase() : ACCENTS[cur][2]}" data-c="accentCustom" data-u="accentLive"
+              aria-label="Elegir un color propio">
+        </i>
+        <small>Personalizado</small>
+      </label>
+    </div>
+    <small class="muted accent-note">
+      Con «Personalizado» eliges cualquier color: la app ajusta sus tonos para que todo se lea bien, con el tema oscuro y con el claro.
+    </small>`;
 };
-export const themeSegment = () => html`<div class="seg">${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`<button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="themeChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
+export const themeSegment = () => html`
+  <div class="segmented">
+    ${[['', 'Auto'], ['dark', 'Oscuro'], ['light', 'Claro']].map(x => html`
+      <button class="${(S.theme || '') == x[0] ? 'on' : ''}" data-a="themeChoose" data-v="${x[0]}">${raw(x[1])}</button>`)}
+  </div>`;
 export const glassMode = () => {
   const m = S.glassLevel;
   return (m === 0 || m === 1 || m === 2 || m === 3) ? m : (S.glassOn === 0 ? 0 : 2);
@@ -128,25 +165,51 @@ const GLASS_INFO = { 3: 'Más transparencia, desenfoque y brillo. Es el más vis
 export const glassCard = () => {
   const m = glassMode();
   const g = m > 0;
-  return html`<label>Estilo</label><div class="gst"><button class="gso${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}"><i class="gpv gc"></i><b>Cristal</b><small>Translúcido y con brillos</small></button><button class="gso${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}"><i class="gpv fl"></i><b>Clásico</b><small>Sólido, sin transparencias</small></button></div>${raw(g ? html`<label>Intensidad del Cristal</label><div class="seg">${GLASS_LEVELS.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><small class="mu d-block mt-4">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>` : '<small class="mu d-block mt-4">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
+  return html`
+    <label>Estilo</label>
+    <div class="glass-options">
+      <button class="glass-option${g ? ' on' : ''}" data-a="glassToggle" data-v="1" aria-pressed="${g}">
+        <i class="glass-preview crystal"></i>
+        <b>Cristal</b>
+        <small>Translúcido y con brillos</small>
+      </button>
+      <button class="glass-option${g ? '' : ' on'}" data-a="glassToggle" data-v="0" aria-pressed="${!g}">
+        <i class="glass-preview flat"></i>
+        <b>Clásico</b>
+        <small>Sólido, sin transparencias</small>
+      </button>
+    </div>
+    ${raw(g ? html`
+      <label>Intensidad del Cristal</label>
+      <div class="segmented">
+        ${GLASS_LEVELS.map(x => html`
+          <button class="${m == /** @type {any} */ (x[0]) ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}
+      </div>
+      <small class="muted d-block mt-4">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>
+    ` : '<small class="muted d-block mt-4">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
 };
 /** «Reducir animaciones» (S.reduceMotion): sin deslizamientos ni fundidos al abrir páginas y ventanas. */
-export const motionCard = () => html`<label>Animaciones</label><label class="srk"><input type="checkbox" data-c="reduceMotion"${S.reduceMotion ? ' checked' : ''}> Reducir animaciones</label><small class="mu d-block mt-n4">Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.</small>`;
+export const motionCard = () => html`
+  <label>Animaciones</label>
+  <label class="setting-check"><input type="checkbox" data-c="reduceMotion"${S.reduceMotion ? ' checked' : ''}> Reducir animaciones</label>
+  <small class="muted d-block mt-n4">
+    Las páginas y ventanas aparecen sin deslizarse. Si en el móvil tienes activado «Reducir movimiento», la app ya lo hace siempre.
+  </small>`;
 /** Tras cada R(): las clases de <html> del estilo Cristal (gl, data-gm) y de reducir animaciones (rm), como diga S. */
 export const lookSync = () => {
   try {
     const m = glassMode();
     const d = document.documentElement;
-    if (d.classList.contains('gl') !== (m > 0))
-      d.classList.toggle('gl', m > 0);
+    if (d.classList.contains('glass') !== (m > 0))
+      d.classList.toggle('glass', m > 0);
     if (m > 0) {
-      if (d.dataset.gm != m)
-        d.dataset.gm = m;
+      if (d.dataset.gm != /** @type {any} */ (m))
+        d.dataset.gm = /** @type {any} */ (m);
     }
     else if (d.hasAttribute('data-gm'))
       d.removeAttribute('data-gm');
-    if (d.classList.contains('rm') !== !!S.reduceMotion)
-      d.classList.toggle('rm', !!S.reduceMotion);
+    if (d.classList.contains('reduce-motion') !== !!S.reduceMotion)
+      d.classList.toggle('reduce-motion', !!S.reduceMotion);
   }
   catch (e) {
     logError('estilo cristal', e);
@@ -163,12 +226,12 @@ let accentFrame = 0;
 let accentTimer = 0;
 const previewAccent = () => {
   accentFrame = 0;
-  const box = $('.acp');
+  const box = $('.accent-preview');
   if (!box || !accentPick)
     return;
   const a = customAccent(accentPick);
   setAccentVars(box, a);
-  const dot = $('.swc i');
+  const dot = $('.swatch-custom i');
   if (dot) {
     dot.style.background = 'linear-gradient(135deg,' + a[1] + ',' + a[2] + ')';
     dot.style.color = a[4];

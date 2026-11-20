@@ -38,7 +38,7 @@ FLOOR = 24
 # la parte que llega a 44 px se da también sin ellas
 FOOD_LIST = ('nuadd', 'scan')
 # los fondos que cierran una hoja o el menú al tocar fuera no son controles: la hoja tiene su propio botón de cerrar
-BACKDROPS = '.bk, .mbk, .lvb'
+BACKDROPS = '.backdrop, .menu-backdrop, .level-backdrop'
 SCAN = """((min, floor) => {
   // (lo de dentro de un desplegable cerrado tiene tamaño pero no se pinta ni se toca: checkVisibility lo sabe)
   const vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility != 'hidden' && s.display != 'none' && (!e.checkVisibility || e.checkVisibility()); };
@@ -49,7 +49,7 @@ SCAN = """((min, floor) => {
   const desc = e => e.outerHTML.replace(/\\s+/g, ' ').slice(0, 120);
   const out = { botones: [], campos: [], clicables: [], pequeños: [], ventanas: [], diminutos: [], medidos: 0, de44: 0 };
   // hojas, páginas, avisos y menú: ventanas para los lectores de pantalla, con nombre (I-06)
-  for (const w of document.querySelectorAll('#sh > .sp:not(.spu), #dg .dgc, #mn .msd, #f2w'))
+  for (const w of document.querySelectorAll('#sh > .sheet:not(.sheet-under), #dg .dialog-box, #mn .menu-panel, #f2w'))
     if (w.getAttribute('role') != 'dialog' || w.getAttribute('aria-modal') != 'true' || !named(label(w))) out.ventanas.push(desc(w));
   for (const b of document.querySelectorAll('button, [role=button]'))
     if (vis(b) && !named(label(b) || txt(b.textContent))) out.botones.push(desc(b));
@@ -82,7 +82,7 @@ SCAN = """((min, floor) => {
   if (floor) {
     // en la ventana de encima, cada control (una casilla o un campo dentro de su <label> cuentan con él: tocar la etiqueta
     // los activa): cuánto responde alrededor de su centro
-    const top = document.querySelector('#dg .dgc') || document.querySelector('#mn .msd') || document.querySelector('#f2w') || document.querySelector('#sh > .sp:not(.spu)') || document.querySelector('#app');
+    const top = document.querySelector('#dg .dialog-box') || document.querySelector('#mn .menu-panel') || document.querySelector('#f2w') || document.querySelector('#sh > .sheet:not(.sheet-under)') || document.querySelector('#app');
     const seen = new Set();
     for (let e of top.querySelectorAll('button, input:not([type=hidden]):not([type=file]), select, textarea, [role=button], [data-a], summary, a[href]')) {
       if (!vis(e) || e.disabled || e.matches('""" + BACKDROPS + """') || e.parentElement.closest('button, [role=button], [role=img], a[href]')) continue;
@@ -109,10 +109,10 @@ SCAN = """((min, floor) => {
 
 # qué tiene el foco: una descripción corta
 ACTIVE = """(() => { const a = document.activeElement; if (!a || a == document.body) return 'nada';
-  const w = a.closest('#sh .sp, #dg .dgc, #mn .msd, #f2w'); const d = a.dataset && a.dataset.a ? '[data-a=' + a.dataset.a + ']' : '';
+  const w = a.closest('#sh .sheet, #dg .dialog-box, #mn .menu-panel, #f2w'); const d = a.dataset && a.dataset.a ? '[data-a=' + a.dataset.a + ']' : '';
   return (a == w ? 'ventana ' + (w.closest('#sh') ? 'hoja' : w.closest('#dg') ? 'aviso' : w.closest('#mn') ? 'menú' : 'wod') : w ? 'dentro de la ventana ' + d : 'fuera ' + a.tagName.toLowerCase() + d); })()"""
 # el nombre de la hoja o página abierta (lo que lee VoiceOver al llegar a ella)
-SHEET_NAME = """(() => { const p = document.querySelector('#sh > .sp'); const t = p && document.getElementById(p.getAttribute('aria-labelledby') || '');
+SHEET_NAME = """(() => { const p = document.querySelector('#sh > .sheet'); const t = p && document.getElementById(p.getAttribute('aria-labelledby') || '');
   return t ? t.textContent.trim() : ''; })()"""
 
 
@@ -189,7 +189,7 @@ def focus_checks(b, path):
     pg.evaluate("S.tab=1;R()")
     pg.clock.run_for(300)
     ok = pg.evaluate("""(() => { const i = document.createElement('input'); i.id = 'fx'; document.querySelector('#app').prepend(i); i.focus();
-      sheet('<h3>Prueba</h3><p>Hoja de prueba</p>'); const inside = document.activeElement.matches('#sh .sp'); sheet();
+      sheet('<h3>Prueba</h3><p>Hoja de prueba</p>'); const inside = document.activeElement.matches('#sh .sheet'); sheet();
       const back = document.activeElement == i; i.remove(); return [inside, back]; })()""")
     check('abierta desde un campo de texto, el foco va a la hoja y al cerrarla no vuelve al campo', ok == [True, False], ok)
     if errs:

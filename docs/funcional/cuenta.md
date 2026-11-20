@@ -28,6 +28,11 @@ recibe lo de los demás al abrir la app o al volver a ella. Si cambias lo mismo 
 móviles sin conexión, al sincronizar se juntan: las comidas de un mismo día y los entrenos de los dos se conservan; en lo demás (un
 programa, los objetivos…) se queda el cambio más reciente. Lo que borras en un móvil se borra también en los otros.
 
+Con la app abierta dos veces en el mismo móvil u ordenador (dos pestañas del navegador o, en Android, la app instalada y una
+pestaña), vale lo que guardas en la que estás usando. La otra lo nota: si la estás viendo, avisa («La app está abierta en otra
+ventana») y se recarga con lo último al tocar **Recargar**; si no, se recarga sola al volver a ella. Así no se mezclan los datos
+de una y otra. Si en esa había un entreno a medias, al recargarse te ofrece reanudarlo.
+
 **Ajustes → Cuenta** enseña el usuario, el tipo de cuenta (Usuario o Administrador) y el estado de la sincronización («Al día», «Sin
 conexión»…), con **Sincronizar ahora**.
 

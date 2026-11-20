@@ -9,6 +9,8 @@
 import { FIG_POSES } from '../data/figposes.js';
 import { RAD, poseSpot } from './rig.js';
 import { beam, bench, box, cable, dipBars, flatBench, lever, mat, pad, pullBar, ringsAt, smith, stackAt, tower, wall, wheel } from './gear.js';
+/** Una postura: los ángulos y los apoyos que dice, que cambian de una familia a otra (extras/rig explica cada uno).
+    @typedef {Record<string, any>} Pose */
 const has = (f, w) => f.includes(w);
 /* lo que vale una medida de la postura cuando no se dice: los escorzos, 1; los ángulos y los desplazamientos, 0 */
 const REST = { kU: 1, kF: 1, kT: 1, kS: 1 };
@@ -264,6 +266,7 @@ const MOVES = {
     const upright = has(f, 'front') || has(f, 'goblet') || has(f, 'zercher') || has(f, 'oh') || has(f, 'band');
     const low = upright ? { lean: 26, neck: -16, hip: 110, knee: 116 } : has(f, 'sides') ? { lean: 32, neck: -20, hip: 116, knee: 112 } : { lean: 36, neck: -22, hip: 120, knee: 110 };
     const top = { lean: upright ? 3 : 5, neck: -3, hip: upright ? 3 : 5, knee: 0 };
+    /** @type {Pose} */
     let arms = { grip: [77, 67], fa: 178, kF: .8, eb: -1 };
     let more = {};
     let gear = [];
@@ -319,7 +322,9 @@ const MOVES = {
        esté el talón */
     const onToes = ft => add([-47, 401.5], turn([-31, -16.5], ft));
     const far = { foot: bulgarian ? [-40, 296] : onToes(86), ft: bulgarian ? 186 : 86 };
+    /** @type {Pose} */
     let arms = { sh: 3, el: 3 };
+    /** @type {Pose} */
     let armsLow = { sh: 5 };
     if (has(f, 'bar') || has(f, 'smith')) {
       arms = { grip: [77, 67], fa: 178, kF: .8, eb: -1 };
@@ -509,7 +514,7 @@ const MOVES = {
     if (has(f, 'ball') || has(f, 'slide')) {
       /* boca arriba, la cadera arriba: los talones acercan el balón (o los deslizadores) */
       const a = { at: 'pin', pin: [74, 100], x: 60, y: 398, lean: -102, neck: 24, sh: -20, el: 2, foot: [262, has(f, 'ball') ? 352 : 388], ank: 14 };
-      return fig(a, { lean: -114, sh: -32, foot: [196, has(f, 'ball') ? 352 : 388] }, [mat(10, 300)].concat(has(f, 'ball') ? [['on', 'm', 'FT', ['C', '', 96, 428, 26, 7]]] : []), 'b', 1);
+      return fig(a, { lean: -114, sh: -32, foot: [196, has(f, 'ball') ? 352 : 388] }, /** @type {any[]} */ ([mat(10, 300)]).concat(has(f, 'ball') ? [['on', 'm', 'FT', ['C', '', 96, 428, 26, 7]]] : []), 'b', 1);
     }
     /* tumbado boca abajo en el banco */
     const a = { at: 'hip', x: 150, y: 300, lean: 92, neck: -16, hip: 2, knee: 6, ank: 0, gw: [286, 346], kU: .6, kF: .6 };
@@ -608,7 +613,7 @@ const MOVES = {
   kick: f => {
     if (has(f, 'floor')) {
       const a = { at: 'hip', x: 150, y: 300, lean: 88, neck: -22, hip: 88, knee: 92, ft: 100, palm: [258, 398], far: { hip: 88, knee: 92, ft: 100 } };
-      return fig(a, { hip: -4, knee: 92, ft: 190 }, [mat(40, 330)].concat(has(f, 'band') ? [['link', 'f', ['xFT', 100, 396], ['FT', 100, 396], 2.2, 4, '']] : []), 'b', 1);
+      return fig(a, { hip: -4, knee: 92, ft: 190 }, /** @type {any[]} */ ([mat(40, 330)]).concat(has(f, 'band') ? [['link', 'f', ['xFT', 100, 396], ['FT', 100, 396], 2.2, 4, '']] : []), 'b', 1);
     }
     const a = { at: 'hip', x: 150, y: 196, lean: 30, neck: -14, hip: 44, knee: 20, ank: 0, gw: [226, 170], far: { hip: 30, knee: 0, ank: null, ft: 0 } };
     /* en la máquina, el brazo gira sobre un eje a la altura de la cadera y empuja con un rodillo por detrás de la rodilla */
@@ -670,6 +675,7 @@ const MOVES = {
     const lean = has(f, 'pendlay') ? 84 : has(f, 'tbar') ? 50 : one ? 78 : has(f, 'chest') ? 54 : has(f, 'band') ? 8 : 62;
     /* con una mano y una rodilla en el banco no hace falta echar la cadera atrás */
     /* (y en el Pendlay, que sale del suelo, las rodillas se doblan hasta que los discos descansan en él) */
+    /** @type {Pose} */
     let a = Object.assign(one ? { lean, hip: lean + 14, knee: 24 } : has(f, 'pendlay') ? { lean, hip: lean + 50, knee: 50 } : bentOver(lean), { neck: -lean * .42, grip: downGrip(lean, 134) });
     let gear = [];
     if (has(f, 'chest')) {
@@ -710,6 +716,7 @@ const MOVES = {
     /* la barra, lo bastante alta para que los pies no toquen el suelo */
     const bar = [110, -66];
     const a = { at: 'grip', x: bar[0], y: bar[1], lean: -2, neck: -8, sh: 176, el: 4, hip: -4, knee: 26, ank: -8, kU: has(f, 'wide') ? .86 : 1 };
+    /** @type {Pose} */
     let b = { lean: -12, sh: 22, el: 150, neck: -18 };
     let at = 1;
     if (has(f, 'scap'))
@@ -810,6 +817,7 @@ const MOVES = {
     const rest = { arm: 4, elb: 0 };
     let a = { arm: 0, elb: 0 };
     let b = { arm: has(f, 'partial') ? 46 : has(f, 'y') ? 142 : 80 };
+    /** @type {any[]} */
     let gear = [['db', 0, one ? 1 : 0]];
     if (has(f, 'cable')) {
       a = { arm: -8, elb: 0, r: { arm: 24, elb: 46 } };
@@ -919,6 +927,7 @@ const MOVES = {
   /** Curl de bíceps: el brazo quieto y solo se dobla el codo. De pie, sentado, en banco inclinado, predicador, en polea… */
   curl: f => {
     const small = has(f, 'db') || has(f, 'hammer') ? loadOf(f, 1) : has(f, 'cable') || has(f, 'machine') || has(f, 'band') ? [] : [['bar', 0, 17]];
+    /** @type {Pose} */
     let base = { lean: 0, neck: 0, hip: 0, knee: 0 };
     let arm = [{ sh: 7, el: 13 }, { sh: 9, el: 138 }];
     let gear = [];

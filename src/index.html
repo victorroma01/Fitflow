@@ -11,7 +11,7 @@ function data(cb){idbParts(function(q){var c=localStorage.getItem('ff'),l=lsPart
 a=o&&o._parts>=2?q:l;b=a===q?l:q;for(k in b)if(!(k in a))a[k]=b[k];p=Object.keys(a).sort();if(!p.length)return cb(c);
 try{if(o&&o._parts){delete o._parts;delete o._pk;for(i=0;i<p.length;i++){k=p[i];v=JSON.parse(a[k]);if(k.indexOf('ff:meals:')==0){for(d in v)m[d]=v[d]}else if(o[k.slice(3)]===k)o[k.slice(3)]=v}if(o.meals==='ff:meals')o.meals=m;return cb(JSON.stringify(o))}}catch(e){}
 o={ff:c};for(i=0;i<p.length;i++)o[p[i]]=a[p[i]];cb(JSON.stringify(o))})}
-function fail(m){if(shown)return;shown=1;var d=document.createElement('div');d.id='ffe';d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99;background:#0b0b0d;color:#f4f4f6;padding:28px 20px;overflow:auto;font:15px/1.45 system-ui,-apple-system,sans-serif';
+function fail(m){if(shown)return;shown=1;var d=document.createElement('div');d.id='ffe';d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99;background:#000;color:#f4f4f6;padding:28px 20px;overflow:auto;font:15px/1.45 system-ui,-apple-system,sans-serif';
 d.innerHTML='<h2 id="ffeh">StrataFit no ha podido iniciarse</h2><p id="ffep">Esto es lo que ha fallado. Si sigue ocurriendo, envíame una captura de este mensaje.</p><pre id="ffem">'+T(m)+'</pre><button id="ffe1">Reintentar</button><button id="ffe2">Ver mis datos (copia de seguridad)</button><button id="ffe3">Restablecer y abrir de nuevo</button><textarea id="ffe4" readonly></textarea>';
 document.body.appendChild(d);
 /* el aspecto, con el CSSOM: la política de seguridad (CSP) no deja style="…" (I-14) */

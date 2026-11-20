@@ -20,7 +20,8 @@ import { backupDate } from './backup.js';
 import { offlineText } from './updates.js';
 import { html } from '../core/html.js';
 /** Tamaño aproximado (caracteres) de cada clave de Store y de cada parte del estado (las comidas, sumando los meses), con
-    dónde están las partes (core/persist: IndexedDB o localStorage). */
+    dónde están las partes (core/persist: IndexedDB o localStorage).
+    @returns {any[][]} */
 const storageUse = () => {
   const size = k => {
     try {
@@ -56,7 +57,28 @@ let diagBack = 'closeSheet';
 const diagnosticsPage = () => {
   const n = errorLog().length;
   const bad = badData();
-  return html`${pgHead('Diagnóstico', diagBack)}<p class="mu m-n6-0-12">Si algo falla, copia este informe y envíalo. Solo contiene datos técnicos y los últimos errores; ningún dato tuyo sale del móvil si no lo copias tú.</p><textarea id="diagt" aria-label="Informe de diagnóstico" rows="12" readonly class="font-mono-12">${diagnosticsText()}</textarea><div class="g2 mt-10"><button class="pr" data-a="diagnosticsCopy">Copiar informe</button><button data-a="diagnosticsClearErrors"${n ? '' : ' disabled'}>Borrar errores</button></div>${bad ? html`<div class="cd mt-14"><b>Datos que no se pudieron leer</b><div class="mu fs-13 m-4-0-10">Al abrir la app el ${backupDate(bad.t, 1)} tus datos estaban dañados y se apartaron aquí para no perderlos. Descárgalos para intentar recuperarlos.</div><div class="g2"><button data-a="diagnosticsDownloadBad">Descargar</button><button data-a="diagnosticsDeleteBadAsk">Eliminar</button></div></div>` : ''}<div class="h-20"></div>`;
+  return html`
+    ${pgHead('Diagnóstico', diagBack)}
+    <p class="muted m-n6-0-12">
+      Si algo falla, copia este informe y envíalo. Solo contiene datos técnicos y los últimos errores; ningún dato tuyo sale del móvil si no lo copias tú.
+    </p>
+    <textarea id="diagt" aria-label="Informe de diagnóstico" rows="12" readonly class="font-mono-12">${diagnosticsText()}</textarea>
+    <div class="grid-2 mt-10">
+      <button class="primary" data-a="diagnosticsCopy">Copiar informe</button>
+      <button data-a="diagnosticsClearErrors"${n ? '' : ' disabled'}>Borrar errores</button>
+    </div>
+    ${bad ? html`
+      <div class="card mt-14">
+        <b>Datos que no se pudieron leer</b>
+        <div class="muted fs-13 m-4-0-10">
+          Al abrir la app el ${backupDate(bad.t, 1)} tus datos estaban dañados y se apartaron aquí para no perderlos. Descárgalos para intentar recuperarlos.
+        </div>
+        <div class="grid-2">
+          <button data-a="diagnosticsDownloadBad">Descargar</button>
+          <button data-a="diagnosticsDeleteBadAsk">Eliminar</button>
+        </div>
+      </div>` : ''}
+    <div class="h-20"></div>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.openDiagnostics = () => {

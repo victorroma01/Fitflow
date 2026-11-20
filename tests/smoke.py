@@ -67,8 +67,8 @@ def main(path):
         pg.clock.run_for(300)
         check('empieza el entreno (W)', ev('!!W'))
         for _ in range(3):
-            if ev("!!document.querySelector('.ck:not(.on)')"):
-                ev("document.querySelector('.ck:not(.on)').click()")
+            if ev("!!document.querySelector('.check:not(.on)')"):
+                ev("document.querySelector('.check:not(.on)').click()")
                 pg.clock.run_for(200)
         check('se completan series', ev('W.sets.flat().filter(s=>s.ok).length') >= 1)
         # añadir un ejercicio desde la librería con el entreno en marcha (antes rompía la sesión)
@@ -80,10 +80,10 @@ def main(path):
         check('añadir ejercicio en pleno entreno añade sus series', ev('W.sets.length') == nx + 1 and ev('W.sets.length==S.plan[S.selectedDay].ex.length'))
         ev('sheet()')
         pg.clock.run_for(200)
-        check('la sesión se sigue pintando', ev("document.querySelectorAll('.xs').length") == nx + 1)
+        check('la sesión se sigue pintando', ev("document.querySelectorAll('.exercise').length") == nx + 1)
         ev('A.finishAsk()')
         pg.clock.run_for(200)
-        check('diálogo de guardar', ev("!!document.querySelector('#dg .dgc')"))
+        check('diálogo de guardar', ev("!!document.querySelector('#dg .dialog-box')"))
         ev("document.querySelector('#dg [data-v=finishSave]').click()")
         pg.clock.run_for(400)
         check('entreno guardado en el registro', ev('S.logs.length') == n0 + 1, str(ev('S.logs.length')))
@@ -142,12 +142,24 @@ def main(path):
         ev("A.themeChoose(0,{dataset:{v:'light'}})")
         check('theme-color claro con el tema claro elegido', ev(tc) == '#f3f3f7', ev(tc))
         ev("A.themeChoose(0,{dataset:{v:'dark'}})")
-        check('theme-color oscuro con el tema oscuro elegido', ev(tc) == '#0b0b0d', ev(tc))
+        check('theme-color oscuro con el tema oscuro elegido', ev(tc) == '#000000', ev(tc))
         ev("A.themeChoose(0,{dataset:{v:''}})")
         auto = ev(tc)
-        check('en automático manda el tema del móvil', ev("!document.querySelector('meta[name=theme-color]:not([media])')") and auto in ('', '#0b0b0d'), auto)
+        check('en automático manda el tema del móvil', ev("!document.querySelector('meta[name=theme-color]:not([media])')") and auto in ('', '#000000'), auto)
         if 'index.html' in path:
-            check('el paquete trae theme-color para tema claro y oscuro', ev("[...document.querySelectorAll('meta[name=theme-color][media]')].map(m=>m.content).sort().join()") == '#0b0b0d,#f3f3f7')
+            check('el paquete trae theme-color para tema claro y oscuro', ev("[...document.querySelectorAll('meta[name=theme-color][media]')].map(m=>m.content).sort().join()") == '#000000,#f3f3f7')
+
+        # el fondo de la app, liso: negro en el tema oscuro y gris muy claro en el claro, sin Cristal y con sus tres niveles. Hasta
+        # la V1.0.32, Cristal ponía detrás unos brillos del color de acento (body::before)
+        bgs = ev("""(() => { const out = [], g = [S.glassLevel, S.glassOn];
+          for (const th of ['dark', 'light']) for (const gm of [0, 1, 2, 3]) {
+            A.themeChoose(0, {dataset: {v: th}}); S.glassLevel = gm; S.glassOn = gm ? 1 : 0; R();
+            const b = getComputedStyle(document.body), a = getComputedStyle(document.body, '::before');
+            out.push([th, gm, document.documentElement.classList.contains('glass'), b.backgroundColor, b.backgroundImage, a.backgroundImage]); }
+          [S.glassLevel, S.glassOn] = g; A.themeChoose(0, {dataset: {v: ''}}); return out; })()""")
+        want = {'dark': 'rgb(0, 0, 0)', 'light': 'rgb(243, 243, 247)'}
+        check('el fondo es liso, sin brillos de color: negro en oscuro y gris muy claro en claro, con Cristal (sus tres niveles) y sin él',
+              len(bgs) == 8 and all(x[2] == (x[1] > 0) and x[3] == want[x[0]] and x[4] == 'none' and x[5] == 'none' for x in bgs), str(bgs))
 
         # persistencia
         ev('saveState()')

@@ -22,14 +22,23 @@ const dayNumber = k => {
    nutritionPeriod; `seen`, la clave del día que se está viendo, y `today`, la de hoy (que aún no ha terminado) */
 const weekDayColumn = (d, i, top, seen, today) => {
   const kcal = roundInt(d.v[0]);
-  /* en objetivo, anotado fuera de objetivo o sin anotar (las clases, enteras: nwd ok · nwd on · nwd) */
-  const cls = (d.ok ? 'nwd ok' : d.on ? 'nwd on' : 'nwd') + (d.k == seen ? ' sel' : '');
+  /* en objetivo, anotado fuera de objetivo o sin anotar (las clases, enteras: nutri-week-day ok · nutri-week-day on · nutri-week-day) */
+  const cls = (d.ok ? 'nutri-week-day ok' : d.on ? 'nutri-week-day on' : 'nutri-week-day') + (d.k == seen ? ' selected' : '');
   const what = !d.on ? 'sin anotar' : d.k == today ? kcal + ' kcal por ahora' : kcal + ' kcal, ' + (d.ok ? 'en objetivo' : 'fuera de objetivo');
   const said = DAY_NAMES[i] + ' ' + (+d.k.slice(8)) + (d.k == today ? ' (hoy)' : '') + ': ' + what;
-  return html`<button class="${cls}" data-a="nutritionGoDay" data-v="${d.k}" aria-label="${said}" aria-current="${d.k == seen ? 'date' : 'false'}"><span class="nwt"><i data-style="height:${d.on ? Math.max(4, Math.min(100, d.v[0] / top * 100)) : 0}%"></i></span><small>${DAY_LETTERS[i]}</small></button>`;
+  return html`
+    <button class="${cls}" data-a="nutritionGoDay" data-v="${d.k}" aria-label="${said}" aria-current="${d.k == seen ? 'date' : 'false'}">
+      <span class="nutri-week-bar"><i data-style="height:${d.on ? Math.max(4, Math.min(100, d.v[0] / top * 100)) : 0}%"></i></span>
+      <small>${DAY_LETTERS[i]}</small>
+    </button>`;
 };
 /* las tres cifras de la semana: kcal y proteína de media (de los días anotados) frente al objetivo, y días en objetivo */
-const weekFigures = (p, kcalGoal, proteinGoal) => html`<div class="nws"><div><b>${roundInt(p.avg[0])}</b><small>kcal de media</small><small>Objetivo ${roundInt(kcalGoal)}</small></div><div><b>${roundInt(p.avg[2])} g</b><small>proteína de media</small><small>Objetivo ${roundInt(proteinGoal)} g</small></div><div><b>${p.ok} de ${p.logged}</b><small>${p.logged == 1 ? 'día' : 'días'} en objetivo</small><small>±10 % de las kcal</small></div></div>`;
+const weekFigures = (p, kcalGoal, proteinGoal) => html`
+  <div class="nutri-week-stats">
+    <div><b>${roundInt(p.avg[0])}</b><small>kcal de media</small><small>Objetivo ${roundInt(kcalGoal)}</small></div>
+    <div><b>${roundInt(p.avg[2])} g</b><small>proteína de media</small><small>Objetivo ${roundInt(proteinGoal)} g</small></div>
+    <div><b>${p.ok} de ${p.logged}</b><small>${p.logged == 1 ? 'día' : 'días'} en objetivo</small><small>±10 % de las kcal</small></div>
+  </div>`;
 /** La tarjeta de la semana del día que se ve en Nutrición. Las barras son los siete días; las cifras, solo de los días ya
   terminados: hoy, a medio anotar, bajaría la media sin motivo. */
 export const nutritionWeekCard = () => {
@@ -48,7 +57,15 @@ export const nutritionWeekCard = () => {
   const logged = p.logged + ' de ' + done.length + (done.length == 1 ? ' día anotado' : ' días anotados');
   const note = !done.length ? (current ? 'Empieza hoy' : 'Aún no ha llegado') : current ? 'Hasta ayer, ' + logged : logged;
   const empty = !done.length ? 'Las medias de la semana salen con los días ya terminados. La línea es tu objetivo de kcal.' : 'Sin comidas anotadas en los días terminados de esta semana. La línea es tu objetivo de kcal.';
-  return html`<div class="cd nwk"><div class="row"><b>${title}</b><small>${note}</small></div><div class="nwb">${week.days.map((d, i) => weekDayColumn(d, i, top, seen, today))}<span class="nwl" aria-hidden="true"><i data-style="bottom:${kcalGoal / top * 100}%"></i></span></div>${p.logged ? weekFigures(p, kcalGoal, kcalGoal * (+n.p || 0) / 400) : html`<p class="mu fs-13 m-0">${empty}</p>`}</div>`;
+  return html`
+    <div class="card nwk">
+      <div class="row"><b>${title}</b><small>${note}</small></div>
+      <div class="nutri-week-bars">
+        ${week.days.map((d, i) => weekDayColumn(d, i, top, seen, today))}
+        <span class="nutri-week-goal" aria-hidden="true"><i data-style="bottom:${kcalGoal / top * 100}%"></i></span>
+      </div>
+      ${p.logged ? weekFigures(p, kcalGoal, kcalGoal * (+n.p || 0) / 400) : html`<p class="muted fs-13 m-0">${empty}</p>`}
+    </div>`;
 };
 /** En el Dashboard, la nutrición de los siete días anteriores a hoy (hoy, a medio anotar, bajaría la media): las mismas tres
     cifras que la semana de Nutrición, con las mismas cuentas. Sin ningún día anotado no sale. Al tocarla se va a Nutrición. */
@@ -60,7 +77,11 @@ export const nutritionRecentCard = () => {
   const p = nutritionPeriod(S.meals, keys, kcalGoal);
   if (!p.logged)
     return '';
-  return html`<button class="cd w-full ta-l nwr" data-a="nutritionOpen"><span class="row"><b>Nutrición · 7 días</b><small>Hasta ayer, ${p.logged} de 7 anotados</small></span>${weekFigures(p, kcalGoal, kcalGoal * (+n.p || 0) / 400)}</button>`;
+  return html`
+    <button class="card w-full ta-l nutri-week" data-a="nutritionOpen">
+      <span class="row"><b>Nutrición · 7 días</b><small>Hasta ayer, ${p.logged} de 7 anotados</small></span>
+      ${weekFigures(p, kcalGoal, kcalGoal * (+n.p || 0) / 400)}
+    </button>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
 /* desde el Dashboard: a Nutrición, en el día de hoy y arriba del todo */

@@ -8,12 +8,15 @@ ver la [documentación funcional](../funcional/README.md).
 | [Este archivo](#cómo-está-hecha) | Arquitectura, principios del código, convenciones y estructura del repositorio. |
 | [Mapa de módulos](modulos.md) | Qué hace cada módulo de `src/js`, qué declara y cuántas acciones registra. Se genera solo. |
 | [Nombres de la V1.0.2](nombres.md) | Los nombres de antes y de ahora de las acciones y de las claves del estado, para leer código, issues o commits anteriores. |
+| [Clases CSS](clases.md) | Cómo se nombran las clases CSS, cómo se renombra una sin romper nada y cómo se llamaban antes las que han cambiado. |
 | [Estado y datos](estado.md) | Diccionario de datos: cada clave de `S` y del almacenamiento, y qué entra en la copia de seguridad. |
+| [Tipos comprobados](tipos.md) | Cómo se comprueban los tipos del código (JavaScript con sus tipos en comentarios), qué detecta, los dos niveles y por dónde seguir. |
 | [Servidor: Firebase](backend.md) | El servidor: cuentas, roles, documentos de Firestore, sincronización sin conexión, reglas de seguridad y administración desde GitHub. |
 | [Desarrollo](desarrollo.md) | Requisitos, comandos, cómo añadir una función, reglas de calidad y cómo se publica una versión. |
 | [Pruebas](pruebas.md) | Qué comprueba cada prueba, en qué navegadores y cuándo se pasan. |
 | [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en la V1.0.2 frente a la V1.0.1 (T-26). |
 | [Auditoría de la V1.0.3](auditoria-1.0.3.md) | Auditoría técnica completa de la V1.0.2: diagnóstico por áreas, lo corregido en la V1.0.3, lo pendiente y las recomendaciones. |
+| [Revisión de la V1.0.32](revision-1.0.32.md) | Repaso de la V1.0.32 antes de publicarla: qué se miró, los dos casos de pérdida de datos encontrados y corregidos, lo comprobado y lo que queda por decidir. |
 | [Informe de issues](issues.md) | Lo encontrado en la revisión final (M8, T-22): lo corregido y lo que queda abierto, con su prioridad, el orden recomendado y su coste en puntos función. |
 | [Figuras de ejercicio](figuras.md) | El modelo anatómico haciendo cada uno de los 551 ejercicios, en lugar de fotos: cómo está hecho, cómo se escribe una postura, cómo se añade un ejercicio, lo que pesa y cómo se prueba. |
 | [Versiones de prueba](versiones-de-prueba.md) | Historial de la serie 1.19 – 1.24, anterior a la V1.0.0. |
@@ -60,7 +63,8 @@ el que usan la mayoría de las pruebas.
   `A.nombre`, `C.nombre` o `U.nombre`, escrito junto a la función que lo usa.
 - **HTML seguro por defecto**: las pantallas se escriben con plantillas ``html`…${valor}…` `` (`core/html`), que escapan cada valor
   insertado. Lo que ya es HTML de la app va tal cual (otra plantilla o una lista de ellas); cualquier otra excepción se marca con
-  `raw(…)`, así que todo lo que no se escapa está a la vista.
+  `raw(…)`, así que todo lo que no se escapa está a la vista. Una plantilla larga va en varias líneas, sangrada como HTML: esos
+  saltos de línea no llegan a la app ([Plantillas HTML](desarrollo.md#plantillas-html)).
 - **Solo su propio código**: una política de seguridad (CSP) en una etiqueta `<meta>` (`build.py`) solo deja ejecutar el código de la
   app, usar su hoja de estilo (sin estilos en línea desde la V1.0.2: clases de `css/99-utilities` y `core/dynstyle`) y conectar con
   su propia web, con Firebase y con Open Food Facts.
@@ -71,7 +75,8 @@ el que usan la mayoría de las pruebas.
 - **Módulos ES con dependencias explícitas**: cada módulo importa lo que usa. Un módulo no puede asignar una variable de otro: para eso
   exporta un `setX()`. `src/js/main.js` fija el orden de carga y `core/lazy` lo que se carga al usarlo.
 - **Persistencia solo a través de `Store`** (`core/store`) y de `core/persist`. Ninguna otra parte toca `localStorage` ni las partes
-  del estado en IndexedDB (las copias automáticas, `system/snapshots`, tienen su propia base, también con `core/idb`), y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`).
+  del estado en IndexedDB (las copias automáticas, `system/snapshots`, tienen su propia base, también con `core/idb`), y de cada parte que cambia se avisa a la sincronización con [Firebase](backend.md) (`Store.remote`). Con la app abierta dos veces (dos
+  pestañas), guarda una sola cada vez y la otra se recarga con lo último ([cómo](estado.md#la-app-abierta-dos-veces)).
 - **Accesible**: un botón sin texto (un icono, ☰, ✕) lleva `aria-label`; cada campo, su etiqueta; lo que se toca sin ser un `<button>`,
   `role="button"` y `tabindex="0"`. En el entreno, todo responde en 44 × 44 px (`css/97-touch-targets`).
 - **Errores visibles**: lo inesperado se registra con `logError()` y se consulta en Ajustes → Diagnóstico; un `catch` vacío solo se
@@ -82,6 +87,9 @@ el que usan la mayoría de las pruebas.
   borra los datos de otra cuenta.
 - **Sin código muerto**: `tools/check.js` falla si algo declarado, exportado, registrado o dibujado no se usa, incluido el CSS
   ([reglas](desarrollo.md#reglas-de-calidad)).
+- **Tipos comprobados**: `tools/types.js` falla si un módulo usa una clave del estado que no existe, le da un valor de otro
+  tipo o llama a una función con lo que no es; en el guardado y la sincronización, además, todo lleva su tipo
+  ([cómo](tipos.md)).
 
 ## Convenciones
 
@@ -122,12 +130,14 @@ el que usan la mayoría de las pruebas.
 │   │   ├── cloud/          Firebase por REST: configuración, peticiones, sesión, cuentas, Firestore, fusión y sincronización
 │   │   └── account/        inicio de sesión y registro, la cuenta en Ajustes y Administración
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
-│   └── img/                day/ (portadas, order.txt) y brand/ (el logo: fuentes y
+│   └── img/                day/ (portadas, order.txt; las de mujer, en mujer/) y brand/ (el logo: fuentes y
 │                           lo que genera tools/marca.py)
 ├── static/                 sw.js (plantilla), manifiesto, iconos de la app y de los accesos directos (tools/marca.py)
 ├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py ·
-│                           marca.py (logo e iconos) · figure.js (el dibujo del modelo de perfil)
-│   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar)
+│                           marca.py (logo e iconos) · figure.js (el dibujo del modelo de perfil) · fondo.py (el fondo del
+│                           inicio de sesión) · portadas.py (las portadas de los días)
+│   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar,
+│                           pasar las cuentas al dominio nuevo)
 ├── tests/                  pruebas, run.sh y compare.sh
 ├── docs/
 │   ├── funcional/          qué hace la app, pantalla a pantalla

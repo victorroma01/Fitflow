@@ -41,7 +41,7 @@ const tabGeometry = () => {
 };
 /* la burbuja en x (dentro de la barra), con ancho w; solo se toca lo que cambia */
 const placeBubble = (x, w) => {
-  const b = $('nav .nbb');
+  const b = $('nav .nav-bubble');
   const bx = x + 'px';
   const bw = w + 'px';
   if (b.style.getPropertyValue('--bx') != bx)
@@ -53,7 +53,7 @@ const placeBubble = (x, w) => {
   ventana). Sin medidas (barra oculta), se queda el fondo de siempre del botón. */
 export const tabbarSync = () => {
   const n = $('nav');
-  if (!n || !n.querySelector('.nbb'))
+  if (!n || !n.querySelector('.nav-bubble'))
     return;
   tabButtons().forEach((e, i) => e.classList.toggle('on', i == S.tab));
   if (tabDrag && tabDrag.on)
@@ -61,18 +61,21 @@ export const tabbarSync = () => {
   /* la barra oculta (en el entreno: core/render) no tiene medidas; al volver, la burbuja se coloca sin deslizarse */
   const g = n.style.display == 'none' ? null : tabGeometry();
   if (!g) {
-    n.classList.remove('nbon');
+    n.classList.remove('bubble-on');
     return;
   }
   placeBubble(g.xs[S.tab], g.w);
   /* la primera vez se coloca sin deslizarse; después, cada cambio se anima */
-  if (!n.classList.contains('nbon'))
-    requestAnimationFrame(() => n.classList.add('nbon'));
+  if (!n.classList.contains('bubble-on'))
+    requestAnimationFrame(() => n.classList.add('bubble-on'));
 };
 /** Pinta la barra (al arrancar). */
 export const buildTabbar = () => {
   /* la burbuja va detrás de los botones (y la última, para que los botones sigan siendo del 1 al 4) */
-  $('nav').innerHTML = html`${TABS.map((t, i) => html`<button data-a="selectTab" data-i="${i}"><span class="d-block lh-0 pb-4">${icon(t[0], 28)}</span>${raw(t[1])}</button>`)}<i class="nbb" aria-hidden="true"></i>`;
+  $('nav').innerHTML = html`
+    ${TABS.map((t, i) => html`
+      <button data-a="selectTab" data-i="${i}"><span class="d-block lh-0 pb-4">${icon(t[0], 28)}</span>${raw(t[1])}</button>`)}
+    <i class="nav-bubble" aria-hidden="true"></i>`;
 };
 /* la burbuja se despega de su pestaña y va hacia el dedo (en la posición x de la pantalla) */
 const dragStart = x => {
@@ -116,7 +119,7 @@ const dragMove = x => {
     if (d.hv >= 0)
       buzz(8);
     d.hv = i;
-    tabButtons().forEach((e, j) => e.classList.toggle('hv', j == i));
+    tabButtons().forEach((e, j) => e.classList.toggle('hover', j == i));
   }
 };
 /* mientras la burbuja se acerca al dedo, se mueve en cada fotograma aunque el dedo esté quieto */
@@ -141,7 +144,7 @@ const dragStop = go => {
   tabDragEnd = Date.now();
   const n = $('nav');
   n.classList.remove('drag');
-  tabButtons().forEach(e => e.classList.remove('hv'));
+  tabButtons().forEach(e => e.classList.remove('hover'));
   /* con el botón de la pestaña: A.selectTab mueve la burbuja ya y pinta la pestaña justo después */
   if (go && d.hv >= 0 && d.hv != S.tab)
     A.selectTab(d.hv, tabButtons()[d.hv]);
@@ -204,7 +207,15 @@ if (typeof ResizeObserver != 'undefined')
 const START_TABS = [[-1, 'La última', 'La última que usaste'], ...TABS.map((t, i) => [i, t[1], t[1]])];
 const startOf = () => S.startTab >= 0 && S.startTab < TABS.length ? S.startTab : -1;
 export const startTabName = () => START_TABS.find(x => x[0] == startOf())[1];
-export const startTabCard = () => html`<p class="mu m-0-2-12 fs-14">La pestaña que ves al abrir StrataFit.</p><div class="cd srg" role="radiogroup" aria-label="Pestaña al abrir la app">${START_TABS.map(x => html`<button class="sr" data-a="setStartTab" data-v="${x[0]}" role="radio" aria-checked="${x[0] == startOf() ? 'true' : 'false'}"><span class="srl">${raw(x[2])}</span>${x[0] == startOf() ? raw(icon('chk', 20)) : ''}</button>`)}</div>`;
+export const startTabCard = () => html`
+  <p class="muted m-0-2-12 fs-14">La pestaña que ves al abrir StrataFit.</p>
+  <div class="card setting-group" role="radiogroup" aria-label="Pestaña al abrir la app">
+    ${START_TABS.map(x => html`
+      <button class="setting-row" data-a="setStartTab" data-v="${x[0]}" role="radio" aria-checked="${x[0] == startOf() ? 'true' : 'false'}">
+        <span class="setting-label">${raw(x[2])}</span>
+        ${x[0] == startOf() ? raw(icon('chk', 20)) : ''}
+      </button>`)}
+  </div>`;
 /** Al arrancar: la pestaña elegida en Ajustes (si no, se queda la última que se usó). */
 export const applyStartTab = () => {
   if (startOf() >= 0)
