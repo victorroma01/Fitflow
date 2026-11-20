@@ -159,20 +159,22 @@ Lo que queda de «las líneas largas», sin tocar:
   Se hace por lotes, cada uno con su prueba de que lo que se ve no cambia: [Clases CSS](clases.md). Van tres, 274 clases: las
   de dos letras; las de las piezas comunes, el entreno, la librería, los programas y la descarga; y las del seguimiento, la
   apariencia, el recorrido, el primer arranque, la cuenta y el perfil. Quedan unas 70: las del WOD, el resumen del entreno,
-  las medidas y la nutrición (el cuarto lote), las de las figuras (cuando se resuelva la #59) y una del inicio de sesión que
-  son dos piezas a la vez.
+  las medidas y la nutrición (el cuarto lote) y las de las figuras (cuando se resuelva la #59).
 
 ## Después de la revisión: lo que destapó el cambio de nombres
 
-Al dar nombre a las clases CSS apareció una, `pgr`, que eran dos piezas a la vez, y detrás de ella un fallo que no era de esta
-versión:
+Al dar nombre a las clases CSS aparecieron dos, `pgr` y `lgl`, que eran dos piezas a la vez cada una, y detrás de la primera
+un fallo que no era de esta versión:
 
 | Id | Prioridad | Qué pasaba | Corrección |
 | --- | --- | --- | --- |
 | R6 | Low | **La etiqueta «RÉCORD» de la gráfica de progreso no salía nunca.** Al elegir un punto, la cifra de arriba se pintaba antes de calcular qué puntos son récord (eso lo hacía la función que dibuja la gráfica), así que para ella ninguno lo era. El punto sí iba relleno. | Qué puntos son récord se calcula al sacarlos (`progressSeries`), antes de pintar nada. |
 | R7 | Low | **Los nombres de los programas salían con el color y las letras de esa etiqueta.** La fila con el nombre de un programa y la etiqueta se llamaban igual, `pgr`, y cada una recibía también el estilo de la otra: los nombres, el color de acento y las letras separadas; la etiqueta, de haber salido, habría caído en una línea aparte. | Dos clases, `program-row` y `record-tag`. El nombre de un programa va como el resto de títulos (lo decidió el propietario). |
 
-Las dos llevan su prueba (`tests/dashboard.py` y `tests/programs.py`), y las dos fallan si se vuelve atrás la corrección.
+| R8 | Low | **El logo del inicio de sesión se dibujaba más pequeño que su marco y algo estrecho** (92 × 100 en un marco de 120 × 120). Compartía clase, `lgl`, con el botón «Privacidad», y recibía su relleno. | Dos clases, `login-logo` y `login-link`. El logo llena su marco (lo decidió el propietario). |
+
+Las tres llevan su prueba (`tests/dashboard.py`, `tests/programs.py` y `tests/login.py`), y las tres fallan si se vuelve atrás la
+corrección.
 
 ## Para decidir
 

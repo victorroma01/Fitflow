@@ -37,7 +37,7 @@
 .login-brand {
   text-align:center;
 }
-.login-brand .brand-logo {
+.brand-logo.login-logo {
   width:120px;
   height:120px;
   margin:0 auto;
@@ -50,7 +50,7 @@
 }
 /* el texto que va suelto sobre la foto lleva detrás su propio velo, difuminado: donde la foto es clara (la pared) se sigue
    leyendo, esté donde esté según el tamaño de la pantalla; sobre lo oscuro no se nota */
-.login-tagline,.login-note,.login-version,button.lgl {
+.login-tagline,.login-note,.login-version,button.login-link {
   border-radius:14px;
   background:rgba(6,7,10,.36);
   box-shadow:0 0 16px 10px rgba(6,7,10,.36);
@@ -111,7 +111,7 @@
   font-size:13px;
   color:#d6d6de;
 }
-.lgl {
+.login-link {
   align-self:center;
   border:0;
   background:none;
