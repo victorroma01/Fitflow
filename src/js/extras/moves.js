@@ -7,6 +7,7 @@
    Define: has, REST, ANGLES, complete, figure, fig, add, turn, SH, loadOf, SEAT, upGrip, downGrip, front, sideTowers, preacherPad, railGrips, railBody, leverFrom, leverGrips, pivotAt, bentOver, SUPINE, LIFT, gait, treadmill, sledAt, STRIDE, MOVES, made, figPose
 */
 import { FIG_POSES } from '../data/figposes.js';
+import { EX_RETIRED } from '../data/aliases.js';
 import { RAD, poseSpot } from './rig.js';
 import { beam, bench, box, cable, dipBars, flatBench, lever, mat, pad, pullBar, ringsAt, smith, stackAt, tower, wall, wheel } from './gear.js';
 /** Una postura: los ángulos y los apoyos que dice, que cambian de una familia a otra (extras/rig explica cada uno).
@@ -1605,10 +1606,11 @@ const MOVES = {
 };
 /* las figuras ya calculadas */
 const made = {};
-/** La figura de un ejercicio de la librería (data/figposes dice su familia y sus variantes), o null si no tiene. */
+/** La figura de un ejercicio de la librería (data/figposes dice su familia y sus variantes), o null si no tiene; la de uno que
+    ya no está en ella, la del que lo sustituye (data/aliases: EX_RETIRED). */
 export const figPose = n => {
   if (!(n in made)) {
-    const words = (FIG_POSES[n] || '').split(' ');
+    const words = (FIG_POSES[n] || FIG_POSES[EX_RETIRED.get(n)] || '').split(' ');
     made[n] = MOVES[words[0]] ? MOVES[words[0]](words.slice(1)) : null;
   }
   return made[n];

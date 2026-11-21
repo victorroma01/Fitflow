@@ -81,7 +81,6 @@ export const FIG_POSES = {
   'Sentadilla sumo con mancuerna': 'squat sumo',
   'Sentadilla con bandas': 'squat band',
   Prensa: 'legPress',
-  'Prensa 45°': 'legPress',
   'Prensa unilateral': 'legPress one',
   'Prensa horizontal': 'legPress horizontal',
   'Prensa con pies bajos': 'legPress low',

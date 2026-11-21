@@ -1,10 +1,10 @@
 /* ═══ library/model ═══
    Modelo de ejercicios: lista completa, músculos, filas y orden.
-   Define: LIB_BY_NAME, libByName, exByName, groupOfName, overlapCount, exAll, exOrder, exMuscles, searchText, SEARCH_TEXT, exSearchText, exSubtitle, exMusclesHtml, ROWS_WITH_PICTURE, exCellHtml, exRowHtml, exCompare, categoryOf
+   Define: LIB_BY_NAME, libByName, exByName, liveName, groupOfName, overlapCount, exAll, exOrder, exMuscles, searchText, SEARCH_TEXT, exSearchText, exSubtitle, exMusclesHtml, ROWS_WITH_PICTURE, exCellHtml, exRowHtml, exCompare, categoryOf
 */
 import { X } from '../core/util.js';
 import { EXERCISES, groupOf, GROUPS, MUSCLES } from '../data/library.js';
-import { EX_ALIASES } from '../data/aliases.js';
+import { EX_ALIASES, EX_RETIRED } from '../data/aliases.js';
 import { S } from '../core/state.js';
 import { exPicture, exPictureLater } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
@@ -18,9 +18,13 @@ const libByName = () => {
   }
   return LIB_BY_NAME;
 };
-/** El ejercicio llamado `n`: el de la biblioteca o, si no lo hay, el propio con ese nombre; undefined si no existe. Lo mismo
-    que buscarlo en exAll(), sin juntar ni recorrer las dos listas en cada llamada (las listas y las figuras lo piden por fila). */
-export const exByName = n => libByName().get(n) || (S.customExercises || []).find(x => x.n == n);
+/** El ejercicio llamado `n`: el de la biblioteca o, si no lo hay, el propio con ese nombre, o el que sustituye a uno que ya no
+    está en la biblioteca (data/aliases: EX_RETIRED); undefined si no existe. Lo mismo que buscarlo en exAll(), sin juntar ni
+    recorrer las dos listas en cada llamada (las listas y las figuras lo piden por fila). */
+export const exByName = n => libByName().get(n) || (S.customExercises || []).find(x => x.n == n) || libByName().get(EX_RETIRED.get(n));
+/** El nombre con el que la biblioteca conoce a `n`: el suyo o, si es uno que ya no está en ella, el del que lo sustituye (para
+    su ficha y su figura, que van por nombre). */
+export const liveName = n => EX_RETIRED.has(n) && !libByName().has(n) && !(S.customExercises || []).some(x => x.n == n) ? EX_RETIRED.get(n) : n;
 export const groupOfName = n => {
   const e = exByName(n);
   return e ? groupOf(e) : 'Propio';
