@@ -55,14 +55,24 @@
   };
   /* como solve, pero si hay más de una solución (cuando la carga va en los brazos, el equilibrio no siempre crece con la
      inclinación), la más cercana a near: así no salta de una a otra entre un fotograma y el siguiente */
-  const solveNear = (f, lo, hi, near, step = 5) => {
+  /* win: si se da, busca primero en una ventana alrededor de near (con la misma rejilla que la búsqueda entera): si ahí hay una
+     solución, es la más cercana y sale igual que buscando en todo el intervalo, con muchas menos evaluaciones (el peso muerto
+     tardaba segundos en prepararse) */
+  const solveNear = (f, lo, hi, near, step = 5, win = 0) => {
+    if (win) {
+      const a0 = lo + step * Math.floor(max(0, near - win - lo) / step), b0 = min(hi, near + win);
+      if (b0 - a0 >= step) { const r = scanNear(f, a0, b0, near, step); if (r != null) return r; }
+    }
+    return scanNear(f, lo, hi, near, step) ?? (abs(f(lo)) < abs(f(hi)) ? lo : hi);
+  };
+  const scanNear = (f, lo, hi, near, step) => {
     let best = null, a = lo, fa = f(a);
     for (let b = lo + step; b <= hi + 1e-9; b += step) {
       const fb = f(b);
       if ((fa > 0) != (fb > 0)) { const r = solve(f, a, b, 12); if (best == null || abs(r - near) < abs(best - near)) best = r; }
       a = b; fa = fb;
     }
-    return best == null ? (abs(f(lo)) < abs(f(hi)) ? lo : hi) : best;
+    return best;
   };
   /* la cadera desde los tobillos: la espinilla, ps grados hacia delante (hacia la punta del pie), y el muslo, pt grados sobre
      la horizontal; da la raíz (el centro de las caderas) y hacia dónde sale la rodilla, en el lado izquierdo */
@@ -720,6 +730,11 @@
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];
     if (!fam) return null;
     const ex = fam(w.slice(1));
+    /* la postura de cada momento se guarda (en 1/480 del gesto): el gesto se repite y algunas posturas cuestan de calcular (el
+       equilibrio de la sentadilla, el paso de la zancada), así que cada una se calcula una vez. Se devuelve una copia, por si
+       quien la pide la toca */
+    const raw = ex.at, memo = new Map();
+    ex.at = t => { const k = Math.round(clamp(t, 0, 1) * 480); let q = memo.get(k); if (!q) { q = raw(k / 480); memo.set(k, q); } return { ...q }; };
     return Object.assign(ex, { name, P, S, pause: ex.pause != null ? ex.pause : has(w, 'pause') ? 900 : 0, yaw: ex.cam[0], pitch: ex.cam[1] });
   };
 })(window);

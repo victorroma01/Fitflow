@@ -86,8 +86,8 @@
         /* para cada ángulo del muslo, el tronco que deja los brazos estirados hasta la barra; y el muslo, el que cumple la regla
            del tronco. Al revés (el muslo para llegar a la barra), con las piernas casi rectas, bajar un poco la barra llevaba la
            cadera muy atrás de golpe */
-        const leanFor = p => solveNear(l => reach(mk(ps, p, l), y, z), -25, 88, p0[2], 2);
-        const pt = solveNear(p => { const l = leanFor(p), q = mk(ps, p, l); return (1 - k) * bal(q, y, z, kk) + k * (z + ahead - sh(q)); }, -20, 89.5, p0[1], 2);
+        const leanFor = p => solveNear(l => reach(mk(ps, p, l), y, z), -25, 88, p0[2], 2, 6);
+        const pt = solveNear(p => { const l = leanFor(p), q = mk(ps, p, l); return (1 - k) * bal(q, y, z, kk) + k * (z + ahead - sh(q)); }, -20, 89.5, p0[1], 2, 6);
         return [ps, pt, leanFor(pt), y, z];
       });
       /* el camino de la barra: el de arriba y, donde con él las piernas (muslos o rodillas) asomarían por delante de la barra,
