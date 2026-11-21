@@ -1,6 +1,6 @@
 """Prueba de las figuras de ejercicio: el modelo haciendo cada ejercicio de la librería, en las miniaturas y, al tocar la
 imagen, en la hoja «Cómo se hace»: figura grande que se mueve, músculos en pequeño a la izquierda con sus nombres, y el
-texto. Los 528 ejercicios se abren uno a uno; unos cuantos, de cada clase de figura, se miran con detalle.
+texto. Los 527 ejercicios se abren uno a uno; unos cuantos, de cada clase de figura, se miran con detalle.
 
   python3 tests/figures.py dist/stratafit.html [carpeta_capturas]
 """
@@ -116,7 +116,7 @@ def main(path, shots=None):
 
         # datos: todos los ejercicios de la librería tienen su figura; uno propio, no
         n_lib = ev("exAll().length - S.customExercises.length")
-        check('la librería tiene sus 528 ejercicios', n_lib == 528, str(n_lib))
+        check('la librería tiene sus 527 ejercicios', n_lib == 527, str(n_lib))
         miss = ev("exAll().filter(e=>!figPose(e.n)).map(e=>e.n)")
         check('todos los ejercicios de la librería tienen figura, y el propio no', miss == ['Mi ejercicio'], str(miss[:8]))
         check('cada postura de la tabla es de un ejercicio que existe', ev("Object.keys(FIG_POSES).every(n=>exAll().some(e=>e.n==n))"))
@@ -130,7 +130,7 @@ def main(path, shots=None):
             else if (uses.some(h => !document.querySelector(h))) bad.push(e.n + ': usa ' + uses.find(h => !document.querySelector(h)));
             else if (!/^-?\\d+ -?\\d+ \\d+ \\d+$/.test(box.querySelector('svg').getAttribute('viewBox'))) bad.push(e.n + ': encuadre'); });
           return bad; })()""")
-        check('las 528 miniaturas son la figura del ejercicio, enteras', not bad, str(bad[:6]))
+        check('las 527 miniaturas son la figura del ejercicio, enteras', not bad, str(bad[:6]))
         check('las piezas de los modelos están en la página, una sola vez', ev("['fbTXs','fsTXs','fbPVi','fbUA','fqHG','fbFB','fbBB','fbFU0','fbBU1','fcB','frBI','frFDL0','frBDP1','gSm'].every(i=>document.querySelectorAll('[id=\"'+i+'\"]').length==1)"),
               str(ev("['fbTXs','fsTXs','fbPVi','fbUA','fqHG','fbFB','fbBB','fbFU0','fbBU1','fcB','frBI','frFDL0','frBDP1','gSm'].filter(i=>document.querySelectorAll('[id=\"'+i+'\"]').length!=1)")))
 
@@ -157,7 +157,7 @@ def main(path, shots=None):
                   if (r.width || r.height) over = Math.max(over, (box.left - r.left) * k, (r.right - box.right) * k, (box.top - r.top) * k, (r.bottom - box.bottom) * k); }); });
               if (over > 4) bad.push(e.n + ': se corta ' + Math.round(over) + ' en el borde'); } }
           return bad; })()""")
-        check('las 528 hojas llevan la figura grande y entera, el nombre y el texto, y ninguna foto', not bad, str(bad[:6]))
+        check('las 527 hojas llevan la figura grande y entera, el nombre y el texto, y ninguna foto', not bad, str(bad[:6]))
         ev("A.closeSheet()")
         pg.clock.run_for(300)
 

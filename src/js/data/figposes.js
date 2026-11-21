@@ -544,7 +544,6 @@ export const FIG_POSES = {
   Senderismo: 'run walk pack',
   'Natación intervalos': 'swim',
   'Saco de boxeo': 'boxing',
-  'Escalera de gimnasio': 'stairs',
   'Comba boxeo': 'jumpRope alt',
   /* ── Abducción y aducción ── */
   'Abducción en máquina': 'hipOpen machine',
