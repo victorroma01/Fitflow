@@ -27,6 +27,7 @@ export const EX_ALIASES = {
   'Cruce de poleas': 'Cruce de poleas alto',
   'Pájaros en polea': 'Pájaros en polea cruzada',
   'Pull-apart con banda': 'Pájaros con banda',
+  'Elevación de piernas': 'Elevaciones de piernas tumbado',
 };
 /** nombre de un ejercicio que ya no está en la librería (era el mismo que otro) → el que queda. Lo que se guardó con el nombre
     viejo (el historial, las notas, un plan propio) lo conserva y muestra el que queda: sus músculos, su ficha y su figura
@@ -44,4 +45,5 @@ export const EX_RETIRED = new Map([
   ['Pájaros en polea cruzada', 'Pájaros en polea'],
   ['Pájaros con banda', 'Pull-apart con banda'],
   ['Jalón con brazos rectos', 'Pullover en polea'],
+  ['Elevaciones de piernas tumbado', 'Elevación de piernas'],
 ]);
