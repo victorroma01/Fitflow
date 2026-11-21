@@ -11,9 +11,10 @@ import { EXERCISES, groupOf } from '../../src/js/data/library.js';
 /* los lotes: sus familias */
 const LOTES = { 1: 'squat,press,overhead', 2: 'pulldown,row,pullup', 3: 'hinge,lunge,thrust,legPress,hack,legExt,legCurl',
   4: 'curl,trxCurl,pushdown,skull,overheadExt,kickback,tricepsMachine,dip,benchDip,wristCurl',
-  5: 'pushup,pressOut,rearFly,lateral,cross,shrug,frontRaise,fly,upright,facePull,straightArm,pullover' };
+  5: 'pushup,pressOut,rearFly,lateral,cross,shrug,frontRaise,fly,upright,facePull,straightArm,pullover',
+  6: 'crunch,plank,hyper,legRaise,twist,wheelRoll,sidePlank,chop,deadBug,pallof,birdDog,vacuum,calf,tib,hipOpen,kick,stepUp,sissy,pistol,bandWalk,sideLunge' };
 /* desde el lote 3, el material de la librería (q) entra como palabra si la tabla de la app no lo dice ya */
-const GEAR_FROM = new Set([...LOTES[3].split(','), ...LOTES[4].split(','), ...LOTES[5].split(',')]);
+const GEAR_FROM = new Set([3, 4, 5, 6].flatMap(k => LOTES[k].split(',')));
 const GEAR = { Mancuernas: 'db', Barra: 'bar', 'Barra Z': 'ez', Smith: 'smith', Kettlebell: 'kb', Banda: 'band', Polea: 'cable', 'Máquina': 'machine', 'Peso corporal': 'none' };
 const arg = process.argv[2] || '1';
 const FAMILIES = (LOTES[arg] || arg).split(',');
@@ -31,7 +32,7 @@ const EXTRA = { 'Sentadilla con pausa': 'pause', 'Sentadilla goblet con pausa': 
   'Curl inverso con mancuernas': 'reverse', 'Extensión agarre supino en polea': 'supine', 'Extensión con barra V': 'vbar', 'TRX fondos': 'trx',
   'Flexiones diamante': 'diamond', 'Flexiones con palmada': 'clap', 'Flexiones arqueras': 'archer', 'Press pecho máquina convergente': 'converge',
   'Press de pecho unilateral en polea': 'one', 'Elevación T': 'tee', 'Landmine press': 'two', 'Curl en polea con cuerda': 'twist', 'Rompecráneos barra Z': 'back', 'Elevaciones laterales a una mano en polea': 'lean', 'TRX flexiones': 'feet', 'Encogimientos con barra hexagonal': 'hex', 'Remo al mentón agarre ancho': 'wide',
-  'Face pull a una mano': 'one' };
+  'Face pull a una mano': 'one', 'Sit-ups': 'abmat', 'Patada de glúteo en máquina': 'kneel', 'Gemelo sentado unilateral': 'one', 'Step up lateral': 'side' };
 
 mkdirSync('salida', { recursive: true });
 writeFileSync('salida/mapa.json', JSON.stringify({ R: AN_R, S: AN_S, H: AN_H, PA: AN_PA }));

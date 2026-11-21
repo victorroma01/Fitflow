@@ -347,7 +347,12 @@
     let pelvis = { o: q.root, x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] };
     /* (roll: el cuerpo ladeado sobre su eje de delante a atrás; tumbado de lado, 90) */
     pelvis = turn(turn(turn(pelvis, 'y', q.yaw || 0), 'z', q.roll || 0), 'x', q.tilt || 0);
-    return { pelvis, thorax: turn(moved(pelvis, at(pelvis, [0, 45, -2])), 'x', q.spine || 0) };
+    /* (el tórax sobre la pelvis: girado sobre la columna (twist, hacia la izquierda de la figura), doblado de lado (bend, hacia
+       su derecha) y hacia delante (spine)) */
+    let thorax = moved(pelvis, at(pelvis, [0, 45, -2]));
+    if (q.twist) thorax = turn(thorax, 'y', q.twist);
+    if (q.bend) thorax = turn(thorax, 'z', q.bend);
+    return { pelvis, thorax: turn(thorax, 'x', q.spine || 0) };
   };
   const pose = q => {
     const { pelvis, thorax } = torso(q);
@@ -376,6 +381,9 @@
       F['foot' + s] = { o: knee[1], y: [0, 1, 0], z: fz, x: s == 'L' ? cross([0, 1, 0], fz) : cross(fz, [0, 1, 0]) };
       // la punta del pie hacia abajo (en el aire, de puntillas): fo[4] grados
       if (fo[4]) F['foot' + s] = turn(F['foot' + s], 'x', fo[4]);
+      /* (o dado por sus ejes, hacia la rodilla y hacia la punta: el pie que no apoya la planta en el suelo, tumbado o de lado) */
+      const fd = q.footDir && q.footDir[s];
+      if (fd) { const fy = norm(fd.y), fzz = perp(fd.z, fy); F['foot' + s] = { o: knee[1], y: fy, z: fzz, x: s == 'L' ? cross(fy, fzz) : cross(fzz, fy) }; }
       const sh = at(thorax, [k * 47, 80 + (q.shrug || 0), -2 + (q.reach || 0)]);
       const ep = (q.elbow[s] || [0, -1, -1]).map((v, j) => j ? v : v * k);
       /* la muñeca doblada (handDir: de la muñeca al puño): el brazo llega a la muñeca y el puño sale de ella en esa dirección;
@@ -651,8 +659,11 @@
       const g = group('hand' + s), A = axes(F['grip' + s], cam), k = s == 'L' ? -1 : 1;
       const out = list => hull([].concat(...list.map(([c, r]) => ellOut(A, [c[0] * k, c[1], c[2]], r, ellN(r)))));
       const depth = list => list.reduce((a, [c]) => a + onto(A, c[0] * k, c[1], c[2])[2], 0) / list.length;
-      const body = { h: [out(FIST.body)], z: depth(FIST.body) }, thumb = { h: [out(FIST.thumb)], z: depth(FIST.thumb) };
-      const band = { h: FIST.fingers.map(out), z: depth([].concat(...FIST.fingers)) };
+      /* (cada parte con el tono de los músculos según lo que le da la luz: antes iban del color oscuro de la piel y la mano se
+         leía como un guante o un muñón al final del antebrazo, que es claro) */
+      const G2 = F['grip' + s], lit = n => { n = dot(n, cam.c) < 0 ? mul(n, -1) : n; return clamp(Math.floor((dot(norm(n), LARM) + .45) / 1.4 * LEVELS), 0, LEVELS - 1); };
+      const body = { h: [out(FIST.body)], z: depth(FIST.body), shade: lit(add(G2.z, mul(G2.y, .4))) }, thumb = { h: [out(FIST.thumb)], z: depth(FIST.thumb), shade: lit(mul(G2.z, -1)) };
+      const band = { h: FIST.fingers.map(out), z: depth([].concat(...FIST.fingers)), shade: max(0, lit(mul(G2.z, -1)) - 1) };
       // las rayas entre los dedos: solo lo que mira a la cámara, y apagándose hacia el borde
       const G3 = F['grip' + s], cz = [dot(G3.y, cam.c), dot(G3.z, cam.c)];
       band.lines = FIST.gaps.map(x => {
@@ -666,7 +677,8 @@
         }
         return d;
       }).join('');
-      [body, band, thumb].forEach(p => p.h.forEach(h => g.skin.push({ h, rim: true })));
+      /* (la silueta, de una pieza: la envolvente de todo; encima, cada parte con su contorno fino. Antes, cada parte dos veces) */
+      g.skin.push({ h: hull([].concat(...[body, band, thumb].map(p => [].concat(...p.h)))), rim: true });
       g.detail = [body, band, thumb].sort((a, b) => a.z - b.z);
       if (g.z == null) g.z = onto(A, 0, 3, 0)[2];
     };
@@ -675,8 +687,10 @@
       const g = group('hand' + s), A = axes(F['hand' + s], cam);
       const out = list => hull([].concat(...list.map(([c, r]) => ellOut(A, c, r, ellN(r)))));
       const depth = list => list.reduce((a, [c]) => a + onto(A, c[0], c[1], c[2])[2], 0) / list.length;
-      const parts = [OPEN.palm, ...OPEN.fingers, OPEN.thumb].map(l => ({ h: [out(l)], z: depth(l) }));
-      parts.forEach(p => g.skin.push({ h: p.h[0], rim: true }));
+      const Hf = F['hand' + s], n0 = dot(Hf.z, cam.c) < 0 ? mul(Hf.z, -1) : Hf.z, sh = clamp(Math.floor((dot(n0, LARM) + .45) / 1.4 * LEVELS), 0, LEVELS - 1);
+      /* la palma (o el dorso), cada dedo con su contorno (un tono más oscuros, para que se separen de la palma) y el pulgar */
+      const parts = [{ h: [out(OPEN.palm)], z: depth(OPEN.palm), shade: sh }, ...OPEN.fingers.map(l => ({ h: [out(l)], z: depth(l), shade: max(0, sh - 1) })), { h: [out(OPEN.thumb)], z: depth(OPEN.thumb), shade: sh }];
+      g.skin.push({ h: hull([].concat(...parts.map(p => [].concat(...p.h)))), rim: true });
       g.detail = parts.sort((a, b) => a.z - b.z);
       if (g.z == null) g.z = onto(A, 0, -12, 0)[2];
     };
@@ -963,7 +977,7 @@
       }).join('');
       /* el puño, pieza a pieza (de atrás adelante): cada una con su relleno y un contorno oscuro fino; la de los dedos, de una
          pieza (el contorno de dentro lo tapa el relleno) y con sus rayas */
-      const detail = g.detail ? g.detail.map(p => `<path d="${p.h.map(smoothR).join('')}" fill="${sg}" stroke="#090a12" stroke-opacity=".7" stroke-width=".55" stroke-linejoin="round" paint-order="stroke"/>` + (p.lines ? `<g stroke="#090a12" stroke-width=".5" stroke-linecap="round">${p.lines}</g>` : '')).join('') : '';
+      const detail = g.detail ? g.detail.map(p => `<path d="${p.h.map(smoothR).join('')}" fill="${p.shade != null ? `url(#g3Ne${p.shade})` : sg}" stroke="#090a12" stroke-opacity=".7" stroke-width=".55" stroke-linejoin="round" paint-order="stroke"/>` + (p.lines ? `<g stroke="#090a12" stroke-width=".5" stroke-linecap="round">${p.lines}</g>` : '')).join('') : '';
       const body = skin + detail + (g.key == 'trunk' ? headLayer() : '') + mus;
       items.push({ z, svg: G.FIG_DEBUG ? `<g data-g="${g.key}">${body}</g>` : body });
       if (twin[g.key]) items.push({ z: twin[g.key].z, svg: `<g opacity="${twin[g.key].k.toFixed(2)}">${body}</g>` });

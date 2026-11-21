@@ -456,7 +456,8 @@
       const items = [GR.padAB(cam, add(b0, mul(n, -7)), add(b1, mul(n, -7)), n, 30, 7)];
       if (!ang) {
         const legs = [add(b0, [0, -14, 40]), add(b1, [0, -14, -12])].flatMap(p => GR.leg(cam, p));
-        return GR.under([...legs, ...items, GR.padAB(cam, add(b0, [0, -7, 0]), add(b0, [0, -7, 62]), UP, 30, 7)]);
+        /* (con su larguero bajo el acolchado, de pata a pata) */
+        return GR.under([...legs, ...GR.beam(cam, add(b0, [0, -18, 40]), add(b1, [0, -18, -12]), 5), ...items, GR.padAB(cam, add(b0, [0, -7, 0]), add(b0, [0, -7, 62]), UP, 30, 7)]);
       }
       /* el asiento (bajo la pelvis) y el armazón */
       const seatC = at(F0.pelvis, [0, -4, -27]), s0 = add([0, seatC[1] - 7, seatC[2] - 18], [0, 0, 0]), s1 = add(s0, [0, 0, 56]);
@@ -773,6 +774,7 @@
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];
     if (!fam) return null;
     const ex = fam(w.slice(1));
+    if (!ex) return null;
     /* la postura de cada momento se guarda (en 1/480 del gesto): el gesto se repite y algunas posturas cuestan de calcular (el
        equilibrio de la sentadilla, el paso de la zancada), así que cada una se calcula una vez. Se devuelve una copia, por si
        quien la pide la toca */

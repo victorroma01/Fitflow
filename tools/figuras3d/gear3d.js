@@ -140,7 +140,7 @@
     return obox(cam, mix(a, b, .5), [x, n], [hw, ht, len(sub(b, a)) / 2], col);
   };
   /* una pata: de un punto del banco al suelo, con su pie */
-  const leg = (cam, top, w = 5, foot = 34) => [obox(cam, [top[0], top[1] / 2, top[2]], [[1, 0, 0], UP], [w, top[1] / 2, w], C.frame), obox(cam, [top[0], 2, top[2]], [[1, 0, 0], UP], [foot, 2, 7], C.frame)];
+  const leg = (cam, top, w = 5, foot = 34) => [obox(cam, [top[0], top[1] / 2, top[2]], [[1, 0, 0], UP], [w, top[1] / 2, w], C.frame), obox(cam, [top[0], 2, top[2]], [[1, 0, 0], UP], [foot, 2, 7], C.frame), ...[-1, 1].map(k => obox(cam, [top[0] + k * (foot - 3), 2.5, top[2]], [[1, 0, 0], UP], [4, 2.5, 7.6], C.rubber))];
 
   /* ── máquinas ── */
   /* la Smith: dos guías de acero verticales a ±xr, en el plano z = zr, con su travesaño arriba y su base; la barra va sujeta a
@@ -187,7 +187,7 @@
     out.push(obox(cam, [base[0], h, base[2]], [[1, 0, 0], UP], [11.5, 9, 11.5], C.iron), ...tube(cam, [base[0] + side * 11, h, base[2]], add(p, [-side * 2, 0, 0]), 2.4, STEEL, 1));
     out.push(disc(cam, p, [0, 0, 1], 9, 4.5, 'wheel'), disc(cam, p, [0, 0, 1], 3, 5, 'metal'));
     /* la pila, al otro lado de la columna (no entre la columna y el cuerpo) */
-    out.push(...stack(cam, [base[0] - side * 30, 0, base[2]], [side, 0, 0], 12));
+    out.push(...stack(cam, [base[0] - side * 30, 0, base[2]], [side, 0, 0], 12), obox(cam, [base[0] - side * 15, 3, base[2]], [[1, 0, 0], UP], [15, 3, 7], C.frame));
     /* el poste es una sola pieza (con la profundidad de su centro): cada trozo del cable se pinta delante o detrás de él según
        quede delante o detrás del poste a su misma altura, y no según el centro del poste (que hacía aparecer y desaparecer el
        cable al moverse) */
@@ -205,7 +205,7 @@
     const arm = [b[0], pul[1] + (pul[1] > 60 ? 12 : 0), b[2]];
     out.push(...tube(cam, arm, add(pul, [0, pul[1] > 60 ? 12 : 0, 0]), 6, C.frame, 2), disc(cam, pul, [1, 0, 0], 9, 4.5, 'wheel'), disc(cam, pul, [1, 0, 0], 3, 5, 'metal'));
     if (pul[1] > 60) out.push(obox(cam, [b[0], H + 4, b[2]], [[1, 0, 0], UP], [13, 4, 13], C.frame));
-    out.push(...stack(cam, add(b, mul(a, 32)), mul(a, -1), 12));
+    out.push(...stack(cam, add(b, mul(a, 32)), mul(a, -1), 12), obox(cam, add(add(b, mul(a, 16)), [0, 3, 0]), [[a[2], 0, -a[0]], UP], [8, 3, 16], C.frame));
     return out;
   };
 

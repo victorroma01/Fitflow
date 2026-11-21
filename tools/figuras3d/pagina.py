@@ -9,8 +9,8 @@ LOTE = json.load(open('salida/lote.json'))
 # el código: el motor, el material y las familias de base (mov3d.js), y de los demás archivos de familias solo los que tienen
 # alguna del lote (y lo que esos usan): la página pesa menos y el móvil la prepara antes. Qué familias tiene cada archivo
 # lo dice su cabecera («Define: Fig3D.FAMILIES.…»)
-BASE, MORE = ('fig3d.js', 'gear3d.js', 'mov3d.js'), ('tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js')
-NEEDS = {'hombros3d.js': ('brazos3d.js',)}  # (hombros3d usa F3.blib, de brazos3d)
+BASE, MORE = ('fig3d.js', 'gear3d.js', 'mov3d.js'), ('tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js', 'core3d.js')
+NEEDS = {'hombros3d.js': ('brazos3d.js',), 'core3d.js': ('brazos3d.js',)}  # (hombros3d y core3d usan F3.blib, de brazos3d)
 def families(f):
     m = re.search(r'Define: Fig3D\.FAMILIES\.(.*?)\*/', open(f, encoding='utf-8').read(), re.S)
     return set(re.findall(r'\w+', m.group(1))) if m else set()
@@ -33,7 +33,7 @@ with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page()
     pg.goto('file://' + os.path.abspath('salida/banco.html')); pg.wait_for_timeout(300)
     VB = pg.evaluate('''(side) => { const out = {}, ts = [0, .125, .25, .375, .5, .625, .75, .875, 1];
-      for (const [n, ex] of Object.entries(EXS)) out[n] = { cam: fit(boxOf(ex, Fig3D.camera(ex.yaw, ex.pitch), ts)).map(v => +v.toFixed(1)).join(' '), side: fit(boxOf(ex, Fig3D.camera(side[0], side[1]), ts)).map(v => +v.toFixed(1)).join(' ') };
+      for (const [n, ex] of Object.entries(EXS)) out[n] = { cam: fit(boxOf(ex, Fig3D.camera(ex.yaw, ex.pitch), ts)).map(v => +v.toFixed(1)).join(' '), side: fit(boxOf(ex, Fig3D.camera(...(ex.side || side)), ts)).map(v => +v.toFixed(1)).join(' ') };
       return out; }''', list(SIDE))
     b.close()
 
@@ -144,7 +144,8 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
   const paint = (c, t) => { c.last = t; c.g.innerHTML = Fig3D.draw(c.ex, t, c.cam, c.id, !c.classList.contains('big')); };
   const setView = (c, v) => {
     build(c); c.view = v;
-    c.cam = v == 'side' ? Fig3D.camera(SIDE[0], SIDE[1]) : Fig3D.camera(c.ex.yaw, c.ex.pitch);
+    /* (de lado: la vista que dé la figura, si la da; tumbado de lado, de frente) */
+    c.cam = v == 'side' ? Fig3D.camera(...(c.ex.side || SIDE)) : Fig3D.camera(c.ex.yaw, c.ex.pitch);
     c.svg.setAttribute('viewBox', VB[c.dataset.ex][v]);
     c.svg.classList.toggle('lado', v == 'side');
     for (const b of c.querySelectorAll('.mini button')) b.setAttribute('aria-pressed', String(b.dataset.v == v));

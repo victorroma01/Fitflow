@@ -80,7 +80,8 @@
   /* la cuerda: del final del cable a cada mano */
   const rope = (cam, top, hands, ss = ['L', 'R']) => ss.flatMap(s => GR.strap(cam, [top, hands[s]], 3.6, ROPE).map(i => ({ ...i, hand: s })));
   /* un banco plano: el acolchado de a a b (su eje, a la altura de arriba) y dos patas */
-  const flatBench = (cam, a, b, hw = 28) => [...GR.leg(cam, add(mix(a, b, .15), [0, -14, 0])), ...GR.leg(cam, add(mix(a, b, .85), [0, -14, 0])), GR.padAB(cam, add(a, [0, -7, 0]), add(b, [0, -7, 0]), UP, hw, 7)];
+  /* (con su larguero bajo el acolchado, de pata a pata: antes el acolchado iba suelto sobre dos postes) */
+  const flatBench = (cam, a, b, hw = 28) => [...GR.leg(cam, add(mix(a, b, .15), [0, -14, 0])), ...GR.leg(cam, add(mix(a, b, .85), [0, -14, 0])), ...GR.beam(cam, add(mix(a, b, .1), [0, -18, 0]), add(mix(a, b, .9), [0, -18, 0]), 5), GR.padAB(cam, add(a, [0, -7, 0]), add(b, [0, -7, 0]), UP, hw, 7)];
 
   /* ════ curls de bíceps ════ */
   const curl = f => {
@@ -427,7 +428,7 @@
     /* el banco, hecho a la medida del cuerpo: el respaldo pegado a la espalda y, plano, sobre dos patas; inclinado, con su asiento */
     const back = F0.thorax, n = back.z, b0 = at(back, [0, -42, -25]), b1 = at(back, [0, 150, -25]);
     const pad = GR.padAB(cam, add(b0, mul(n, -7)), add(b1, mul(n, -7)), n, 28, 7);
-    if (!ang) return GR.under([...[add(b0, [0, -14, 40]), add(b1, [0, -14, -12])].flatMap(p => GR.leg(cam, p)), pad, GR.padAB(cam, add(b0, [0, -7, 0]), add(b0, [0, -7, 62]), UP, 28, 7)]);
+    if (!ang) return GR.under([...[add(b0, [0, -14, 40]), add(b1, [0, -14, -12])].flatMap(p => GR.leg(cam, p)), ...GR.beam(cam, add(b0, [0, -18, 40]), add(b1, [0, -18, -12]), 5), pad, GR.padAB(cam, add(b0, [0, -7, 0]), add(b0, [0, -7, 62]), UP, 28, 7)]);
     const seatC = at(F0.pelvis, [0, -4, -27]), s0 = [0, seatC[1] - 7, seatC[2] - 18], s1 = add(s0, [0, 0, 56]);
     return GR.under([...GR.leg(cam, add(s0, [0, -7, 10])), ...GR.leg(cam, [0, max(8, b1[1] - 10), b1[2]]), GR.padAB(cam, s0, s1, UP, 28, 7), pad]);
   };
