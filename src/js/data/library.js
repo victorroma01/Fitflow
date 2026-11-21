@@ -172,9 +172,9 @@ Cardio|Cuerpo completo y marcha|cr|co,ge|Comba~O,Comba por intervalos~O,Natació
   });
   /* Músculos de ejercicios que comparten línea con otros que trabajan otra cosa (y se llevaban los de la línea): son los de su
      ejercicio equivalente de la biblioteca (la sentadilla, la zancada, el press landmine de hombro, los remos en anillas o con banda, el curl,
-     los fondos en anillas), más lo propio de cada carga que la línea ya decía (el agarre del saco, los hombros que sostienen la kettlebell o la barra por
+     los fondos en anillas, las flexiones, el press de pecho en polea de pie, los pájaros con banda), más lo propio de cada carga que la línea ya decía (el agarre del saco, los hombros que sostienen la kettlebell o la barra por
      encima de la cabeza, el tronco recto colgado del TRX) */
-  const FIX = { 'TRX sentadilla': ['cu,gl', 'is,ad,co'], 'Landmine press': ['dA,dL', 'tr,ts,sa'], 'Goblet squat': ['cu,gl', 'is,er,ad,co,dA'], 'Sentadilla goblet con pausa': ['cu,gl', 'is,er,ad,co,dA'], 'Sandbag squat': ['cu,gl', 'is,er,ad,co,an'], 'Overhead squat': ['cu,gl', 'is,er,ad,co,dA,tr,da'], 'TRX remo': ['da', 'bi,co,an'], 'Remo con banda de pie': ['da,tm,ro', 'bi,dP,er'], 'Sandbag lunges': ['cu,gl', 'is,ad,gm,co,an'], 'Lunges con sandbag 100 m': ['cu,gl', 'is,ad,gm,co,an'], 'TRX curl': ['bi', 'br,an,co'], 'TRX fondos': ['dA,tr', 'pe,co,sa'] };
+  const FIX = { 'TRX sentadilla': ['cu,gl', 'is,ad,co'], 'Landmine press': ['dA,dL', 'tr,ts,sa'], 'Goblet squat': ['cu,gl', 'is,er,ad,co,dA'], 'Sentadilla goblet con pausa': ['cu,gl', 'is,er,ad,co,dA'], 'Sandbag squat': ['cu,gl', 'is,er,ad,co,an'], 'Overhead squat': ['cu,gl', 'is,er,ad,co,dA,tr,da'], 'TRX remo': ['da', 'bi,co,an'], 'Remo con banda de pie': ['da,tm,ro', 'bi,dP,er'], 'Sandbag lunges': ['cu,gl', 'is,ad,gm,co,an'], 'Lunges con sandbag 100 m': ['cu,gl', 'is,ad,gm,co,an'], 'TRX curl': ['bi', 'br,an,co'], 'TRX fondos': ['dA,tr', 'pe,co,sa'], 'TRX flexiones': ['pe', 'tr,dA,co'], 'Parallette push-ups': ['pe', 'tr,dA,co'], 'Press con banda de pie': ['pe', 'dA,tr,co'], 'Pull-apart con banda': ['dP', 'tm,ro'] };
   for (const [n, [p, s]] of Object.entries(FIX))
     if (by[n]) {
       by[n].p = p.split(',');
