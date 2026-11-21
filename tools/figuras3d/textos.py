@@ -696,3 +696,85 @@ LOTES[7] = dict(title='Figuras 3D · lote 7', notes=NOTES7, fams=FAMS7,
 <li><b>Lo que es una aproximación.</b> Los acarreos, el trineo, los gateos y el volteo de neumático avanzan en el sitio (la cámara va con la figura), y la trepa de cuerda sube con ella. El saco por encima del hombro, el burpee con cajón y el de salto adelante dan media vuelta entre repetición y repetición para no salirse del encuadre. La pared de los wall balls llega hasta la diana, a 3 m, y por eso esa figura se ve algo más pequeña.</li>
 </ul>
 </section>''')
+
+NOTES8 = {
+    'Carrera continua': 'Carrera a ritmo cómodo y constante: el pie cae bajo la cadera y se va hacia atrás, el talón sube detrás y la rodilla se adelanta; los brazos, doblados, se balancean junto al cuerpo, al revés que las piernas, y el tronco va algo inclinado.',
+    'Intervalos 400 m': 'La zancada de la carrera; las series de 400 m rápidas y la recuperación van en el objetivo del ejercicio.',
+    'Series 1 km': 'La zancada de la carrera, en series de 1 km.',
+    'Series 800 m': 'La zancada de la carrera, en series de 800 m.',
+    'Series 200 m': 'La zancada de la carrera, en series cortas de 200 m.',
+    'Tempo run': 'La zancada de la carrera, a ritmo de umbral sostenido.',
+    'Carrera por tempo': 'La zancada de la carrera, en bloques a ritmo de umbral.',
+    'Fartlek': 'La zancada de la carrera, con cambios de ritmo.',
+    'Rodaje suave zona 2': 'La zancada de la carrera, a ritmo suave.',
+    'Rodaje largo': 'La zancada de la carrera, en una tirada larga a ritmo suave.',
+    'Progresivos': 'La zancada de la carrera, de menos a más.',
+    'Cuestas': 'Carrera cuesta arriba, por una pendiente de 9°: el tronco más inclinado hacia la cuesta y cada pie apoyando sobre ella.',
+    'Trote en cinta': 'Trote en la cinta: la banda corre bajo los pies y la figura va en el sitio, con los brazos libres de las barras.',
+    'Cuestas en cinta': 'Carrera en la cinta inclinada (12 %), con el tronco más adelantado.',
+    'Cinta inclinada': 'Andar en la cinta inclinada (12 %) sin agarrarse: siempre un pie en la banda, el talón entra primero y los brazos acompañan, con el tronco erguido algo adelantado.',
+    'Caminata inclinada': 'Andar en cuesta (aquí, en la cinta inclinada), con el paso de la marcha rápida y el tronco algo adelantado.',
+    'Caminata rápida': 'Paso rápido en llano: siempre un pie en el suelo, el talón entra primero y los brazos acompañan.',
+    'Senderismo': 'Andar con mochila: un paso algo más lento y el tronco un poco más inclinado por la carga, con las correas sobre los hombros.',
+    'Carrera 1 km': 'La carrera de Hyrox entre estación y estación: la zancada de la carrera continua.',
+    'Carrera 1 km ritmo Hyrox': 'La zancada de la carrera, al ritmo de la prueba.',
+    'Carrera 800 m tras estación': 'La zancada de la carrera, al salir de una estación.',
+    'Carrera 1 km con chaleco': 'La carrera con el chaleco lastrado, que lleva el peso por delante y por detrás del tronco.',
+    'Bicicleta': 'Bici estática: las bielas giran con la bola del pie sobre el pedal (el talón algo más bajo al empujar delante y la punta más caída al subir por detrás), la rodilla algo doblada abajo y las manos en el manillar.',
+    'Bicicleta zona 2': 'La bici estática, a ritmo suave.',
+    'Bicicleta Tabata': 'La bici estática, en esfuerzos cortos.',
+    'Intervalos HIIT en bici': 'La bici estática, en intervalos.',
+    'Assault bike calorías': 'Bici de aire: las palancas van unidas a los pedales y se mueven al revés que el pie de su lado, así que los brazos empujan y tiran a la vez que se pedalea; el ventilador gira delante.',
+    'Assault bike intervalos': 'La bici de aire, en intervalos.',
+    'Ciclismo en carretera': 'Bici de carretera: las manos en las manetas, el tronco más tumbado y las ruedas girando en el sitio.',
+    'Remo ergómetro': 'Remo: la palada empuja primero con las piernas, con los brazos estirados; luego el tronco va hacia atrás y por fin los brazos llevan el asa a la boca del estómago. A la vuelta, al revés: brazos, tronco y piernas. El asiento corre por el raíl, la cadena sale del volante y los talones se despegan en el enganche.',
+    'Remo 2000 m': 'El remo, en 2000 m.',
+    'Remo zona 2': 'El remo, a ritmo suave.',
+    'Remo 500 m intervalos': 'El remo, en series de 500 m.',
+    'Remo calorías': 'El remo, por calorías.',
+    'Remo 1000 m': 'El remo de Hyrox, en 1000 m.',
+    'Remo 1000 m ritmo Hyrox': 'El remo, al ritmo de la prueba.',
+    'Remo 750 m': 'El remo, en 750 m.',
+    'SkiErg 1000 m': 'SkiErg: los brazos bajan casi estirados por delante del cuerpo, separados de él, mientras la cadera se dobla y las rodillas se flexionan un poco, hasta que las asas pasan junto a los muslos; a la vuelta, los brazos suben delante y el cuerpo se estira. Las cuerdas salen de las poleas de arriba de la torre.',
+    'SkiErg 500 m': 'El SkiErg, en 500 m.',
+    'SkiErg 750 m': 'El SkiErg, en 750 m.',
+    'SkiErg intervalos 4x250': 'El SkiErg, en cuatro series de 250 m.',
+    'Ski erg intervalos': 'El SkiErg, en series cortas.',
+    'Comba': 'Saltos sobre la parte delantera de los pies, con el vuelo justo para que pase la cuerda: la cuerda gira alrededor de la línea de las manos, que hacen círculos pequeños con las muñecas, y pasa bajo los pies en lo más alto del salto.',
+    'Comba por intervalos': 'La comba, en intervalos.',
+    'Single unders': 'La comba de CrossFit: una vuelta de cuerda por salto.',
+    'Double unders': 'Un salto más alto con dos vueltas de cuerda: pasa bajo los pies a media subida y a media bajada.',
+    'Comba boxeo': 'Al paso del boxeador: un pie y luego el otro, con un saltito en el de apoyo cuando pasa la cuerda y el otro algo levantado detrás.',
+    'Elíptica': 'Elíptica: cada pedal describe una elipse, con su brazo de la manivela de detrás al rodillo de delante; las asas van al revés que el pie de su lado y la cadera se mece un poco con el paso.',
+    'Escaladora': 'Escaladora de peldaños que bajan: el pie de apoyo baja con su peldaño (el talón se despega al final) y el otro sube al de dos más arriba, sin frenazos; las manos, apenas apoyadas en las barras de los lados.',
+    'Natación': 'Crol: cada brazo entra delante de la cabeza, tira por debajo del cuerpo hasta la cadera, sale junto al muslo y vuelve por encima del agua con el codo alto; el cuerpo rueda hacia el brazo que tira y las piernas baten desde la cadera con los pies en punta. El agua, translúcida, a ras de la espalda.',
+    'Natación intervalos': 'El crol, en series.',
+    'Saco de boxeo': 'El uno-dos al saco, dos veces: directo de izquierda y cruzado de derecha a la altura del hombro, desde la guardia con los codos abajo y los guantes junto a la cara. En el cruzado gira la cadera y se despega el talón de atrás; el saco se mece tras cada golpe.',
+}
+FAMS8 = [('run', 'Carrera y marcha', 'La zancada en el sitio (en la calle, en la cinta, en cuesta, con chaleco o con mochila): el pie de apoyo se va atrás y el otro vuelve por delante, con los brazos al revés que las piernas. Andando, siempre hay un pie en el suelo.'),
+         ('bike', 'Bicicletas', 'Las bielas giran con el pie en el pedal: estática, de aire (con las palancas y el ventilador) y de carretera (con sus ruedas).'),
+         ('rower', 'Remo', 'La palada seguida: piernas, tronco y brazos al empujar; brazos, tronco y piernas a la vuelta, con el asiento por su raíl.'),
+         ('skiErg', 'SkiErg', 'Los brazos bajan por delante del cuerpo mientras la cadera se dobla, y suben a la vuelta.'),
+         ('jumpRope', 'Comba', 'La cuerda gira alrededor de las manos y pasa bajo los pies en el vuelo: simple, doble y al paso del boxeador.'),
+         ('elliptical', 'Elíptica', 'Los pies sobre la elipse de los pedales y las manos en las asas, al revés que los pies.'),
+         ('stairs', 'Escaladora', 'Subir por los peldaños que bajan, sin pararse.'),
+         ('swim', 'Natación', 'El crol, con el cuerpo rodando, las piernas batiendo y el agua a ras de la espalda.'),
+         ('boxing', 'Saco de boxeo', 'Directo y cruzado al saco desde la guardia.')]
+LOTES[8] = dict(title='Figuras 3D · lote 8', notes=NOTES8, fams=FAMS8,
+    head='''<p class="pr">StrataFit · figuras de ejercicio · lote 8 de la revisión</p>
+<h1>Cardio, en 3D</h1>
+<p class="lede">Los <b>52 ejercicios</b> de carrera y marcha (en la calle, en la cinta, en cuesta, con chaleco y con mochila), bicicletas (estática, de aire y de carretera), remo, SkiErg, comba, elíptica, escaladora, natación y saco de boxeo, con la figura nueva moviéndose. Toca una figura para verla en grande con lo que hace; <b>Lado</b> la gira de perfil. Como los lotes anteriores, no está en la app: se integrará cuando estén todos.</p>
+<p class="lede"><b>Novedades:</b> las máquinas de cardio, cada una con lo que se mueve: la banda de la cinta, las bielas y los pedales, las palancas y el ventilador de la bici de aire, las ruedas de la de carretera, el asiento y la cadena del remo, las cuerdas del SkiErg, la elipse de la elíptica y los peldaños de la escaladora. Además, la cuerda de la comba, el agua de la piscina y el saco con los guantes. Todos los gestos van seguidos (solo se paran donde de verdad cambian de sentido) y algo más despacio que en la realidad, para que se vean bien.</p>
+''',
+    found='''<section class="found">
+<h2>Lo que he visto al revisarlo</h2>
+<ul>
+<li><b>Revisado a fondo.</b> Las 52 figuras pasan todas las pruebas: manos que llegan, pies donde deben, articulaciones posibles, sin saltos, choques de todo lo que se dibuja, el grosor real del dibujo contra el material, las piezas que no deben moverse, los agarres y los choques del cuerpo consigo mismo. Lo que salió al hacerlas, ya corregido: las bielas de la bici rozaban la espinilla (ahora van a su escala, con los pedales algo más abiertos que las caderas), las palancas de la bici de aire pasaban por los muslos, la cuerda de la comba cruzaba los brazos (ahora se abre hacia fuera al salir de las manos) y los puños rozaban los muslos, las asas del SkiErg iban torcidas en el puño, las manos rozaban los muslos al correr cuesta arriba y los brazos se cruzaban en la guardia de boxeo.</li>
+<li><b>Más seguidos y más despacio.</b> Como pediste para el lote 7, aquí los gestos ya van seguidos desde el principio: cada uno sigue una curva suave que solo se para en los extremos del movimiento (arriba y abajo en el SkiErg, el enganche y el final en el remo), y todos van algo más despacio que en la realidad.</li>
+<li><b>Corregido en la app.</b> La <b>Cinta inclinada</b> corría, y su explicación es andar a 4,5-6 km/h con la cinta inclinada: ahora anda.</li>
+<li><b>Músculos de la librería.</b> Los de cardio llevan el sistema cardiovascular de principal y, de secundarios, los músculos de cada gesto. Los que llevaban «cuerpo completo» (el SkiErg, el remo y la bici de aire de Hyrox y CrossFit, y la comba de CrossFit), con los suyos, y los que tenían alguno que no era (el remo de 1000 y 750 m con el tríceps, el SkiErg de intervalos con los cuádriceps), corregidos.</li>
+<li><b>Repetidos.</b> La <b>Escalera de gimnasio</b> era la <b>Escaladora</b> (la misma máquina y la misma explicación): queda la Escaladora, como con la Prensa. Los de Hyrox del lote 7, juntados como dijiste, sin perder el número: los cuatro que se miden en metros (trineo, acarreo y burpee con salto) salen al añadirlos con la distancia de la prueba (50, 50, 200 y 80 m), los programas de Hyrox llevan el mismo objetivo que antes y las 100 wall balls y los tramos de cada prueba van en su explicación.</li>
+<li><b>Dos que podría juntar, si quieres.</b> <b>Single unders</b> (CrossFit) y <b>Comba</b> (cardio) son el mismo salto, y <b>Cinta inclinada</b> y <b>Caminata inclinada</b>, la misma marcha en cuesta (la segunda vale también para una cuesta de verdad). Los que cambian la distancia, el ritmo o las series (Remo 1000 m, Bicicleta zona 2, Series 800 m…) los dejo: el número o el formato del nombre es el objetivo que sale al añadirlos.</li>
+<li><b>Lo que es una aproximación.</b> La carrera y la marcha van en el sitio (en la cinta, la banda corre bajo los pies), las ruedas de la bici de carretera giran sin avanzar, y el agua es una superficie translúcida a ras de la espalda (lo que queda debajo se ve a través de ella).</li>
+</ul>
+</section>''')
