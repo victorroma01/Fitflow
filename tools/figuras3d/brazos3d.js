@@ -463,7 +463,9 @@
       }
       /* (la polea cuelga de un brazo que sale de la columna hacia el cuerpo, sobre las manos: el cable baja casi vertical y
          separado de la columna. Antes la polea iba pegada a la columna y el cable bajaba rozándola) */
-      if (one) { out.push(...GR.pulleyTower(cam, [-61, 0, zt], yp, q.hands.R, { reach: 52, dir: [14, 0, -50] }), ...handle(cam, F, 'R', q.hands.R)); return out; }
+      /* (a una mano, el cable se engancha en el arco del asa, detrás de los nudillos: abajo, si saliera del centro del puño,
+         subiría a lo largo del antebrazo) */
+      if (one) { out.push(...GR.pulleyTower(cam, [-61, 0, zt], yp, add(q.hands.R, mul(F.gripR.z, 10)), { reach: 52, dir: [14, 0, -50] }), ...handle(cam, F, 'R', q.hands.R)); return out; }
       const top = add(m, mul(up, ropeA ? 16 : vbar ? 14 : 4));
       out.push(...GR.pulleyTower(cam, [14, 0, zt], yp, top, { reach: 52, dir: [-14, 0, -50] }));
       if (ropeA) out.push(...rope(cam, top, q.hands));

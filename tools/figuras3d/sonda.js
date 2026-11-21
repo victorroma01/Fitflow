@@ -48,7 +48,12 @@
   wrap(GR, 'sandbag', (cam, c, ax, hl, r) => { const a = norm(ax); return { ...seg(add(c, mul(a, -hl)), add(c, mul(a, hl)), r * .85, 'saco'), hug: true }; });
   wrap(GR, 'smithFrame', (cam, zr, xr = 128, top = 470) => [seg([xr, 6, zr], [xr, top, zr], 2.3, 'guía'), seg([-xr, 6, zr], [-xr, top, zr], 2.3, 'guía'), seg([xr, top + 6, zr], [-xr, top + 6, zr], 3.5, 'guía')]);
   wrap(GR, 'smithHooks', (cam, c, xr = 128) => [-1, 1].map(k => box([k * xr, c[1], c[2]], [X, UP], [8, 15, 8], 'carro')));
-  wrap(GR, 'pulleyTower', (cam, base, h, to) => {
+  wrap(GR, 'pulleyTower', (cam, base, h, to, o = {}) => {
+    /* (con o.reach, la polea cuelga de un brazo que sale del poste: el cable sale de ahí, y el brazo también cuenta) */
+    if (o.reach) {
+      const d = norm([o.dir[0], 0, o.dir[2]]), end = add([base[0], h + 12, base[2]], mul(d, o.reach)), p = [end[0], h, end[2]];
+      return [box([base[0], 235, base[2]], [X, UP], [9, 235, 9], 'poste'), seg([base[0], h + 12, base[2]], end, 2.5, 'brazo de la polea'), { ...seg(p, to, .7, 'cable'), soft: true }];
+    }
     const p = [base[0] + (base[0] < 0 ? 14 : -14), h, base[2]];
     return [box([base[0], 235, base[2]], [X, UP], [9, 235, 9], 'poste'), { ...seg(p, to, .7, 'cable'), soft: true }];
   });
