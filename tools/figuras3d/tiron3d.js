@@ -1,0 +1,445 @@
+/* ═══ figuras 3D: los tirones (lote 2) ═══
+   Jalones, remos y dominadas. Como en el lote 1, las posturas salen de reglas: en los jalones y remos sentados el tronco se
+   echa algo atrás al tirar; en los remos inclinados, la cadera se va atrás lo justo para que el peso quede sobre el medio
+   del pie; colgado de la barra, el cuerpo se coloca con su centro de masas bajo las manos. En los tirones se descansa con
+   los brazos estirados (rest 'a') y el esfuerzo acaba con el tirón (up 'b').
+   Define: Fig3D.FAMILIES.pulldown, .row, .pullup */
+(function (G) {
+  const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib;
+  const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, plate, barbell, cross } = L;
+  const { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, bands } = M;
+  const { cos, sin, PI, abs, max, min, sqrt, atan2 } = Math;
+  const STEEL = ['#b9bed0', '#0a0b10'];
+  /* el centro de los hombros */
+  const shC = (F, q) => mix(shoulder(F, 'L', q), shoulder(F, 'R', q), .5);
+  /* una cuerda (la del jalón con cuerda): dos ramales con su nudo al final */
+  const rope = (cam, top, hands) => ['L', 'R'].flatMap(s => GR.strap(cam, [top, hands[s]], 3.4, ['#c9b98f', '#0a0b10']).map(i => ({ ...i, hand: s })));
+  /* un asa de agarre (un tubo corto de acero) en la mano s, a lo largo de dir */
+  const grip = (cam, c, dir, s, hw = 9) => GR.tube(cam, add(c, mul(dir, -hw)), add(c, mul(dir, hw)), 4, STEEL, 1).map(i => ({ ...i, hand: s }));
+
+  /* ════ jalones ════ */
+  const pulldown = f => {
+    const wide = has(f, 'wide'), one = has(f, 'one'), machine = has(f, 'machine'), rope_ = has(f, 'rope'), kneel = has(f, 'kneel');
+    const name = f.join(' ');
+    /* el agarre: ancho, normal, supino (al ancho de los hombros, palmas hacia uno), neutro (asas paralelas), estrecho (el
+       triángulo: las manos casi juntas) o la cuerda */
+    const kind = rope_ ? 'rope' : wide ? 'wide' : f.includes('supine') ? 'supine' : f.includes('neutral') ? 'neutral' : f.includes('close') ? 'close' : one || machine ? 'neutral' : 'normal';
+    const g = { wide: 100, normal: 76, supine: 40, neutral: 30, close: 8, rope: 16 }[kind];
+    const neutralGrip = kind == 'neutral' || kind == 'close' || kind == 'rope';
+    const barDir = neutralGrip ? { L: [0, 0, 1], R: [0, 0, -1] } : kind == 'supine' ? [-1, 0, 0] : [1, 0, 0];
+    const elbow = kind == 'wide' ? [1, -.2, .05] : kind == 'normal' ? [.85, -.3, .2] : [.35, -.45, .85];
+    /* sentado con los muslos bajo los rodillos (o de rodillas en el suelo, en el de una mano) */
+    const body = kneel ? { root: [0, 97, 0], feet: both(() => [20, -76, 0, 14, 60]), knee: both(() => [0, -.2, 1]) }
+      : { root: [0, 122, 0], feet: both(() => [40, 86, 14]), knee: both(() => [.25, .7, .7]) };
+    const bodyAt = t => { const lean = kneel ? mix(-2, -8, t) : mix(-4, -17, t); return { ...body, tilt: lean * .55, spine: lean * .45, neck: -.8 * lean + 3, shrug: mix(8, -4, t) }; };
+    /* el principio (los brazos estirados hacia arriba, algo por delante de la cabeza) y el final (la barra en lo alto del pecho;
+       con los agarres cerrados, más abajo, en el esternón), cada uno con el tronco de ese momento */
+    const F0 = pose({ ...bodyAt(0), hands: ZERO, elbow: {} }).F, F1 = pose({ ...bodyAt(1), hands: ZERO, elbow: {} }).F;
+    const topY = 80 + 8 + sqrt(max(0, 145 ** 2 - (g - 47) ** 2 - 14 ** 2));
+    const c0 = at(F0.thorax, [0, topY, 12]);
+    const c1 = at(F1.thorax, neutralGrip || kind == 'supine' ? [0, 76, 30] : [0, 92, 24]);
+    const pulley = [0, 560, c0[2]];
+    const at3 = t => { const c = mix(c0, c1, t); return add(c, [0, 0, 6 * sin(PI * t)]); };
+    const hand = (c, s) => add(c, sd(s, [g, 0, 0]));
+    return {
+      view: 'back', up: 'b', rest: 'a', cam: [-148, 12], one: one || kneel, feetOff: kneel,
+      at(t) {
+        const b = bodyAt(t), c = at3(t);
+        if (one || kneel) {
+          /* con una mano (la derecha): la otra, apoyada en el muslo (sentado) o colgando (de rodillas) */
+          const { F } = pose({ ...b, hands: ZERO, elbow: {} });
+          const free = kneel ? add(shoulder(F, 'L', b), [9, -143, 4]) : at(F.pelvis, [26, 8, 40]);
+          return { ...b, barC: c, hands: { R: hand(c, 'R'), L: free }, elbow: { R: [.45, -.4, .6], L: kneel ? [.1, 0, -1] : [.3, -.3, 1] }, barDir: { R: [0, 0, -1], L: [1, 0, 0] }, fist: { L: false }, palm: { L: kneel ? [-1, 0, 0] : [0, -1, 0] } };
+        }
+        if (machine) {
+          /* la convergente: cada asa baja por su arco, de arriba y separadas a los lados del pecho */
+          const hs = both(s => { const a = hand(c0, s), e = add(T(F1, s, [52, 66, 24]), [0, 0, 0]); const u = mix(a, e, t); return add(u, sd(s, [12 * sin(PI * t), 0, 0])); });
+          return { ...b, barC: c, hands: hs, elbow: both(() => elbow), barDir };
+        }
+        return { ...b, barC: c, hands: both(s => hand(c, s)), elbow: both(() => elbow), barDir, ...(kind == 'supine' ? {} : {}) };
+      },
+      gear(q, F, cam) {
+        const out = [];
+        /* el asiento y los rodillos de los muslos (o nada, de rodillas) */
+        if (!kneel) {
+          const s = at(F.pelvis, [0, -22, -8]), s0 = [0, s[1] - 7, s[2] - 24], s1 = add(s0, [0, 0, 60]);
+          out.push(...GR.under([...GR.leg(cam, add(mix(s0, s1, .5), [0, -7, 0])), GR.padAB(cam, s0, s1, UP, 30, 7)]));
+          const kn = mix(pose(q).J.L.knee, pose(q).J.R.knee, .5), r = [0, kn[1] + 16, kn[2] - 14];
+          out.push(...GR.tube(cam, add(r, [-34, 0, 0]), add(r, [-8, 0, 0]), 11, GR.C.pad, 1), ...GR.tube(cam, add(r, [8, 0, 0]), add(r, [34, 0, 0]), 11, GR.C.pad, 1));
+          out.push(...GR.tube(cam, add(r, [0, 0, 0]), [0, r[1], r[2] + 60], 5, GR.C.frame, 1).map(i => ({ ...i, nf: true })));
+        }
+        /* el cable, de la polea (arriba, fuera del encuadre) a la barra o el asa */
+        const att = q.barC;
+        if (machine) {
+          (one ? ['R'] : ['L', 'R']).forEach(s => { const h = q.hands[s], pv = add(h, [0, 0, -1]), top = [sd(s, [70, 0, 0])[0], 470, pulley[2] - 40]; out.push(...GR.tube(cam, top, add(h, sd(s, [10, 0, 0])), 6, GR.C.frame, 4).map(i => ({ ...i, nf: true })), ...grip(cam, h, [0, 0, 1], s, 8)); });
+          return out;
+        }
+        out.push(...GR.cableLine(cam, att, pulley).map(i => ({ ...i, nf: true })));
+        if (one || kneel) { out.push(...grip(cam, q.hands.R, [0, 0, 1], 'R', 8)); return out; }
+        if (kind == 'rope') { out.push(...rope(cam, add(att, [0, 14, 0]), q.hands)); return out; }
+        if (kind == 'close') {
+          /* el triángulo: dos asas paralelas, juntas, colgando de un soporte en V */
+          ['L', 'R'].forEach(s => { const h = q.hands[s]; out.push(...grip(cam, h, [0, 0, 1], s, 8), ...GR.tube(cam, add(h, [0, 0, 8]), add(att, [0, 22, 0]), 3, STEEL, 1), ...GR.tube(cam, add(h, [0, 0, -8]), add(att, [0, 22, 0]), 3, STEEL, 1)); });
+          return out;
+        }
+        if (kind == 'neutral') {
+          /* la barra de agarre neutro: un travesaño con dos asas paralelas */
+          out.push(...bar(cam, add(att, [-52, 8, 0]), add(att, [52, 8, 0]), 4, 5));
+          ['L', 'R'].forEach(s => { const h = q.hands[s]; out.push(...grip(cam, h, [0, 0, 1], s, 9), ...GR.tube(cam, add(h, [0, 0, 9]), add(h, [0, 8, 9]), 3, STEEL, 1), ...GR.tube(cam, add(h, [0, 0, -9]), add(h, [0, 8, -9]), 3, STEEL, 1)); });
+          return out;
+        }
+        /* la barra de jalón: recta, con las puntas algo dobladas hacia abajo */
+        const hw = wide ? 124 : 104;
+        const segs = bar(cam, add(att, [-hw + 18, 0, 0]), add(att, [hw - 18, 0, 0]), 10, 5.2);
+        segs.forEach((i, n) => { const x = -hw + 18 + (n + .5) * (2 * hw - 36) / 10; if (abs(abs(x) - g) < 18) i.hand = x > 0 ? 'L' : 'R'; });
+        out.push(...segs, ...[-1, 1].flatMap(k => bar(cam, add(att, [k * (hw - 18), 0, 0]), add(att, [k * hw, -10, 0]), 1, 5.2)));
+        return out;
+      },
+    };
+  };
+
+  /* ════ remos ════ */
+  /* el tronco inclinado (en grados desde la vertical) como lo hace el motor: la pelvis se lleva casi tres cuartos y el resto,
+     la espalda */
+  const trunk = lean => ({ tilt: lean * .72, spine: lean * .28 });
+  /* la raíz (la cadera) para que el centro de los hombros quede donde se pide, con el tronco dado */
+  const rootFor = (base, S) => { const q = { ...base, hands: ZERO, elbow: {} }, { F } = pose(q); return add(base.root, sub(S, shC(F, base))); };
+  /* la mano s colgando, con el brazo estirado bajo el hombro (y algo hacia fuera, out) */
+  const hangFrom = (F, s, q, out = 6) => add(shoulder(F, s, q), sd(s, [out, -145, 0]));
+  const row = f => {
+    const w = x => has(f, x);
+    let body, arms, gear = () => [], cam = [-130, 14], one = false, feetOff = false, rest = 'a', up = 'b';
+    /* ── inclinado, de pie: con barra (normal, supino, Pendlay, en la Smith), Remo T y Meadows, y Kroc ── */
+    if (w('bar') || w('pendlay') || w('smith') || w('tbar')) {
+      const pend = w('pendlay'), supine = w('supine'), meadows = w('meadows'), tb = w('tbar') && !meadows, smith = w('smith');
+      const lean = pend ? 74 : meadows ? 70 : tb ? 48 : 52, gg = tb ? 7 : supine ? 46 : 64;
+      const ft = meadows ? { L: [24, 30, 10], R: [30, -34, 22] } : both(() => [30, 0, 8]);
+      const lr = legRoot(30, 0, 8, pend ? 14 : 10, pend ? 38 : 52);
+      const base = { root: lr.root, ...trunk(lean), neck: -.3 * lean, feet: ft, knee: both(() => lr.knee), shrug: 2 };
+      /* la cadera, atrás lo justo para que la carga, colgando de los brazos, quede sobre el medio del pie */
+      const hangC = q => { const { F } = pose({ ...q, hands: ZERO, elbow: {} }); return mix(hangFrom(F, 'L', q, gg - 47), hangFrom(F, 'R', q, gg - 47), .5); };
+      if (pend) {
+        /* en el Pendlay la barra empieza en el suelo: la cadera baja (y las rodillas se doblan) lo justo para llegar a ella */
+        const { F } = pose({ ...base, hands: ZERO, elbow: {} }), want = 49 + sqrt(144 ** 2 - (gg - 47) ** 2);
+        base.root = add(base.root, [0, want - shC(F, base)[1], 0]);
+      }
+      const shift = d => ({ ...base, root: add(base.root, [0, 0, d]) });
+      const dz = solve(d => { const q = shift(d), { F } = pose({ ...q, hands: ZERO, elbow: {} }); return midFoot(F)[2] - hangC(q)[2]; }, -60, 60);
+      body = shift(meadows ? dz * .4 : dz);
+      const { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
+      /* abajo: los brazos estirados (en el Pendlay, la barra en el suelo); arriba, en la parte baja del pecho (con agarre
+         supino, en el vientre; en el T, en el pecho) */
+      let c0 = hangC(body);
+      if (pend) c0 = [0, 49, c0[2]];
+      const c1 = at(F0.thorax, supine ? [0, 16, 32] : tb ? [0, 42, 40] : [0, 34, 31]);
+      const elbow = supine || tb ? [.18, .25, -1] : [.6, .25, -1];
+      const barDir = tb ? { L: [0, 1, 0], R: [0, 1, 0] } : supine ? [-1, 0, 0] : [1, 0, 0];
+      if (pend) rest = 'a';
+      if (meadows) {
+        /* Meadows: con la derecha, del extremo de la barra apoyada en el suelo a la izquierda; el antebrazo izquierdo, en la
+           rodilla */
+        one = true;
+        const h0 = hangFrom(F0, 'R', body, 2), h1 = T(F0, 'R', [34, 22, 4]), piv = [h0[0] + 380, 6, h0[2] + 40];
+        const J0 = pose({ ...body, hands: ZERO, elbow: {} }).J, SL = shoulder(F0, 'L', body), hl = add(SL, mul(norm(sub(add(J0.L.knee, [0, 14, 0]), SL)), 128));
+        arms = t => ({ hands: { R: mix(h0, h1, t), L: hl }, elbow: { R: [.2, .6, -1], L: [.6, -.2, .4] }, barDir: { R: norm(sub(piv, h0)), L: [1, 0, 0] }, fist: { L: false }, palm: { L: [0, -1, 0] }, piv });
+        gear = (q, F, cam) => { const h = q.hands.R, u = norm(sub(h, q.piv)); return [GR.obox(cam, [q.piv[0], 3, q.piv[2]], [[1, 0, 0], UP], [22, 3, 22], GR.C.frame), ...bar(cam, add(q.piv, mul(u, -8)), add(h, mul(u, -30)), 8, 5.2), ...bar(cam, add(h, mul(u, -30)), add(h, mul(u, 10)), 2, 7.6).map((i, n) => n == 1 ? { ...i, hand: 'R' } : i), GR.disc(cam, add(h, mul(u, -24)), u, 40, 9)]; };
+      }
+      else if (tb) {
+        /* Remo T: a horcajadas sobre la barra, con el asa en V bajo ella, delante de los discos; el eje de la barra, en el
+           suelo detrás */
+        const piv = [0, 6, c0[2] - 420];
+        arms = t => { const c = mix(c0, c1, ease(t)); return { barC: c, hands: { L: add(c, [7, 0, 0]), R: add(c, [-7, 0, 0]) }, elbow: both(() => elbow), barDir, piv }; };
+        gear = (q, F, cam) => { const c = q.barC, u = norm(sub(c, q.piv)); return [GR.obox(cam, [q.piv[0], 3, q.piv[2]], [[1, 0, 0], UP], [22, 3, 22], GR.C.frame), ...bar(cam, add(q.piv, mul(u, -8)), add(c, mul(u, 90)), 14, 5.2), GR.disc(cam, add(c, mul(u, 30)), u, 49, 12), GR.disc(cam, add(c, mul(u, 42)), u, 40, 9), ...GR.tube(cam, add(c, [0, 10, -10]), add(c, [0, 10, 10]), 3, STEEL, 1), ...['L', 'R'].flatMap(s => grip(cam, q.hands[s], [0, 1, 0], s, 7))]; };
+      }
+      else {
+        arms = t => { const c = add(mix(c0, c1, t), [0, 0, -6 * sin(PI * t)]); return { barC: c, grip: gg, hands: { L: add(c, [gg, 0, 0]), R: add(c, [-gg, 0, 0]) }, elbow: both(() => elbow), barDir }; };
+        gear = (q, F, cam) => [...bb(q, cam), ...(smith ? [...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC)] : [])];
+        if (smith) arms = t => { const c = [0, mix(c0[1], c1[1], t), c0[2]]; return { barC: c, grip: gg, hands: { L: add(c, [gg, 0, 0]), R: add(c, [-gg, 0, 0]) }, elbow: both(() => elbow), barDir }; };
+      }
+      cam = meadows ? [-118, 14] : [-125, 14];
+    }
+    /* ── con mancuerna, a una mano: apoyado en el banco (rodilla y mano izquierdas) o, el Kroc, con la mano en un apoyo ── */
+    else if (w('db')) {
+      one = true;
+      const kroc = w('kroc');
+      if (kroc) {
+        const lr = legRoot(30, 0, 8, 12, 50), base = { root: lr.root, ...trunk(64), neck: -16, feet: { L: [30, 34, 10], R: [32, -26, 16] }, knee: both(() => lr.knee) };
+        body = base;
+      }
+      else {
+        /* la rodilla izquierda en el banco, la espinilla sobre él y el pie colgando por detrás; la mano izquierda en el banco,
+           con el brazo estirado; el pie derecho en el suelo. El tronco queda algo más alto por delante (unos 30°) */
+        const th = RAD(29), root = [0, 190, -38];
+        body = { root, ...trunk(90 - 29), neck: -18, feet: { L: [18, -96, 180, 91, 55], R: [42, -20, 12] }, knee: { L: [0, -.3, 1], R: [.2, 0, 1] } };
+      }
+      const { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
+      const h0 = hangFrom(F0, 'R', body, 4), h1 = T(F0, 'R', [30, 18, -8]);
+      const hl = kroc ? add(shoulder(F0, 'L', body), [6, -128, 30]) : add(shoulder(F0, 'L', body), [2, -145, 0]);
+      arms = t => ({ hands: { R: add(mix(h0, h1, t), [0, 0, 0]), L: hl }, elbow: { R: [.12, .7, -1], L: [.4, 0, -1] }, barDir: { R: [0, 0, 1], L: [1, 0, 0] }, fist: { L: false }, palm: { L: [0, -1, 0] } });
+      gear = (q, F, cam) => {
+        const out = [...GR.dumbbell(cam, q.hands.R, [0, 0, 1], 'R', { R: 15.5 })];
+        if (kroc) { const p = add(hl, [0, -6, 0]); out.push(...GR.under([GR.obox(cam, [p[0], p[1] / 2, p[2]], [[1, 0, 0], UP], [30, p[1] / 2, 22], GR.C.pad)])); }
+        else out.push(...GR.under([GR.padAB(cam, [18, 94, -100], [18, 94, 112], UP, 30, 7), ...GR.leg(cam, [18, 87, -70]), ...GR.leg(cam, [18, 87, 84])]));
+        return out;
+      };
+      cam = [-118, 16];
+    }
+    /* ── tumbado boca abajo en el banco inclinado (con apoyo en el pecho; el posterior, con los codos abiertos) ── */
+    else if (w('chest')) {
+      const rear = w('rear'), inc = 34;
+      body = { root: [0, 112, 0], ...trunk(90 - inc), neck: -(90 - inc) * .45, feet: both(() => [22, -128, 6, 12, 36]), knee: both(() => [0, -.4, 1]) };
+      const { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
+      const h0 = s => hangFrom(F0, s, body, rear ? 16 : 6), h1 = s => rear ? T(F0, s, [80, 74, -12]) : T(F0, s, [34, 30, -6]);
+      const barDir = rear ? [1, 0, 0] : { L: norm(F0.thorax.y), R: norm(F0.thorax.y) };
+      arms = t => ({ hands: both(s => mix(h0(s), h1(s), t)), elbow: both(() => rear ? [1, .2, -.1] : [.3, .5, -1]), barDir });
+      gear = (q, F, cam) => {
+        const n = mul(F0.thorax.z, -1), a = at(F0.thorax, [0, -40, 27]), b = at(F0.thorax, [0, 96, 27]);
+        const seat = at(F0.pelvis, [0, -30, 10]);
+        return [...pair(q, cam, rear ? [1, 0, 0] : norm(F0.thorax.y)), ...GR.under([...GR.leg(cam, [0, seat[1] - 14, seat[2]]), ...GR.leg(cam, add(b, [0, -30, 0])), GR.padAB(cam, add(a, mul(n, -7)), add(b, mul(n, -7)), mul(n, -1), 28, 7)])];
+      };
+      cam = [-140, 18];
+      feetOff = true;
+    }
+    /* ── sentado en la polea baja (V, agarre neutro, a una mano, retracción de escápulas) o alta, y en máquina ── */
+    else if (w('cable') || w('machine')) {
+      const high = w('high'), mach = w('machine'), scap = w('scap'), conv = w('converge');
+      one = w('one');
+      const seatY = mach || high ? 100 : 70;
+      body = { root: [0, seatY + 22, 0], feet: mach || high ? both(() => [36, 80, 12]) : both(() => [22, 162, 4, 40, -30]), knee: both(() => [.15, .8, .7]) };
+      const bodyAt = t => { const lean = scap ? 0 : mach ? mix(8, 2, t) : high ? mix(10, -6, t) : mix(22, -6, t); return { ...body, ...trunk(lean), neck: -.8 * lean, reach: scap ? mix(8, -8, t) : mix(6, -4, t) }; };
+      const F0 = pose({ ...bodyAt(0), hands: ZERO, elbow: {} }).F, F1 = pose({ ...bodyAt(1), hands: ZERO, elbow: {} }).F;
+      /* la polea (o la máquina): baja, a la altura de los pies; alta, por delante y arriba; en la máquina, el asa delante */
+      const pul = high ? [0, 400, 230] : mach ? null : [0, 64, 196];
+      const reachTo = (F, s, q, tgt, k = 140) => { const S = shoulder(F, s, q); return add(S, mul(norm(sub(tgt, S)), k)); };
+      const end = s => mach ? T(F1, s, [42, 46, 4]) : high ? T(F1, s, [16, 70, 34]) : T(F1, s, one ? [26, 26, 20] : [9, 24, 36]);
+      const start = s => { const q = bodyAt(0); if (mach) return add(shoulder(F0, s, q), sd(s, [-4 + (conv ? 14 : 0), -12, 138])); return reachTo(F0, s, q, add(pul, sd(s, [one ? 0 : 9, 0, 0])), scap ? 143 : 140); };
+      const neutral = !w('bar');
+      const barDir = neutral ? [0, 1, 0] : [1, 0, 0];
+      arms = t => {
+        const q = bodyAt(t);
+        const H = s => scap ? (() => { const { F } = pose({ ...q, hands: ZERO, elbow: {} }); return reachTo(F, s, q, add(pul, sd(s, [9, 0, 0])), 143); })() : mix(start(s), end(s), t);
+        const el = mach || one ? [.25, .2, -1] : high ? [.4, -.3, -1] : [.2, .05, -1];
+        if (one) { const { F } = pose({ ...q, hands: ZERO, elbow: {} }); return { hands: { R: H('R'), L: at(F.pelvis, [26, 8, 40]) }, elbow: { R: el, L: [.3, -.3, 1] }, barDir: { R: barDir, L: [1, 0, 0] }, fist: { L: false }, palm: { L: [0, -1, 0] } }; }
+        return { hands: both(H), elbow: both(() => el), barDir };
+      };
+      const ret = arms;
+      arms = t => ({ ...bodyAt(t), ...ret(t) });
+      gear = (q, F, cam) => {
+        const out = [];
+        const s = at(F.pelvis, [0, -22, -8]), s0 = [0, s[1] - 7, s[2] - 26], s1 = add(s0, [0, 0, mach || high ? 60 : 110]);
+        out.push(...GR.under([...GR.leg(cam, add(mix(s0, s1, .5), [0, -7, 0])), GR.padAB(cam, s0, s1, UP, 28, 7)]));
+        if (mach) {
+          /* el apoyo del pecho y las palancas de las asas, que cuelgan de un eje alto por delante */
+          const ch = at(F.thorax, [0, 52, 31]);
+          out.push(...GR.under([GR.padAB(cam, add(ch, [0, -32, 7]), add(ch, [0, 32, 7]), [0, 0, -1], 30, 7)], 1), ...GR.tube(cam, add(ch, [0, -40, 20]), [0, 8, ch[2] + 20], 6, GR.C.frame));
+          (one ? ['R'] : ['L', 'R']).forEach(k => { const h = q.hands[k], pv = [h[0] + sd(k, [10, 0, 0])[0], 330, 170]; out.push(...GR.tube(cam, pv, add(h, sd(k, [10, 0, 0])), 6, GR.C.frame, 4).map(i => ({ ...i, z: i.z - 2 })), ...grip(cam, h, [0, 1, 0], k, 8)); });
+          return out;
+        }
+        if (!high) {
+          /* la plataforma de los pies, inclinada, y la polea baja delante */
+          out.push(...GR.under([GR.obox(cam, [0, 52, 182], [[1, 0, 0], norm([0, .5, -1])], [36, 30, 4], GR.C.frame)], 2));
+        }
+        const hc = one ? q.hands.R : mix(q.hands.L, q.hands.R, .5);
+        out.push(...GR.cableLine(cam, add(hc, [0, 0, 8]), pul).map(i => high ? { ...i, nf: true } : i), GR.disc(cam, pul, [1, 0, 0], 8, 4, 'wheel'));
+        if (one) out.push(...grip(cam, q.hands.R, [0, 1, 0], 'R', 8));
+        else ['L', 'R'].forEach(k => { const h = q.hands[k]; out.push(...grip(cam, h, [0, 1, 0], k, 8), ...GR.tube(cam, add(h, [0, 8, 0]), add(hc, [0, 2, 8]), 3, STEEL, 1), ...GR.tube(cam, add(h, [0, -8, 0]), add(hc, [0, 2, 8]), 3, STEEL, 1)); });
+        return out;
+      };
+      cam = [-128, 12];
+      if (!mach && !high) feetOff = true;
+    }
+    /* ── invertido bajo una barra, y en anillas o TRX: el cuerpo recto de los talones a los hombros, que sube hasta las manos ── */
+    else if (w('inverted') || w('rings')) {
+      const rings = w('rings'), trx = w('trx');
+      const yb = rings ? 0 : 190, L1 = LEN.thigh + LEN.shin - .6, L2 = 128;
+      /* el ángulo del cuerpo con el suelo: abajo, los brazos estirados; arriba, el pecho en la barra (o en las manos) */
+      let ph = t => RAD(rings ? mix(32, 52, t) : mix(9, 31, t));
+      const ankle = [0, LEN.ankle, 150];
+      /* el cuerpo recto con un ángulo a (en radianes) sobre el suelo, apoyado en los talones */
+      const bodyAng = a => ({ root: add(ankle, [0, L1 * sin(a), -L1 * cos(a)]), tilt: -(90 - a / RAD(1)), spine: 0, neck: 8, feet: both(() => [22, ankle[2], 4, 0, -62]), knee: both(() => [0, 1, .2]), reach: -2 });
+      const bodyAt = t => bodyAng(ph(t));
+      const g = rings ? 26 : 70, zB = -96;
+      if (!rings) {
+        /* bajo la barra: el ángulo de cada momento, el que deja el hombro a la distancia de la mano que toca (los brazos
+           estirados abajo; arriba, el pecho junto a la barra) */
+        const armAt = a => { const q = bodyAng(a), { F } = pose({ ...q, hands: ZERO, elbow: {} }); return len(sub(add([0, yb, zB], [g, 0, 0]), shoulder(F, 'L', q))); };
+        const memo = {};
+        ph = t => { const k = Math.round(t * 400); if (memo[k] == null) memo[k] = solve(a => mix(145, 60, t) - armAt(a), RAD(0), RAD(60), 16); return memo[k]; };
+      }
+      const F0 = pose({ ...bodyAt(0), hands: ZERO, elbow: {} }).F, F1 = pose({ ...bodyAt(1), hands: ZERO, elbow: {} }).F;
+      const anchor = [0, 560, shC(F0, bodyAt(0))[2] - 60];
+      const top = s => rings ? T(F1, s, [24, 58, 44]) : add([0, yb, zB], sd(s, [g, 0, 0]));
+      const bot = s => rings ? add(shoulder(F0, s, bodyAt(0)), mul(norm(sub(add(anchor, sd(s, [20, 0, 0])), shoulder(F0, s, bodyAt(0)))), 143)) : top(s);
+      arms = t => ({ ...bodyAt(t), hands: both(s => rings ? mix(bot(s), top(s), t) : top(s)), elbow: both(() => rings ? [.35, -.3, .4] : [.55, -.4, .3]), barDir: rings ? [0, 1, 0] : [1, 0, 0] });
+      gear = (q, F, cam) => {
+        if (rings) return ['L', 'R'].flatMap(s => { const h = q.hands[s], A = add(anchor, sd(s, [20, 0, 0])); return [...GR.strap(cam, [h, A], 2.6, GR.C.strap).map(i => ({ ...i, nf: true })), ...(trx ? grip(cam, h, [0, 1, 0], s, 7) : [ringAt(cam, h, s)])]; });
+        const c = [0, yb, q.hands.L[2]];
+        return [...barbell(cam, c, g), ...[-1, 1].flatMap(k => GR.tube(cam, [k * 128, 0, c[2]], [k * 128, 300, c[2]], 6, GR.C.frame, 6).map(i => ({ ...i, nf: true })))];
+      };
+      cam = [-62, 16];
+      feetOff = true;
+    }
+    /* ── con banda: sentado en el suelo con la banda en los pies, o de pie con la banda sujeta delante ── */
+    else if (w('bandsit') || w('band')) {
+      const sit = w('bandsit');
+      body = sit ? { root: [0, 26, 0], feet: both(() => [18, 160, 4, 4, -28]), knee: both(() => [.1, 1, .3]) }
+        : { root: [0, LEN.ankle + LEN.shin + LEN.thigh - 5, 0], feet: { L: [26, 14, 10], R: [26, -14, 10] }, knee: both(() => [.2, 0, 1]) };
+      const bodyAt = t => { const lean = sit ? mix(14, -6, t) : mix(6, -2, t); return { ...body, ...trunk(lean), neck: -.8 * lean, reach: mix(5, -5, t) }; };
+      const F0 = pose({ ...bodyAt(0), hands: ZERO, elbow: {} }).F, F1 = pose({ ...bodyAt(1), hands: ZERO, elbow: {} }).F;
+      const anchor = sit ? null : [0, 236, 250];
+      const tgt = s => sit ? at(F0['foot' + s], [0, -6, 26]) : add(anchor, sd(s, [6, 0, 0]));
+      const start = s => { const S = shoulder(F0, s, bodyAt(0)); return add(S, mul(norm(sub(tgt(s), S)), 140)); };
+      const end = s => T(F1, s, sit ? [22, 24, 34] : [24, 50, 30]);
+      arms = t => ({ ...bodyAt(t), hands: both(s => mix(start(s), end(s), t)), elbow: both(() => [.25, .05, -1]), barDir: [0, 1, 0] });
+      gear = (q, F, cam) => ['L', 'R'].flatMap(s => GR.strap(cam, GR.sag(sit ? at(F['foot' + s], [0, -6, 26]) : add(anchor, sd(s, [6, 0, 0])), q.hands[s], [0, -1, 0], 4, 5), 3.2, GR.C.band)).concat(sit ? [] : [GR.obox(cam, anchor, [[1, 0, 0], UP], [6, 9, 4], GR.C.frame)]);
+      cam = [-118, 14];
+      if (sit) feetOff = true;
+    }
+    if (!arms) return null;
+    const self = {
+      view: 'back', up, rest, cam, one, feetOff,
+      at(t) { const a = arms(t); return { ...(body || {}), ...a }; },
+      gear(q, F, cam) { return gear(q, F, cam); },
+    };
+    return self;
+  };
+  /* una anilla (vista de canto o de frente según la cámara), en la mano s */
+  const ringAt = (cam, h, s) => {
+    const c = add(h, [0, 6, 0]), P = cam.P(c), u = cam.P(add(c, [0, 1, 0])), r = 11;
+    return { z: P[2] + .5, hand: s, svg: `<ellipse cx="${(P[0]).toFixed(1)}" cy="${(P[1] - 2).toFixed(1)}" rx="${(r * .55).toFixed(1)}" ry="${r}" fill="none" stroke="#0a0b10" stroke-width="5"/><ellipse cx="${(P[0]).toFixed(1)}" cy="${(P[1] - 2).toFixed(1)}" rx="${(r * .55).toFixed(1)}" ry="${r}" fill="none" stroke="#c9b98f" stroke-width="3"/>` };
+  };
+
+  /* ════ dominadas y colgados ════ */
+  /* las piernas, colgando: la cadera flexionada a grados (hacia delante) y la rodilla b grados (la espinilla, atrás); da el
+     tobillo en el marco de la pelvis (lado izquierdo) y el pie, con la punta estirada pf grados */
+  const legAt = (a, b, x = 14) => {
+    const th = [0, -cos(RAD(a)), sin(RAD(a))], sh = [0, -cos(RAD(a - b)), sin(RAD(a - b))];
+    return add(add([x, 0, 0], mul(th, LEN.thigh)), mul(sh, LEN.shin));
+  };
+  const footFrom = (F, s, local, kneeDir, pf = 30) => {
+    const A = at(F.pelvis, sd(s, local)), K = at(F.pelvis, sd(s, add([local[0], 0, 0], mul(kneeDir, LEN.thigh))));
+    const sh = norm(sub(A, K)), f0 = [0, sh[2], -sh[1]], th0 = atan2(f0[1], f0[2]) / RAD(1);
+    return [abs(A[0]), A[2], 0, A[1] - LEN.ankle, pf - th0];
+  };
+  const pullup = f => {
+    const w = x => has(f, x);
+    const hang = w('hang'), scap = w('scap'), knees = w('knees'), legs = w('legs'), t2b = w('t2b'), kip = w('kip'), c2b = w('c2b');
+    const chair = w('chair'), rings = w('rings'), towel = w('towel'), band = w('band'), machine = w('machine'), weight = w('weight');
+    const one = w('one'), ecc = w('eccentric'), supine = w('supine'), neutral = w('neutral') || rings, wide = w('wide');
+    const strict = !hang && !scap && !knees && !legs && !t2b && !kip && !c2b && !chair && !machine;
+    /* ── en la silla romana (antebrazos en los apoyos, espalda en el respaldo) o en paralelas (brazos estirados) ── */
+    if (chair) return captainsChair(knees);
+    const g = wide ? 100 : supine ? 40 : neutral ? 32 : towel ? 44 : 64;
+    const barDir = towel ? [0, 1, 0] : neutral ? { L: [0, 0, 1], R: [0, 0, -1] } : supine ? [-1, 0, 0] : [1, 0, 0];
+    const elbow = wide ? [1, -.15, .25] : supine ? [.3, -.3, 1] : neutral ? [.55, -.3, .8] : [.85, -.25, .45];
+    /* lo que mide cada brazo (hombro a mano), la inclinación del tronco (negativa: hacia atrás), los hombros (encogidos
+       al colgar, abajo al tirar) y las piernas (cadera y rodilla), en cada momento */
+    const P = t => {
+      if (hang) return { d: 146, lean: 0, shrug: 10, a: 6, b: 18, sway: 5 * (t - .5) * 2 };
+      if (scap) return { d: 146, lean: mix(0, -5, t), shrug: mix(10, -7, t), a: 6, b: 18 };
+      if (knees || legs || t2b) {
+        /* las piernas suben por delante: rodillas al pecho, piernas estiradas hasta la horizontal o los pies a la barra */
+        const k = t2b ? mix(4, 150, t) : legs ? mix(4, 92, t) : mix(6, 112, t);
+        return { d: t2b ? mix(146, 128, t) : 146, lean: t2b ? mix(0, -30, t) : mix(0, -8, t), shrug: mix(8, -2, t), a: k, b: knees ? mix(14, 105, t) : 4, pf: 40 };
+      }
+      if (kip) {
+        /* el balanceo: arqueado (el pecho adelante, las piernas atrás) hasta el hueco (los pies delante) y el tirón */
+        const s1 = span(t, 0, .4), s2 = span(t, .3, 1);
+        return { d: mix(146, 50, s2), lean: mix(mix(12, -12, s1), -18, s2), shrug: mix(8, -4, s2), a: mix(mix(-18, 34, s1), 12, s2), b: mix(26, 8, s1), pf: 40 };
+      }
+      /* arriba: la barbilla (o el pecho) a la altura de la barra; con el agarre abierto, los hombros no pueden acercarse a las
+         manos más de lo que las separan a lo ancho */
+      const top = max(c2b ? 36 : supine ? 46 : 50, sqrt((g - 47) ** 2 + 30 ** 2) + 6);
+      const lean = mix(0, c2b ? -24 : supine ? -10 : -16, t), legsOn = strict && !w('pullup') ? 0 : 1;
+      return { d: mix(146, top, t), lean, shrug: mix(10, -4, t), a: machine ? 88 : band ? 12 : strict ? 6 : 14, b: machine ? 92 : band ? 70 : strict ? 8 : 62, pf: machine ? 0 : 35 };
+    };
+    /* el cuerpo de cada momento: los hombros a la distancia de las manos que toca y el centro de masas bajo la barra (que está
+       a la altura yb) */
+    const qAt = (t, z, yb) => {
+      const p = P(t), base = { tilt: p.lean * .6, spine: p.lean * .4, neck: hang || scap ? 6 : mix(-6, 10, t), shrug: p.shrug, reach: 0 };
+      const { F: F0 } = pose({ ...base, root: [0, 0, 0], feet: both(() => [20, 0, 0]), knee: both(() => [0, 0, 1]), hands: ZERO, elbow: {} });
+      const sO = shoulder(F0, 'L', base), dx = one ? 8 : g - 47, dz = z + sO[2];
+      const root = [0, yb - sqrt(max(0, p.d ** 2 - dx * dx - dz * dz)) - sO[1], z], q = { ...base, root };
+      const { F } = pose({ ...q, feet: both(() => [20, 0, 0]), knee: both(() => [0, 0, 1]), hands: ZERO, elbow: {} });
+      const kd = [0, -cos(RAD(p.a)), sin(RAD(p.a))], leg = legAt(p.a, p.b);
+      let hands = both(s => sd(s, [g, yb, 0])), extra = {};
+      if (one) { hands = { R: [-39, yb, 0], L: add(shoulder(F, 'L', q), [8, -143, 4]) }; extra = { fist: { L: false }, palm: { L: [-1, 0, 0] } }; }
+      if (towel) hands = both(s => add(hands[s], [0, -26, 0]));
+      return { ...q, feet: both(s => footFrom(F, s, leg, kd, p.pf != null ? p.pf : 30)), knee: both(() => [0, sin(RAD(p.a)), cos(RAD(p.a))]), hands, elbow: both(() => elbow), barDir, ...extra };
+    };
+    /* dónde queda el cuerpo (z) en cada momento, calculado una vez en 41 momentos: el centro de masas, bajo la barra */
+    let ztab = null;
+    const zAt = t => {
+      if (!ztab) ztab = Array.from({ length: 41 }, (_, i) => { const tt = i / 40, tgt = P(tt).sway || 0; return solveNear(z => { const q = qAt(tt, z, 0), r = pose(q); return tgt - comOf(r.F, r.J, weight ? [[at(r.F.pelvis, [0, -62, 10]), .25]] : [])[2]; }, -80, 80, 0, 10); });
+      const x = clamp(t, 0, 1) * 40, i = min(39, Math.floor(x));
+      return mix(ztab[i], ztab[i + 1], x - i);
+    };
+    /* la barra, a la altura justa para que lo más bajo del cuerpo quede a un palmo del suelo */
+    let yb = null;
+    const barY = () => {
+      if (yb == null) { const low = t => { const { J } = pose(qAt(t, zAt(t), 0)); return min(J.L.ankle[1], J.R.ankle[1], J.L.knee[1] - 8, J.R.knee[1] - 8); }; yb = -min(low(0), low(.5), low(1)) + (machine ? 70 : 44); }
+      return yb;
+    };
+    const self = {
+      view: 'back', up: 'b', rest: 'a', cam: knees || legs || t2b ? [-32, 6] : [-152, 8], one, feetOff: true,
+      at(t) { return qAt(t, zAt(t), barY()); },
+      gear(q, F, cam) {
+        const out = [], yb = barY();
+        if (rings) {
+          ['L', 'R'].forEach(s => { const h = q.hands[s]; out.push(...GR.strap(cam, [add(h, [0, 12, 0]), [sd(s, [g + 4, 0, 0])[0], yb + 160, 0]], 2.6, GR.C.strap).map(i => ({ ...i, nf: true })), ringAt(cam, h, s)); });
+          return out;
+        }
+        /* la barra entre dos postes (los postes, fuera del encuadre) */
+        const bx = wide ? 150 : 128;
+        const segs = bar(cam, [-bx, yb, 0], [bx, yb, 0], 12, 5.2);
+        segs.forEach((i, n) => { const x = -bx + (n + .5) * 2 * bx / 12; ['L', 'R'].forEach(s => { if (q.hands[s] && !towel && abs(x - q.hands[s][0]) < 14 && !(one && s == 'L')) i.hand = s; }); });
+        out.push(...segs, ...[-1, 1].flatMap(k => GR.tube(cam, [k * (bx + 6), yb + 30, 0], [k * (bx + 6), 0, 0], 7, GR.C.frame, 8).map(i => ({ ...i, nf: true }))));
+        if (neutral && !rings) ['L', 'R'].forEach(s => out.push(...GR.tube(cam, add(q.hands[s], [0, 0, -14]), add(q.hands[s], [0, 0, 14]), 4, STEEL, 1).map(i => ({ ...i, hand: s })), ...GR.tube(cam, add(q.hands[s], [0, 0, -14]), [q.hands[s][0], yb, -14], 3, STEEL, 1)));
+        if (towel) ['L', 'R'].forEach(s => { const h = q.hands[s]; out.push(...GR.strap(cam, [[h[0] - 4, yb + 4, 0], add(h, [-4, -14, 0])], 4.5, ['#d9dce6', '#0a0b10']), ...GR.strap(cam, [[h[0] + 4, yb + 4, 0], add(h, [4, -14, 0])], 4.5, ['#d9dce6', '#0a0b10']).map(i => ({ ...i, hand: s }))); });
+        if (band) { const { J } = pose(q), kn = mix(J.L.knee, J.R.knee, .5); out.push(...GR.strap(cam, [[-5, yb, 0], add(kn, [-4, -6, 0])], 3.2, GR.C.band), ...GR.strap(cam, [[5, yb, 0], add(kn, [4, -6, 0])], 3.2, GR.C.band)); }
+        if (weight) { const p = at(F.pelvis, [0, -62, 10]); out.push(...GR.strap(cam, [at(F.pelvis, [-14, 6, 18]), add(p, [0, 30, 0]), at(F.pelvis, [14, 6, 18])], 1.4, [GR.C.cable, '#0a0b10']), GR.disc(cam, p, [0, 0, 1], 30, 6)); }
+        if (machine) { const { J } = pose(q), kn = mix(J.L.knee, J.R.knee, .5); out.push(...GR.under([GR.obox(cam, add(kn, [0, -12, -18]), [[1, 0, 0], UP], [34, 5, 30], GR.C.pad), ...GR.tube(cam, add(kn, [0, -18, -40]), [0, 0, kn[2] - 40], 6, GR.C.frame)])); }
+        return out;
+      },
+    };
+    /* excéntricas: arriba de un salto (deprisa) y abajo muy despacio; el kipping, sin pausas, como un péndulo */
+    if (ecc) self.beat = ms => { const x = ms % 5000; return x < 500 ? 0 : x < 1100 ? L.ease((x - 500) / 600) : x < 1400 ? 1 : x < 4600 ? 1 - (x - 1400) / 3200 : 0; };
+    if (kip || c2b && !strict) self.beat = ms => { const x = ms % 1700; return x < 850 ? L.ease(x / 850) : 1 - L.ease((x - 850) / 850); };
+    if (hang) self.beat = ms => .5 + .5 * sin(ms / 1000 * 2 * PI / 3.2);
+    return self;
+  };
+  /* la silla romana (rodillas: antebrazos en los apoyos, la espalda en el respaldo) y las paralelas (piernas estiradas, con
+     los brazos estirados sobre las barras): las piernas suben por delante */
+  const captainsChair = knees => {
+    const root = [0, 206, 0];
+    const bodyAt = t => ({ root, tilt: -3, spine: 0, neck: 4, shrug: knees ? 4 : -2 });
+    const { F: F0 } = pose({ ...bodyAt(0), feet: both(() => [20, 0, 0]), knee: both(() => [0, 0, 1]), hands: ZERO, elbow: {} });
+    return {
+      view: 'front', up: 'b', rest: 'a', cam: [-34, 8], feetOff: true,
+      at(t) {
+        const b = bodyAt(t), a = knees ? mix(8, 108, t) : mix(6, 90, t), bb2 = knees ? mix(14, 102, t) : 4;
+        const leg = legAt(a, bb2), kd = [0, -cos(RAD(a)), sin(RAD(a))];
+        const feet = both(s => footFrom(F0, s, leg, kd, 36));
+        /* los antebrazos en los apoyos (codos a 90°) o, en paralelas, los brazos estirados con las manos en las barras */
+        const hands = knees ? both(s => T(F0, s, [52, 56, 66])) : both(s => add(shoulder(F0, s, b), sd(s, [12, -143, 4])));
+        return { ...b, feet, knee: both(() => [0, .2, 1]), hands, elbow: both(() => knees ? [.2, -1, -.3] : [.1, 0, -1]), barDir: { L: [0, 0, 1], R: [0, 0, -1] } };
+      },
+      gear(q, F, cam) {
+        const out = [];
+        if (knees) {
+          /* los apoyos de los antebrazos, los asideros y el respaldo */
+          const back = at(F0.thorax, [0, 20, -36]);
+          out.push(...GR.under([GR.padAB(cam, at(F0.thorax, [0, -40, -33]), at(F0.thorax, [0, 70, -33]), F0.thorax.z, 26, 6)]));
+          ['L', 'R'].forEach(s => { const { J } = pose(q), e = J[s].el, h = q.hands[s]; out.push(...GR.under([GR.padAB(cam, add(e, [0, -8, -12]), add(h, [0, -8, -4]), UP, 9, 4)], 1), ...grip(cam, h, [0, 1, 0], s, 7)); });
+          out.push(...GR.tube(cam, add(back, [0, -40, -8]), [0, 0, back[2] - 8], 7, GR.C.frame, 4).map(i => ({ ...i, z: -1e6 })));
+        }
+        else ['L', 'R'].forEach(s => { const h = q.hands[s]; out.push(...bar(cam, add(h, [0, 0, -60]), add(h, [0, 0, 70]), 6, 5.2).map(i => ({ ...i, hand: abs(i.z - cam.P(h)[2]) < 6 ? s : undefined })), ...GR.tube(cam, add(h, [0, 0, -54]), [h[0], 0, h[2] - 54], 6, GR.C.frame, 4), ...GR.tube(cam, add(h, [0, 0, 64]), [h[0], 0, h[2] + 64], 6, GR.C.frame, 4)); });
+        return out;
+      },
+    };
+  };
+
+  F3.FAMILIES.pulldown = pulldown;
+  F3.FAMILIES.row = row;
+  F3.FAMILIES.pullup = pullup;
+})(window);

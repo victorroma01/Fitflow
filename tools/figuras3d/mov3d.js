@@ -537,11 +537,13 @@
   };
 
   F3.FAMILIES = { squat, press, overhead };
+  /* lo que comparten las familias de los otros lotes (cada lote, en su archivo) */
+  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];
     if (!fam) return null;
     const ex = fam(w.slice(1));
-    return Object.assign(ex, { name, P, S, pause: has(w, 'pause') ? 900 : 0, yaw: ex.cam[0], pitch: ex.cam[1] });
+    return Object.assign(ex, { name, P, S, pause: ex.pause != null ? ex.pause : has(w, 'pause') ? 900 : 0, yaw: ex.cam[0], pitch: ex.cam[1] });
   };
 })(window);

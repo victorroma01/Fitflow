@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 
 MAP = open('salida/mapa.json').read()
 REG = open('salida/regiones.txt').read().strip()
-JS = '\n'.join(open(f, encoding='utf-8').read() for f in ('fig3d.js', 'gear3d.js', 'mov3d.js'))
+JS = '\n'.join(open(f, encoding='utf-8').read() for f in ('fig3d.js', 'gear3d.js', 'mov3d.js', 'tiron3d.js'))
 LOTE = json.load(open('salida/lote.json'))
 SIDE = (-80, 4)
 
@@ -220,7 +220,7 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
      se dibujan primero la figura en grande (hasta 60 veces por segundo) y luego las pequeñas, la que lleva más rato sin
      moverse antes (hasta 30 veces por segundo cada una): un móvil rápido las mueve todas con fluidez y uno lento, por turnos */
   let t0 = 0, last = 0, frame = 16.7;
-  const clock = (c, ms) => c.ex.beat ? c.ex.beat(ms) : Fig3D.beat(ms, c.ex.up, false, c.ex.pause);
+  const clock = (c, ms) => c.ex.beat ? c.ex.beat(ms) : Fig3D.beat(ms, c.ex.up, false, c.ex.pause, c.ex.rest);
   const step = (c, now) => { const t = clock(c, now - t0 + lag.get(c)); if (t !== c.last) paint(c, t); c.at = now; };
   const tick = now => {
     t0 = t0 || now;

@@ -20,14 +20,14 @@ JS = r'''
       const fy = Math.min(J.L.ankle[1], J.R.ankle[1]);
       minFloor = Math.min(minFloor, fy);
       // simetría (si los dos brazos hacen lo mismo)
-      const one = /unilateral|kettlebell|polea|landmine/i.test(name);
+      const one = ex.one || /unilateral|kettlebell|polea|landmine/i.test(name);
       if (!one) asym = Math.max(asym, Math.abs(J.L.el[0] + J.R.el[0]) + Math.abs(J.L.el[1] - J.R.el[1]) + Math.abs(J.L.el[2] - J.R.el[2]));
       // codos imposibles
       for (const s of ['L', 'R']) { const e = ang(J[s].sh, J[s].el, J[s].fist), k = ang(J[s].hip, J[s].knee, J[s].ankle); if (e < 8) probs.push(`codo ${s} cerrado ${e.toFixed(0)}° t=${t.toFixed(2)}`); if (k < 30) probs.push(`rodilla ${s} ${k.toFixed(0)}° t=${t.toFixed(2)}`); }
     }
     if (maxReach > 1.5) probs.push('la mano no llega: ' + maxReach.toFixed(1));
     if (minY < -1) probs.push('algo bajo el suelo: ' + minY.toFixed(1));
-    if (!/salto|declinad/i.test(name) && Math.abs(minFloor - 20) > .6) probs.push('tobillo fuera del suelo: ' + minFloor.toFixed(1));
+    if (!ex.feetOff && !/salto|declinad/i.test(name) && Math.abs(minFloor - 20) > .6) probs.push('tobillo fuera del suelo: ' + minFloor.toFixed(1));
     if (asym > 1) probs.push('asimetría ' + asym.toFixed(1));
     out.push([name, [...new Set(probs)].slice(0, 6)]);
   }

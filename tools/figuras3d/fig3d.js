@@ -1006,14 +1006,17 @@
      da la vuelta, salvo en los ejercicios con pausa (pause, en ms). La sentadilla y el press de banca empiezan en reposo
      (up 'a': el esfuerzo acaba en a); el press de hombro, abajo (up 'b') */
   const mj = t => t * t * t * (10 + t * (6 * t - 15));
-  const beat = (ms, up, long, pause = 0) => {
-    const k = long ? 1.5 : 1, slow = 1650 * k, fast = 1100 * k, rest = 520, turn = 130 + pause;
-    const go = up == 'a' ? slow : fast, back = up == 'a' ? fast : slow, h1 = up == 'a' ? turn : rest, h0 = up == 'a' ? rest : turn;
-    let x = ms % (go + back + h0 + h1);
-    if (x < go) return mj(x / go);
-    if ((x -= go) < h1) return 1;
-    if ((x -= h1) < back) return 1 - mj(x / back);
-    return 0;
+  const beat = (ms, up, long, pause = 0, rest = up) => {
+    /* rest: el extremo donde se descansa (por omisión, donde acaba el esfuerzo; en los tirones, el otro: con los brazos
+       estirados). Desde él, el primer tramo es la bajada (lenta) si el esfuerzo acaba en él, o el tirón (rápido) si no */
+    const k = long ? 1.5 : 1, slow = 1650 * k, fast = 1100 * k, r = rest == 'a' ? 0 : 1;
+    const out = up == rest ? slow : fast, back = up == rest ? fast : slow, hR = 520, hO = 130 + pause;
+    let x = ms % (hR + out + hO + back), p;
+    if (x < hR) p = 0;
+    else if ((x -= hR) < out) p = mj(x / out);
+    else if ((x -= out) < hO) p = 1;
+    else p = 1 - mj((x - hO) / back);
+    return r ? 1 - p : p;
   };
   const ROOT_Y = 20 + 84 + 89 - 4; // de pie, con las rodillas apenas dobladas
   const EX = {
