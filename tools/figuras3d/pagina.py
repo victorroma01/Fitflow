@@ -175,7 +175,7 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
 <section class="found">
 <h2>Lo que he visto al revisarlo</h2>
 <ul>
-<li><b>Músculos de la librería que no cuadran.</b> Las figuras pintan los músculos que la app tiene para cada ejercicio, y en algunos están mal: <b>TRX sentadilla</b> y <b>Landmine press</b> llevan dorsal y pectoral como principales (los comparten con su línea de la librería, «Empuje y tracción funcional», junto con remos y fondos); <b>Goblet squat</b>, <b>Sentadilla goblet con pausa</b>, <b>Sandbag squat</b> y <b>Overhead squat</b> llevan «cuerpo entero», y por eso salen todos en rojo. Es un fallo de datos que ya está en la app de ahora; no lo he tocado.</li>
+<li><b>Músculos de la librería que no cuadraban.</b> <b>TRX sentadilla</b> y <b>Landmine press</b> llevaban dorsal y pectoral como principales (los compartían con su línea de la librería, junto con remos y fondos), y <b>Goblet squat</b>, <b>Sentadilla goblet con pausa</b>, <b>Sandbag squat</b> y <b>Overhead squat</b> llevaban «cuerpo entero», así que salían enteros en rojo. Ya están corregidos, en su propia rama (desarrollo-musculos), y aquí se ven bien.</li>
 <li><b>Lo que es una aproximación.</b> En la sentadilla frontal, la mano rodea la barra con la muñeca doblada hacia atrás (no se dibujan los dedos abiertos bajo la barra). La barra del landmine está algo más corta que una real para que quepa en la tarjeta, y las cintas del TRX y lo alto de la Smith y de la polea se salen del encuadre.</li>
 <li><b>Las variantes que la app junta y aquí se distinguen:</b> las de pausa (se paran abajo), el agarre ancho, el agarre neutro, el banco a 30°, el Arnold, el JM y el hack en la Smith.</li>
 </ul>
