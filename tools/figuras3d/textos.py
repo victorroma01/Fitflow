@@ -155,9 +155,9 @@ NOTES3 = {
     'Peso muerto rumano en Smith': 'El rumano con la barra de la Smith, que baja por sus guías pegada a las piernas.',
     'Peso muerto con piernas rígidas': 'Como el rumano, pero con las rodillas casi estiradas: la cadera va más atrás y el tronco baja más.',
     'Peso muerto rumano con kettlebell': 'Con una kettlebell cogida con las dos manos, que baja por delante de las piernas.',
-    'Pull-through en polea': 'De espaldas a la polea baja, con la cuerda entre las piernas: la cadera va atrás y el tronco baja; al subir, la cadera empuja adelante hasta quedar de pie.',
+    'Pull-through en polea': 'De espaldas a la polea baja, con la cuerda entre las piernas: la cadera va atrás y el tronco baja; al subir, la cadera empuja adelante hasta quedar de pie. Se ve de frente, con la polea detrás.',
     'Peso muerto rumano con banda': 'Con la banda pisada bajo los pies y cogida con las manos: se estira al subir.',
-    'Peso muerto': 'La barra sale del suelo sobre el medio del pie, rozando las espinillas, y sube en vertical. Abajo, los brazos casi verticales, con los hombros justo por delante de la barra y la espalda recta; arriba, de pie con la cadera estirada.',
+    'Peso muerto': 'La barra sale del suelo sobre el medio del pie y sube pegada a las piernas, siempre por delante de ellas: al pasar por las rodillas, las espinillas están casi verticales, y arriba la barra queda delante de los muslos. Abajo, los brazos casi verticales, con los hombros justo por delante de la barra y la espalda recta.',
     'Peso muerto con barra hexagonal': 'Dentro de la barra hexagonal, con las asas a los lados: la barra sube en vertical por el centro del cuerpo.',
     'Peso muerto con déficit': 'Subido a una tarima: la barra sale desde más abajo y las rodillas y la cadera se doblan más.',
     'Rack pull': 'La barra empieza en los soportes del rack, a la altura de las rodillas: solo el último tramo del peso muerto.',
@@ -177,7 +177,7 @@ NOTES3 = {
     'Sentadilla búlgara con énfasis en glúteo': 'La búlgara con el tronco más inclinado adelante, que lleva el trabajo al glúteo.',
     'Sandbag lunges': 'Zancadas con el saco a la espalda, sobre los hombros.',
     'Lunges con sandbag 100 m': 'Las zancadas caminando con el saco a la espalda: aquí se ve un paso.',
-    'Hip thrust': 'La espalda alta apoyada en el borde del banco y los pies en el suelo: la cadera sube con la barra encima hasta dejar tronco y muslos en línea, con las espinillas verticales.',
+    'Hip thrust': 'La espalda alta apoyada en el borde del banco y los pies en el suelo: la barra, con su almohadilla, apoyada en el pliegue de la cadera, y la cadera sube hasta dejar tronco y muslos en línea, con las espinillas verticales.',
     'Puente de glúteo': 'Tumbado en el suelo con las rodillas dobladas: la cadera sube hasta dejar el cuerpo en línea de los hombros a las rodillas.',
     'Hip thrust unilateral': 'Sin peso y sobre la pierna izquierda; la derecha, estirada en línea con el muslo.',
     'Hip thrust en máquina': 'El apoyo de la cadera va en dos palancas que giran en el centro del arco que hace la cadera, así que la sigue sin cambiar de largo.',
@@ -211,7 +211,7 @@ NOTES3 = {
     'Curl femoral de pie': 'De pie, con el muslo derecho contra un acolchado y el pecho apoyado: el talón sube por detrás.',
     'Curl femoral con balón suizo': 'Boca arriba con los talones en el balón y la cadera arriba: al doblar las rodillas, el balón rueda hacia uno y acaba bajo las plantas.',
     'Curl femoral deslizante': 'Boca arriba, con los talones en unos deslizadores: de la cadera algo levantada con las piernas estiradas a un puente con las rodillas dobladas.',
-    'Curl femoral con mancuerna': 'Boca abajo en un banco plano, con una mancuerna de pie sobre las plantas y el asa entre los pies.',
+    'Curl femoral con mancuerna': 'Boca abajo en un banco plano, con una mancuerna ligera apretada entre los pies: una cabeza sobre las plantas y la otra contra el empeine.',
     'Curl femoral con banda': 'De pie, agarrado a un poste que sujeta la banda abajo: la banda, por detrás del tobillo derecho, se estira al subir el talón.',
 }
 FAMS3 = [('hinge', 'Pesos muertos y bisagras de cadera', 'La cadera va atrás con la espalda recta; con la barra en el suelo, la barra sube en vertical sobre el medio del pie, rozando las espinillas, con los hombros justo por delante de ella al despegar.'),
@@ -230,6 +230,7 @@ LOTES[3] = dict(title='Figuras 3D · lote 3', notes=NOTES3, fams=FAMS3,
     found='''<section class="found">
 <h2>Lo que he visto al revisarlo</h2>
 <ul>
+<li><b>Arreglado tras tu revisión.</b> En todos los pesos muertos, la barra pasaba por dentro de las rodillas (en el rack pull, por dentro del cuádriceps; en el sumo, por las espinillas): ahora las piernas se miden con el grosor del dibujo y la barra sube siempre por delante de ellas, con las espinillas casi verticales al pasar las rodillas y la barra delante de los muslos arriba. La kettlebell del rumano ya no se mete en los muslos. El pull-through se ve de frente, con la polea detrás, y la polea ya no se mezcla con la pierna. Las zancadas ya no dan un saltito al empezar (la cadera subía al ponerse de puntillas el pie de atrás), y en la Smith la máquina ya no se mueve: la barra baja en vertical por sus guías, también en el rumano y en el hip thrust en Smith. En los hip thrust, la barra, la mancuerna y la banda ya no flotan: se apoyan en la cadera. En la prensa, el chasis ya no se mueve con la plataforma, y en el curl con mancuerna, la mancuerna va apretada entre los pies.</li>
 <li><b>Posturas que he corregido.</b> En el peso muerto, la cadera se quedaba alta y el tronco casi horizontal, como con las piernas rígidas: ahora, al despegar la barra, los brazos quedan casi verticales con los hombros justo por delante de ella (en el sumo y con la barra hexagonal, el tronco va más erguido). En la búlgara con barra y en la Smith, la cadera no bajaba al principio y luego caía de golpe; ahora baja seguida. En el curl con balón y en el deslizante, la cabeza se metía en el suelo; ahora el cuello se dobla lo justo. Y el peso muerto con pausa se para al subir, a media espinilla, no arriba.</li>
 <li><b>Músculos de la librería que no cuadraban.</b> <b>Sandbag lunges</b> y <b>Lunges con sandbag 100 m</b> llevaban «cuerpo entero» y salían enteros en rojo. Ya están corregidos, en la misma rama que los de los lotes 1 y 2 (desarrollo-musculos), con los músculos de la zancada y el agarre del saco.</li>
 <li><b>Lo que es una aproximación.</b> La zancada caminando y la de 100 m con saco muestran un solo paso. Las máquinas son genéricas, sin copiar ninguna marca: en la prensa, el hack y el péndulo, los discos van en cuernos a los lados del carro o de la palanca, y la extensión y el curl llevan una leva en el eje. La prensa y la prensa de 45° son la misma máquina, igual que el curl femoral y el tumbado.</li>
