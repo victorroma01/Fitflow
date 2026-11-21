@@ -9,14 +9,20 @@ import { FIG_POSES } from '../../src/js/data/figposes.js';
 import { EXERCISES, groupOf } from '../../src/js/data/library.js';
 
 /* los lotes: sus familias */
-const LOTES = { 1: 'squat,press,overhead', 2: 'pulldown,row,pullup' };
+const LOTES = { 1: 'squat,press,overhead', 2: 'pulldown,row,pullup', 3: 'hinge,lunge,thrust,legPress,hack,legExt,legCurl' };
+/* desde el lote 3, el material de la librería (q) entra como palabra si la tabla de la app no lo dice ya */
+const GEAR_FROM = new Set(LOTES[3].split(','));
+const GEAR = { Mancuernas: 'db', Barra: 'bar', Smith: 'smith', Kettlebell: 'kb', Banda: 'band', Polea: 'cable', 'Máquina': 'machine', 'Peso corporal': 'none' };
 const arg = process.argv[2] || '1';
 const FAMILIES = (LOTES[arg] || arg).split(',');
 /* lo que el 3D distingue y la tabla de la app junta: la pausa, el agarre, el ángulo del banco, el Arnold, el JM, el hack */
 const EXTRA = { 'Sentadilla con pausa': 'pause', 'Sentadilla goblet con pausa': 'pause', 'Hack squat en Smith': 'hack', 'Press banca con pausa': 'pause', 'Press banca agarre ancho': 'wide', 'Press banca agarre neutro mancuernas': 'neutral', 'Press inclinado agarre neutro mancuernas': 'neutral', 'Press inclinado 30° mancuernas': 'thirty', 'Press inclinado con pausa': 'pause', 'Press JM': 'jm', 'Press Arnold': 'arnold', 'Press hombro sentado agarre neutro': 'neutral', 'Press hombro con pausa': 'pause',
   'Jalón agarre estrecho': 'close', 'Jalón agarre neutro': 'neutral', 'Jalón agarre supino': 'supine',
   'Remo con barra agarre supino': 'supine', 'Remo en polea agarre neutro': 'neutral', 'Remo unilateral en polea': 'one', 'Remo unilateral en máquina': 'one', 'Remo Meadows': 'meadows', 'Remo Kroc': 'kroc', 'Remo en máquina convergente': 'converge', 'Retracción escapular en polea': 'scap', 'Remo posterior con mancuernas': 'rear', 'TRX remo': 'trx',
-  'Dominadas supinas': 'supine', 'Dominadas agarre neutro': 'neutral', 'Dominadas excéntricas': 'eccentric', 'Colgado a una mano': 'one' };
+  'Dominadas supinas': 'supine', 'Dominadas agarre neutro': 'neutral', 'Dominadas excéntricas': 'eccentric', 'Colgado a una mano': 'one',
+  'Peso muerto con barra hexagonal': 'hex', 'Peso muerto con pausa': 'pause', 'Zancada caminando': 'walk', 'Lunges con sandbag 100 m': 'walk',
+  'Sentadilla búlgara con énfasis en glúteo': 'glute', 'Hip thrust con pausa': 'pause', 'Prensa con pies juntos': 'narrow', 'Sentadilla Pendulum': 'pendulum',
+  'Sentadilla en máquina': 'upright', 'Extensión con pausa': 'pause' };
 
 mkdirSync('salida', { recursive: true });
 writeFileSync('salida/mapa.json', JSON.stringify({ R: AN_R, S: AN_S, H: AN_H, PA: AN_PA }));
@@ -30,7 +36,8 @@ for (const [n, w] of Object.entries(FIG_POSES)) {
   if (!FAMILIES.includes(w.split(' ')[0])) continue;
   const e = by.get(n);
   if (!e) throw new Error('no está en la librería: ' + n);
-  lote.push({ n, w: w + (EXTRA[n] ? ' ' + EXTRA[n] : ''), p: e.p || [], s: e.s || [], g: groupOf(e) });
+  const ws = w.split(' '), gw = GEAR_FROM.has(ws[0]) && GEAR[e.q] && !ws.includes(GEAR[e.q]) ? ' ' + GEAR[e.q] : '';
+  lote.push({ n, w: w + gw + (EXTRA[n] ? ' ' + EXTRA[n] : ''), p: e.p || [], s: e.s || [], g: groupOf(e) });
 }
 writeFileSync('salida/lote.json', JSON.stringify(lote));
 writeFileSync('salida/lote.txt', arg);

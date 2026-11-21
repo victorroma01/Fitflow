@@ -144,3 +144,96 @@ LOTES[2] = dict(title='Figuras 3D · lote 2', notes=NOTES2, fams=FAMS2,
 <li><b>Las variantes que la app junta y aquí se distinguen:</b> los agarres de los jalones (estrecho, neutro, supino), el remo supino, el Meadows, el Kroc, la retracción escapular, el remo posterior y las dominadas supinas, neutras y excéntricas.</li>
 </ul>
 </section>''')
+
+NOTES3 = {
+    'Peso muerto rumano': 'De pie con la barra en las manos: la cadera va atrás con las rodillas apenas dobladas y la espalda recta, y la barra baja pegada a los muslos hasta media espinilla. El peso, sobre el medio del pie.',
+    'Buenos días': 'La barra sobre los trapecios: el tronco baja hasta casi la horizontal llevando la cadera atrás, con la espalda recta y las rodillas algo dobladas.',
+    'Peso muerto sumo': 'Pies muy abiertos y puntas hacia fuera, las manos por dentro de las rodillas: de la barra en el suelo a de pie, con el tronco más erguido que en el convencional.',
+    'Peso muerto rumano mancuernas': 'Como el rumano con barra, con una mancuerna en cada mano que baja por delante de los muslos.',
+    'Good morning sentado': 'Sentado en el banco con la barra a la espalda: el tronco se inclina adelante desde la vertical, con la espalda recta.',
+    'Peso muerto rumano a una pierna': 'De pie sobre la izquierda, algo doblada: el tronco baja mientras la pierna derecha sube por detrás, en línea con él; una mancuerna en cada mano.',
+    'Peso muerto rumano en Smith': 'El rumano con la barra de la Smith, que baja por sus guías pegada a las piernas.',
+    'Peso muerto con piernas rígidas': 'Como el rumano, pero con las rodillas casi estiradas: la cadera va más atrás y el tronco baja más.',
+    'Peso muerto rumano con kettlebell': 'Con una kettlebell cogida con las dos manos, que baja por delante de las piernas.',
+    'Pull-through en polea': 'De espaldas a la polea baja, con la cuerda entre las piernas: la cadera va atrás y el tronco baja; al subir, la cadera empuja adelante hasta quedar de pie.',
+    'Peso muerto rumano con banda': 'Con la banda pisada bajo los pies y cogida con las manos: se estira al subir.',
+    'Peso muerto': 'La barra sale del suelo sobre el medio del pie, rozando las espinillas, y sube en vertical. Abajo, los brazos casi verticales, con los hombros justo por delante de la barra y la espalda recta; arriba, de pie con la cadera estirada.',
+    'Peso muerto con barra hexagonal': 'Dentro de la barra hexagonal, con las asas a los lados: la barra sube en vertical por el centro del cuerpo.',
+    'Peso muerto con déficit': 'Subido a una tarima: la barra sale desde más abajo y las rodillas y la cadera se doblan más.',
+    'Rack pull': 'La barra empieza en los soportes del rack, a la altura de las rodillas: solo el último tramo del peso muerto.',
+    'Peso muerto con pausa': 'Como el peso muerto, pero al subir se para un momento a media espinilla, nada más despegar la barra del suelo.',
+    'Zancadas': 'Desde de pie, un paso adelante con la izquierda y bajar hasta que la rodilla de atrás queda a un palmo del suelo; una mancuerna en cada mano. El peso, más sobre el pie de delante.',
+    'Sentadilla búlgara': 'El empeine del pie de atrás en el banco: se baja hasta que el muslo de delante queda casi horizontal; una mancuerna en cada mano.',
+    'Zancada caminando': 'Cada paso es una zancada adelante: aquí se ve un paso.',
+    'Zancada en Smith': 'Sin paso: los pies quietos en la postura de la zancada y la barra de la Smith, que baja por sus guías.',
+    'Zancada con barra': 'La zancada con paso adelante y la barra a la espalda.',
+    'Sentadilla búlgara en Smith': 'La búlgara con la barra de la Smith a la espalda.',
+    'Zancada con salto': 'Desde la zancada, un salto para cambiar de pierna en el aire y caer en la zancada contraria.',
+    'Sentadilla búlgara con barra': 'La búlgara con la barra a la espalda.',
+    'Zancada frontal con déficit': 'El paso adelante, a una tarima: la rodilla de atrás baja más.',
+    'Zancada atrás': 'El paso, hacia atrás con la derecha: el pie de delante no se mueve.',
+    'Zancada atrás en Smith': 'Con la barra de la Smith y los pies quietos en la postura de la zancada.',
+    'Zancada atrás con déficit': 'Con el pie de delante sobre una tarima, el paso hacia atrás: se baja más.',
+    'Sentadilla búlgara con énfasis en glúteo': 'La búlgara con el tronco más inclinado adelante, que lleva el trabajo al glúteo.',
+    'Sandbag lunges': 'Zancadas con el saco a la espalda, sobre los hombros.',
+    'Lunges con sandbag 100 m': 'Las zancadas caminando con el saco a la espalda: aquí se ve un paso.',
+    'Hip thrust': 'La espalda alta apoyada en el borde del banco y los pies en el suelo: la cadera sube con la barra encima hasta dejar tronco y muslos en línea, con las espinillas verticales.',
+    'Puente de glúteo': 'Tumbado en el suelo con las rodillas dobladas: la cadera sube hasta dejar el cuerpo en línea de los hombros a las rodillas.',
+    'Hip thrust unilateral': 'Sin peso y sobre la pierna izquierda; la derecha, estirada en línea con el muslo.',
+    'Hip thrust en máquina': 'El apoyo de la cadera va en dos palancas que giran en el centro del arco que hace la cadera, así que la sigue sin cambiar de largo.',
+    'Hip thrust en Smith': 'La barra de la Smith sobre la cadera, subiendo por sus guías.',
+    'Hip thrust con banda': 'La banda por encima de la cadera, sujeta al suelo a los dos lados: se estira al subir.',
+    'Puente de glúteo a una pierna': 'El puente sobre el pie izquierdo; la pierna derecha, estirada en línea con el muslo.',
+    'Hip thrust con mancuerna': 'Con una mancuerna sobre la cadera, sujeta con las dos manos.',
+    'Hip thrust con pausa': 'Como el hip thrust, parándose arriba un momento.',
+    'Puente de glúteo con banda': 'Con una minibanda alrededor de los muslos, por encima de las rodillas, que empujan hacia fuera.',
+    'Prensa': 'La prensa de 45°: la espalda en el respaldo tumbado y la cadera quieta en el asiento; la plataforma sube por sus guías, de las piernas casi estiradas a las rodillas cerca del pecho.',
+    'Prensa 45°': 'La misma prensa inclinada a 45° (la app tiene los dos nombres).',
+    'Prensa unilateral': 'En la prensa de 45°, con la pierna derecha; la izquierda, con el pie en el suelo.',
+    'Prensa horizontal': 'Sentado, con el respaldo poco inclinado: la plataforma, vertical, va adelante y atrás.',
+    'Prensa con pies bajos': 'Los pies más abajo en la plataforma: la rodilla pasa más por delante y el tobillo se dobla más, así que se baja algo menos.',
+    'Prensa con pies juntos': 'Los pies casi juntos en el centro de la plataforma.',
+    'Gemelo en prensa': 'Las piernas casi estiradas y quietas, con la punta del pie en el borde de abajo de la plataforma: el tobillo baja el talón y luego empuja con la punta.',
+    'Hack squat': 'La espalda en el respaldo del carro, inclinado a 45°, y las hombreras sobre los hombros: el carro baja por sus guías hasta que las rodillas se doblan en ángulo recto; los pies, adelantados en la plataforma inclinada.',
+    'Hack squat inverso': 'De cara al respaldo, con el pecho apoyado: la cadera va atrás y abajo mientras el carro baja.',
+    'Sentadilla Pendulum': 'El respaldo va en una palanca que gira en un eje por detrás: la cadera baja por un arco y las rodillas se doblan mucho, con el tronco casi vertical.',
+    'Sentadilla en máquina': 'La espalda en un respaldo vertical que baja por guías verticales: una sentadilla con el tronco erguido.',
+    'Extensión cuádriceps': 'Sentado, con las rodillas en el eje de la palanca y el rodillo delante de los tobillos: de las rodillas dobladas a casi estiradas.',
+    'Extensión una pierna': 'Con la pierna derecha; la izquierda se queda doblada.',
+    'Extensión con pausa': 'Parándose arriba un momento, con la pierna estirada.',
+    'Extensión con banda': 'Sentado en un banco, con la banda sujeta a su pata y por delante del tobillo derecho: se estira al levantar la pierna.',
+    'Extensión de rodilla en polea': 'Sentado en un banco, con la tobillera en el tobillo derecho y el cable hasta la polea baja, detrás.',
+    'Curl femoral': 'Tumbado boca abajo en la máquina, con las rodillas en el eje de la palanca y el rodillo sobre los talones: los talones suben hacia el glúteo.',
+    'Curl femoral tumbado': 'El mismo curl femoral, boca abajo en la máquina.',
+    'Curl femoral sentado': 'Sentado, con los muslos sujetos por un acolchado encima de las rodillas: las piernas van de estiradas hacia delante a dobladas bajo el asiento.',
+    'Curl nórdico': 'De rodillas, con los tobillos sujetos: el cuerpo, recto de las rodillas a la cabeza, se deja caer adelante despacio hasta que las manos se preparan para parar la caída.',
+    'Curl femoral a una pierna': 'En la máquina, tumbado, con la pierna derecha; la izquierda se queda estirada.',
+    'Curl femoral de pie': 'De pie, con el muslo derecho contra un acolchado y el pecho apoyado: el talón sube por detrás.',
+    'Curl femoral con balón suizo': 'Boca arriba con los talones en el balón y la cadera arriba: al doblar las rodillas, el balón rueda hacia uno y acaba bajo las plantas.',
+    'Curl femoral deslizante': 'Boca arriba, con los talones en unos deslizadores: de la cadera algo levantada con las piernas estiradas a un puente con las rodillas dobladas.',
+    'Curl femoral con mancuerna': 'Boca abajo en un banco plano, con una mancuerna de pie sobre las plantas y el asa entre los pies.',
+    'Curl femoral con banda': 'De pie, agarrado a un poste que sujeta la banda abajo: la banda, por detrás del tobillo derecho, se estira al subir el talón.',
+}
+FAMS3 = [('hinge', 'Pesos muertos y bisagras de cadera', 'La cadera va atrás con la espalda recta; con la barra en el suelo, la barra sube en vertical sobre el medio del pie, rozando las espinillas, con los hombros justo por delante de ella al despegar.'),
+         ('lunge', 'Zancadas y búlgaras', 'Con paso (adelante, atrás o caminando) o con los pies quietos; abajo, la rodilla de atrás a un palmo del suelo y el peso más sobre el pie de delante.'),
+         ('thrust', 'Hip thrust y puentes', 'La espalda alta en el banco (en el puente, en el suelo) y los pies en el suelo: la cadera sube hasta dejar tronco y muslos en línea.'),
+         ('legPress', 'Prensas', 'La espalda en el respaldo y la cadera quieta en el asiento: la plataforma va por sus guías y las piernas la empujan.'),
+         ('hack', 'Hack y sentadillas en máquina', 'La espalda (o el pecho) en el respaldo de un carro que va por guías, o de una palanca; los pies, quietos en la plataforma.'),
+         ('legExt', 'Extensiones de cuádriceps', 'Sentado, con la rodilla en el eje de la palanca (o con banda o polea en un banco): la pierna va de doblada a casi estirada.'),
+         ('legCurl', 'Curl femoral', 'Tumbado, sentado, de pie, de rodillas o boca arriba: la rodilla se dobla llevando el talón hacia el glúteo, contra un rodillo, una banda, un peso o el propio cuerpo.')]
+LOTES[3] = dict(title='Figuras 3D · lote 3', notes=NOTES3, fams=FAMS3,
+    head='''<p class="pr">StrataFit · figuras de ejercicio · lote 3 de la revisión</p>
+<h1>Piernas: pesos muertos, zancadas, hip thrust y máquinas, en 3D</h1>
+<p class="lede">Los <b>67 ejercicios</b> de las familias de peso muerto y bisagra de cadera, zancada, hip thrust, prensa, hack, extensión de cuádriceps y curl femoral, con la figura nueva moviéndose. Toca una figura para verla en grande con lo que hace; <b>Lado</b> la gira de perfil para comprobar la postura (los discos y los postes que quedan delante se aclaran para que se vea el cuerpo). Como los lotes 1 y 2, no está en la app: se integrará cuando estén todos los lotes.</p>
+<p class="lede"><b>Novedades:</b> las máquinas de pierna (la prensa de 45° y la horizontal, el hack, el péndulo, la extensión y el curl) llevan su respaldo, sus guías o su palanca, que gira en el eje de la rodilla o de la cadera, y los pies se apoyan en sus plataformas.</p>
+''',
+    found='''<section class="found">
+<h2>Lo que he visto al revisarlo</h2>
+<ul>
+<li><b>Posturas que he corregido.</b> En el peso muerto, la cadera se quedaba alta y el tronco casi horizontal, como con las piernas rígidas: ahora, al despegar la barra, los brazos quedan casi verticales con los hombros justo por delante de ella (en el sumo y con la barra hexagonal, el tronco va más erguido). En la búlgara con barra y en la Smith, la cadera no bajaba al principio y luego caía de golpe; ahora baja seguida. En el curl con balón y en el deslizante, la cabeza se metía en el suelo; ahora el cuello se dobla lo justo. Y el peso muerto con pausa se para al subir, a media espinilla, no arriba.</li>
+<li><b>Músculos de la librería que no cuadraban.</b> <b>Sandbag lunges</b> y <b>Lunges con sandbag 100 m</b> llevaban «cuerpo entero» y salían enteros en rojo. Ya están corregidos, en la misma rama que los de los lotes 1 y 2 (desarrollo-musculos), con los músculos de la zancada y el agarre del saco.</li>
+<li><b>Lo que es una aproximación.</b> La zancada caminando y la de 100 m con saco muestran un solo paso. Las máquinas son genéricas, sin copiar ninguna marca: en la prensa, el hack y el péndulo, los discos van en cuernos a los lados del carro o de la palanca, y la extensión y el curl llevan una leva en el eje. La prensa y la prensa de 45° son la misma máquina, igual que el curl femoral y el tumbado.</li>
+<li><b>Revisado a fondo.</b> Las 67 figuras pasan las mismas pruebas que los lotes anteriores: manos que llegan, pies en el suelo o en su plataforma, articulaciones posibles, sin saltos de un fotograma a otro y la prueba de choques de todo lo que se dibuja contra el cuerpo. Lo que salió (los discos del hack inverso contra los brazos, la palanca del hip thrust en máquina contra los codos, los muslos del curl con mancuerna que se cruzaban) ya está corregido.</li>
+<li><b>Las variantes que la app junta y aquí se distinguen:</b> la barra hexagonal, el peso muerto con pausa, la zancada caminando, la búlgara con énfasis en glúteo, el hip thrust con pausa, la prensa con los pies juntos, la sentadilla Pendulum, la sentadilla en máquina y la extensión con pausa.</li>
+</ul>
+</section>''')

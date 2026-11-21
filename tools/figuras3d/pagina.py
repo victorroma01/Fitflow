@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 
 MAP = open('salida/mapa.json').read()
 REG = open('salida/regiones.txt').read().strip()
-JS = '\n'.join(open(f, encoding='utf-8').read() for f in ('fig3d.js', 'gear3d.js', 'mov3d.js', 'tiron3d.js'))
+JS = '\n'.join(open(f, encoding='utf-8').read() for f in ('fig3d.js', 'gear3d.js', 'mov3d.js', 'tiron3d.js', 'piernas3d.js'))
 LOTE = json.load(open('salida/lote.json'))
 SIDE = (-80, 4)
 
