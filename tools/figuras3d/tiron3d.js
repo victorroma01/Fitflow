@@ -1,14 +1,15 @@
 /* ═══ figuras 3D: los tirones (lote 2) ═══
    Jalones, remos y dominadas. Como en el lote 1, las posturas salen de reglas: en los jalones y remos sentados el tronco se
-   echa algo atrás al tirar; en los remos inclinados, la cadera se va atrás lo justo para que el peso quede sobre el medio
-   del pie; colgado de la barra, el cuerpo se coloca con su centro de masas bajo las manos. En los tirones se descansa con
-   los brazos estirados (rest 'a') y el esfuerzo acaba con el tirón (up 'b').
+   echa algo atrás al tirar; en los remos inclinados, con la espalda recta, la cadera se va atrás lo justo para que el peso
+   (el del cuerpo con el de la barra) quede sobre el medio del pie; colgado de la barra, el cuerpo se coloca con su centro de
+   masas bajo las manos. En los tirones se descansa con los brazos estirados (rest 'a') y el esfuerzo acaba con el tirón
+   (up 'b').
    Define: Fig3D.FAMILIES.pulldown, .row, .pullup */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib;
   const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, plate, barbell, cross } = L;
   const { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, bands } = M;
-  const { cos, sin, PI, abs, max, min, sqrt, atan2 } = Math;
+  const { cos, sin, PI, abs, max, min, sqrt, atan2, exp } = Math;
   const STEEL = ['#b9bed0', '#0a0b10'];
   /* el centro de los hombros */
   const shC = (F, q) => mix(shoulder(F, 'L', q), shoulder(F, 'R', q), .5);
@@ -99,63 +100,98 @@
   };
 
   /* ════ remos ════ */
-  /* el tronco inclinado (en grados desde la vertical) como lo hace el motor: la pelvis se lleva casi tres cuartos y el resto,
-     la espalda */
-  const trunk = lean => ({ tilt: lean * .72, spine: lean * .28 });
+  /* el tronco inclinado (en grados desde la vertical) con la espalda recta: toda la inclinación sale de la cadera, y la
+     espalda guarda su curva natural (un poco arqueada, nunca redondeada) */
+  const trunk = lean => ({ tilt: lean + 3, spine: -3 });
   /* la raíz (la cadera) para que el centro de los hombros quede donde se pide, con el tronco dado */
   const rootFor = (base, S) => { const q = { ...base, hands: ZERO, elbow: {} }, { F } = pose(q); return add(base.root, sub(S, shC(F, base))); };
   /* la mano s colgando, con el brazo estirado bajo el hombro (y algo hacia fuera, out) */
   const hangFrom = (F, s, q, out = 6) => add(shoulder(F, s, q), sd(s, [out, -145, 0]));
+  /* el pie s en el suelo por detrás de su cadera, a la distancia que deja esa rodilla doblada k grados (x: lo abierto del
+     tobillo; toe: la punta) */
+  const backFoot = (q, s, k, x, toe) => {
+    const H = pose({ ...q, hands: ZERO, elbow: {} }).J[s].hip, d = sqrt(LEN.thigh ** 2 + LEN.shin ** 2 + 2 * LEN.thigh * LEN.shin * cos(RAD(k)));
+    const dy = H[1] - LEN.ankle, dx = abs(x - abs(H[0]));
+    return [x, H[2] - sqrt(max(0, d * d - dy * dy - dx * dx)), toe];
+  };
   const row = f => {
     const w = x => has(f, x);
     let body, arms, gear = () => [], cam = [-130, 14], one = false, feetOff = false, rest = 'a', up = 'b';
     /* ── inclinado, de pie: con barra (normal, supino, Pendlay, en la Smith), Remo T y Meadows, y Kroc ── */
     if (w('bar') || w('pendlay') || w('smith') || w('tbar')) {
       const pend = w('pendlay'), supine = w('supine'), meadows = w('meadows'), tb = w('tbar') && !meadows, smith = w('smith');
-      const lean = pend ? 74 : meadows ? 70 : tb ? 48 : 52, gg = tb ? 7 : supine ? 46 : 64;
-      const ft = meadows ? { L: [24, 30, 10], R: [30, -34, 22] } : both(() => [30, 0, 8]);
-      const lr = legRoot(30, 0, 8, pend ? 14 : 10, pend ? 38 : 52);
-      const base = { root: lr.root, ...trunk(lean), neck: -.3 * lean, feet: ft, knee: both(() => lr.knee), shrug: 2 };
-      /* la cadera, atrás lo justo para que la carga, colgando de los brazos, quede sobre el medio del pie */
-      const hangC = q => { const { F } = pose({ ...q, hands: ZERO, elbow: {} }); return mix(hangFrom(F, 'L', q, gg - 47), hangFrom(F, 'R', q, gg - 47), .5); };
-      if (pend) {
-        /* en el Pendlay la barra empieza en el suelo: la cadera baja (y las rodillas se doblan) lo justo para llegar a ella */
-        const { F } = pose({ ...base, hands: ZERO, elbow: {} }), want = 49 + sqrt(144 ** 2 - (gg - 47) ** 2);
-        base.root = add(base.root, [0, want - shC(F, base)[1], 0]);
-      }
-      const shift = d => ({ ...base, root: add(base.root, [0, 0, d]) });
-      const dz = solve(d => { const q = shift(d), { F } = pose({ ...q, hands: ZERO, elbow: {} }); return midFoot(F)[2] - hangC(q)[2]; }, -60, 60);
-      body = shift(meadows ? dz * .4 : dz);
-      const { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
-      /* abajo: los brazos estirados (en el Pendlay, la barra en el suelo); arriba, en la parte baja del pecho (con agarre
-         supino, en el vientre; en el T, en el pecho) */
-      let c0 = hangC(body);
-      if (pend) c0 = [0, 49, c0[2]];
-      const c1 = at(F0.thorax, supine ? [0, 16, 32] : tb ? [0, 44, 50] : [0, 34, 31]);
-      const elbow = supine ? [.18, .25, -1] : tb ? [.5, .25, -1] : [.6, .25, -1];
-      const barDir = tb ? { L: [0, 1, 0], R: [0, 1, 0] } : supine ? [-1, 0, 0] : [1, 0, 0];
-      if (pend) rest = 'a';
+      const gg = tb ? 7 : supine ? 46 : 64, el = supine ? [.18, .25, -1] : tb ? [.5, .25, -1] : [.6, .25, -1];
+      const hands2 = c => ({ L: add(c, [gg, 0, 0]), R: add(c, [-gg, 0, 0]) }), F_ = q => pose({ ...q, hands: ZERO, elbow: {} }).F;
+      /* la altura de la mano con el brazo estirado desde el hombro S, dx hacia dentro y en la vertical de z */
+      const armY = (S, dx, z) => S[1] - sqrt(max(0, 145 ** 2 - dx * dx - (S[2] - z) ** 2));
       if (meadows) {
-        /* Meadows: con la derecha, del extremo de la barra apoyada en el suelo a la izquierda; el antebrazo izquierdo, en la
-           rodilla */
+        /* Meadows: de lado a la barra, con el extremo cargado (el manguito, en la mano derecha) junto al cuerpo y la barra
+           saliendo hacia la derecha hasta su eje en el suelo. El pie izquierdo (el de fuera) delante, con la mano izquierda en
+           esa rodilla, y el derecho detrás. El tronco casi paralelo al suelo y la cadera a la altura justa para que, abajo, con
+           el brazo estirado, los discos queden cerca del suelo */
         one = true;
-        const h0 = hangFrom(F0, 'R', body, 2), h1 = T(F0, 'R', [34, 22, 4]), piv = [h0[0] + 380, 6, h0[2] + 40];
-        const J0 = pose({ ...body, hands: ZERO, elbow: {} }).J, SL = shoulder(F0, 'L', body), hl = add(SL, mul(norm(sub(add(J0.L.knee, [0, 14, 0]), SL)), 128));
-        arms = t => ({ hands: { R: mix(h0, h1, t), L: hl }, elbow: { R: [.2, .6, -1], L: [.6, -.2, .4] }, barDir: { R: norm(sub(piv, h0)), L: [1, 0, 0] }, fist: { L: false }, palm: { L: [0, -1, 0] }, piv });
+        const mk = pt => {
+          const lr = legRoot(24, 30, 10, 12, pt);
+          const q = { root: lr.root, ...trunk(76), neck: -14, feet: { L: [24, 30, 10], R: [30, -60, 22] }, knee: { L: lr.knee, R: [.1, 0, 1] }, shrug: 2, reach: 8 };
+          q.feet.R = backFoot(q, 'R', 24, 30, 22);
+          return q;
+        };
+        body = mk(solve(pt => { const q = mk(pt); return hangFrom(F_(q), 'R', q, 2)[1] - 48; }, -10, 88));
+        const F0 = F_(body), J0 = pose({ ...body, hands: ZERO, elbow: {} }).J;
+        const h0 = hangFrom(F0, 'R', body, 2), h1 = T(F0, 'R', [34, 22, 4]), piv = [h0[0] - 400, 6, h0[2] + 6], R = len(sub(h0, piv));
+        /* la mano sube girando alrededor del eje de la barra (la barra no cambia de largo) */
+        const hR = t => add(piv, mul(norm(sub(mix(h0, h1, t), piv)), R));
+        const hl = add(J0.L.knee, [2, 14, 2]);
+        arms = t => ({ reach: mix(8, -6, t), hands: { R: hR(t), L: hl }, elbow: { R: [.45, .5, -1], L: [.8, .1, -.2] }, barDir: { R: norm(sub(piv, hR(t))), L: [1, 0, 0] }, fist: { L: false }, palm: { L: [0, -1, 0] }, piv });
         gear = (q, F, cam) => { const h = q.hands.R, u = norm(sub(h, q.piv)); return [GR.obox(cam, [q.piv[0], 3, q.piv[2]], [[1, 0, 0], UP], [22, 3, 22], GR.C.frame), ...bar(cam, add(q.piv, mul(u, -8)), add(h, mul(u, -30)), 8, 5.2), ...bar(cam, add(h, mul(u, -30)), add(h, mul(u, 10)), 2, 7.6).map((i, n) => n == 1 ? { ...i, hand: 'R' } : i), GR.disc(cam, add(h, mul(u, -24)), u, 40, 9)]; };
       }
-      else if (tb) {
-        /* Remo T: a horcajadas sobre la barra, con el asa en V bajo ella, delante de los discos; el eje de la barra, en el
-           suelo detrás */
-        const piv = [0, 6, c0[2] - 420];
-        arms = t => { const c = mix(c0, c1, ease(t)); return { barC: c, hands: { L: add(c, [7, 0, 0]), R: add(c, [-7, 0, 0]) }, elbow: both(() => elbow), barDir, piv }; };
-        gear = (q, F, cam) => { const c = q.barC, u = norm(sub(c, q.piv)); return [GR.obox(cam, [q.piv[0], 3, q.piv[2]], [[1, 0, 0], UP], [22, 3, 22], GR.C.frame), ...bar(cam, add(q.piv, mul(u, -8)), add(c, mul(u, 90)), 14, 5.2), GR.disc(cam, add(c, mul(u, 30)), u, 49, 12), GR.disc(cam, add(c, mul(u, 42)), u, 40, 9), ...GR.tube(cam, add(c, [0, 10, -10]), add(c, [0, 10, 10]), 3, STEEL, 1), ...['L', 'R'].flatMap(s => grip(cam, q.hands[s], [0, 1, 0], s, 7))]; };
-      }
       else {
-        /* en el Pendlay, la barra pasa por delante de las rodillas al despegar del suelo */
-        arms = t => { const c = add(mix(c0, c1, t), [0, 0, pend ? 14 * sin(PI * min(1, t / .7)) : -6 * sin(PI * t)]); return { barC: c, grip: gg, hands: { L: add(c, [gg, 0, 0]), R: add(c, [-gg, 0, 0]) }, elbow: both(() => elbow), barDir }; };
+        /* la espalda recta e inclinada (unos 40° sobre el suelo; con agarre supino y en el T, unos 45°), las espinillas casi
+           verticales y el muslo lo justo para que el peso, el del cuerpo con el de la barra, caiga sobre el medio del pie. En el
+           Pendlay la espalda va casi paralela al suelo y las rodillas, más dobladas, como al empezar un peso muerto: la barra
+           sale del suelo cada vez */
+        const ps = pend ? 10 : 3, load = tb ? .3 : .4;
+        const mk = (lean, pt) => { const lr = legRoot(30, 0, 8, ps, pt); return { root: lr.root, ...trunk(lean), neck: -.2 * lean, feet: both(() => [30, 0, 8]), knee: both(() => lr.knee), shrug: 2, reach: 4 }; };
+        /* arriba, donde la barra llega al cuerpo: la parte baja del pecho (con agarre supino, la boca del estómago; en el T, el asa
+           delante del pecho) */
+        const topOf = F => at(F.thorax, supine ? [0, 8, 34] : tb ? [0, 30, 50] : [0, 24, 34]);
+        /* el eje del T, en el suelo detrás: el asa va por el arco que hace la barra alrededor de él */
+        const pivOf = F => { const c = topOf(F); return [0, 6, c[2] - 420]; };
+        const onArc = (F, y) => { const c = topOf(F), p = pivOf(F), R = len(sub(c, p)); return [0, y, p[2] + sqrt(max(0, R * R - (y - p[1]) ** 2))]; };
+        /* abajo, con los brazos estirados: la barra en la vertical de donde acaba (sube recta), el asa del T en su arco y, en el
+           Pendlay, la barra en el suelo sobre el medio del pie */
+        const botOf = (q, F) => {
+          if (pend) return [0, 49, midFoot(F, 20)[2]];
+          const S = shC(F, q);
+          if (tb) return onArc(F, solve(y => { const c = onArc(F, y); return len(sub([gg, c[1], c[2]], add(S, [47, 0, 0]))) - 145; }, topOf(F)[1], 30));
+          const c = topOf(F); return [0, armY(S, gg - 47, c[2]), c[2]];
+        };
+        const err = q => { const c = botOf(q, F_(q)), { F, J } = pose({ ...q, hands: hands2(c), elbow: both(() => el) }); return midFoot(F, 16)[2] - comOf(F, J, [[c, load]])[2]; };
+        if (pend) {
+          /* con cada inclinación, la cadera a la altura justa para llegar con los brazos estirados a la barra en el suelo; y la
+             inclinación, la que deja el peso sobre el medio del pie */
+          const fit = lean => solve(pt => { const q = mk(lean, pt), F = F_(q), S = shC(F, q), c = botOf(q, F); return armY(S, gg - 47, c[2]) - 49; }, -10, 88);
+          const lean = solve(l => err(mk(l, fit(l))), 55, 89);
+          body = mk(lean, fit(lean));
+          rest = 'a';
+        }
+        else { const lean = tb || supine ? 45 : 50; body = mk(lean, solve(pt => err(mk(lean, pt)), 4, 88)); }
+        const F0 = F_(body), c0 = botOf(body, F0), c1 = topOf(F0);
+        const barDir = tb ? { L: [0, 1, 0], R: [0, 1, 0] } : supine ? [-1, 0, 0] : [1, 0, 0];
+        if (tb) {
+          /* Remo T: a horcajadas sobre la barra, con el asa en V bajo ella, delante de los discos */
+          const piv = pivOf(F0), R = len(sub(c1, piv));
+          arms = t => { const c = add(piv, mul(norm(sub(mix(c0, c1, t), piv)), R)); return { reach: mix(4, -6, t), barC: c, hands: hands2(c), elbow: both(() => el), barDir, piv }; };
+        gear = (q, F, cam) => { const c = q.barC, u = norm(sub(c, q.piv)); return [GR.obox(cam, [q.piv[0], 3, q.piv[2]], [[1, 0, 0], UP], [22, 3, 22], GR.C.frame), ...bar(cam, add(q.piv, mul(u, -8)), add(c, mul(u, 90)), 14, 5.2), GR.disc(cam, add(c, mul(u, 30)), u, 49, 12), GR.disc(cam, add(c, mul(u, 42)), u, 40, 9), ...GR.tube(cam, add(c, [0, 10, -10]), add(c, [0, 10, 10]), 3, STEEL, 1), ...['L', 'R'].flatMap(s => grip(cam, q.hands[s], [0, 1, 0], s, 7))]; };
+        }
+        else {
+          /* la barra sube recta (en la Smith, guiada por la máquina); en el Pendlay, al despegar del suelo, pasa por delante de
+             las rodillas */
+          const K = pose({ ...body, hands: ZERO, elbow: {} }).J.L.knee, g = y => exp(-(((y - K[1]) / 22) ** 2));
+          const A = pend ? max(0, K[2] + 18 - mix(c0[2], c1[2], (K[1] - c0[1]) / (c1[1] - c0[1]))) : 0;
+          arms = t => { const c = mix(c0, c1, t); c[2] += A * (g(c[1]) - mix(g(c0[1]), g(c1[1]), t)); return { reach: mix(4, -6, t), barC: c, grip: gg, hands: hands2(c), elbow: both(() => el), barDir }; };
         gear = (q, F, cam) => [...bb(q, cam), ...(smith ? [...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC)] : [])];
-        if (smith) arms = t => { const c = [0, mix(c0[1], c1[1], t), c0[2]]; return { barC: c, grip: gg, hands: { L: add(c, [gg, 0, 0]), R: add(c, [-gg, 0, 0]) }, elbow: both(() => elbow), barDir }; };
+        }
       }
       cam = meadows ? [-118, 14] : [-125, 14];
     }
@@ -164,8 +200,11 @@
       one = true;
       const kroc = w('kroc');
       if (kroc) {
-        const lr = legRoot(30, 0, 8, 12, 50), base = { root: lr.root, ...trunk(64), neck: -16, feet: { L: [30, 34, 10], R: [32, -26, 16] }, knee: both(() => lr.knee) };
-        body = base;
+        /* el pie izquierdo delante, con la rodilla algo doblada, y el derecho detrás, casi estirado; la mano izquierda en un
+           apoyo y el tronco, unos 35° sobre el suelo */
+        const lr = legRoot(30, 34, 10, 6, 58);
+        body = { root: lr.root, ...trunk(55), neck: -12, feet: { L: [30, 34, 10], R: [32, -40, 16] }, knee: { L: lr.knee, R: [.1, 0, 1] } };
+        body.feet.R = backFoot(body, 'R', 16, 32, 16);
       }
       else {
         /* la rodilla izquierda en el banco, la espinilla sobre él y el pie colgando por detrás; la mano izquierda en el banco,
@@ -190,7 +229,7 @@
     /* ── tumbado boca abajo en el banco inclinado (con apoyo en el pecho; el posterior, con los codos abiertos) ── */
     else if (w('chest')) {
       const rear = w('rear'), inc = 34;
-      body = { root: [0, 112, 0], ...trunk(90 - inc), neck: -(90 - inc) * .45, feet: both(() => [22, -128, 6, 12, 36]), knee: both(() => [0, -.4, 1]) };
+      body = { root: [0, 112, 0], ...trunk(90 - inc), neck: -(90 - inc) * .3, feet: both(() => [22, -150, 6, 8, 34]), knee: both(() => [0, -1, -.15]) };
       const { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
       const h0 = s => hangFrom(F0, s, body, rear ? 16 : 6), h1 = s => rear ? T(F0, s, [80, 74, -12]) : T(F0, s, [34, 30, -6]);
       const barDir = rear ? [1, 0, 0] : { L: norm(F0.thorax.y), R: norm(F0.thorax.y) };
