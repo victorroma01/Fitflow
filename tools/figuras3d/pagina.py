@@ -1,12 +1,23 @@
 # La página de revisión de un lote (el que diga salida/lote.txt), con la figura 3D de cada ejercicio; los textos, en textos.py.
 # Antes: node datos.mjs && python3 banco.py. Deja la página en salida/pagina/index.html
-import json, os, html
+import json, os, html, re
 from playwright.sync_api import sync_playwright
 
 MAP = open('salida/mapa.json').read()
 REG = open('salida/regiones.txt').read().strip()
-JS = '\n'.join(open(f, encoding='utf-8').read() for f in ('fig3d.js', 'gear3d.js', 'mov3d.js', 'tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js'))
 LOTE = json.load(open('salida/lote.json'))
+# el código: el motor, el material y las familias de base (mov3d.js), y de los demás archivos de familias solo los que tienen
+# alguna del lote (y lo que esos usan): la página pesa menos y el móvil la prepara antes. Qué familias tiene cada archivo
+# lo dice su cabecera («Define: Fig3D.FAMILIES.…»)
+BASE, MORE = ('fig3d.js', 'gear3d.js', 'mov3d.js'), ('tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js')
+NEEDS = {'hombros3d.js': ('brazos3d.js',)}  # (hombros3d usa F3.blib, de brazos3d)
+def families(f):
+    m = re.search(r'Define: Fig3D\.FAMILIES\.(.*?)\*/', open(f, encoding='utf-8').read(), re.S)
+    return set(re.findall(r'\w+', m.group(1))) if m else set()
+used = {x['w'].split(' ')[0] for x in LOTE}
+files = {f for f in MORE if families(f) & used}
+files |= {d for f in files for d in NEEDS.get(f, ())}
+JS = '\n'.join(open(f, encoding='utf-8').read() for f in BASE + tuple(f for f in MORE if f in files))
 SIDE = (-80, 4)
 
 from textos import LOTES
@@ -121,15 +132,18 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
 {
   document.getElementById('defs3').innerHTML = Fig3D.DEFS;
   const VB = ''' + json.dumps(VB, ensure_ascii=False) + r''', SIDE = ''' + json.dumps(list(SIDE)) + r''';
-  const EXS = {};
-  for (const e of LOTE) EXS[e.n] = Fig3D.make(e.n, e.w, e.p, e.s);
+  /* cada figura se prepara cuando hace falta: al verse su tarjeta o, antes, en los ratos libres del navegador, de una en una
+     (prepararlas todas al cargar dejaba la página parada un momento, sobre todo en un móvil) */
+  const DEF = new Map(LOTE.map(e => [e.n, e]));
   const cards = [...document.querySelectorAll('.card')];
+  const build = c => { if (!c.ex) { const e = DEF.get(c.dataset.ex); c.ex = Fig3D.make(e.n, e.w, e.p, e.s); } return c.ex; };
+  let mode = 'cam';
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const seg = [...document.querySelectorAll('.seg button')];
   /* en pequeño, sin el rayado de los músculos (no se distingue y es casi un tercio del dibujo); en grande, con todo */
   const paint = (c, t) => { c.last = t; c.g.innerHTML = Fig3D.draw(c.ex, t, c.cam, c.id, !c.classList.contains('big')); };
   const setView = (c, v) => {
-    c.view = v;
+    build(c); c.view = v;
     c.cam = v == 'side' ? Fig3D.camera(SIDE[0], SIDE[1]) : Fig3D.camera(c.ex.yaw, c.ex.pitch);
     c.svg.setAttribute('viewBox', VB[c.dataset.ex][v]);
     c.svg.classList.toggle('lado', v == 'side');
@@ -137,14 +151,15 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
     paint(c, still ? .5 : c.last >= 0 ? c.last : 0);
   };
   for (const c of cards) {
-    c.ex = EXS[c.dataset.ex]; c.svg = c.querySelector('svg.stage'); c.g = c.svg.querySelector('g'); c.last = -1;
+    c.svg = c.querySelector('svg.stage'); c.g = c.svg.querySelector('g'); c.last = -1;
     for (const b of c.querySelectorAll('.mini button')) b.addEventListener('click', () => setView(c, b.dataset.v));
     const media = c.querySelector('.media');
     const big = () => { c.classList.toggle('big'); if (c.last >= 0) paint(c, c.last); media.setAttribute('aria-label', c.dataset.ex + (c.classList.contains('big') ? ': ver en pequeño' : ': ver en grande')); };
     media.addEventListener('click', big);
     media.addEventListener('keydown', e => { if (e.key == 'Enter' || e.key == ' ') { e.preventDefault(); big(); } });
   }
-  for (const b of seg) b.addEventListener('click', () => { for (const x of seg) x.setAttribute('aria-pressed', String(x == b)); for (const c of cards) setView(c, b.dataset.m); });
+  /* (las que aún no se han visto tomarán la vista al aparecer) */
+  for (const b of seg) b.addEventListener('click', () => { mode = b.dataset.m; for (const x of seg) x.setAttribute('aria-pressed', String(x == b)); for (const c of cards) if (c.view) setView(c, mode); });
   /* cada figura empieza en un momento distinto del gesto: así no se mueven todas a la vez */
   const lag = new Map(cards.map((c, i) => [c, (i * 977) % 5200]));
   /* cuánto se puede dibujar en cada fotograma sin que la pantalla se atasque: algo menos de la mitad de lo que dura un
@@ -159,7 +174,7 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
     if (last) frame = frame * .9 + Math.min(50, now - last) * .1;
     last = now;
     const vis = cards.filter(c => c.inView);
-    for (const c of vis) if (!c.view) setView(c, 'cam');
+    for (const c of vis) if (!c.view) setView(c, mode);
     if (!still && vis.length) {
       const budget = Math.max(4, Math.min(9, frame * .45)), start = performance.now();
       const due = vis.filter(c => now - (c.at || 0) >= (c.classList.contains('big') ? 15 : 31))
@@ -171,6 +186,9 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
   const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => { for (const e of es) e.target.inView = e.isIntersecting; }, { rootMargin: '40px 0px' }) : null;
   for (const c of cards) { if (io) io.observe(c); else c.inView = true; }
   requestAnimationFrame(tick);
+  const idle = window.requestIdleCallback || (f => setTimeout(f, 50));
+  const pre = () => { const c = cards.find(c => !c.ex); if (c) { build(c); idle(pre); } };
+  idle(pre);
 }
 </script>
 </body>

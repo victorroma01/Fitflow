@@ -341,11 +341,16 @@
   const profAt = (seg, y) => seg == 'neck' ? prof(NECK3, 60 - y) : seg == 'thorax' ? prof(TRUNK3, 160 - y) : seg == 'pelvis' ? prof(TRUNK3, 205 - y) : prof(LIMB3[seg], -y);
 
   /* ── la postura ── */
-  const pose = q => {
+  /* la pelvis y el tórax: de ellos sale todo lo demás. Aparte, para las búsquedas de los gestos que solo miran los hombros o
+     la cadera (el peso muerto prueba cientos de posturas por momento): así no calculan brazos y piernas que no usan */
+  const torso = q => {
     let pelvis = { o: q.root, x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] };
     /* (roll: el cuerpo ladeado sobre su eje de delante a atrás; tumbado de lado, 90) */
     pelvis = turn(turn(turn(pelvis, 'y', q.yaw || 0), 'z', q.roll || 0), 'x', q.tilt || 0);
-    const thorax = turn(moved(pelvis, at(pelvis, [0, 45, -2])), 'x', q.spine || 0);
+    return { pelvis, thorax: turn(moved(pelvis, at(pelvis, [0, 45, -2])), 'x', q.spine || 0) };
+  };
+  const pose = q => {
+    const { pelvis, thorax } = torso(q);
     const neck = turn(moved(thorax, at(thorax, [0, 100, -4])), 'x', (q.neck || 0) + NECK_TILT);
     const head = turn(moved(neck, at(neck, HEAD_AT)), 'x', -NECK_TILT);
     const F = { pelvis, thorax, neck, head };
@@ -1117,5 +1122,5 @@
   };
   /* lo que hace falta para escribir ejercicios y material fuera de aquí */
   const lib = { add, sub, mul, dot, cross, len, norm, perp, mix, ease, clamp, at, turn, moved, RAD, LEN, bar, plate, box, barbell, kept, hull, smoothR, smooth, f1, pathOf, ik, isFist, LIMB3, TRUNK3 };
-  G.Fig3D = { EX, draw, camera, DEFS, beat, frameBox, PARTS, pose, lib };
+  G.Fig3D = { EX, draw, camera, DEFS, beat, frameBox, PARTS, pose, torso, lib };
 })(window);

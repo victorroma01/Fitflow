@@ -8,7 +8,7 @@
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib;
   const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, plate, barbell, cross } = L;
-  const { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, bands, visTag, onThigh, legFront } = M;
+  const { has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, bands, visTag, onThigh, legFront } = M;
   const { cos, sin, PI, abs, max, min, sqrt, atan2, exp } = Math;
   const STEEL = ['#b9bed0', '#0a0b10'];
   /* el centro de los hombros */
@@ -344,7 +344,7 @@
       if (!rings) {
         /* bajo la barra: el ángulo de cada momento, el que deja el hombro a la distancia de la mano que toca (los brazos
            estirados abajo; arriba, el pecho junto a la barra) */
-        const armAt = a => { const q = bodyAng(a), { F } = pose({ ...q, hands: ZERO, elbow: {} }); return len(sub(add([0, yb, zB], [g, 0, 0]), shoulder(F, 'L', q))); };
+        const armAt = a => { const q = bodyAng(a); return len(sub(add([0, yb, zB], [g, 0, 0]), shoulder(torso(q), 'L', q))); };
         const memo = {};
         ph = t => { const k = Math.round(t * 400); if (memo[k] == null) memo[k] = solve(a => mix(145, 60, t) - armAt(a), RAD(0), RAD(60), 16); return memo[k]; };
       }
@@ -459,7 +459,8 @@
     /* dónde queda el cuerpo (z) en cada momento, calculado una vez en 41 momentos: el centro de masas, bajo la barra */
     let ztab = null;
     const zAt = t => {
-      if (!ztab) ztab = Array.from({ length: 41 }, (_, i) => { const tt = i / 40, tgt = P(tt).sway || 0; return solveNear(z => { const q = qAt(tt, z, 0), r = pose(q); return tgt - comOf(r.F, r.J, weight ? [[plateAt(r.F, r.J), .25]] : [])[2]; }, -80, 80, 0, 10); });
+      /* (cada momento, buscado primero junto al anterior: el cuerpo se mueve poco de uno a otro y sale lo mismo con menos pruebas) */
+      if (!ztab) { ztab = []; for (let i = 0; i <= 40; i++) { const tt = i / 40, tgt = P(tt).sway || 0; ztab.push(solveNear(z => { const q = qAt(tt, z, 0), r = pose(q); return tgt - comOf(r.F, r.J, weight ? [[plateAt(r.F, r.J), .25]] : [])[2]; }, -80, 80, i ? ztab[i - 1] : 0, 10, i ? 20 : 0)); } }
       const x = clamp(t, 0, 1) * 40, i = min(39, Math.floor(x));
       return mix(ztab[i], ztab[i + 1], x - i);
     };

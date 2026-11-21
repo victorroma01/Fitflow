@@ -7,7 +7,7 @@
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib;
   const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, barbell, cross } = L;
-  const { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, dbAxis, bodyCaps, taut, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront } = M;
+  const { has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, dbAxis, bodyCaps, taut, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront } = M;
   const { cos, sin, PI, abs, max, min, sqrt, atan2 } = Math;
   const STEEL = ['#b9bed0', '#0a0b10'];
 
@@ -56,12 +56,13 @@
       const shin0 = sumo ? 7 : 14;
       const zAt = (q, y) => { if (hex) return zb; const { J } = pose({ ...q, hands: ZERO, elbow: {} }); return max(zb, loadFront(J, y, g, [0, 0], clear)); };
       const hands = (y, z) => ({ L: [g, y, z], R: [-g, y, z] });
-      const reach = (q, y, z) => { const { F } = pose({ ...q, hands: ZERO, elbow: {} }); const S = shoulder(F, 'L', q); return len(sub(S, [g, y, z])) - 145; };
+      /* (solo con el tronco: es lo que más se prueba) */
+      const reach = (q, y, z) => len(sub(shoulder(torso(q), 'L', q), [g, y, z])) - 145;
       const bal = (q, y, z, k) => { const { F, J } = pose({ ...q, hands: hands(y, z), elbow: both(() => [.1, .2, -1]) }); return midFoot(F, k)[2] - comOf(F, J, [[[0, y, z], load]])[2]; };
       /* de pie, arriba: piernas estiradas, la barra donde llegan los brazos, delante de los muslos, y el tronco lo justo para el
          equilibrio */
       const PT0 = 88;
-      const yTop = (l, z) => { const q = mk(0, PT0, l); const { F } = pose({ ...q, hands: ZERO, elbow: {} }); return armY(shoulder(F, 'L', q), g - 47, z); };
+      const yTop = (l, z) => { const q = mk(0, PT0, l); return armY(shoulder(torso(q), 'L', q), g - 47, z); };
       let zTop = zb, lean0 = 0;
       /* (con la barra delante de los muslos, arriba el cuerpo se echa algo atrás para equilibrarla) */
       for (let i = 0; i < 4; i++) { lean0 = solve(l => bal(mk(0, PT0, l), yTop(l, zTop), zTop, 9), -20, 20); zTop = zAt(mk(0, PT0, lean0), yTop(lean0, zTop)); }
@@ -78,7 +79,7 @@
            de la barra, con los brazos casi verticales. Solo con el equilibrio en un punto fijo del pie, la cadera se quedaba
            alta y el tronco casi horizontal, como en un peso muerto con piernas rígidas; el peso del cuerpo puede caer algo más
            atrás (hacia el talón) y lo compensa la barra */
-        const sh = (q) => { const { F } = pose({ ...q, hands: ZERO, elbow: {} }); return shoulder(F, 'L', q)[2]; }, ahead = sumo ? 6 : hex ? 8 : 14;
+        const sh = q => shoulder(torso(q), 'L', q)[2], ahead = sumo ? 6 : hex ? 8 : 14;
         /* la barra: sobre el medio del pie hasta pasar las rodillas y, de ahí arriba, cada vez más por delante, hasta donde
            queda arriba, delante de los muslos (un camino suave; calcularla a cada momento según las piernas hacía que la barra y la
            cadera se empujaran una a otra y la figura temblara) */

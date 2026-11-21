@@ -7,7 +7,7 @@
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib, B = F3.blib;
   const { add, sub, mul, dot, len, norm, mix, ease, at, RAD, LEN, bar } = L;
-  const { has, pose, ZERO, UP, sd, both, shoulder, comOf, solve, legRoot, midFoot, ezBar, ezCd, dbAxis, bodyCaps, taut, olympic } = M;
+  const { has, pose, torso, ZERO, UP, sd, both, shoulder, comOf, solve, legRoot, midFoot, ezBar, ezCd, dbAxis, bodyCaps, taut, olympic } = M;
   const { STAND, SEAT, LU, LF, STEEL, dirT, hintL, armAt, onHip, frontAt, keys, cycle, curlBar, handle, rope, flatBench, benchUnder } = B;
   const { cos, sin, max, min, sqrt } = Math;
 
@@ -50,7 +50,7 @@
     /* el cuerpo, recto desde las puntas de los pies (el pie, perpendicular a la espinilla); gira alrededor de los tobillos */
     const ankleY = (feetUp ? 92 : trx ? 62 : 0) + 40.6, Lg = LEN.thigh + LEN.shin - 2;
     const mk = (th, zA, dx = 0) => ({ root: [dx, ankleY + Lg * sin(RAD(th)), zA + Lg * cos(RAD(th))], tilt: 90 - th, spine: 0, neck: 8, feet: both(() => [12, zA - 3, 0, ankleY - LEN.ankle, 65]), knee: both(() => [0, -1, .1]) });
-    const sh = (th, zA, dx) => { const q = mk(th, zA, dx), { F } = pose({ ...q, hands: ZERO, elbow: {} }); return shoulder(F, 'L', q); };
+    const sh = (th, zA, dx) => { const q = mk(th, zA, dx); return shoulder(torso(q), 'L', q); };
     /* arriba: los hombros justo encima de las muñecas, con los brazos casi estirados; de ahí sale dónde van los pies */
     const reachTop = (grips ? LU + LF : LU + LEN.fore) - 3, Wl = W('L');
     /* (con los pies en alto, el cuerpo baja hacia la cabeza: el ángulo, negativo) */

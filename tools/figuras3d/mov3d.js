@@ -12,7 +12,7 @@
   const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, barbell, bar, plate } = L;
   const { cos, sin, PI, abs, max, min, sqrt, atan2 } = Math;
   const has = (f, w) => f.includes(w);
-  const pose = F3.pose;
+  const pose = F3.pose, torso = F3.torso;
   const ZERO = { L: [0, 0, 0], R: [0, 0, 0] };
   const UP = [0, 1, 0];
   /* un punto o una dirección dados para el lado izquierdo, en el lado s (el derecho, en espejo) */
@@ -47,9 +47,12 @@
   const COP = 9;
   /* mínimo y máximo suaves (k: lo ancha que es la curva): con ellos, lo que llega a un tope no frena de golpe */
   const smax = (a, b, k) => (a + b + sqrt((a - b) ** 2 + k * k)) / 2, smin = (a, b, k) => (a + b - sqrt((a - b) ** 2 + k * k)) / 2;
-  /* bisección: el valor de x entre lo y hi con f(x) = 0 */
+  /* el valor de x entre lo y hi con f(x) = 0, con la precisión de n bisecciones: si f cambia de signo entre los extremos, por
+     la regla falsa (refine, mucho más rápida); si no, por bisección (que acaba en un extremo o en un cambio de signo de dentro) */
   const solve = (f, lo, hi, n = 18) => {
     let flo = f(lo);
+    const fhi = f(hi);
+    if ((flo > 0) != (fhi > 0)) return refine(f, lo, hi, flo, fhi, (hi - lo) / 2 ** n);
     for (let i = 0; i < n; i++) { const m = (lo + hi) / 2, fm = f(m); if ((fm > 0) == (flo > 0)) { lo = m; flo = fm; } else hi = m; }
     return (lo + hi) / 2;
   };
@@ -69,10 +72,24 @@
     let best = null, a = lo, fa = f(a);
     for (let b = lo + step; b <= hi + 1e-9; b += step) {
       const fb = f(b);
-      if ((fa > 0) != (fb > 0)) { const r = solve(f, a, b, 12); if (best == null || abs(r - near) < abs(best - near)) best = r; }
+      if ((fa > 0) != (fb > 0)) { const r = refine(f, a, b, fa, fb, step * 1e-4); if (best == null || abs(r - near) < abs(best - near)) best = r; }
       a = b; fa = fb;
     }
     return best;
+  };
+  /* la raíz de f entre a y b (con f(a) y f(b) de signo contrario, ya calculados) por la regla falsa con el arreglo de
+     Illinois: con la misma precisión que doce bisecciones, en cuatro o cinco evaluaciones */
+  const refine = (f, a, b, fa, fb, tol) => {
+    let c = a, side = 0;
+    for (let i = 0; i < 40; i++) {
+      const cn = fb == fa ? (a + b) / 2 : (a * fb - b * fa) / (fb - fa);
+      if (abs(cn - c) < tol || abs(b - a) < tol) return cn;
+      c = cn; const fc = f(c);
+      if (fc == 0) return c;
+      if ((fc > 0) == (fb > 0)) { b = c; fb = fc; if (side == -1) fa /= 2; side = -1; }
+      else { a = c; fa = fc; if (side == 1) fb /= 2; side = 1; }
+    }
+    return c;
   };
   /* la cadera desde los tobillos: la espinilla, ps grados hacia delante (hacia la punta del pie), y el muslo, pt grados sobre
      la horizontal; da la raíz (el centro de las caderas) y hacia dónde sale la rodilla, en el lado izquierdo */
@@ -728,7 +745,7 @@
     return { hand: add(add(J[s].hip, mul(norm(sub(J[s].knee, J[s].hip)), d)), mul(th.z, prof1(THIGH_F, d) + lift)), palm: mul(th.z, -1) };
   };
 
-  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
+  F3.mlib = { has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];
