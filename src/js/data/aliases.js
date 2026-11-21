@@ -29,6 +29,9 @@ export const EX_ALIASES = {
   'Pull-apart con banda': 'Pájaros con banda',
   'Elevación de piernas': 'Elevaciones de piernas tumbado',
   'Box jump': 'Salto al cajón',
+  Snatch: 'Squat snatch',
+  Clean: 'Squat clean',
+  'Sled pull': 'Sled pull con cuerda',
 };
 /** nombre de un ejercicio que ya no está en la librería (era el mismo que otro) → el que queda. Lo que se guardó con el nombre
     viejo (el historial, las notas, un plan propio) lo conserva y muestra el que queda: sus músculos, su ficha y su figura
@@ -48,4 +51,7 @@ export const EX_RETIRED = new Map([
   ['Jalón con brazos rectos', 'Pullover en polea'],
   ['Elevaciones de piernas tumbado', 'Elevación de piernas'],
   ['Salto al cajón', 'Box jump'],
+  ['Squat snatch', 'Snatch'],
+  ['Squat clean', 'Clean'],
+  ['Sled pull con cuerda', 'Sled pull'],
 ]);
