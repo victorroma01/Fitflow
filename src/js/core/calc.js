@@ -5,7 +5,7 @@
    (Mifflin-St Jeor). Entreno: en qué se mide un ejercicio, el volumen y la duración de una sesión, qué serie cuenta para las
    marcas (1RM estimado), la mejor marca y la progresión (qué peso toca la próxima vez, también en la semana de descarga).
    Calendario: el lunes de una semana y los días de un periodo. Solo importa core/util (fechas y 1RM), que tampoco tiene estado.
-   Define: itemMacros, sumMacros, mealItems, dayItems, dayTotals, macroTargets, BIO_RANGES, ACTIVITY_FACTORS, energyNeeds, dietPlan, LOGGED_KCAL, GOAL_MARGIN, nutritionPeriod, unitFromName, measuredInReps, elapsedMs, sessionVolume, MAX_1RM_REPS, liftScore, bestSet, bestLift, LB_PER_KG, kgToLb, lbToKg, stepUpWeight, stepDownWeight, loadable, deloadWeight, dropSetWeight, progressionRule, nextWeight, kmTotal, weekMonday, mondays, mondayKey, weekKeys, countBetween
+   Define: itemMacros, sumMacros, mealItems, dayItems, dayTotals, macroTargets, BIO_RANGES, ACTIVITY_FACTORS, energyNeeds, dietPlan, LOGGED_KCAL, GOAL_MARGIN, nutritionPeriod, HYROX_M, unitFromName, measuredInReps, elapsedMs, sessionVolume, MAX_1RM_REPS, liftScore, bestSet, bestLift, LB_PER_KG, kgToLb, lbToKg, stepUpWeight, stepDownWeight, loadable, deloadWeight, dropSetWeight, progressionRule, nextWeight, kmTotal, weekMonday, mondays, mondayKey, weekKeys, countBetween
 */
 import { dayKey, est1RM } from './util.js';
 /* ── nutrición ─────────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -72,14 +72,20 @@ export const nutritionPeriod = (meals, keys, kcalGoal) => {
   return { days, logged: on.length, ok: on.filter(d => d.ok).length, avg: sumMacros(on.map(d => d.v)).map(v => on.length ? v / on.length : 0) };
 };
 /* ── entreno ───────────────────────────────────────────────────────────────────────────────────────────────────────── */
+/** Las pruebas de Hyrox que se miden en metros aunque su nombre no lleve la distancia: la de la prueba es su objetivo al
+    añadirlas (antes eran otros ejercicios, «Sled push 50 m»…, que siguen midiéndose por su nombre). */
+const HYROX_M = new Map([['Sled push', 50], ['Sled pull', 50], ['Farmers carry', 200], ['Burpee broad jump', 80]]);
 /** En qué se mide un ejercicio, por su nombre, si no es en repeticiones: { u: 'm' | 'min' | 's', rg: [objetivo, objetivo] }
-    («Farmers carry 200 m», «Carrera continua», «Plancha»); null si se mide en repeticiones. */
+    («Farmers carry 200 m», «Sled push», «Carrera continua», «Plancha»); null si se mide en repeticiones. */
 export const unitFromName = n => {
   const m = String(n).match(/(\d+(?:[.,]\d+)?)\s*(km|m)\b/i);
   if (m) {
     const v = +m[1].replace(',', '.') * (m[2].toLowerCase() == 'km' ? 1000 : 1);
     return { u: 'm', rg: [v, v] };
   }
+  const h = HYROX_M.get(n);
+  if (h)
+    return { u: 'm', rg: [h, h] };
   if (/^(Carrera continua|Rodaje|Trote|Bicicleta|Cinta|Elíptica|Caminata|Remo continuo|Natación)/i.test(n)) {
     const z = /largo/i.test(n) ? 60 : /zona 2|suave/i.test(n) ? 45 : /Tabata|intervalos/i.test(n) ? 20 : 30;
     return { u: 'min', rg: [z, z] };

@@ -31,7 +31,11 @@ export const EX_ALIASES = {
   'Box jump': 'Salto al cajón',
   Snatch: 'Squat snatch',
   Clean: 'Squat clean',
-  'Sled pull': 'Sled pull con cuerda',
+  'Sled pull': 'Sled pull con cuerda Sled pull 50 m',
+  'Sled push': 'Sled push 50 m',
+  'Farmers carry': 'Farmers carry 200 m',
+  'Burpee broad jump': 'Burpee broad jump 80 m',
+  'Wall balls': 'Wall balls 100 Wall balls 75 Hyrox',
 };
 /** nombre de un ejercicio que ya no está en la librería (era el mismo que otro) → el que queda. Lo que se guardó con el nombre
     viejo (el historial, las notas, un plan propio) lo conserva y muestra el que queda: sus músculos, su ficha y su figura
@@ -54,4 +58,10 @@ export const EX_RETIRED = new Map([
   ['Squat snatch', 'Snatch'],
   ['Squat clean', 'Clean'],
   ['Sled pull con cuerda', 'Sled pull'],
+  ['Sled push 50 m', 'Sled push'],
+  ['Sled pull 50 m', 'Sled pull'],
+  ['Farmers carry 200 m', 'Farmers carry'],
+  ['Burpee broad jump 80 m', 'Burpee broad jump'],
+  ['Wall balls 100', 'Wall balls'],
+  ['Wall balls 75', 'Wall balls'],
 ]);
