@@ -9,8 +9,8 @@ LOTE = json.load(open('salida/lote.json'))
 # el código: el motor, el material y las familias de base (mov3d.js), y de los demás archivos de familias solo los que tienen
 # alguna del lote (y lo que esos usan): la página pesa menos y el móvil la prepara antes. Qué familias tiene cada archivo
 # lo dice su cabecera («Define: Fig3D.FAMILIES.…»)
-BASE, MORE = ('fig3d.js', 'gear3d.js', 'mov3d.js'), ('tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js', 'core3d.js')
-NEEDS = {'hombros3d.js': ('brazos3d.js',), 'core3d.js': ('brazos3d.js',)}  # (hombros3d y core3d usan F3.blib, de brazos3d)
+BASE, MORE = ('fig3d.js', 'gear3d.js', 'mov3d.js'), ('tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js', 'core3d.js', 'funcional3d.js')
+NEEDS = {'hombros3d.js': ('brazos3d.js',), 'core3d.js': ('brazos3d.js',), 'funcional3d.js': ('brazos3d.js', 'core3d.js')}  # (hombros3d, core3d y funcional3d usan F3.blib, de brazos3d; funcional3d, también F3.clib)
 def families(f):
     m = re.search(r'Define: Fig3D\.FAMILIES\.(.*?)\*/', open(f, encoding='utf-8').read(), re.S)
     return set(re.findall(r'\w+', m.group(1))) if m else set()
