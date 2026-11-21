@@ -90,7 +90,7 @@
         /* (de seguido, como se hace: baja despacio, empuja de golpe sin pararse, el cuerpo sale despedido y sube y cae como cae
            cualquier cosa (una parábola) mientras las manos se juntan y vuelven, y al caer amortigua doblando un poco los codos.
            Antes cada tramo arrancaba y frenaba y el cuerpo apenas subía) */
-        const S_ = F3.clib.spl, fl = t > .5 && t < .72 ? (t - .5) / .22 : -1;
+        const S_ = M.spl, fl = t > .5 && t < .72 ? (t - .5) / .22 : -1;
         const d = S_(t, [[0, 0], [.38, 1], [.5, 0], [.72, 0], [.8, .38], [.92, 0], [1, 0]]);
         u = fl < 0 ? 0 : Math.sin(Math.PI * fl) ** .7;
         th = mix(th0, th1, d) + (fl < 0 ? 0 : 9 * 4 * fl * (1 - fl));

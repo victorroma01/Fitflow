@@ -19,17 +19,8 @@
   const DEG = 180 / PI;
 
   /* ── el ritmo ── */
-  /* una curva suave que pasa por los valores de K ([t, valor]) sin pasarse de ellos: donde el valor da la vuelta (o se queda
-     igual) se para, y donde sigue en el mismo sentido pasa de largo sin frenar (interpolación cúbica monótona) */
-  const spl = (t, K) => {
-    const n = K.length;
-    if (t <= K[0][0]) return K[0][1];
-    if (t >= K[n - 1][0]) return K[n - 1][1];
-    let i = 1; while (K[i][0] < t) i++;
-    const sl = j => { if (j <= 0 || j >= n - 1) return 0; const a = (K[j][1] - K[j - 1][1]) / (K[j][0] - K[j - 1][0]), b = (K[j + 1][1] - K[j][1]) / (K[j + 1][0] - K[j][0]); return a * b <= 0 ? 0 : 2 * a * b / (a + b); };
-    const [x0, y0] = K[i - 1], [x1, y1] = K[i], h = x1 - x0, s = (t - x0) / h, s2 = s * s, s3 = s2 * s;
-    return (2 * s3 - 3 * s2 + 1) * y0 + (s3 - 2 * s2 + s) * h * sl(i - 1) + (3 * s2 - 2 * s3) * y1 + (s3 - s2) * h * sl(i);
-  };
+  /* (la curva suave, la de mov3d.js) */
+  const spl = M.spl;
   /* un gesto hecho de tramos: cada uno, la postura a la que llega, lo que tarda (ms) y cuánto cambia la figura (du: lo que
      avanza t). Así t avanza parejo con lo que se ve (y las comprobaciones lo miran a pasos iguales) y el reloj pone el ritmo:
      lento al bajar, explosivo en el tirón. Devuelve la postura en t (cada número por su curva) y el reloj */

@@ -799,7 +799,20 @@
     const u = sub(a, P), v = sub(b, P), k = norm(cross(u, v)), th = acos(clamp(dot(norm(u), norm(v)), -1, 1)) * t, c = cos(th), s = sin(th);
     return add(P, add(add(mul(u, c), mul(cross(k, u), s)), mul(k, dot(k, u) * (1 - c))));
   };
-  F3.mlib = { pivotFor, leverAt, has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
+  /* una curva suave que pasa por los valores de K ([t, valor]) sin pasarse de ellos: donde el valor da la vuelta (o se queda
+     igual) se para, y donde sigue en el mismo sentido pasa de largo sin frenar (interpolación cúbica monótona). La usan las
+     familias de todos los lotes: va aquí, en lo que carga cada página (antes estaba en core3d.js y la página del lote 5, que
+     no lo carga, fallaba en las flexiones con palmada y se quedaba sin figuras) */
+  const spl = (t, K) => {
+    const n = K.length;
+    if (t <= K[0][0]) return K[0][1];
+    if (t >= K[n - 1][0]) return K[n - 1][1];
+    let i = 1; while (K[i][0] < t) i++;
+    const sl = j => { if (j <= 0 || j >= n - 1) return 0; const a = (K[j][1] - K[j - 1][1]) / (K[j][0] - K[j - 1][0]), b = (K[j + 1][1] - K[j][1]) / (K[j + 1][0] - K[j][0]); return a * b <= 0 ? 0 : 2 * a * b / (a + b); };
+    const [x0, y0] = K[i - 1], [x1, y1] = K[i], h = x1 - x0, u = (t - x0) / h, u2 = u * u, u3 = u2 * u;
+    return (2 * u3 - 3 * u2 + 1) * y0 + (u3 - 2 * u2 + u) * h * sl(i - 1) + (3 * u2 - 2 * u3) * y1 + (u3 - u2) * h * sl(i);
+  };
+  F3.mlib = { spl, pivotFor, leverAt, has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];
