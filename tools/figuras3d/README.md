@@ -8,7 +8,7 @@ Está en pruebas y **no está conectada a la app**: se integrará cuando estén 
 - `fig3d.js`: el motor. Construye el cuerpo (tronco, brazos, piernas, cabeza y manos), le envuelve los músculos del mapa
   de la app y lo pinta en SVG desde la cámara que se le dé.
 - `gear3d.js`: el material (bancos, Smith, máquinas, poleas, mancuernas, kettlebell, bandas, saco…).
-- `mov3d.js`: las familias de movimiento. Cada una recibe las variantes de un ejercicio y da su postura en cada momento
+- `mov3d.js` y `tiron3d.js`: las familias de movimiento (las del lote 1 y las de tirón, del lote 2). Cada una recibe las variantes de un ejercicio y da su postura en cada momento
   del gesto. Las posturas salen de reglas físicas: los pies no se mueven del suelo, las rodillas van hacia las puntas de
   los pies y el tronco se inclina lo justo para que el peso quede sobre el medio del pie (con barra, la barra; en la
   Smith, para que la barra siga sus guías). En el banco, la barra toca el pecho con los antebrazos casi verticales.
@@ -20,15 +20,17 @@ Está en pruebas y **no está conectada a la app**: se integrará cuando estén 
 Con Node 22 y Python con Playwright (lo mismo que las pruebas), desde esta carpeta:
 
 ```
-node datos.mjs                     # los datos del lote (por omisión, el 1: squat,press,overhead)
+node datos.mjs 2                   # los datos de un lote (1: squat,press,overhead; 2: pulldown,row,pullup)
 python3 banco.py                   # el banco de pruebas: salida/banco.html
 python3 verifica.py                # manos que no llegan, pies fuera del suelo, codos o rodillas imposibles, asimetrías
+python3 choques.py                 # barra o mancuernas contra el cuerpo, brazos y piernas que se cruzan o atraviesan el tronco
 python3 saltos.py                  # saltos de un fotograma a otro en la animación
 python3 numeros.py "Sentadilla"    # inclinación del tronco, ángulos, barra sobre el medio del pie…
 python3 hoja.py hoja.png "Sentadilla|Press banca"   # una hoja con cada ejercicio en varios momentos y de lado
-python3 pagina.py                  # la página de revisión del lote: salida/pagina/index.html
+python3 pagina.py                  # la página de revisión del lote (sus textos, en textos.py): salida/pagina/index.html
 ```
 
 ## Lotes
 
 1. Sentadillas, press de banca y press de hombro: 57 ejercicios. Revisado.
+2. Jalones, remos y dominadas (con colgados y elevaciones de piernas): 57 ejercicios. Revisado.

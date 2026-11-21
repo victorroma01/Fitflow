@@ -70,6 +70,12 @@
     return out;
   };
   const cableLine = (cam, a, b) => strap(cam, [a, b], 1.4, [C.cable, '#0a0b10']);
+  /* una banda elástica: un lazo de dos tiras tensas, de a (donde está sujeta) a b (la mano o la barra), un poco separadas
+     (sep, a lo largo de dir); cuanto más se estira respecto a su largo en reposo (l0), más fina */
+  const bandLoop = (cam, a, b, l0, dir = [0, 0, 1], sep = 3) => {
+    const l = len(sub(b, a)) || 1, w = max(1.6, min(4, 3.4 * sqrt(l0 / l)));
+    return [-1, 1].flatMap(k => strap(cam, [add(a, mul(dir, k * sep)), add(b, mul(dir, k * sep * .45))], w, C.band));
+  };
   /* una curva suave entre dos puntos que cuelga (o se tensa) hacia dir: para las bandas */
   const sag = (a, b, dir, k, n = 6) => { const out = []; for (let i = 0; i <= n; i++) { const t = i / n; out.push(add(mix(a, b, t), mul(dir, k * 4 * t * (1 - t)))); } return out; };
 
@@ -119,14 +125,21 @@
   const leg = (cam, top, w = 5, foot = 34) => [obox(cam, [top[0], top[1] / 2, top[2]], [[1, 0, 0], UP], [w, top[1] / 2, w], C.frame), obox(cam, [top[0], 2, top[2]], [[1, 0, 0], UP], [foot, 2, 7], C.frame)];
 
   /* ── máquinas ── */
-  /* el armazón de una Smith: dos guías verticales a ±xr, en el plano z = zr, y el travesaño de arriba */
+  /* la Smith: dos guías de acero verticales a ±xr, en el plano z = zr, con su travesaño arriba y su base; la barra va sujeta a
+     dos carros que suben y bajan por ellas (smithHooks) */
+  const STEEL = ['#c3c8d8', '#0a0b10'];
   const smithFrame = (cam, zr, xr = 128, top = 470) => [
-    ...tube(cam, [xr, 0, zr], [xr, top, zr], 6, C.frame, 10), ...tube(cam, [-xr, 0, zr], [-xr, top, zr], 6, C.frame, 10),
-    ...tube(cam, [xr, top, zr], [-xr, top, zr], 6, C.frame, 6),
-    obox(cam, [xr, 3, zr], [[1, 0, 0], UP], [8, 3, 46], C.frame), obox(cam, [-xr, 3, zr], [[1, 0, 0], UP], [8, 3, 46], C.frame),
+    ...tube(cam, [xr, 6, zr], [xr, top, zr], 4.6, STEEL, 12), ...tube(cam, [-xr, 6, zr], [-xr, top, zr], 4.6, STEEL, 12),
+    ...tube(cam, [xr, top + 6, zr], [-xr, top + 6, zr], 7, C.frame, 6),
+    obox(cam, [xr, 3, zr], [[1, 0, 0], UP], [10, 3, 46], C.frame), obox(cam, [-xr, 3, zr], [[1, 0, 0], UP], [10, 3, 46], C.frame),
   ];
-  /* los ganchos de la barra de la Smith, en las guías */
-  const smithHooks = (cam, c, xr = 128) => [-1, 1].flatMap(k => tube(cam, [k * xr, c[1], c[2]], [k * xr, c[1] + 9, c[2] - 7], 2.4, ['#7d849e', '#0a0b10'], 1));
+  /* los carros: cada uno abraza su guía a la altura de la barra (la barra pasa por ellos), con el gancho para dejarla */
+  const smithHooks = (cam, c, xr = 128) => [-1, 1].flatMap(k => {
+    const p = [k * xr, c[1], c[2]], it = obox(cam, p, [[1, 0, 0], UP], [8, 15, 8], ['#2a2f44', '#8c93b0']);
+    it.z = cam.P(p)[2] + 9;
+    const hook = tube(cam, add(p, [0, 4, -8]), add(p, [0, 13, -15]), 2.6, STEEL, 1).map(i => ({ ...i, z: it.z + .1 }));
+    return [it, ...hook];
+  });
   /* una torre de polea: el poste, la polea abajo (o a la altura h) y el cable hasta la mano */
   const pulleyTower = (cam, base, h, to) => {
     const out = [{ ...obox(cam, [base[0], 235, base[2]], [[1, 0, 0], UP], [9, 235, 9], C.frame), nf: true }, obox(cam, [base[0], 3, base[2]], [[1, 0, 0], UP], [26, 3, 26], C.frame)];
@@ -136,5 +149,5 @@
     return out;
   };
 
-  F3.gear = { C, tone, basis, obox, tube, disc, strap, cableLine, sag, dumbbell, kettlebell, sandbag, under, padAB, leg, smithFrame, smithHooks, pulleyTower };
+  F3.gear = { C, tone, basis, obox, tube, disc, strap, cableLine, bandLoop, sag, dumbbell, kettlebell, sandbag, under, padAB, leg, smithFrame, smithHooks, pulleyTower };
 })(window);

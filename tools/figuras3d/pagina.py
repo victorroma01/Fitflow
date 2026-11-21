@@ -1,4 +1,4 @@
-# La página de revisión del lote 1: sentadillas, press de banca y press de hombro, con la figura 3D de cada ejercicio.
+# La página de revisión de un lote (el que diga salida/lote.txt), con la figura 3D de cada ejercicio; los textos, en textos.py.
 # Antes: node datos.mjs && python3 banco.py. Deja la página en salida/pagina/index.html
 import json, os, html
 from playwright.sync_api import sync_playwright
@@ -9,65 +9,10 @@ JS = '\n'.join(open(f, encoding='utf-8').read() for f in ('fig3d.js', 'gear3d.js
 LOTE = json.load(open('salida/lote.json'))
 SIDE = (-80, 4)
 
-NOTES = {
-    'Sentadilla': 'Barra alta, sobre los trapecios. Baja hasta que la cadera pasa por debajo de la rodilla, con las rodillas hacia las puntas de los pies; la barra no se sale de la vertical del medio del pie.',
-    'Sentadilla frontal': 'La barra sobre la parte delantera de los hombros, con los codos altos y hacia delante. El tronco queda casi vertical y la barra, sobre el medio del pie.',
-    'Sentadilla en Smith': 'La barra va por las guías. Los pies, algo por delante de la barra; el tronco se inclina lo justo para que la barra no se salga de su recorrido.',
-    'Sentadilla con pausa': 'Como la sentadilla, con una parada de casi un segundo abajo.',
-    'Sentadilla en caja': 'Pies más abiertos: se sienta atrás hasta tocar la caja con el muslo paralelo y las espinillas casi verticales.',
-    'Sentadilla Zercher': 'La barra en el pliegue de los codos, delante del vientre, y las manos juntas a la altura de la barbilla. Tronco erguido.',
-    'Sentadilla con barra de seguridad': 'El yugo acolchado sobre los trapecios y las asas hacia delante; los extremos de la barra bajan por delante, con los discos.',
-    'Sentadilla con mancuernas': 'Una mancuerna en cada mano, colgando a los lados, con las palmas hacia dentro.',
-    'Sentadilla goblet con mancuerna': 'La mancuerna de pie delante del pecho, sujeta por la cabeza de arriba con las dos manos; los codos, hacia abajo.',
-    'Sentadilla sumo con mancuerna': 'Pies muy abiertos y puntas hacia fuera; la mancuerna cuelga entre las piernas, cogida por arriba con las dos manos.',
-    'Sentadilla con bandas': 'La banda pisada por el medio de los pies y las asas a la altura de los hombros.',
-    'Hack squat en Smith': 'En la Smith con los pies bastante adelantados: el tronco, casi vertical, y las rodillas avanzan mucho.',
-    'Overhead squat': 'La barra arriba con los brazos estirados y el agarre muy abierto, siempre sobre el medio del pie; el tronco, erguido.',
-    'Goblet squat': 'La kettlebell cogida por los dos lados del asa, delante del pecho, con la bola hacia abajo.',
-    'Sentadilla goblet con pausa': 'Como la goblet con kettlebell, con una parada abajo.',
-    'Sandbag squat': 'El saco apoyado en los pliegues de los codos, contra el pecho, y las manos agarrándolo por arriba.',
-    'Sentadilla con salto': 'Desde abajo con los brazos atrás: se estira del todo, despega con los brazos arriba y vuelve a caer en la sentadilla.',
-    'TRX sentadilla': 'Agarrado a las asas con los brazos estirados hacia el anclaje: el TRX sostiene y deja bajar con el tronco más erguido.',
-    'Press banca': 'Agarre de vez y media el ancho de los hombros. La barra baja hasta tocar la parte baja del pecho con los antebrazos casi verticales y sube hasta quedar sobre los hombros.',
-    'Press banca mancuernas': 'Las mancuernas bajan a los lados del pecho, algo más hondo que la barra, con los antebrazos verticales; arriba, casi juntas sobre los hombros.',
-    'Press banca en Smith': 'La barra sube y baja en vertical por las guías, sobre el pecho: arriba, los brazos quedan algo hacia los pies.',
-    'Press banca agarre neutro mancuernas': 'Las palmas, una frente a otra, y los codos más pegados al cuerpo.',
-    'Press en suelo con barra': 'Tumbado en el suelo con las rodillas dobladas: la barra baja hasta que los brazos se apoyan en el suelo, sin llegar al pecho.',
-    'Press en suelo con mancuernas': 'En el suelo con mancuernas: abajo, los codos se apoyan en el suelo.',
-    'Press banca con pausa': 'Como el press de banca, con una parada con la barra en el pecho.',
-    'Press banca agarre ancho': 'Agarre muy abierto: la barra toca algo más arriba en el pecho y los codos se abren más.',
-    'Press banca con bandas': 'Una banda en cada extremo de la barra, sujeta al suelo: se estira al subir.',
-    'Press banca unilateral con mancuerna': 'Con la mano derecha; la izquierda, abierta sobre el vientre.',
-    'Press inclinado mancuernas': 'Banco a unos 38°: las mancuernas bajan a los lados de la parte alta del pecho.',
-    'Press inclinado barra': 'Banco a unos 38°: la barra toca la parte alta del pecho, bajo las clavículas, y sube en vertical hasta quedar sobre los hombros.',
-    'Press inclinado en Smith': 'Inclinado en la Smith: la barra va en vertical por las guías, sobre la parte alta del pecho.',
-    'Press inclinado agarre neutro mancuernas': 'Inclinado, con las palmas una frente a otra.',
-    'Press inclinado 30° mancuernas': 'Banco a 30°, algo menos inclinado que en los demás.',
-    'Press inclinado unilateral mancuerna': 'Inclinado, con la mano derecha; la izquierda, sobre el vientre.',
-    'Press inclinado con pausa': 'Inclinado con barra, con una parada en el pecho.',
-    'Press banca declinado': 'Banco declinado unos 18°, con las piernas sujetas en los rodillos; la barra toca la parte baja del pecho.',
-    'Press declinado mancuernas': 'Declinado, con mancuernas.',
-    'Press declinado en Smith': 'Declinado en la Smith: en vertical por las guías.',
-    'Press cerrado': 'Agarre al ancho de los hombros y codos pegados: la barra toca más abajo en el pecho.',
-    'Press cerrado mancuernas': 'Las dos mancuernas juntas, apretadas una contra otra sobre el pecho, con los codos pegados.',
-    'Press cerrado en Smith': 'Agarre cerrado en la Smith.',
-    'Press cerrado con barra Z': 'Agarre cerrado en las curvas de la barra Z.',
-    'Press JM': 'Agarre cerrado: la barra baja hacia la barbilla con los codos hacia los pies, a medio camino entre un press cerrado y un press francés.',
-    'Press hombro mancuernas': 'Sentado con respaldo: las mancuernas salen a la altura de las orejas, con los antebrazos verticales, y suben hasta estirar los brazos sobre los hombros.',
-    'Press militar barra': 'De pie: la barra sale de lo alto del pecho, pasa por delante de la cara con la cabeza un poco atrás y acaba sobre la cabeza.',
-    'Press Arnold': 'Empieza con las mancuernas delante de la cara y las palmas hacia uno; al subir, abre los codos y gira las muñecas hasta acabar como en el press normal.',
-    'Press hombro máquina': 'Sentado en la máquina: las asas suben por el arco de sus palancas.',
-    'Press hombro unilateral': 'De pie, con la mano derecha; el otro brazo, relajado.',
-    'Press landmine': 'La barra apoyada en el suelo por delante: la mano sube y avanza por su arco hasta estirar el brazo, con el pie contrario adelantado.',
-    'Press militar sentado con barra': 'Como el press militar, sentado y con respaldo.',
-    'Press hombro en Smith': 'Sentado en la Smith: la barra sube en vertical por delante de la cara.',
-    'Press hombro con kettlebell': 'La kettlebell en la posición de rack, apoyada por fuera del antebrazo; sube hasta arriba con la palma hacia delante.',
-    'Press hombro en polea': 'De pie junto a la polea baja, con una mano: el cable sube de la polea al asa.',
-    'Press hombro sentado agarre neutro': 'Sentado, con las palmas una frente a otra y los codos más adelantados.',
-    'Press hombro con bandas': 'De pie sobre la banda: las asas suben desde los hombros hasta arriba.',
-    'Press hombro con pausa': 'Sentado con mancuernas, con una parada abajo.',
-    'Landmine press': 'Como el press landmine.',
-}
+from textos import LOTES
+LOTE_N = int(open('salida/lote.txt').read().strip())
+TX = LOTES[LOTE_N]
+NOTES = TX['notes']
 missing = [e['n'] for e in LOTE if e['n'] not in NOTES]
 assert not missing, missing
 
@@ -81,9 +26,7 @@ with sync_playwright() as p:
       return out; }''', list(SIDE))
     b.close()
 
-FAMS = [('squat', 'Sentadillas', 'Los pies no se mueven del suelo y el tronco se inclina lo justo para que el peso quede sobre el medio del pie; con barra, la barra baja en vertical.'),
-        ('press', 'Press de banca', 'La barra (o las mancuernas) toca el pecho con los antebrazos casi verticales y acaba sobre los hombros. Plano, inclinado, declinado y en el suelo.'),
-        ('overhead', 'Press de hombro', 'De la altura de los hombros a estirar los brazos sobre la cabeza, de pie o sentado con respaldo.')]
+FAMS = TX['fams']
 e = html.escape
 def card(i, x):
     n = x['n']
@@ -104,7 +47,7 @@ HTML = r'''<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Figuras 3D · lote 1</title>
+<title>''' + TX['title'] + r'''</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -164,22 +107,11 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs3"></defs></svg>
 <header class="band">
-<p class="pr">StrataFit · figuras de ejercicio · lote 1 de la revisión</p>
-<h1>Sentadillas y presses, en 3D</h1>
-<p class="lede">Los <b>57 ejercicios</b> de las familias de sentadilla, press de banca y press de hombro, con la figura nueva moviéndose. Toca una figura para verla en grande con lo que hace; <b>Lado</b> la gira de perfil para comprobar la postura (los discos se aclaran para que se vea el cuerpo). Todavía no está en la app: se integrará cuando estén todos los lotes.</p>
-<p class="lede"><b>Novedades:</b> los gestos arrancan y frenan como los de una persona, sin tirones; solo descansan en la posición de reposo y abajo dan la vuelta sin pararse (salvo los de pausa). El salto tiene sus tiempos de verdad: impulso, vuelo y caída amortiguada. Las figuras se mueven con más fotogramas por segundo, y las bandas son cian.</p>
-<p class="key"><span><i style="background:#e0263a"></i>Músculos principales</span><span><i style="background:#f59a2c"></i>Secundarios</span><span>los de la librería de la app</span></p>
+''' + TX['head'] + r'''<p class="key"><span><i style="background:#e0263a"></i>Músculos principales</span><span><i style="background:#f59a2c"></i>Secundarios</span><span>los de la librería de la app</span></p>
 </header>
 <div class="bar"><div class="in"><span class="lbl">Todas:</span><div class="seg" role="group" aria-label="Vista de todas las figuras"><button type="button" data-m="cam" aria-pressed="true">3/4</button><button type="button" data-m="side" aria-pressed="false">Lado</button></div></div></div>
 ''' + sections + r'''
-<section class="found">
-<h2>Lo que he visto al revisarlo</h2>
-<ul>
-<li><b>Músculos de la librería que no cuadraban.</b> <b>TRX sentadilla</b> y <b>Landmine press</b> llevaban dorsal y pectoral como principales (los compartían con su línea de la librería, junto con remos y fondos), y <b>Goblet squat</b>, <b>Sentadilla goblet con pausa</b>, <b>Sandbag squat</b> y <b>Overhead squat</b> llevaban «cuerpo entero», así que salían enteros en rojo. Ya están corregidos, en su propia rama (desarrollo-musculos), y aquí se ven bien.</li>
-<li><b>Lo que es una aproximación.</b> En la sentadilla frontal, la mano rodea la barra con la muñeca doblada hacia atrás (no se dibujan los dedos abiertos bajo la barra). La barra del landmine está algo más corta que una real para que quepa en la tarjeta, y las cintas del TRX y lo alto de la Smith y de la polea se salen del encuadre.</li>
-<li><b>Las variantes que la app junta y aquí se distinguen:</b> las de pausa (se paran abajo), el agarre ancho, el agarre neutro, el banco a 30°, el Arnold, el JM y el hack en la Smith.</li>
-</ul>
-</section>
+''' + TX['found'] + r'''
 <footer>Las figuras se dibujan en vivo: solo se mueven las que están a la vista. Si el sistema pide menos movimiento, se quedan quietas a mitad del gesto.</footer>
 <script>window.FIG_MAP = ''' + MAP + r'''; window.FIG_REG = ''' + REG + r'''; window.LOTE = ''' + json.dumps(LOTE, ensure_ascii=False) + r''';</script>
 <script>

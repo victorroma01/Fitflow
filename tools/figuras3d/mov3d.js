@@ -119,7 +119,7 @@
     else if (has(f, 'sumo')) {
       /* pies muy abiertos y puntas hacia fuera; una mancuerna colgando entre las piernas, cogida por arriba con las dos manos */
       Object.assign(V, { w: 68, toe: 38, ps: [3, 25], pt: [86, -2] });
-      const hand = (F, s) => add(mul(add(shoulder(F, 'L'), shoulder(F, 'R')), .5), sd(s, [6, -139, 6]));
+      const hand = (F, s) => add(mul(add(shoulder(F, 'L'), shoulder(F, 'R')), .5), sd(s, [6, -132, 30]));
       arms = F => ({ hands: both(s => hand(F, s)), elbow: both(() => [.3, 0, -1]), fist: false, palm: both(() => [-1, 0, 0]), load: [[add(hand(F, 'L'), [-6, -20, 0]), .3]] });
       gear = (q, F, cam) => { const c = add(mul(add(q.hands.L, q.hands.R), .5), [0, -11, 0]); return GR.dumbbell(cam, c, UP, null, { handle: 15 }); };
     }
@@ -252,9 +252,11 @@
     return out;
   };
   /* las bandas: de debajo de cada pie (pisadas por el medio) a cada mano */
+  /* las bandas pisadas: cada una pasa por debajo del medio del pie (sus dos tiras suben por los lados del pie) y llega
+     tensa a la mano; en reposo mide lo que hay del suelo a la cintura */
   const bands = (cam, F, q) => ['L', 'R'].flatMap(s => {
-    const foot = at(F['foot' + s], [0, -19, 12]);
-    return GR.strap(cam, GR.sag(foot, q.hands[s], sd(s, [1, 0, 0]), 6, 5), 3.2, GR.C.band);
+    const foot = at(F['foot' + s], [0, -19, 12]), x = F['foot' + s].x;
+    return GR.bandLoop(cam, foot, q.hands[s], 105, x, 7);
   });
 
   /* la sentadilla con salto: de abajo (los brazos atrás) a estirarse del todo y despegar (los brazos arriba), y vuelta */
@@ -371,7 +373,9 @@
       }
       return GR.under([...legs, ...extra, GR.padAB(cam, s0, s1, UP, 30, 7), ...items]);
     };
-    const bandGear = (q, cam) => [-1, 1].flatMap(k => { const a = add(q.barC, [k * 128, 0, 0]), b = [k * 128, 2, q.barC[2]]; return [...GR.strap(cam, [a, b], 3, GR.C.band), GR.obox(cam, b, [[1, 0, 0], UP], [5, 2, 5], GR.C.frame)]; });
+    /* las bandas del banco: cada una, en lazo alrededor del extremo de la barra (por fuera de los discos) y de un anclaje en el
+       suelo justo debajo; con la barra en el pecho ya están algo tensas y al subir se estiran más */
+    const bandGear = (q, cam) => [-1, 1].flatMap(k => { const a = [k * 196, 6, bottom[2]], b = add(q.barC, [k * 196, 0, 0]); return [GR.obox(cam, [a[0], 4, a[2]], [[1, 0, 0], UP], [9, 4, 9], GR.C.frame), ...GR.bandLoop(cam, a, b, (bottom[1] - 6) * .8, [0, 0, 1], 3.5)]; });
     return {
       view: 'bench', up: 'a', cam: incline ? [-38, 26] : [-30, 33],
       at(t) { return { ...body, ...arms(t) }; },
