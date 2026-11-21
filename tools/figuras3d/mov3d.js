@@ -166,7 +166,7 @@
       fixed = [-3, 16];
       const anchor = s => sd(s, [14, 520, 300]);
       arms = F => ({ hands: both(s => { const sh = shoulder(F, s); return add(sh, mul(norm(sub(anchor(s), sh)), 140)); }), elbow: both(() => [.3, -1, 0]) });
-      gear = (q, F, cam) => ['L', 'R'].flatMap(s => GR.strap(cam, [q.hands[s], anchor(s)], 2.6, GR.C.strap).map(i => ({ ...i, nf: true })));
+      gear = (q, F, cam) => ['L', 'R'].flatMap(s => GR.strap(cam, [q.hands[s], anchor(s)], 6, GR.C.trx).map(i => ({ ...i, nf: true })));
     }
     else if (has(f, 'jump')) return jumpSquat(f);
     else {
@@ -522,13 +522,18 @@
       gear = (q, F, cam) => machineGear(cam, q, F);
     }
     else if (arnold) {
-      /* Arnold: empieza con las mancuernas delante de la cara, las palmas hacia uno y los codos delante; al subir, los codos se
-         abren y las muñecas giran hasta acabar como en el press normal */
+      /* Arnold: empieza con las mancuernas a la altura de la barbilla, las palmas hacia uno y los codos juntos delante del pecho.
+         Al subir, los codos se abren por un arco hacia los lados (con el antebrazo siempre vertical) mientras las muñecas giran:
+         las palmas pasan de mirar a uno a mirarse y a mirar adelante. El giro acaba con las mancuernas a la altura de la frente,
+         ya subiendo, y de ahí sigue como el press normal. Antes la mano iba en línea recta de delante al lado, sin subir, y
+         luego subía: el codo daba un bandazo y las mancuernas pasaban rozando la cara */
+      const azAt = t => RAD(mix(104, 25, ease(clamp(t / .5, 0, 1)))), evAt = t => RAD(mix(-62, 76, t ** 1.64));
+      const arc = t => { const a = azAt(t), e = evAt(t), E = [47 + LEN.upper * cos(e) * cos(a), 80 + LEN.upper * sin(e), -2 + LEN.upper * cos(e) * sin(a)]; return { E, H: [E[0], E[1] + LEN.fore + LEN.grip, E[2]] }; };
       arms = (F, t) => {
-        const k = span(t, 0, .5), u = span(t, .42, 1);
-        const hands = both(s => mix(T(F, s, [20, 86, 36]), pressed(F, s, u), k));
-        const th = PI * span(t, .05, .6);
-        return { hands, elbow: both(() => norm(mix([.15, -.6, 1], elAt(F, u), k))), barDir: { L: [cos(PI - th), 0, sin(PI - th)], R: [cos(PI + th), 0, sin(PI + th)] } };
+        const a = arc(t), lock = span(t, .68, 1), th = PI * span(t, .04, .5);
+        const hands = both(s => mix(T(F, s, a.H), T(F, s, HIGH), lock));
+        const el = norm(mix(norm(sub(T(F, 'L', a.E), T(F, 'L', [47, 80, -2]))), [.2, -1, 0], lock * .5));
+        return { hands, elbow: both(() => el), barDir: { L: [cos(PI - th), 0, sin(PI - th)], R: [cos(PI + th), 0, sin(PI + th)] } };
       };
       gear = (q, F, cam) => pair(q, cam, null, F);
     }

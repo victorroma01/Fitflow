@@ -9,7 +9,7 @@
   const { cos, sin, PI, abs, max, min, round, sqrt, ceil } = Math;
   /* los colores: el armazón, oscuro y con el canto algo más claro; los acolchados, un poco más claros; el acero, como la barra */
   /* las bandas elásticas, siempre en cian: así se distinguen de un vistazo de cables, cintas y barras */
-  const C = { frame: ['#1b1e2d', '#4d5370'], pad: ['#343950', '#7078a0'], rubber: ['#0f1119', '#59607c'], iron: ['#1d2030', '#5d6482'], band: ['#22d3ee', '#063845'], strap: ['#2a2e40', '#0a0b10'], cable: '#9aa1bb' };
+  const C = { frame: ['#1b1e2d', '#4d5370'], pad: ['#343950', '#7078a0'], rubber: ['#0f1119', '#59607c'], iron: ['#1d2030', '#5d6482'], band: ['#22d3ee', '#063845'], strap: ['#2a2e40', '#0a0b10'], trx: ['#b3473a', '#2b0a07', '#de7b64'], cable: '#9aa1bb' };
   /* un color algo más claro (k > 0) o más oscuro (k < 0) */
   const tone = (hex, k) => {
     const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => round(k > 0 ? v + (255 - v) * k : v * (1 + k)));
@@ -73,7 +73,9 @@
       const a0 = i == 0 ? 0 : -e, b0 = i == m - 1 ? 0 : e;
       const d = `M${f1(A[0])} ${f1(A[1])}L${f1(B[0])} ${f1(B[1])}`, df = `M${f1(A[0] + dx * a0)} ${f1(A[1] + dy * a0)}L${f1(B[0] + dx * b0)} ${f1(B[1] + dy * b0)}`;
       const cap = m == 1 ? 'round' : i == 0 || i == m - 1 ? 'round' : 'butt';
-      out.push({ z: (A[2] + B[2]) / 2, svg: `<path d="${d}" stroke="${col[1]}" stroke-width="${w + 1.6}" stroke-linecap="${cap}"/><path d="${df}" stroke="${col[0]}" stroke-width="${w}" stroke-linecap="${cap}"/>` });
+      /* con un tercer color (la cinta del TRX), una raya fina por el centro, como una cincha */
+      const stripe = col[2] ? `<path d="${df}" stroke="${col[2]}" stroke-width="${f1(w * .26)}" stroke-linecap="${cap}"/>` : '';
+      out.push({ z: (A[2] + B[2]) / 2, svg: `<path d="${d}" stroke="${col[1]}" stroke-width="${w + 1.6}" stroke-linecap="${cap}"/><path d="${df}" stroke="${col[0]}" stroke-width="${w}" stroke-linecap="${cap}"/>${stripe}` });
     }
     return out;
   };

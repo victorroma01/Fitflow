@@ -343,7 +343,7 @@
       const bot = s => rings ? add(shoulder(F0, s, bodyAt(0)), mul(norm(sub(add(anchor, sd(s, [20, 0, 0])), shoulder(F0, s, bodyAt(0)))), 143)) : top(s);
       arms = t => ({ ...bodyAt(t), hands: both(s => rings ? mix(bot(s), top(s), t) : top(s)), elbow: both(() => rings ? [.35, -.3, .4] : [.55, -.4, .3]), barDir: rings ? [0, 1, 0] : [1, 0, 0] });
       gear = (q, F, cam) => {
-        if (rings) return ['L', 'R'].flatMap(s => { const h = q.hands[s], A = add(anchor, sd(s, [20, 0, 0])); return [...GR.strap(cam, [h, A], 2.6, GR.C.strap).map(i => ({ ...i, nf: true })), ...(trx ? grip(cam, h, [0, 1, 0], s, 7) : [ringAt(cam, h, s)])]; });
+        if (rings) return ['L', 'R'].flatMap(s => { const h = q.hands[s], A = add(anchor, sd(s, [20, 0, 0])); return [...GR.strap(cam, [h, A], trx ? 6 : 2.6, trx ? GR.C.trx : GR.C.strap).map(i => ({ ...i, nf: true })), ...(trx ? grip(cam, h, [0, 1, 0], s, 7) : [ringAt(cam, h, s)])]; });
         const c = [0, yb, q.hands.L[2]];
         return [...barbell(cam, c, g), ...GR.sideFade([-1, 1].flatMap(k => GR.tube(cam, [k * 128, 0, c[2]], [k * 128, 300, c[2]], 6, GR.C.frame, 6).map(i => ({ ...i, nf: true }))))];
       };

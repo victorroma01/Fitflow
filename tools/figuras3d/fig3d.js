@@ -871,6 +871,19 @@
       if (groups['hand' + s] && groups['fore' + s]) Z['hand' + s] = max(Z['hand' + s], Z['fore' + s] + 1e-4);
       if (groups['foot' + s] && groups['shin' + s]) Z['foot' + s] = max(Z['foot' + s], Z['shin' + s] + 1e-4);
     });
+    /* el antebrazo que queda delante del cuerpo y dentro de su anchura (como al coger una mancuerna entre las piernas, en la
+       sentadilla sumo), con la cámara de frente: delante del tronco, y su mano con él. El tronco se ordena por una sola
+       profundidad, la del medio del tórax, y con la cámara algo alta un antebrazo que cuelga bajo, delante de la pelvis,
+       quedaba detrás de ella y desaparecía al bajar */
+    if (dot(F.pelvis.z, cam.c) > .55) ['L', 'R'].forEach(s => {
+      const k = 'fore' + s;
+      if (!groups[k]) return;
+      const v = sub(mix(J[s].el, J[s].fist, .5), F.pelvis.o), dz = dot(v, F.pelvis.z), dx = abs(dot(v, F.pelvis.x)), dy = dot(v, F.pelvis.y);
+      if (dz > 10 && dx < 30 && dy > -60 && dy < 140 && Z[k] < tz) {
+        Z[k] = tz + .01; delete twin[k];
+        if (groups['hand' + s]) { Z['hand' + s] = max(Z['hand' + s], Z[k] + 1e-4); delete twin['hand' + s]; }
+      }
+    });
     Object.values(groups).forEach(g => {
       const z = Z[g.key];
       const sk = STYLE.skin;
