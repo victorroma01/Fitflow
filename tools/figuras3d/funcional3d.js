@@ -120,15 +120,16 @@
   };
   /* los pesos de lo que hacen los brazos (colgando, tirón alto, en los hombros, arriba), normalizados */
   const wts = s => { const a = [s.mH, s.mP, s.mR, s.mO].map(v => max(0, v)), k = a.reduce((x, y) => x + y, 0) || 1; return a.map(v => v / k); };
-  const EL = [[.3, .1, -1], [1, .75, -.25], [.2, -.3, 1], [.45, 0, -1]];
+  const EL = [[.3, .1, -1], [1, .75, -.25], [.22, .05, 1], [.45, 0, -1]];
   /* la muñeca: con la barra en los hombros, doblada hacia atrás (el puño encima, el antebrazo hacia delante); en lo demás,
      siguiendo al antebrazo. Entre medias, mezclado: así no salta */
-  const rackHand = (F, s) => norm(sub(at(F.thorax, sd(s, [.4, 1, -.2])), F.thorax.o));
+  /* (los dedos bajo la barra, hacia el hombro: la muñeca queda lejos de él y el antebrazo no se mete en el brazo) */
+  const rackHand = (F, s, q) => norm(add(norm(sub(shoulder(F, s, q), q.hands[s])), mul(F.thorax.y, .35)));
   const wristMix = (q, w) => {
     if (w <= 0) return q;
     w = min(1, 3.5 * w);
     const { F, J } = pose(q), o = {};
-    for (const s of ['L', 'R']) o[s] = norm(mix(norm(sub(J[s].fist, J[s].el)), rackHand(F, s), w));
+    for (const s of ['L', 'R']) o[s] = norm(mix(norm(sub(J[s].fist, J[s].el)), rackHand(F, s, q), w));
     return { ...q, handDir: o };
   };
 

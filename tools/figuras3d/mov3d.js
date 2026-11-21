@@ -106,7 +106,26 @@
   };
 
   /* ── el material de las figuras ── */
-  const bb = (q, cam) => barbell(cam, q.barC, q.grip);
+  /* la barra; con F, cada trozo ordenado según lo que de verdad lo tapa visto desde la cámara (el muslo o la rodilla que
+     quedan delante, el antebrazo...) y, si nada lo tapa, delante del cuerpo: ordenada solo por la profundidad de su centro,
+     pegada a los muslos parecía pasar por dentro de ellos */
+  const bb = (q, cam, F) => {
+    if (!F) return barbell(cam, q.barC, q.grip);
+    const { J } = pose(q), c = q.barC, grip = q.grip, X = x => add(c, [x, 0, 0]), out = [];
+    let spans = [[-139, 139]];
+    if (grip) [[-grip - 8, -grip + 8], [grip - 8, grip + 8]].forEach(([a, b]) => { spans = spans.flatMap(([u, v]) => b <= u || a >= v ? [[u, v]] : [[u, a], [b, v]].filter(([m, n]) => n - m > 1)); });
+    spans.forEach(([u, v]) => {
+      const it = bar(cam, X(u), X(v), max(1, Math.round((v - u) / 18)), 5.2), n = it.length;
+      if (grip) [[u, 0], [v, n - 1]].forEach(([e, i]) => { if (abs(abs(e) - grip) < 9) it[i].hand = e > 0 ? 'L' : 'R'; });
+      const tagged = visTag(it, it.map((_, i) => X(u + (v - u) * (i + .5) / n)), cam, F, J);
+      out.push(...it.map((p, i) => p.hand ? p : tagged[i]));
+    });
+    [-1, 1].forEach(k => {
+      out.push(...bar(cam, X(k * 141), X(k * 222), 4, 7.6));
+      out.push(plate(cam, X(k * 140), 6.5, 3.5, true), plate(cam, X(k * 151), 49, 12), plate(cam, X(k * 163), 40, 9), plate(cam, X(k * 171), 7.5, 5, true), plate(cam, X(k * 221.5), 3.8, 1, true));
+    });
+    return out;
+  };
   /* el eje de una mancuerna: el del puño que la agarra (la dirección pedida, puesta perpendicular al antebrazo); así el asa
      queda siempre de través en la mano y las cabezas no tocan el antebrazo */
   const dbAxis = (F, q, s, axis) => F && F['grip' + s] ? F['grip' + s].x : (q.barDir ? (Array.isArray(q.barDir) ? q.barDir : q.barDir[s]) : null) || axis || [1, 0, 0];
@@ -125,7 +144,9 @@
       V.lean = [0, 28];
       track = (q, F) => q.barC[2] - midFoot(F)[2];
       /* la muñeca doblada hacia atrás (el puño encima de ella): así el antebrazo sale hacia delante y los codos quedan altos */
-      arms = F => { const c = at(F.thorax, [0, 98, 16]), hd = s => norm(sub(T(F, s, [.4, 1, -.2]), F.thorax.o)); return { barC: c, grip: 54, hands: { L: add(c, [54, 0, 0]), R: add(c, [-54, 0, 0]) }, handDir: both(hd), elbow: both(() => [.2, -.3, 1]), shrug: 4, reach: 10, load: [[c, 1]] }; };
+      /* (los dedos bajo la barra apuntan hacia el hombro: la muñeca queda más lejos de él y el codo, menos cerrado; antes la mano
+         apuntaba hacia arriba, la muñeca quedaba junto al hombro y el antebrazo se metía en el brazo) */
+      arms = F => { const c = at(F.thorax, [0, 100.5, 17.5]), sh = { shrug: 4, reach: 10 }, hd = s => { const H = add(c, sd(s, [54, 0, 0])); return norm(add(norm(sub(shoulder(F, s, sh), H)), mul(F.thorax.y, .35))); }; return { barC: c, grip: 54, hands: { L: add(c, [54, 0, 0]), R: add(c, [-54, 0, 0]) }, handDir: both(hd), elbow: both(() => [.22, .05, 1]), ...sh, load: [[c, 1]] }; };
       gear = (q, F, cam) => bb(q, cam);
     }
     else if (has(f, 'zercher')) {
@@ -475,8 +496,18 @@
     /* el soporte de la barra: dos postes en la cabecera del banco, por dentro de los discos y por fuera de las manos, con sus
        ganchos (en J) mirando a los pies; quedan detrás de por donde pasa la barra (hacia la cabeza) y algo por debajo de donde
        acaba arriba: ahí se deja al terminar. Fijos, aunque la barra suba y baje */
+    /* (dónde: por detrás de lo más cerca de la cabeza que llega la barra en todo el gesto, y el tope de seguridad, por debajo de
+       lo más bajo; antes se contaba desde arriba y en el press JM, que baja hacia la barbilla, la barra daba en el tope, y la
+       barra Z, en el gancho) */
+    let rg = null;
+    const rackGeo = () => {
+      if (rg) return rg;
+      let zMin = 1e9, yLow = 1e9;
+      for (let i = 0; i <= 24; i++) { const c = arms(i / 24).barC; if (c) { zMin = min(zMin, c[2]); yLow = min(yLow, c[1]); } }
+      return (rg = { zp: min(top[2], zMin - (ez ? 40 : 0)) - 31, yLow });
+    };
     const rack = cam => {
-      const zp = top[2] - 31, yh = top[1] - 7, H = yh + 30, out = [];
+      const { zp, yLow } = rackGeo(), yh = top[1] - 7, H = yh + 30, out = [];
       [-1, 1].forEach(k => {
         const x = k * 121;
         out.push({ ...GR.obox(cam, [x, H / 2, zp], [[1, 0, 0], UP], [6, H / 2, 6], GR.C.frame), name: 'poste' });
@@ -485,7 +516,7 @@
         out.push(GR.obox(cam, [x, yh - 3, zp + 13], [[1, 0, 0], UP], [6.5, 2.5, 8], GR.C.iron), GR.obox(cam, [x, yh, zp + 13], [[1, 0, 0], UP], [6, .8, 6], GR.C.rubber));
         out.push(GR.obox(cam, [x, yh + 2.5, zp + 20], [[1, 0, 0], UP], [6.5, 5, 1.6], GR.C.iron));
         /* el tope de seguridad, abajo (donde caería la barra si fallase), también hacia los pies */
-        out.push(GR.obox(cam, [x, yh - 70, zp + 16], [[1, 0, 0], UP], [5, 3, 11], GR.C.iron));
+        out.push(GR.obox(cam, [x, min(yh - 70, yLow - 16), zp + 16], [[1, 0, 0], UP], [5, 3, 11], GR.C.iron));
       });
       return out;
     };

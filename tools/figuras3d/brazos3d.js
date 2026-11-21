@@ -75,6 +75,28 @@
     [-1, 1].forEach(k => { out.push(...bar(cam, X(k * 112), X(k * 150), 2, 7), GR.disc(cam, X(k * 124), [1, 0, 0], 34, 8), GR.disc(cam, X(k * 115), [1, 0, 0], 6, 4, 'metal')); });
     return out;
   };
+  /* una mancuerna con sus cabezas ordenadas según lo que de verdad las tapa visto desde la cámara (la pierna o el brazo que
+     queda delante): ordenadas por la profundidad de su centro, abajo, junto a la espinilla, parecían atravesarla */
+  const dbVis = (cam, c, axis, hand, F, q, o = {}) => {
+    const it = GR.dumbbell(cam, c, axis, hand, o), a = norm(axis), hl = o.handle || 15, hw = o.w || 18, J = pose(q).J;
+    const heads = it.slice(-2), mids = [-1, 1].map(k => add(c, mul(a, k * (hl + hw / 2))));
+    return [...it.slice(0, -2), ...M.visTag(heads, mids, cam, F, J)];
+  };
+  /* la barra corta de polea: recta, algo más ancha que las manos, sin discos (antes la de las poleas llevaba los discos de la
+     barra de curl), con la argolla del cable en medio */
+  const cableBar = (cam, c, grip) => {
+    const X = x => add(c, [x, 0, 0]), e = grip + 16, out = [];
+    let spans = [[-e, e]];
+    [[-grip - 8, -grip + 8], [grip - 8, grip + 8]].forEach(([a, b]) => { spans = spans.flatMap(([u, v]) => b <= u || a >= v ? [[u, v]] : [[u, a], [b, v]].filter(([m, n]) => n - m > 1)); });
+    spans.forEach(([u, v]) => {
+      const it = bar(cam, X(u), X(v), max(1, round((v - u) / 18)), 5);
+      [[u, 0], [v, it.length - 1]].forEach(([en, i]) => { if (abs(abs(en) - grip) < 9) it[i].hand = en > 0 ? 'L' : 'R'; });
+      out.push(...it);
+    });
+    [-1, 1].forEach(k => out.push(GR.disc(cam, X(k * (e + 1)), [1, 0, 0], 3.6, 2.5, 'metal')));
+    out.push(GR.disc(cam, c, [1, 0, 0], 4.2, 7, 'metal'));
+    return out;
+  };
   /* un asa de polea (en D): un tubo corto en el puño, a lo largo de su eje */
   const handle = (cam, F, s, H) => { const x = F['grip' + s].x; return GR.tube(cam, add(H, mul(x, -8)), add(H, mul(x, 8)), 4, STEEL, 1).map(i => ({ ...i, hand: s })); };
   /* la cuerda: del final del cable a cada mano */
@@ -262,11 +284,12 @@
     };
 
     /* ── el material ── */
-    const towerZ = 92;
+    /* (la torre, a un paso: con la barra arriba, antes rozaba la columna) */
+    const towerZ = 108;
     const gear = (q, F, cam) => {
       const out = [];
-      if (kind == 'bar') out.push(...(ez ? ezBar(cam, q.barC, gx, ezCd(F)) : curlBar(cam, q.barC, gx)));
-      if (kind == 'db') out.push(...(solo ? GR.dumbbell(cam, q.hands.R, dbAxis(F, q, 'R'), 'R') : ['L', 'R'].flatMap(s => GR.dumbbell(cam, q.hands[s], dbAxis(F, q, s), s))));
+      if (kind == 'bar') out.push(...(ez ? ezBar(cam, q.barC, gx, ezCd(F)) : cable ? cableBar(cam, q.barC, gx) : curlBar(cam, q.barC, gx)));
+      if (kind == 'db') out.push(...(solo ? dbVis(cam, q.hands.R, dbAxis(F, q, 'R'), 'R', F, q) : ['L', 'R'].flatMap(s => dbVis(cam, q.hands[s], dbAxis(F, q, s), s, F, q))));
       if (smith) out.push(...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC));
       /* las poleas: baja delante (barra, cuerda o asa), detrás (Bayesian), altas a los lados o a los pies (tumbado) */
       if (cable && !preacher) {
@@ -326,7 +349,7 @@
         if (machine) out.push(...GR.under(GR.stack(cam, [-114, 0, kneeZ + 20], [1, 0, 0], 12), 3));
         if (cable) {
           /* la polea, en el suelo por delante del atril, y el cable hasta el centro de la barra */
-          out.push(...GR.pulleyTower(cam, [14, 0, bot[2] + 70], 12, q.barC));
+          out.push(...GR.pulleyTower(cam, [14, 0, bot[2] + 100], 12, q.barC));
         }
         return out;
       };
@@ -397,7 +420,8 @@
       if (one) { const h = onHip(F, 'L'); out.hands.L = h.hand; out.elbow.L = h.elbow; out.palm = { L: h.palm }; out.fist = { L: false }; out.barDir.L = [1, 0, 0]; }
       return out;
     };
-    const zt = 106, yp = 420;
+    /* (la torre, a un paso: arriba, la barra rozaba la columna) */
+    const zt = 122, yp = 420;
     const gear = (q, F, cam) => {
       const out = [], m = one ? q.hands.R : mix(q.hands.L, q.hands.R, .5), up = norm(sub([one ? -47 : 0, yp, zt], m));
       if (band) {
@@ -758,7 +782,7 @@
       const p0 = at(F0.pelvis, [0, -22, 0]), out = [...GR.under(flatBench(cam, [0, p0[1] - 7, p0[2] + 26], [0, p0[1] - 7, p0[2] - 110]))];
       if (db) out.push(...GR.dumbbell(cam, q.hands.R, dbAxis(F, q, 'R'), 'R'));
       else {
-        out.push(...curlBar(cam, q.barC, q.grip));
+        out.push(...(cable ? cableBar(cam, q.barC, q.grip) : curlBar(cam, q.barC, q.grip)));
         if (cable) out.push(...GR.pulleyTower(cam, [14, 0, wristOf(J0, F0, 'L')[2] + 90], 12, q.barC));
       }
       return out;

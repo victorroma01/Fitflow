@@ -40,7 +40,7 @@
     /* la barra baja de debajo de la polea (por delante de la cara) hasta lo alto del pecho (con los agarres cerrados, más abajo,
        al esternón), con el tronco echado atrás: el cable se inclina un poco hacia uno al final. Arriba, con los brazos estirados
        por encima de la cabeza. Antes la barra bajaba casi rozando la cara, y a media bajada pasaba por la frente */
-    const c1 = at(F1.thorax, neutralGrip || kind == 'supine' ? [0, 74, 32] : [0, 90, 27]), S0 = shoulder(F0, 'L'), zp = c1[2] + 20;
+    const c1 = at(F1.thorax, neutralGrip || kind == 'supine' ? [0, 74, 32] : [0, 90, 27]), S0 = shoulder(F0, 'L'), zp = c1[2] + 24;
     const c0 = [0, S0[1] + sqrt(max(0, 143 ** 2 - (g - S0[0]) ** 2 - (zp - S0[2]) ** 2)), zp];
     const pulley = [0, 560, zp];
     const at3 = t => mix(c0, c1, t);
@@ -50,7 +50,9 @@
     let mg = null;
     const machineHand = (s, t) => { if (!mg) { const a = [g + 8, c0[1] - 4, c0[2] + 6], e = T(F1, 'L', [52, 66, 24]); mg = { a, e, P: pivotFor(a, e, [0, .45, 1], 118) }; } return sd(s, leverAt(mg.P, mg.a, mg.e, t)); };
     return {
-      view: 'back', up: 'b', rest: 'a', cam: [-148, 12], one: one || kneel, feetOff: kneel,
+      /* (vista de atrás y algo de lado: la barra se ve pasar por delante de la cara; desde atrás del todo la tapaba la cabeza y
+         parecía atravesarla) */
+      view: 'back', up: 'b', rest: 'a', cam: [-124, 14], one: one || kneel, feetOff: kneel,
       at(t) {
         const b = bodyAt(t), c = at3(t);
         if (machine && one) {
@@ -238,10 +240,11 @@
           /* y nunca dentro de las piernas tal como se dibujan (antes rozaba las espinillas al despegar) */
           const J0 = pose({ ...body, hands: ZERO, elbow: {} }).J, clear = y => legFront(J0, y) + 5.5;
           arms = t => { const c = mix(c0, c1, t); c[2] += A * (g(c[1]) - mix(g(c0[1]), g(c1[1]), t)); if (pend) c[2] = M.smax(c[2], clear(c[1]), 4); return { reach: mix(4, -6, t), barC: c, grip: gg, hands: hands2(c), elbow: both(() => el), barDir }; };
-        gear = (q, F, cam) => [...bb(q, cam), ...(smith ? [...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC)] : [])];
+        gear = (q, F, cam) => [...bb(q, cam, F), ...(smith ? [...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC)] : [])];
         }
       }
-      cam = meadows ? [-118, 14] : [-125, 14];
+      /* (el Meadows, más desde atrás: desde delante el disco tapaba la mano que agarra la barra) */
+      cam = meadows ? [-152, 16] : [-125, 14];
     }
     /* ── con mancuerna, a una mano: apoyado en el banco (rodilla y mano izquierdas) o, el Kroc, con la mano en un apoyo ── */
     else if (w('db')) {
@@ -288,7 +291,9 @@
          a los costados; en el posterior, los codos se abren hacia los lados hasta la altura de los hombros */
       const barDir = rear ? [1, 0, 0] : [0, 0, 1];
       arms = t => {
-        const reach = mix(6, -5, t), arc = s => armArc(shoulder(F0, s, { ...body, reach }), RAD(rear ? 84 : 90) * t, rear ? add(sd(s, [1, 0, 0]), [0, 0, -.15]) : [0, 0, -1], s, rear ? [1, .2, -.1] : [.1, .2, -1], rear ? .1 : .17);
+        /* (en el remo, las mancuernas suben algo separadas del cuerpo y sin llegar tan atrás: arriba, la de detrás pasaba junto al
+           muslo y parecía chocar con él) */
+        const reach = mix(6, -5, t), arc = s => armArc(shoulder(F0, s, { ...body, reach }), RAD(rear ? 84 : 84) * t, rear ? add(sd(s, [1, 0, 0]), [0, 0, -.15]) : norm(add(sd(s, [.24, 0, 0]), [0, 0, -1])), s, rear ? [1, .2, -.1] : [.2, .2, -1], rear ? .1 : .17);
         const A = { L: arc('L'), R: arc('R') };
         return { reach, hands: both(s => A[s].H), elbow: both(s => A[s].hint), barDir };
       };

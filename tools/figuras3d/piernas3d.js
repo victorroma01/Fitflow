@@ -115,7 +115,7 @@
       gear = (q, F, cam) => {
         const out = [];
         if (hex) out.push(...hexBar(cam, q.barC, g));
-        else out.push(...bb(q, cam));
+        else out.push(...bb(q, cam, F));
         if (deficit) out.push(...GR.under([GR.obox(cam, [0, plat / 2, 6], [[1, 0, 0], UP], [70, plat / 2, 52], GR.C.rubber)]));
         if (rack) [-1, 1].forEach(k => { out.push(...GR.sideFade([...GR.tube(cam, [k * 118, 0, zb - 30], [k * 118, 260, zb - 30], 7, GR.C.frame, 6), ...GR.tube(cam, [k * 118, 0, zb + 40], [k * 118, 260, zb + 40], 7, GR.C.frame, 6)]).map(i => ({ ...i, nf: true })), ...GR.tube(cam, [k * 112, hBar - 7.6, zb - 40], [k * 112, hBar - 7.6, zb + 50], 5, STEEL, 2)); });
         return out;
@@ -131,7 +131,7 @@
         at_ = t => { const q = mk(mix(2, 58, t)), { F } = pose({ ...q, hands: ZERO, elbow: {} }), c = back(F); return { ...q, barC: c, grip: 80, hands: { L: add(c, [80, 0, 0]), R: add(c, [-80, 0, 0]) }, elbow: both(() => [.25, -1, -.45]) }; };
         /* el banco, donde está el asiento al empezar (antes seguía a la pelvis al inclinarse y se movía) */
         const s = at(pose({ ...mk(2), hands: ZERO, elbow: {} }).F.pelvis, [0, -22, -8]);
-        gear = (q, F, cam) => [...bb(q, cam), ...GR.under([...GR.leg(cam, [0, s[1] - 14, s[2]]), GR.padAB(cam, [0, s[1] - 7, s[2] - 34], [0, s[1] - 7, s[2] + 30], UP, 30, 7)])];
+        gear = (q, F, cam) => [...bb(q, cam, F), ...GR.under([...GR.leg(cam, [0, s[1] - 14, s[2]]), GR.padAB(cam, [0, s[1] - 7, s[2] - 34], [0, s[1] - 7, s[2] + 30], UP, 30, 7)])];
         feetOff = false;
       }
       else {
@@ -140,7 +140,7 @@
         /* arriba, ya algo inclinado (la barra sobre el medio del pie, como en la sentadilla) */
         const post = table(t => { const lean = mix(8, 76, t), kf = mix(6, 24, t), ps = solve(p => bal(mk(p, kf, lean), mix(12, 18, t)), -14, 16); return [ps, kf, lean]; });
         at_ = t => { const [ps, kf, lean] = post(t), q = mk(ps, kf, lean), { F } = pose({ ...q, hands: ZERO, elbow: {} }), c = back(F); return { ...q, barC: c, grip: 80, hands: { L: add(c, [80, 0, 0]), R: add(c, [-80, 0, 0]) }, elbow: both(() => [.25, -1, -.45]) }; };
-        gear = (q, F, cam) => bb(q, cam);
+        gear = (q, F, cam) => bb(q, cam, F);
       }
       cam = [-62, 10];
     }
@@ -217,7 +217,7 @@
           const it = GR.cableLine(cam, pul, h), mids = it.map((_, i) => mix(pul, h, (i + .5) / it.length));
           return [...GR.pulleyTower(cam, [0, 0, -164], 30, h).slice(0, 2), GR.disc(cam, pul, [1, 0, 0], 7, 4, 'wheel'), ...visTag(it, mids, cam, F, J), ...['L', 'R'].flatMap(s => GR.tube(cam, add(q.hands[s], [0, 10, 0]), add(q.hands[s], [0, -12, 0]), 4, ['#2a2e40', '#0a0b10'], 1).map(i => ({ ...i, hand: s })))];
         }
-        return [...bb(q, cam), ...(smith ? [...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC)] : [])];
+        return [...bb(q, cam, F), ...(smith ? [...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC)] : [])];
       };
       cam = cable ? [-56, 12] : [-62, 10];
     }
