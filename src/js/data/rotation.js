@@ -9,21 +9,21 @@
 export const ROTATIONS = `Press inclinado mancuernas,Press inclinado barra,Press inclinado en máquina
 Press pecho máquina convergente,Press banca mancuernas,Press pecho máquina
 Cruce de poleas,Pec deck,Aperturas inclinadas
-Fondos,Press declinado en máquina,Fondos en paralelas inclinado adelante
+Fondos,Press declinado en máquina,Press declinado mancuernas
 Fondos en paralelas,Press cerrado,Fondos en máquina sentado
 Jalón agarre neutro,Jalón al pecho,Jalón en máquina convergente
 Jalón agarre estrecho,Jalón agarre supino,Jalón unilateral
 Remo mancuerna,Remo con apoyo en pecho,Remo unilateral en máquina
 Remo en polea baja,Remo en máquina,Remo en polea agarre neutro
-Pullover en polea,Jalón con brazos rectos,Pullover máquina
+Pullover en polea,Jalón con brazos rectos con cuerda,Pullover máquina
 Encogimientos,Encogimientos con mancuernas,Encogimientos en máquina
 Press hombro mancuernas,Press hombro máquina,Press Arnold
 Elevaciones laterales,Elevaciones laterales en polea,Elevaciones laterales en máquina
 Pájaros mancuernas,Pájaros en máquina,Pájaros en polea
-Face pull,Pájaros en polea cruzada,Face pull a una mano
+Face pull,Face pull con banda,Face pull a una mano
 Curl con barra Z,Curl bíceps barra,Curl en polea
 Curl martillo,Curl martillo en cuerda,Curl martillo cruzado
-Curl predicador,Curl predicador en máquina,Curl spider
+Curl predicador,Curl en máquina,Curl spider
 Curl en banco inclinado,Curl Bayesian,Curl en polea a una mano
 Curl con mancuernas,Curl alterno mancuernas,Curl concentrado
 Extensión tríceps polea,Extensión con barra V,Extensión de tríceps en máquina
@@ -35,8 +35,8 @@ Elevación de piernas colgado,Elevación de rodillas en silla romana,Crunch inve
 Prensa,Hack squat,Sentadilla Pendulum
 Sentadilla búlgara,Sentadilla búlgara en Smith,Zancada en Smith
 Extensión cuádriceps,Extensión una pierna,Extensión con pausa
-Curl femoral tumbado,Curl femoral sentado,Curl femoral de pie
-Curl femoral,Curl femoral a una pierna,Curl femoral con balón suizo
+Curl femoral,Curl femoral sentado,Curl femoral de pie
+Curl femoral a una pierna,Curl femoral con balón suizo,Curl femoral deslizante
 Gemelo de pie,Gemelo en prensa,Gemelo en Smith
 Gemelo sentado,Gemelo sentado unilateral,Gemelo sentado con mancuerna
 Patada de glúteo en polea,Patada de glúteo en máquina,Extensión de cadera máquina
