@@ -350,3 +350,111 @@ LOTES[4] = dict(title='Figuras 3D · lote 4', notes=NOTES4, fams=FAMS4,
 <li><b>Las que aquí son iguales:</b> el curl con mancuernas y el simultáneo; el curl en polea con cuerda y el martillo en cuerda; el press francés y los rompecráneos con barra Z; el curl en máquina y el predicador en máquina; los fondos y los fondos inclinado adelante.</li>
 </ul>
 </section>''')
+
+NOTES5 = {
+    'Press pecho máquina': 'Sentado, con la espalda en el respaldo: las asas, en dos palancas que cuelgan de un eje alto, van de junto al pecho (los codos atrás y algo abiertos) a los brazos casi estirados al frente. La pila de pesas, detrás del respaldo.',
+    'Press pecho máquina convergente': 'Como el press en máquina, pero las manos se juntan al estirar los brazos.',
+    'Press de pecho en polea de pie': 'De pie, con un pie delante y el tronco algo inclinado, entre dos torres que quedan detrás y a los lados: las manos van del pecho al frente y los cables llegan por fuera de los brazos.',
+    'Press de pecho unilateral en polea': 'Como el press en polea de pie, con el brazo derecho; la mano izquierda, en la cadera.',
+    'Press inclinado en máquina': 'Sentado en la máquina: las manos empujan al frente y hacia arriba.',
+    'Press inclinado en polea': 'De pie, con las poleas abajo y detrás: las manos empujan al frente y hacia arriba, y el cable cuelga de debajo del puño.',
+    'Press declinado en máquina': 'Sentado en la máquina: las manos empujan al frente y hacia abajo.',
+    'Press declinado en polea': 'De pie, con las poleas altas y detrás: las manos empujan al frente y hacia abajo.',
+    'Flexiones': 'Las manos, abiertas en el suelo con los dedos hacia delante, algo más separadas que los hombros; el cuerpo, recto de los talones a la cabeza, gira alrededor de los tobillos: baja hasta que el pecho casi toca el suelo y sube hasta los brazos casi estirados, con los hombros encima de las muñecas.',
+    'Flexiones con lastre': 'Como las flexiones, con un disco sobre la espalda.',
+    'Flexiones con pies elevados': 'Con los pies en un banco: el cuerpo queda inclinado hacia la cabeza y, abajo, la cara se queda cerca del suelo.',
+    'Flexiones con manos elevadas': 'Con las manos en el borde de un banco: el cuerpo queda inclinado hacia arriba (son más fáciles).',
+    'Flexiones en anillas': 'Con las manos en dos anillas que cuelgan a un palmo del suelo.',
+    'Flexiones arqueras': 'Con las manos muy separadas: al bajar, el cuerpo se va hacia la mano derecha, que es la que se dobla, y el brazo izquierdo sigue estirado hacia un lado.',
+    'Flexiones con palmada': 'Baja y sube; arriba empuja fuerte: el cuerpo sube un poco, las manos se despegan, dan una palmada delante del pecho y vuelven a caer en el suelo.',
+    'Flexiones en TRX': 'Con los pies colgados en las cunas del TRX y las manos en el suelo.',
+    'Flexiones diamante': 'Con las manos juntas bajo el pecho: los codos se quedan más cerca del cuerpo y trabaja más el tríceps.',
+    'Encogimientos': 'De pie, con la barra colgando por delante de los muslos y los brazos estirados: solo suben los hombros, hacia las orejas.',
+    'Encogimientos con mancuernas': 'Con las mancuernas a los lados de los muslos y las palmas hacia dentro.',
+    'Encogimientos en Smith': 'Con la barra de la Smith, que sube por sus guías.',
+    'Encogimientos en máquina': 'Con las asas de la máquina a los lados, en una palanca que sube con los hombros.',
+    'Encogimientos en polea': 'Con dos poleas bajas, una a cada lado.',
+    'Encogimientos con barra hexagonal': 'Dentro de la barra hexagonal, con las asas a los lados del cuerpo.',
+    'Pull-apart con banda': 'Con los brazos estirados al frente, a la altura de los hombros, y la banda entre las manos: los brazos se abren hasta casi los lados y la banda queda tensa por delante del pecho.',
+    'Pullover en polea': 'De pie frente a la polea alta, algo inclinado hacia delante, con una barra corta: los brazos, casi rectos, bajan desde arriba y por delante hasta los muslos.',
+    'Pullover máquina': 'Sentado, con los codos en las almohadillas de una palanca que gira a la altura de los hombros: los brazos, doblados, bajan de por encima de la cabeza a delante del tronco.',
+    'Jalón con brazos rectos': 'Igual que el pullover en polea.',
+    'Jalón con brazos rectos con cuerda': 'Con la cuerda: al bajar, las manos se separan un poco.',
+    'Aperturas en polea': 'De pie entre las dos torres, con las poleas a la altura del pecho: los brazos, con los codos algo doblados, van de abiertos a los lados a juntarse delante del pecho.',
+    'Aperturas mancuernas': 'Tumbado en el banco: arriba, las mancuernas juntas sobre el pecho; los brazos, con los codos algo doblados, se abren hasta la altura del pecho y vuelven.',
+    'Cruce de poleas': 'Con las poleas altas: los brazos bajan desde arriba y a los lados hasta juntar las manos delante de la cadera.',
+    'Pec deck': 'Sentado en el contractor: con los codos doblados en ángulo recto y los antebrazos contra los rodillos, los brazos se cierran delante de la cara.',
+    'Aperturas inclinadas': 'Como las aperturas, en el banco inclinado.',
+    'Cruce de poleas bajo': 'Con las poleas abajo: las manos suben desde los lados de la cadera hasta juntarse delante de la cara.',
+    'Aperturas declinadas mancuernas': 'Como las aperturas, en el banco declinado, con los pies sujetos bajo los rodillos.',
+    'Cruce de poleas alto': 'Igual que el cruce de poleas.',
+    'Cruce de poleas a una mano': 'Como el cruce de poleas, con la mano derecha; la izquierda, en la cadera.',
+    'Aperturas en banco inclinado con polea': 'Como las aperturas inclinadas, con dos poleas bajas a los lados del banco.',
+    'Aperturas en suelo con mancuernas': 'Tumbado en el suelo con las rodillas dobladas: los brazos se abren hasta que los codos tocan el suelo.',
+    'Aperturas con bandas': 'De pie, con una banda atada detrás a cada lado: los brazos se cierran delante del pecho.',
+    'Pullover mancuerna': 'Tumbado en el banco, con una mancuerna sujeta con las dos manos por un extremo: los brazos, casi estirados, van de verticales sobre el pecho a por detrás de la cabeza y vuelven.',
+    'Pullover con barra Z': 'Como el pullover con mancuerna, con la barra Z.',
+    'Elevaciones laterales': 'De pie, con las mancuernas colgando algo por delante: los brazos, con los codos un poco doblados, suben por los lados hasta la horizontal.',
+    'Elevaciones laterales en polea': 'Con el brazo derecho y la polea baja al otro lado: el cable cruza por delante del cuerpo. La mano izquierda, en la cadera.',
+    'Elevaciones laterales inclinado': 'Agarrado con la mano izquierda a un poste y con el cuerpo inclinado hacia el otro lado: el brazo derecho sube por el lado.',
+    'Elevaciones laterales en máquina': 'Sentado, con los codos doblados y apoyados por fuera en los acolchados de las palancas: los brazos suben por los lados hasta la horizontal.',
+    'Elevaciones laterales a una mano en polea': 'Igual que las elevaciones laterales en polea.',
+    'Elevaciones laterales sentado': 'Como las elevaciones laterales, sentado.',
+    'Elevaciones laterales con banda': 'Con la banda pisada y un extremo en cada mano.',
+    'Elevaciones laterales tumbado de lado': 'Tumbado de lado en el banco, sobre el costado derecho: el brazo izquierdo sube desde junto al muslo hasta la vertical. La mano derecha, junto a la cabeza.',
+    'Elevaciones laterales parciales': 'Solo la mitad de abajo del recorrido.',
+    'Elevaciones frontales': 'De pie, con las mancuernas de través por delante de los muslos: los brazos, casi estirados, suben por delante hasta la horizontal.',
+    'Elevaciones frontales con disco': 'Con un disco sujeto con las dos manos por los lados.',
+    'Elevaciones frontales con barra': 'Con una barra recta y las palmas hacia abajo.',
+    'Elevaciones frontales en polea': 'De espaldas a la polea baja: el cable pasa entre las piernas hasta una barra corta.',
+    'Elevaciones frontales con cuerda': 'Como en polea, con la cuerda.',
+    'Elevaciones frontales alternas': 'Primero un brazo y luego el otro.',
+    'Pájaros mancuernas': 'De pie, inclinado desde la cadera con la espalda recta y las rodillas dobladas: los brazos cuelgan y se abren a los lados, con los codos algo doblados.',
+    'Face pull': 'De cara a la polea, a la altura de la cara, con la cuerda: de los brazos estirados hacia ella a las manos junto a las orejas, con los codos abiertos y altos.',
+    'Pájaros en máquina': 'Sentado de cara a la máquina, con el pecho contra el respaldo: los brazos, al frente y a la altura de los hombros, se abren hasta los lados.',
+    'Pájaros en polea': 'De pie frente a dos poleas a la altura de los hombros, con los cables cruzados (cada mano lleva el de la polea del otro lado): los brazos se abren desde delante hasta los lados.',
+    'Elevación Y': 'Boca abajo en el banco inclinado: los brazos cuelgan y suben hacia delante y arriba, abiertos en Y.',
+    'Pájaros en banco inclinado': 'Boca abajo en el banco inclinado: los brazos cuelgan y suben hasta los lados, en T.',
+    'Pájaros en polea cruzada': 'Igual que los pájaros en polea.',
+    'Face pull con banda': 'Con la banda atada a un poste a la altura de la cara.',
+    'Elevación T': 'Igual que los pájaros en banco inclinado.',
+    'Pájaros con banda': 'Igual que el pull-apart con banda.',
+    'Face pull a una mano': 'Con un asa y el brazo derecho; la mano izquierda, en la cadera.',
+    'Remo al mentón': 'De pie, con la barra por delante de los muslos y las manos algo más juntas que los hombros: la barra sube pegada al cuerpo hasta el pecho, con los codos hacia fuera y por encima de las manos.',
+    'Remo al mentón con mancuernas': 'Con una mancuerna en cada mano.',
+    'Remo al mentón con barra Z': 'Con la barra Z, con discos pequeños (los codos van muy abiertos).',
+    'Remo al mentón con cuerda en polea': 'Frente a la polea baja, con la cuerda.',
+    'Remo al mentón agarre ancho': 'Con las manos al ancho de los hombros.',
+    'Parallette push-ups': 'Flexiones con las manos en dos paralelas bajas (agarre neutro): el pecho baja por debajo de las manos.',
+    'TRX flexiones': 'Igual que las flexiones en TRX.',
+    'Press con banda de pie': 'De pie, con una banda atada detrás a cada lado: las manos empujan del pecho al frente y las bandas pasan por fuera de los brazos.',
+}
+FAMS5 = [('pushup', 'Flexiones', 'Las manos, quietas (en el suelo, en un banco, en anillas o en paralelas), y el cuerpo recto, que gira alrededor de los tobillos: arriba, los hombros encima de las muñecas con los brazos casi estirados; abajo, el pecho casi en el suelo.'),
+         ('pressOut', 'Press de pecho de pie y en máquina', 'Las manos van de junto al pecho, con los codos atrás y algo abiertos, a los brazos casi estirados al frente (hacia arriba en el inclinado y hacia abajo en el declinado). En máquina, sentado; en polea o con banda, de pie con un pie delante.'),
+         ('fly', 'Aperturas con mancuernas', 'Tumbado (en banco plano, inclinado, declinado o en el suelo): los brazos, con los codos algo doblados y sin moverlos, se abren desde encima del pecho hasta su altura.'),
+         ('cross', 'Cruces de poleas, aperturas en polea y contractor', 'Los brazos, con los codos algo doblados, van de abiertos a juntos delante: desde las poleas altas, las manos se juntan delante de la cadera; a media altura, del pecho; desde abajo, de la cara. En el contractor, con los antebrazos verticales contra los rodillos.'),
+         ('pullover', 'Pullover', 'Tumbado en el banco, con los brazos casi estirados: de encima del pecho a por detrás de la cabeza.'),
+         ('straightArm', 'Jalón con brazos rectos y pullover de pie o en máquina', 'Los brazos, casi rectos, bajan desde arriba y por delante hasta los muslos; en la máquina, sentado, con los codos en las almohadillas.'),
+         ('shrug', 'Encogimientos', 'Los brazos cuelgan estirados y solo suben los hombros, hacia las orejas.'),
+         ('lateral', 'Elevaciones laterales', 'Los brazos suben por los lados hasta la horizontal, con los codos un poco doblados.'),
+         ('frontRaise', 'Elevaciones frontales', 'Los brazos, casi estirados, suben por delante hasta la horizontal.'),
+         ('rearFly', 'Pájaros y pull-apart', 'Para la parte de atrás del hombro: los brazos, casi estirados, se abren hacia los lados (inclinado, boca abajo en el banco, en la máquina, en polea o con banda).'),
+         ('facePull', 'Face pull', 'Desde los brazos estirados hacia la polea (o la banda), a la altura de la cara, hasta las manos junto a las orejas, con los codos abiertos y altos.'),
+         ('upright', 'Remo al mentón', 'Las manos suben pegadas por delante del cuerpo, de los muslos al pecho, con los codos hacia fuera y por encima de ellas.')]
+LOTES[5] = dict(title='Figuras 3D · lote 5', notes=NOTES5, fams=FAMS5,
+    head='''<p class="pr">StrataFit · figuras de ejercicio · lote 5 de la revisión</p>
+<h1>Pecho y hombros: flexiones, aperturas, elevaciones y pájaros, en 3D</h1>
+<p class="lede">Los <b>76 ejercicios</b> de las familias de flexiones, press de pecho de pie y en máquina, aperturas, cruces de poleas y contractor, pullover, jalón con brazos rectos, encogimientos, elevaciones laterales y frontales, pájaros, face pull y remo al mentón, con la figura nueva moviéndose. Toca una figura para verla en grande con lo que hace; <b>Lado</b> la gira de perfil para comprobar la postura. Como los lotes anteriores, no está en la app: se integrará cuando estén todos.</p>
+<p class="lede"><b>Novedades:</b> la figura apoya las manos abiertas en el suelo, con los dedos hacia delante (las flexiones), y se puede tumbar de lado (las elevaciones laterales tumbado). Hay contractor, máquinas de press de pecho, de pájaros, de elevaciones laterales, de encogimientos y de pullover, barra hexagonal y paralelas bajas.</p>
+''',
+    found='''<section class="found">
+<h2>Lo que he visto al revisarlo</h2>
+<ul>
+<li><b>Revisado a fondo.</b> Las 76 figuras pasan todas las pruebas de los lotes anteriores: manos que llegan, pies en el suelo, articulaciones posibles, sin saltos, choques de todo lo que se dibuja, el grosor real del dibujo contra el material y las piezas que no deben moverse. Lo que salió, ya corregido: los cables del press en polea y de los pájaros en polea atravesaban brazos y antebrazos (las torres, ahora más abiertas o más lejos, y en el press inclinado el cable cuelga de debajo del puño); las cintas de las anillas rozaban los brazos (bajan por fuera); la banda del pull-apart cruzaba el tronco y los antebrazos (ahora va por delante de los puños), y la del press y las aperturas con bandas rozaba el antebrazo (sale del lado del puño que da al anclaje); en el contractor, el rodillo se metía en el antebrazo; en la máquina de pullover, la palanca atravesaba el brazo y los antebrazos se cruzaban; en la de elevaciones laterales, el acolchado se metía en el brazo (ahora apoya por fuera, junto al codo); las mancuernas de las elevaciones frontales se hundían en los muslos; en el remo al mentón, la barra rozaba los antebrazos y los puños, los muslos, y con la barra Z los discos tocaban los brazos, y en el press declinado en polea el codo daba un salto al empezar a doblarse (arriba, el brazo ya no se estira del todo).</li>
+<li><b>Visto en las figuras.</b> En las flexiones arqueras, el brazo que se queda estirado se doblaba: ahora sigue estirado y el cuerpo se corre hacia la otra mano lo justo para eso.</li>
+<li><b>Músculos de la librería que no cuadraban.</b> <b>TRX flexiones</b> y <b>Press con banda de pie</b> llevaban el dorsal como principal (comparten línea con remos), <b>Parallette push-ups</b>, el hombro y el tríceps (su línea es la de los pinos), y <b>Pull-apart con banda</b>, los músculos del encogimiento. Corregido en la misma rama que los de los otros lotes (desarrollo-musculos): llevan los de las flexiones, el press de pecho en polea de pie y los pájaros con banda.</li>
+<li><b>Lo que es una aproximación.</b> Las flexiones en TRX van con los pies en las cunas y las manos en el suelo (la forma más habitual; con las manos en las asas serían como las de anillas). La palmada es un empujón corto: las manos se despegan, se juntan delante del pecho y vuelven al suelo. En las arqueras, el cuerpo va siempre hacia la mano derecha (se suele alternar). En los pájaros en polea, las dos poleas quedan delante y más juntas que en un cruce de poleas, para que los cables se crucen delante del cuerpo sin tocar los brazos. Las máquinas son genéricas, sin copiar ninguna marca. Las anillas y el TRX cuelgan quietos, y lo alto de las torres, las anillas y el TRX se sale del encuadre.</li>
+<li><b>Las variantes que la app junta y aquí se distinguen:</b> la máquina convergente, el press inclinado y el declinado (en máquina y en polea), cada flexión (con lastre, con pies o manos en alto, en anillas, arqueras, con palmada, diamante, en TRX y en paralelas), la barra hexagonal, el cruce bajo, el pullover con barra Z, las laterales inclinado, tumbado de lado y parciales, las frontales con disco, barra, cuerda y alternas, la elevación Y y el remo al mentón con agarre ancho.</li>
+<li><b>Las que aquí son iguales:</b> el cruce de poleas y el cruce de poleas alto; las elevaciones laterales en polea y a una mano en polea; los pájaros en polea y en polea cruzada; los pájaros en banco inclinado y la elevación T; el pull-apart y los pájaros con banda; el pullover en polea y el jalón con brazos rectos; las flexiones en TRX y TRX flexiones.</li>
+</ul>
+</section>''')

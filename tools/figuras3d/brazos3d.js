@@ -759,4 +759,6 @@
   };
 
   Object.assign(F3.FAMILIES, { curl, trxCurl, pushdown, skull, overheadExt, kickback, tricepsMachine, dip, benchDip, wristCurl });
+  /* lo que comparten las familias del lote 5 (hombros3d.js) */
+  F3.blib = { STAND, SEAT, ROOT_Y, LU, LF, STEEL, ROPE, mj, dirT, hintL, armAt, gripDir, onHip, prof, frontAt, bump, keys, cycle, curlBar, handle, rope, flatBench, benchUnder };
 })(window);

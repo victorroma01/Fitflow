@@ -10,9 +10,10 @@ import { EXERCISES, groupOf } from '../../src/js/data/library.js';
 
 /* los lotes: sus familias */
 const LOTES = { 1: 'squat,press,overhead', 2: 'pulldown,row,pullup', 3: 'hinge,lunge,thrust,legPress,hack,legExt,legCurl',
-  4: 'curl,trxCurl,pushdown,skull,overheadExt,kickback,tricepsMachine,dip,benchDip,wristCurl' };
+  4: 'curl,trxCurl,pushdown,skull,overheadExt,kickback,tricepsMachine,dip,benchDip,wristCurl',
+  5: 'pushup,pressOut,rearFly,lateral,cross,shrug,frontRaise,fly,upright,facePull,straightArm,pullover' };
 /* desde el lote 3, el material de la librería (q) entra como palabra si la tabla de la app no lo dice ya */
-const GEAR_FROM = new Set([...LOTES[3].split(','), ...LOTES[4].split(',')]);
+const GEAR_FROM = new Set([...LOTES[3].split(','), ...LOTES[4].split(','), ...LOTES[5].split(',')]);
 const GEAR = { Mancuernas: 'db', Barra: 'bar', 'Barra Z': 'ez', Smith: 'smith', Kettlebell: 'kb', Banda: 'band', Polea: 'cable', 'Máquina': 'machine', 'Peso corporal': 'none' };
 const arg = process.argv[2] || '1';
 const FAMILIES = (LOTES[arg] || arg).split(',');
@@ -27,7 +28,10 @@ const EXTRA = { 'Sentadilla con pausa': 'pause', 'Sentadilla goblet con pausa': 
   'Curl con barra agarre ancho': 'wide', 'Curl con barra agarre estrecho': 'close', 'Curl con barra Z agarre cerrado': 'close', 'Curl 21': 'x21',
   'Curl Zottman': 'zottman', 'Curl con mancuernas a 45°': 'deg45', 'Curl con supinación completa': 'supinate', 'Curl martillo cruzado': 'cross',
   'Curl martillo con barra Z': 'hammer', 'Curl en máquina unilateral': 'one', 'Curl inverso': 'reverse', 'Curl inverso en polea': 'reverse',
-  'Curl inverso con mancuernas': 'reverse', 'Extensión agarre supino en polea': 'supine', 'Extensión con barra V': 'vbar', 'TRX fondos': 'trx' };
+  'Curl inverso con mancuernas': 'reverse', 'Extensión agarre supino en polea': 'supine', 'Extensión con barra V': 'vbar', 'TRX fondos': 'trx',
+  'Flexiones diamante': 'diamond', 'Flexiones con palmada': 'clap', 'Flexiones arqueras': 'archer', 'Press pecho máquina convergente': 'converge',
+  'Press de pecho unilateral en polea': 'one', 'Elevación T': 'tee', 'Encogimientos con barra hexagonal': 'hex', 'Remo al mentón agarre ancho': 'wide',
+  'Face pull a una mano': 'one' };
 
 mkdirSync('salida', { recursive: true });
 writeFileSync('salida/mapa.json', JSON.stringify({ R: AN_R, S: AN_S, H: AN_H, PA: AN_PA }));

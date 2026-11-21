@@ -500,7 +500,8 @@
   const ezOff = x => { x = abs(x); for (let i = 1; i < EZ_P.length; i++) if (x <= EZ_P[i][0]) { const [a, u] = EZ_P[i - 1], [b, v] = EZ_P[i]; return EZ_D * (u + (v - u) * (x - a) / (b - a)); } return 0; };
   /* el plano de las curvas, desde los puños: la media de hacia dónde miran los nudillos, sin su parte a lo largo de la barra */
   const ezCd = F => { const v = add(F.gripL.z, F.gripR.z); return len([0, v[1], v[2]]) > 1e-6 ? norm([0, v[1], v[2]]) : [0, 0, 1]; };
-  const ezBar = (cam, c, grip, cd = [0, 0, 1]) => {
+  /* (small: solo el disco pequeño, para los gestos con los codos muy abiertos, como el remo al mentón) */
+  const ezBar = (cam, c, grip, cd = [0, 0, 1], small = false) => {
     const o = add(c, mul(cd, -ezOff(grip))), X = x => add(o, add([x, 0, 0], mul(cd, ezOff(x)))), out = [];
     const xs = [-80, -60, -50.5, -41, -31, -21.5, -12, 0, 12, 21.5, 31, 41, 50.5, 60, 80];
     for (let i = 0; i + 1 < xs.length; i++) {
@@ -510,8 +511,10 @@
     }
     /* los collarines, las mangas y los discos (uno mediano y uno pequeño por lado) */
     [-1, 1].forEach(k => {
-      out.push(GR.disc(cam, X(k * 81), [1, 0, 0], 7, 3, 'metal'), ...bar(cam, X(k * 82), X(k * 122), 2, 7));
-      out.push(GR.disc(cam, X(k * 90), [1, 0, 0], 34, 7), GR.disc(cam, X(k * 98), [1, 0, 0], 23, 5), GR.disc(cam, X(k * 104), [1, 0, 0], 6, 4, 'metal'));
+      /* (los discos, hacia fuera de la manga: con los codos abiertos, en el remo al mentón, no los tocan) */
+      out.push(GR.disc(cam, X(k * 81), [1, 0, 0], 7, 3, 'metal'), ...bar(cam, X(k * 82), X(k * 124), 2, 7));
+      if (!small) out.push(GR.disc(cam, X(k * 103), [1, 0, 0], 30, 7));
+      out.push(GR.disc(cam, X(k * 111), [1, 0, 0], 21, 5), GR.disc(cam, X(k * 117), [1, 0, 0], 6, 4, 'metal'));
     });
     return out;
   };

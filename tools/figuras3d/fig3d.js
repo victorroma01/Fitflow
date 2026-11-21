@@ -343,7 +343,8 @@
   /* ── la postura ── */
   const pose = q => {
     let pelvis = { o: q.root, x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] };
-    pelvis = turn(turn(pelvis, 'y', q.yaw || 0), 'x', q.tilt || 0);
+    /* (roll: el cuerpo ladeado sobre su eje de delante a atrás; tumbado de lado, 90) */
+    pelvis = turn(turn(turn(pelvis, 'y', q.yaw || 0), 'z', q.roll || 0), 'x', q.tilt || 0);
     const thorax = turn(moved(pelvis, at(pelvis, [0, 45, -2])), 'x', q.spine || 0);
     const neck = turn(moved(thorax, at(thorax, [0, 100, -4])), 'x', (q.neck || 0) + NECK_TILT);
     const head = turn(moved(neck, at(neck, HEAD_AT)), 'x', -NECK_TILT);
@@ -393,7 +394,9 @@
          lo dejaba girar sin control */
       const foreFront = !isFist(q, s) ? (q.palm && q.palm[s] ? q.palm[s].map((v, j) => j ? v : v * k) : F['upper' + s].z) : mul(F['grip' + s].z, -1);
       F['fore' + s] = limb(el[0], el[1], s, foreFront);
-      F['hand' + s] = moved(F['fore' + s], at(F['fore' + s], [0, -LEN.fore, 0]));
+      /* la mano abierta con la muñeca doblada (apoyada en el suelo en una flexión): sale de la muñeca hacia handDir, con la palma
+         hacia donde diga palm; antes seguía siempre la línea del antebrazo */
+      F['hand' + s] = hd && !isFist(q, s) ? limb(el[1], sub(el[1], hd), s, foreFront) : moved(F['fore' + s], at(F['fore' + s], [0, -LEN.fore, 0]));
       J[s] = { hip, knee: knee[0], ankle: knee[1], sh, el: el[0], fist: fistC };
     });
     return { F, J };
