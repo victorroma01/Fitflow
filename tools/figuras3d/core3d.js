@@ -1372,5 +1372,5 @@
 
   Object.assign(F3.FAMILIES, { crunch, legRaise, deadBug, plank, sidePlank, birdDog, vacuum, kick, hyper, twist, wheelRoll, chop, pallof, calf, tib, hipOpen, stepUp, sissy, pistol, bandWalk, sideLunge });
   /* (para las pruebas: lo más bajo del cuerpo dibujado) */
-  F3.clib = { spl, lowOf, restOn, shift, legAt, legsOf, armTo, crossed, behindHead, prone, thFor, shAt, forearm, handFlat, HD, TOE_A, quad, quadHands, quadLeg, kneel, kneelRoot, KNEE_Y, supine, palmsDown, stepPath, toeAnkle, heelAnkle, footAtA, rotY, rotP, rotV, ball, medBall, barAx, plate10, step, postAt, hang, yz, miniBand };
+  F3.clib = { keyed, capRoot, reachY, spl, lowOf, restOn, shift, legAt, legsOf, armTo, crossed, behindHead, prone, thFor, shAt, forearm, handFlat, HD, TOE_A, quad, quadHands, quadLeg, kneel, kneelRoot, KNEE_Y, supine, palmsDown, stepPath, toeAnkle, heelAnkle, footAtA, rotY, rotP, rotV, ball, medBall, barAx, plate10, step, postAt, hang, yz, miniBand };
 })(window);
