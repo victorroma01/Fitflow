@@ -899,6 +899,8 @@
   const heelAnkle = (heel, p) => { const r = RAD(p), y = [0, cos(r), sin(r)], z = [0, -sin(r), cos(r)]; return add(heel, add(mul(y, 19.5), mul(z, 5))); };
   /* la mano libre que se agarra a un poste (a un lado) y el poste */
   const postAt = (x, z, h = 250) => [x, h, z];
+  /* el poste de los gemelos en el escalón: delante y algo a la derecha */
+  const CALF_POST = [-38, 318, 70];
   const holdPost = (s, P) => ({ hand: add(P, [0, -60, 0]), elbow: hintL(s, [.4, -.6, .2]), bd: [0, 1, 0] });
   /* el poste (con su base): por trozos, cada uno delante o detrás según lo que de verdad lo tapa, si se le pasa la postura.
      Antes iba siempre detrás del cuerpo y, con el poste entre la cámara y la figura, la mano que lo agarra parecía flotar
@@ -950,16 +952,22 @@
       if (machine && !donkey || smith || barW) {
         /* la barra o las hombreras sobre los trapecios, las manos agarradas a ellas */
         const c = at(F.thorax, [0, 90, -26]);
-        return { ...q, barC: c, grip: machine ? 54 : 80, hands: { L: add(c, [machine ? 54 : 80, 0, 0]), R: add(c, [machine ? -54 : -80, 0, 0]) }, elbow: both(() => [.25, -1, -.45]), shrug: 3 };
+        /* (en la máquina, las asas de las hombreras van de delante a atrás y se agarran en neutro: antes el puño iba de través y
+           el asa lo cruzaba) */
+        return { ...q, barC: c, grip: machine ? 54 : 80, hands: { L: add(c, [machine ? 54 : 80, 0, 0]), R: add(c, [machine ? -54 : -80, 0, 0]) }, elbow: both(() => [.25, -1, -.45]), shrug: 3, ...(machine ? { barDir: both(() => [0, 0, 1]) } : {}) };
       }
-      if (donkey) return { ...q, hands: both(s => [sd(s, [30, 0, 0])[0], 124, root[2] + 150]), elbow: both(() => [.3, -.4, -1]), barDir: both(() => [0, 0, 1]) };
+      /* (en el burro, las asas del apoyo, verticales y con el pulgar arriba: el antebrazo va de delante a atrás, y antes el asa
+         también) */
+      if (donkey) return { ...q, hands: both(s => [sd(s, [30, 0, 0])[0], 124, root[2] + 150]), elbow: both(() => [.3, -.4, -1]), barDir: both(() => [0, 1, 0]) };
       /* (los brazos, sueltos junto al cuerpo con los codos algo doblados, acompañando el bote) */
       if (jump) { const e = 22 + 8 * sin(2 * PI * t), h = s => armTo(F, q, s, [.12, -1, .14], e, [0, 0, 1]); return { ...q, hands: both(s => h(s).H), elbow: both(s => h(s).hint), fist: false, palm: both(() => [-1, 0, 0]) }; }
-      /* en el escalón: una mano en la pared (o en un poste) y, con mancuerna, la otra la lleva colgando */
-      const P = postAt(-100, 24, 330), hp = holdPost('R', P);
-      if (db) return { ...q, hands: { L: hang(F, q, 'L'), R: hp.hand }, elbow: { L: [.1, 0, -1], R: hp.elbow }, barDir: { L: [0, 0, 1], R: hp.bd } };
-      const fl = onHip(F, 'L');
-      return { ...q, hands: { L: fl.hand, R: hp.hand }, elbow: { L: fl.elbow, R: hp.elbow }, barDir: { L: [1, 0, 0], R: hp.bd }, fist: { L: false }, palm: { L: fl.palm } };
+      /* en el escalón: la mano derecha en un poste que queda delante y algo a la derecha, a la altura del pecho, con el codo
+         doblado y relajado; la izquierda, suelta y colgando junto al cuerpo o, con mancuerna, llevándola colgada. Antes el poste
+         quedaba a un lado, a la altura del hombro: el brazo iba estirado en horizontal, rígido, y la otra mano en la cadera */
+      const hp = holdPost('R', CALF_POST);
+      if (db) return { ...q, hands: { L: hang(F, q, 'L'), R: hp.hand }, elbow: { L: [.1, 0, -1], R: [.35, -.7, -.3] }, barDir: { L: [0, 0, 1], R: hp.bd } };
+      const fl = armTo(F, q, 'L', [.14, -1, .08], 16, [0, 0, 1]);
+      return { ...q, hands: { L: fl.H, R: hp.hand }, elbow: { L: fl.hint, R: [.35, -.7, -.3] }, barDir: { L: [1, 0, 0], R: hp.bd }, fist: { L: false }, palm: { L: [-1, 0, .2] } };
     };
     let zS = null;
     const gear = (q, F, cam) => {
@@ -979,13 +987,16 @@
         const hp = at(F.pelvis, [0, 20, -30]);
         out.push(GR.padAB(cam, add(hp, [0, 8, -6]), add(hp, [0, 8, 26]), UP, 28, 7), ...GR.beam(cam, add(hp, [0, 0, 10]), [0, 260, -120], 5), ...GR.hub(cam, [0, 262, -122], [1, 0, 0], 8));
         out.push(...GR.under([GR.padAB(cam, [0, 116, q.root[2] + 120], [0, 116, q.root[2] + 180], UP, 30, 7), ...GR.beam(cam, [0, 106, q.root[2] + 150], [0, 4, q.root[2] + 150], 7), ...GR.beam(cam, [0, 4, -130], [0, 4, q.root[2] + 170], 6), ...GR.beam(cam, [0, 4, -122], [0, 262, -122], 7)], 2));
-        ['L', 'R'].forEach(s => out.push(...GR.rubber(cam, add(q.hands[s], [0, 0, -8]), add(q.hands[s], [0, 0, 8])).map(i => ({ ...i, hand: s }))));
+        ['L', 'R'].forEach(s => out.push(...GR.rubber(cam, add(q.hands[s], mul(F['grip' + s].x, -8)), add(q.hands[s], mul(F['grip' + s].x, 8))).map(i => ({ ...i, hand: s }))));
       }
       if (db) out.push(...GR.dumbbell(cam, q.hands.L, [0, 0, 1], 'L'));
-      if (!machine && !donkey && !smith && !barW && !jump) out.push(...postGear(cam, postAt(-100, 24, 330), F, pose(q).J));
+      if (!machine && !donkey && !smith && !barW && !jump) out.push(...postGear(cam, CALF_POST, F, pose(q).J));
       return out;
     };
     const ex = { view: 'front', up: 'b', rest: 'a', cam: [-56, 8], feetOff: true, one: one || !(machine || smith || barW || jump), at: at_, gear };
+    /* (en el escalón con el poste, de frente por el lado izquierdo: se ve la pierna que trabaja, la mano libre (o la mancuerna) y
+       el poste detrás, sin tapar el cuerpo; de lado, por ese mismo lado) */
+    if (!machine && !donkey && !smith && !barW && !jump) { ex.cam = [52, 8]; ex.side = [84, 4]; }
     if (jump) ex.beat = cycle(640);
     return ex;
   };
@@ -1083,7 +1094,8 @@
         const ph = add_ ? mix(36, 9, t) : mix(4, 38, t), q = { root, tilt: -14, spine: 2, neck: 6, shrug: 0 }, T = torso(q);
         const lg = s => { const hp = at(T.pelvis, sd(s, [20, 0, 0])), d1 = sd(s, [sin(RAD(ph)), .05, cos(RAD(ph))]), d2 = sd(s, [sin(RAD(ph)) * .2, -1, .12]); return legAt(hp, d1, d2, s, [0, 1, 0], -2); };
         const lq = { ...q, ...legsOf({ L: lg('L'), R: lg('R') }) };
-        return { ...lq, hands: both(s => [sd(s, [62, 0, 0])[0], 112, 6]), elbow: both(() => [.6, -.2, -1]), barDir: both(() => [0, 0, 1]) };
+        /* (las asas junto al asiento, inclinadas hacia delante y arriba, de través al antebrazo, con el pulgar delante) */
+        return { ...lq, hands: both(s => [sd(s, [62, 0, 0])[0], 112, 6]), elbow: both(() => [.6, -.2, -1]), barDir: both(() => [0, .57, .82]) };
       };
       const gear = (q, F, cam) => {
         const { J } = pose(q), out = [], BN = norm([0, .26, 1]);
@@ -1095,22 +1107,27 @@
         ['L', 'R'].forEach(s => {
           /* (el acolchado, por fuera de la rodilla en la abducción y por dentro en la aducción, en las dos piernas: antes el de la
              derecha iba al revés) */
-          /* (apoyado en la cara del muslo y de la rodilla, siguiendo cómo se estrecha hacia ella: antes iba recto, a la misma
-             distancia del eje, y por arriba se metía en el muslo; se pinta detrás de lo que de verdad lo tapa) */
+          /* (el acolchado: un cojín redondo, de pie, contra la cara de fuera (o de dentro) de la rodilla, con su placa y la palanca
+             que baja hasta el eje bajo la cadera. Antes era una caja a lo largo del muslo que, desde algunos lados, parecía un
+             bloque clavado en la rodilla o, en tres trozos, cajas sueltas) */
           const k = s == 'L' ? 1 : -1, K = J[s].knee, hip = J[s].hip, out_ = add_ ? -1 : 1, d1 = norm(sub(K, hip)), side_ = norm(cross(UP, d1)).map(v => v * k * out_), hub = [hip[0], 62, hip[2]];
-          const P = (d, w) => add(add(hip, mul(d1, d)), mul(side_, w)), a = P(LEN.thigh - 34, prof1(THIGH_W, LEN.thigh - 34) * 1.08 + 1.5 + 6), b = P(LEN.thigh + 4, 13.5 + 6), n = perp(side_, sub(b, a)), pad = mix(a, b, .5);
-          /* (en tres trozos, cada uno delante o detrás según lo que de verdad lo tapa) */
-          const cut = [0, 1 / 3, 2 / 3, 1].map(u => mix(a, b, u)), pcs = [0, 1, 2].map(i => GR.padAB(cam, cut[i], cut[i + 1], n, 12, 6));
-          out.push(...visTag(pcs, [0, 1, 2].map(i => add(mix(cut[i], cut[i + 1], .5), mul(n, 6))), cam, F, J), ...GR.beam(cam, add(pad, add(mul(n, 4), [0, -14, 0])), add(hub, [0, 0, 0]), 4.5), ...GR.hub(cam, hub, [0, 1, 0], 8));
+          const dd = LEN.thigh - 10, c = add(add(hip, mul(d1, dd)), mul(side_, prof1(THIGH_W, dd) * 1.08 + 2 + 9)), plate = add(c, mul(side_, 11));
+          const legs = ['trunk', 'shin' + s, 'foot' + s], near = dot(side_, cam.c) > 0;
+          const ord = add_ ? { under: ['trunk', 'shinL', 'shinR', 'footL', 'footR'] } : near ? { above: legs } : { under: legs };
+          const it = [GR.obox(cam, plate, [d1, UP], [7, 15, 2.5], GR.C.frame), ...GR.tube(cam, add(c, [0, 15, 0]), add(c, [0, -15, 0]), 18, GR.C.pad, 1)];
+          out.push(...it.map(x => ({ ...x, ...ord })), ...GR.beam(cam, add(plate, [0, -12, 0]), [plate[0], 62, plate[2]], 4.5), ...GR.beam(cam, [plate[0], 62, plate[2]], hub, 4.5), ...GR.hub(cam, hub, [0, 1, 0], 8));
           const fo = J[s].ankle; out.push(GR.obox(cam, add(fo, [0, -24, 12]), [[1, 0, 0], UP], [14, 2.5, 18], GR.C.frame), ...GR.beam(cam, add(fo, [0, -26, -4]), [hub[0], 62, hub[2]], 4));
-          out.push(...GR.rubber(cam, add(q.hands[s], [0, 0, -8]), add(q.hands[s], [0, 0, 8])).map(i => ({ ...i, hand: s })));
+          out.push(...GR.rubber(cam, add(q.hands[s], mul(F['grip' + s].x, -8)), add(q.hands[s], mul(F['grip' + s].x, 8))).map(i => ({ ...i, hand: s })));
         });
         return out;
       };
       /* (la abducción: de frente y a un lado, que se ve cómo se abren las piernas; y de lado, algo desde atrás, donde quedan
          a la vista el glúteo medio y el mayor, lo que trabaja. La aducción, de frente y desde arriba: la cara de dentro de los
          muslos) */
-      return { view: 'seat', up: 'b', rest: 'a', cam: add_ ? [-58, 16] : [-34, 18], side: add_ ? [-10, 30] : [-112, 14], feetOff: true, at: at_, gear };
+      /* (la abducción: en 3/4, de frente y algo de lado y desde arriba, se ve cómo se abren las piernas y el costado de la
+         cadera; de lado, el glúteo medio, en el costado, que es lo que trabaja. La aducción, de frente y desde arriba: la cara de
+         dentro de los muslos) */
+      return { view: 'seat', up: 'b', rest: 'a', cam: add_ ? [-58, 16] : [-50, 22], side: add_ ? [-10, 30] : [-90, 8], feetOff: true, at: at_, gear };
     }
     if (cable) {
       /* de pie, de lado a la polea baja, la tobillera en el tobillo izquierdo y agarrado a la torre: la pierna se separa del

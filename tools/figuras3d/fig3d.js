@@ -386,9 +386,39 @@
       if (fd) { const fy = norm(fd.y), fzz = perp(fd.z, fy); F['foot' + s] = { o: knee[1], y: fy, z: fzz, x: s == 'L' ? cross(fy, fzz) : cross(fzz, fy) }; }
       const sh = at(thorax, [k * 47, 80 + (q.shrug || 0), -2 + (q.reach || 0)]);
       const ep = (q.elbow[s] || [0, -1, -1]).map((v, j) => j ? v : v * k);
+      // hacia dónde va lo que agarra la mano (una barra, un asa): el mismo para las dos, o uno por lado
+      let bd = q.barDir ? (Array.isArray(q.barDir) ? q.barDir : q.barDir[s]) : [1, 0, 0];
+      /* (las dos manos con el mismo eje, cada una en su asa (no una barra de lado a lado, que va a lo largo de x, ni las dos manos
+         juntas en la misma asa): el eje dice hacia dónde va el pulgar de la derecha, y la izquierda va como en un espejo. Antes
+         las dos usaban el mismo y, en las asas verticales o de delante a atrás, la palma izquierda miraba hacia fuera) */
+      if (s == 'L' && q.barDir && q.hands.R && q.hands.L && abs(bd[0]) < .7) {
+        const bR = Array.isArray(q.barDir) ? q.barDir : q.barDir.R;
+        /* (también si se dieron como en un espejo (la x cambiada de signo): así los nudillos de la izquierda salen al revés) */
+        if (bR && abs(abs(bR[0]) - abs(bd[0])) < 1e-6 && abs(bR[1] - bd[1]) < 1e-6 && abs(bR[2] - bd[2]) < 1e-6 && abs(q.hands.L[0] - q.hands.R[0]) > 12) bd = [bR[0], -bR[1], -bR[2]];
+      }
       /* la muñeca doblada (handDir: de la muñeca al puño): el brazo llega a la muñeca y el puño sale de ella en esa dirección;
          si no, el puño sigue la línea del antebrazo */
-      const hd = q.handDir && q.handDir[s] ? norm(q.handDir[s]) : null;
+      let hd = q.handDir && q.handDir[s] ? norm(q.handDir[s]) : null;
+      /* (con el puño cerrado sobre algo con su eje (una barra, un asa) y el antebrazo algo torcido respecto a él, la muñeca se
+         dobla de lado, como de verdad, hasta 28°, para que lo que agarra quede de través en la mano. Antes el puño seguía siempre
+         al antebrazo y, en las dominadas, los presses o los fondos, la barra lo cruzaba en diagonal. Solo si el desvío es
+         pequeño: más, el eje es solo una pista de hacia dónde van los nudillos) */
+      if (!hd && q.barDir && isFist(q, s)) {
+        const pre = ik(sh, q.hands[s], LEN.upper, LEN.fore + LEN.grip, ep), f = norm(sub(pre[1], pre[0])), b = norm(bd), c = dot(f, b), th = asin(min(1, abs(c)));
+        /* (lo que se dobla, hasta 28°, y se va quitando poco a poco entre 34° y 46° de desvío: sin un corte, que haría saltar la
+           mano al cruzarlo) */
+        const fade = clamp((RAD(46) - th) / RAD(12), 0, 1), dv = min(th, RAD(28)) * fade * fade * (3 - 2 * fade);
+        /* (y sin mover el codo: con el brazo casi estirado, mover un poco la muñeca hacía saltar el codo y el brazo se metía en el
+           tronco; si el codo se mueve más de 4, se dobla la mitad, y así hasta cuatro veces) */
+        if (th > RAD(1) && dv > RAD(.5)) {
+          const fp = norm(sub(f, mul(b, c)));
+          for (let k = dv / th, n = 0; n < 4; n++, k *= .5) {
+            const h2 = norm(add(mul(f, sin((1 - k) * th)), mul(fp, sin(k * th)))), W = sub(q.hands[s], mul(h2, LEN.grip)), e2 = ik(sh, W, LEN.upper, LEN.fore, ep);
+            /* (y la muñeca, al alcance del brazo: con el brazo estirado, si no, la mano se quedaba corta) */
+            if (len(sub(e2[0], pre[0])) < 4 && len(sub(W, sh)) < LEN.upper + LEN.fore - .05) { hd = h2; break; }
+          }
+        }
+      }
       const el = hd ? ik(sh, sub(q.hands[s], mul(hd, LEN.grip)), LEN.upper, LEN.fore, ep) : ik(sh, q.hands[s], LEN.upper, LEN.fore + LEN.grip, ep);
       const fistC = hd ? add(el[1], mul(hd, LEN.grip)) : el[1];
       // delante del brazo, el bíceps: hacia donde se dobla el codo (o, con el brazo estirado, lo contrario de adonde apunta el codo)
@@ -398,8 +428,6 @@
       const wa = clamp(len(bend) / 6, 0, 1);
       const front = norm(add(mul(norm(mul(bend, -1)), wa), mul(perp(mul(ep, -1), axis), 1 - wa)));
       F['upper' + s] = limb(sh, el[0], s, front);
-      // hacia dónde va lo que agarra la mano (una barra, un asa): el mismo para las dos, o uno por lado
-      const bd = q.barDir ? (Array.isArray(q.barDir) ? q.barDir : q.barDir[s]) : [1, 0, 0];
       const gy = hd ? mul(hd, -1) : norm(sub(el[0], el[1])), gx = perp(bd, gy);
       F['grip' + s] = { o: fistC, y: gy, x: gx, z: cross(gx, gy) };
       /* delante del antebrazo (los flexores): hacia la palma. Con la barra en la mano, la palma mira al lado contrario de los
@@ -1003,6 +1031,9 @@
       if (i.hand && Z['hand' + i.hand] != null) i.z = min(i.z, Z['hand' + i.hand] - 1e-3);
       if (i.below) i.below.forEach(k => { if (Z[k] != null) i.z = min(i.z, Z[k] - 1e-3); });
       if (i.above) i.above.forEach(k => { if (Z[k] != null) i.z = max(i.z, Z[k] + 1e-3); });
+      /* (under: debajo de estas piezas pase lo que pase, aunque choque con above: lo que se apoya debajo de un brazo o una
+         pierna nunca se pinta encima de ellos) */
+      if (i.under) i.under.forEach(k => { if (Z[k] != null) i.z = min(i.z, Z[k] - 1e-3); });
       items.push(i);
     });
     items.sort((a, b) => a.z - b.z);
@@ -1048,7 +1079,8 @@
       const t0 = i / n, t1 = (i + 1) / n;
       const P1 = cam.P(mix(a, b, t0)), P2 = cam.P(mix(a, b, t1)), Q1 = cam.P(mix(a, b, max(0, t0 - ext))), Q2 = cam.P(mix(a, b, min(1, t1 + ext)));
       const d = `M${f1(P1[0])} ${f1(P1[1])}L${f1(P2[0])} ${f1(P2[1])}`, e = `M${f1(Q1[0])} ${f1(Q1[1])}L${f1(Q2[0])} ${f1(Q2[1])}`;
-      out.push({ z: (P1[2] + P2[2]) / 2, svg: `<path d="${d}" stroke="#0a0b10" stroke-width="${wdt + 2}"/><path d="${e}" stroke="#b9bed0" stroke-width="${wdt}"/>` });
+      /* (mid: el punto medio del trozo en 3D, para ordenarlo según lo que de verdad lo tapa) */
+      out.push({ z: (P1[2] + P2[2]) / 2, mid: mix(a, b, (t0 + t1) / 2), ax: norm(sub(b, a)), svg: `<path d="${d}" stroke="#0a0b10" stroke-width="${wdt + 2}"/><path d="${e}" stroke="#b9bed0" stroke-width="${wdt}"/>` });
     }
     return out;
   };

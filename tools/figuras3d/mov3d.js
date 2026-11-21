@@ -152,7 +152,9 @@
     else if (has(f, 'zercher')) {
       /* la barra en el pliegue de los codos, delante del vientre; las manos juntas a la altura de la barbilla */
       Object.assign(V, { w: 40, ps: [5, 38], lean: [0, 30] });
-      arms = F => ({ hands: both(s => T(F, s, [6, 88, 40])), elbow: both(() => [.18, -1, .6]), barDir: [0, 1, 0], load: (F2, J) => [[crooks(J).c, 1]] });
+      /* (las manos, juntas y cerradas delante de la barbilla, con los nudillos hacia delante: antes el eje del puño iba a lo largo
+         del antebrazo) */
+      arms = F => ({ hands: both(s => T(F, s, [6, 88, 40])), elbow: both(() => [.18, -1, .6]), barDir: [-1, 0, 0], load: (F2, J) => [[crooks(J).c, 1]] });
       gear = (q, F, cam) => { const J = pose(q).J; return olympic(cam, crooks(J).c, x => abs(x) < abs(crook(J.L)[0] - crooks(J).c[0]) + 26 ? ['foreL', 'foreR'] : null); };
     }
     else if (has(f, 'ssb')) {
@@ -347,6 +349,9 @@
     return [...out];
   };
   const BODY = ['trunk', 'upperL', 'upperR', 'foreL', 'foreR', 'handL', 'handR', 'shinL', 'shinR', 'footL', 'footR'];
+  /* el material que se lleva delante del cuerpo (una barra con sus discos): cada pieza con su punto en 3D (mid) se pinta
+     delante o detrás según lo que de verdad la tapa; las que van en el puño (hand) o ya traen su orden, como estaban */
+  const visAll = (items, cam, F, J) => items.map(it => it.mid && !it.hand && !it.below && !it.above ? (() => { const o = occluders(it.mid, cam, F, J); return o.length ? { ...it, below: o } : { ...it, above: BODY }; })() : it);
   /* los trozos (items) de una pieza larga, con sus puntos medios (mids): cada uno, detrás de lo que lo tapa o, si nada lo tapa,
      delante de todo el cuerpo */
   const visTag = (items, mids, cam, F, J) => items.map((it, i) => { const o = occluders(mids[i], cam, F, J); return o.length ? { ...it, below: o } : { ...it, above: BODY }; });
@@ -467,7 +472,8 @@
       else arms = t => ({ hands: both(s => dbH(s, t)), elbow: both(() => close ? [.45, -.6, .65] : under(dbH('L', t), el)), barDir: { L: axis, R: axis } });
     }
     else {
-      arms = t => { const c = path(top, bottom, t), H = add(c, [grip, 0, 0]); return { barC: c, grip, hands: { L: H, R: add(c, [-grip, 0, 0]) }, elbow: both(() => jm ? elbow : under(H, elbow)) }; };
+      /* (con la barra Z, el puño a lo largo del tramo que agarra) */
+      arms = t => { const c = path(top, bottom, t), H = add(c, [grip, 0, 0]); return { barC: c, grip, hands: { L: H, R: add(c, [-grip, 0, 0]) }, elbow: both(() => jm ? elbow : under(H, elbow)), ...(ez ? { barDir: both(s => ezFit(s, [0, 1, 0], 180, grip)) } : {}) }; };
     }
     /* el banco, hecho a la medida del cuerpo: el respaldo pegado a la espalda y el asiento bajo la pelvis */
     const benchGear = cam => {
@@ -530,7 +536,7 @@
       gear(q, F, cam) {
         const out = [...benchGear(cam)];
         if (db) out.push(...(one ? GR.dumbbell(cam, q.hands.R, dbAxis(F, q, 'R'), 'R') : pair(q, cam, null, F)));
-        else if (ez) out.push(...ezBar(cam, q.barC, grip, ezCd(F)));
+        else if (ez) out.push(...ezBar(cam, q.barC, grip, ezCd(F, grip)));
         else out.push(...bb(q, cam));
         if (smith) out.push(...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC));
         if (band) out.push(...bandGear(q, cam));
@@ -548,7 +554,38 @@
   const EZ_D = 17, EZ_P = [[0, 0], [12, 0], [31, -1], [41, -1], [60, 0], [80, 0]];
   const ezOff = x => { x = abs(x); for (let i = 1; i < EZ_P.length; i++) if (x <= EZ_P[i][0]) { const [a, u] = EZ_P[i - 1], [b, v] = EZ_P[i]; return EZ_D * (u + (v - u) * (x - a) / (b - a)); } return 0; };
   /* el plano de las curvas, desde los puños: la media de hacia dónde miran los nudillos, sin su parte a lo largo de la barra */
-  const ezCd = F => { const v = add(F.gripL.z, F.gripR.z); return len([0, v[1], v[2]]) > 1e-6 ? norm([0, v[1], v[2]]) : [0, 0, 1]; };
+  /* (y, si se da dónde van las manos (grip), el sentido de las curvas que deja el tramo que agarra cada mano a lo largo de su
+     puño: antes las curvas iban siempre hacia la palma y, con la barra agarrada en las curvas de fuera, el tramo cruzaba el puño
+     torcido, como si la muñeca girara al revés) */
+  const ezSlope = x => { x = abs(x); for (let i = 1; i < EZ_P.length; i++) if (x <= EZ_P[i][0]) { const [a, u] = EZ_P[i - 1], [b, v] = EZ_P[i]; return EZ_D * (v - u) / (b - a); } return 0; };
+  /* el eje del puño s agarrado a la barra Z en grip (de su centro), con el antebrazo v (del codo a la mano): a lo largo del tramo
+     de la barra que agarra (las curvas, ~42° de la recta), girando desde base (0, supino; 180, prono) hacia neutro, como hace la
+     muñeca. Antes el puño giraba un ángulo fijo (22°) que no era el de la barra: el tramo lo cruzaba torcido */
+  const ezFit = (s, v, base, grip) => {
+    const k = ezSlope(grip), gx0 = base > 90 ? [1, 0, 0] : [-1, 0, 0];
+    if (!k) return gx0;
+    /* (las curvas, en el plano de través a los antebrazos, hacia los nudillos o hacia las palmas, lo que gire la mano hacia
+       neutro: la barra Z es plana, así que es el mismo plano para las dos manos; si el antebrazo no queda de través a la barra,
+       la muñeca se dobla de lado, como con cualquier barra) */
+    const gy = mul(norm(v), -1), kn = cross(gx0, gy), kp = norm([0, kn[1], kn[2]]), cd = mul(kp, k < 0 ? 1 : -1);
+    const seg = norm(add([1, 0, 0], mul(cd, s == 'L' ? k : -k)));
+    return dot(seg, gx0) >= 0 ? seg : mul(seg, -1);
+  };
+  /* el plano de las curvas para dibujar la barra: el que deja el tramo de cada mano a lo largo de su puño (sale de los ejes de los
+     puños), de través a los antebrazos. Sin grip, o si las manos van en lo recto, hacia los nudillos */
+  const ezCd = (F, grip) => {
+    const v = add(F.gripL.z, F.gripR.z), cd0 = len([0, v[1], v[2]]) > 1e-6 ? norm([0, v[1], v[2]]) : [0, 0, 1];
+    const k = grip == null ? 0 : ezSlope(grip);
+    if (!k) return cd0;
+    const est = (g, sg) => { const gx = dot(g, [1, 0, 0]) < 0 ? mul(g, -1) : g, c = dot(gx, [1, 0, 0]); if (c < .3) return null; const d = mul(sub(mul(gx, 1 / c), [1, 0, 0]), sg / k); return [0, d[1], d[2]]; };
+    const a = est(F.gripL.x, 1), b = est(F.gripR.x, -1);
+    let m = a && b ? add(a, b) : a || b;
+    if (!m || len(m) < 1e-6) return cd0;
+    /* (sin lo que vaya a lo largo de los antebrazos: la barra es plana) */
+    const fa0 = add(F.foreL.y, F.foreR.y), fa = len([0, fa0[1], fa0[2]]) > 1e-6 ? norm([0, fa0[1], fa0[2]]) : null;
+    if (fa) m = sub(m, mul(fa, dot(m, fa)));
+    return len(m) > 1e-6 ? norm(m) : cd0;
+  };
   /* (small: solo el disco pequeño, para los gestos con los codos muy abiertos, como el remo al mentón) */
   const ezBar = (cam, c, grip, cd = [0, 0, 1], small = false) => {
     const o = add(c, mul(cd, -ezOff(grip))), X = x => add(o, add([x, 0, 0], mul(cd, ezOff(x)))), out = [];
@@ -667,7 +704,9 @@
         }
         const E = geo.at2(geo.a1 * t), bd = norm(sub(E, geo.piv));
         if (two) return { hands: { L: add(E, [8, 0, 0]), R: add(E, [-8, 0, 0]) }, elbow: both(() => [.35, -1, .05]), barDir: both(() => bd), piv: geo.piv, lmEnd: E };
-        return { hands: { R: E, ...freeL(F) }, elbow: { R: [.25, -1, .2], L: [.1, 0, -1] }, barDir: { R: [1, 0, 0], L: [1, 0, 0] }, fist: { L: false }, palm: { L: [-1, 0, 0] }, piv: geo.piv };
+        /* (a una mano, el puño agarra el manguito a lo largo de la barra, con el pulgar hacia su extremo: antes iba de través y la
+           barra lo cruzaba torcida) */
+        return { hands: { R: E, ...freeL(F) }, elbow: { R: [.25, -1, .2], L: [.1, 0, -1] }, barDir: { R: thumbTo('R', bd), L: [1, 0, 0] }, fist: { L: false }, palm: { L: [-1, 0, 0] }, piv: geo.piv };
       };
       cam = [-62, 10];
       gear = (q, F, cam) => landmineGear(cam, q);
@@ -675,7 +714,9 @@
     else if (cable) {
       /* con una mano, de pie junto a la polea baja: el cable sube de la polea al asa */
       arms = (F, t) => ({ hands: { R: pressed(F, 'R', t), ...freeL(F) }, elbow: { R: elAt(F, t), L: [.1, 0, -1] }, barDir: [1, 0, 0], fist: { L: false }, palm: { L: [-1, 0, 0] } });
-      gear = (q, F, cam) => [...GR.pulleyTower(cam, [-80, 0, -120], 16, q.hands.R), ...GR.tube(cam, add(q.hands.R, [-7, 0, 0]), add(q.hands.R, [7, 0, 0]), 4, ['#b9bed0', '#0a0b10'], 1).map(i => ({ ...i, hand: 'R' }))];
+      /* (el cable se engancha en el arco del asa, que pasa por detrás de los nudillos: arriba, si saliera del centro del puño,
+         rozaría la muñeca) */
+      gear = (q, F, cam) => [...GR.pulleyTower(cam, [-80, 0, -120], 16, add(q.hands.R, mul(F.gripR.z, 10))), ...GR.tube(cam, add(q.hands.R, [-7, 0, 0]), add(q.hands.R, [7, 0, 0]), 4, ['#b9bed0', '#0a0b10'], 1).map(i => ({ ...i, hand: 'R' }))];
     }
     else {
       /* mancuernas (o bandas): con una mano o con las dos; agarre normal o neutro (las palmas, una frente a otra) */
@@ -812,7 +853,10 @@
     const [x0, y0] = K[i - 1], [x1, y1] = K[i], h = x1 - x0, u = (t - x0) / h, u2 = u * u, u3 = u2 * u;
     return (2 * u3 - 3 * u2 + 1) * y0 + (u3 - 2 * u2 + u) * h * sl(i - 1) + (3 * u2 - 2 * u3) * y1 + (u3 - u2) * h * sl(i);
   };
-  F3.mlib = { spl, pivotFor, leverAt, has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
+  /* el eje de lo que agarra la mano s para que el pulgar quede hacia d (así lo entiende el motor: en la izquierda, el pulgar
+     va al lado contrario del eje; en la derecha, al mismo) */
+  const thumbTo = (s, d) => s == 'L' ? mul(norm(d), -1) : norm(d);
+  F3.mlib = { spl, visAll, ezFit, thumbTo, pivotFor, leverAt, has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];

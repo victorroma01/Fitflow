@@ -151,7 +151,9 @@
           ...GR.cableLine(cam, [0, 10 + 12 * 6.4 + 40, b0[2] - 60], [0, Y - 14, zc - 8])]));
         out.push(...GR.beam(cam, pivot('L'), pivot('R'), 5));
         /* cada palanca, de sección cuadrada, del cubo de su eje al asa, con su puño de goma */
-        ss.forEach(s => { const k = s == 'L' ? 1 : -1, H = q.hands[s], P = pivot(s), x = H[0] + k * 12, top = [P[0] + k * 12, P[1], P[2]]; out.push(...GR.hub(cam, add(top, [k * 5, 0, 0]), [1, 0, 0]), ...GR.beam(cam, top, [x, H[1], H[2]], 4.8, GR.C.frame, 3), ...GR.rubber(cam, [x - k * 2, H[1], H[2]], add(H, [-k * 9, 0, 0])).map(i => ({ ...i, hand: s }))); });
+        /* (el puño de goma, a lo largo del puño, de su extremo de fuera hacia dentro: antes iba siempre de lado a lado y, con el
+           antebrazo hacia fuera, cruzaba la mano en diagonal) */
+        ss.forEach(s => { const k = s == 'L' ? 1 : -1, H = q.hands[s], P = pivot(s), gx = F['grip' + s].x, go = dot(gx, [k, 0, 0]) > 0 ? gx : mul(gx, -1), x = add(H, mul(go, 11)), top = [P[0] + k * 12, P[1], P[2]]; out.push(...GR.hub(cam, add(top, [k * 5, 0, 0]), [1, 0, 0]), ...GR.beam(cam, top, x, 4.8, GR.C.frame, 3), ...GR.rubber(cam, add(H, mul(go, 9)), add(H, mul(go, -9))).map(i => ({ ...i, hand: s }))); });
       }
       else if (cable) {
         /* las dos torres, detrás y a los lados; la polea a la altura de las manos (baja en el inclinado, alta en el declinado) */
@@ -173,7 +175,10 @@
       /* de cara a la máquina (sentado, el pecho contra el respaldo), a las poleas o con la banda: los brazos al frente, a la
          altura de los hombros, se abren hasta los lados */
       body = machine ? { ...SEAT, tilt: 9 } : { ...STAND, tilt: 4 };
-      P = t => ({ u: sph(mix(band ? 4 : crossC ? -14 : 6, band ? 76 : 86, t), 2), e: 8, n: [0, -1, 0], bd: machine ? [0, 1, 0] : [0, 0, 1] });
+      /* (con banda, la banda pasa de puño a puño, de lado a lado, con las palmas hacia abajo; con las poleas cruzadas, el asa de
+         cada mano, de través al cable que llega del otro lado, con el pulgar arriba: antes los dos ejes iban a lo largo del
+         antebrazo) */
+      P = t => ({ u: sph(mix(band ? 4 : crossC ? -14 : 6, band ? 76 : 86, t), 2), e: 8, n: [0, -1, 0], bd: machine ? [0, 1, 0] : band ? [1, 0, 0] : crossC ? [0, 1, 0] : [0, 0, 1] });
       /* (se ve desde atrás: los deltoides de atrás y la espalda, lo que trabaja, y los brazos que se abren; de frente la máquina
          tapaba el gesto) */
       cam = machine || crossC ? [-152, 16] : [-30, 18];
@@ -279,6 +284,8 @@
         ['L', 'R'].forEach(s => { const E = J[s].el, S = J[s].sh, uw = norm(sub(E, S)), k = s == 'L' ? 1 : -1, no = norm([-uw[1] * k, uw[0] * k, 0]), pad = add(mix(E, S, .2), mul(no, 19)), pv = add(S, [0, 0, -26]); out.push(GR.padAB(cam, add(pad, mul(uw, 10)), add(pad, mul(uw, -12)), no, 8, 5), ...GR.beam(cam, pv, add(pad, [0, 0, -8]), 5), ...GR.hub(cam, pv, [0, 0, 1], 8), ...GR.beam(cam, pv, [pv[0], pv[1], zb], 6), ...GR.tube(cam, add(q.hands[s], [0, 9, 0]), add(q.hands[s], [0, -9, 0]), 5, STEEL, 1).map(i => ({ ...i, hand: s }))); });
       }
       else out.push(...solo.flatMap(s => GR.dumbbell(cam, q.hands[s], dbAxis(F, q, s), s)));
+      /* (sentado, en el extremo de un banco plano que va hacia atrás: antes se sentaba en el aire) */
+      if (seated && !machine) { const p0 = at(F.pelvis, [0, -22, 0]); out.push(...GR.under(flatBench(cam, [0, p0[1] - 7, p0[2] + 24], [0, p0[1] - 7, p0[2] - 110]))); }
       if (lean && !cable) out.push(GR.obox(cam, [78, 130, 8], [[1, 0, 0], UP], [6, 130, 6], GR.C.frame));
       if (side) out.push(...GR.under([GR.padAB(cam, [-150, 85, 0], [90, 85, 0], UP, 28, 7), ...GR.leg(cam, [-120, 78, 0]), ...GR.leg(cam, [60, 78, 0])]));
       return out;
@@ -301,6 +308,9 @@
     const at_ = t => {
       const h = mix(a0[0], a1[0], t), el = mix(a0[1], a1[1], t);
       const o = arms(ss, s => ({ ...armU(F0, body, s, sph(h, el), deck ? 88 : 16, { n: deck ? [0, 1, 0] : [-.3, 0, 1] }), bd: deck ? [0, 1, 0] : [0, 0, 1] }));
+      /* (en el contractor empujan los antebrazos: las manos, abiertas y relajadas, con las palmas hacia delante; antes iban
+         cerradas sobre un asa a lo largo del antebrazo) */
+      if (deck) { o.fist = false; o.palm = both(() => [0, 0, 1]); }
       return one ? { ...body, ...freeL(F0, o) } : { ...body, ...o };
     };
     const ph = low ? 20 : mid ? 290 : 400;
@@ -372,7 +382,10 @@
     const fl0 = (() => { let a = 4; for (; a < 34; a += .5) { const H = armAt(F0, body, 'L', a, two ? 0 : 4, 6, gx != null ? { hx: gx } : {}).H; if (H[2] >= frontAt(F0, J0, H[1]) + (disc ? 34 : two ? 8 : 23)) break; } return a; })();
     const at_ = t => {
       const p = alt ? both(s => (s == 'L' ? keys(t, [[0, 0], [.2, 1], [.25, 1], [.5, 0], [1, 0]]) : keys(t, [[0, 0], [.5, 0], [.7, 1], [.75, 1], [1, 0]]))) : both(() => t);
-      const o = arms(['L', 'R'], s => ({ ...armAt(F0, body, s, mix(fl0, 92, p[s]), two ? 0 : 4, 6, gx != null ? { hx: gx } : {}), bd: disc ? [0, 1, 0] : ropeA ? [0, 1, 0] : [1, 0, 0] }));
+      const o = arms(['L', 'R'], s => ({ ...armAt(F0, body, s, mix(fl0, 92, p[s]), two ? 0 : 4, 6, gx != null ? { hx: gx } : {}), bd: disc ? [0, 1, 0] : ropeA ? [0, 0, 1] : [1, 0, 0] }));
+      /* (el disco, sujeto por los lados con las manos abiertas, las palmas contra su canto; antes, con los puños cerrados sobre un
+         eje a lo largo del antebrazo. La cuerda, con los pulgares hacia delante) */
+      if (disc) { o.fist = false; o.palm = both(() => [-1, 0, 0]); }
       if (two && !ropeA) { o.barC = mix(o.hands.L, o.hands.R, .5); o.grip = gx; }
       return { ...body, ...o };
     };
@@ -431,14 +444,14 @@
       const y = mix(y0, y1, t);
       /* (la muñeca se dobla y el puño cuelga debajo de ella: la barra (o las mancuernas, de través) queda recta y por debajo de los
          antebrazos; si no, seguía al antebrazo y, con los codos altos, lo atravesaba o, con mancuernas, quedaba en diagonal) */
-      const o = { hands: both(s => [sd(s, [hx, 0, 0])[0], y, zAt(y)]), elbow: both(() => [1, .8, -.25]), barDir: [1, 0, 0], ...(cable ? {} : { handDir: db ? { L: [-.25, -1, .2], R: [.25, -1, .2] } : both(() => [0, -1, .2]) }) };
+      const o = { hands: both(s => [sd(s, [hx, 0, 0])[0], y, zAt(y)]), elbow: both(() => [1, .8, -.25]), barDir: ez ? both(s => M.ezFit(s, [0, -1, .2], 180, hx)) : [1, 0, 0], ...(cable ? {} : { handDir: db ? { L: [-.25, -1, .2], R: [.25, -1, .2] } : both(() => [0, -1, .2]) }) };
       if (!db && !cable) { o.barC = mix(o.hands.L, o.hands.R, .5); o.grip = hx; }
       return { ...body, ...o };
     };
     const gear = (q, F, cam) => {
       if (db) return ['L', 'R'].flatMap(s => GR.dumbbell(cam, q.hands[s], dbAxis(F, q, s), s));
       if (cable) { const top = add(mix(q.hands.L, q.hands.R, .5), [0, -14, 6]); return [...GR.pulleyTower(cam, [14, 0, 96], 14, top), ...rope(cam, top, q.hands)]; }
-      return ez ? ezBar(cam, q.barC, hx, ezCd(F), true) : curlBar(cam, q.barC, hx);
+      return ez ? ezBar(cam, q.barC, hx, ezCd(F, hx), true) : curlBar(cam, q.barC, hx);
     };
     return { view: 'stand', up: 'b', rest: 'a', cam: [-40, 6], at: at_, gear };
   };
@@ -509,11 +522,11 @@
     /* tumbado en el banco: los brazos, casi estirados, van de verticales sobre el pecho a por detrás de la cabeza y vuelven */
     const gx = ez ? 24 : 7;
     const at_ = t => {
-      const o = arms(['L', 'R'], s => ({ ...armAt(F0, body, s, mix(96, 176, t), 0, 16, { hx: gx }), bd: [1, 0, 0] }));
+      const o = arms(['L', 'R'], s => { const a = armAt(F0, body, s, mix(96, 176, t), 0, 16, { hx: gx }); return { ...a, bd: ez ? M.ezFit(s, a.v, 180, gx) : [1, 0, 0] }; });
       o.barC = mix(o.hands.L, o.hands.R, .5); o.grip = gx;
       return { ...body, ...o };
     };
-    const gear = (q, F, cam) => [...benchUnder(cam, F0, 0), ...(ez ? ezBar(cam, q.barC, gx, ezCd(F)) : GR.dumbbell(cam, add(q.barC, [0, -24, 0]), [0, 1, 0]))];
+    const gear = (q, F, cam) => [...benchUnder(cam, F0, 0), ...(ez ? ezBar(cam, q.barC, gx, ezCd(F, gx)) : GR.dumbbell(cam, add(q.barC, [0, -24, 0]), [0, 1, 0]))];
     return { view: 'bench', up: 'a', rest: 'a', cam: [-62, 18], at: at_, gear };
   };
 

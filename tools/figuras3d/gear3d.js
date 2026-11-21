@@ -42,7 +42,7 @@
       const t0 = i / n, t1 = (i + 1) / n;
       const P1 = cam.P(mix(a, b, t0)), P2 = cam.P(mix(a, b, t1)), Q1 = cam.P(mix(a, b, max(0, t0 - ext))), Q2 = cam.P(mix(a, b, min(1, t1 + ext)));
       const cap = i == 0 || i == n - 1 ? 'round' : 'butt';
-      out.push({ z: (P1[2] + P2[2]) / 2, svg: `<path d="M${f1(P1[0])} ${f1(P1[1])}L${f1(P2[0])} ${f1(P2[1])}" stroke="${col[1]}" stroke-width="${w + 2}" stroke-linecap="${cap}"/><path d="M${f1(Q1[0])} ${f1(Q1[1])}L${f1(Q2[0])} ${f1(Q2[1])}" stroke="${col[0]}" stroke-width="${w}" stroke-linecap="${cap}"/>` });
+      out.push({ z: (P1[2] + P2[2]) / 2, mid: mix(a, b, (t0 + t1) / 2), ax: norm(sub(b, a)), svg: `<path d="M${f1(P1[0])} ${f1(P1[1])}L${f1(P2[0])} ${f1(P2[1])}" stroke="${col[1]}" stroke-width="${w + 2}" stroke-linecap="${cap}"/><path d="M${f1(Q1[0])} ${f1(Q1[1])}L${f1(Q2[0])} ${f1(Q2[1])}" stroke="${col[0]}" stroke-width="${w}" stroke-linecap="${cap}"/>` });
     }
     return out;
   };
@@ -57,7 +57,7 @@
     else if (style == 'head') svg = `<path d="${side}" fill="#161925" stroke="#5d6482" stroke-width="1.1"/><path d="${face}" fill="#232738" stroke="#5d6482" stroke-width="1.1"/><path d="${smoothR(ring(near, R * .42, 12))}" fill="#7d849e" stroke="#0a0b10" stroke-width=".8"/>`;
     else if (style == 'wheel') svg = `<path d="${side}" fill="#1d2030" stroke="#5d6482" stroke-width="1"/><path d="${face}" fill="#2b2f43" stroke="#5d6482" stroke-width="1"/><path d="${smoothR(ring(near, R * .35, 10))}" fill="#9aa1bb" stroke="#0a0b10" stroke-width=".7"/>`;
     else svg = `<g class="pl"><path d="${side}" fill="#0f1119" stroke="#59607c" stroke-width="1.2"/><path d="${face}" fill="#171a27" stroke="#59607c" stroke-width="1.2"/><path d="${smoothR(ring(near, R * .7, 20))}" fill="none" stroke="#2b2f43" stroke-width="1"/></g>`;
-    return { z: cam.P(c)[2], svg };
+    return { z: cam.P(c)[2], mid: c, svg };
   };
   /* una cinta o un cable: una línea con su borde oscuro, a trozos cortos (de unos 30) para que cada trozo se ordene con el
      cuerpo por su propia profundidad: un cable largo que pasa por delante de una pierna y por detrás de la otra se ve así como
@@ -180,13 +180,25 @@
   };
   /* una torre de polea: la columna, con su tapa, el carro que lleva la polea a la altura h, la pila de pesas al otro lado de
      la columna y el cable hasta la mano */
-  const pulleyTower = (cam, base, h, to) => {
+  /* (o.reach: la polea, colgada al final de un brazo que sale del poste o.reach hacia o.dir, en vez de pegada a él: el cable
+     baja separado de la columna. En las extensiones de tríceps en polea alta el cable bajaba rozando la columna) */
+  const pulleyTower = (cam, base, h, to, o = {}) => {
     const post = { ...obox(cam, [base[0], 236, base[2]], [[1, 0, 0], UP], [9, 236, 9], C.frame), nf: true };
     const out = [post, obox(cam, [base[0], 3, base[2]], [[1, 0, 0], UP], [26, 3, 26], C.frame), obox(cam, [base[0], 474, base[2]], [[1, 0, 0], UP], [12, 4, 12], C.frame)];
     /* la polea, en el lado del poste que da al cuerpo (siempre el mismo: si dependiera de la mano, saltaría de un lado a otro) */
-    const side = base[0] < 0 ? 1 : -1, p = [base[0] + side * 14, h, base[2]];
-    out.push(obox(cam, [base[0], h, base[2]], [[1, 0, 0], UP], [11.5, 9, 11.5], C.iron), ...tube(cam, [base[0] + side * 11, h, base[2]], add(p, [-side * 2, 0, 0]), 2.4, STEEL, 1));
-    out.push(disc(cam, p, [0, 0, 1], 9, 4.5, 'wheel'), disc(cam, p, [0, 0, 1], 3, 5, 'metal'));
+    const side = base[0] < 0 ? 1 : -1;
+    let p = [base[0] + side * 14, h, base[2]];
+    if (o.reach) {
+      /* el brazo: del carro del poste, en horizontal, hasta la polea; la rueda cuelga en su extremo, girando en el plano del
+         cable */
+      const d = norm([o.dir[0], 0, o.dir[2]]), end = add([base[0], h + 12, base[2]], mul(d, o.reach)), ax = cross(d, UP);
+      p = [end[0], h, end[2]];
+      out.push(obox(cam, [base[0], h + 12, base[2]], [[1, 0, 0], UP], [11.5, 9, 11.5], C.iron), ...beam(cam, [base[0], h + 12, base[2]], end, 5), ...tube(cam, end, add(p, [0, 2, 0]), 2.4, STEEL, 1));
+      out.push(disc(cam, p, ax, 9, 4.5, 'wheel'), disc(cam, p, ax, 3, 5, 'metal'));
+    } else {
+      out.push(obox(cam, [base[0], h, base[2]], [[1, 0, 0], UP], [11.5, 9, 11.5], C.iron), ...tube(cam, [base[0] + side * 11, h, base[2]], add(p, [-side * 2, 0, 0]), 2.4, STEEL, 1));
+      out.push(disc(cam, p, [0, 0, 1], 9, 4.5, 'wheel'), disc(cam, p, [0, 0, 1], 3, 5, 'metal'));
+    }
     /* la pila, al otro lado de la columna (no entre la columna y el cuerpo) */
     out.push(...stack(cam, [base[0] - side * 30, 0, base[2]], [side, 0, 0], 12), obox(cam, [base[0] - side * 15, 3, base[2]], [[1, 0, 0], UP], [15, 3, 7], C.frame));
     /* el poste es una sola pieza (con la profundidad de su centro): cada trozo del cable se pinta delante o detrás de él según
