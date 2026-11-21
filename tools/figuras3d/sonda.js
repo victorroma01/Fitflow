@@ -35,7 +35,8 @@
   wrap(GR, 'strap', (cam, pts, w) => pts.slice(1).map((p, i) => ({ ...seg(pts[i], p, w / 2, 'cinta'), soft: true })));
   wrap(GR, 'cableLine', (cam, a, b) => ({ ...seg(a, b, .7, 'cable'), soft: true }));
   wrap(GR, 'bandLoop', (cam, a, b, l0, dir = [0, 0, 1], sep = 3) => [-1, 1].map(k => ({ ...seg(add(a, mul(dir, k * sep)), add(b, mul(dir, k * sep * .45)), 1.4, 'banda'), soft: true })));
-  wrap(GR, 'disc', (cam, c, axis, R, w) => disc(c, axis, R, w, 'disco'));
+  /* (un neumático, ancho: tres discos finos a lo largo de su eje, para que su grosor no se cuente como una bola enorme) */
+  wrap(GR, 'disc', (cam, c, axis, R, w, style) => style == 'tire' ? [-w / 2 + 6, 0, w / 2 - 6].map(o => disc(add(c, mul(norm(axis), o)), axis, R, 12, 'neumático')) : disc(c, axis, R, w, 'disco'));
   wrap(GR, 'bandPath', (cam, pts, l0, dir = [0, 0, 1], sep = 3) => [-1, 1].flatMap(k => pts.slice(1).map((p, i) => ({ ...seg(add(pts[i], mul(dir, k * sep)), add(p, mul(dir, k * sep)), 1.4, 'banda'), soft: true }))));
   wrap(GR, 'obox', (cam, c, ax, h) => box(c, ax, h, 'caja'));
   wrap(GR, 'padAB', (cam, a, b, nrm, hw, ht) => { const u = norm(sub(b, a)), n = norm(nrm); return box(mix(a, b, .5), [cross(u, n), n], [hw, ht, len(sub(b, a)) / 2], 'banco'); });
@@ -45,6 +46,7 @@
     return [-1, 1].map(s => disc(add(c, mul(a, s * (hl + hw / 2))), a, R, hw, 'mancuerna'));
   });
   wrap(GR, 'kettlebell', (cam, B, H, xa, hand, R = 20) => ({ k: 'ball', c: B, R, what: 'kettlebell' }));
+  wrap(GR, 'ball', (cam, c, r) => ({ k: 'ball', c, R: r, what: 'balón' }));
   wrap(GR, 'sandbag', (cam, c, ax, hl, r) => { const a = norm(ax); return { ...seg(add(c, mul(a, -hl)), add(c, mul(a, hl)), r * .85, 'saco'), hug: true }; });
   wrap(GR, 'smithFrame', (cam, zr, xr = 128, top = 470) => [seg([xr, 6, zr], [xr, top, zr], 2.3, 'guía'), seg([-xr, 6, zr], [-xr, top, zr], 2.3, 'guía'), seg([xr, top + 6, zr], [-xr, top + 6, zr], 3.5, 'guía')]);
   wrap(GR, 'smithHooks', (cam, c, xr = 128) => [-1, 1].map(k => box([k * xr, c[1], c[2]], [X, UP], [8, 15, 8], 'carro')));

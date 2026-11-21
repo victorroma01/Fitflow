@@ -55,6 +55,8 @@
     let svg;
     if (style == 'metal') svg = `<path d="${side}" fill="#7d849e" stroke="#0a0b10" stroke-width="1"/><path d="${face}" fill="#b9bed0" stroke="#0a0b10" stroke-width="1"/>`;
     else if (style == 'head') svg = `<path d="${side}" fill="#161925" stroke="#5d6482" stroke-width="1.1"/><path d="${face}" fill="#232738" stroke="#5d6482" stroke-width="1.1"/><path d="${smoothR(ring(near, R * .42, 12))}" fill="#7d849e" stroke="#0a0b10" stroke-width=".8"/>`;
+    /* (un neumático: la banda de rodadura y la cara de goma, con el hueco de la llanta en medio) */
+    else if (style == 'tire') svg = `<path d="${side}" fill="#14161f" stroke="#4a5068" stroke-width="1.3"/><path d="${face}" fill="#1d2030" stroke="#4a5068" stroke-width="1.3"/><path d="${smoothR(ring(near, R * .5, 20))}" fill="#0a0b10" stroke="#3a3f56" stroke-width="1.2"/><path d="${smoothR(ring(near, R * .82, 24))}" fill="none" stroke="#2a2e40" stroke-width="1"/>`;
     else if (style == 'wheel') svg = `<path d="${side}" fill="#1d2030" stroke="#5d6482" stroke-width="1"/><path d="${face}" fill="#2b2f43" stroke="#5d6482" stroke-width="1"/><path d="${smoothR(ring(near, R * .35, 10))}" fill="#9aa1bb" stroke="#0a0b10" stroke-width=".7"/>`;
     else svg = `<g class="pl"><path d="${side}" fill="#0f1119" stroke="#59607c" stroke-width="1.2"/><path d="${face}" fill="#171a27" stroke="#59607c" stroke-width="1.2"/><path d="${smoothR(ring(near, R * .7, 20))}" fill="none" stroke="#2b2f43" stroke-width="1"/></g>`;
     return { z: cam.P(c)[2], mid: c, svg };
@@ -121,6 +123,12 @@
     if (hand) it.hand = hand;
     out.push(it);
     return out;
+  };
+  /* una bola (balón medicinal, wall ball): un círculo con su brillo y su costura, que se ordena por su centro */
+  const MB = ['#2a2318', '#8a7a58', '#4a3f2a'];
+  const ball = (cam, c, r, col = MB) => {
+    const P = cam.P(c);
+    return [{ z: P[2], svg: `<circle cx="${f1(P[0])}" cy="${f1(P[1])}" r="${f1(r)}" fill="${col[0]}" stroke="${col[1]}" stroke-width="1.3"/><ellipse cx="${f1(P[0] - r * .32)}" cy="${f1(P[1] - r * .36)}" rx="${f1(r * .42)}" ry="${f1(r * .3)}" fill="${col[2]}" opacity=".7"/><path d="M${f1(P[0] - r)} ${f1(P[1])}Q${f1(P[0])} ${f1(P[1] + r * .38)} ${f1(P[0] + r)} ${f1(P[1])}" fill="none" stroke="${col[1]}" stroke-width="1" opacity=".5"/>` }];
   };
   /* un saco (sandbag): un cilindro blando, a lo largo de ax */
   const sandbag = (cam, c, ax, hl, r) => {
@@ -242,5 +250,5 @@
     return out;
   };
 
-  F3.gear = { C, IRON, tone, basis, obox, tube, disc, strap, cableLine, bandLoop, bandPath, sag, dumbbell, kettlebell, sandbag, under, padAB, leg, smithFrame, smithHooks, pulleyTower, stack, station, sideFade, beam, hub, rubber, horn };
+  F3.gear = { C, IRON, tone, basis, obox, tube, disc, strap, cableLine, bandLoop, bandPath, sag, dumbbell, kettlebell, ball, sandbag, under, padAB, leg, smithFrame, smithHooks, pulleyTower, stack, station, sideFade, beam, hub, rubber, horn };
 })(window);

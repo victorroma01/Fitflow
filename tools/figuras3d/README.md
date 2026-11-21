@@ -10,9 +10,9 @@ Está en pruebas y **no está conectada a la app**: se integrará cuando estén 
 - `gear3d.js`: el material (bancos, Smith, máquinas, poleas, mancuernas, kettlebell, bandas, saco…).
 - `sonda.js`: solo para `choques.py`. Envuelve las piezas del material para que cada una apunte su forma en 3D al dibujarse;
   así la prueba de choques mira exactamente lo que se pinta.
-- `mov3d.js`, `tiron3d.js`, `piernas3d.js`, `brazos3d.js`, `hombros3d.js` y `core3d.js`: las familias de movimiento (las del
-  lote 1, las de tirón del lote 2, las de pierna del lote 3, las de brazos del lote 4, las de pecho y hombro del lote 5 y las de
-  core y lo que quedaba de pierna del lote 6). Cada una recibe las variantes de un ejercicio y da su postura en cada momento
+- `mov3d.js`, `tiron3d.js`, `piernas3d.js`, `brazos3d.js`, `hombros3d.js`, `core3d.js` y `funcional3d.js`: las familias de
+  movimiento (las del lote 1, las de tirón del lote 2, las de pierna del lote 3, las de brazos del lote 4, las de pecho y
+  hombro del lote 5, las de core y lo que quedaba de pierna del lote 6 y las de CrossFit, Hyrox y funcional del lote 7). Cada una recibe las variantes de un ejercicio y da su postura en cada momento
   del gesto. Las posturas salen de reglas físicas: los pies no se mueven del suelo, las rodillas van hacia las puntas de
   los pies y el tronco se inclina lo justo para que el peso quede sobre el medio del pie (con barra, la barra; en la
   Smith, para que la barra siga sus guías). En el banco, la barra toca el pecho con los antebrazos casi verticales.
@@ -24,7 +24,7 @@ Está en pruebas y **no está conectada a la app**: se integrará cuando estén 
 Con Node 22 y Python con Playwright (lo mismo que las pruebas), desde esta carpeta:
 
 ```
-node datos.mjs 3                   # los datos de un lote (1: squat,press,overhead; 2: pulldown,row,pullup; 3: las de pierna; 4: las de brazos; 5: pecho y hombro; 6: core y el resto de pierna)
+node datos.mjs 3                   # los datos de un lote (1: squat,press,overhead; 2: pulldown,row,pullup; 3: las de pierna; 4: las de brazos; 5: pecho y hombro; 6: core y el resto de pierna; 7: CrossFit, Hyrox y funcional)
 python3 banco.py                   # el banco de pruebas: salida/banco.html
 python3 verifica.py                # manos que no llegan, pies fuera del suelo, codos o rodillas imposibles, asimetrías
 python3 choques.py [-v]            # el material (todo lo que se dibuja) contra el cuerpo, brazos y piernas que se cruzan o atraviesan el tronco; -v da el punto
@@ -48,3 +48,6 @@ python3 pagina.py                  # la página de revisión del lote (sus texto
 6. Core y lo que quedaba de pierna: crunch y sit-up, elevaciones de piernas, planchas y hollow, dead bug, bird dog, giros,
    rueda, leñador, Pallof, vacío, lumbares (hiperextensiones, GHD, superman y máquina), gemelos, tibial, abductores y
    aductores, patadas de glúteo, step up, sissy, pistol, pasos laterales y zancada lateral: 82 ejercicios. En revisión.
+7. CrossFit, Hyrox y funcional: halterofilia (con barra y con mancuernas), kettlebell, acarreos y saco, trineo, burpees, wall
+   balls, balón medicinal, box jump y saltos laterales, muscle-ups, trepa de cuerda, pino, gateos, inchworm, press Svend,
+   battle ropes y volteo de neumático: 76 ejercicios. En revisión.
