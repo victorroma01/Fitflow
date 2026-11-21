@@ -161,13 +161,33 @@
     const hook = tube(cam, add(p, [0, 4, -8]), add(p, [0, 13, -15]), 2.6, STEEL, 1).map(i => ({ ...i, z: it.z + .1 }));
     return [it, ...hook];
   });
-  /* una torre de polea: el poste, la polea abajo (o a la altura h) y el cable hasta la mano */
+  /* la pila de pesas de una máquina de placas: la base, las dos guías, las placas (de hierro, con su canto) atravesadas por la
+     varilla, el pasador que elige el peso y el travesaño de arriba. c: el centro de la base en el suelo; f: hacia dónde mira su
+     cara ancha; n: cuántas placas; lift: lo que suben las de arriba (las que se levantan) */
+  const IRON = ['#262a3c', '#6a7190'];
+  const stack = (cam, c, f = [0, 0, 1], n = 12, lift = 0) => {
+    const a = norm([f[0], 0, f[2]]), s = [a[2], 0, -a[0]], PH = 6.4, W = 17, D = 8, top = 10 + n * PH, rodTop = top + 64, out = [];
+    out.push(obox(cam, add(c, [0, 5, 0]), [s, UP], [W + 7, 5, D + 7], C.frame));
+    [-1, 1].forEach(k => out.push(...tube(cam, add(c, add(mul(s, k * (W + 3.5)), [0, 10, 0])), add(c, add(mul(s, k * (W + 3.5)), [0, rodTop, 0])), 1.9, STEEL, 3)));
+    for (let i = 0; i < n; i++) { const up = i >= n - 5 ? lift : 0; out.push(obox(cam, add(c, [0, 10 + PH * (i + .5) + up, 0]), [s, UP], [W, PH / 2 - .5, D], IRON)); }
+    /* la varilla que sube de la placa de arriba (donde va el cable), el pasador en la quinta empezando por arriba y el travesaño */
+    out.push(...tube(cam, add(c, [0, top + lift, 0]), add(c, [0, top + 40 + lift, 0]), 1.7, STEEL, 1));
+    const yp = 10 + PH * (n - 5.5) + lift;
+    out.push(...tube(cam, add(add(c, [0, yp, 0]), mul(a, D)), add(add(c, [0, yp, 0]), mul(a, D + 7)), 1.6, ['#d9b44a', '#3a2a00'], 1));
+    out.push(obox(cam, add(c, [0, rodTop + 3, 0]), [s, UP], [W + 7, 3, D + 4], C.frame));
+    return out;
+  };
+  /* una torre de polea: la columna, con su tapa, el carro que lleva la polea a la altura h, la pila de pesas al otro lado de
+     la columna y el cable hasta la mano */
   const pulleyTower = (cam, base, h, to) => {
-    const post = { ...obox(cam, [base[0], 235, base[2]], [[1, 0, 0], UP], [9, 235, 9], C.frame), nf: true };
-    const out = [post, obox(cam, [base[0], 3, base[2]], [[1, 0, 0], UP], [26, 3, 26], C.frame)];
+    const post = { ...obox(cam, [base[0], 236, base[2]], [[1, 0, 0], UP], [9, 236, 9], C.frame), nf: true };
+    const out = [post, obox(cam, [base[0], 3, base[2]], [[1, 0, 0], UP], [26, 3, 26], C.frame), obox(cam, [base[0], 474, base[2]], [[1, 0, 0], UP], [12, 4, 12], C.frame)];
     /* la polea, en el lado del poste que da al cuerpo (siempre el mismo: si dependiera de la mano, saltaría de un lado a otro) */
-    const p = [base[0] + (base[0] < 0 ? 14 : -14), h, base[2]];
-    out.push(disc(cam, p, [0, 0, 1], 7, 4, 'wheel'));
+    const side = base[0] < 0 ? 1 : -1, p = [base[0] + side * 14, h, base[2]];
+    out.push(obox(cam, [base[0], h, base[2]], [[1, 0, 0], UP], [11.5, 9, 11.5], C.iron), ...tube(cam, [base[0] + side * 11, h, base[2]], add(p, [-side * 2, 0, 0]), 2.4, STEEL, 1));
+    out.push(disc(cam, p, [0, 0, 1], 9, 4.5, 'wheel'), disc(cam, p, [0, 0, 1], 3, 5, 'metal'));
+    /* la pila, al otro lado de la columna (no entre la columna y el cuerpo) */
+    out.push(...stack(cam, [base[0] - side * 30, 0, base[2]], [side, 0, 0], 12));
     /* el poste es una sola pieza (con la profundidad de su centro): cada trozo del cable se pinta delante o detrás de él según
        quede delante o detrás del poste a su misma altura, y no según el centro del poste (que hacía aparecer y desaparecer el
        cable al moverse) */
@@ -177,5 +197,17 @@
     return out;
   };
 
-  F3.gear = { C, tone, basis, obox, tube, disc, strap, cableLine, bandLoop, bandPath, sag, dumbbell, kettlebell, sandbag, under, padAB, leg, smithFrame, smithHooks, pulleyTower, sideFade };
+  /* el puesto de una polea que no va en torre (jalón, remo sentado): la columna, a d de la polea alejándose del cuerpo (away),
+     el brazo que la sostiene, la rueda y la pila de pesas al pie de la columna */
+  const station = (cam, pul, away, o = {}) => {
+    const a = norm([away[0], 0, away[2]]), b = add([pul[0], 0, pul[2]], mul(a, o.d || 40)), H = o.h || 470, out = [];
+    out.push({ ...obox(cam, [b[0], H / 2, b[2]], [[1, 0, 0], UP], [10, H / 2, 10], C.frame), nf: true }, obox(cam, [b[0], 3, b[2]], [[1, 0, 0], UP], [30, 3, 30], C.frame));
+    const arm = [b[0], pul[1] + (pul[1] > 60 ? 12 : 0), b[2]];
+    out.push(...tube(cam, arm, add(pul, [0, pul[1] > 60 ? 12 : 0, 0]), 6, C.frame, 2), disc(cam, pul, [1, 0, 0], 9, 4.5, 'wheel'), disc(cam, pul, [1, 0, 0], 3, 5, 'metal'));
+    if (pul[1] > 60) out.push(obox(cam, [b[0], H + 4, b[2]], [[1, 0, 0], UP], [13, 4, 13], C.frame));
+    out.push(...stack(cam, add(b, mul(a, 32)), mul(a, -1), 12));
+    return out;
+  };
+
+  F3.gear = { C, IRON, tone, basis, obox, tube, disc, strap, cableLine, bandLoop, bandPath, sag, dumbbell, kettlebell, sandbag, under, padAB, leg, smithFrame, smithHooks, pulleyTower, stack, station, sideFade };
 })(window);

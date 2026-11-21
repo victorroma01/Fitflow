@@ -77,6 +77,10 @@
           return out;
         }
         out.push(...visLine(GR.cableLine(cam, att, pulley), att, pulley, cam, F, q).map(i => ({ ...i, nf: true })));
+        /* el puesto: la columna por delante, con el brazo que lleva la polea por encima de la barra, y la pila de pesas */
+        /* (siempre detrás del cuerpo: queda por delante de él, al otro lado de la cámara; una columna tan alta, ordenada por su
+           centro, se pintaba encima del tronco) */
+        out.push(...GR.under(GR.station(cam, pulley, [0, 0, 1], { d: 78, h: 574 })).map(i => ({ ...i, nf: true })));
         if (one || kneel) { out.push(...grip(cam, q.hands.R, [0, 0, 1], 'R', 8)); return out; }
         if (kind == 'rope') { out.push(...rope(cam, add(att, [0, 14, 0]), q.hands)); return out; }
         if (kind == 'close') {
@@ -316,7 +320,9 @@
           out.push(...GR.under([GR.obox(cam, [0, 52, 182], [[1, 0, 0], norm([0, .5, -1])], [36, 30, 4], GR.C.frame)], 2));
         }
         const hc = one ? q.hands.R : mix(q.hands.L, q.hands.R, .5);
-        out.push(...visLine(GR.cableLine(cam, add(hc, [0, 0, 8]), pul), add(hc, [0, 0, 8]), pul, cam, F, q).map(i => high ? { ...i, nf: true } : i), GR.disc(cam, pul, [1, 0, 0], 8, 4, 'wheel'));
+        out.push(...visLine(GR.cableLine(cam, add(hc, [0, 0, 8]), pul), add(hc, [0, 0, 8]), pul, cam, F, q).map(i => high ? { ...i, nf: true } : i));
+        /* el puesto: la columna detrás de la polea (y de la plataforma), con la pila de pesas */
+        out.push(...GR.under(GR.station(cam, pul, [0, 0, 1], { d: high ? 40 : 44, h: high ? 470 : 280 })));
         if (one) out.push(...grip(cam, q.hands.R, [0, 1, 0], 'R', 8));
         else ['L', 'R'].forEach(k => { const h = q.hands[k]; out.push(...grip(cam, h, [0, 1, 0], k, 8), ...GR.tube(cam, add(h, [0, 8, 0]), add(hc, [0, 2, 8]), 3, STEEL, 1), ...GR.tube(cam, add(h, [0, -8, 0]), add(hc, [0, 2, 8]), 3, STEEL, 1)); });
         return out;
@@ -503,6 +509,8 @@
           const { J } = pose(q), kn = mix(J.L.knee, J.R.knee, .5), an = mix(J.L.ankle, J.R.ankle, .5), d = norm(sub(an, kn)), n = norm(sub(UP, mul(d, dot(UP, d))));
           const c = add(add(kn, mul(d, 30)), mul(n, -14));
           out.push(...GR.under([GR.obox(cam, c, [[1, 0, 0], n], [34, 5, 36], GR.C.pad), ...GR.tube(cam, add(c, [0, -6, 0]), [0, 0, c[2]], 6, GR.C.frame)]));
+          /* la pila de pesas que hace de contrapeso, detrás */
+          out.push(...GR.under(GR.stack(cam, [0, 0, -150], [0, 0, 1], 12), 3));
         }
         return out;
       },

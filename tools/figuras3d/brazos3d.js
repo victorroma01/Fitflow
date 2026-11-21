@@ -8,7 +8,7 @@
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib;
   const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, cross } = L;
-  const { has, pose, ZERO, UP, sd, both, shoulder, span, comOf, solve, legFront, onThigh, ezBar, dbAxis } = M;
+  const { has, pose, ZERO, UP, sd, both, shoulder, span, comOf, solve, legFront, onThigh, ezBar, ezCd, dbAxis } = M;
   const { cos, sin, PI, abs, max, min, sqrt, round } = Math;
   const LU = LEN.upper, LF = LEN.fore + LEN.grip;
   const ROOT_Y = LEN.ankle + LEN.shin + LEN.thigh - 4;
@@ -123,9 +123,12 @@
         return { L: up, R: up, down: both(() => r) };
       }
       if (x21) {
-        /* una de la mitad de abajo (hasta el antebrazo horizontal), una de la de arriba (se sube a la mitad, de ahí arriba y vuelta
-           a la mitad, y se baja) y una entera; sin saltos de una a otra */
-        const p = keys(t, [[0, 0], [.12, .5], [.15, .5], [.28, 0], [.33, 0], [.4, .5], [.5, 1], [.53, 1], [.63, .5], [.7, 0], [.75, 0], [.87, 1], [.9, 1], [1, 0]]);
+        /* dos de la mitad de abajo (hasta el antebrazo horizontal); sube a la mitad y se para; dos de la mitad de arriba, sin bajar
+           de ahí (con una pausa en la mitad, para que se vea que el tramo empieza ahí); baja, y una entera. Antes la de arriba
+           salía del suelo y volvía a él sin pararse en la mitad: parecía una entera */
+        const p = keys(t, [[0, 0], [.06, .5], [.075, .5], [.14, 0], [.155, 0], [.215, .5], [.23, .5], [.295, 0], [.32, 0],
+          [.37, .5], [.4, .5], [.455, 1], [.47, 1], [.525, .5], [.545, .5], [.6, 1], [.615, 1], [.67, .5], [.7, .5],
+          [.76, 0], [.78, 0], [.855, 1], [.87, 1], [1, 0]]);
         return { L: p, R: p, down: { L: false, R: false } };
       }
       return { L: t, R: t, down: { L: false, R: false } };
@@ -257,7 +260,7 @@
     const towerZ = 92;
     const gear = (q, F, cam) => {
       const out = [];
-      if (kind == 'bar') out.push(...(ez ? ezBar(cam, q.barC, gx) : curlBar(cam, q.barC, gx)));
+      if (kind == 'bar') out.push(...(ez ? ezBar(cam, q.barC, gx, ezCd(F)) : curlBar(cam, q.barC, gx)));
       if (kind == 'db') out.push(...(solo ? GR.dumbbell(cam, q.hands.R, dbAxis(F, q, 'R'), 'R') : ['L', 'R'].flatMap(s => GR.dumbbell(cam, q.hands[s], dbAxis(F, q, s), s))));
       if (smith) out.push(...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC));
       /* las poleas: baja delante (barra, cuerda o asa), detrás (Bayesian), altas a los lados o a los pies (tumbado) */
@@ -314,6 +317,8 @@
             out.push(GR.disc(cam, [sd(s, [82, 0, 0])[0], ax[1], ax[2]], [1, 0, 0], 16, 8, 'wheel'));
           });
         }
+        /* la pila de pesas de la máquina, a la derecha, detrás del cuerpo para la cámara */
+        if (machine) out.push(...GR.under(GR.stack(cam, [-114, 0, kneeZ + 20], [1, 0, 0], 12), 3));
         if (cable) {
           /* la polea, en el suelo por delante del atril, y el cable hasta el centro de la barra */
           out.push(...GR.pulleyTower(cam, [14, 0, bot[2] + 70], 12, q.barC));
@@ -336,7 +341,7 @@
     const ex = { view: 'stand', up: 'b', rest: 'a', cam, one: solo || alt || zott, feetOff, at: at_, gear };
     if (alt) ex.beat = cycle(5200);
     if (zott) ex.beat = cycle(4800);
-    if (x21) ex.beat = cycle(7200);
+    if (x21) ex.beat = cycle(13000);
     return ex;
   };
 
@@ -447,7 +452,7 @@
         out.push(...GR.pulleyTower(cam, [14, 0, hd[2] - 40], 30, c));
         [[-34, -gx - 8], [-gx + 8, gx - 8], [gx + 8, 34]].forEach(([a, b]) => out.push(...bar(cam, X(a), X(b), 1, 5)));
       }
-      else out.push(...ezBar(cam, q.barC, gx));
+      else out.push(...ezBar(cam, q.barC, gx, ezCd(F)));
       return out;
     };
     return { view: 'bench', up: 'a', rest: 'a', cam: incline ? [-46, 24] : [-40, 30], at: at_, gear };
@@ -480,7 +485,7 @@
     const gear = (q, F, cam) => {
       const out = [];
       if (body === SEAT) { const p0 = at(F.pelvis, [0, -22, 0]); out.push(...GR.under(flatBench(cam, [0, p0[1] - 7, p0[2] + 26], [0, p0[1] - 7, p0[2] - 110]))); }
-      if (ez) out.push(...ezBar(cam, q.barC, gx));
+      if (ez) out.push(...ezBar(cam, q.barC, gx, ezCd(F)));
       else if (cable) {
         /* (la polea, por encima de la cabeza: el cable pasa por encima de ella hasta la cuerda) */
         const m = mix(q.hands.L, q.hands.R, .5), pz = -130, top = add(m, mul(norm(sub([0, 350, pz], m)), 16));
@@ -571,6 +576,8 @@
         out.push(...GR.tube(cam, [xo, p[1], p[2]], [xo, H[1], H[2]], 8, GR.C.frame, 3), GR.disc(cam, [xo, p[1], p[2]], [1, 0, 0], 12, 7, 'wheel'), ...GR.under(GR.tube(cam, [xo, p[1], p[2]], [xo, 0, p[2]], 9, GR.C.frame, 2)));
         out.push(...GR.tube(cam, [xo, H[1], H[2]], add(H, [0, 0, -6]), 5, STEEL, 1), ...GR.tube(cam, add(H, [0, 0, -9]), add(H, [0, 0, 9]), 5, STEEL, 1).map(i => ({ ...i, hand: s })));
       });
+      /* la pila de pesas, detrás del respaldo, entre los ejes de las palancas */
+      out.push(...GR.under(GR.stack(cam, [0, 0, piv('L')[2] - 30], [0, 0, 1], 12), 3));
       return out;
     };
     return { view: 'seat', up: 'a', rest: 'a', cam: [-50, 8], at: at_, gear };
@@ -630,6 +637,7 @@
         /* el apoyo de las rodillas: sube y baja con ellas (es lo que ayuda) */
         const { J } = pose(q), k = mix(J.L.knee, J.R.knee, .5), a = mix(J.L.ankle, J.R.ankle, .5);
         out.push(GR.padAB(cam, [0, k[1] - 14, k[2] + 6], [0, a[1] - 12, a[2] - 4], UP, 30, 6), ...GR.tube(cam, [0, k[1] - 26, mix(k[2], a[2], .5)], [0, 0, mix(k[2], a[2], .5)], 9, GR.C.frame, 2));
+        out.push(...GR.under(GR.stack(cam, [0, 0, -168], [0, 0, 1], 12), 3));
       }
       return out;
     };

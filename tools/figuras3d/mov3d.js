@@ -444,6 +444,24 @@
       }
       return GR.under([...legs, ...extra, GR.padAB(cam, s0, s1, UP, 30, 7), ...items]);
     };
+    /* el soporte de la barra: dos postes en la cabecera del banco, por dentro de los discos y por fuera de las manos, con sus
+       ganchos (en J) mirando a los pies; quedan detrás de por donde pasa la barra (hacia la cabeza) y algo por debajo de donde
+       acaba arriba: ahí se deja al terminar. Fijos, aunque la barra suba y baje */
+    const rack = cam => {
+      const zp = top[2] - 31, yh = top[1] - 7, H = yh + 30, out = [];
+      [-1, 1].forEach(k => {
+        const x = k * 121;
+        out.push({ ...GR.obox(cam, [x, H / 2, zp], [[1, 0, 0], UP], [6, H / 2, 6], GR.C.frame), name: 'poste' });
+        out.push(GR.obox(cam, [x, 3, zp + 4], [[1, 0, 0], UP], [10, 3, 34], GR.C.frame));
+        /* el gancho: la cuna (con su forro de goma) y el labio del borde */
+        out.push(GR.obox(cam, [x, yh - 3, zp + 13], [[1, 0, 0], UP], [6.5, 2.5, 8], GR.C.iron), GR.obox(cam, [x, yh, zp + 13], [[1, 0, 0], UP], [6, .8, 6], GR.C.rubber));
+        out.push(GR.obox(cam, [x, yh + 2.5, zp + 20], [[1, 0, 0], UP], [6.5, 5, 1.6], GR.C.iron));
+        /* el tope de seguridad, abajo (donde caería la barra si fallase), también hacia los pies */
+        out.push(GR.obox(cam, [x, yh - 70, zp + 16], [[1, 0, 0], UP], [5, 3, 11], GR.C.iron));
+      });
+      return out;
+    };
+    const withRack = !db && !smith && !floor;
     /* las bandas del banco: cada una, en lazo alrededor del extremo de la barra (por fuera de los discos) y de un anclaje en el
        suelo justo debajo; con la barra en el pecho ya están algo tensas y al subir se estiran más */
     const bandGear = (q, cam) => [-1, 1].flatMap(k => { const a = [k * 196, 6, bottom[2]], b = add(q.barC, [k * 196, 0, 0]); return [GR.obox(cam, [a[0], 4, a[2]], [[1, 0, 0], UP], [9, 4, 9], GR.C.frame), ...GR.bandLoop(cam, a, b, (bottom[1] - 6) * .8, [0, 0, 1], 3.5)]; });
@@ -453,25 +471,37 @@
       gear(q, F, cam) {
         const out = [...benchGear(cam)];
         if (db) out.push(...(one ? GR.dumbbell(cam, q.hands.R, dbAxis(F, q, 'R'), 'R') : pair(q, cam, null, F)));
-        else if (ez) out.push(...ezBar(cam, q.barC, grip));
+        else if (ez) out.push(...ezBar(cam, q.barC, grip, ezCd(F)));
         else out.push(...bb(q, cam));
         if (smith) out.push(...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC));
         if (band) out.push(...bandGear(q, cam));
+        if (withRack) out.push(...rack(cam));
         return out;
       },
     };
   };
-  /* la barra Z: más corta, con las curvas del centro donde van las manos, y discos medianos */
-  const ezBar = (cam, c, grip) => {
-    const X = (x, d = 0) => add(c, [x, 0, d]), out = [];
-    const pts = [-118, -60, -50, -36, -24, 24, 36, 50, 60, 118].map(x => X(x, abs(x) == 50 || abs(x) == 24 ? 3.5 : 0));
-    for (let i = 0; i + 1 < pts.length; i++) {
-      const it = bar(cam, pts[i], pts[i + 1], 1, 5);
-      const xm = (pts[i][0] + pts[i + 1][0]) / 2 - c[0];
-      if (abs(abs(xm) - grip) < 10) it.forEach(j => { j.hand = xm > 0 ? 'L' : 'R'; });
+  /* la barra Z (unos 120 cm): el centro recto y, a cada lado, una W: un tramo inclinado (el agarre cerrado, hacia x = 24), un
+     valle plano y otro tramo inclinado al revés (el agarre abierto, hacia x = 50), que vuelve a la línea del centro antes del
+     collarín. Las curvas van en el plano de las palmas (cd: perpendicular a la barra y a los antebrazos), así que giran con la
+     barra en las manos. Las manos van sobre los tramos inclinados: la barra se desplaza lo que haga falta para que pase por
+     ellas. Antes, las curvas eran apenas un pellizco fijo hacia delante, con las manos en los vértices */
+  const EZ_D = 10, EZ_P = [[0, 0], [14, 0], [32, -1], [42, -1], [60, 0], [80, 0]];
+  const ezOff = x => { x = abs(x); for (let i = 1; i < EZ_P.length; i++) if (x <= EZ_P[i][0]) { const [a, u] = EZ_P[i - 1], [b, v] = EZ_P[i]; return EZ_D * (u + (v - u) * (x - a) / (b - a)); } return 0; };
+  /* el plano de las curvas, desde los puños: la media de hacia dónde miran los nudillos, sin su parte a lo largo de la barra */
+  const ezCd = F => { const v = add(F.gripL.z, F.gripR.z); return len([0, v[1], v[2]]) > 1e-6 ? norm([0, v[1], v[2]]) : [0, 0, 1]; };
+  const ezBar = (cam, c, grip, cd = [0, 0, 1]) => {
+    const o = add(c, mul(cd, -ezOff(grip))), X = x => add(o, add([x, 0, 0], mul(cd, ezOff(x)))), out = [];
+    const xs = [-80, -60, -51, -42, -32, -23, -14, 0, 14, 23, 32, 42, 51, 60, 80];
+    for (let i = 0; i + 1 < xs.length; i++) {
+      const it = bar(cam, X(xs[i]), X(xs[i + 1]), 1, 4.6), xm = (xs[i] + xs[i + 1]) / 2;
+      if (abs(abs(xm) - grip) < 9) it.forEach(j => { j.hand = xm > 0 ? 'L' : 'R'; });
       out.push(...it);
     }
-    [-1, 1].forEach(k => { out.push(...bar(cam, X(k * 118), X(k * 160), 2, 7)); out.push(GR.disc(cam, X(k * 128), [1, 0, 0], 34, 8), GR.disc(cam, X(k * 120), [1, 0, 0], 6, 4, 'metal')); });
+    /* los collarines, las mangas y los discos (uno mediano y uno pequeño por lado) */
+    [-1, 1].forEach(k => {
+      out.push(GR.disc(cam, X(k * 81), [1, 0, 0], 7, 3, 'metal'), ...bar(cam, X(k * 82), X(k * 122), 2, 7));
+      out.push(GR.disc(cam, X(k * 90), [1, 0, 0], 34, 7), GR.disc(cam, X(k * 98), [1, 0, 0], 23, 5), GR.disc(cam, X(k * 104), [1, 0, 0], 6, 4, 'metal'));
+    });
     return out;
   };
 
@@ -604,6 +634,8 @@
       out.push(...GR.tube(cam, pv, add(h, [k * 12, 0, 0]), 6, GR.C.frame, 3));
       out.push(...GR.tube(cam, add(h, [k * 12, 0, 0]), add(h, [-k * 8, 0, 0]), 4, ['#b9bed0', '#0a0b10'], 1).map(i => ({ ...i, hand: s })));
     });
+    /* la pila de pesas, detrás del eje de las palancas */
+    out.push(...GR.under(GR.stack(cam, [0, 0, p[2] - 48], [0, 0, 1], 12), 3));
     return out;
   };
   /* el landmine: la base en el suelo, la barra hasta la mano y el disco en la parte de dentro del manguito (lejos de la mano
@@ -682,7 +714,7 @@
     return { hand: add(add(J[s].hip, mul(norm(sub(J[s].knee, J[s].hip)), d)), mul(th.z, prof1(THIGH_F, d) + lift)), palm: mul(th.z, -1) };
   };
 
-  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar };
+  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];

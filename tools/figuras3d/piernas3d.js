@@ -692,6 +692,9 @@
   };
 
   /* ════ extensión de cuádriceps ════ */
+  /* la pila de pesas de las máquinas de pierna: a la derecha, junto al eje de la palanca (P) y algo hacia atrás, detrás del
+     cuerpo para la cámara */
+  const sideStack = (cam, P) => GR.under(GR.stack(cam, [P[0] - 44, 0, P[2] - 26], [1, 0, 0], 12), 3);
   const legExt = f => {
     const w = x => has(f, x);
     const band = w('band'), cable = w('cable'), machine = !band && !cable, single = w('one') || band || cable;
@@ -724,7 +727,7 @@
         const P = add(K, [-38, 0, 0]), roll = add(add(K, mul(sh, 68)), mul(fr, 17)), end = add(roll, [-38 - xk + xk, 0, 0]);
         out.push(...GR.tube(cam, add(roll, [-34, 0, 0]), add(roll, [34, 0, 0]), 18, GR.C.pad, 3), ...GR.tube(cam, P, [P[0], end[1], end[2]], 6), ...GR.tube(cam, [P[0], end[1], end[2]], add(roll, [-34, 0, 0]), 5));
         out.push(GR.disc(cam, add(P, [-6, 0, 0]), [1, 0, 0], 16, 6, 'wheel'));
-        out.push(...GR.under([GR.obox(cam, [P[0] - 8, (P[1] - 10) / 2, P[2]], [[1, 0, 0], UP], [6, (P[1] - 10) / 2, 10], GR.C.frame)], 2));
+        out.push(...GR.under([GR.obox(cam, [P[0] - 8, (P[1] - 10) / 2, P[2]], [[1, 0, 0], UP], [6, (P[1] - 10) / 2, 10], GR.C.frame)], 2), ...sideStack(cam, P));
         return out;
       }
       const A = add(K, mul(sh, LEN.shin));
@@ -789,7 +792,7 @@
            los talones */
         const P = add(K, [-38, 0, 0]), roll = add(add(K, mul(sh, 68)), mul(bk, 17)), elb = [P[0], roll[1], roll[2]];
         out.push(...GR.tube(cam, add(roll, [-34, 0, 0]), add(roll, [34, 0, 0]), 18, GR.C.pad, 3), ...GR.tube(cam, P, elb, 6), ...GR.tube(cam, elb, add(roll, [-34, 0, 0]), 5), GR.disc(cam, add(P, [-6, 0, 0]), [1, 0, 0], 16, 6, 'wheel'));
-        out.push(...GR.under([GR.obox(cam, [P[0] - 8, (P[1] - 10) / 2, P[2]], [[1, 0, 0], UP], [6, (P[1] - 10) / 2, 10], GR.C.frame)], 2));
+        out.push(...GR.under([GR.obox(cam, [P[0] - 8, (P[1] - 10) / 2, P[2]], [[1, 0, 0], UP], [6, (P[1] - 10) / 2, 10], GR.C.frame)], 2), ...sideStack(cam, P));
         return out;
       };
       return { view: 'bench', up: 'b', rest: 'a', cam: [-58, 18], one, feetOff: true, at: at_, gear };
@@ -816,6 +819,7 @@
         ['L', 'R'].forEach(s => out.push(...handle(cam, q.hands[s], [0, 0, 1], s)));
         const P = add(K, [-38, 0, 0]), roll = add(add(K, mul(sh, 68)), mul(bk, 17)), elb = [P[0], roll[1], roll[2]];
         out.push(...GR.tube(cam, add(roll, [-34, 0, 0]), add(roll, [34, 0, 0]), 18, GR.C.pad, 3), ...GR.tube(cam, P, elb, 6), ...GR.tube(cam, elb, add(roll, [-34, 0, 0]), 5), GR.disc(cam, add(P, [-6, 0, 0]), [1, 0, 0], 16, 6, 'wheel'));
+        out.push(...sideStack(cam, P));
         return out;
       };
       return { view: 'seat', up: 'b', rest: 'a', cam: [-62, 12], feetOff: true, at: at_, gear };
@@ -872,7 +876,7 @@
         out.push(...GR.tube(cam, add(kp, [-16, 0, 0]), add(kp, [14, 0, 0]), 16, GR.C.pad, 3));
         const P = add(K, [-34, 0, 0]), roll = add(add(K, mul(sh, 68)), mul(bk, 17)), elb = [P[0], roll[1], roll[2]];
         out.push(...GR.tube(cam, add(roll, [-14, 0, 0]), add(roll, [14, 0, 0]), 18, GR.C.pad, 3), ...GR.tube(cam, P, elb, 6), ...GR.tube(cam, elb, add(roll, [-14, 0, 0]), 5), GR.disc(cam, add(P, [-6, 0, 0]), [1, 0, 0], 16, 6, 'wheel'));
-        out.push(...GR.under([GR.obox(cam, [P[0] - 8, (P[1] - 10) / 2, P[2]], [[1, 0, 0], UP], [6, (P[1] - 10) / 2, 10], GR.C.frame)], 2));
+        out.push(...GR.under([GR.obox(cam, [P[0] - 8, (P[1] - 10) / 2, P[2]], [[1, 0, 0], UP], [6, (P[1] - 10) / 2, 10], GR.C.frame)], 2), ...sideStack(cam, P));
         return out;
       };
       return { view: 'front', up: 'b', rest: 'a', cam: [-60, 10], one: true, feetOff: true, at: at_, gear };
