@@ -167,6 +167,7 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
 <p class="pr">StrataFit · figuras de ejercicio · lote 1 de la revisión</p>
 <h1>Sentadillas y presses, en 3D</h1>
 <p class="lede">Los <b>57 ejercicios</b> de las familias de sentadilla, press de banca y press de hombro, con la figura nueva moviéndose. Toca una figura para verla en grande con lo que hace; <b>Lado</b> la gira de perfil para comprobar la postura (los discos se aclaran para que se vea el cuerpo). Todavía no está en la app: se integrará cuando estén todos los lotes.</p>
+<p class="lede"><b>Novedades:</b> los gestos arrancan y frenan como los de una persona, sin tirones; solo descansan en la posición de reposo y abajo dan la vuelta sin pararse (salvo los de pausa). El salto tiene sus tiempos de verdad: impulso, vuelo y caída amortiguada. Las figuras se mueven con más fotogramas por segundo, y las bandas son cian.</p>
 <p class="key"><span><i style="background:#e0263a"></i>Músculos principales</span><span><i style="background:#f59a2c"></i>Secundarios</span><span>los de la librería de la app</span></p>
 </header>
 <div class="bar"><div class="in"><span class="lbl">Todas:</span><div class="seg" role="group" aria-label="Vista de todas las figuras"><button type="button" data-m="cam" aria-pressed="true">3/4</button><button type="button" data-m="side" aria-pressed="false">Lado</button></div></div></div>
@@ -193,7 +194,8 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
   const cards = [...document.querySelectorAll('.card')];
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const seg = [...document.querySelectorAll('.seg button')];
-  const paint = (c, t) => { c.last = t; c.g.innerHTML = Fig3D.draw(c.ex, t, c.cam, c.id); };
+  /* en pequeño, sin el rayado de los músculos (no se distingue y es casi un tercio del dibujo); en grande, con todo */
+  const paint = (c, t) => { c.last = t; c.g.innerHTML = Fig3D.draw(c.ex, t, c.cam, c.id, !c.classList.contains('big')); };
   const setView = (c, v) => {
     c.view = v;
     c.cam = v == 'side' ? Fig3D.camera(SIDE[0], SIDE[1]) : Fig3D.camera(c.ex.yaw, c.ex.pitch);
@@ -206,35 +208,34 @@ footer{color:var(--soft);font-size:14px;max-width:1240px;margin:0 auto;padding:2
     c.ex = EXS[c.dataset.ex]; c.svg = c.querySelector('svg.stage'); c.g = c.svg.querySelector('g'); c.last = -1;
     for (const b of c.querySelectorAll('.mini button')) b.addEventListener('click', () => setView(c, b.dataset.v));
     const media = c.querySelector('.media');
-    const big = () => { c.classList.toggle('big'); media.setAttribute('aria-label', c.dataset.ex + (c.classList.contains('big') ? ': ver en pequeño' : ': ver en grande')); };
+    const big = () => { c.classList.toggle('big'); if (c.last >= 0) paint(c, c.last); media.setAttribute('aria-label', c.dataset.ex + (c.classList.contains('big') ? ': ver en pequeño' : ': ver en grande')); };
     media.addEventListener('click', big);
     media.addEventListener('keydown', e => { if (e.key == 'Enter' || e.key == ' ') { e.preventDefault(); big(); } });
   }
   for (const b of seg) b.addEventListener('click', () => { for (const x of seg) x.setAttribute('aria-pressed', String(x == b)); for (const c of cards) setView(c, b.dataset.m); });
   /* cada figura empieza en un momento distinto del gesto: así no se mueven todas a la vez */
   const lag = new Map(cards.map((c, i) => [c, (i * 977) % 5200]));
-  /* la figura en grande, a 30 fotogramas por segundo; las pequeñas, por turnos (dos por fotograma, como mucho 15 por segundo
-     cada una): cada fotograma de una figura es mucho dibujo, y con muchas a la vista el móvil se atascaría */
-  let t0 = 0, turn = 0;
-  const step = (c, now) => { const t = Fig3D.beat(now - t0 + lag.get(c), c.ex.up, false, c.ex.pause); if (t !== c.last) paint(c, t); c.at = now; };
+  /* cuánto se puede dibujar en cada fotograma sin que la pantalla se atasque: algo menos de la mitad de lo que dura un
+     fotograma (en una pantalla de 120 Hz, menos que en una de 60), y lo demás, para que el navegador lo pinte. En ese tiempo
+     se dibujan primero la figura en grande (hasta 60 veces por segundo) y luego las pequeñas, la que lleva más rato sin
+     moverse antes (hasta 30 veces por segundo cada una): un móvil rápido las mueve todas con fluidez y uno lento, por turnos */
+  let t0 = 0, last = 0, frame = 16.7;
+  const clock = (c, ms) => c.ex.beat ? c.ex.beat(ms) : Fig3D.beat(ms, c.ex.up, false, c.ex.pause);
+  const step = (c, now) => { const t = clock(c, now - t0 + lag.get(c)); if (t !== c.last) paint(c, t); c.at = now; };
   const tick = now => {
     t0 = t0 || now;
+    if (last) frame = frame * .9 + Math.min(50, now - last) * .1;
+    last = now;
     const vis = cards.filter(c => c.inView);
     for (const c of vis) if (!c.view) setView(c, 'cam');
     if (!still && vis.length) {
-      const small = [];
-      for (const c of vis) { if (c.classList.contains('big')) { if (now - (c.at || 0) >= 30) step(c, now); } else small.push(c); }
-      let done = 0;
-      for (let k = 0; k < small.length && done < 2; k++) {
-        const c = small[(turn + k) % small.length];
-        if (now - (c.at || 0) < 64) continue;
-        step(c, now); done++;
-      }
-      turn = small.length ? (turn + max1(done)) % small.length : 0;
+      const budget = Math.max(4, Math.min(9, frame * .45)), start = performance.now();
+      const due = vis.filter(c => now - (c.at || 0) >= (c.classList.contains('big') ? 15 : 31))
+        .sort((a, b) => (b.classList.contains('big') - a.classList.contains('big')) || (a.at || 0) - (b.at || 0));
+      for (const c of due) { step(c, now); if (performance.now() - start > budget) break; }
     }
     requestAnimationFrame(tick);
   };
-  const max1 = n => Math.max(1, n);
   const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => { for (const e of es) e.target.inView = e.isIntersecting; }, { rootMargin: '40px 0px' }) : null;
   for (const c of cards) { if (io) io.observe(c); else c.inView = true; }
   requestAnimationFrame(tick);

@@ -8,7 +8,8 @@
   const { add, sub, mul, dot, cross, len, norm, mix, bar, plate, kept, hull, smoothR, f1, pathOf } = L;
   const { cos, sin, PI, abs, max, min, round, sqrt } = Math;
   /* los colores: el armazón, oscuro y con el canto algo más claro; los acolchados, un poco más claros; el acero, como la barra */
-  const C = { frame: ['#1b1e2d', '#4d5370'], pad: ['#343950', '#7078a0'], rubber: ['#0f1119', '#59607c'], iron: ['#1d2030', '#5d6482'], band: ['#454d6c', '#0a0b10'], strap: ['#2a2e40', '#0a0b10'], cable: '#9aa1bb' };
+  /* las bandas elásticas, siempre en cian: así se distinguen de un vistazo de cables, cintas y barras */
+  const C = { frame: ['#1b1e2d', '#4d5370'], pad: ['#343950', '#7078a0'], rubber: ['#0f1119', '#59607c'], iron: ['#1d2030', '#5d6482'], band: ['#22d3ee', '#063845'], strap: ['#2a2e40', '#0a0b10'], cable: '#9aa1bb' };
   /* un color algo más claro (k > 0) o más oscuro (k < 0) */
   const tone = (hex, k) => {
     const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => round(k > 0 ? v + (255 - v) * k : v * (1 + k)));

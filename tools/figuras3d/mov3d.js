@@ -45,6 +45,8 @@
   const midFoot = (F, k = 14) => mul(add(at(F.footL, [0, 0, k]), at(F.footR, [0, 0, k])), .5);
   /* de pie y sin barra, el centro de masas cae algo más cerca del tobillo (unos 5 cm por delante) */
   const COP = 9;
+  /* mínimo y máximo suaves (k: lo ancha que es la curva): con ellos, lo que llega a un tope no frena de golpe */
+  const smax = (a, b, k) => (a + b + sqrt((a - b) ** 2 + k * k)) / 2, smin = (a, b, k) => (a + b - sqrt((a - b) ** 2 + k * k)) / 2;
   /* bisección: el valor de x entre lo y hi con f(x) = 0 */
   const solve = (f, lo, hi, n = 18) => {
     let flo = f(lo);
@@ -207,9 +209,9 @@
         const off = (q, F, J) => track ? -track(q, F, J) : midFoot(F, COP)[2] - comOf(F, J, typeof q.load == 'function' ? q.load(F, J) : q.load)[2];
         const bal = (l, r) => { const q = build(l, r), { F, J } = pose(q); return off(q, F, J); };
         const lo = mix(V.lean[0], V.lean[0] + 6, t), hi = mix(V.top != null ? V.top : min(V.lean[1], 30), V.lean[1], t * (2 - t));
-        let lean = solveNear(l => bal(l, lr), -20, 80, mix(V.lean[0] + 2, (V.lean[0] + V.lean[1]) / 2, t));
-        if (lean < lo || lean > hi) {
-          lean = clamp(lean, lo, hi);
+        const free = solveNear(l => bal(l, lr), -20, 80, mix(V.lean[0] + 2, (V.lean[0] + V.lean[1]) / 2, t));
+        const lean = smin(smax(free, lo, 6), hi, 6);
+        if (abs(lean - free) > .05) {
           /* la cadera, movida adelante o atrás (y bajada lo justo para que las piernas lleguen al suelo) */
           const moved = d => { const r = add(lr.root, [0, 0, -d]), dx = 20 - V.w, dzA = r[2] - V.za, reach = sqrt(max(0, (LEN.thigh + LEN.shin - .6) ** 2 - dx * dx - dzA * dzA)); return { ...lr, root: [r[0], min(r[1], LEN.ankle + reach), r[2]] }; };
           const dz = solve(d => bal(lean, moved(d)), -25, 25);
@@ -259,8 +261,19 @@
   const jumpSquat = () => {
     const V = { w: 34, za: 0, toe: 14 };
     const STAND = LEN.ankle + sqrt((LEN.thigh + LEN.shin) ** 2 - (V.w - 20) ** 2) - .5, AIR = 34;
+    /* el reloj del salto: abajo un momento, el impulso (cada vez más deprisa), el vuelo (sube frenando y cae acelerando, como
+       cae cualquier cosa) y la caída, que se amortigua hasta abajo */
+    const UPT = .72, PH = [140, 430, 290, 290, 680], TOT = PH.reduce((a, b) => a + b);
+    const clock = ms => {
+      let x = ms % TOT;
+      if (x < PH[0]) return 0;
+      if ((x -= PH[0]) < PH[1]) return UPT * (x / PH[1]) ** 1.6;
+      if ((x -= PH[1]) < PH[2]) { const s = x / PH[2]; return UPT + (1 - UPT) * (1 - (1 - s) ** 2); }
+      if ((x -= PH[2]) < PH[3]) { const s = x / PH[3]; return 1 - (1 - UPT) * s * s; }
+      x -= PH[3]; const s = x / PH[4]; return UPT * (1 - s) ** 2;
+    };
     return {
-      view: 'front', up: 'b', merge: false, cam: [-40, 10],
+      view: 'front', up: 'b', merge: false, cam: [-40, 10], beat: clock,
       at(t) {
         /* t: 0, abajo; ~0,7, de pie con las piernas estiradas; 1, en el aire */
         const k = span(t, 0, .72), air = span(t, .62, 1);
@@ -325,7 +338,7 @@
         return add(E, [0, LEN.fore + LEN.grip, 0]);
       };
       /* t: 0, arriba; 1, abajo */
-      const dbH = (s, t) => close ? path(hi(s), low(s), t) : mix(arcH(s, min(1, (1 - t) / .8)), hi(s), span(1 - t, .7, 1));
+      const dbH = (s, t) => close ? path(hi(s), low(s), t) : mix(arcH(s, 1 - t), hi(s), span(1 - t, .7, 1));
       if (one) {
         /* con una mano: la derecha; la izquierda, abierta sobre el vientre */
         arms = t => ({ hands: { R: dbH('R', t), L: at(F0.pelvis, [10, 36, 24]) }, elbow: { R: under(dbH('L', t), el), L: [.6, .3, 0] }, barDir: { R: axis, L: axis }, fist: { L: false }, palm: { L: [0, -1, 0] } });
@@ -408,7 +421,7 @@
     /* el codo sube por un arco desde algo por debajo del hombro (hacia fuera y fwd grados hacia delante) con el antebrazo
        vertical; al final, el brazo se estira y la mano se mete un poco, sobre el hombro */
     const arcAt = (th, fwd) => { const u = [cos(RAD(fwd)), 0, sin(RAD(fwd))], E = [47 + LEN.upper * cos(th) * u[0], 80 + LEN.upper * sin(th), -2 + LEN.upper * cos(th) * u[2]]; return { E, H: [E[0], E[1] + LEN.fore + LEN.grip, E[2]] }; };
-    const arcT = (t, fwd) => arcAt(RAD(mix(-38, 76, min(1, t / .82))), fwd);
+    const arcT = (t, fwd) => arcAt(RAD(mix(-38, 76, t)), fwd);
     const pressed = (F, s, t, fwd = 25) => mix(T(F, s, arcT(t, fwd).H), T(F, s, HIGH), span(t, .68, 1));
     const elAt = (F, t, fwd = 25) => { const a = arcT(t, fwd); return norm(mix(norm(sub(T(F, 'L', a.E), T(F, 'L', [47, 80, -2]))), [.2, -1, 0], span(t, .75, 1) * .5)); };
     const elOut = [.48, -.86, .17];

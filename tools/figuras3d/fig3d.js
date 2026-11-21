@@ -577,7 +577,8 @@
     const s = e / SNAP;
     return tv + Math.sign(ph) * (PI / 2 - SNAP * s * s * s * (3 - 2 * s));
   };
-  const draw = (ex, t, cam, pre = 'f') => {
+  /* lite: sin el rayado de los músculos (para figuras pequeñas, donde no se distingue y es casi un tercio del dibujo) */
+  const draw = (ex, t, cam, pre = 'f', lite = false) => {
     let defs = '', nMask = 0;
     const q = ex.at(t);
     const { F, J } = pose(q);
@@ -908,7 +909,7 @@
            según las fibras del músculo (antes se escribía otra vez el músculo entero, girado) */
         const d = smoothR(m.pts);
         let hatch = '';
-        if (!m.small) {
+        if (!m.small && !lite) {
           const id = `${pre}r${m.pi}`;
           defs += `<pattern id="${id}" width="3.4" height="4" patternUnits="userSpaceOnUse" patternTransform="${m.ht}"><line y2="4" stroke="#000" stroke-opacity=".33" stroke-width=".55"/></pattern>`;
           hatch = `<path d="${d}" fill="url(#${id})"${o}/>`;
@@ -999,15 +1000,19 @@
   };
 
   /* ── los ejercicios del prototipo ── */
-  /* el momento del gesto (0 a 1) a los ms de empezar; con pause, una parada más larga abajo (el extremo que no es el final del
-     esfuerzo) */
+  /* el momento del gesto (0 a 1) a los ms de empezar. Como se mueve una persona: cada tramo arranca y frena sin tirones (el
+     perfil de tirón mínimo, que es el de los movimientos humanos), la bajada es más lenta que la subida, y solo se descansa
+     en la posición de reposo (arriba, con los brazos o las piernas estirados); en el otro extremo el gesto apenas se para y
+     da la vuelta, salvo en los ejercicios con pausa (pause, en ms). La sentadilla y el press de banca empiezan en reposo
+     (up 'a': el esfuerzo acaba en a); el press de hombro, abajo (up 'b') */
+  const mj = t => t * t * t * (10 + t * (6 * t - 15));
   const beat = (ms, up, long, pause = 0) => {
-    const k = long ? 1.5 : 1, go = (up == 'a' ? 1700 : 1100) * k, back = (up == 'a' ? 1100 : 1700) * k, hold = 420;
-    const h1 = hold + (up == 'a' ? pause : 0), h0 = hold + (up == 'a' ? 0 : pause);
+    const k = long ? 1.5 : 1, slow = 1650 * k, fast = 1100 * k, rest = 520, turn = 130 + pause;
+    const go = up == 'a' ? slow : fast, back = up == 'a' ? fast : slow, h1 = up == 'a' ? turn : rest, h0 = up == 'a' ? rest : turn;
     let x = ms % (go + back + h0 + h1);
-    if (x < go) return ease(x / go);
+    if (x < go) return mj(x / go);
     if ((x -= go) < h1) return 1;
-    if ((x -= h1) < back) return 1 - ease(x / back);
+    if ((x -= h1) < back) return 1 - mj(x / back);
     return 0;
   };
   const ROOT_Y = 20 + 84 + 89 - 4; // de pie, con las rodillas apenas dobladas
