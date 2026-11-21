@@ -105,7 +105,7 @@
       /* la barra en el pliegue de los codos, delante del vientre; las manos juntas a la altura de la barbilla */
       Object.assign(V, { w: 40, ps: [5, 38], lean: [0, 30] });
       arms = F => ({ hands: both(s => T(F, s, [6, 88, 40])), elbow: both(() => [.18, -1, .6]), barDir: [0, 1, 0], load: (F2, J) => [[crooks(J).c, 1]] });
-      gear = (q, F, cam) => { const J = pose(q).J; return olympic(cam, crooks(J).c, x => abs(x) < abs(crook(J.L)[0] - crooks(J).c[0]) + 20 ? ['foreL', 'foreR'] : null); };
+      gear = (q, F, cam) => { const J = pose(q).J; return olympic(cam, crooks(J).c, x => abs(x) < abs(crook(J.L)[0] - crooks(J).c[0]) + 26 ? ['foreL', 'foreR'] : null); };
     }
     else if (has(f, 'ssb')) {
       /* la barra de seguridad: el yugo acolchado sobre los trapecios y las asas hacia delante, por encima de los hombros */
@@ -304,8 +304,10 @@
   const visTag = (items, mids, cam, F, J) => items.map((it, i) => { const o = occluders(mids[i], cam, F, J); return o.length ? { ...it, below: o } : { ...it, above: BODY }; });
   /* una banda (o un cable) tensa de a a b que no atraviesa el cuerpo: los puntos de en medio se alisan (la tensión los lleva a
      la recta) y se apartan de cada cápsula [p, q, r] hasta su superficie; si alguno queda justo en el eje, sale hacia side */
-  const taut = (a, b, caps, side = [0, 0, 1], n = 14, iters = 36) => {
-    const P = Array.from({ length: n + 1 }, (_, i) => mix(a, b, i / n));
+  /* (bias: por dónde empieza a buscar, desviada hacia ese lado; sin él, si la recta pasaba cerca del eje de una rodilla, de un
+     momento a otro la banda se iba por dentro o por fuera, y saltaba) */
+  const taut = (a, b, caps, side = [0, 0, 1], n = 14, iters = 36, bias = null) => {
+    const P = Array.from({ length: n + 1 }, (_, i) => bias ? add(mix(a, b, i / n), mul(bias, sin(PI * i / n))) : mix(a, b, i / n));
     for (let it = 0; it < iters; it++) {
       for (let i = 1; i < n; i++) P[i] = mix(P[i], mix(P[i - 1], P[i + 1], .5), .5);
       for (let i = 1; i < n; i++) for (const [p, q, r] of caps) {
@@ -318,10 +320,13 @@
   /* las bandas pisadas: cada una pasa por debajo del medio del pie (sus dos tiras suben por los lados del pie) y llega
      tensa a la mano; en reposo mide lo que hay del suelo a la cintura */
   const bands = (cam, F, q) => {
-    const caps = bodyCaps(pose(q).J).map(([a, b, r]) => [a, b, r + 5]);
+    /* (con holgura: los muslos y las pantorrillas del dibujo son más gruesos que las cápsulas, y la banda los rozaba) */
+    const caps = bodyCaps(pose(q).J).map(([a, b, r], i) => [a, b, r + (i % 4 == 3 ? 10 : 8.5)]);
     return ['L', 'R'].flatMap(s => {
       const foot = at(F['foot' + s], [0, -19, 12]), x = F['foot' + s].x;
-      return GR.bandPath(cam, taut(foot, at(F['grip' + s], [0, 5, -9]), caps, [0, 0, 1]), 105, x, 5);
+      /* (sale del lado de fuera del puño: desde el centro, arriba, rozaba el brazo) */
+      const top = add(at(F['grip' + s], [0, 5, -9]), mul(norm([F['grip' + s].x[0], 0, F['grip' + s].x[2]]), s == 'L' ? 7 : -7));
+      return GR.bandPath(cam, taut(foot, top, caps, [0, 0, 1], 14, 36, mul(norm([s == 'L' ? 1 : -1, 0, .3]), 30)), 105, x, 5);
     });
   };
 
@@ -669,7 +674,15 @@
     return m;
   };
 
-  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront };
+  /* la mano abierta apoyada encima del muslo, a k de la cadera a la rodilla: la palma, sobre la cara de delante del muslo tal
+     como se dibuja (antes se ponía en un punto fijo respecto a la pelvis y la mano se hundía en él). Devuelve la mano y hacia
+     dónde mira la palma */
+  const onThigh = (q, s, k = .7, lift = 4) => {
+    const { F, J } = pose({ ...q, hands: ZERO, elbow: {} }), th = F['thigh' + s], d = k * len(sub(J[s].knee, J[s].hip));
+    return { hand: add(add(J[s].hip, mul(norm(sub(J[s].knee, J[s].hip)), d)), mul(th.z, prof1(THIGH_F, d) + lift)), palm: mul(th.z, -1) };
+  };
+
+  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];

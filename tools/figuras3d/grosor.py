@@ -54,7 +54,8 @@ JS = r'''
           const [hw, hd] = prof(tab, d), p = L.add(f.o, L.mul(f.y, -d)), hit = inLimb(F, p, Math.min(hw, hd), true);
           if (hit && /muslo|pierna/.test(hit[0])) { const k = nm + s + ' en ' + hit[0]; if (!(k in found)) found[k] = t.toFixed(2) + (VERB ? ' ' + JSON.stringify([p.map(v => +v.toFixed(0)), hit[1]]) : ''); }
         }
-        const hit = inLimb(F, J[s].fist, 7.5, true);
+        /* (la mano abierta, apoyada, es más fina que el puño) */
+        const open = q.fist === false || (q.fist && q.fist[s] === false), hit = inLimb(F, J[s].fist, open ? 4 : 7.5, true);
         if (hit && /muslo|pierna/.test(hit[0])) { const k = 'puño' + s + ' en ' + hit[0]; if (!(k in found)) found[k] = t.toFixed(2) + (VERB ? ' ' + JSON.stringify([J[s].fist.map(v => +v.toFixed(0)), hit[1]]) : ''); }
       }
       for (const [g, p, r, soft] of pts) {
