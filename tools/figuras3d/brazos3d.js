@@ -195,7 +195,8 @@
     /* con barra de pie, abajo, la barra apoyada por delante de los muslos: el brazo se adelanta lo justo */
     if (kind == 'bar' && !preacher && !lying && !drag && !smith) {
       let fl0 = 0;
-      for (; fl0 < 30; fl0 += .5) { const H = armAt(F0, body, 'L', fl0, 0, 8, { hx: gx }).H; if (H[2] >= frontAt(F0, J0, H[1]) + 6.5) break; }
+      /* (con la barra Z, más: sus curvas se acercan a los muslos lo que las manos no) */
+      for (; fl0 < 30; fl0 += .5) { const H = armAt(F0, body, 'L', fl0, 0, 8, { hx: gx }).H; if (H[2] >= frontAt(F0, J0, H[1]) + (ez ? 16 : 6.5)) break; }
       const base = P; P = p => ({ ...base(p), fl: mix(fl0, fl0 + 14, p ** 1.5), ab: 0, e: mix(8, 128, p) });
     }
     /* con la cuerda, abajo, las manos por delante de los muslos (la cuerda cuelga entre ellas) */

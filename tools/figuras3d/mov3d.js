@@ -495,13 +495,14 @@
      collarín. Las curvas van en el plano de las palmas (cd: perpendicular a la barra y a los antebrazos), así que giran con la
      barra en las manos. Las manos van sobre los tramos inclinados: la barra se desplaza lo que haga falta para que pase por
      ellas. Antes, las curvas eran apenas un pellizco fijo hacia delante, con las manos en los vértices */
-  const EZ_D = 10, EZ_P = [[0, 0], [14, 0], [32, -1], [42, -1], [60, 0], [80, 0]];
+  /* (curvas bien marcadas, de unos 8 cm, para que se distinga de una barra recta de un vistazo) */
+  const EZ_D = 17, EZ_P = [[0, 0], [12, 0], [31, -1], [41, -1], [60, 0], [80, 0]];
   const ezOff = x => { x = abs(x); for (let i = 1; i < EZ_P.length; i++) if (x <= EZ_P[i][0]) { const [a, u] = EZ_P[i - 1], [b, v] = EZ_P[i]; return EZ_D * (u + (v - u) * (x - a) / (b - a)); } return 0; };
   /* el plano de las curvas, desde los puños: la media de hacia dónde miran los nudillos, sin su parte a lo largo de la barra */
   const ezCd = F => { const v = add(F.gripL.z, F.gripR.z); return len([0, v[1], v[2]]) > 1e-6 ? norm([0, v[1], v[2]]) : [0, 0, 1]; };
   const ezBar = (cam, c, grip, cd = [0, 0, 1]) => {
     const o = add(c, mul(cd, -ezOff(grip))), X = x => add(o, add([x, 0, 0], mul(cd, ezOff(x)))), out = [];
-    const xs = [-80, -60, -51, -42, -32, -23, -14, 0, 14, 23, 32, 42, 51, 60, 80];
+    const xs = [-80, -60, -50.5, -41, -31, -21.5, -12, 0, 12, 21.5, 31, 41, 50.5, 60, 80];
     for (let i = 0; i + 1 < xs.length; i++) {
       const it = bar(cam, X(xs[i]), X(xs[i + 1]), 1, 4.6), xm = (xs[i] + xs[i + 1]) / 2;
       if (abs(abs(xm) - grip) < 9) it.forEach(j => { j.hand = xm > 0 ? 'L' : 'R'; });
