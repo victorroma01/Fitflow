@@ -7,7 +7,7 @@ import { A, U } from '../core/registry.js';
 import { groupLabel, groupOf, GROUPS } from '../data/library.js';
 import { groupIcon } from '../core/icons.js';
 import { fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
-import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText } from './model.js';
+import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText, liveName } from './model.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
 import { exTip, withExInfo } from './howto.js';
 import { customTools, isCustomExercise } from './custom.js';
@@ -111,8 +111,11 @@ const exDetailSheet = i => {
     </div>`));
   sheetToTop();
 };
+/* (la de un ejercicio que se guardó con un nombre que ya no está en la librería, porque era el mismo que otro, es la del que
+   queda: data/aliases, EX_RETIRED) */
 A.exerciseDetailByName = (i, b) => {
-  const j = exAll().findIndex(x => x.n == b.dataset.n);
+  const n = liveName(b.dataset.n);
+  const j = exAll().findIndex(x => x.n == n);
   if (j < 0)
     return;
   withExInfo(() => {
