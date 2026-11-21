@@ -170,6 +170,15 @@ Cardio|Cuerpo completo y marcha|cr|co,ge|Comba~O,Comba por intervalos~O,Natació
       e.k = k++;
     });
   });
+  /* Músculos de ejercicios que comparten línea con otros que trabajan otra cosa (y se llevaban los de la línea): son los de su
+     ejercicio equivalente de la biblioteca (la sentadilla, el press landmine de hombro), más lo propio de cada carga que la
+     línea ya decía (el agarre del saco, los hombros que sostienen la kettlebell o la barra por encima de la cabeza) */
+  const FIX = { 'TRX sentadilla': ['cu,gl', 'is,ad,co'], 'Landmine press': ['dA,dL', 'tr,ts,sa'], 'Goblet squat': ['cu,gl', 'is,er,ad,co,dA'], 'Sentadilla goblet con pausa': ['cu,gl', 'is,er,ad,co,dA'], 'Sandbag squat': ['cu,gl', 'is,er,ad,co,an'], 'Overhead squat': ['cu,gl', 'is,er,ad,co,dA,tr,da'] };
+  for (const [n, [p, s]] of Object.entries(FIX))
+    if (by[n]) {
+      by[n].p = p.split(',');
+      by[n].s = s.split(',');
+    }
   EXERCISES.forEach(e => {
     if (!e.t) {
       e.t = 'Otros';
