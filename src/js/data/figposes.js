@@ -510,7 +510,7 @@ export const FIG_POSES = {
   /* ── Cardio ── */
   'Carrera continua': 'run',
   'Intervalos 400 m': 'run',
-  'Cinta inclinada': 'run treadmill incline',
+  'Cinta inclinada': 'run walk treadmill incline',
   'Series 1 km': 'run',
   'Tempo run': 'run',
   Cuestas: 'run incline',
