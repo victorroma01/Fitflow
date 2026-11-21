@@ -209,5 +209,25 @@
     return out;
   };
 
-  F3.gear = { C, IRON, tone, basis, obox, tube, disc, strap, cableLine, bandLoop, bandPath, sag, dumbbell, kettlebell, sandbag, under, padAB, leg, smithFrame, smithHooks, pulleyTower, stack, station, sideFade };
+  /* ── piezas de las máquinas ── */
+  /* una viga del armazón, de sección cuadrada (medio lado w), de a a b; si pasa junto al cuerpo, a n trozos, para que cada uno
+     se ordene con él por su propia profundidad (si no, de una pieza: los trozos dejan rayas). Con ellas, las máquinas son de una
+     pieza (antes, postes y varillas finas sueltos) */
+  const beam = (cam, a, b, w = 6, col = C.frame, n = 1) => {
+    const d = sub(b, a), L = len(d) || 1, u = mul(d, 1 / L), side = basis(u)[1], out = [];
+    for (let i = 0; i < n; i++) out.push(obox(cam, mix(a, b, (i + .5) / n), [side, u], [w, L / n / 2 + .3, w], col));
+    return out;
+  };
+  /* el eje de una palanca: el cubo (un disco gordo) con su tapa de metal */
+  const hub = (cam, c, axis, r = 8.5) => [disc(cam, c, axis, r, 11, 'wheel'), disc(cam, c, axis, r * .42, 13, 'metal')];
+  /* el puño de goma de un asa, de a a b */
+  const rubber = (cam, a, b, r = 4.4) => tube(cam, a, b, r, C.rubber, 1);
+  /* un cuerno para discos (de a hacia dir) con n discos puestos */
+  const horn = (cam, a, dir, n = 2) => {
+    const u = norm(dir), out = [...tube(cam, a, add(a, mul(u, 30)), 3.4, STEEL, 1)];
+    for (let i = 0; i < n; i++) out.push(disc(cam, add(a, mul(u, 9 + i * 6.5)), u, 30 - i * 6, 5.5));
+    return out;
+  };
+
+  F3.gear = { C, IRON, tone, basis, obox, tube, disc, strap, cableLine, bandLoop, bandPath, sag, dumbbell, kettlebell, sandbag, under, padAB, leg, smithFrame, smithHooks, pulleyTower, stack, station, sideFade, beam, hub, rubber, horn };
 })(window);

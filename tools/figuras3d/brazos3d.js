@@ -98,6 +98,8 @@
     /* el giro de cada mano según lo subida que va (p, de 0 a 1) y, en el Zottman, según suba o baje */
     const rhoAt = (p, down) => {
       if (kind == 'bar') return barRho;
+      /* (con la cuerda, en neutro; en el curl en polea con cuerda, las muñecas giran hacia fuera al subir, con los meñiques arriba) */
+      if (kind == 'rope' && w('twist')) return mix(90, 25, span(p, .2, 1));
       if (kind == 'rope' || hammer || tri) return 90;
       if (high) return 0;
       if (zott) return down;
@@ -203,7 +205,8 @@
     if (kind == 'rope') {
       let fl0 = 0;
       for (; fl0 < 30; fl0 += .5) { const H = armAt(F0, body, 'L', fl0, 4, 6).H; if (H[2] >= frontAt(F0, J0, H[1]) + 11) break; }
-      P = p => ({ fl: mix(fl0, fl0 + 12, p ** 1.5), ab: 4, e: mix(6, 130, p) });
+      /* (al girar las muñecas, los extremos de la cuerda se abren) */
+      P = p => ({ fl: mix(fl0, fl0 + 12, p ** 1.5), ab: w('twist') ? mix(4, 13, span(p, .2, 1)) : 4, e: mix(6, 130, p) });
     }
 
     /* el arrastre (drag curl, también en la Smith): la barra (o las mancuernas) sube pegada al cuerpo y los codos van atrás */
@@ -430,7 +433,7 @@
   };
   const skull = f => {
     const w = x => has(f, x);
-    const db = w('db'), cable = w('cable'), incline = w('incline');
+    const db = w('db'), cable = w('cable'), incline = w('incline'), back = w('back');
     const ang = incline ? 30 : 0;
     /* tumbado en el banco: los brazos casi verticales (algo hacia la cabeza) y quietos; los antebrazos bajan hasta llevar la barra
        justo por encima de la frente */
@@ -440,7 +443,8 @@
     const gx = db ? null : 24, rho = db ? 90 : cable ? 180 : 158;
     const at_ = t => {
       const out = { ...body, hands: {}, elbow: {}, barDir: {} };
-      for (const s of ['L', 'R']) { const a = armAt(F0, body, s, mix(98, 106, t), 3, mix(2, 100, t), gx != null ? { hx: gx } : {}); out.hands[s] = a.H; out.elbow[s] = a.hint; out.barDir[s] = gripDir(s, a.v, rho); }
+      /* (los rompecráneos con barra Z: los brazos, algo echados hacia la cabeza, y la barra baja por detrás de ella) */
+      for (const s of ['L', 'R']) { const a = armAt(F0, body, s, back ? mix(118, 124, t) : mix(98, 106, t), 3, mix(2, back ? 108 : 100, t), gx != null ? { hx: gx } : {}); out.hands[s] = a.H; out.elbow[s] = a.hint; out.barDir[s] = gripDir(s, a.v, rho); }
       if (gx != null) { out.barC = mix(out.hands.L, out.hands.R, .5); out.grip = gx; }
       return out;
     };
@@ -623,8 +627,9 @@
       ['L', 'R'].forEach(s => {
         const x = H[s][0];
         if (machine) {
-          /* las asas de la máquina, cortas, sobre sus columnas */
-          out.push(...GR.tube(cam, [x, Hb, -22], [x, Hb, 22], 6, STEEL, 3).map(i => abs(i.z) < 1e9 ? i : i), ...GR.under(GR.tube(cam, [x, Hb, -22], [x * 1.25, 0, -40], 8, GR.C.frame, 3)));
+          /* las asas de la máquina, de goma, en un brazo que sale de la columna de detrás */
+          const k = s == 'L' ? 1 : -1;
+          out.push(...GR.rubber(cam, [x, Hb, -20], [x, Hb, 20]).map(i => ({ ...i, hand: s })), ...GR.under([...GR.beam(cam, [x, Hb - 6, -20], [k * 22, Hb + 30, -74], 5), ...GR.beam(cam, [x, Hb, -22], [x, Hb - 6, -20], 4)]));
         }
         else {
           /* la paralela, con sus dos postes */
@@ -635,10 +640,12 @@
         }
       });
       if (machine) {
-        /* el apoyo de las rodillas: sube y baja con ellas (es lo que ayuda) */
-        const { J } = pose(q), k = mix(J.L.knee, J.R.knee, .5), a = mix(J.L.ankle, J.R.ankle, .5);
-        out.push(GR.padAB(cam, [0, k[1] - 14, k[2] + 6], [0, a[1] - 12, a[2] - 4], UP, 30, 6), ...GR.tube(cam, [0, k[1] - 26, mix(k[2], a[2], .5)], [0, 0, mix(k[2], a[2], .5)], 9, GR.C.frame, 2));
-        out.push(...GR.under(GR.stack(cam, [0, 0, -168], [0, 0, 1], 12), 3));
+        /* el apoyo de las rodillas: sube y baja con ellas (es lo que ayuda), en una palanca que gira en la columna de detrás; la
+           columna sube hasta los brazos de las asas, con su base en el suelo; la pila, detrás, con su cable */
+        const { J } = pose(q), k = mix(J.L.knee, J.R.knee, .5), a = mix(J.L.ankle, J.R.ankle, .5), pc = [0, k[1] - 22, mix(k[2], a[2], .5)], pv = [0, 118, -74];
+        out.push(GR.padAB(cam, [0, k[1] - 14, k[2] + 6], [0, a[1] - 12, a[2] - 4], UP, 30, 6), ...GR.beam(cam, pv, pc, 5), ...GR.hub(cam, pv, [1, 0, 0], 7));
+        out.push(...GR.under([...GR.beam(cam, [0, 4, -74], [0, Hb + 30, -74], 8), ...GR.beam(cam, [-22, Hb + 30, -74], [22, Hb + 30, -74], 6), ...GR.beam(cam, [0, 4, -190], [0, 4, 40], 6), ...GR.beam(cam, [-40, 4, 30], [40, 4, 30], 6),
+          ...GR.stack(cam, [0, 0, -168], [0, 0, 1], 12), ...GR.beam(cam, [0, 168, -168], [0, 168, -74], 5), ...GR.cableLine(cam, [0, 127, -168], [0, 160, -82])], 3));
       }
       return out;
     };

@@ -9,8 +9,8 @@
    Define: Fig3D.FAMILIES, Fig3D.make */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear;
-  const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, barbell, bar, plate } = L;
-  const { cos, sin, PI, abs, max, min, sqrt, atan2 } = Math;
+  const { add, sub, mul, dot, cross, len, norm, mix, ease, clamp, at, RAD, LEN, barbell, bar, plate } = L;
+  const { cos, sin, PI, abs, max, min, sqrt, atan2, acos } = Math;
   const has = (f, w) => f.includes(w);
   const pose = F3.pose, torso = F3.torso;
   const ZERO = { L: [0, 0, 0], R: [0, 0, 0] };
@@ -285,7 +285,7 @@
   };
   /* las bandas: de debajo de cada pie (pisadas por el medio) a cada mano */
   /* brazos y piernas como cápsulas del grosor con que se dibujan (para que bandas y cables pasen por fuera) */
-  const bodyCaps = J => ['L', 'R'].flatMap(s => { const j = J[s], wr = add(j.fist, mul(norm(sub(j.el, j.fist)), 14)); return [[j.sh, j.el, 11], [j.el, wr, 9], [j.hip, j.knee, 16], [j.knee, j.ankle, 11]]; });
+  const bodyCaps = J => ['L', 'R'].flatMap(s => { const j = J[s], wr = j.wr || add(j.fist, mul(norm(sub(j.el, j.fist)), 14)); return [[j.sh, j.el, 11], [j.el, wr, 9], [j.hip, j.knee, 16], [j.knee, j.ankle, 11]]; });
   /* qué partes del cuerpo tapan el punto m visto desde la cámara: el rayo de m hacia la cámara contra el cuerpo hecho de
      cápsulas del grosor dibujado (el tronco, tres a lo ancho del tórax y tres de la pelvis; la cabeza; brazos y piernas). Sirve
      para ordenar con el cuerpo los trozos de material largo por lo que de verdad se ve (el grupo del tronco tiene una sola
@@ -538,9 +538,9 @@
 
   /* ════ press de hombro ════ */
   const overhead = f => {
-    const seated = has(f, 'seated') || has(f, 'machine'), db = has(f, 'db'), one = has(f, 'one') || has(f, 'kb') || has(f, 'cable') || has(f, 'landmine');
+    const seated = has(f, 'seated') || has(f, 'machine'), db = has(f, 'db'), one = has(f, 'one') || has(f, 'kb') || has(f, 'cable') || (has(f, 'landmine') && !has(f, 'two'));
     const machine = has(f, 'machine'), smith = has(f, 'smith'), barb = has(f, 'bar') || smith, arnold = has(f, 'arnold'), neutral = has(f, 'neutral');
-    const kb = has(f, 'kb'), cable = has(f, 'cable'), band = has(f, 'band'), landmine = has(f, 'landmine');
+    const kb = has(f, 'kb'), cable = has(f, 'cable'), band = has(f, 'band'), landmine = has(f, 'landmine'), two = landmine && has(f, 'two');
     /* sentado: en un banco con respaldo casi vertical; de pie: las rodillas apenas dobladas */
     const ROOT_Y = LEN.ankle + LEN.shin + LEN.thigh - 4;
     let body = seated ? { root: [0, 122, 0], tilt: -6, spine: -2, neck: 0, feet: both(() => [40, 86, 14]), knee: both(() => [.25, .7, .7]) }
@@ -548,6 +548,8 @@
     if (landmine) body = { ...body, feet: { L: [26, 26, 10], R: [26, -22, 14] }, tilt: 8, spine: 4, neck: -10 };
     const bodyAt = t => {
       if (barb) return { ...body, spine: body.spine - 4 * sin(PI * t) + t, neck: -14 + 10 * t };
+      /* (a dos manos, empuja también con las piernas: abajo, las rodillas algo dobladas, que se estiran al empujar) */
+      if (two) return { ...body, root: add(body.root, [0, -9 * (1 - t), 0]), tilt: 10 + 8 * t, spine: 4 + 3 * t, neck: -10 - 6 * t };
       if (landmine) return { ...body, tilt: 8 + 4 * t, spine: 4 + 3 * t, neck: -10 - 6 * t };
       return body;
     };
@@ -577,13 +579,17 @@
       gear = (q, F, cam) => [...bb(q, cam), ...(smith ? [...GR.smithFrame(cam, q.barC[2]).map(i => ({ ...i, nf: true })), ...GR.smithHooks(cam, q.barC)] : [])];
     }
     else if (machine) {
-      /* las asas de la máquina van por un arco alrededor de un eje detrás de la cabeza */
-      let piv = null;
+      /* las asas van en dos palancas que giran en un eje detrás de la cabeza (cada asa, por su arco, sin abrirse ni cerrarse):
+         de junto a las orejas a los brazos estirados por encima de la cabeza */
+      let geo = null;
       arms = (F, t) => {
-        const lo = s => T(F, s, add(arcT(0, 40).H, [0, 0, 6])), hi = s => T(F, s, [44, 220, 22]);
-        if (!piv) { const a = lo('L'), b = hi('L'), m = mix(a, b, .5), d = norm(sub(b, a)), n = norm([0, d[2], -d[1]]); piv = add(m, mul(n, n[2] < 0 ? 100 : -100)); }
-        const hands = both(s => { const a = lo(s), b = hi(s), p = [a[0], piv[1], piv[2]], r = len(sub(a, p)); const a0 = atan2(a[1] - p[1], a[2] - p[2]), a1 = atan2(b[1] - p[1], b[2] - p[2]), th = mix(a0, a1, t); return [mix(a[0], b[0], t), p[1] + r * sin(th), p[2] + r * cos(th)]; });
-        return { hands, elbow: both(() => elAt(F, t, 40)), barDir: [1, 0, 0], piv };
+        if (!geo) {
+          const a = T(F, 'L', add(arcT(0, 40).H, [0, 0, 6])), b = T(F, 'L', [44, 220, 22]), x = (a[0] + b[0]) / 2;
+          const A = [x, a[1], a[2]], B = [x, b[1], b[2]], P = pivotFor(A, B, [0, 0, -1], 96);
+          geo = { A, B, P };
+        }
+        const H = leverAt(geo.P, geo.A, geo.B, t);
+        return { hands: { L: H, R: [-H[0], H[1], H[2]] }, elbow: both(() => elAt(F, t, 40)), barDir: [1, 0, 0], piv: geo.P };
       };
       gear = (q, F, cam) => machineGear(cam, q, F);
     }
@@ -612,19 +618,24 @@
       gear = (q, F, cam) => GR.kettlebell(cam, at(F.gripR, [0, 9, 28]), q.hands.R, q.barDir.R, 'R');
     }
     else if (landmine) {
-      /* la barra apoyada en el suelo por delante: la mano va por su arco, hacia delante y arriba, hasta estirar el brazo */
+      /* la barra apoyada en el suelo por delante: el extremo va por su arco, hacia delante y arriba, hasta estirar el brazo. A
+         una mano, desde el hombro (la otra, suelta); a dos (Landmine press), desde el pecho, con las manos juntas en el extremo */
       const LM = 400;
       let geo = null;
       arms = (F, t) => {
         if (!geo) {
-          const h0 = T(F, 'R', [30, 88, 30]), sh = shoulder(F, 'R');
+          const h0 = two ? at(F.thorax, [0, 64, 40]) : T(F, 'R', [30, 88, 30]), sh = two ? mix(shoulder(F, 'L'), shoulder(F, 'R'), .5) : shoulder(F, 'R');
           const piv = [h0[0] * .4, 6, h0[2] + sqrt(LM ** 2 - (h0[1] - 6) ** 2 - (h0[0] * .6) ** 2)];
-          const u = norm(sub(h0, piv)), v = norm(sub(sub(sh, piv), mul(u, dot(sub(sh, piv), u))));
+          const u = norm(sub(h0, piv));
           const at2 = a => add(piv, mul(add(mul(u, cos(a)), mul(norm(sub([0, 1, 0], mul(u, dot([0, 1, 0], u)))), sin(a))), LM));
-          let a1 = 0; for (let a = 0; a < .7; a += .002) { if (len(sub(at2(a), sh)) <= 146) a1 = a; }
-          geo = { piv, at2, a1, v };
+          /* (a dos manos, cada mano a 8 del extremo: el brazo llega estirado cuando el extremo está a algo menos del hombro) */
+          const reach = two ? sqrt(146 ** 2 - (47 - 8) ** 2) : 146;
+          let a1 = 0; for (let a = 0; a < .7; a += .002) { if (len(sub(at2(a), sh)) <= reach) a1 = a; }
+          geo = { piv, at2, a1 };
         }
-        return { hands: { R: geo.at2(geo.a1 * t), ...freeL(F) }, elbow: { R: [.25, -1, .2], L: [.1, 0, -1] }, barDir: { R: [1, 0, 0], L: [1, 0, 0] }, fist: { L: false }, palm: { L: [-1, 0, 0] }, piv: geo.piv };
+        const E = geo.at2(geo.a1 * t), bd = norm(sub(E, geo.piv));
+        if (two) return { hands: { L: add(E, [8, 0, 0]), R: add(E, [-8, 0, 0]) }, elbow: both(() => [.35, -1, .05]), barDir: both(() => bd), piv: geo.piv, lmEnd: E };
+        return { hands: { R: E, ...freeL(F) }, elbow: { R: [.25, -1, .2], L: [.1, 0, -1] }, barDir: { R: [1, 0, 0], L: [1, 0, 0] }, fist: { L: false }, palm: { L: [-1, 0, 0] }, piv: geo.piv };
       };
       cam = [-62, 10];
       gear = (q, F, cam) => landmineGear(cam, q);
@@ -655,27 +666,30 @@
       gear(q, F, cam) { return [...seatGear(cam), ...gear(q, F, cam)]; },
     };
   };
-  /* la máquina de press de hombro: el asiento (con su respaldo, del banco), los postes detrás y las palancas hasta las asas */
+  /* la máquina de press de hombro: el asiento y el respaldo (del banco); detrás, la columna que sube hasta el eje de las
+     palancas, con el eje de lado a lado, y su base en el suelo; cada palanca, de sección cuadrada, va de su cubo en el eje al asa,
+     con su puño de goma; la pila de pesas, detrás de la columna, colgada de su viga */
   const machineGear = (cam, q, F) => {
-    const out = [], p = q.piv;
+    const out = [], P = q.piv, zc = P[2] - 6;
+    out.push(...GR.under([
+      ...GR.beam(cam, [0, 4, zc], [0, P[1] + 4, zc], 8), ...GR.beam(cam, [0, 4, zc - 70], [0, 4, zc + 120], 6), ...GR.beam(cam, [-52, 4, zc - 70], [52, 4, zc - 70], 6),
+      ...GR.beam(cam, [0, 168, zc], [0, 168, zc - 52], 5), ...GR.stack(cam, [0, 0, zc - 52], [0, 0, 1], 12),
+      /* (el cable, de la varilla de la pila a una polea en lo alto de la columna y de ahí al eje) */
+      ...GR.cableLine(cam, [0, 127, zc - 52], [0, P[1] - 16, zc - 14]), GR.disc(cam, [0, P[1] - 12, zc - 10], [1, 0, 0], 7, 4, 'wheel')]));
     [-1, 1].forEach(k => {
-      const s = k > 0 ? 'L' : 'R', h = q.hands[s], pv = [h[0] + k * 12, p[1], p[2]];
-      out.push(...GR.tube(cam, [pv[0], 0, pv[2]], pv, 7, GR.C.frame, 5).map(i => ({ ...i, z: i.z - 400 })));
-      out.push(GR.disc(cam, pv, [1, 0, 0], 7, 8, 'wheel'));
-      out.push(...GR.tube(cam, pv, add(h, [k * 12, 0, 0]), 6, GR.C.frame, 3));
-      out.push(...GR.tube(cam, add(h, [k * 12, 0, 0]), add(h, [-k * 8, 0, 0]), 4, ['#b9bed0', '#0a0b10'], 1).map(i => ({ ...i, hand: s })));
+      const s = k > 0 ? 'L' : 'R', h = q.hands[s], x = h[0] + k * 12, hub = [x, P[1], P[2]];
+      out.push(...GR.beam(cam, [0, P[1], P[2]], hub, 4.5), ...GR.hub(cam, add(hub, [k * 6, 0, 0]), [1, 0, 0]));
+      out.push(...GR.beam(cam, hub, [x, h[1], h[2]], 4.6), ...GR.rubber(cam, [x - k * 2, h[1], h[2]], add(h, [-k * 9, 0, 0])).map(i => ({ ...i, hand: s })));
     });
-    /* la pila de pesas, detrás del eje de las palancas */
-    out.push(...GR.under(GR.stack(cam, [0, 0, p[2] - 48], [0, 0, 1], 12), 3));
     return out;
   };
   /* el landmine: la base en el suelo, la barra hasta la mano y el disco en la parte de dentro del manguito (lejos de la mano
      y del antebrazo) */
   const landmineGear = (cam, q) => {
-    const p = q.piv, h = q.hands.R, u = norm(sub(h, p)), out = [];
+    const p = q.piv, h = q.lmEnd || q.hands.R, u = norm(sub(h, p)), out = [];
     out.push(GR.obox(cam, [p[0], 3, p[2]], [[1, 0, 0], UP], [22, 3, 22], GR.C.frame));
     out.push(...bar(cam, add(p, mul(u, -8)), add(h, mul(u, -88)), 8, 5.2));
-    out.push(...bar(cam, add(h, mul(u, -88)), add(h, mul(u, 8)), 3, 7.6).map((i, n) => n == 2 ? { ...i, hand: 'R' } : i));
+    out.push(...bar(cam, add(h, mul(u, -88)), add(h, mul(u, 8)), 3, 7.6).map((i, n) => n == 2 && !q.lmEnd ? { ...i, hand: 'R' } : i));
     out.push(GR.disc(cam, add(h, mul(u, -80)), u, 34, 8));
     return out;
   };
@@ -745,7 +759,15 @@
     return { hand: add(add(J[s].hip, mul(norm(sub(J[s].knee, J[s].hip)), d)), mul(th.z, prof1(THIGH_F, d) + lift)), palm: mul(th.z, -1) };
   };
 
-  F3.mlib = { has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
+  /* las palancas de las máquinas giran en un eje: la mano va por un arco. pivotFor: el eje para ir de a a b, a igual distancia
+     de los dos y a d del punto medio, hacia dir (que se endereza para quedar en ángulo recto con a → b). leverAt: la mano en el
+     momento t, de a (t = 0) a b (t = 1), girando alrededor de P */
+  const pivotFor = (a, b, dir, d) => { const ab = norm(sub(b, a)), n = norm(sub(dir, mul(ab, dot(dir, ab)))); return add(mix(a, b, .5), mul(n, d)); };
+  const leverAt = (P, a, b, t) => {
+    const u = sub(a, P), v = sub(b, P), k = norm(cross(u, v)), th = acos(clamp(dot(norm(u), norm(v)), -1, 1)) * t, c = cos(th), s = sin(th);
+    return add(P, add(add(mul(u, c), mul(cross(k, u), s)), mul(k, dot(k, u) * (1 - c))));
+  };
+  F3.mlib = { pivotFor, leverAt, has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar, ezCd };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];

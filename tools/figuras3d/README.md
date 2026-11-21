@@ -38,9 +38,9 @@ python3 pagina.py                  # la página de revisión del lote (sus texto
 ## Lotes
 
 1. Sentadillas, press de banca y press de hombro: 57 ejercicios. Revisado.
-2. Jalones, remos y dominadas (con colgados y elevaciones de piernas): 57 ejercicios. Revisado.
-3. Piernas: pesos muertos y bisagras, zancadas, hip thrust y puentes, prensas, hack, extensiones y curl femoral: 66
+2. Jalones, remos y dominadas (con colgados y elevaciones de piernas): 54 ejercicios. Revisado.
+3. Piernas: pesos muertos y bisagras, zancadas, hip thrust y puentes, prensas, hack, extensiones y curl femoral: 65
    ejercicios. Revisado.
-4. Brazos: curls, extensiones de tríceps, fondos y antebrazos: 78 ejercicios. Revisado.
+4. Brazos: curls, extensiones de tríceps, fondos y antebrazos: 75 ejercicios. Revisado.
 5. Pecho y hombros: flexiones, press de pecho de pie y en máquina, aperturas y cruces de poleas, pullover, encogimientos,
-   elevaciones laterales y frontales, pájaros, face pull y remo al mentón: 76 ejercicios. Revisado.
+   elevaciones laterales y frontales, pájaros, face pull y remo al mentón: 72 ejercicios. Revisado.

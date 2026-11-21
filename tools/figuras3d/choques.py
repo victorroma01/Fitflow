@@ -29,7 +29,7 @@ JS = r'''
       const head = L.at(F.head, [0, 2, 1]);
       const caps = [];
       for (const s of ['L', 'R']) {
-        const j = J[s], wrist = L.add(j.fist, L.mul(L.norm(L.sub(j.el, j.fist)), 16));
+        const j = J[s], wrist = j.wr || L.add(j.fist, L.mul(L.norm(L.sub(j.el, j.fist)), 16));
         caps.push(['muslo' + s, j.hip, j.knee, 13], ['pierna' + s, j.knee, j.ankle, 8], ['brazo' + s, j.sh, j.el, 8], ['antebrazo' + s, j.el, wrist, 6]);
       }
       /* el material, tal como se dibuja (la sonda apunta cada pieza): tramos con su grosor, discos y cajas */

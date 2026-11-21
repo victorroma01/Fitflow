@@ -44,7 +44,9 @@
          del pie */
       const zb = midFoot(pose({ root: [0, 190, 0], tilt: 0, spine: 0, feet, knee: both(() => [0, 0, 1]), hands: ZERO, elbow: {} }).F, sumo ? 20 : 17)[2];
       const floorY = 49 + plat * 0, hBar = rack ? 118 : floorY;
-      const legs = (ps, pt) => legRoot(fw, 0, toe, ps, pt);
+      /* (la última pierna, guardada: para cada muslo se prueban varios troncos con las mismas piernas) */
+      let lk0 = NaN, lk1 = NaN, lv = null;
+      const legs = (ps, pt) => ps === lk0 && pt === lk1 ? lv : (lk0 = ps, lk1 = pt, lv = legRoot(fw, 0, toe, ps, pt));
       const mk = (ps, pt, lean) => { const lr = legs(ps, pt); return { root: add(lr.root, [0, plat, 0]), ...trunk(lean), neck: -.35 * lean, feet, knee: both(() => lr.knee), shrug: 0, reach: 3 }; };
       /* la barra pasa por delante de las piernas, nunca por dentro: sobre el medio del pie mientras las espinillas la dejan pasar
          (más verticales cuanto más sube) y, por las rodillas y los muslos, rozando su cara de delante (con el grosor del
@@ -88,7 +90,8 @@
            del tronco. Al revés (el muslo para llegar a la barra), con las piernas casi rectas, bajar un poco la barra llevaba la
            cadera muy atrás de golpe */
         const leanFor = p => solveNear(l => reach(mk(ps, p, l), y, z), -25, 88, p0[2], 2, 6);
-        const pt = solveNear(p => { const l = leanFor(p), q = mk(ps, p, l); return (1 - k) * bal(q, y, z, kk) + k * (z + ahead - sh(q)); }, -20, 89.5, p0[1], 2, 6);
+        /* (en el sumo, abajo, la cadera algo por encima de las rodillas: si no, salía en cuclillas, con los muslos horizontales) */
+        const pt = max(sumo ? 16 : -20, solveNear(p => { const l = leanFor(p), q = mk(ps, p, l); return (1 - k) * bal(q, y, z, kk) + k * (z + ahead - sh(q)); }, -20, 89.5, p0[1], 2, 6));
         return [ps, pt, leanFor(pt), y, z];
       });
       /* el camino de la barra: el de arriba y, donde con él las piernas (muslos o rodillas) asomarían por delante de la barra,
@@ -96,7 +99,10 @@
       let post = makePost(zPath);
       if (!hex) for (let pass = 0; pass < 2; pass++) {
         const N = 40, ys = [], need = [];
-        for (let i = 0; i <= N; i++) { const [ps, pt, lean, y, z] = post(i / N), { J } = pose({ ...mk(ps, pt, lean), hands: ZERO, elbow: {} }); ys.push(y); need.push(max(z, loadFront(J, y, g, [0, 0], clear + .6))); }
+        /* (en el sumo, las manos van por dentro de las rodillas y los brazos cuelgan por delante de la cadera, lejos de los muslos:
+           solo la barra tiene que pasar por delante de las piernas. Contar los antebrazos contra los muslos, casi horizontales
+           abajo, echaba la barra un palmo por delante del medio del pie) */
+        for (let i = 0; i <= N; i++) { const [ps, pt, lean, y, z] = post(i / N), { J } = pose({ ...mk(ps, pt, lean), hands: ZERO, elbow: {} }); ys.push(y); need.push(max(z, sumo ? legFront(J, y) + clear + .6 : loadFront(J, y, g, [0, 0], clear + .6))); }
         const sm = need.map((_, i) => { let m = -1e9; for (let j = max(0, i - 3); j <= min(N, i + 3); j++) m = max(m, need[j]); return m; });
         const zs = sm.map((_, i) => { let s = 0, w = 0; for (let j = max(0, i - 2); j <= min(N, i + 2); j++) { s += sm[j]; w++; } return s / w; });
         const prevPath = zPath;
@@ -485,7 +491,10 @@
           const a = add(c, [k * X, 0, 0]), p = [k * X, piv[1], piv[2]];
           out.push(...GR.tube(cam, a, p, 6, GR.C.frame, 6), ...horn(cam, add(a, mul(norm(sub(a, p)), -10)), [k, 0, 0], 28), GR.disc(cam, add(p, [k * 4, 0, 0]), [1, 0, 0], 9, 6, 'wheel'));
           out.push(...GR.under(GR.tube(cam, [k * (X + 6), 4, piv[2]], [k * (X + 6), piv[1], piv[2]], 7), 2));
+          /* (el bastidor del suelo, de los postes al banco: antes el banco iba suelto) */
+          out.push(...GR.under(GR.beam(cam, [k * (X + 6), 4, piv[2]], [k * (X + 6), 4, C[2] - 26], 6), 2));
         });
+        out.push(...GR.under(GR.beam(cam, [-(X + 6), 4, C[2] - 26], [X + 6, 4, C[2] - 26], 6), 2));
         ['L', 'R'].forEach(s => out.push(...GR.tube(cam, add(q.hands[s], [0, 0, -8]), add(q.hands[s], [0, 0, 8]), 4, STEEL, 1).map(i => ({ ...i, hand: s }))));
       }
       if (db) out.push(...GR.dumbbell(cam, q.barC, [1, 0, 0], null, { R: 15 }));
@@ -878,6 +887,10 @@
         const P = add(K, [-34, 0, 0]), roll = add(add(K, mul(sh, 68)), mul(bk, 17)), elb = [P[0], roll[1], roll[2]];
         out.push(...GR.tube(cam, add(roll, [-14, 0, 0]), add(roll, [14, 0, 0]), 18, GR.C.pad, 3), ...GR.tube(cam, P, elb, 6), ...GR.tube(cam, elb, add(roll, [-14, 0, 0]), 5), GR.disc(cam, add(P, [-6, 0, 0]), [1, 0, 0], 16, 6, 'wheel'));
         out.push(...GR.under([GR.obox(cam, [P[0] - 8, (P[1] - 10) / 2, P[2]], [[1, 0, 0], UP], [6, (P[1] - 10) / 2, 10], GR.C.frame)], 2), ...sideStack(cam, P));
+        /* el acolchado del muslo, en un brazo del poste de la palanca; y el bastidor del suelo, del poste del pecho al de la
+           palanca (antes el acolchado flotaba y los dos postes iban sueltos) */
+        const pf = [0, 4, at(F.thorax, [0, 30, 40])[2] + 20], br = [P[0] - 8, kp[1], kp[2]];
+        out.push(...GR.beam(cam, add(kp, [-16, 0, 0]), br, 4.5), ...GR.under(GR.beam(cam, br, [P[0] - 8, P[1] + 8, P[2]], 5)), ...GR.under(GR.beam(cam, pf, [P[0] - 8, 4, P[2]], 6), 2));
         return out;
       };
       return { view: 'front', up: 'b', rest: 'a', cam: [-60, 10], one: true, feetOff: true, at: at_, gear };

@@ -30,7 +30,7 @@ const EXTRA = { 'Sentadilla con pausa': 'pause', 'Sentadilla goblet con pausa': 
   'Curl martillo con barra Z': 'hammer', 'Curl en máquina unilateral': 'one', 'Curl inverso': 'reverse', 'Curl inverso en polea': 'reverse',
   'Curl inverso con mancuernas': 'reverse', 'Extensión agarre supino en polea': 'supine', 'Extensión con barra V': 'vbar', 'TRX fondos': 'trx',
   'Flexiones diamante': 'diamond', 'Flexiones con palmada': 'clap', 'Flexiones arqueras': 'archer', 'Press pecho máquina convergente': 'converge',
-  'Press de pecho unilateral en polea': 'one', 'Elevación T': 'tee', 'Encogimientos con barra hexagonal': 'hex', 'Remo al mentón agarre ancho': 'wide',
+  'Press de pecho unilateral en polea': 'one', 'Elevación T': 'tee', 'Landmine press': 'two', 'Curl en polea con cuerda': 'twist', 'Rompecráneos barra Z': 'back', 'Elevaciones laterales a una mano en polea': 'lean', 'TRX flexiones': 'feet', 'Encogimientos con barra hexagonal': 'hex', 'Remo al mentón agarre ancho': 'wide',
   'Face pull a una mano': 'one' };
 
 mkdirSync('salida', { recursive: true });

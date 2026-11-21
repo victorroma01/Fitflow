@@ -401,8 +401,10 @@
       F['fore' + s] = limb(el[0], el[1], s, foreFront);
       /* la mano abierta con la muñeca doblada (apoyada en el suelo en una flexión): sale de la muñeca hacia handDir, con la palma
          hacia donde diga palm; antes seguía siempre la línea del antebrazo */
-      F['hand' + s] = hd && !isFist(q, s) ? limb(el[1], sub(el[1], hd), s, foreFront) : moved(F['fore' + s], at(F['fore' + s], [0, -LEN.fore, 0]));
-      J[s] = { hip, knee: knee[0], ankle: knee[1], sh, el: el[0], fist: fistC };
+      /* (el marco, como el del antebrazo: -y hacia la punta de los dedos; antes iba al revés y la mano se metía en el antebrazo) */
+      F['hand' + s] = hd && !isFist(q, s) ? limb(el[1], add(el[1], hd), s, foreFront) : moved(F['fore' + s], at(F['fore' + s], [0, -LEN.fore, 0]));
+      /* (wr: la muñeca; con la muñeca doblada, el puño no sigue la línea del antebrazo) */
+      J[s] = { hip, knee: knee[0], ankle: knee[1], sh, el: el[0], fist: fistC, wr: hd ? el[1] : mix(el[0], el[1], LEN.fore / (LEN.fore + LEN.grip)) };
     });
     return { F, J };
   };
@@ -518,7 +520,6 @@
      con el cráneo, la cara y la barbilla; el pie, como una zapatilla (talón, empeine, planta y punta); el puño, cerrado
      sobre la barra (su marco: el centro en la barra, y hacia la muñeca, a lo largo de la barra y hacia los nudillos) */
   const BLOBS = {
-    hand: [[[0, -9, 1], [5.5, 8, 6.5]], [[0, -19, 2], [4.8, 6, 5.5]]],
     foot: [[[0, -12, -5], [6.5, 7.5, 6.5]], [[0, -3, 0], [6.5, 7, 7]], [[0, -11, 10], [8, 7.5, 9]], [[0, -15, 25], [9, 4.8, 8]], [[0, -16.5, 35], [7.5, 3.4, 6]]],
     fist: [[[0, 3, 0], [8.5, 8, 6.5]], [[-6.5, -5, 2.5], [3.6, 3.6, 3.6]], [[-2.2, -5.5, 2.8], [3.6, 3.6, 3.6]], [[2.2, -5.5, 2.8], [3.6, 3.6, 3.6]], [[6.5, -5, 2.5], [3.6, 3.6, 3.6]], [[0, -3, -4.5], [7, 3.6, 3.4]], [[0, 12, 0], [5.5, 4, 4.5]]],
   };
@@ -540,6 +541,18 @@
      la barra) al dedo doblado por delante de ella; y el pulgar, que sale de la base de la palma, rodea la barra por el otro
      lado y cruza por delante de los dedos. Hecho para la mano derecha: en la izquierda, x cambia de signo (el pulgar queda
      siempre hacia el centro del cuerpo) */
+  /* la mano abierta, en su marco (el origen en la muñeca, -y hacia la punta de los dedos, +z hacia la palma y +x hacia el
+     pulgar, en las dos manos): la palma con la muñeca, cada dedo con sus dos falanges (algo abiertos en abanico, el corazón
+     el más largo y el meñique el más corto) y el pulgar, que sale en diagonal de la base de la palma. Antes era un mitón de
+     dos elipsoides, que se leía como un muñón */
+  const OPEN = {
+    /* (la palma acaba ancha y roma en los nudillos, y cada dedo empieza dentro de ella: si no, entre la palma y los dedos
+       quedaba un cuello, como si fueran piezas sueltas) */
+    palm: [[[0, -3, 0], [5.4, 4.6, 4.2]], [[0, -11.5, .5], [8.2, 8.6, 3.2]], [[0, -18.6, .5], [8.4, 3.4, 2.7]]],
+    fingers: [[5.5, 2.05, 1, .5], [1.85, 2.15, 1.1, .15], [-1.85, 2.05, 1.05, -.15], [-5.3, 1.8, .85, -.5]].map(([x, r, l, sp]) => [
+      [[x + sp * .6, -19.6, .5], [r * 1.05, 2.6, 2.2]], [[x + sp, -24.4, .5], [r, 4.4 * l, 2.05]], [[x + sp * 2.2, -24.6 - 8 * l, .7], [r * .9, 4.3 * l, 1.85]]]),
+    thumb: [[[6.6, -5.4, 2.2], [3.1, 3.7, 2.8]], [[9.4, -10.8, 3], [2.6, 3.5, 2.3]], [[11.4, -15.9, 3.3], [2.2, 3.2, 2]]],
+  };
   const FIST = {
     // la palma y el dorso, con la base del pulgar (la eminencia tenar), y la muñeca
     body: [[[0, 4.2, .6], [7.6, 6, 4.6]], [[5.4, 4.8, -2.4], [3.2, 4, 3]], [[0, 11.8, .4], [5, 3.8, 4.1]]],
@@ -657,6 +670,16 @@
       g.detail = [body, band, thumb].sort((a, b) => a.z - b.z);
       if (g.z == null) g.z = onto(A, 0, 3, 0)[2];
     };
+    /* la mano abierta: la palma, cada dedo y el pulgar, cada uno con su contorno, de atrás adelante (como el puño) */
+    const openSkin = s => {
+      const g = group('hand' + s), A = axes(F['hand' + s], cam);
+      const out = list => hull([].concat(...list.map(([c, r]) => ellOut(A, c, r, ellN(r)))));
+      const depth = list => list.reduce((a, [c]) => a + onto(A, c[0], c[1], c[2])[2], 0) / list.length;
+      const parts = [OPEN.palm, ...OPEN.fingers, OPEN.thumb].map(l => ({ h: [out(l)], z: depth(l) }));
+      parts.forEach(p => g.skin.push({ h: p.h[0], rim: true }));
+      g.detail = parts.sort((a, b) => a.z - b.z);
+      if (g.z == null) g.z = onto(A, 0, -12, 0)[2];
+    };
     // el tronco: cada anillo, con el marco de su altura (en la cintura, a medias entre el tórax y la pelvis)
     const BF = {};
     const trunkSkin = () => {
@@ -678,7 +701,7 @@
     trunkSkin();
     ['L', 'R'].forEach(s => {
       ['upper', 'fore', 'thigh', 'shin'].forEach(k => ringSkin(k + s, F[k + s], RINGS_PRE[k]));
-      if (!isFist(q, s)) blobSkin('hand' + s, F['hand' + s], 'hand');
+      if (!isFist(q, s)) openSkin(s);
       else fistSkin(s);
       blobSkin('foot' + s, F['foot' + s], 'foot');
     });
