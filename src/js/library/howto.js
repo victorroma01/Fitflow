@@ -16,7 +16,7 @@ import { loadExInfo } from '../core/lazy.js';
 import { groupOf } from '../data/library.js';
 import { sheet, sheetToTop } from '../core/ui.js';
 import { S } from '../core/state.js';
-import { exAll, exByName, exMuscles } from './model.js';
+import { exAll, exByName, exMuscles, liveName } from './model.js';
 import { exAnatomy, exMotion, exMusclesSmall } from '../extras/anatomy.js';
 import { html, raw } from '../core/html.js';
 /* consejo de los ejercicios propios (no están en el catálogo), según su grupo */
@@ -43,13 +43,13 @@ export const withExInfo = f => {
 export const exTip = n => {
   if (!info)
     return '';
-  const x = info.get(n);
+  const x = info.get(liveName(n));
   if (x)
     return x.t;
   const e = exByName(n);
   return GROUP_TIPS[e ? groupOf(e) : 'Propio'] || GROUP_TIPS.Propio;
 };
-const exHow = n => (info && info.get(n) || {}).h || '';
+const exHow = n => (info && info.get(liveName(n)) || {}).h || '';
 /* ¿las figuras, quietas? Con «Reducir animaciones» de Ajustes o si el móvil pide menos movimiento */
 const stillFigures = () => !!S.reduceMotion || typeof matchMedia == 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* bajo la imagen grande: a la izquierda, los músculos en pequeño (de frente y de espaldas); a su lado, el nombre y cuáles son */
