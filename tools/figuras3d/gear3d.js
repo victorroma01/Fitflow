@@ -75,7 +75,8 @@
       const cap = m == 1 ? 'round' : i == 0 || i == m - 1 ? 'round' : 'butt';
       /* con un tercer color (la cinta del TRX), una raya fina por el centro, como una cincha */
       const stripe = col[2] ? `<path d="${df}" stroke="${col[2]}" stroke-width="${f1(w * .26)}" stroke-linecap="${cap}"/>` : '';
-      out.push({ z: (A[2] + B[2]) / 2, svg: `<path d="${d}" stroke="${col[1]}" stroke-width="${w + 1.6}" stroke-linecap="${cap}"/><path d="${df}" stroke="${col[0]}" stroke-width="${w}" stroke-linecap="${cap}"/>${stripe}` });
+      /* (mid: el punto medio del trozo en 3D, para ordenarlo según lo que de verdad lo tapa) */
+      out.push({ z: (A[2] + B[2]) / 2, mid: mix(P[i], P[i + 1], .5), svg: `<path d="${d}" stroke="${col[1]}" stroke-width="${w + 1.6}" stroke-linecap="${cap}"/><path d="${df}" stroke="${col[0]}" stroke-width="${w}" stroke-linecap="${cap}"/>${stripe}` });
     }
     return out;
   };

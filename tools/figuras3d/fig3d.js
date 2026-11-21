@@ -929,6 +929,21 @@
         if (groups['hand' + s]) { Z['hand' + s] = max(Z['hand' + s], Z[k] + 1e-4); delete twin['hand' + s]; }
       }
     });
+    /* los brazos cruzados (q.layers: las piezas por capas, de la que toca el pecho a la de más fuera): con el pecho hacia la
+       cámara (o de canto), cada capa encima de la anterior y todas encima del tronco; con el pecho de espaldas, al revés. Se
+       ordenaban por la profundidad de su centro y, al enrollarse el tronco, el orden cambiaba de golpe a mitad del gesto: los
+       antebrazos parecían atravesarse, y la mano que descansa en el hombro contrario se metía por debajo de ese brazo */
+    if (q.layers) {
+      /* (se da la vuelta solo con el pecho claramente de espaldas, y se suben sobre el tronco con el pecho claramente de cara:
+         en medio, de canto, no cambia nada y no hay saltos) */
+      const c = dot(F.thorax.z, cam.c), Ls = c >= -.6 ? q.layers : [...q.layers].reverse(), has_ = k => Z[k] != null;
+      if (c >= .15 && has_('trunk')) q.layers.flat().forEach(o => { if (has_(o)) Z[o] = max(Z[o], Z.trunk + 1e-3); });
+      const stack = () => Ls.forEach((hi, i) => { if (i) Ls.slice(0, i).flat().forEach(lo => hi.forEach(o => { if (has_(o) && has_(lo)) Z[o] = max(Z[o], Z[lo] + 1e-3); })); });
+      stack();
+      ['L', 'R'].forEach(s => { if (has_('hand' + s) && has_('fore' + s)) Z['hand' + s] = max(Z['hand' + s], Z['fore' + s] + 1e-4); });
+      stack();
+      q.layers.flat().forEach(o => delete twin[o]);
+    }
     Object.values(groups).forEach(g => {
       const z = Z[g.key];
       const sk = STYLE.skin;
