@@ -9,10 +9,11 @@ import { FIG_POSES } from '../../src/js/data/figposes.js';
 import { EXERCISES, groupOf } from '../../src/js/data/library.js';
 
 /* los lotes: sus familias */
-const LOTES = { 1: 'squat,press,overhead', 2: 'pulldown,row,pullup', 3: 'hinge,lunge,thrust,legPress,hack,legExt,legCurl' };
+const LOTES = { 1: 'squat,press,overhead', 2: 'pulldown,row,pullup', 3: 'hinge,lunge,thrust,legPress,hack,legExt,legCurl',
+  4: 'curl,trxCurl,pushdown,skull,overheadExt,kickback,tricepsMachine,dip,benchDip,wristCurl' };
 /* desde el lote 3, el material de la librería (q) entra como palabra si la tabla de la app no lo dice ya */
-const GEAR_FROM = new Set(LOTES[3].split(','));
-const GEAR = { Mancuernas: 'db', Barra: 'bar', Smith: 'smith', Kettlebell: 'kb', Banda: 'band', Polea: 'cable', 'Máquina': 'machine', 'Peso corporal': 'none' };
+const GEAR_FROM = new Set([...LOTES[3].split(','), ...LOTES[4].split(',')]);
+const GEAR = { Mancuernas: 'db', Barra: 'bar', 'Barra Z': 'ez', Smith: 'smith', Kettlebell: 'kb', Banda: 'band', Polea: 'cable', 'Máquina': 'machine', 'Peso corporal': 'none' };
 const arg = process.argv[2] || '1';
 const FAMILIES = (LOTES[arg] || arg).split(',');
 /* lo que el 3D distingue y la tabla de la app junta: la pausa, el agarre, el ángulo del banco, el Arnold, el JM, el hack */
@@ -22,7 +23,11 @@ const EXTRA = { 'Sentadilla con pausa': 'pause', 'Sentadilla goblet con pausa': 
   'Dominadas supinas': 'supine', 'Dominadas agarre neutro': 'neutral', 'Dominadas excéntricas': 'eccentric', 'Colgado a una mano': 'one',
   'Peso muerto con barra hexagonal': 'hex', 'Peso muerto con pausa': 'pause', 'Zancada caminando': 'walk', 'Lunges con sandbag 100 m': 'walk',
   'Sentadilla búlgara con énfasis en glúteo': 'glute', 'Hip thrust con pausa': 'pause', 'Prensa con pies juntos': 'narrow', 'Sentadilla Pendulum': 'pendulum',
-  'Sentadilla en máquina': 'upright', 'Extensión con pausa': 'pause' };
+  'Sentadilla en máquina': 'upright', 'Extensión con pausa': 'pause',
+  'Curl con barra agarre ancho': 'wide', 'Curl con barra agarre estrecho': 'close', 'Curl con barra Z agarre cerrado': 'close', 'Curl 21': 'x21',
+  'Curl Zottman': 'zottman', 'Curl con mancuernas a 45°': 'deg45', 'Curl con supinación completa': 'supinate', 'Curl martillo cruzado': 'cross',
+  'Curl martillo con barra Z': 'hammer', 'Curl en máquina unilateral': 'one', 'Curl inverso': 'reverse', 'Curl inverso en polea': 'reverse',
+  'Curl inverso con mancuernas': 'reverse', 'Extensión agarre supino en polea': 'supine', 'Extensión con barra V': 'vbar', 'TRX fondos': 'trx' };
 
 mkdirSync('salida', { recursive: true });
 writeFileSync('salida/mapa.json', JSON.stringify({ R: AN_R, S: AN_S, H: AN_H, PA: AN_PA }));

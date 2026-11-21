@@ -682,7 +682,7 @@
     return { hand: add(add(J[s].hip, mul(norm(sub(J[s].knee, J[s].hip)), d)), mul(th.z, prof1(THIGH_F, d) + lift)), palm: mul(th.z, -1) };
   };
 
-  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh };
+  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront, onThigh, ezBar };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];

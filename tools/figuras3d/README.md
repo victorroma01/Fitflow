@@ -10,8 +10,8 @@ Está en pruebas y **no está conectada a la app**: se integrará cuando estén 
 - `gear3d.js`: el material (bancos, Smith, máquinas, poleas, mancuernas, kettlebell, bandas, saco…).
 - `sonda.js`: solo para `choques.py`. Envuelve las piezas del material para que cada una apunte su forma en 3D al dibujarse;
   así la prueba de choques mira exactamente lo que se pinta.
-- `mov3d.js`, `tiron3d.js` y `piernas3d.js`: las familias de movimiento (las del lote 1, las de tirón del lote 2 y las de
-  pierna del lote 3). Cada una recibe las variantes de un ejercicio y da su postura en cada momento
+- `mov3d.js`, `tiron3d.js`, `piernas3d.js` y `brazos3d.js`: las familias de movimiento (las del lote 1, las de tirón del
+  lote 2, las de pierna del lote 3 y las de brazos del lote 4). Cada una recibe las variantes de un ejercicio y da su postura en cada momento
   del gesto. Las posturas salen de reglas físicas: los pies no se mueven del suelo, las rodillas van hacia las puntas de
   los pies y el tronco se inclina lo justo para que el peso quede sobre el medio del pie (con barra, la barra; en la
   Smith, para que la barra siga sus guías). En el banco, la barra toca el pecho con los antebrazos casi verticales.
@@ -23,7 +23,7 @@ Está en pruebas y **no está conectada a la app**: se integrará cuando estén 
 Con Node 22 y Python con Playwright (lo mismo que las pruebas), desde esta carpeta:
 
 ```
-node datos.mjs 3                   # los datos de un lote (1: squat,press,overhead; 2: pulldown,row,pullup; 3: las de pierna)
+node datos.mjs 3                   # los datos de un lote (1: squat,press,overhead; 2: pulldown,row,pullup; 3: las de pierna; 4: las de brazos)
 python3 banco.py                   # el banco de pruebas: salida/banco.html
 python3 verifica.py                # manos que no llegan, pies fuera del suelo, codos o rodillas imposibles, asimetrías
 python3 choques.py [-v]            # el material (todo lo que se dibuja) contra el cuerpo, brazos y piernas que se cruzan o atraviesan el tronco; -v da el punto
