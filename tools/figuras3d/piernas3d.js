@@ -368,13 +368,15 @@
       const q0 = at_(1), hB = q0.root[1], zR = q0.root[2], hA = reachH(feetAt(1, 0), zR, lean) + 14;
       const fA = { L: [16, zF, 4, 0, 0], R: backToes(1) }, swap = f => ({ L: [f.R[0] - 2, ...f.R.slice(1)], R: [f.L[0] + 2, ...f.L.slice(1)] });
       const half = (u, A, B, kA, kB) => {
-        /* el impulso (de 0 a .32), el vuelo (hasta .68) y la caída (hasta 1) */
-        const up = span(u, 0, .32), down = 1 - span(u, .68, 1), air = clamp(min(up, down), 0, 1), sw = span(u, .3, .7);
-        const h = mix(hB, hA, air ** .8), feet = {};
+        /* el impulso (de 0 a .3), el vuelo (hasta .7) y la caída (hasta 1). En el aire, la cadera sube frenando y baja acelerando
+           (una parábola) y, al tocar el suelo, la bajada se amortigua; antes se quedaba a la misma altura todo el vuelo, como
+           flotando, y el pie cambiaba de golpe */
+        const sw = span(u, .3, .7), mjx = x => x * x * x * (10 + x * (6 * x - 15));
+        const fly = u > .3 && u < .7 ? (u - .3) / .4 : -1, h = u <= .3 ? mix(hB, hA, mjx(u / .3)) : fly >= 0 ? hA + 18 * 4 * fly * (1 - fly) : mix(hA, hB, 1 - (1 - (u - .7) / .3) ** 2), feet = {};
         for (const s of ['L', 'R']) {
           const v = A[s].map((x, i) => mix(x, B[s][i] != null ? B[s][i] : 0, sw));
-          /* en el aire, los pies se despegan del suelo lo que sube la cadera por encima de estar de pie, y algo más */
-          v[3] = (v[3] || 0) + max(0, h - hA + 14) * 1.05 * (sw > 0 && sw < 1 ? 1 : air);
+          /* en el aire, los pies se despegan lo que sube la cadera, y algo más mientras las piernas se cruzan */
+          v[3] = (v[3] || 0) + (fly >= 0 ? (h - hA) + 13 * Math.sin(Math.PI * fly) : 0);
           feet[s] = v;
         }
         const kn = { L: mix(kA.L, kB.L, sw), R: mix(kA.R, kB.R, sw) };
@@ -384,7 +386,7 @@
       const B = swap(fA);
       return {
         view: 'front', up: 'a', rest: 'a', cam: [-68, 8], one: true, feetOff: true,
-        beat: ms => (ms % 2400) / 2400,
+        beat: ms => (ms % 2200) / 2200,
         at(t) { const q = t < .5 ? half(t * 2, fA, B, kL, kR) : half(t * 2 - 1, B, fA, kR, kL), { F } = pose({ ...q, hands: ZERO, elbow: {} }); return { ...q, hands: both(s => at(F.pelvis, sd(s, [30, 26, 4]))), elbow: both(() => [1, -.2, -.6]), fist: false, palm: both(s => sd(s, [-1, 0, 0])) }; },
         gear: () => [],
       };

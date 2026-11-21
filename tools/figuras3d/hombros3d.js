@@ -87,9 +87,13 @@
       if (clap) {
         /* el ciclo: baja y sube (hasta .45), empuja fuerte: el cuerpo sube un poco, las manos se despegan y dan una palmada
            delante del pecho, y vuelve a caer en las manos */
-        const d = keys(t, [[0, 0], [.22, 1], [.3, 1], [.45, 0], [1, 0]]);
-        u = keys(t, [[0, 0], [.45, 0], [.58, 1], [.68, 1], [.82, 0], [1, 0]]);
-        th = mix(th0, th1, d) + 5 * u;
+        /* (de seguido, como se hace: baja despacio, empuja de golpe sin pararse, el cuerpo sale despedido y sube y cae como cae
+           cualquier cosa (una parábola) mientras las manos se juntan y vuelven, y al caer amortigua doblando un poco los codos.
+           Antes cada tramo arrancaba y frenaba y el cuerpo apenas subía) */
+        const S_ = F3.clib.spl, fl = t > .5 && t < .72 ? (t - .5) / .22 : -1;
+        const d = S_(t, [[0, 0], [.38, 1], [.5, 0], [.72, 0], [.8, .38], [.92, 0], [1, 0]]);
+        u = fl < 0 ? 0 : Math.sin(Math.PI * fl) ** .7;
+        th = mix(th0, th1, d) + (fl < 0 ? 0 : 9 * 4 * fl * (1 - fl));
         const q0 = mk(th, zA), { F } = pose({ ...q0, hands: ZERO, elbow: {} });
         H = both(s => mix(Hs[s], at(F.thorax, sd(s, [6, 30, 52])), u));
       }
@@ -110,20 +114,22 @@
       return out;
     };
     const ex = { view: 'front', up: 'a', rest: 'a', cam: [-64, 14], feetOff: true, one: archer, at: at_, gear };
-    if (clap) ex.beat = cycle(3800);
+    if (clap) ex.beat = cycle(3200);
     return ex;
   };
 
   /* ════ press de pecho: máquina, polea y banda ════ */
   const pressOut = f => {
     const w = x => has(f, x), machine = w('machine'), cable = w('cable'), band = w('band'), incline = w('incline'), decline = w('decline'), conv = w('converge'), one = w('one');
-    const body = machine ? { ...SEAT, tilt: -10, neck: 6 } : SPLIT, { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
+    /* (de pie, en la polea o con la banda, el tronco algo inclinado hacia delante sobre el pie adelantado, como se empuja de
+       verdad; antes iba recto) */
+    const body = machine ? { ...SEAT, tilt: -10, neck: 6 } : { ...SPLIT, tilt: (SPLIT.tilt || 0) + 9, spine: (SPLIT.spine || 0) + 3, neck: (SPLIT.neck || 0) - 8 }, { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
     /* de junto al pecho (codos atrás y algo abiertos) a los brazos estirados al frente; inclinado, hacia arriba; declinado, hacia
        abajo; en la convergente, las manos se juntan al estirar */
     const yE = incline ? 122 : decline ? 26 : 66, yC = incline ? 64 : decline ? 50 : 58;
     /* (arriba, el brazo casi estirado, sin bloquear el codo: estirado del todo, el codo daría un salto al empezar a doblarse) */
     const reach = (s, P) => { const S = shoulder(F0, s, body), d = sub(P, S), r = len(d), m = .94 * (LU + LF); return r > m ? add(S, mul(d, m / r)) : P; };
-    const lo = s => at(F0.thorax, sd(s, [57, yC, 24])), hi = s => reach(s, at(F0.thorax, sd(s, [conv ? 18 : 36, yE, 138])));
+    const lo = s => at(F0.thorax, sd(s, [57, yC, 24])), hi = s => reach(s, at(F0.thorax, sd(s, [conv ? 18 : cable || band ? 28 : 36, yE, 138])));
     const ss = one ? ['R'] : ['L', 'R'];
     /* en la máquina, cada asa va en una palanca que cuelga de un eje alto, por encima del punto medio de su recorrido: la mano va
        por un arco (antes iba en línea recta y la palanca se alargaba y se acortaba) */
@@ -166,9 +172,11 @@
     if (machine || crossC || band) {
       /* de cara a la máquina (sentado, el pecho contra el respaldo), a las poleas o con la banda: los brazos al frente, a la
          altura de los hombros, se abren hasta los lados */
-      body = machine ? { ...SEAT, tilt: 6 } : { ...STAND, tilt: 4 };
+      body = machine ? { ...SEAT, tilt: 9 } : { ...STAND, tilt: 4 };
       P = t => ({ u: sph(mix(band ? 4 : crossC ? -14 : 6, band ? 76 : 86, t), 2), e: 8, n: [0, -1, 0], bd: machine ? [0, 1, 0] : [0, 0, 1] });
-      cam = [-30, 18];
+      /* (se ve desde atrás: los deltoides de atrás y la espalda, lo que trabaja, y los brazos que se abren; de frente la máquina
+         tapaba el gesto) */
+      cam = machine || crossC ? [-152, 16] : [-30, 18];
     }
     else if (benchB) {
       /* boca abajo en el banco inclinado: los brazos cuelgan y suben hasta los lados (la T) o hacia delante y arriba, abiertos (la Y) */
@@ -178,7 +186,9 @@
       /* (la T, con los brazos estirados y los pulgares hacia arriba: la mancuerna, de través abajo y vertical arriba) */
       const tee = w('tee');
       P = t => ({ u: yRaise ? norm(mix([.06, -1, .08], u1, ease(t))) : sph(90, mix(-84, 0, t)), e: tee ? 1 : 6, n: [0, 0, 1], bd: yRaise ? [1, 0, 0] : tee ? norm(mix([0, 0, 1], [0, 1, .15], ease(t))) : [0, 0, 1] });
-      cam = [-74, 14];
+      /* (la Y y la T, vistas desde atrás y arriba, donde se ve la forma de los brazos y lo que trabaja; de lado, un brazo tapaba
+         al otro y no se distinguían) */
+      cam = yRaise || tee ? [-156, 34] : [-74, 14];
     }
     else {
       /* de pie, inclinado desde la cadera con la espalda recta: los brazos cuelgan y se abren a los lados, con los codos algo
@@ -193,7 +203,8 @@
     const gear = (q, F, cam) => {
       const out = [];
       if (machine) {
-        const seat = at(F0.pelvis, [0, -22, 0]), ch = at(F0.thorax, [0, 40, 36]);
+        /* (el respaldo, contra el pecho: su cara, justo en el pecho tal como se dibuja; antes quedaba un palmo por delante) */
+        const fr = B.prof(L.TRUNK3, 160 - 52), seat = at(F0.pelvis, [0, -22, 0]), ch = at(F0.thorax, [0, 40, fr[2] + fr[3] + 1 - 6 + 7]);
         out.push(...GR.under([GR.padAB(cam, [0, seat[1] - 7, seat[2] - 24], [0, seat[1] - 7, seat[2] + 24], UP, 28, 7), ...GR.leg(cam, [0, seat[1] - 14, seat[2]]), GR.padAB(cam, add(ch, [0, -40, 6]), add(ch, [0, 40, 6]), [0, 0, -1], 26, 7), ...GR.tube(cam, add(ch, [0, -40, 20]), [0, 8, ch[2] + 30], 7), ...GR.stack(cam, [0, 0, ch[2] + 90], [0, 0, -1], 12)], 3));
         /* las asas, verticales, en palancas en L que giran en un eje vertical justo encima de cada hombro (la mano da la vuelta
            alrededor del hombro, así que la palanca no cambia de largo); los ejes cuelgan de una viga que viene de la columna de
@@ -218,7 +229,7 @@
       if (!machine && !crossC && !band) out.push(...['L', 'R'].flatMap(s => GR.dumbbell(cam, q.hands[s], dbAxis(F, q, s), s)));
       return out;
     };
-    return { view: 'stand', up: 'b', rest: 'a', cam, feetOff: benchB, at: at_, gear };
+    return { view: 'stand', up: 'b', rest: 'a', cam, side: machine || crossC ? [-60, 10] : benchB && (yRaise || w('tee')) ? [-74, 14] : undefined, feetOff: benchB, at: at_, gear };
   };
 
   /* ════ elevaciones laterales ════ */
@@ -278,12 +289,14 @@
   /* ════ aperturas en polea, cruces y contractor ════ */
   const cross_ = f => {
     const w = x => has(f, x), mid = w('mid'), low = w('low'), deck = w('deck'), one = w('one'), band = w('band');
-    const body = deck ? { ...SEAT, tilt: -6 } : { ...SPLIT, tilt: 12 };
+    /* (de pie, el tronco inclinado sobre el pie adelantado: más desde arriba, menos desde abajo) */
+    const body = deck ? { ...SEAT, tilt: -6 } : { ...SPLIT, tilt: low ? 8 : mid || band ? 12 : 16, spine: low ? 2 : 4 };
     const { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
     /* los brazos van de abiertos (atrás, a la altura de las poleas) a juntos delante: desde arriba, las manos se juntan delante de
        la cadera; a media altura, del pecho; desde abajo, de la cara. En el contractor, con los codos doblados y los antebrazos
        verticales contra los rodillos */
-    const a0 = deck ? [86, 0] : low ? [70, -44] : mid || band ? [88, 0] : [76, 20], a1 = deck ? [10, 0] : low ? [6, 26] : mid || band ? [6, -4] : [8, -36];
+    /* (al final, las manos llegan a juntarse y, desde arriba, se cruzan un poco delante de la cadera, como en un cruce de verdad) */
+    const a0 = deck ? [86, 0] : low ? [70, -44] : mid || band ? [88, 0] : [76, 20], a1 = deck ? [10, 0] : low ? [5, 26] : mid || band ? [3, -4] : one ? [6, -36] : [-3, -38];
     const ss = one ? ['R'] : ['L', 'R'];
     const at_ = t => {
       const h = mix(a0[0], a1[0], t), el = mix(a0[1], a1[1], t);
@@ -393,7 +406,9 @@
     const at_ = t => ({ ...body, ...arms(['L', 'R'], s => ({ ...armU(F0, body, s, sph(mix(6, hMax, t), 10), 24, { n: [-.6, 0, 1] }), bd: norm(F0.thorax.y) })) });
     const gear = (q, F, cam) => {
       const out = floor ? GR.under([GR.obox(cam, [0, 1.5, body.root[2] - 70], [[1, 0, 0], UP], [40, 1.5, 125], GR.C.pad)]) : benchUnder(cam, F0, ang);
-      if (cable) out.push(...towers(cam, q, 170, at(F0.thorax, [0, 50, 0])[2], 16), ...handles(cam, F, q));
+      /* (las torres, a los lados de donde quedan las manos con los brazos abiertos, a la altura del pecho: así el cable tira hacia
+         fuera y abajo; antes quedaban hacia los pies y tiraba en diagonal hacia la cadera) */
+      if (cable) out.push(...towers(cam, q, 250, at_(1).hands.L[2] - 4, 16), ...handles(cam, F, q));
       else out.push(...['L', 'R'].flatMap(s => GR.dumbbell(cam, q.hands[s], dbAxis(F, q, s), s)));
       return out;
     };
@@ -410,7 +425,8 @@
     const S0 = shoulder(F0, 'L', body), zAt = y => frontAt(F0, J0, y) + need;
     const yLow = z => S0[1] - sqrt(max(0, 146 ** 2 - (hx - S0[0]) ** 2 - (z - S0[2]) ** 2));
     let y0 = 170; for (let i = 0; i < 8; i++) y0 = yLow(zAt(y0));
-    const y1 = at(F0.thorax, [0, 66, 0])[1];
+    /* (arriba, hasta lo alto del pecho, bajo la barbilla, con los codos por encima de las manos) */
+    const y1 = at(F0.thorax, [0, db ? 76 : 82, 0])[1];
     const at_ = t => {
       const y = mix(y0, y1, t);
       /* (la muñeca se dobla y el puño cuelga debajo de ella: la barra (o las mancuernas, de través) queda recta y por debajo de los
@@ -434,7 +450,9 @@
     /* de cara a la polea, a la altura de la cara: de los brazos estirados hacia ella a las manos junto a las orejas, con los codos
        abiertos y altos */
     const ss = one ? ['R'] : ['L', 'R'];
-    const at_ = t => { const o = arms(ss, s => ({ ...armU(F0, body, s, sph(mix(10, 80, t), mix(4, 14, t)), mix(4, 116, t), { n: [-.2, .4, 1] }), bd: [0, 1, 0] })); return one ? { ...body, ...freeL(F0, o) } : { ...body, ...o }; };
+    /* (al final, los codos abiertos a la altura de los hombros y algo atrás, y los antebrazos girados hacia arriba: las manos junto
+       a las orejas, separadas; antes acababan delante de la cara, como un remo) */
+    const at_ = t => { const k = ease(t), o = arms(ss, s => ({ ...armU(F0, body, s, sph(mix(10, 88, k), mix(4, 10, k)), mix(4, 102, k), { n: norm(mix([-.2, .4, 1], [-.12, 1, .1], k)) }), bd: [0, 1, 0] })); return one ? { ...body, ...freeL(F0, o) } : { ...body, ...o }; };
     const gear = (q, F, cam) => {
       if (band) return anchorBands(cam, q, [0, 340, 160], ss);
       const m = one ? q.hands.R : mix(q.hands.L, q.hands.R, .5), top = one ? m : add(m, [0, 0, 16]);
