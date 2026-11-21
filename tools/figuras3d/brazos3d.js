@@ -460,7 +460,8 @@
     /* los brazos por encima de la cabeza, con los codos apuntando arriba; los antebrazos bajan por detrás de la cabeza.
        Con mancuerna (una, sujeta con las dos manos por la cabeza de arriba, o a una mano), sentado; con la barra Z, de pie; con
        la cuerda, de espaldas a la polea y algo inclinado, hacia delante y arriba */
-    let body = SEAT, flA = 170, flB = 174, gx = 7, rho = 90, cam = [-64, 8];
+    /* (casi de perfil: de tres cuartos, la mancuerna detrás de la cabeza quedaba tapada por ella) */
+    let body = SEAT, flA = 170, flB = 174, gx = 7, rho = 90, cam = [-80, 8];
     if (ez) { body = STAND; gx = 24; rho = 158; }
     if (cable) { body = { ...STAND, tilt: 26, spine: 4, neck: -4, feet: { L: [22, 40, 8], R: [24, -38, 12] }, knee: { L: [.2, .3, 1], R: [.2, 0, 1] } }; flA = 150; flB = 156; gx = null; cam = [-72, 6]; }
     if (one) gx = null;
