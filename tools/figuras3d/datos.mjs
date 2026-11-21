@@ -13,9 +13,10 @@ const LOTES = { 1: 'squat,press,overhead', 2: 'pulldown,row,pullup', 3: 'hinge,l
   4: 'curl,trxCurl,pushdown,skull,overheadExt,kickback,tricepsMachine,dip,benchDip,wristCurl',
   5: 'pushup,pressOut,rearFly,lateral,cross,shrug,frontRaise,fly,upright,facePull,straightArm,pullover',
   6: 'crunch,plank,hyper,legRaise,twist,wheelRoll,sidePlank,chop,deadBug,pallof,birdDog,vacuum,calf,tib,hipOpen,kick,stepUp,sissy,pistol,bandWalk,sideLunge',
-  7: 'oly,kbell,carry,sled,burpee,wallBall,medBall,boxJump,sideJump,muscleUp,ropeClimb,handstand,crawl,inchworm,svend,ropes,tire' };
+  7: 'oly,kbell,carry,sled,burpee,wallBall,medBall,boxJump,sideJump,muscleUp,ropeClimb,handstand,crawl,inchworm,svend,ropes,tire',
+  8: 'run,bike,rower,skiErg,jumpRope,elliptical,stairs,swim,boxing' };
 /* desde el lote 3, el material de la librería (q) entra como palabra si la tabla de la app no lo dice ya */
-const GEAR_FROM = new Set([3, 4, 5, 6, 7].flatMap(k => LOTES[k].split(',')));
+const GEAR_FROM = new Set([3, 4, 5, 6, 7, 8].flatMap(k => LOTES[k].split(',')));
 const GEAR = { Mancuernas: 'db', Barra: 'bar', 'Barra Z': 'ez', Smith: 'smith', Kettlebell: 'kb', Banda: 'band', Polea: 'cable', 'Máquina': 'machine', 'Peso corporal': 'none' };
 const arg = process.argv[2] || '1';
 const FAMILIES = (LOTES[arg] || arg).split(',');
@@ -34,7 +35,7 @@ const EXTRA = { 'Sentadilla con pausa': 'pause', 'Sentadilla goblet con pausa': 
   'Flexiones diamante': 'diamond', 'Flexiones con palmada': 'clap', 'Flexiones arqueras': 'archer', 'Press pecho máquina convergente': 'converge',
   'Press de pecho unilateral en polea': 'one', 'Elevación T': 'tee', 'Landmine press': 'two', 'Curl en polea con cuerda': 'twist', 'Rompecráneos barra Z': 'back', 'Elevaciones laterales a una mano en polea': 'lean', 'TRX flexiones': 'feet', 'Encogimientos con barra hexagonal': 'hex', 'Remo al mentón agarre ancho': 'wide',
   'Face pull a una mano': 'one', 'Sit-ups': 'abmat', 'Patada de glúteo en máquina': 'kneel', 'Gemelo sentado unilateral': 'one', 'Step up lateral': 'side',
-  'Handstand push-up': 'kip', 'Sled push pesado': 'heavy', 'Sled push ligero y rápido': 'fast', 'Cargada de mochila': 'pack' };
+  'Handstand push-up': 'kip', 'Sled push pesado': 'heavy', 'Sled push ligero y rápido': 'fast', 'Cargada de mochila': 'pack', 'Carrera 1 km con chaleco': 'vest' };
 
 mkdirSync('salida', { recursive: true });
 writeFileSync('salida/mapa.json', JSON.stringify({ R: AN_R, S: AN_S, H: AN_H, PA: AN_PA }));

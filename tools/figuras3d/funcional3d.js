@@ -741,10 +741,11 @@
   /* (la mochila: una caja blanda de 52 de ancho, 76 de alto y 32 de fondo, con su asa arriba) */
   const PACK = [26, 38, 16], HANDLE = 9;
   /* la mochila: el cuerpo (una caja), el asa de arriba (la agarran los puños) y las dos hombreras por la cara
-     de atrás, la que va hacia quien la levanta. c: su centro; up: hacia arriba; hands: quién agarra el asa */
+     de atrás, la que va hacia quien la levanta. c: su centro; up: hacia arriba; hands: quién agarra el asa; xa: su lado
+     (de su derecha a su izquierda, vista de frente) */
   const PACK_COL = ['#2b3040', '#68708c'];
-  const packGear = (cam, c, up, hands) => {
-    const y = norm(up), x = norm(perp([1, 0, 0], y)), z = cross(x, y), out = [];
+  const packGear = (cam, c, up, hands, xa = [1, 0, 0]) => {
+    const y = norm(up), x = norm(perp(xa, y)), z = cross(x, y), out = [];
     out.push(GR.obox(cam, c, [x, y], PACK, PACK_COL));
     /* (la tapa de arriba, algo abombada, y el bolsillo de delante) */
     out.push(GR.obox(cam, add(c, mul(y, PACK[1] - 6)), [x, y], [PACK[0] - 2, 6, PACK[2] + 1.5], ['#323849', '#68708c']));
@@ -1682,5 +1683,5 @@
 
   const stub = () => null;
   Object.assign(F3.FAMILIES, { oly, kbell, carry, sled, burpee, wallBall, medBall, boxJump, sideJump, muscleUp, ropeClimb, handstand, crawl, inchworm, svend, ropes, tire });
-  F3.flib = { spl, sequence, footUp, legRootA, legsAt, qOf, legs, BASE };
+  F3.flib = { spl, sequence, footUp, legRootA, legsAt, qOf, legs, BASE, gait, hipOver, footPose, keyAnim, qmix, reachClamp, withHands, bySh, legsFree, acrossFist, armArc, elArc, packGear, PACK, PU, HDF, ROPE_C, WALL_C, stepZ };
 })(window);
