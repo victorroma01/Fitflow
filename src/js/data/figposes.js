@@ -356,7 +356,6 @@ export const FIG_POSES = {
   'Crunch inverso': 'legRaise reverse',
   'Elevación de rodillas colgado': 'pullup knees',
   'Dragon flag': 'legRaise dragon',
-  'Elevaciones de piernas tumbado': 'legRaise',
   'Elevación de piernas en paralelas': 'pullup chair',
   'Elevación de piernas colgado': 'pullup legs',
   'Elevación de rodillas en silla romana': 'pullup chair knees',
