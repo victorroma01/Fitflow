@@ -28,6 +28,8 @@ python3 banco.py                   # el banco de pruebas: salida/banco.html
 python3 verifica.py                # manos que no llegan, pies fuera del suelo, codos o rodillas imposibles, asimetrías
 python3 choques.py [-v]            # el material (todo lo que se dibuja) contra el cuerpo, brazos y piernas que se cruzan o atraviesan el tronco; -v da el punto
 python3 saltos.py                  # saltos de un fotograma a otro en la animación
+python3 grosor.py [-v]             # con el grosor del dibujo: material dentro de brazos o piernas, y puños o antebrazos dentro de los muslos
+python3 fijos.py                   # piezas que no deben moverse (guías de la Smith, postes de la polea, patas de los bancos, cajones)
 python3 numeros.py "Sentadilla"    # inclinación del tronco, ángulos, barra sobre el medio del pie…
 python3 hoja.py hoja.png "Sentadilla|Press banca"   # una hoja con cada ejercicio en varios momentos y de lado
 python3 pagina.py                  # la página de revisión del lote (sus textos, en textos.py): salida/pagina/index.html

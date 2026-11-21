@@ -614,7 +614,62 @@
 
   F3.FAMILIES = { squat, press, overhead };
   /* lo que comparten las familias de los otros lotes (cada lote, en su archivo) */
-  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag };
+  /* lo que la cara de delante del muslo y de la espinilla sobresale de su eje, según la distancia a la cadera (o a la rodilla):
+     el medio fondo del dibujo más lo que se adelanta su centro (los perfiles de fig3d). El muslo abulta hasta 22 a media
+     altura; antes se tomaba 15, y la barra que subía pegada a él pasaba por dentro del cuádriceps */
+  const THIGH_F = [[-10, 12], [2, 17], [12, 20.1], [28, 22.4], [46, 21.4], [62, 18.2], [74, 14.4], [88, 11], [99, 10.5]];
+  const SHIN_F = [[-8, 10.5], [4, 11], [14, 12.2], [26, 11.6], [40, 10], [54, 8], [70, 7], [84, 6.6], [92, 6.6]];
+  /* y su medio ancho (hacia los lados) */
+  const THIGH_W = [[-10, 12], [2, 17.5], [12, 19.2], [28, 19.2], [46, 17.6], [62, 15.5], [74, 13], [88, 10.5], [99, 10]];
+  const SHIN_W = [[-8, 10], [4, 11.5], [14, 15.2], [26, 14.6], [40, 11.4], [54, 8], [70, 6.4], [84, 6.2], [92, 6.2]];
+  const prof1 = (tab, d) => { if (d <= tab[0][0]) return tab[0][1]; for (let i = 1; i < tab.length; i++) if (d <= tab[i][0]) { const a = tab[i - 1], b = tab[i]; return a[1] + (b[1] - a[1]) * (d - a[0]) / (b[0] - a[0]); } return tab[tab.length - 1][1]; };
+  /* lo más adelantado de las piernas a la altura y: la cara de delante del muslo o de la espinilla, contada en horizontal (con
+     la pierna inclinada, la sección a una altura es más larga que el grosor: e / cos). Lo que va pegado a ellas (la barra, las
+     mancuernas, la kettlebell) tiene que quedar por delante */
+  const legFront = (J, y, xr) => {
+    let z = -1e9;
+    for (const s of ['L', 'R']) {
+      const j = J[s];
+      const seg = (a, b, tab, wtab, L0, ext) => {
+        const dy = b[1] - a[1], dz = b[2] - a[2], ln = Math.hypot(dy, dz) || 1, c = max(.25, abs(dy) / ln), lo = min(a[1], b[1]) - ext, hi = max(a[1], b[1]) + ext;
+        if (y < lo || y > hi) return;
+        const u = abs(dy) > 1e-6 ? clamp((y - a[1]) / dy, 0, 1) : .5, e = prof1(tab, u * L0);
+        /* con xr (de x0 a x1, en valor absoluto): solo si la pierna, a esa altura, llega a esa franja */
+        if (xr) { const xc = abs(a[0] + (b[0] - a[0]) * u), hw = prof1(wtab, u * L0); if (xc + hw < xr[0] || xc - hw > xr[1]) return; }
+        z = max(z, a[2] + dz * u + e / c);
+      };
+      seg(j.hip, j.knee, THIGH_F, THIGH_W, LEN.thigh, 4); seg(j.knee, j.ankle, SHIN_F, SHIN_W, LEN.shin, 4);
+    }
+    return z;
+  };
+  /* lo más adelantado de las piernas a la altura y justo en x (en valor absoluto), para algo de radio r: la sección de cada pierna
+     a esa altura es una elipse (su medio ancho y su fondo, estirado por la inclinación), así que lo que hace falta adelantarse
+     crece y decrece sin saltos según se solapa con ella */
+  const legFrontX = (J, y, x, r) => {
+    let z = -1e9;
+    for (const s of ['L', 'R']) {
+      const j = J[s];
+      const seg = (a, b, tab, wtab, L0) => {
+        const dy = b[1] - a[1], dz = b[2] - a[2], ln = Math.hypot(dy, dz) || 1, c = max(.25, abs(dy) / ln);
+        if (y < min(a[1], b[1]) - 4 || y > max(a[1], b[1]) + 4) return;
+        const u = abs(dy) > 1e-6 ? clamp((y - a[1]) / dy, 0, 1) : .5, xc = abs(a[0] + (b[0] - a[0]) * u), hw = prof1(wtab, u * L0) + r, k = 1 - ((x - xc) / hw) ** 2;
+        if (k > 0) z = max(z, a[2] + dz * u + (prof1(tab, u * L0) / c + r) * sqrt(k));
+      };
+      seg(j.hip, j.knee, THIGH_F, THIGH_W, LEN.thigh); seg(j.knee, j.ankle, SHIN_F, SHIN_W, LEN.shin);
+    }
+    return z;
+  };
+  /* lo que tiene que adelantarse lo que se lleva en las manos (a la altura y, con las manos a g del centro) para que ni ello
+     (rng: su alto respecto a las manos; need: su radio y un margen) ni los puños y antebrazos, que cuelgan sobre ello, toquen
+     las piernas */
+  const loadFront = (J, y, g, rng, need) => {
+    let m = -1e9;
+    for (let d = rng[0]; d <= rng[1] + 1e-9; d += 5) m = max(m, legFront(J, y + d) + need);
+    for (let d = 0; d <= 50; d += 5) m = max(m, legFront(J, y + d, [g - 11, g + 11]) + 10.5);
+    return m;
+  };
+
+  F3.mlib = { has, pose, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, COP, solve, solveNear, smin, smax, legRoot, bb, pair, bands, olympic, dbAxis, bodyCaps, taut, occluders, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront };
   /* la figura de un ejercicio: su familia y variantes (palabras), y sus músculos principales (P) y secundarios (S) */
   F3.make = (name, words, P, S) => {
     const w = words.split(' '), fam = F3.FAMILIES[w[0]];

@@ -1113,6 +1113,6 @@
     return [x0, y0, x1 - x0, y1 - y0];
   };
   /* lo que hace falta para escribir ejercicios y material fuera de aquí */
-  const lib = { add, sub, mul, dot, cross, len, norm, perp, mix, ease, clamp, at, turn, moved, RAD, LEN, bar, plate, box, barbell, kept, hull, smoothR, smooth, f1, pathOf, ik, isFist };
+  const lib = { add, sub, mul, dot, cross, len, norm, perp, mix, ease, clamp, at, turn, moved, RAD, LEN, bar, plate, box, barbell, kept, hull, smoothR, smooth, f1, pathOf, ik, isFist, LIMB3, TRUNK3 };
   G.Fig3D = { EX, draw, camera, DEFS, beat, frameBox, PARTS, pose, lib };
 })(window);

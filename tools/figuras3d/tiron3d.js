@@ -63,7 +63,8 @@
         const out = [];
         /* el asiento y los rodillos de los muslos (o nada, de rodillas) */
         if (!kneel) {
-          const s = at(F.pelvis, [0, -22, -8]), s0 = [0, s[1] - 7, s[2] - 24], s1 = add(s0, [0, 0, 60]);
+          /* (bajo la cadera, que no se mueve: si siguiera a la pelvis, el asiento se movería al echar el tronco atrás) */
+          const s = add(F.pelvis.o, [0, -22, -8]), s0 = [0, s[1] - 7, s[2] - 24], s1 = add(s0, [0, 0, 60]);
           out.push(...GR.under([...GR.leg(cam, add(mix(s0, s1, .5), [0, -7, 0])), GR.padAB(cam, s0, s1, UP, 30, 7)]));
           const { J } = pose(q), kn = mix(J.L.knee, J.R.knee, .5), d = norm(sub(mix(J.L.hip, J.R.hip, .5), kn)), r = add(add(kn, mul(d, 18)), mul(norm(sub(UP, mul(d, dot(UP, d)))), 21));
           out.push(...GR.tube(cam, add(r, [-34, 0, 0]), add(r, [-8, 0, 0]), 11, GR.C.pad, 1), ...GR.tube(cam, add(r, [8, 0, 0]), add(r, [34, 0, 0]), 11, GR.C.pad, 1));
@@ -296,7 +297,8 @@
       arms = t => ({ ...bodyAt(t), ...ret(t) });
       gear = (q, F, cam) => {
         const out = [];
-        const s = at(F.pelvis, [0, -22, -8]), s0 = [0, s[1] - 7, s[2] - 26], s1 = add(s0, [0, 0, mach || high ? 60 : 110]);
+        /* (bajo la cadera, que no se mueve: si siguiera a la pelvis, el asiento se movería con el tronco) */
+        const s = add(F.pelvis.o, [0, -22, -8]), s0 = [0, s[1] - 7, s[2] - 26], s1 = add(s0, [0, 0, mach || high ? 60 : 110]);
         out.push(...GR.under([...GR.leg(cam, add(mix(s0, s1, .5), [0, -7, 0])), GR.padAB(cam, s0, s1, UP, 28, 7)]));
         if (mach) {
           /* el apoyo del pecho y las palancas de las asas, que cuelgan de un eje alto por delante */
