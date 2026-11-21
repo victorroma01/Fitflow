@@ -502,7 +502,6 @@ export const FIG_POSES = {
   'Sentadilla con salto': 'squat jump',
   'Salto lateral': 'sideJump',
   'Skater jump': 'sideJump skater',
-  'Salto al cajón': 'boxJump',
   'Lanzamiento de balón medicinal': 'medBall',
   'Lanzamiento rotacional de balón': 'medBall rot',
   'Volteo de neumático': 'tire',
