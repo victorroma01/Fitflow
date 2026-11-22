@@ -356,7 +356,8 @@
   };
   const pose = q => {
     const { pelvis, thorax } = torso(q);
-    const neck = turn(moved(thorax, at(thorax, [0, 100, -4])), 'x', (q.neck || 0) + NECK_TILT);
+    /* (look: la cabeza girada a un lado, alrededor del cuello, como al respirar nadando) */
+    const neck = turn(turn(moved(thorax, at(thorax, [0, 100, -4])), 'y', q.look || 0), 'x', (q.neck || 0) + NECK_TILT);
     const head = turn(moved(neck, at(neck, HEAD_AT)), 'x', -NECK_TILT);
     const F = { pelvis, thorax, neck, head };
     const J = {};

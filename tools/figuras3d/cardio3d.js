@@ -27,13 +27,17 @@
       if (u < st) { const v = u / st; z = z0 + S / 2 - S * v; lift = 0; p = v < .7 ? -3 + 6 * v : 1 + 44 * ((v - .7) / .3) ** 1.5; on[s] = true; }
       else {
         const v = (u - st) / (1 - st);
-        z = spl(v, [[0, z0 - S / 2], [.22, z0 - S / 2 - 12], [.55, z0 + 4], [.84, z0 + S / 2 + 12], [1, z0 + S / 2]]);
+        /* (el pie sale hacia atrás a la velocidad del suelo, vuelve por delante y llega frenando hacia atrás, a la misma
+           velocidad: sin cambios bruscos al despegar ni al apoyar) */
+        const m = -S * (1 - st) / st;
+        z = FL.herm(v, z0 - S / 2, z0 + S / 2, m, m);
         lift = spl(v, [[0, 0], [.25, hk * .85], [.45, hk], [.75, hk * .45], [1, 0]]);
         p = spl(v, [[0, 45], [.3, 40], [.7, 10], [1, -3]]);
         on[s] = false;
       }
-      /* (el tobillo: sobre el suelo, que puede ir en cuesta; con el talón levantado, la punta queda apoyada) */
-      const yF = y0 + z * slope, A = p > 0 && lift < 1 ? FL.footPose(x, z, p) : [x, LEN.ankle, z];
+      /* (el tobillo: sobre el suelo, que puede ir en cuesta, y siempre según la inclinación del pie: con el talón levantado, la
+         punta queda apoyada; en el aire, sigue igual, sin saltos al despegar) */
+      const yF = y0 + z * slope, A = FL.footPose(x, z, p);
       feet[s] = [abs(x), A[2], toe, yF + lift + (A[1] - LEN.ankle), p]; knee[s] = [sin(RAD(toe)), 0, cos(RAD(toe))];
       ank[s] = [x, yF + lift + A[1], A[2]];
     }
@@ -43,9 +47,11 @@
      piernas */
   const runArms = (F, q, t, amp = 1) => {
     const o = { hands: {}, elbow: {} };
+    /* (cada brazo, al revés que su pierna y a la vez que ella: el izquierdo, atrás cuando el pie izquierdo apoya delante; la
+       mano sube hasta el pecho por delante y baja hasta la cadera por detrás, con el codo doblado) */
     for (const [s, ph] of [['L', .5], ['R', 0]]) {
-      const a = sin(2 * PI * (t + ph)), S = shoulder(F, s, q);
-      o.hands[s] = add(S, sd(s, [-7 + 7 * max(0, -a), -104 + 14 * a * amp, 18 + 38 * a * amp]));
+      const a = cos(2 * PI * (t + ph)), S = shoulder(F, s, q);
+      o.hands[s] = add(S, sd(s, [-7 + 7 * max(0, -a), -96 + 22 * a * amp, 14 + 44 * a * amp]));
       o.elbow[s] = [.25, -.3, -1];
     }
     return { ...o, fist: false, palm: both(() => [-1, 0, .2]), handDir: both(sd2 => norm(sd(sd2, [-.25, .15, 1]))) };
@@ -53,7 +59,7 @@
   /* andando: los brazos sueltos, casi estirados, al revés que las piernas */
   const walkArms = (F, q, t, amp = 1) => {
     const o = { hands: {}, elbow: {} };
-    for (const [s, ph] of [['L', .5], ['R', 0]]) { const a = sin(2 * PI * (t + ph)); o.hands[s] = add(shoulder(F, s, q), sd(s, [9 + 5 * max(0, -a), -138, 8 + 26 * a * amp])); o.elbow[s] = [.2, 0, -1]; }
+    for (const [s, ph] of [['L', .5], ['R', 0]]) { const a = cos(2 * PI * (t + ph - .05)); o.hands[s] = add(shoulder(F, s, q), sd(s, [9 + 5 * max(0, -a), -138 + 8 * max(0, a) * amp, 10 + 34 * a * amp])); o.elbow[s] = [.2, 0, -1]; }
     return { ...o, fist: false, palm: both(() => [-1, 0, 0]), handDir: both(() => [0, -1, .1]) };
   };
   /* la cinta: la base con la banda (de z = -130 a 70), los dos postes delante y la consola con los pasamanos. inc: lo que
@@ -88,22 +94,28 @@
         ry = hipOver(g.ank, ROOT_Y + y0 - 1);
       }
       else {
-        g = runGait(t, { S: incline ? 64 : 78, st: incline ? .4 : .36, hk: incline ? 36 : 46, slope, y0 });
+        g = runGait(t, { S: incline ? 92 : 112, st: incline ? .4 : .36, hk: incline ? 46 : 56, slope, y0 });
         /* (la cadera: más baja a mitad de cada apoyo, más alta en el vuelo; sin estirar nunca la pierna que apoya) */
-        const top = ROOT_Y + y0 - 8 + 5 * cos(4 * PI * (t - .18));
+        const top = ROOT_Y + y0 - 8 + 5 * cos(4 * PI * (t - (.36 + (.5 - .36) / 2)));
         const stance = ['L', 'R'].filter(s => g.on[s]).map(s => [g.ank[s], s == 'L' ? 20 : -20]);
         ry = stance.length ? C.capRoot([0, top, 0], stance)[1] : top;
       }
       /* (el tronco, algo adelante; más en cuesta y con mochila; gira un poco con cada zancada) */
       const lean = (walk ? 2 : 7) + (incline ? 6 : 0) + (pack ? 6 : 0);
-      const q = { feet: g.feet, knee: g.knee, root: [1.5 * sin(ph), ry, 0], tilt: lean, spine: walk ? 0 : 2, neck: -lean * .6, shrug: 2, reach: 2, twist: (walk ? 3 : 6) * sin(ph), roll: 1.5 * sin(ph) };
+      /* (la cadera gira con la pierna que va delante y los hombros, al revés, con el brazo) */
+      const c = cos(ph), q = { tt: t, feet: g.feet, knee: g.knee, root: [1.5 * sin(ph), ry, 0], tilt: lean, spine: walk ? 0 : 2, neck: -lean * .6, shrug: 2, reach: 2, yaw: -(walk ? 3 : 5) * c, twist: (walk ? 7 : 12) * c, roll: 1.5 * sin(ph) };
       const { F } = pose({ ...q, hands: ZERO, elbow: {} });
       return { ...q, ...(walk ? walkArms(F, q, t, pack ? .6 : 1) : runArms(F, q, t)) };
     };
+    /* (lo que corre el suelo, o la banda de la cinta, en una vuelta: lo que recorre el pie de apoyo) */
+    const V = walk ? (pack ? 92 : 104) / .62 : (incline ? 92 : 112) / (incline ? .4 : .36);
     const gear = (q, F, cam) => {
       const out = [];
-      if (tm) out.push(...treadmill(cam, slope));
-      else if (incline) out.push(...GR.under([GR.obox(cam, [0, -2, 0], [[1, 0, 0], norm([0, 1, -slope])], [60, 2, 150], ['#1b1e2b', '#3f4560'])], 0));
+      if (tm) out.push(...treadmill(cam, slope), ...FL.floorRun(cam, q.tt, V, { z0: -30, half: 96, x: 30, y0: TM_Y + 4.4, slope, z: -1e6 + 1, n: max(2, Math.round(V / 48)) }));
+      else {
+        if (incline) out.push(...GR.under([GR.obox(cam, [0, -2, 0], [[1, 0, 0], norm([0, 1, -slope])], [60, 2, 150], ['#1b1e2b', '#3f4560'])], 0));
+        out.push(...FL.floorRun(cam, q.tt, V, { slope, y0: .5, z: -1e6 + 1, half: 160, x: 56 }));
+      }
       if (pack) out.push(...wornPack(cam, F));
       if (vest) out.push(...weightVest(cam, F));
       return out;
@@ -307,13 +319,14 @@
      los double unders, dos vueltas por salto, a media subida y a media bajada; en el de boxeo, un pie y luego el otro, con un
      saltito en cada uno */
   const ROPE_C = ['#c9cfe6', '#2b2f43'];
-  const ropeGear = (cam, q) => {
+  const ropeGear = (cam, q, F) => {
     const out = [], T = (a, b, r, col, cap = 1) => out.push(...GR.tube(cam, a, b, r, col, cap)), tip = {};
     for (const s of ['L', 'R']) { const h = q.hands[s], d = q.hd[s]; T(add(h, mul(d, -4)), add(h, mul(d, 12)), 2.6, ['#a33a3a', '#3a0f12'], 2); tip[s] = add(h, mul(d, 13)); }
     /* la cuerda, en el plano que forma con la línea de las manos y la dirección del ángulo φ (0: abajo; 90: detrás; 180: arriba):
        se abre hacia fuera al salir de las manos (pasa por fuera de los hombros y de las piernas), roza el suelo abajo y pasa
        por encima de la cabeza arriba */
-    const A = tip.L, B = tip.R, c = mix(A, B, .5), ph = RAD(q.phi), d = [0, -cos(ph), -sin(ph)], Rd = c[1] - 2, Ru = 405 - c[1], R = (Rd + Ru) / 2 - (Ru - Rd) / 2 * cos(ph);
+    /* (arriba, siempre un palmo por encima de la cabeza, también en lo más alto del salto) */
+    const A = tip.L, B = tip.R, c = mix(A, B, .5), ph = RAD(q.phi), d = [0, -cos(ph), -sin(ph)], top = max(405, at(F.head, [0, 30, 0])[1] + 26), Rd = c[1] - 2, Ru = top - c[1], R = (Rd + Ru) / 2 - (Ru - Rd) / 2 * cos(ph);
     let prev = A;
     for (let i = 1; i <= 26; i++) {
       const u = i / 26, x = c[0] + (A[0] - c[0]) * cos(PI * u) + 110 * sin(PI * u) * cos(PI * u), r = R * pow(sin(PI * u), 1.3);
@@ -353,7 +366,7 @@
       const q2 = { ...q, hands, elbow: both(() => [.45, -.2, -1]), barDir: both(() => [0, 1, 0]) }, J2 = pose(q2).J;
       return { ...q2, barDir: { L: mul(acrossFist(J2, 'L', hd.L), -1), R: acrossFist(J2, 'R', hd.R) }, hd, phi };
     };
-    return { view: 'front', up: 'a', rest: 'a', cam: [-38, 8], side: [-90, 4], feetOff: true, one: alt, at: atT, gear: (q, F, cam) => ropeGear(cam, q), beat: cycle(T) };
+    return { view: 'front', up: 'a', rest: 'a', cam: [-38, 8], side: [-90, 4], feetOff: true, one: alt, at: atT, gear: (q, F, cam) => ropeGear(cam, q, F), beat: cycle(T) };
   };
 
   /* ════ elíptica ════ */
@@ -469,9 +482,13 @@
      El cuerpo rueda hacia el brazo que tira y las piernas baten seis veces por ciclo, desde la cadera, con los pies en punta.
      El agua: losetas translúcidas a la altura de la superficie, ordenadas con el cuerpo, de modo que lo que queda debajo se ve a
      través de ella */
-  const W_Y = 70, SWIM = [[0, [6, -6, 128]], [.12, [8, -30, 124]], [.25, [2, -62, 72]], [.38, [-4, -60, 6]], [.5, [10, -36, -68]], [.56, [16, -6, -86]], [.68, [30, 22, -50]], [.82, [26, 30, 30]], [.93, [14, 12, 100]]];
-  const waterGear = (cam, q) => {
-    const out = [], c = q.root;
+  const W_Y = 104, SWIM = [[0, [6, -6, 128]], [.12, [8, -30, 124]], [.25, [2, -62, 72]], [.38, [-4, -60, 6]], [.5, [10, -36, -68]], [.56, [16, -6, -86]], [.68, [30, 22, -50]], [.82, [26, 30, 30]], [.93, [14, 12, 100]]];
+  const waterGear = (cam, q, F) => {
+    /* el gorro, claro, sobre el cráneo: se ve aunque la cara vaya en el agua (con su profundidad, la de lo más alto, para que
+       el agua no lo tape) */
+    const C0 = at(F.head, [0, 9, -3]), capZ = max(cam.P(C0)[2], cam.P(at(F.head, [0, 24, -3]))[2]);
+    const P0 = cam.P(C0), f1 = v => v.toFixed(1);
+    const out = [{ z: capZ, above: ['head'], svg: `<circle cx="${f1(P0[0])}" cy="${f1(P0[1])}" r="17.5" fill="#d7dbe7" stroke="#59607c" stroke-width="1.2"/><ellipse cx="${f1(P0[0] - 5)}" cy="${f1(P0[1] - 6)}" rx="7" ry="4.5" fill="rgba(255,255,255,.55)"/>` }], c = q.root;
     for (let i = -3; i < 3; i++) for (let j = -7; j < 5; j++) {
       const x0 = i * 40, z0 = c[2] + j * 40, P = [[x0, W_Y, z0], [x0 + 40, W_Y, z0], [x0 + 40, W_Y, z0 + 40], [x0, W_Y, z0 + 40]].map(v => cam.P(v));
       out.push({ z: cam.P([x0 + 20, W_Y, z0 + 20])[2], nf: true, svg: `<path d="M${P.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L')}Z" fill="rgba(70,150,210,.2)" stroke="rgba(150,200,240,.10)" stroke-width=".8"/>` });
@@ -485,7 +502,10 @@
   };
   const swim = f => {
     const atT = t => {
-      const roll = 34 * sin(2 * PI * t), q0 = { root: [0, W_Y - 10, 0], tilt: 90, spine: 0, neck: 4, roll, twist: -roll * .25, shrug: 0, reach: 10, tt: t };
+      /* (el cuerpo rueda hacia el brazo que tira: sube el hombro del que vuelve por encima del agua; la cabeza, con la coronilla
+         a ras del agua y la cara hacia abajo y algo adelante, gira hacia el brazo izquierdo para respirar cuando sale) */
+      const roll = -34 * sin(2 * PI * t), breath = sin(PI * clamp((t - .58) / .3, 0, 1)) ** 2;
+      const q0 = { root: [0, W_Y - 7, 0], tilt: 90, spine: 0, neck: -12 + 8 * breath, look: 62 * breath, roll, twist: -roll * .25, shrug: 0, reach: 10, tt: t };
       const J0 = pose({ ...q0, feet: both(() => [20, -170, 0, 40, 0]), knee: both(() => [0, -1, 0]), hands: ZERO, elbow: {} }).J;
       /* las piernas: baten desde la cadera (unos 9° arriba y abajo), la rodilla algo doblada al bajar, los pies en punta */
       const kneeDown = s => { const a = 9 * sin(6 * PI * t + (s == 'L' ? 0 : PI)), b = a - 10 * max(0, sin(6 * PI * t + (s == 'L' ? 0 : PI) - .6)); return [a, b]; };
@@ -503,7 +523,7 @@
       }
       return { ...q, hands, elbow, handDir, palm, fist: false };
     };
-    return { view: 'side', up: 'a', rest: 'a', cam: [-55, 22], side: [-90, 8], feetOff: true, one: true, noShadow: true, at: atT, gear: (q, F, cam) => waterGear(cam, q), beat: cycle(2800) };
+    return { view: 'side', up: 'a', rest: 'a', cam: [-32, 24], side: [-90, 8], feetOff: true, one: true, noShadow: true, at: atT, gear: (q, F, cam) => waterGear(cam, q, F), beat: cycle(2800) };
   };
 
   /* ════ saco de boxeo ════ */
