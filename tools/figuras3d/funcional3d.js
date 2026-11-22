@@ -37,7 +37,7 @@
     const T = CL.reduce((a, c) => a + c[1], 0);
     return {
       at: t => { const o = {}; for (const f of fields) o[f] = spl(t, tabs[f]); return o; },
-      beat: ms => { let x = ms % T, t0 = 0; for (const [t1, d] of CL) { if (x < d) return t0 + (t1 - t0) * x / d; x -= d; t0 = t1; } return 1; },
+      beat: ms => { let x = ms % T, t0 = 0; for (const [t1, d] of CL) { if (x < d) return t0 + (t1 - t0) * x / d; x -= d; t0 = t1; } return 1; }, T,
       keyT: K.map(k => k[0]),
     };
   };
@@ -656,8 +656,9 @@
      en una vuelta entera del gesto (negativo, si la figura va hacia atrás); las marcas, a v/n unas de otras, para que la vuelta
      cierre igual que empieza. Se pintan las primeras (debajo de todo) y no cuentan para el encuadre */
   const floorRun = (cam, t, v, o = {}) => {
-    const n = o.n || max(1, Math.round(abs(v) / 64)), D = abs(v) / n, z0 = o.z0 ?? 0, X = o.x ?? 64, half = o.half ?? 150, slope = o.slope ?? 0, y0 = o.y0 ?? .4, zs = o.z ?? -1e9;
-    const off = ((t * v) % D + D) % D, out = [];
+    /* (o.off: lo que lleva corrido el suelo, si no es t·v; o.D, la separación de las marcas) */
+    const n = o.n || max(1, Math.round(abs(v) / 64)), D = o.D || abs(v) / n, z0 = o.z0 ?? 0, X = o.x ?? 64, half = o.half ?? 150, slope = o.slope ?? 0, y0 = o.y0 ?? .4, zs = o.z ?? -1e9;
+    const off = (((o.off ?? t * v) % D) + D) % D, out = [];
     for (let z = z0 - half - D + (D - off); z <= z0 + half; z += D) {
       const f = 1 - abs(z - z0) / half; if (f <= 0) continue;
       const a = cam.P([-X, y0 + z * slope, z]), b = cam.P([X, y0 + z * slope, z]);
@@ -945,14 +946,15 @@
         const e = first(1); return { ...C.rotY(e, 180 + 180 * ease((t - .92) / .08), C0), barC: [0, BAG_R, ZF], bagAx: [1, 0, 0] };
       };
       /* (el reloj: cada lanzamiento a su ritmo, y la media vuelta en 450 ms) */
-      const Ts = 2680, Tt = 450;
+      const Ts = seq.T, Tt = 450 * SLOW;
       beat = ms => { const x = ms % (2 * (Ts + Tt)), r = x % (Ts + Tt), o = x < Ts + Tt ? 0 : .5; return o + (r < Ts ? .42 * min(.9999, seq.beat(r)) : .42 + .08 * (r - Ts) / Tt); };
     }
     const gear = (q, F, cam) => {
       if (pack) return [];
       return GR.sandbag(cam, q.barC, q.bagAx, BAG_L, BAG_R);
     };
-    return { view: 'front', up: 'a', rest: 'a', cam: [-40, 8], side: [-88, 4], at: at_, gear, beat, keyT: over ? undefined : seq.keyT, one: over };
+    /* (los que dan media vuelta entre repetición y repetición, casi de perfil: así ninguna de las dos se ve de espaldas) */
+    return { view: 'front', up: 'a', rest: 'a', cam: over ? [-80, 8] : [-40, 8], side: [-88, 4], at: at_, gear, beat, keyT: over ? undefined : seq.keyT, one: over };
   };
 
   /* ════ trineo ════ */
@@ -1104,7 +1106,7 @@
       return P[P.length - 1];
     };
     const beat = ms => { let x = ms % T, t0 = 0; for (const k of K) { const d = k[2] / tot, D = k[1] * SLOW; if (x < D) return t0 + d * x / D; x -= D; t0 += d; } return 1; };
-    return { at, beat };
+    return { at, beat, T };
   };
   const DIRS = ['knee', 'elbow', 'handDir', 'palm', 'barDir'], NUMS = ['tilt', 'spine', 'neck', 'roll', 'yaw', 'twist', 'bend', 'shrug', 'reach'];
   const keyAnim = (start, K) => {
@@ -1139,7 +1141,7 @@
       return reachClamp(o);
     };
     const beat = ms => { let x = ms % T, t0 = 0; for (const k of K) { const d = k[2] / tot, D = k[1] * SLOW; if (x < D) return t0 + d * x / D; x -= D; t0 += d; } return 1; };
-    return { at, beat };
+    return { at, beat, T };
   };
 
   /* ════ burpees ════ */
@@ -1177,15 +1179,17 @@
   const bpDownUp = () => [[bpSquat(ZF), 320, .7], [bpPlank(), 230, .6, 12], [bpDown(), 320, .6], [bpPlank(), 300, .6], [bpSquat(ZF), 250, .6, 12]];
   /* dos repeticiones con media vuelta tras cada una (sobre sí mismo), la segunda girada media vuelta alrededor de C: así la
      segunda empieza donde acabó la primera y la animación cierra (como el saco por encima del hombro) */
-  const twoReps = (one, C0, Ts, Tt = 450) => {
+  const twoReps = (A, C0, Tt = 450 * SLOW) => {
+    const one = A.at, Ts = A.T;
     const at = t => {
       if (t < .42) return one(t / .42);
       if (t < .5) { const e = one(1); return C.rotY(e, 180 * ease((t - .42) / .08), [e.root[0], 0, e.root[2]]); }
       if (t < .92) return C.rotY(one((t - .5) / .42), 180, C0);
       const e = C.rotY(one(1), 180, C0); return C.rotY(e, 180 * ease((t - .92) / .08), [e.root[0], 0, e.root[2]]);
     };
-    const beat = ms => { const x = ms % (2 * (Ts + Tt)), r = x % (Ts + Tt), o = x < Ts + Tt ? 0 : .5; return o + (r < Ts ? .42 * r / Ts : .42 + .08 * (r - Ts) / Tt); };
-    return { at, beat };
+    /* (dentro de cada repetición, el reloj de su animación: cada postura a su ritmo) */
+    const beat = ms => { const x = ms % (2 * (Ts + Tt)), r = x % (Ts + Tt), o = x < Ts + Tt ? 0 : .5; return o + (r < Ts ? .42 * min(.9999, A.beat(r)) : .42 + .08 * (r - Ts) / Tt); };
+    return { at, beat, T: 2 * (Ts + Tt) };
   };
   /* la caja del burpee con salto: 24" (61 cm), delante de las manos */
   const BOX_H = 122, BOX_D = 38, BOX_Z = -16 + BOX_D;
@@ -1218,9 +1222,9 @@
       const endZ = 2 * BOX_Z - (ZF + dz);
       const K1 = [...bpDownUp().map(k => [sh(k[0]), ...k.slice(1)]), [sh(bpRise(ZF)), 150, .35], [airUp, 240, .6], [onBox, 200, .5], [airOff, 220, .5], [C.shift(bpLand(0), [0, 0, endZ - 0]), 160, .35], [C.shift(bpStand(0), [0, 0, endZ]), 200, .35]];
       const A = keyAnim(sh(bpStand(ZF)), K1);
-      const R = twoReps(A.at, [0, 0, BOX_Z], 2900);
+      const R = twoReps(A, [0, 0, BOX_Z]);
       const gear = (q, F, cam) => GR.under([GR.obox(cam, [0, BOX_H / 2, BOX_Z], [[1, 0, 0], UP], [54, BOX_H / 2, BOX_D], ['#3a3328', '#8a7a58'])], 1);
-      return { view: 'front', up: 'a', rest: 'a', cam: [-62, 10], side: [-90, 4], feetOff: true, one: true, at: R.at, beat: R.beat, gear };
+      return { view: 'front', up: 'a', rest: 'a', cam: [-82, 10], side: [-90, 4], feetOff: true, one: true, at: R.at, beat: R.beat, gear };
     }
     if (w('broad')) {
       /* con salto adelante: tras el burpee, un salto de longitud con los dos pies (los brazos, atrás y luego adelante); media
@@ -1231,7 +1235,7 @@
       const land = C.shift(bpSquat(ZF), [0, 0, dz + D]);
       const K1 = [...bpDownUp().map(k => [C.shift(k[0], [0, 0, dz]), ...k.slice(1)]), [load, 260, .5], [fly, 240, .7], [{ ...land, ...bpRise(ZF + dz + D), root: land.root, feet: land.feet, tilt: 30 }, 200, .5], [C.shift(bpStand(ZF), [0, 0, dz + D]), 300, .45]];
       const A = keyAnim(C.shift(bpStand(ZF), [0, 0, dz]), K1);
-      const R = twoReps(A.at, [0, 0, ZF + dz + D / 2], 2700);
+      const R = twoReps(A, [0, 0, ZF + dz + D / 2]);
       return { view: 'front', up: 'a', rest: 'a', cam: [-84, 10], side: [-90, 4], feetOff: true, one: true, at: R.at, beat: R.beat };
     }
     const A = keyAnim(bpStand(ZF), [...K, [bpRise(ZF), 140, .35], [bpAir(ZF), 180, .5], [bpLand(ZF), 160, .35], [bpStand(ZF), 220, .45]]);
@@ -1773,7 +1777,9 @@
       const hands = ang > 92 ? both(sd2 => add(shoulder(F, sd2, q), sd(sd2, [-8, -4, 132]))) : { L: mix(under.L, onFace.L, pw), R: mix(under.R, onFace.R, pw) };
       return { ...q, hands, elbow: both(() => [.4, -.6, -.6]), fist: false, palm: both(() => norm([-.3, 1 - 2 * pw, pw])), handDir: both(() => norm([0, .4 - .5 * pw, 1])), tire: tireAt(ang), dz };
     };
-    const gear = (q, F, cam) => [GR.disc(cam, add(q.tire.c, [0, 0, q.dz]), q.tire.ax, TIRE_R, TIRE_W, 'tire')];
+    /* (el suelo, con marcas que van con el neumático: la figura avanza tras él) */
+    const TOT = travel(1), FD = TOT / max(1, Math.round(TOT / 64));
+    const gear = (q, F, cam) => [...floorRun(cam, 0, 1, { off: -q.dz, D: FD, z0: 60, half: 200 }), GR.disc(cam, add(q.tire.c, [0, 0, q.dz]), q.tire.ax, TIRE_R, TIRE_W, 'tire')];
     return { view: 'front', up: 'a', rest: 'a', cam: [-60, 10], side: [-90, 4], feetOff: true, one: true, at: t => reachClamp(at_(t)), gear, beat: cycle(4200) };
   };
 
