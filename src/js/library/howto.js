@@ -3,8 +3,8 @@
    hace falta (core/lazy). Los dos textos son propios de cada ejercicio y no se repiten (tests/exinfo.test.mjs).
    - Tips (en el entreno) y «Consejo» (en la ficha de la librería): el consejo del ejercicio.
    - Cómo se hace: solo al tocar la imagen del ejercicio (la miniatura del entreno o la imagen de la ficha), en su hoja:
-     arriba, la imagen en grande (el modelo haciendo el ejercicio, si tiene postura: extras/figure; si aún no, su foto);
-     debajo, a la izquierda, sus músculos en pequeño, con el nombre; y después, el texto.
+     arriba, la imagen en grande (el modelo 3D haciendo el ejercicio: extras/pictures pone su sitio y extras/figure3d la
+     dibuja; uno propio, sus músculos); debajo, a la izquierda, sus músculos en pequeño, con el nombre; y después, el texto.
    Los ejercicios propios no están en el catálogo: su consejo es el de su grupo muscular y no tienen hoja de ejecución.
    Define: GROUP_TIPS, info, setExInfo, withExInfo, exTip, exHow, stillFigures, howHead, howSheet  · acciones/registros: 1
 */

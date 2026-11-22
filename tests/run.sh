@@ -24,7 +24,6 @@ run() {
 run node tools/format.js --check
 run node tools/format_css.js --check
 run node tools/modindex.js --check
-run node tools/figure.js --check
 run python3 build.py --check
 run node tools/types.js
 run node tools/classes.js --check tests/clases-1.0.32.txt
@@ -35,7 +34,7 @@ run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs
 run node --test --test-reporter=dot tests/parts.test.mjs
-run node --test --test-reporter=dot tests/rig.test.mjs
+run node --test --test-reporter=dot tests/fig3d.test.mjs
 run node --test --test-reporter=dot tests/dominio.test.mjs
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html

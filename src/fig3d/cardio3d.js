@@ -530,7 +530,7 @@
   /* en guardia (zurdo delante, el cuerpo de perfil y los codos abajo, los puños a la altura de la cara), el uno-dos dos veces:
      directo de izquierda y cruzado de derecha a la altura del hombro. En el cruzado gira la cadera y el talón de atrás se
      despega; cada golpe sale y vuelve a la guardia sin pararse, y el saco se mece un poco tras cada uno */
-  const BAG = [-4, 0, 236], BAG_R2 = 34, GLOVE = ['#b23b3b', '#3a0f12'];
+  const BAG = [-4, 0, 236], BAG_R2 = 34, GLOVE = ['#b23b3b', '#3a0f12', '#d4706c'];
   const bump = (t, a, d) => { const x = (t - a) / d; return x <= 0 || x >= 1 ? 0 : sin(PI * x) ** 2; };
   const hits = [[.12, 'L'], [.32, 'R'], [.62, 'L'], [.82, 'R']], PD = .2;
   const bagSwing = t => { let z = 0; for (const [h] of hits) { const u = ((t - h - PD / 2) % 1 + 1) % 1; z += 5 * Math.exp(-u * 9) * sin(2 * PI * u * 2.2); } return z; };

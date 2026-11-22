@@ -20,7 +20,7 @@ python -m playwright install chromium webkit
 | `python3 build.py --appcheck` | Solo el archivo único, en `dist/appcheck/`, con App Check configurado con valores de prueba y la CSP que eso abre (lo usa `tests/cloud.py`). |
 | `npm run format` | Formatea JS y CSS, reparte en líneas las [plantillas HTML](#plantillas-html) que no caben en una, y pone al día la línea «Define:» de cada módulo y el [mapa de módulos](modulos.md). |
 | `node tools/types.js` | Comprueba los tipos de todos los módulos ([Tipos comprobados](tipos.md)); con `--resumen`, lo que le falta a cada módulo para el nivel estricto. |
-| `node tools/figure.js` | Rehace `src/js/data/figure.js` (el modelo de perfil de las [figuras de ejercicio](figuras.md)) a partir de los puntos del dibujo. |
+| `cd tools/figuras3d && node datos.mjs N && python3 pagina.py` | La página de revisión de un lote de [figuras de ejercicio](figuras.md) (y, antes, sus pruebas: ver `tools/figuras3d/README.md`). |
 | `bash tests/run.sh` | Formato, reglas, tipos, mapa de módulos y todas las pruebas. |
 | `python3 tests/syncfuzz.py dist/stratafit.html 20-200 80` | Pruebas al azar del guardado y la sincronización con otras semillas que las de la batería ([cómo son](pruebas.md#pruebas-al-azar-del-guardado-y-la-sincronización)). |
 | `bash tests/compare.sh vieja.html nueva.html` | Compara el comportamiento y la imagen de dos compilaciones. |
