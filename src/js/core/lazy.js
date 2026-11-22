@@ -5,7 +5,7 @@
    Hasta entonces, los botones que lo abren tienen aquí un manejador provisional: carga el módulo, que registra los de
    verdad, y repite la acción. En el archivo único todo va dentro y carga al instante. Si la descarga tarda, se dice
    «Cargando…»; si falla, se avisa y la siguiente vez se vuelve a pedir (lazyLoad).
-   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo
+   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, loadFigures
 */
 import { logError } from './errors.js';
 import { toast } from './toast.js';
@@ -67,3 +67,9 @@ export const setPdfMaker = f => {
 export const loadPdf = () => lazyLoad('pdf', () => import('../system/pdf.js')).then(() => pdfMaker);
 /** Catálogo de consejos y ejecución de los ejercicios (data/exinfo, unos 200 KB): se descarga la primera vez que hace falta. */
 export const loadExInfo = () => lazyLoad('exinfo', () => import('../data/exinfo.js'));
+/** Las figuras 3D: el motor (extras/motor3d, unos 300 KB) y lo que dibuja con él (extras/figure3d), que se descargan la
+    primera vez que hace falta dibujar una figura. Da extras/figure3d con el motor ya arrancado. */
+export const loadFigures = () => Promise.all([lazyLoad('motor3d', () => import('../extras/motor3d.js')), lazyLoad('figure3d', () => import('../extras/figure3d.js'))]).then(([m, f]) => {
+  f.startFigures(m.motor3d);
+  return f;
+});

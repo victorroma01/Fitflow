@@ -13,7 +13,7 @@ import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, 
 import { REST_OPTIONS, restDefault } from '../workout/rest.js';
 import { imagePicker, photoUrl, routineImage } from '../workout/images.js';
 import { MAX_SETS } from '../workout/targets.js';
-import { exPicture } from '../extras/anatomy.js';
+import { exPicture } from '../extras/pictures.js';
 import { html, raw } from '../core/html.js';
 export let routineState = { i: -1, k: 1, sel: [], q: '' };
 const BLOCK_KINDS = ['', 'Suelto', 'Superserie', 'Triserie'];

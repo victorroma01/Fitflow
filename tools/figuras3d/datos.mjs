@@ -20,7 +20,7 @@ const FAMILIES = (LOTES[arg] || arg).split(',');
 mkdirSync('salida', { recursive: true });
 writeFileSync('salida/mapa.json', JSON.stringify({ R: AN_R, S: AN_S, H: AN_H, PA: AN_PA }));
 const src = readFileSync('../../src/js/extras/anatomy.js', 'utf8');
-const m = src.match(/^const MUSCLE_REGIONS = (\{.*\});$/m);
+const m = src.match(/^(?:export )?const MUSCLE_REGIONS = (\{.*\});$/m);
 if (!m) throw new Error('no encuentro MUSCLE_REGIONS en extras/anatomy');
 writeFileSync('salida/regiones.txt', m[1]);
 const by = new Map(EXERCISES.map(e => [e.n, e]));

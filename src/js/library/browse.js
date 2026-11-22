@@ -13,7 +13,8 @@ import { exTip, withExInfo } from './howto.js';
 import { customTools, isCustomExercise } from './custom.js';
 import { bestOf } from '../workout/finish.js';
 import { toDisplayWeight, weightUnit } from '../profile/units.js';
-import { exAnatomyFull, exHasFigure, exPicture } from '../extras/anatomy.js';
+import { exAnatomyFull } from '../extras/anatomy.js';
+import { exHasFigure, exPicture } from '../extras/pictures.js';
 import { html, raw } from '../core/html.js';
 export let libState = { g: '', q: '' };
 export function libBody() {

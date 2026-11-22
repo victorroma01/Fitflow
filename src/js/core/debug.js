@@ -15,8 +15,8 @@ import { A, C, U } from './registry.js';
 import { EXERCISES, groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_ALIASES } from '../data/aliases.js';
 import { FIG_POSES } from '../data/figposes.js';
-import { figPose } from '../extras/moves.js';
-import { exPicture } from '../extras/anatomy.js';
+import { exHasFigure, exMotion, exPicture } from '../extras/pictures.js';
+import { loadFigures } from './lazy.js';
 import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, overviewMode, S, saveState, setOverviewMode, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
@@ -77,11 +77,12 @@ const DEBUG_NAMES = {
   exAll: [() => exAll],
   exByName: [() => exByName],
   EXERCISES: [() => EXERCISES],
+  exHasFigure: [() => exHasFigure],
+  exMotion: [() => exMotion],
   exPicture: [() => exPicture],
   exSearchText: [() => exSearchText],
   FFDEP: [() => FFDEP],
   FIG_POSES: [() => FIG_POSES],
-  figPose: [() => figPose],
   flushState: [() => flushState],
   FOOD_GROUPS: [() => FOOD_GROUPS],
   FOODS_SRC: [() => FOODS_SRC],
@@ -89,6 +90,7 @@ const DEBUG_NAMES = {
   icon: [() => icon],
   isDeloadWeek: [() => isDeloadWeek],
   levelPlan: [() => levelPlan],
+  loadFigures: [() => loadFigures],
   libBody: [() => libBody],
   libState: [() => libState],
   logError: [() => logError],

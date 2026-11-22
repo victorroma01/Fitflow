@@ -21,6 +21,9 @@ Estructura (todo vive en src/):
                           pueden ocupar varias líneas: esos saltos no llegan a la app (flat_js)
   src/js/data/media.js    molde que el build sustituye por las fotos de src/img/ (rutas o base64 según la variante)
   src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
+  src/fig3d/              el motor de las figuras 3D: scripts clásicos «(function (G) {…})(window);», en el orden de FIG3D_FILES,
+                          que también usan las páginas de revisión de tools/figuras3d
+  src/js/extras/motor3d.js  molde que el build sustituye por ese motor, metido en una función (se carga al usarlo: core/lazy)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
                           (la revisión de una versión enseña sus arreglos junto con las novedades de la que revisa)
   src/img/day/            portadas de los días (.webp o .jpg), en el orden de order.txt; las de mujer, en mujer/ (tools/portadas.py)
@@ -42,6 +45,10 @@ IMG = os.path.join(SRC, 'img')
 ENTRY = 'main.js'
 MEDIA_MODULE = 'data/media.js'
 RELEASE_MODULE = 'data/release.js'
+FIG3D_MODULE = 'extras/motor3d.js'
+FIG3D = os.path.join(SRC, 'fig3d')
+# los archivos del motor 3D, en el orden en que se cargan: cada uno usa lo que dejan los anteriores en Fig3D
+FIG3D_FILES = ('fig3d.js', 'gear3d.js', 'mov3d.js', 'tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js', 'core3d.js', 'funcional3d.js', 'cardio3d.js')
 CHANGELOG = os.path.join(ROOT, 'CHANGELOG.md')
 USER_SECTIONS = ('Novedades', 'Mejoras', 'Correcciones')  # apartados que la app enseña al usuario
 VERSION = r'\d+\.\d+\.\d+(?:\.\d+)?'  # 1.1.0 o, la revisión de una versión, 1.1.0.1
@@ -99,6 +106,8 @@ def check_tree(mods):
     for gm in (MEDIA_MODULE, RELEASE_MODULE):
         if gm not in seen:
             die('main.js debe importar ' + gm)
+    if FIG3D_MODULE not in lazy_modules():
+        die('core/lazy.js debe cargar ' + FIG3D_MODULE)
 
 
 # ── fotos ──────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -273,6 +282,23 @@ def version_json(entries):
 
 # ── compilación ────────────────────────────────────────────────────────────────────────────────────────────────────
 
+def motor3d_js():
+    """El módulo del motor 3D (extras/motor3d): los archivos de src/fig3d, cada uno con su «(function (G) {…})(window);», dentro
+    de una función que les pasa, en vez de window, un objeto con el mapa muscular y las regiones de cada músculo (lo que en las
+    páginas de revisión está en window.FIG_MAP y window.FIG_REG), y que devuelve Fig3D. Así el motor no toca window y va en
+    modo estricto, como el resto del código."""
+    have = sorted(f for f in os.listdir(FIG3D) if f.endswith('.js'))
+    if have != sorted(FIG3D_FILES):
+        die('src/fig3d debe tener justo estos archivos: ' + ', '.join(FIG3D_FILES))
+    body = []
+    for f in FIG3D_FILES:
+        t = read(os.path.join(FIG3D, f)).rstrip()
+        if t.count('})(window);') != 1 or not t.endswith('})(window);') or len(re.findall(r'^\(function \(G\) \{$', t, re.M)) != 1:
+            die('src/fig3d/%s debe ser una sola función «(function (G) {» … «})(window);»' % f)
+        body.append(t[:-len('})(window);')] + '})(G);')
+    return 'export const motor3d = (FIG_MAP, FIG_REG) => {\nconst G = { FIG_MAP, FIG_REG };\n' + '\n'.join(body) + '\nreturn G.Fig3D;\n};'
+
+
 def esbuild_bin():
     """esbuild de node_modules (npm install) o el indicado en la variable ESBUILD."""
     for c in (os.environ.get('ESBUILD'), os.path.join(ROOT, 'node_modules', '.bin', 'esbuild'), shutil.which('esbuild')):
@@ -378,7 +404,10 @@ def bundle_app(st, outdir):
                  '--chunk-names=[name]-[hash]', '--metafile=' + meta] + ESBUILD_COMMON)
     outs = json.loads(read(meta))['outputs']
     rel = lambda p: 'js/' + os.path.basename(p)
-    entry = next(p for p, o in outs.items() if o.get('entryPoint'))
+    # la entrada es la de main.js: los import() dinámicos también salen como entradas (extras/figure3d, data/exinfo…) y el orden
+    # en que esbuild las lista no es el de siempre
+    main_in = rel_root(os.path.join(st, ENTRY)).replace(os.sep, '/')
+    entry = next(p for p, o in outs.items() if o.get('entryPoint') == main_in)
     eager, todo = [], [entry]
     while todo:
         for i in outs[todo.pop()].get('imports', []):
@@ -565,8 +594,9 @@ def main():
     os.makedirs(DIST, exist_ok=True)
     ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
     rel_js = release_js(release_for(entries, ver))
+    m3 = motor3d_js()
     if a.emulador:
-        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False, emu=True)
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js, FIG3D_MODULE: m3}, deploy=False, emu=True)
         try:
             js = bundle_single(st)
         finally:
@@ -576,7 +606,7 @@ def main():
         print('  dist/emu/stratafit.html  (archivo único con el emulador de Firebase: %s y %s)' % (EMU_AUTH, EMU_FIRESTORE))
         return
     if a.appcheck:
-        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False, appcheck=True)
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js, FIG3D_MODULE: m3}, deploy=False, appcheck=True)
         try:
             js = bundle_single(st)
         finally:
@@ -586,7 +616,7 @@ def main():
         print('  dist/appcheck/stratafit.html  (archivo único con App Check configurado con valores de prueba)')
         return
     if a.only != 'app':
-        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False)
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js, FIG3D_MODULE: m3}, deploy=False)
         try:
             js = bundle_single(st)
         finally:
@@ -600,7 +630,7 @@ def main():
         out = os.path.join(DIST, 'app')
         shutil.rmtree(out, ignore_errors=True)
         os.makedirs(out)
-        st = stage({MEDIA_MODULE: media_js(m, inline=False), RELEASE_MODULE: rel_js}, deploy=True)
+        st = stage({MEDIA_MODULE: media_js(m, inline=False), RELEASE_MODULE: rel_js, FIG3D_MODULE: m3}, deploy=True)
         try:
             entry, eager, js_files = bundle_app(st, os.path.join(out, 'js'))
         finally:

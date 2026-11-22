@@ -21,7 +21,7 @@ import { TECHNIQUES } from '../data/techniques.js';
 import { progressBody } from '../dashboard/progress.js';
 import { fromDisplayWeight, toDisplayWeight, weightUnit } from '../profile/units.js';
 import { buzz } from '../profile/feedback.js';
-import { exPicture } from '../extras/anatomy.js';
+import { exPicture } from '../extras/pictures.js';
 import { rpeOn } from './rpe.js';
 import { html, raw } from '../core/html.js';
 import { elapsedMs, liftScore } from '../core/calc.js';

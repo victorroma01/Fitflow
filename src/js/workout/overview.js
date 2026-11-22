@@ -13,7 +13,7 @@ import { restOf, restSelect } from './rest.js';
 import { dayMinutes, rangeSelect, rirOf, targetText, tempoOf, unitOf } from './targets.js';
 import { isDeloadWeek } from './deload.js';
 import { coverStyle } from './images.js';
-import { exPicture } from '../extras/anatomy.js';
+import { exPicture } from '../extras/pictures.js';
 import { html, raw } from '../core/html.js';
 /* la cabecera: «‹ Atrás» y «Editar» (o «Listo» al editar) */
 const overviewHead = editing => html`

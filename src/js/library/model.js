@@ -6,7 +6,7 @@ import { X } from '../core/util.js';
 import { EXERCISES, groupOf, GROUPS, MUSCLES } from '../data/library.js';
 import { EX_ALIASES, EX_RETIRED } from '../data/aliases.js';
 import { S } from '../core/state.js';
-import { exPicture, exPictureLater } from '../extras/anatomy.js';
+import { exPicture, exPictureLater } from '../extras/pictures.js';
 import { html, raw } from '../core/html.js';
 /* los ejercicios de la biblioteca por nombre (el primero, si alguno se repitiera). La biblioteca no cambia después de
    arrancar; los propios, sí (se renombran en su sitio), y por eso esos se buscan en su lista, que es corta */

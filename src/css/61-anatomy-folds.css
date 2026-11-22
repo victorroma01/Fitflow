@@ -71,7 +71,7 @@
   margin:0 auto;
   border:1px solid #ffffff12;
 }
-.anb svg {
+.anb svg,.anb img {
   display:block;
 }
 .exercise-cell {
@@ -92,7 +92,8 @@
   border:1px solid #ffffff12;
   font-style:normal;
 }
-.exercise-thumb svg {
+/* la miniatura del ejercicio (extras/pictures): la figura como imagen o, mientras se dibuja, su hueco */
+.exercise-thumb svg,.exercise-thumb img,.thumb>img {
   display:block;
 }
 .exercise-text {

@@ -1,17 +1,31 @@
 /* ═══ css/96-exercise-figures ═══ La figura de un ejercicio en grande (hoja «Cómo se hace») y sus músculos en pequeño */
+/* el sitio de la figura tiene proporción fija (la de extras/figure3d, 4:3): la figura llega cuando el motor la dibuja y
+   nada de la hoja se mueve al llegar */
 .fgs {
   margin:2px 0 12px;
   border-radius:18px;
   overflow:hidden;
   background:radial-gradient(120% 95% at 50% 6%,#343956,#0d0e14 88%);
   border:1px solid #ffffff14;
+  aspect-ratio:4/3;
+  max-height:340px;
 }
 .fgs svg {
   display:block;
   width:100%;
-  height:auto;
-  max-height:340px;
+  height:100%;
+  opacity:0;
+  transition:opacity .3s;
 }
+.fgs svg.on,.fgs.on svg {
+  opacity:1;
+}
+@media(prefers-reduced-motion:reduce) {
+  .fgs svg {
+    transition:none;
+  }
+}
+/* quieta: la postura de inicio y la final, una junto a otra, con su rótulo debajo */
 .fgs.two {
   display:flex;
 }
@@ -19,6 +33,13 @@
   flex:1;
   min-width:0;
   margin:0;
+  display:flex;
+  flex-direction:column;
+}
+.fgs figure svg {
+  flex:1;
+  min-height:0;
+  height:auto;
 }
 .fgs figure+figure {
   border-left:1px solid #ffffff14;
