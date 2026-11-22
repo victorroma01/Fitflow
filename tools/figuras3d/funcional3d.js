@@ -1574,8 +1574,13 @@
     const Wr = sub(hsFlat.hands.L, mul(norm([0, -.5, 15]), LEN.grip)), upY = Wr[1] + sqrt((LU + LEN.fore - 2) ** 2 - 9 - 100);
     { const P0 = torso(mk(upY, -10, 120, 30)).pelvis, Hp = at(P0, [20, 0, 0]); ZFt = Hp[2] - sqrt(max(0, (LEN.thigh + LEN.shin - 2) ** 2 - (Hp[1] - LEN.ankle) ** 2 - 4)); }
     const top = { ...mk(upY, -10, 120, 30), elbow: both(() => [.4, .3, -1]) };
-    const yLow = solve(y => crownY(mk(y, 6, 128, 40)) - 6, 30, upY);
-    const bot = { ...mk(yLow, 6, 128, 40), elbow: both(() => [.6, .3, -.8]) };
+    /* (abajo, la cabeza casi en el suelo entre las manos y la cadera igual de alta: el tronco se pone más vertical y las
+       piernas siguen estiradas) */
+    /* (la distancia de la cadera al tobillo que piden los pies, no al que alcanza la pierna) */
+    const legD = q => { const { J } = pose({ ...q, hands: ZERO, elbow: {} }), f = q.feet.L; return len(sub(J.L.hip, [f[0], LEN.ankle + f[3], f[1]])); }, LD = min(legD(mk(upY, -10, 120, 30)), LEN.thigh + LEN.shin - 1.5);
+    const tiltAt = y => { const f = tl => legD(mk(y, 6, tl, 40)) - LD; return f(116) * f(178) < 0 ? solve(f, 116, 178) : 128; };
+    const yLow = solve(y => crownY(mk(y, 6, tiltAt(y), 40)) - 6, 30, upY);
+    const bot = { ...mk(yLow, 6, tiltAt(yLow), 40), elbow: both(() => [.6, .3, -.8]) };
     const A = keyAnim(top, [[bot, 900, .8], [bot, 150, .1], [top, 900, .8], [top, 300, .1]]);
     return { view: 'front', up: 'a', rest: 'a', cam: [-70, 8], side: [-90, 4], at: A.at, beat: A.beat };
   };
@@ -1652,12 +1657,38 @@
       return { ...q, feet: both(() => [14, FZ, 4, 0, 0]), knee: both(() => [0, -.4, 1]), ...flat(zh), elbow: both(() => [.3, .3, -1]) };
     };
     const stand = (() => { const st = legs({ w: 14, toe: 4, ps: 2, pt: 88 }, { tilt: 0, spine: 0, neck: 0, shrug: 0, reach: 2 }); st.zL = st.zR = FZ; st.rz += FZ; return withHands(st, (F, q) => ({ hands: both(sd2 => add(shoulder(F, sd2, q), sd(sd2, [14, -139, 6]))), elbow: both(() => [.2, 0, -1]), fist: false, palm: both(() => [-1, 0, 0]), handDir: both(() => [0, -1, 0]) })); })();
-    /* (doblado: las manos junto a las puntas de los pies) */
-    const fold = vee(FZ + 44, 150), mid1 = vee(FZ + 86, 132), mid2 = vee(FZ + 118, 112);
-    /* (una mano y luego la otra) */
-    const step = (a, b, s2) => { const o = { ...a, hands: { ...a.hands } }; o.hands[s2] = [...b.hands[s2]]; return o; };
-    const K = [[fold, 700, .6], [step(fold, mid1, 'L'), 240, .25, 0], [mid1, 240, .25], [step(mid1, mid2, 'R'), 240, .25], [mid2, 240, .25], [step(mid2, plank, 'L'), 240, .25], [plank, 240, .25], [plank, 400, .12],
-      [step(plank, mid2, 'R'), 240, .25], [mid2, 240, .25], [step(mid2, mid1, 'L'), 240, .25], [mid1, 240, .25], [step(mid1, fold, 'R'), 240, .25], [fold, 240, .25], [stand, 800, .6], [stand, 300, .1]];
+    /* (doblado: las manos junto a las puntas de los pies, las rodillas algo dobladas. Al alejarse las manos, la V con las
+       piernas estiradas y los brazos en línea con el tronco, de las manos a la cadera; y de ahí baja la cadera a la plancha,
+       con las piernas siempre estiradas, mientras los brazos se ponen verticales. Cada postura sale de cortar dos
+       circunferencias en el plano de perfil: la de la cadera alrededor de los tobillos (una pierna estirada) y la de la cadera
+       alrededor de las manos (o de los hombros)) */
+    const LEG = LEN.thigh + LEN.shin - 1.5, ARM = LU + LEN.fore - 4, TOR = (() => { const q = { root: [0, 0, 0], tilt: 0, spine: 4 }, T = torso(q); return shoulder(T, 'L', q)[1] - at(T.pelvis, [20, 0, 0])[1]; })();
+    /* (en la V, los pies planos: el tobillo a su altura de pie) */
+    const Ay = [LEN.ankle, FZ];
+    /* (el corte de dos circunferencias en el plano (y, z): el de arriba) */
+    const cut = (P1, r1, P2, r2) => { const dy = P2[0] - P1[0], dz = P2[1] - P1[1], d = Math.hypot(dy, dz); if (d > r1 + r2 || d < abs(r1 - r2)) return null; const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d), h = sqrt(max(0, r1 * r1 - a * a)), my = P1[0] + a * dy / d, mz = P1[1] + a * dz / d, s1 = [my - h * dz / d, mz + h * dy / d], s2 = [my + h * dz / d, mz - h * dy / d]; return s1[0] > s2[0] ? s1 : s2; };
+    /* (el cuerpo con los hombros en S y la cadera en H, de perfil; las manos en zh) */
+    const byHS = (S, H, zh) => { const tilt = atan2(S[1] - H[1], S[0] - H[0]) * DEG; return { ...bySh([0, S[0], S[1]], { tilt, spine: 4, neck: 20 }), feet: both(() => [14, FZ, 4, 0, 0]), knee: both(() => [0, -.4, 1]), ...flat(zh), elbow: both(() => [.3, .3, -1]) }; };
+    const Wy = zh => [3.9 + 4, zh];
+    const lineVee = zh => { const W = Wy(zh), H = cut(Ay, LEG, W, ARM + TOR); if (!H) return null; const u = [(H[0] - W[0]) / (ARM + TOR), (H[1] - W[1]) / (ARM + TOR)]; return byHS([W[0] + u[0] * ARM, W[1] + u[1] * ARM], H, zh); };
+    /* (con las manos en zh = 0, el brazo a a grados de la vertical, inclinado hacia la cadera) */
+    const armVee = a => { const W = Wy(0), S = [W[0] + ARM * cos(RAD(a)), W[1] - ARM * sin(RAD(a))], H = cut(Ay, LEG, S, TOR); return H ? byHS(S, H, 0) : null; };
+    /* (el cuerpo donde quedan las manos, de media, en zh: doblado cerca de los pies, en V con las piernas estiradas más lejos) */
+    const ZS = [FZ + 44, FZ + 100, FZ + 132, FZ + 158, 0], TL = [150, 130, 118, 108, 100];
+    const bodyAt = (zh, i) => lineVee(zh) || vee(zh, TL[i]);
+    const hands2 = (q, zL, zR) => ({ ...q, hands: { L: [44, 3.9, zL], R: [-44, 3.9, zR] } });
+    const lowHalf = armVee(18) || qmix(bodyAt(0, 4), plank, .5);
+    /* (ida: la izquierda adelanta, el cuerpo a medio camino; luego la derecha, y el cuerpo llega) */
+    const out = [], back = [];
+    for (let i = 0; i < ZS.length - 1; i++) {
+      const a0 = ZS[i], a1 = ZS[i + 1], m = (a0 + a1) / 2, mi = i + .5;
+      out.push([hands2(bodyAt(m, Math.round(mi)), a1, a0), 260, .28]);
+      out.push([hands2(bodyAt(a1, i + 1), a1, a1), 260, .28]);
+      back.unshift([hands2(bodyAt(a0, i), a0, a0), 260, .28]);
+      back.unshift([hands2(bodyAt(m, Math.round(mi)), a1, a0), 260, .28]);
+    }
+    const fold = hands2(bodyAt(ZS[0], 0), ZS[0], ZS[0]);
+    const K = [[fold, 700, .6], ...out, [lowHalf, 280, .3], [plank, 280, .3], [plank, 420, .12], [lowHalf, 280, .3], [hands2(bodyAt(0, 4), 0, 0), 280, .3], ...back, [stand, 800, .6], [stand, 300, .1]];
     const A = keyAnim(stand, K);
     return { view: 'front', up: 'a', rest: 'a', cam: [-70, 8], side: [-90, 4], feetOff: true, one: true, at: A.at, beat: A.beat };
   };
