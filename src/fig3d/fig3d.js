@@ -1192,20 +1192,75 @@
     },
   };
 
-  const frameBox = (ex, cam) => {
-    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-    const tmp = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    tmp.setAttribute('width', 0); tmp.setAttribute('height', 0); tmp.style.position = 'absolute';
-    document.body.appendChild(tmp);
-    for (let i = 0; i <= 12; i++) {
-      tmp.innerHTML = draw(ex, i / 12, cam);
-      const b = tmp.getBBox();
-      x0 = min(x0, b.x); y0 = min(y0, b.y); x1 = max(x1, b.x + b.width); y1 = max(y1, b.y + b.height);
+  /* lo que ocupa un dibujo (lo que devuelve draw), sin pintarlo: se recorren sus etiquetas y se miden sus trazos, círculos,
+     elipses y rectángulos, con el desplazamiento de sus grupos (translate: el de los discos, el único que se usa). No cuenta
+     lo que no se ve (defs, máscaras, patrones, degradados) ni lo que no encuadra (los grupos nf: el suelo que corre, el
+     agua). Las curvas, por sus extremos de verdad, no por sus puntos de control: da lo mismo que getBBox pieza a pieza, sin
+     necesitar la página y en la cuarta parte de tiempo. [x, y, ancho, alto], o null si no hay nada */
+  const UNSEEN = new Set(['defs', 'mask', 'pattern', 'radialGradient', 'linearGradient', 'clipPath']);
+  const bounds = svg => {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const pt = (x, y) => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; };
+    /* una cuadrática de a a c con control en b: su final y, si se sale de ellos, su punto más lejano en cada eje */
+    const quad = (ax, ay, bx, by, cx, cy) => {
+      pt(cx, cy);
+      for (const [p0, p1, p2] of [[ax, bx, cx], [ay, by, cy]]) {
+        const den = p0 - 2 * p1 + p2, u = den ? (p0 - p1) / den : -1;
+        if (u > 0 && u < 1) pt((1 - u) * (1 - u) * ax + 2 * (1 - u) * u * bx + u * u * cx, (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * by + u * u * cy);
+      }
+    };
+    const path = (d, tx, ty) => {
+      const k = d.match(/[A-Za-z]|-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/g) || [];
+      let i = 0, c = '', x = 0, y = 0, sx = 0, sy = 0;
+      const n = () => +k[i++];
+      while (i < k.length) {
+        if (/[A-Za-z]/.test(k[i])) c = k[i++];
+        if (c == 'M') { x = sx = n() + tx; y = sy = n() + ty; pt(x, y); c = 'L'; }
+        else if (c == 'm') { x = sx = x + n(); y = sy = y + n(); pt(x, y); c = 'l'; }
+        else if (c == 'L') { x = n() + tx; y = n() + ty; pt(x, y); }
+        else if (c == 'l') { x += n(); y += n(); pt(x, y); }
+        else if (c == 'Q') { const bx = n() + tx, by = n() + ty, cx = n() + tx, cy = n() + ty; quad(x, y, bx, by, cx, cy); x = cx; y = cy; }
+        else if (c == 'q') { const bx = x + n(), by = y + n(), cx = x + n(), cy = y + n(); quad(x, y, bx, by, cx, cy); x = cx; y = cy; }
+        else if (c == 'Z' || c == 'z') { x = sx; y = sy; }
+        else throw new Error('bounds: orden de trazo desconocida ' + c);
+      }
+    };
+    const num = (a, k) => { const m = new RegExp('\\s' + k + '="([^"]*)"').exec(a); return m ? +m[1] : 0; };
+    const stack = [{ skip: false, tx: 0, ty: 0 }];
+    for (const [, close, tag, a, self] of svg.matchAll(/<(\/?)([a-zA-Z]+)([^>]*?)(\/?)>/g)) {
+      if (close) { if (stack.length > 1) stack.pop(); continue; }
+      const top = stack[stack.length - 1];
+      let skip = top.skip || UNSEEN.has(tag), tx = top.tx, ty = top.ty;
+      if (tag == 'g') {
+        if (/\sclass="(?:[^"]* )?nf[ "]/.test(a)) skip = true;
+        const m = /\stransform="([^"]*)"/.exec(a);
+        if (m) {
+          const tr = /^translate\(\s*(-?[\d.]+(?:e-?\d+)?)[\s,]+(-?[\d.]+(?:e-?\d+)?)\s*\)$/.exec(m[1]);
+          if (!tr) throw new Error('bounds: transformación desconocida ' + m[1]);
+          tx += +tr[1]; ty += +tr[2];
+        }
+      }
+      if (!skip) {
+        if (tag == 'path') { const m = /\sd="([^"]*)"/.exec(a); if (m) path(m[1], tx, ty); }
+        else if (tag == 'circle') { const cx = num(a, 'cx') + tx, cy = num(a, 'cy') + ty, r = num(a, 'r'); pt(cx - r, cy - r); pt(cx + r, cy + r); }
+        else if (tag == 'ellipse') { const cx = num(a, 'cx') + tx, cy = num(a, 'cy') + ty, rx = num(a, 'rx'), ry = num(a, 'ry'); pt(cx - rx, cy - ry); pt(cx + rx, cy + ry); }
+        else if (tag == 'rect') { const x = num(a, 'x') + tx, y = num(a, 'y') + ty; pt(x, y); pt(x + num(a, 'width'), y + num(a, 'height')); }
+      }
+      if (!self) stack.push({ skip, tx, ty });
     }
-    tmp.remove();
-    return [x0, y0, x1 - x0, y1 - y0];
+    return x0 > x1 ? null : [x0, y0, x1 - x0, y1 - y0];
+  };
+  /* lo que ocupa el gesto, en esos momentos (por omisión, trece repartidos de 0 a 1), desde la cámara cam */
+  const frameBox = (ex, cam, ts = Array.from({ length: 13 }, (_, i) => i / 12)) => {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const t of ts) {
+      const b = bounds(draw(ex, t, cam, 'b', true));
+      if (!b) continue;
+      x0 = min(x0, b[0]); y0 = min(y0, b[1]); x1 = max(x1, b[0] + b[2]); y1 = max(y1, b[1] + b[3]);
+    }
+    return x0 > x1 ? null : [x0, y0, x1 - x0, y1 - y0];
   };
   /* lo que hace falta para escribir ejercicios y material fuera de aquí */
   const lib = { add, sub, mul, dot, cross, len, norm, perp, mix, ease, clamp, at, turn, moved, RAD, LEN, bar, plate, box, barbell, kept, hull, smoothR, smooth, f1, pathOf, ik, isFist, LIMB3, TRUNK3 };
-  G.Fig3D = { EX, draw, camera, DEFS, beat, frameBox, PARTS, pose, torso, lib };
+  G.Fig3D = { EX, draw, camera, DEFS, beat, bounds, frameBox, PARTS, pose, torso, lib };
 })(window);
