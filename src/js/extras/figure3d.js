@@ -9,7 +9,7 @@
      cuesta, menos veces por segundo. Quieta («Reducir animaciones»): la postura de inicio y la final, una junto a otra, o una
      sola si el gesto es un ciclo (correr, remar) o se mantiene (una plancha).
    El motor recibe el mapa muscular de la app y los músculos de cada ejercicio de la librería, como las páginas de revisión.
-   Define: F3, startFigures, figs, exOf, stillAt, fit, boxText, uid, STAGE, MOMENTS, raster, LIGHTEN, thumbBlob, play, stills, startStages
+   Define: F3, startFigures, figs, exOf, moments, fit, boxText, uid, STAGE, MOMENTS, raster, LIGHTEN, thumbBlob, play, stills, startStages
 */
 import { AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
 import { FIG_POSES } from '../data/figposes.js';
@@ -37,10 +37,59 @@ const exOf = n => {
   }
   return figs.get(n);
 };
-/** El momento del gesto de la figura quieta (la miniatura, y la figura grande quieta si es una sola): la postura final (la
-    de un curl arriba, la de una sentadilla abajo) o, en un gesto con su propio reloj (un ciclo, uno que alterna los lados,
-    una postura que se mantiene), un cuarto de vuelta. La familia puede decir otro (still). */
-const stillAt = ex => ex.still != null ? ex.still : ex.beat ? .25 : 1;
+/** Los momentos quietos de un gesto: el de la miniatura (thumb) y los de la figura grande quieta (stills, con su rótulo).
+    En un gesto de ida y vuelta, la postura final (la de un curl arriba, la de una sentadilla abajo) y, quietas, la de inicio
+    y la final. En uno con su propio reloj (un ciclo, uno que alterna los lados, una secuencia), las posturas más distintas
+    entre sí, hasta tres y por orden: se mira el gesto en 24 momentos y se toma el principio, la postura más lejos de él (la
+    de la miniatura: el otro paso al correr, el brazo arriba en un curl alterno, la barra arriba en un clean & jerk) y, si la
+    hay, otra bien lejos de las dos. Si casi no se mueve (una plancha), una sola. La familia puede decir el de la miniatura
+    (still). Se calcula una vez por ejercicio.
+    @returns {{ thumb: number, stills: [number, string, string][] }} */
+const moments = ex => {
+  if (ex.moments)
+    return ex.moments;
+  /** @type {{ thumb: number, stills: [number, string, string][] }} */
+  let out;
+  if (!ex.beat)
+    out = { thumb: 1, stills: [[0, 'Inicio', 'Postura de inicio'], [1, 'Final', 'Postura final']] };
+  else {
+    const ts = Array.from({ length: 24 }, (_, i) => i / 24);
+    /* cada postura, por sus rodillas, tobillos, codos y muñecas */
+    const pts = ts.map(t => {
+      const { J } = F3.pose(ex.at(t));
+      return [J.L.knee, J.R.knee, J.L.ankle, J.R.ankle, J.L.el, J.R.el, J.L.wr, J.R.wr];
+    });
+    const dist = (a, b) => Math.max(...pts[a].map((p, k) => Math.hypot(p[0] - pts[b][k][0], p[1] - pts[b][k][1], p[2] - pts[b][k][2])));
+    const pick = [0];
+    /* la postura más lejos de las que ya hay, y cuánto */
+    const farthest = () => {
+      let best = -1;
+      let at = 0;
+      ts.forEach((_, i) => {
+        const m = Math.min(...pick.map(j => dist(i, j)));
+        if (m > best) {
+          best = m;
+          at = i;
+        }
+      });
+      return [at, best];
+    };
+    const [second, spread] = farthest();
+    if (spread < 20)
+      out = { thumb: .25, stills: [[.25, '', 'La postura del ejercicio']] };
+    else {
+      pick.push(second);
+      const [third, gap] = farthest();
+      if (gap > .5 * spread)
+        pick.push(third);
+      pick.sort((a, b) => a - b);
+      out = { thumb: ts[second], stills: pick.map((i, k) => /** @type {[number, string, string]} */ ([ts[i], '', 'Postura ' + (k + 1) + ' de ' + pick.length])) };
+    }
+  }
+  if (ex.still != null)
+    out.thumb = ex.still;
+  return ex.moments = out;
+};
 /** El recuadro b, agrandado un margin (de lo más largo) por cada lado y luego lo justo para que su ancho sea ratio veces su
     alto. */
 const fit = (b, ratio, margin = .05) => {
@@ -100,7 +149,7 @@ export const thumbBlob = (n, px) => {
   const ex = exOf(n);
   if (!ex)
     return Promise.reject(new Error('sin figura: ' + n));
-  const body = F3.draw(ex, stillAt(ex), F3.camera(ex.yaw, ex.pitch), 'm', true);
+  const body = F3.draw(ex, moments(ex).thumb, F3.camera(ex.yaw, ex.pitch), 'm', true);
   const box = F3.bounds(body);
   if (!box)
     return Promise.reject(new Error('figura vacía: ' + n));
@@ -147,22 +196,22 @@ const play = svg => {
   };
   requestAnimationFrame(step);
 };
-/* la figura grande quieta: la postura de inicio y la final (con su rótulo), o una sola */
+/* la figura grande quieta: sus posturas (moments), una junto a otra, con su rótulo si lo tienen */
 const stills = box => {
   box.setAttribute('data-on', '1');
   const ex = exOf(box.dataset.f3s);
   if (!ex)
     return;
   const cam = F3.camera(ex.yaw, ex.pitch);
-  /** @type {[number, string, string][]} */
-  const stops = ex.beat ? [[stillAt(ex), '', 'La postura del ejercicio']] : [[0, 'Inicio', 'Postura de inicio'], [1, 'Final', 'Postura final']];
-  /* el mismo encuadre para las dos: el de las dos posturas */
-  const vb = boxText(fit(F3.frameBox(ex, cam, stops.map(s => s[0])), stops.length > 1 ? .75 : STAGE));
+  const stops = moments(ex).stills;
+  /* el mismo encuadre para todas: el de todas las posturas, con la proporción de cada una en su sitio */
+  const vb = boxText(fit(F3.frameBox(ex, cam, stops.map(s => s[0])), stops.length > 1 ? (STAGE - .08) / stops.length : STAGE));
   const one = ([t, , label]) => html`
     <svg viewBox="${vb}" role="img" aria-label="${label}">${raw(F3.draw(ex, t, cam, 'f' + (++uid) + '_'))}</svg>`;
   if (stops.length > 1) {
     box.classList.add('two');
-    box.innerHTML = stops.map(s => html`<figure>${raw(one(s))}<figcaption>${s[1]}</figcaption></figure>`).join('');
+    box.innerHTML = stops.map(s => html`
+      <figure>${raw(one(s))}${raw(s[1] ? html`<figcaption>${s[1]}</figcaption>` : '')}</figure>`).join('');
   }
   else
     box.innerHTML = one(stops[0]);

@@ -23,8 +23,22 @@ interface Fig3DExercise {
   /** su propio reloj (ms → momento del gesto, de 0 a 1), en vez del de ida y vuelta del motor: un ciclo, un gesto que
       alterna los lados, una secuencia, una postura que se mantiene */
   beat?: (ms: number) => number;
-  /** el momento de la figura quieta, si la familia no quiere el de siempre */
+  /** el momento de la miniatura, si la familia no quiere el de siempre */
   still?: number;
+  /** la postura en el momento t (0 a 1): lo que necesita pose */
+  at(t: number): object;
+  /** los momentos quietos que calcula extras/figure3d (moments), una vez */
+  moments?: { thumb: number, stills: [number, string, string][] };
+}
+
+/** Las articulaciones de un lado del cuerpo (Fig3D.pose), como puntos 3D. */
+interface Fig3DSide {
+  hip: number[];
+  knee: number[];
+  ankle: number[];
+  sh: number[];
+  el: number[];
+  wr: number[];
 }
 
 /** El motor: lo que deja en Fig3D. */
@@ -38,6 +52,8 @@ interface Fig3D {
   camera(yaw: number, pitch: number): Fig3DCamera;
   /** el reloj de ida y vuelta: el momento del gesto a los ms de empezar */
   beat(ms: number, up: string, long: boolean, pause?: number, rest?: string): number;
+  /** el cuerpo en una postura (la de ex.at): sus articulaciones, de cada lado */
+  pose(q: object): { J: { L: Fig3DSide, R: Fig3DSide } };
   /** lo que ocupa un dibujo: [x, y, ancho, alto], o null */
   bounds(svg: string): number[] | null;
   /** lo que ocupa el gesto en esos momentos */

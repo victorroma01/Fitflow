@@ -1239,7 +1239,8 @@
       return { view: 'front', up: 'a', rest: 'a', cam: [-84, 10], side: [-90, 4], feetOff: true, one: true, at: R.at, beat: R.beat };
     }
     const A = keyAnim(bpStand(ZF), [...K, [bpRise(ZF), 140, .35], [bpAir(ZF), 180, .5], [bpLand(ZF), 160, .35], [bpStand(ZF), 220, .45]]);
-    return { view: 'front', up: 'a', rest: 'a', cam: [-70, 10], side: [-90, 4], feetOff: true, at: A.at, beat: A.beat };
+    /* (quieto, en la app: con el pecho en el suelo, que es lo que lo distingue) */
+    return { view: 'front', up: 'a', rest: 'a', cam: [-70, 10], side: [-90, 4], feetOff: true, at: A.at, beat: A.beat, still: .4 };
   };
   /* el sprawl: de pie, las manos al suelo y las piernas atrás de un golpe, con la cadera al suelo y el pecho arriba (los brazos
      estirados); de un salto, los pies otra vez junto a las manos, y de pie. Sin flexión ni salto arriba */
@@ -1319,7 +1320,8 @@
       return { ...q, mb: B };
     };
     const gear = (q, F, cam) => [...wallAt(cam, WZ), ...GR.ball(cam, q.mb, MB_R)];
-    return { view: 'front', up: 'a', rest: 'a', cam: [-56, 8], side: [-90, 4], at: at_, gear, beat: A.beat };
+    /* (quieto, en la app: abajo, con el balón al pecho) */
+    return { view: 'front', up: 'a', rest: 'a', cam: [-56, 8], side: [-90, 4], at: at_, gear, beat: A.beat, still: .05 };
   };
   const medBall = f => {
     const w = x => has(f, x);
