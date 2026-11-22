@@ -11,13 +11,14 @@ LOTE = json.load(open('salida/lote.json'))
 # lo dice su cabecera («Define: Fig3D.FAMILIES.…»)
 BASE, MORE = ('fig3d.js', 'gear3d.js', 'mov3d.js'), ('tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js', 'core3d.js', 'funcional3d.js', 'cardio3d.js')
 NEEDS = {'hombros3d.js': ('brazos3d.js',), 'core3d.js': ('brazos3d.js',), 'funcional3d.js': ('brazos3d.js', 'core3d.js'), 'cardio3d.js': ('brazos3d.js', 'core3d.js', 'funcional3d.js')}  # (hombros3d, core3d, funcional3d y cardio3d usan F3.blib, de brazos3d; funcional3d y cardio3d, también F3.clib; cardio3d, F3.flib)
+MOTOR = '../../src/fig3d/'
 def families(f):
-    m = re.search(r'Define: Fig3D\.FAMILIES\.(.*?)\*/', open(f, encoding='utf-8').read(), re.S)
+    m = re.search(r'Define: Fig3D\.FAMILIES\.(.*?)\*/', open(MOTOR + f, encoding='utf-8').read(), re.S)
     return set(re.findall(r'\w+', m.group(1))) if m else set()
 used = {x['w'].split(' ')[0] for x in LOTE}
 files = {f for f in MORE if families(f) & used}
 files |= {d for f in files for d in NEEDS.get(f, ())}
-JS = '\n'.join(open(f, encoding='utf-8').read() for f in BASE + tuple(f for f in MORE if f in files))
+JS = '\n'.join(open(MOTOR + f, encoding='utf-8').read() for f in BASE + tuple(f for f in MORE if f in files))
 SIDE = (-80, 4)
 
 from textos import LOTES

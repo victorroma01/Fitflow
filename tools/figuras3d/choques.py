@@ -92,7 +92,7 @@ JS = r'''
 }
 '''
 html = open('salida/banco.html').read()
-tag = '<script src="../mov3d.js"></script>'
+tag = '<script src="../../../src/fig3d/mov3d.js"></script>'
 assert tag in html
 open('salida/choques.html', 'w').write(html.replace(tag, '<script src="../sonda.js"></script>' + tag))
 with sync_playwright() as p:

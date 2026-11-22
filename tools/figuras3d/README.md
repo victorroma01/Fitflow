@@ -5,6 +5,9 @@ Está en pruebas y **no está conectada a la app**: se integrará cuando estén 
 
 ## Archivos
 
+El motor y las familias están en `src/fig3d/` (de ahí los toma también la app al compilar); aquí, lo que sirve para
+revisarlos.
+
 - `fig3d.js`: el motor. Construye el cuerpo (tronco, brazos, piernas, cabeza y manos), le envuelve los músculos del mapa
   de la app y lo pinta en SVG desde la cámara que se le dé.
 - `gear3d.js`: el material (bancos, Smith, máquinas, poleas, mancuernas, kettlebell, bandas, saco…).
