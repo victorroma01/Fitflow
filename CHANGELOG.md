@@ -117,6 +117,16 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   `BLOB_NOISE`); la captura de `tests/figures.py` descarta también el bloqueo de la hoja de estilos que mete Playwright; el
   rojo de una miniatura se mide con el margen de los tres motores; y, sin service worker, `tests/deploy.py` no cuenta el 404
   de un archivo de código de una versión que ya no está en el servidor.
+- Una recarga no es otra ventana (`core/persist`, `core/boot`): al recargar a los pocos segundos de guardar algo, la página
+  nueva podía enseñar «La app está abierta en otra ventana» con una sola abierta (la protección es de esta versión: no llegó
+  a publicarse así). La página anterior sigue viva un momento: el aviso de lo último que guardó le llegaba tarde a la nueva, y
+  lo que va a IndexedDB podía terminar de escribirse con la nueva ya abierta. Ahora el aviso de algo que la página ya tiene
+  no cuenta (`coreAtLoad`), y si quien ha guardado después es la página anterior de la pestaña (cada marca dice de quién es, y
+  la que se cierra deja dicho quién era: `savedByPredecessor`), la nueva se recarga sola, sin aviso. La recarga que pide la
+  app (`reloadApp`) hace antes el repaso pendiente. Hacía fallar `tests/a11y.py` una de cada varias veces; las pruebas piden
+  ahora ese repaso antes de recargar (`tests/browser.py`), y `tests/storage.py` comprueba los dos casos y catorce recargas
+  seguidas.
+- `tests/figures.py`: el ciclo de una figura se mide desde que está en marcha (en Firefox arranca unos fotogramas más tarde).
 - Prueba nueva, `tests/library.test.mjs` (sin navegador): que los programas, los cambios y los días por nivel, las plantillas
   del programa guiado, los grupos de rotación y los otros nombres del buscador solo nombran ejercicios de la librería; que cada
   ejercicio tiene su figura; y que de cada ejercicio juntado el nombre viejo ya no está, el que queda sí, y lo guardado con el

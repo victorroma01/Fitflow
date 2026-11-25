@@ -244,6 +244,108 @@ def two_windows(b, path, url):
     c.close()
 
 
+def after_reload(b, path, url):
+    """Una recarga no es otra ventana. Al recargar, la página anterior de la pestaña sigue viva un momento: lo que guarda al
+    cerrarse puede terminar con la nueva ya abierta, y el aviso de lo que guardó justo antes puede llegarle tarde a la nueva.
+    Antes, una de cada varias decenas de recargas enseñaba «La app está abierta en otra ventana» con una sola abierta. Ahora un
+    aviso de lo que la página ya tiene no cuenta, y si quien ha guardado después es la página anterior de la misma pestaña, la
+    nueva se recarga sola, sin aviso (core/persist: coreAtLoad, savedByPredecessor; core/boot)."""
+    c = b.new_context(viewport={'width': 390, 'height': 844}, **context_opts(path))
+    c.add_init_script(INIT)
+    # (el núcleo que hay guardado cuando la página empieza a cargar: el que la app lee al arrancar)
+    c.add_init_script("try{window.__core0=localStorage.getItem('ff')}catch(e){}")
+    # (y cuántas veces se ha cargado la app en la pestaña)
+    c.add_init_script("try{sessionStorage.setItem('__loads',String(1+(+sessionStorage.getItem('__loads')||0)))}catch(e){}")
+    errs = []
+    a = c.new_page()
+    a.on('pageerror', lambda e: errs.append(str(e)[:200]))
+    a.goto(url)
+    booted(a)
+    notice = "/abierta en otra ventana/.test(document.querySelector('#dg').innerText)"
+    no_notice = "!document.querySelector('#dg').firstChild"
+    stale = lambda: a.evaluate('instanceStale')
+    told = "(k, v) => window.dispatchEvent(new StorageEvent('storage', { key: k, newValue: v, storageArea: localStorage }))"
+    a.evaluate("S.logs=[];S.defaultRest=150;saveState()")
+    a.reload()
+    booted(a)
+    until(a, '!!S.achievements', 8000)
+    a.evaluate('savesDone()')
+
+    # ── el aviso de algo que la página ya tiene ──
+    at_load = a.evaluate("window.__core0")
+    a.evaluate("v => (%s)('ff', v)" % told, at_load)
+    a.wait_for_timeout(200)
+    check('un aviso que llega tarde, de lo que la página leyó al arrancar, no la deja atrás', bool(at_load) and not stale() and a.evaluate(no_notice))
+    a.evaluate("S.defaultRest=151;flushState()")
+    now = a.evaluate("savesDone().then(()=>localStorage.getItem('ff'))")
+    a.evaluate("([x, y]) => { (%s)('ff', x); (%s)('ff', y); }" % (told, told), [at_load, now])
+    a.wait_for_timeout(200)
+    check('ni después de haber guardado ella: ni el de lo que leyó ni el de lo que acaba de dejar', at_load != now and not stale() and a.evaluate(no_notice), str([at_load != now, stale()]))
+    a.evaluate("S.defaultRest=152;flushState()")
+    check('y sigue guardando', a.evaluate("savesDone().then(()=>JSON.parse(localStorage.getItem('ff')).rest)") == 152 and not stale())
+    a.evaluate("(%s)('ff', '{\"tab\":2}')" % told)
+    check('otro contenido sí la deja atrás, con su aviso (una versión anterior de la app, que no deja marca, en otra ventana)', until(a, 'instanceStale') and a.evaluate(notice))
+    reload_by(a, "document.querySelector('#dg [data-v=staleReload]').click()")
+
+    # ── quien ha guardado después es la página anterior de esta pestaña ──
+    a.evaluate("sessionStorage.setItem('ffbye','anterior');localStorage.setItem('ffrev','anterior.ultimo')")
+    ok = reload_by(a, "(%s)('ffrev', 'anterior.ultimo')" % told)
+    check('si la que guarda después es la página anterior de la pestaña (lo deja dicho al cerrarse), la nueva se recarga sola, sin aviso',
+          ok and not stale() and a.evaluate(no_notice) and a.evaluate("sessionStorage.getItem('ffbye')") is None, '%s %s' % (ok, stale()))
+    a.evaluate("sessionStorage.setItem('ffbye','anterior');localStorage.setItem('ffrev','otra.marca');(%s)('ffrev', 'otra.marca')" % told)
+    check('si es otra (su marca no es de la anterior), es otra ventana: sale el aviso', until(a, 'instanceStale') and a.evaluate(notice) and a.evaluate('window.__ffok'))
+    reload_by(a, "document.querySelector('#dg [data-v=staleReload]').click()")
+    a.evaluate("localStorage.setItem('ffrev','otra.marca2');(%s)('ffrev', 'otra.marca2')" % told)
+    check('y lo que dejó dicho la anterior vale una vez: después, el aviso de siempre', until(a, 'instanceStale') and a.evaluate(notice))
+    reload_by(a, "document.querySelector('#dg [data-v=staleReload]').click()")
+    a.evaluate("S.defaultRest=160;flushState()")
+    check('cada apertura deja su marca con su nombre delante y, al cerrarse, dice en la pestaña quién era',
+          a.evaluate("savesDone().then(() => (window.dispatchEvent(new Event('pagehide')), (b => !!b && localStorage.getItem('ffrev').startsWith(b + '.'))(sessionStorage.getItem('ffbye'))))"),
+          str(a.evaluate("[sessionStorage.getItem('ffbye'), localStorage.getItem('ffrev')]")))
+
+    # ── y de verdad: recargar con el repaso pendiente y algo que guardar en él, muchas veces ──
+    # Un guardado de una parte deja pendiente el repaso completo (a los 2 s, o al cerrarse la página). Si para entonces ha
+    # cambiado algo más sin decirlo, lo guarda el repaso. En las vueltas pares cambia el núcleo (el descanso por defecto): se
+    # escribe al momento, al cerrarse, y a la página nueva solo le llega tarde el aviso. En las impares cambia una parte (un
+    # entreno del registro): va a IndexedDB y puede terminar con la página nueva ya abierta, que entonces se recarga sola, o
+    # no llegar a escribirse si el navegador cierra antes la página (eso no lo puede evitar la app).
+    a.evaluate("S.logs=[];S.defaultRest=199;flushState()")
+    a.evaluate('savesDone()')
+    seen, bad, loads0 = 0, [], a.evaluate("+sessionStorage.getItem('__loads')")
+    for i in range(14):
+        # (el primer guardado de una página lo mira todo; el segundo, solo la parte que dice, y deja pendiente el repaso)
+        a.evaluate("S.logs.push({d:'2026-10-%02d',n:'R%d',v:1000,s:4,m:20,q:7});flushState().then(()=>{S.logs[S.logs.length-1].m=21;saveState('logs');return savesDone()})" % (i + 1, i))
+        change = "S.defaultRest=%d" % (200 + i) if i % 2 == 0 else "S.logs[S.logs.length-1].v=%d" % (2000 + i)
+        reload_by(a, change + ";location.reload()")
+        st = [False]
+        for _ in range(80):
+            # (si la anterior terminó de guardar con esta ya abierta, esta se recarga sola: se espera a que quede quieta)
+            try:
+                st = a.evaluate("[!!window.__ffok, instanceStale, !!document.querySelector('#dg').firstChild, !!partsLost, S.defaultRest, S.logs.length, (S.logs[S.logs.length-1]||{}).v]")
+            except Exception:
+                st = [False]
+            if st[0] and st[2]:
+                seen += 1
+                break
+            if st[0] and not st[1]:
+                a.wait_for_timeout(250)   # (un aviso tardío llegaría en este rato)
+                try:
+                    if a.evaluate("!!window.__ffok && !instanceStale && !document.querySelector('#dg').firstChild"):
+                        break
+                except Exception:
+                    pass
+            a.wait_for_timeout(50)
+        rest = 200 + i - i % 2
+        if not (st[0] and len(st) > 6 and not st[1] and not st[3] and st[4] == rest and st[5] == i + 1 and st[6] in (1000, 2000 + i)):
+            bad.append([i] + st)
+    extra = a.evaluate("+sessionStorage.getItem('__loads')") - loads0 - 14
+    print('        (de 14 recargas, la página nueva se recargó sola %d veces)' % extra)
+    check('recargar con el repaso pendiente, 14 veces: nunca sale el aviso de otra ventana', seen == 0, '%d veces' % seen)
+    check('y la página queda al día y sin nada roto: lo que se guardó al cerrarse está, y lo de IndexedDB, entero o como estaba', not bad, str(bad[:3]))
+    check('sin errores de JS al recargar', not errs, '; '.join(errs[:3]))
+    c.close()
+
+
 def main(path):
     url = app_url(path)
     with sync_playwright() as p:
@@ -552,6 +654,7 @@ def main(path):
             raise
         without_idb(b, path, url)
         two_windows(b, path, url)
+        after_reload(b, path, url)
         b.close()
     print('\n%s' % ('TODO CORRECTO' if not fails else 'FALLAN: ' + ', '.join(fails)))
     sys.exit(1 if fails else 0)
