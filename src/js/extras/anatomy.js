@@ -46,7 +46,7 @@ const anatomySvg = (v, P, S, box, w, h) => {
 const GROUP_ANATOMY = { Pecho: ['F', ['pe'], ['dA', 'tr', 'sa'], '24 42 152 152'], Espalda: ['B', ['da', 'tm', 'ro'], ['dP', 'tr', 'er', 'rm'], '24 38 152 152'], Hombros: ['F', ['dA', 'dL'], ['ts', 'tr'], '30 40 140 140'], 'Bíceps': ['F', ['bi'], ['br', 'bq', 'an', 'dA'], '14 70 172 172'], 'Tríceps': ['B', ['tr'], ['dP', 'an', 'bq'], '14 70 172 172'], Antebrazos: ['F', ['an', 'bq'], ['bi', 'br'], '14 110 172 172'], Abdomen: ['F', ['ab'], ['ob', 'tv', 'fc', 'sa'], '36 98 128 128'], 'Cuádriceps': ['F', ['cu'], ['fc', 'ad', 'ta'], '36 196 128 128'], 'Isquios y glúteos': ['B', ['is', 'gl'], ['gm', 'ad', 'ge', 'er'], '36 160 128 128'], Gemelos: ['B', ['ge', 'so'], ['is', 'ta'], '36 270 128 128'] };
 export function groupAnatomy(g, s) {
   const a = GROUP_ANATOMY[g];
-  return a ? html`<span class="anb" data-style="width:${s}px;height:${s}px">${anatomySvg(a[0], a[1], a[2], a[3], s)}</span>` : '';
+  return a ? html`<span class="anatomy-box" data-style="width:${s}px;height:${s}px">${anatomySvg(a[0], a[1], a[2], a[3], s)}</span>` : '';
 }
 const regionsBox = (v, regs) => {
   let x0 = 999;
@@ -103,12 +103,12 @@ export const exAnatomyFull = e => {
   const [P, S] = exWork(e);
   if (!P.length && !S.length)
     return '';
-  return html`<div class="anf"><div>${anatomySvg('F', P, S, '0 0 200 410', 132, 271)}<small>Frontal</small></div><div>${anatomySvg('B', P, S, '0 0 200 410', 132, 271)}<small>Posterior</small></div><div class="anl"><span><i class="bg-grad-red"></i>Principal</span><span><i class="bg-grad-amber"></i>Secundario</span></div></div>`;
+  return html`<div class="anatomy-full"><div>${anatomySvg('F', P, S, '0 0 200 410', 132, 271)}<small>Frontal</small></div><div>${anatomySvg('B', P, S, '0 0 200 410', 132, 271)}<small>Posterior</small></div><div class="anatomy-legend"><span><i class="bg-grad-red"></i>Principal</span><span><i class="bg-grad-amber"></i>Secundario</span></div></div>`;
 };
 /** Los músculos de un ejercicio en pequeño, de frente y de espaldas; '' si no hay datos. */
 export const exMusclesSmall = n => {
   const [P, S] = exWork(exByName(n));
   if (!regionsFor(P.concat(S), 'F').length && !regionsFor(P.concat(S), 'B').length)
     return '';
-  return html`<span class="hwf" aria-hidden="true">${anatomySvg('F', P, S, '0 0 200 410', 40, 82)}${anatomySvg('B', P, S, '0 0 200 410', 40, 82)}</span>`;
+  return html`<span class="howto-maps" aria-hidden="true">${anatomySvg('F', P, S, '0 0 200 410', 40, 82)}${anatomySvg('B', P, S, '0 0 200 410', 40, 82)}</span>`;
 };

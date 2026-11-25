@@ -1,11 +1,11 @@
 /* ═══ core/lazy ═══
    Carga diferida: lo poco usado (temporizador WOD, exportar a CSV, escáner y búsqueda en Open Food Facts, análisis mensual
-   y PDF) va en archivos aparte que se descargan la primera vez que se abren (el service worker los guarda para usarlos sin
-   conexión).
+   y PDF) y lo que pesa (los consejos de los ejercicios y el motor de sus figuras 3D) va en archivos aparte que se descargan
+   la primera vez que hacen falta (el service worker los guarda para usarlos sin conexión).
    Hasta entonces, los botones que lo abren tienen aquí un manejador provisional: carga el módulo, que registra los de
    verdad, y repite la acción. En el archivo único todo va dentro y carga al instante. Si la descarga tarda, se dice
    «Cargando…»; si falla, se avisa y la siguiente vez se vuelve a pedir (lazyLoad).
-   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, loadFigures
+   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, figureTools, setFigureTools, loadFigures
 */
 import { logError } from './errors.js';
 import { toast } from './toast.js';
@@ -67,9 +67,18 @@ export const setPdfMaker = f => {
 export const loadPdf = () => lazyLoad('pdf', () => import('../system/pdf.js')).then(() => pdfMaker);
 /** Catálogo de consejos y ejecución de los ejercicios (data/exinfo, unos 200 KB): se descarga la primera vez que hace falta. */
 export const loadExInfo = () => lazyLoad('exinfo', () => import('../data/exinfo.js'));
-/** Las figuras 3D: el motor (extras/motor3d, unos 300 KB) y lo que dibuja con él (extras/figure3d), que se descargan la
-    primera vez que hace falta dibujar una figura. Da extras/figure3d con el motor ya arrancado. */
-export const loadFigures = () => Promise.all([lazyLoad('motor3d', () => import('../extras/motor3d.js')), lazyLoad('figure3d', () => import('../extras/figure3d.js'))]).then(([m, f]) => {
-  f.startFigures(m.motor3d);
-  return f;
-});
+/* lo que dibuja las figuras 3D: extras/figure3d lo deja aquí al cargarse */
+let figureTools = null;
+/** extras/figure3d se apunta aquí al cargarse, con lo que dibuja la miniatura de un ejercicio (thumb) y lo que pone en marcha
+    las figuras grandes de la hoja (stages). */
+export const setFigureTools = (thumb, stages) => {
+  figureTools = { thumb, stages };
+};
+/** Las figuras 3D: el motor (extras/motor3d, unos 340 KB), los encuadres ya calculados (data/figboxes) y lo que dibuja con
+    ellos (extras/figure3d), que se descargan la primera vez que hace falta dibujar una figura. Da lo que deja
+    extras/figure3d: thumb (la miniatura de un ejercicio, como imagen) y stages (las figuras grandes de la hoja). */
+export const loadFigures = () => Promise.all([
+  lazyLoad('motor3d', () => import('../extras/motor3d.js')),
+  lazyLoad('figboxes', () => import('../data/figboxes.js')),
+  lazyLoad('figure3d', () => import('../extras/figure3d.js')),
+]).then(() => figureTools);

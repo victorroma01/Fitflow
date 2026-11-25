@@ -24,6 +24,7 @@ run() {
 run node tools/format.js --check
 run node tools/format_css.js --check
 run node tools/modindex.js --check
+run node tools/figboxes.js --check
 run python3 build.py --check
 run node tools/types.js
 run node tools/classes.js --check tests/clases-1.0.32.txt

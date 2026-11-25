@@ -58,9 +58,9 @@ const howHead = n => {
   const e = exByName(n);
   const small = exMusclesSmall(n);
   const line = (k, label, cls) => e && exMuscles(e, k).length ? html`
-    <p class="hwl"><i class="${cls}"></i><b>${label}</b> ${exMuscles(e, k).join(', ')}</p>` : '';
+    <p class="howto-muscles"><i class="${cls}"></i><b>${label}</b> ${exMuscles(e, k).join(', ')}</p>` : '';
   return small ? html`
-    <div class="hwm">
+    <div class="howto-head">
       ${small}
       <div class="fx-1 minw-0">
         <h3 class="howto-title">${n}</h3>

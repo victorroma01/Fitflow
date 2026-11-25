@@ -242,7 +242,7 @@ button.deload-primary,#dg .primary.deload-primary {
   margin:-2px 2px 6px;
   font-size:12px;
 }
-.anb[data-a] {
+.anatomy-box[data-a] {
   cursor:pointer;
 }
 .howto-anatomy {

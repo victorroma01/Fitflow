@@ -1,50 +1,52 @@
 /* ═══ css/96-exercise-figures ═══ La figura de un ejercicio en grande (hoja «Cómo se hace») y sus músculos en pequeño */
 /* el sitio de la figura tiene proporción fija (la de extras/figure3d, 4:3): la figura llega cuando el motor la dibuja y
-   nada de la hoja se mueve al llegar */
-.fgs {
+   nada de la hoja se mueve al llegar. Lo que cambia dentro (el dibujo entero, en cada fotograma) no toca nada de fuera:
+   se le dice al navegador (contain) para que no lo mire */
+.figure-stage {
   margin:2px 0 12px;
   border-radius:18px;
   overflow:hidden;
+  contain:layout paint;
   background:radial-gradient(120% 95% at 50% 6%,#343956,#0d0e14 88%);
   border:1px solid #ffffff14;
   aspect-ratio:4/3;
   max-height:340px;
 }
-.fgs svg {
+.figure-stage svg {
   display:block;
   width:100%;
   height:100%;
   opacity:0;
   transition:opacity .3s;
 }
-.fgs svg.on,.fgs.on svg {
+.figure-stage svg.on,.figure-stage.on svg {
   opacity:1;
 }
 @media(prefers-reduced-motion:reduce) {
-  .fgs svg {
+  .figure-stage svg {
     transition:none;
   }
 }
 /* quieta: la postura de inicio y la final, una junto a otra, con su rótulo debajo */
-.fgs.two {
+.figure-stage.two {
   display:flex;
 }
-.fgs figure {
+.figure-stage figure {
   flex:1;
   min-width:0;
   margin:0;
   display:flex;
   flex-direction:column;
 }
-.fgs figure svg {
+.figure-stage figure svg {
   flex:1;
   min-height:0;
   height:auto;
 }
-.fgs figure+figure {
+.figure-stage figure+figure {
   border-left:1px solid #ffffff14;
 }
-.fgs figcaption {
+.figure-stage figcaption {
   padding:0 0 9px;
   text-align:center;
   color:#8d93ad;
@@ -52,17 +54,17 @@
   text-transform:uppercase;
   font-size:11px;
 }
-html.glass .fgs {
+html.glass .figure-stage {
   border-radius:24px;
 }
 /* bajo la imagen: los músculos en pequeño a la izquierda y, a su lado, el nombre y cuáles son */
-.hwm {
+.howto-head {
   display:flex;
   gap:12px;
   align-items:center;
   margin:10px 0 0;
 }
-.hwf {
+.howto-maps {
   flex:none;
   display:flex;
   gap:4px;
@@ -71,26 +73,26 @@ html.glass .fgs {
   background:radial-gradient(circle at 50% 26%,#30344b,#0e0f15 84%);
   border:1px solid #ffffff12;
 }
-.hwf svg {
+.howto-maps svg {
   display:block;
 }
-.hwm .howto-title {
+.howto-head .howto-title {
   margin:0 0 6px;
 }
-.hwl {
+.howto-muscles {
   margin:3px 0 0;
   font-size:13px;
   line-height:1.35;
   color:var(--mu);
 }
-.hwl i {
+.howto-muscles i {
   display:inline-block;
   width:10px;
   height:10px;
   border-radius:3px;
   margin-right:6px;
 }
-.hwl b {
+.howto-muscles b {
   margin-right:2px;
   color:var(--tx);
 }

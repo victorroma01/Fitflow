@@ -370,3 +370,11 @@ K nwd nutri-week-day
 K nwt nutri-week-bar
 K nwl nutri-week-goal
 K sel selected
+# quinto lote (1.0.4): las de las figuras, que esperaban a las figuras nuevas
+K fgs figure-stage
+K hwm howto-head
+K hwf howto-maps
+K hwl howto-muscles
+K anb anatomy-box
+K anf anatomy-full
+K anl anatomy-legend

@@ -7,7 +7,8 @@ Hasta la V1.0.32 casi todas las clases tenían de dos a cuatro letras (`cd`, `it
 estado se hizo lo mismo en la V1.0.2 ([Nombres de la V1.0.2](nombres.md)); las clases eran lo que quedaba. Se renombran por
 lotes: el primero, las 53 de dos letras; el segundo, 104 de las piezas comunes, el entreno, la librería, los programas y la
 descarga; el tercero, 117 del seguimiento, la apariencia, el recorrido, el primer arranque, la cuenta y el perfil; el cuarto,
-61 del WOD, el resumen del entreno, las medidas y la nutrición.
+61 del WOD, el resumen del entreno, las medidas y la nutrición; y el quinto, en la V1.0.4, las siete de las figuras, que
+esperaban a las figuras nuevas.
 
 ## Cómo se nombran
 
@@ -459,9 +460,21 @@ imagen con las dos opciones).
 | `lgl` | `login-link` | Botón «Privacidad» del inicio de sesión. |
 | `lgl` | `login-logo` | El logo, en el inicio de sesión. |
 
+### Quinto lote (V1.0.4): las de las figuras
+
+Esperaban a las figuras nuevas, que reescribían su código; llegaron con el modelo 3D.
+
+| Antes | Ahora | Qué es |
+| --- | --- | --- |
+| `fgs` | `figure-stage` | El sitio de la figura grande de un ejercicio, en la hoja «Cómo se hace» (4:3). |
+| `hwm` | `howto-head` | Bajo la figura: los músculos en pequeño y, a su lado, el nombre del ejercicio y sus músculos. |
+| `hwf` | `howto-maps` | Los músculos en pequeño, de frente y de espaldas. |
+| `hwl` | `howto-muscles` | Cada línea de músculos: principales y secundarios. |
+| `anb` | `anatomy-box` | El recuadro de la imagen de un ejercicio (la ficha) o de un grupo muscular. |
+| `anf` | `anatomy-full` | Los mapas musculares grandes de la ficha, de frente y de espaldas. |
+| `anl` | `anatomy-legend` | Su leyenda: principal y secundario. |
+
 ### Sin renombrar todavía
 
-- Las siete de **las figuras** (`fgs`, `hwf`, `hwl`, `hwm`, `anb`, `anf`, `anl`): las reescribe la solicitud de las figuras
-  nuevas (#59).
 - Cinco **sin estilo** (`nwk`, `pgc`, `pgm`, `trp`, `trs`), de las apuntadas en `HOOKS`: no están en el CSS, que es por donde
   la herramienta y las comparaciones saben qué es una clase.

@@ -21,6 +21,9 @@ def rd(n):
 
 
 INIT = rd('init.js')
+# la huella de las figuras (data/figstamp) y la versión de la app, como están en el código
+FIG_STAMP = re.search(r"^export const FIG_STAMP = '(\w+)';$", rd('../src/js/data/figstamp.js'), re.M).group(1)
+APPV = re.search(r"^export const APPV = '([\d.]+)';$", rd('../src/js/core/util.js'), re.M).group(1)
 fails = []
 # uno de cada clase de gesto: de ida y vuelta con barra, con mancuernas, en máquina y en polea; de frente y de espaldas; una
 # secuencia (clean & jerk, burpee); un ciclo (la bici, el remo, la carrera, la comba); los golpes al saco; el agua; y una
@@ -31,7 +34,7 @@ MOVING = ['Press banca', 'Sentadilla', 'Curl con mancuernas', 'Jalón al pecho',
 IS_PICTURE = "(el => !!el && !!el.querySelector('img') && !el.querySelector('svg[data-pic]'))"
 HOLES = "document.querySelectorAll('svg[data-pic]').length"
 # la figura grande: puesta (data-on) y dibujada
-STAGE = "document.querySelector('#sh .fgs svg[data-f3]')"
+STAGE = "document.querySelector('#sh .figure-stage svg[data-f3]')"
 DRAWN = "(s => !!s && s.hasAttribute('data-on') && s.children.length > 40 && s.getAttribute('viewBox') != '0 0 400 300')(" + STAGE + ")"
 
 
@@ -93,7 +96,7 @@ def main(path, shots=None):
             """Abre la hoja «Cómo se hace» de un ejercicio, como al tocar su imagen, y espera a su figura."""
             ev("A.exerciseHowTo(0,{dataset:{n:%r}})" % n)
             pg.clock.run_for(300)
-            settle("!!document.querySelector('#sh .howto-text') && (!!document.querySelector('#sh .fgs.on, #sh .fgs svg.on') || !document.querySelector('#sh .fgs'))")
+            settle("!!document.querySelector('#sh .howto-text') && (!!document.querySelector('#sh .figure-stage.on, #sh .figure-stage svg.on') || !document.querySelector('#sh .figure-stage'))")
 
         def capture(loc):
             """Captura de un elemento, para mirar lo pintado. En WebKit, Playwright mete y quita una hoja de estilos vacía en
@@ -138,7 +141,7 @@ def main(path, shots=None):
         # las 527 miniaturas, dibujadas: cada una es una imagen de su tamaño (WebP en Chromium; PNG donde no hay WebP)
         bad = ev("""(async () => { const f = await loadFigures(); const bad = [];
           for (const e of exAll()) { if (!exHasFigure(e.n)) continue;
-            try { const o = await f.thumbBlob(e.n, 96);
+            try { const o = await f.thumb(e.n, 96);
               const img = new Image(); img.src = URL.createObjectURL(o.blob); await img.decode();
               if (!/^image\\/(webp|png)$/.test(o.blob.type) || o.blob.size < 1200 || img.naturalWidth != 96 || img.naturalHeight != 96 || !o.keep) bad.push(e.n + ': ' + o.blob.type + ' ' + o.blob.size + ' ' + img.naturalWidth);
               URL.revokeObjectURL(img.src); }
@@ -177,9 +180,10 @@ def main(path, shots=None):
         ev("A.closeSheet()")
         pg.clock.run_for(300)
         # guardadas en el móvil: tras recargar, la lista las tiene sin dibujar nada (sin el motor)
-        saved = ev("""new Promise(r => { const q = indexedDB.open('fffig'); q.onsuccess = () => { const t = q.result.transaction('mini').objectStore('mini').getAll();
-          t.onsuccess = () => { r([t.result.length, t.result.every(x => x.v == APPV && x.b instanceof Blob && x.b.size > 1000)]); q.result.close(); }; }; q.onerror = () => r([0, false]); })""")
-        check('las miniaturas dibujadas quedan guardadas en el móvil, con la versión de la app', saved[0] >= 60 and saved[1], str(saved))
+        saved = ev("""new Promise(r => { const q = indexedDB.open('fffig'); q.onsuccess = () => { const st = q.result.transaction('mini').objectStore('mini'), k = st.getAllKeys(), v = st.getAll();
+          v.onsuccess = () => { const rows = v.result.filter(x => x && x.d), stamp = v.result.find(x => typeof x == 'string');
+            r([rows.length, rows.every(x => /^image\\/(webp|png)$/.test(x.t) && x.d instanceof ArrayBuffer && x.d.byteLength > 1000), stamp, k.result.includes('Dominadas')]); q.result.close(); }; }; q.onerror = () => r([0, false]); })""")
+        check('las miniaturas dibujadas quedan guardadas en el móvil, con la huella de las figuras y su tamaño', saved[0] >= 60 and saved[1] and saved[2] == FIG_STAMP + ' 144' and saved[3], str(saved))
         pg.reload()
         pg.clock.run_for(800)
         ev(open_group)
@@ -187,15 +191,30 @@ def main(path, shots=None):
         check('y sin descargar el motor', not ev("!!document.getElementById('g3Ne0')"))
         ev("A.closeSheet()")
         pg.clock.run_for(300)
+        # si lo guardado es de otras figuras (otra huella), se tira y se dibujan otra vez; con la misma huella valen aunque
+        # la app sea otra versión (la huella no lleva la versión)
+        ev("""new Promise(r => { const q = indexedDB.open('fffig'); q.onsuccess = () => { const tx = q.result.transaction('mini', 'readwrite'); tx.objectStore('mini').put('otras 144', '\\0de');
+          tx.oncomplete = () => { q.result.close(); r(1); }; }; })""")
+        pg.reload()
+        pg.clock.run_for(800)
+        ev(open_group)
+        pg.clock.run_for(200)
+        again = ev("""new Promise(r => { const q = indexedDB.open('fffig'); q.onsuccess = () => { const st = q.result.transaction('mini').objectStore('mini'), k = st.getAllKeys(), v = st.get('\\0de');
+          v.onsuccess = () => { r([k.result.length, v.result]); q.result.close(); }; }; })""")
+        check('lo guardado de otras figuras (otra huella) se tira', again[0] < saved[0] and again[1] == FIG_STAMP + ' 144', str(again))
+        check('y se dibujan otra vez, con el motor', settle(HOLES + " == 0", 400) and ev("!!document.getElementById('g3Ne0')") and ev(ROWS + ".every(r => " + IS_PICTURE + "(r))"), 'huecos: %d' % ev(HOLES))
+        check('la huella de las figuras no lleva la versión de la app', APPV not in FIG_STAMP and re.fullmatch(r'[0-9a-f]{20}', FIG_STAMP) is not None, FIG_STAMP)
+        ev("A.closeSheet()")
+        pg.clock.run_for(300)
         # ficha: la figura pequeña junto al nombre abre la hoja; no hay foto
         i = ev("exAll().findIndex(e=>e.n=='Elevaciones laterales')")
         ev("A.exerciseDetail(%d)" % i)
         pg.clock.run_for(300)
-        check('ficha: la figura del ejercicio, junto al nombre, se puede tocar', settle(IS_PICTURE + "(document.querySelector('#sh .anb[data-a=exerciseHowTo]'))"))
-        check('ficha: el mapa muscular sigue', ev("document.querySelectorAll('#sh .anf svg').length == 2"))
+        check('ficha: la figura del ejercicio, junto al nombre, se puede tocar', settle(IS_PICTURE + "(document.querySelector('#sh .anatomy-box[data-a=exerciseHowTo]'))"))
+        check('ficha: el mapa muscular sigue', ev("document.querySelectorAll('#sh .anatomy-full svg').length == 2"))
         check('ficha: sin foto', ev("!document.querySelector('#sh .exph')"))
         shot('ficha')
-        ev("document.querySelector('#sh .anb[data-a=exerciseHowTo]').click()")
+        ev("document.querySelector('#sh .anatomy-box[data-a=exerciseHowTo]').click()")
         pg.clock.run_for(300)
         check('ficha: al tocarla se abre la hoja con la figura, con la vuelta a la ficha', settle(DRAWN) and ev("!!document.querySelector('#sh [data-a=exerciseDetail]')"))
         ev("A.closeSheet()")
@@ -206,10 +225,10 @@ def main(path, shots=None):
         for n in MOVING:
             how(n)
             check('hoja de «%s»: la figura grande, dibujada' % n, ev(DRAWN))
-            check('hoja de «%s»: sin números rotos ni fotos' % n, not ev("/NaN|undefined|Infinity/.test(document.querySelector('#sh .fgs').innerHTML)") and not ev("!!document.querySelector('#sh img')"))
-            check('hoja de «%s»: los músculos en pequeño, de frente y de espaldas' % n, ev("document.querySelectorAll('#sh .hwm .hwf svg').length == 2"))
-            check('hoja de «%s»: el nombre y los músculos con su nombre' % n, ev("document.querySelector('#sh .hwm .howto-title').textContent == %r && document.querySelectorAll('#sh .hwm .hwl').length >= 1 && /^Principal /.test(document.querySelector('#sh .hwm .hwl').textContent) && document.querySelector('#sh .howto-text').innerText.length > 80" % n))
-            order = ev("""(() => { const y = s => document.querySelector('#sh ' + s).getBoundingClientRect(); const f = y('.fgs'), m = y('.hwf'), t = y('.hwm .howto-title'), p = y('.howto-text');
+            check('hoja de «%s»: sin números rotos ni fotos' % n, not ev("/NaN|undefined|Infinity/.test(document.querySelector('#sh .figure-stage').innerHTML)") and not ev("!!document.querySelector('#sh img')"))
+            check('hoja de «%s»: los músculos en pequeño, de frente y de espaldas' % n, ev("document.querySelectorAll('#sh .howto-head .howto-maps svg').length == 2"))
+            check('hoja de «%s»: el nombre y los músculos con su nombre' % n, ev("document.querySelector('#sh .howto-head .howto-title').textContent == %r && document.querySelectorAll('#sh .howto-head .howto-muscles').length >= 1 && /^Principal /.test(document.querySelector('#sh .howto-head .howto-muscles').textContent) && document.querySelector('#sh .howto-text').innerText.length > 80" % n))
+            order = ev("""(() => { const y = s => document.querySelector('#sh ' + s).getBoundingClientRect(); const f = y('.figure-stage'), m = y('.howto-maps'), t = y('.howto-head .howto-title'), p = y('.howto-text');
               return [f.bottom <= m.top + 1, m.bottom <= p.top + 1, m.right <= t.left + 1, m.left - f.left < 2, f.width > 300 && f.height > 200, m.width < 110, Math.abs(f.width / f.height - 4 / 3) < .02]; })()""")
             check('hoja de «%s»: figura arriba (4:3), músculos debajo a la izquierda, texto después' % n, all(order), str(order))
             fits = ev("(() => { const s = document.querySelector('#sh .sheet'); return s.scrollWidth <= s.clientWidth + 1; })()")
@@ -242,7 +261,7 @@ def main(path, shots=None):
         check('al cerrar la hoja no queda ninguna figura grande', ev("!document.querySelector('svg[data-f3]')"))
         # un ejercicio propio: sus músculos, como antes
         how('Mi ejercicio')
-        check('ejercicio propio: sus músculos, sin figura', ev("!!document.querySelector('#sh .howto-anatomy svg') && !document.querySelector('#sh .fgs') && document.querySelector('#sh .howto-title').textContent == 'Mi ejercicio'"))
+        check('ejercicio propio: sus músculos, sin figura', ev("!!document.querySelector('#sh .howto-anatomy svg') && !document.querySelector('#sh .figure-stage') && document.querySelector('#sh .howto-title').textContent == 'Mi ejercicio'"))
         ev("A.closeSheet()")
         pg.clock.run_for(300)
 
@@ -251,7 +270,7 @@ def main(path, shots=None):
             pg.set_viewport_size({'width': w, 'height': h})
             for n in ['Press banca', 'Sentadilla', 'Elevaciones laterales', 'Remo en polea baja', 'Burpees', 'Dominadas']:
                 how(n)
-                box = ev("""(() => { const s = document.querySelector('#sh .sheet'), f = document.querySelector('#sh .fgs').getBoundingClientRect(), t = document.querySelector('#sh .hwm').getBoundingClientRect();
+                box = ev("""(() => { const s = document.querySelector('#sh .sheet'), f = document.querySelector('#sh .figure-stage').getBoundingClientRect(), t = document.querySelector('#sh .howto-head').getBoundingClientRect();
                   return [s.scrollWidth <= s.clientWidth + 1, f.height <= 341 && f.height > 150, f.right <= s.getBoundingClientRect().right + 1, t.right <= s.getBoundingClientRect().right + 1]; })()""")
                 check('a %d px, la hoja de «%s» cabe' % (w, n), all(box), str(box))
             if shots:
@@ -263,29 +282,29 @@ def main(path, shots=None):
         # con «Reducir animaciones»: las posturas quietas
         ev("S.reduceMotion=1;saveState()")
         how('Sentadilla')
-        check('reducir animaciones: dos posturas quietas, «Inicio» y «Final»', ev("!document.querySelector('#sh svg[data-f3]') && [...document.querySelectorAll('#sh .fgs.two figcaption')].map(x=>x.textContent).join() == 'Inicio,Final'"))
-        t0 = ev("document.querySelector('#sh .fgs').innerHTML")
+        check('reducir animaciones: dos posturas quietas, «Inicio» y «Final»', ev("!document.querySelector('#sh svg[data-f3]') && [...document.querySelectorAll('#sh .figure-stage.two figcaption')].map(x=>x.textContent).join() == 'Inicio,Final'"))
+        t0 = ev("document.querySelector('#sh .figure-stage').innerHTML")
         pg.clock.run_for(1500)
-        check('reducir animaciones: no se mueve', ev("document.querySelector('#sh .fgs').innerHTML") == t0)
-        two = ev("[...document.querySelectorAll('#sh .fgs.two svg')].map(s=>s.innerHTML.length + ':' + s.innerHTML.slice(2000, 2300))")
+        check('reducir animaciones: no se mueve', ev("document.querySelector('#sh .figure-stage').innerHTML") == t0)
+        two = ev("[...document.querySelectorAll('#sh .figure-stage.two svg')].map(s=>s.innerHTML.length + ':' + s.innerHTML.slice(2000, 2300))")
         check('reducir animaciones: las dos posturas son distintas', len(two) == 2 and two[0] != two[1])
-        check('reducir animaciones: cada postura dice cuál es', ev("[...document.querySelectorAll('#sh .fgs svg')].map(s=>s.getAttribute('aria-label')).join() == 'Postura de inicio,Postura final'"))
+        check('reducir animaciones: cada postura dice cuál es', ev("[...document.querySelectorAll('#sh .figure-stage svg')].map(s=>s.getAttribute('aria-label')).join() == 'Postura de inicio,Postura final'"))
         shot('quieta')
         # lo pintado de verdad (también en Safari y Firefox): los músculos que trabajan en rojo y naranja, el resto del
         # cuerpo en su gris azulado; y, de frente, los brazos abiertos del todo, con las mancuernas en los extremos
         settled()
-        red, orange, slate, _, _ = painted(capture(pg.locator('#sh .fgs')))
+        red, orange, slate, _, _ = painted(capture(pg.locator('#sh .figure-stage')))
         print('        pintado (rojo, naranja, gris azulado): sentadilla %.4f %.4f %.4f' % (red, orange, slate))
         check('sentadilla: se ven los músculos principales, los secundarios y el resto del cuerpo', red > .003 and orange > .0025 and slate > .02, '%.4f %.4f %.4f' % (red, orange, slate))
         how('Press banca')
         settled()
-        red, orange, slate, _, _ = painted(capture(pg.locator('#sh .fgs figure').nth(1)))
+        red, orange, slate, _, _ = painted(capture(pg.locator('#sh .figure-stage figure').nth(1)))
         print('        pintado: press banca %.4f %.4f %.4f' % (red, orange, slate))
         check('press banca: se ven el pectoral, los secundarios y el cuerpo', red > .0005 and orange > .001 and slate > .02, '%.4f %.4f %.4f' % (red, orange, slate))
         # un gesto con su propio reloj: sus posturas más distintas, sin rótulo; una postura que se mantiene: una sola
         for n, k in [('Curl alterno mancuernas', 3), ('Clean & jerk', 2), ('Burpees', 3), ('Plancha', 1)]:
             how(n)
-            got = ev("[document.querySelectorAll('#sh .fgs svg').length, document.querySelectorAll('#sh .fgs figcaption').length, new Set([...document.querySelectorAll('#sh .fgs svg')].map(s=>s.innerHTML.length)).size]")
+            got = ev("[document.querySelectorAll('#sh .figure-stage svg').length, document.querySelectorAll('#sh .figure-stage figcaption').length, new Set([...document.querySelectorAll('#sh .figure-stage svg')].map(s=>s.innerHTML.length)).size]")
             check('reducir animaciones, «%s»: %d postura(s) distinta(s), sin rótulo' % (n, k), got == [k, 0, k], str(got))
             fits = ev("(() => { const s = document.querySelector('#sh .sheet'); return s.scrollWidth <= s.clientWidth + 1; })()")
             check('reducir animaciones, «%s»: caben a lo ancho' % n, fits)
@@ -321,8 +340,8 @@ def main(path, shots=None):
         check('entreno: al tocarla se abre la hoja con la figura grande y el texto', settle(DRAWN) and ev("document.querySelector('#sh .howto-text').innerText.length > 80"))
         ev("document.querySelector('#sh [data-a=exerciseDetailByName]').click()")
         pg.clock.run_for(400)
-        settle("!!document.querySelector('#sh .anf')")
-        check('entreno: desde la hoja se abre la ficha, sin «+ Al día» ni variantes', ev("!!document.querySelector('#sh .anf') && !document.querySelector('#sh [data-a=libraryAddToDay]')"))
+        settle("!!document.querySelector('#sh .anatomy-full')")
+        check('entreno: desde la hoja se abre la ficha, sin «+ Al día» ni variantes', ev("!!document.querySelector('#sh .anatomy-full') && !document.querySelector('#sh [data-a=libraryAddToDay]')"))
         check('el entreno sigue en marcha', ev('!!W'))
         ev("A.closeSheet()")
         pg.clock.run_for(200)

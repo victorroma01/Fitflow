@@ -29,6 +29,7 @@ import './data/photos.js';
 import './data/aliases.js';
 import './data/anatomy.js';
 import './data/figposes.js';
+import './data/figstamp.js';
 import './data/templates.js';
 import './data/levels.js';
 import './data/techniques.js';

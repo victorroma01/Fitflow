@@ -1,38 +1,19 @@
 // Pruebas del motor de las figuras 3D tal como va en la app, sin navegador: node --test tests/fig3d.test.mjs
-// Se arranca como lo compone build.py para extras/motor3d (los archivos de src/fig3d en su orden, cada uno con su G en vez
-// de window, en modo estricto) con el mapa muscular y las regiones de la app, y se mira cada ejercicio de data/figposes: que
-// su familia exista y lo haga, que se dibuje en todo el gesto sin números rotos y entero dentro de lo que mide bounds, que
-// su reloj vaya de 0 a 1 y que el dibujo solo use lo que él mismo o el motor definen (una miniatura es un dibujo suelto).
+// Se arranca como lo compone build.py para extras/motor3d (tools/figboxes.js, engine: los archivos de src/fig3d en su orden,
+// cada uno con su G en vez de window, en modo estricto) con el mapa muscular y las regiones de la app, y se mira cada
+// ejercicio de data/figposes: que su familia exista y lo haga, que se dibuje en todo el gesto sin números rotos y entero
+// dentro de lo que mide bounds, que su reloj vaya de 0 a 1 y que el dibujo solo use lo que él mismo o el motor definen (una
+// miniatura es un dibujo suelto). Y los encuadres ya calculados (data/figboxes): que estén todos y sean los del motor.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 
-// los datos de la app (módulos ES sin dependencias): se copian a una carpeta con "type": "module" para cargarlos tal cual
-const dir = mkdtempSync(join(tmpdir(), 'sf-fig3d-'));
-writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
-for (const f of ['anatomy.js', 'figposes.js', 'library.js'])
-  writeFileSync(join(dir, f), readFileSync(new URL('../src/js/data/' + f, import.meta.url), 'utf8'));
-const { AN_R, AN_S, AN_H, AN_PA } = await import(pathToFileURL(join(dir, 'anatomy.js')));
-const { FIG_POSES } = await import(pathToFileURL(join(dir, 'figposes.js')));
-const { EXERCISES } = await import(pathToFileURL(join(dir, 'library.js')));
-// las regiones de cada músculo están en extras/anatomy, que necesita la página: se leen de su código
-const anatomy = readFileSync(new URL('../src/js/extras/anatomy.js', import.meta.url), 'utf8');
-const REG = Function('return ' + anatomy.match(/^export const MUSCLE_REGIONS = (\{.*\});$/m)[1])();
-// el motor, como lo compone build.py (motor3d_js), con los archivos de su lista FIG3D_FILES
-const FILES = [...readFileSync(new URL('../build.py', import.meta.url), 'utf8').match(/^FIG3D_FILES = \(([^)]*)\)$/m)[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
-const END = '})(window);';
-const body = FILES.map(f => {
-  const t = readFileSync(new URL('../src/fig3d/' + f, import.meta.url), 'utf8').trimEnd();
-  assert.ok(t.endsWith(END), f);
-  return t.slice(0, -END.length) + '})(G);';
-}).join('\n');
-const F3 = Function('FIG_MAP', 'FIG_REG', '"use strict";\nconst G = { FIG_MAP, FIG_REG };\n' + body + '\nreturn G.Fig3D;')({ R: AN_R, S: AN_S, H: AN_H, PA: AN_PA }, REG);
-const LIB = new Map(EXERCISES.map(e => [e.n, e]));
-const NAMES = Object.keys(FIG_POSES);
-const exs = new Map(NAMES.map(n => [n, F3.make(n, FIG_POSES[n], LIB.get(n) ? LIB.get(n).p || [] : [], LIB.get(n) ? LIB.get(n).s || [] : [])]));
+const { engine, boxesOf } = createRequire(import.meta.url)('../tools/figboxes.js');
+const { F3, FIG_POSES, LIB, NAMES, make } = engine();
+const exs = new Map(NAMES.map(n => [n, make(n)]));
+// los encuadres ya calculados, como los lee la app
+const FIG_BOXES = Function(readFileSync(new URL('../src/js/data/figboxes.js', import.meta.url), 'utf8').replace(/^export /m, '') + '\nreturn FIG_BOXES;')();
 const MOMENTS = Array.from({ length: 9 }, (_, i) => i / 8);
 // lo que define el motor para todas las figuras (degradados y rayados)
 const SHARED = new Set([...F3.DEFS.matchAll(/\sid="([^"]+)"/g)].map(m => m[1]));
@@ -103,4 +84,23 @@ test('bounds mide trazos, curvas, círculos y discos desplazados', () => {
   assert.deepEqual(F3.bounds('<g class="pl" transform="translate(100 50)"><circle cx="0" cy="0" r="10"/></g>'), [90, 40, 20, 20]);
   assert.deepEqual(F3.bounds('<defs><path d="M-500 -500L0 0"/></defs><g class="nf"><path d="M-900 0L0 0"/></g><ellipse cx="5" cy="5" rx="5" ry="2"/>'), [0, 3, 10, 4]);
   assert.equal(F3.bounds('<g class="nf"><path d="M0 0L9 9"/></g>'), null);
+});
+
+test('los encuadres ya calculados: uno por ejercicio, con sus momentos y sus recuadros', () => {
+  assert.deepEqual(Object.keys(FIG_BOXES), NAMES);
+  const bad = NAMES.filter(n => {
+    const b = FIG_BOXES[n], stops = b.slice(13);
+    const boxes = [b.slice(0, 4), b.slice(5, 9), b.slice(9, 13)];
+    return !b.every(Number.isFinite) || stops.length < 1 || stops.length > 3 || ![b[4], ...stops].every(t => t >= 0 && t <= 1) ||
+      !boxes.every(x => Number.isInteger(x[0]) && Number.isInteger(x[1]) && x[2] >= 60 && x[3] >= 60 && x[2] <= 2400 && x[3] <= 2400) ||
+      // un gesto de ida y vuelta: quieto, su inicio y su final, y la miniatura, el final (si la familia no dice otro momento);
+      // uno con su propio reloj no acaba en el 1: es un ciclo
+      (exs.get(n).beat ? stops.includes(1) : String(stops) != '0,1' || exs.get(n).still == null && b[4] != 1);
+  });
+  assert.deepEqual(bad, []);
+});
+
+test('y son los que da el motor (uno de cada veinte, vuelto a calcular)', () => {
+  const bad = NAMES.filter((n, i) => i % 20 == 0 && String(boxesOf(F3, exs.get(n))) != String(FIG_BOXES[n]));
+  assert.deepEqual(bad, []);
 });

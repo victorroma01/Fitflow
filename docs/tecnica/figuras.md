@@ -38,9 +38,11 @@ con barra recta o con barra Z) comparten figura.
 | `src/fig3d/*.js` | **El motor** (`fig3d.js`), **el material** (`gear3d.js`) y **las familias de movimiento** (`mov3d.js` … `cardio3d.js`). Scripts clásicos, `(function (G) {…})(window);`, que dejan todo en `G.Fig3D`; los usan tal cual las páginas de revisión (`tools/figuras3d`). |
 | `src/js/extras/motor3d.js` | El **molde** del motor en la app: `build.py` (`motor3d_js`) lo sustituye por los archivos de `src/fig3d`, en el orden de `FIG3D_FILES`, dentro de una función `motor3d(map, regions)` que les pasa un objeto en vez de `window` (así no tocan `window` y van en modo estricto) y devuelve `Fig3D`. |
 | `src/js/data/figposes.js` | La **tabla**: ejercicio → familia y variantes, en palabras (`'Press inclinado mancuernas': 'press incline db'`, `'Remo con barra agarre supino': 'row bar supine'`). Lleva todo lo que distingue el 3D: el material, el agarre, el banco, la pausa. |
-| `src/js/extras/figure3d.js` | Lo que **dibuja la app** con el motor: arranca el motor con el mapa muscular (`data/anatomy`) y las regiones de cada músculo (`extras/anatomy`, `MUSCLE_REGIONS`), hace cada ejercicio con sus músculos de la librería, pasa las miniaturas a imagen (`thumbBlob`) y pone en marcha las figuras grandes (`startStages`). |
-| `src/js/extras/pictures.js` | Lo que se hace **sin el motor**: `exHasFigure`, `exPicture` (la miniatura, o su hueco), `exPictureLater` (la de una fila que aún no se ve), `exMotion` (el sitio de la figura grande), la cola de miniaturas por dibujar y su caché en memoria y en el móvil. |
-| `src/js/core/lazy.js` | `loadFigures`: descarga el motor y `extras/figure3d` la primera vez que hace falta una figura. |
+| `tools/figboxes.js` → `src/js/data/figboxes.js` | **Los encuadres, ya calculados**: de cada ejercicio, lo que ocupa su gesto entero, el momento de su miniatura y lo que ocupa, y los momentos de sus posturas quietas y lo que ocupan. La herramienta arranca el motor en Node tal como va en la app y lo calcula una vez (unos 45 s); el archivo lleva la huella de lo que decide cómo se ve una figura (el motor, los ejercicios, el mapa muscular y `extras/figure3d`) y la batería comprueba que está al día. |
+| `src/js/data/figstamp.js` | **La huella**, aparte, en lo que la app carga al arrancar (la escribe la misma herramienta): con ella la app sabe si las miniaturas que guardó siguen valiendo. |
+| `src/js/extras/figure3d.js` | Lo que **dibuja la app** con el motor: lo arranca con el mapa muscular (`data/anatomy`) y las regiones de cada músculo (`extras/anatomy`, `MUSCLE_REGIONS`), hace cada ejercicio con sus músculos de la librería, pasa las miniaturas a imagen (`thumb`) y pone en marcha las figuras grandes (`stages`). Al cargarse deja esas dos funciones en `core/lazy`. |
+| `src/js/extras/pictures.js` | Lo que se hace **sin el motor**: `exHasFigure`, `exPicture` (la miniatura, o su hueco), `exPictureLater` (la de una fila que aún no se ve), `exMotion` (el sitio de la figura grande), las miniaturas por buscar y por dibujar y su caché en memoria y en el móvil. |
+| `src/js/core/lazy.js` | `loadFigures`: descarga el motor, los encuadres y `extras/figure3d` la primera vez que hace falta una figura. |
 | `src/js/library/howto.js` | La hoja. |
 | `src/types/fig3d.d.ts` | Lo que la app usa del motor, para el comprobador de tipos (el motor no es un módulo de `src/js`). |
 
@@ -66,25 +68,38 @@ verdad, círculos, elipses, el desplazamiento de los discos) y deja fuera lo que
 
 - **El motor se descarga al usarlo.** Al arrancar no se carga: la primera miniatura que haga falta dibujar, o la primera
   hoja, lo descarga (el service worker lo tiene guardado desde que se instaló la app, así que también va sin conexión).
+- **Nada se dibuja para medirlo.** El recuadro de cada figura y los momentos de las quietas vienen calculados
+  (`data/figboxes`). Antes, al abrir la hoja había que dibujar la figura trece veces para encuadrar el gesto: unos 50 ms en un
+  ordenador y cuatro veces más en un móvil, justo mientras la hoja entra.
 - **Una miniatura se dibuja una vez.** `extras/figure3d` dibuja la figura quieta sin el rayado (a ese tamaño no se
-  distingue), con los tonos oscuros aclarados (un filtro gamma), la encuadra en lo que ocupa con un margen pequeño y la pasa
-  a imagen en un lienzo: WebP de 72 px por la densidad de la pantalla (hasta 216 px), unos 6–10 KB. La imagen se guarda en la
-  memoria y en el móvil (IndexedDB, base `fffig`, una fila por ejercicio con la versión de la app y el tamaño): la siguiente
-  vez se enseña al momento, sin el motor. Son dibujos de la librería, iguales para cualquiera, no datos de nadie; se rehacen
-  al cambiar de versión. Donde el navegador no deja leer el lienzo, la imagen es el propio dibujo y no se guarda.
+  distingue), con los tonos oscuros aclarados (un filtro gamma) y solo con los degradados que usa, y la pasa a imagen en un
+  lienzo: WebP de 72 px por la densidad de la pantalla (hasta 216 px), unos 6–10 KB. La imagen se guarda en la memoria y en el
+  móvil (IndexedDB, base `fffig`: por cada ejercicio, el tipo de la imagen y sus bytes; y una fila con la huella de las
+  figuras, `data/figstamp`, y el tamaño): la siguiente vez se enseña al momento, sin el motor. Son dibujos de la librería,
+  iguales para cualquiera, no datos de nadie. Solo se vacían y se rehacen cuando una versión cambia las figuras (otra
+  huella): una actualización que no las toca no hace dibujar otra vez las 527. Donde el navegador no deja leer el lienzo, la
+  imagen es el propio dibujo y no se guarda.
+- **Solo se lee lo que se pide.** Las miniaturas que pide una pantalla se buscan juntas en lo guardado, en una sola lectura;
+  abrir la app no trae todas las guardadas.
 - **El momento de la miniatura**: en un gesto de ida y vuelta, la postura final (un curl arriba, una sentadilla abajo); en
   uno con su propio reloj, la postura más lejos del principio (el otro paso al correr, el brazo arriba en un curl alterno, la
   barra arriba en un clean & jerk). La familia puede decir otro (`still`): el burpee, con el pecho en el suelo; los wall
   balls, abajo con el balón al pecho.
-- **Mientras se dibuja, su hueco** (`svg[data-pic]`, del mismo tamaño), que se cambia por la imagen en cuanto está. Se
-  dibujan de dos en dos (mientras una se pasa a imagen, que lo hace el navegador aparte, se dibuja la siguiente) y con un
-  respiro entre una y otra. Una lista larga pide primero las de las filas que se ven; las demás, detrás, de arriba abajo, y
-  pasan delante en cuanto su fila se acerca a lo que se ve. Al cerrar la lista se deja de dibujar lo que ya nadie espera.
-- **Las del plan, antes de verlas**: unos segundos después de abrir la app, en un rato libre, se dibujan las de los
-  ejercicios del plan que aún no estén (tras instalar o actualizar), para que el día y el entreno las tengan al momento.
-- **La figura grande** se encuadra en el gesto entero (trece momentos) y se dibuja con el reloj de su gesto mientras se ve
-  (fuera de la vista no se dibuja); si un dibujo cuesta más de medio fotograma, espera otro tanto antes del siguiente. Cada
-  una lleva su prefijo en lo que define (degradados de la cabeza, rayados), así que dos en la página no se pisan.
+- **Mientras se busca o se dibuja, su hueco** (`svg[data-pic]`, del mismo tamaño), que se cambia por la imagen en cuanto
+  está.
+- **Dibujarlas no estorba.** Las que se ven (el día, el entreno, la ficha, las primeras filas de una lista) se dibujan ya, de
+  dos en dos (mientras una se pasa a imagen, que lo hace el navegador aparte, se dibuja la siguiente) y con un respiro entre
+  una y otra. Las demás (el resto de una lista abierta, de arriba abajo, y las del plan unos segundos después de abrir la app,
+  tras instalarla o actualizarla), de una en una y solo cuando la pantalla lleva más de medio segundo sin tocarse y no hay
+  una figura grande moviéndose: dibujar una ocupa unos milisegundos en los que la app no atiende, y deslizando una lista o
+  viendo el gesto se notaría. Una fila que se acerca a lo que se ve pasa delante de todas. Al cerrar la lista se deja de
+  dibujar lo que ya nadie espera.
+- **La figura grande** se dibuja con el reloj de su gesto mientras se ve (fuera de la vista no se dibuja) y nunca ocupa más
+  de la mitad del tiempo: tras cada dibujo espera, al menos, lo que ha costado. En un móvil rápido son 60 por segundo; en uno
+  lento, los que pueda, y sin el rayado de los músculos (a ese tamaño apenas se nota y es un cuarto menos de trabajo): lento
+  es que un fotograma cueste más de 9 ms, medido con la primera figura cuando el navegador ya ha afinado el código (o antes,
+  si ya los primeros cuestan el doble). Su sitio lleva `contain: layout paint`: lo que cambia dentro no hace mirar nada de
+  fuera. Cada una lleva su prefijo en lo que define (degradados de la cabeza, rayados), así que dos en la página no se pisan.
 
 ## Añadir un ejercicio o una variante
 
@@ -92,16 +107,26 @@ verdad, círculos, elipses, el desplazamiento de los discos) y deja fuera lo que
    otro, con las mismas palabras.
 2. Si hace falta una variante nueva (otro material, otro agarre), se añade a su familia en `src/fig3d`; si el gesto es otro,
    una familia nueva, con su nombre en la cabecera del archivo («Define: Fig3D.FAMILIES.…»).
-3. Se revisa con las herramientas de `tools/figuras3d` (las pruebas de manos, pies, choques y saltos, y la página del lote)
-   y, en la app, con `python3 build.py` y la hoja del ejercicio. `tests/fig3d.test.mjs` lo dibuja en todo el gesto.
+3. Se revisa con las herramientas de `tools/figuras3d` (las pruebas de manos, pies, choques y saltos, y la página del lote).
+4. `node tools/figboxes.js` rehace los encuadres (la compilación y la batería avisan si falta) y, en la app, se mira con
+   `python3 build.py` y la hoja del ejercicio. `tests/fig3d.test.mjs` lo dibuja en todo el gesto.
 
 ## Lo que pesa
 
-- El motor va en un archivo aparte: unos 340 KB (130 KB comprimido) en el paquete, que solo se descargan al usarlo. Lo que
-  carga al arrancar bajó de 578 a 485 KB al quitar las figuras de perfil.
-- Arrancar el motor: unos 65 ms en un ordenador; con la CPU cuatro veces más lenta (un móvil normal), unos 230 ms, una vez.
-- Una miniatura: unos 35 ms (115 ms con la CPU cuatro veces más lenta); doce a la vez, unos 0,3 s (0,9 s). Guardada, nada.
-- Un fotograma de la figura grande: unos 3 ms de dibujo.
+Medido en la app compilada, en Chromium sin pantalla (dibuja sin tarjeta gráfica) y en un móvil simulado de 390 px y
+densidad 3; «lento» es con la CPU cuatro veces más despacio.
+
+- El motor va en un archivo aparte: 346 KB (133 KB comprimido), y los encuadres, 45 KB (12 KB). Solo se descargan al usar
+  una figura. Lo que carga al arrancar: 481 KB.
+- Arrancar el motor: unos 45 ms (lento, unos 190 ms), una vez.
+- Abrir la hoja con la figura grande: unos 125 ms la primera (lento, unos 490 ms) y de 30 a 65 ms las siguientes (lento,
+  unos 110 ms). Antes de tener los encuadres calculados había que sumar trece dibujos: unos 50 ms (lento, 200 ms).
+- Una miniatura: unos 33 ms (lento, unos 90 ms), de los que la app no atiende alrededor de un tercio (el resto lo hace el
+  navegador aparte). Guardada, nada.
+- Un fotograma de la figura grande: unos 6–7 ms de código (hacer el dibujo y ponerlo en la página), 1,5 ms de estilos y
+  unos 6 ms de pintarlo; lento, unos 20 ms de código y sin el rayado. Sin tarjeta gráfica salen unos 29 por segundo (15
+  lento), y lo que limita no es el código sino pintar: con el aspecto Cristal, el desenfoque de la hoja se rehace bajo la
+  figura en cada fotograma (sin Cristal salen 43). En un móvil eso lo hace la tarjeta gráfica.
 
 ## Pruebas
 
@@ -110,7 +135,7 @@ verdad, círculos, elipses, el desplazamiento de los discos) y deja fuera lo que
   una figura, lo que usa cada dibujo lo define él o el motor (una miniatura es un dibujo suelto) y su reloj va de 0 a 1.
 - `tests/figures.py` (en navegador): las 527 miniaturas, como imagen de su tamaño; las listas (la figura en cada fila, los
   huecos del mismo tamaño que se llenan todos con la lista abierta, al momento al volver a abrirla y, tras recargar, de lo
-  guardado y sin el motor); la ficha; la hoja de un ejercicio de cada clase (figura arriba en 4:3, músculos y texto, que se
+  guardado y sin el motor; lo guardado con otra huella se tira y se dibuja otra vez); la ficha; la hoja de un ejercicio de cada clase (figura arriba en 4:3, músculos y texto, que se
   mueve y sigue dibujada tras varios gestos; los ciclos no se paran; fuera de la vista no se dibuja); a 320 y 768 px; con
   «Reducir animaciones», las posturas quietas; los colores pintados de verdad; el entreno; sin errores ni choques con la
   política de seguridad.
