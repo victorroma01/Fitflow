@@ -2,11 +2,17 @@
 con cambios en los dos, sin poder guardar en el móvil y con la app abierta dos veces), cerrar sesión, espera tras fallos, Administración, contraseña temporal, fallos y sugerencias (enviar,
 sin conexión, vista, respuesta y arreglado), copia de seguridad en la nube (a mano, semanal, sin pisar una copia con más datos,
 restaurar), foto con consentimiento, borrar todos los datos y seguridad (sin código inyectado ni choques con la CSP).
+Y lo de la V1.0.4: las dos casillas de crear la cuenta y lo aceptado anotado en su perfil, la pantalla de la aceptación de una
+cuenta que no tiene nada aceptado (en dos móviles), el contacto de privacidad, retirar el consentimiento, «Eliminar cuenta»
+(contraseña que no es, un borrado que falla a medias, y entera) y, con el emulador, la limpieza periódica
+(tools/admin/limpieza.mjs): los restos de una cuenta eliminada y las cuentas con dos años sin actividad.
 
   python3 tests/cloud.py dist/stratafit.html                          (Firebase de prueba en memoria: tests/fakefb.py)
   SF_CLOUD=emulador python3 tests/cloud.py dist/emu/stratafit.html    (emulador de Firebase, con firestore.rules; en la CI)
 Con el emulador, la contraseña temporal la crea el script de verdad (tools/admin/contrasena.mjs, con firebase-admin).
 """
+# las colecciones de cada cuenta, bajo users/{uid} (firestore.rules)
+OWN = ('data', 'logs', 'hist', 'meals', 'private', 'backup')
 import os, re, sys, json, time, base64, subprocess, urllib.request
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts, RECAPTCHA, recaptcha_route
@@ -125,6 +131,37 @@ class EmuFirebase:
     def delete(self, path):
         self._req('%s/v1/projects/%s/databases/(default)/documents/%s' % (self.FS, self.P, path), method='DELETE')
 
+    def _list(self, coll):
+        """Los documentos de una colección: [(ruta, campos)]."""
+        base = '%s/v1/projects/%s/databases/(default)/documents/' % (self.FS, self.P)
+        docs = self._req(base + coll + '?pageSize=300').get('documents', [])
+        return [(d['name'].split('/documents/')[1], d.get('fields', {})) for d in docs]
+
+    def tree(self, uid):
+        """Todo lo que la cuenta `uid` tiene en Firestore: su perfil, sus documentos y sus avisos (rutas, ordenadas)."""
+        out = ['users/' + uid] if self.data('users/' + uid) is not None else []
+        for c in OWN:
+            out += [p for p, _ in self._list('users/%s/%s' % (uid, c))]
+        out += [p for p, f in self._list('reports') if f.get('uid', {}).get('stringValue') == uid]
+        return sorted(out)
+
+    def has_account(self, user):
+        try:
+            self._account(user)
+            return True
+        except KeyError:
+            return False
+
+    def strip_consent(self, uid):
+        """Deja el perfil como el de una cuenta anterior a la V1.0.4: sin nada aceptado."""
+        self._req('%s/v1/projects/%s/databases/(default)/documents/users/%s?updateMask.fieldPaths=cs' % (self.FS, self.P, uid), {'fields': {}}, 'PATCH')
+
+    def sweep(self, mode, days=0):
+        """La limpieza periódica de verdad (tools/admin/limpieza.mjs), como si pasaran `days` días: (código de salida, salida)."""
+        env = dict(os.environ, FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099', FIRESTORE_EMULATOR_HOST='127.0.0.1:8080', LIMPIEZA_AHORA=str(int((time.time() + days * 86400) * 1000)))
+        r = subprocess.run(['node', os.path.join(ROOT, 'tools', 'admin', 'limpieza.mjs'), mode], env=env, capture_output=True, text=True, timeout=180)
+        return r.returncode, r.stdout + r.stderr
+
     def data(self, path):
         try:
             d = self._req('%s/v1/projects/%s/databases/(default)/documents/%s' % (self.FS, self.P, path))
@@ -153,6 +190,22 @@ class FakeBackend(FakeFirebase):
 
     def delete(self, path):
         self.docs.pop(path, None)
+
+    def tree(self, uid):
+        """Todo lo que la cuenta `uid` tiene en Firestore: su perfil, sus documentos y sus avisos (rutas, ordenadas)."""
+        return sorted(k for k, d in self.docs.items() if k == 'users/' + uid or k.startswith('users/%s/' % uid)
+                      or k.startswith('reports/') and d['fields'].get('uid', {}).get('stringValue') == uid)
+
+    def has_account(self, user):
+        try:
+            self._email(user)
+            return True
+        except KeyError:
+            return False
+
+    def strip_consent(self, uid):
+        """Deja el perfil como el de una cuenta anterior a la V1.0.4: sin nada aceptado."""
+        self.docs['users/' + uid]['fields'].pop('cs', None)
 
 
 def offline_noise(text):
@@ -186,6 +239,10 @@ def main(path):
             wait(pg, 'window.__ffok')
             return c, pg
 
+        def tick(pg):
+            """Marca las dos casillas: las de crear la cuenta o las de la pantalla de la aceptación."""
+            pg.evaluate("for (const id of ['lgc1', 'lgc2']) { const e = document.getElementById(id); if (!e.checked) e.click(); }")
+
         def login(pg, user, pw, new=False, wait_app=True):
             if new:
                 pg.click('[data-a=loginMode][data-v=up]')
@@ -193,6 +250,7 @@ def main(path):
             pg.fill('#lgp', pw)
             if new:
                 pg.fill('#lgp2', pw)
+                tick(pg)
             pg.click('[data-a=loginSubmit]')
             if wait_app:
                 wait(pg, "window.__ffok && !document.getElementById('lgw') && document.querySelector('nav').style.display!='none'", 20000)
@@ -231,18 +289,31 @@ def main(path):
         c1, p1 = device()
         check('sin sesión, solo el inicio de sesión (sin la barra de pestañas)', p1.evaluate("!!document.getElementById('lgw') && document.querySelector('nav').style.display=='none'"))
         check('el inicio de sesión lleva el logo (F-40)', p1.evaluate("(i=>!!i&&i.alt=='StrataFit'&&i.complete&&i.naturalWidth==288)(document.querySelector('#lgw img.brand-logo'))"))
-        check('sin datos personales en el registro: solo usuario y contraseña', p1.evaluate("(A.loginMode(0,{dataset:{v:'up'}}),[...document.querySelectorAll('#lgw input')].map(i=>i.id).join())") == 'lgu,lgp,lgp2')
+        check('sin datos personales en el registro: solo usuario y contraseña, y las dos casillas de la aceptación, sin marcar',
+              p1.evaluate("(A.loginMode(0,{dataset:{v:'up'}}),[...document.querySelectorAll('#lgw input')].map(i=>i.id+(i.checked?'*':'')).join())") == 'lgu,lgp,lgp2,lgc1,lgc2')
         p1.fill('#lgu', 'Ana_1'); p1.fill('#lgp', 'contraseña-1'); p1.fill('#lgp2', 'otra-cosa')
         p1.click('[data-a=loginSubmit]')
         check('contraseñas que no coinciden: aviso y no se crea nada', 'no coinciden' in p1.inner_text('#lge'))
         p1.fill('#lgu', 'a..b')
         p1.click('[data-a=loginSubmit]')
         check('usuario no válido: aviso', 'punto' in p1.inner_text('#lge'))
+        # sin marcar las casillas no se crea la cuenta: ni sin las dos ni con una sola
+        p1.fill('#lgu', 'Ana_1'); p1.fill('#lgp2', 'contraseña-1')
+        p1.click('[data-a=loginSubmit]')
+        check('sin aceptar las condiciones no se crea la cuenta', '16 años' in p1.inner_text('#lge') and not fb.has_account('Ana_1'), p1.inner_text('#lge'))
+        p1.evaluate("document.getElementById('lgc1').click()")
+        p1.click('[data-a=loginSubmit]')
+        check('ni sin el consentimiento para los datos de salud', 'consentimiento' in p1.inner_text('#lge') and not fb.has_account('Ana_1'), p1.inner_text('#lge'))
+        p1.evaluate("document.getElementById('lgc1').click()")
         p1.evaluate("A.loginMode(0,{dataset:{v:'in'}})")
         login(p1, 'Ana_1', 'contraseña-1', new=True)
         uid = fb.uid_of('Ana_1')
         prof = fb.data('users/' + uid) or {}
-        check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm', 'os'}, str(prof))
+        check('al crear la cuenta se crea su perfil con el usuario (y nada personal)', prof.get('u') == 'Ana_1' and set(prof) <= {'u', 'sx', 'pr', 'ca', 'm', 'os', 'cs'}, str(prof))
+        cs = prof.get('cs') or {}
+        check('y en él queda anotado lo aceptado: la versión de las condiciones y la del consentimiento, con su momento',
+              set(cs) == {'t', 'h'} and cs['t'].get('v') == '1.0' and cs['h'].get('v') == '1.0' and cs['h'].get('st') == 1 and abs(cs['t'].get('at', 0) - time.time() * 1000) < 300000 and cs['t'].get('at') == cs['h'].get('at'), str(cs))
+        check('en el móvil ya no queda nada por subir de lo aceptado', p1.evaluate("account.cs.h.st === 1 && !account.csu"), str(p1.evaluate('account.cs')))
         check('y se suben el índice y el núcleo', fb.data('users/%s/data/index' % uid) is not None and fb.part('users/%s/data/core' % uid) is not None)
         check('Perfil enseña el usuario', 'Ana_1' in p1.inner_text('#app') or p1.evaluate("(S.tab=3,R(),document.querySelector('.profile-name').textContent)") == 'Ana_1')
         check('la cuenta nueva se crea con el dominio de ahora (el del proyecto de Firebase)', fb.domain_of('Ana_1') == DOMAIN, fb.domain_of('Ana_1'))
@@ -586,7 +657,7 @@ def main(path):
                 badge = pa.evaluate("(()=>{const e=document.querySelector('.grecaptcha-badge');if(!e)return null;const s=getComputedStyle(e);return[s.visibility,s.position,!!e.querySelector('iframe')]})()")
                 check('el sello de reCAPTCHA no se ve ni ocupa sitio en la página', badge == ['hidden', 'fixed', True], str(badge))
                 pa.evaluate("A.openSettings()")
-                pa.evaluate("A.openSettingsPage(0,{dataset:{v:'privacidad'}})")
+                pa.evaluate("A.openLegal(0,{dataset:{v:'privacy'}})")
                 # (si falla, dice si la configuración sigue puesta, si el texto está en la página aunque no se lea, y cómo acaba)
                 seen = pa.inner_text('#sh')
                 check('y Privacidad lo cuenta', 'reCAPTCHA Enterprise' in seen,
@@ -972,13 +1043,206 @@ def main(path):
         check('sin conexión no se borra nada (si no, volverían de la nube)', p2.evaluate('S.logs.length') == 2 and fb.data('users/%s/data/index' % uid) is not None)
         fb.set_offline(c2, False)
         p2.evaluate("localStorage.setItem('ffw',JSON.stringify({W:{x:[]},t:Date.now()}))")
+        p2.evaluate("takeSnapshot()")
+        snaps = p2.evaluate("snapList().then(a => a.length)")
         with p2.expect_navigation(timeout=20000):
             p2.evaluate('A.resetAllConfirmed()')
         wait(p2, 'window.__ffok')
         check('con conexión se borran del móvil (también el entreno en curso) y de la nube; el usuario se queda', p2.evaluate("S.logs.length==0 && !localStorage.getItem('ffw')") and fb.data('users/%s/data/index' % uid) is None and fb.data('users/%s/logs/2026' % uid) is None and (fb.data('users/' + uid) or {}).get('u') == 'Ana_1')
         check('y también la copia de seguridad de la nube', fb.data('users/%s/backup/meta' % uid) is None and fb.data('users/%s/backup/c0' % uid) is None)
+        check('y las copias automáticas de este móvil: lo borrado no se recupera desde aquí', snaps >= 1 and p2.evaluate("snapList().then(a => a.length)") == 0, str(snaps))
+        prof = fb.data('users/' + uid) or {}
+        check('del perfil se borra el sexo; se quedan el usuario, las preferencias y lo aceptado', prof.get('sx') == '' and prof.get('u') == 'Ana_1' and 'theme' in (prof.get('pr') or {}) and (prof.get('cs') or {}).get('h', {}).get('st') == 1, str(prof))
         sync(p2)
         check('y la cuenta sigue sincronizando, vacía', p2.evaluate('syncState().st') == 'ok' and fb.data('users/%s/data/index' % uid) is not None)
+        check('sin que nada lo devuelva: ni el sexo ni los entrenos', p2.evaluate("S.logs.length == 0 && !(S.biometrics || {}).sex") and (fb.data('users/' + uid) or {}).get('sx') == '')
+        p2.evaluate('stopSync()')
+
+        # ══ V1.0.4: lo aceptado, el consentimiento y la eliminación de la cuenta ══
+        # una cuenta nueva, con datos, en dos móviles
+        c5, p5 = device()
+        login(p5, 'Leo_9', 'clave-leo-99', new=True)
+        leo = fb.uid_of('Leo_9')
+        wait(p5, "!!document.getElementById('wlc')", 30000)
+        new_account_bio(p5, 'M')
+        p5.click('#tour [data-a=tourSkip]')
+        DATA = "S.logs.push({d:'%s',n:'Pierna',v:5000,s:18,m:60,q:7});S.meals['%s']={0:[%s]};S.weightLog=[{d:'%s',w:78}];S.profile={img:'data:image/jpeg;base64,/9j/4AAQSkZJRg==',pc:Date.now()};saveState()" % (today, today, json.dumps(pollo), today)
+        p5.evaluate(DATA)
+        check('(la cuenta nueva sube sus datos)', sync(p5) == 'ok' and len(fb.part('users/%s/logs/2026' % leo) or []) == 1)
+        c6, p6 = device()
+        login(p6, 'Leo_9', 'clave-leo-99')
+        check('otro móvil de la cuenta entra sin que se le pida nada: ya lo tiene aceptado', p6.evaluate('S.logs.length') == 1 and p6.evaluate('account.cs.h.st') == 1 and p6.evaluate("!document.getElementById('lgw')"))
+
+        # ── una cuenta de antes de la V1.0.4 no tiene nada aceptado: en lugar de la app, la pantalla que lo pide ──
+        STRIP = "(a => { delete a.cs; delete a.csu; localStorage.setItem('ffacct', JSON.stringify(a)); })(JSON.parse(localStorage.getItem('ffacct')))"
+        GATE = "window.__ffok && !!document.getElementById('lgc1') && document.querySelector('nav').style.display == 'none'"
+        APP = "window.__ffok && !document.getElementById('lgw') && document.querySelector('nav').style.display != 'none'"
+        fb.strip_consent(leo)
+        for pg in (p5, p6):
+            pg.evaluate('stopSync()')
+            pg.evaluate(STRIP)
+            pg.reload()
+            wait(pg, GATE)
+        p5.wait_for_timeout(2500)
+        idx0 = fb.data('users/%s/data/index' % leo)
+        p5.evaluate("S.weightLog.push({d:'2026-11-05',w:77});saveState()")
+        st = sync(p5)
+        check('sin lo aceptado, la app no se abre ni sincroniza: los datos del móvil siguen en él y los de la nube no cambian',
+              st == 'idle' and p5.evaluate('S.logs.length') == 1 and fb.data('users/%s/data/index' % leo) == idx0 and (fb.part('users/%s/data/core' % leo) or {}).get('wl') == [{'d': today, 'w': 78}], st)
+        check('la pantalla dice de qué cuenta es y deja exportar, borrar, eliminar la cuenta o cerrar sesión', 'Leo_9' in p5.inner_text('#lgw .login-card')
+              and p5.evaluate("['backupDownload','resetAllAsk','openDeleteAccount','signOut'].every(a => !!document.querySelector('#lgw .login-links [data-a=' + a + ']'))"))
+        with p5.expect_download(timeout=20000) as dl:
+            p5.click('#lgw [data-a=backupDownload]')
+        copy = json.load(open(dl.value.path(), encoding='utf-8'))
+        check('«Exportar una copia» da el archivo con los datos del móvil, sin aceptar nada', len(copy.get('logs', [])) == 1 and copy.get('_sf', {}).get('app') == 'StrataFit', str(sorted(copy))[:200])
+        p5.click('[data-a=consentAccept]')
+        check('sin marcar las casillas no se entra', '16 años' in p5.inner_text('#lge') and p5.evaluate('!account.cs'), p5.inner_text('#lge'))
+        tick(p5)
+        with p5.expect_navigation(timeout=30000):
+            p5.click('[data-a=consentAccept]')
+        wait(p5, APP)
+        st = sync(p5)
+        cs = (fb.data('users/' + leo) or {}).get('cs') or {}
+        check('al aceptar se entra, con los datos que había, y lo aceptado se anota en el perfil de la cuenta', st == 'ok' and p5.evaluate('S.logs.length') == 1 and cs.get('t', {}).get('v') == '1.0'
+              and cs.get('h', {}).get('st') == 1 and abs(cs['h'].get('at', 0) - time.time() * 1000) < 300000 and (fb.part('users/%s/data/core' % leo) or {}).get('wl', [{}])[-1].get('w') == 77, '%s %s' % (st, cs))
+        p6.reload()
+        wait(p6, APP, 30000)
+        check('el otro móvil, al abrirse, ve que la cuenta ya aceptó y entra sin pedirlo otra vez', p6.evaluate('account.cs.h.st') == 1 and sync(p6) == 'ok' and p6.evaluate('S.weightLog.length') == 2)
+
+        # ── el contacto de privacidad: un aviso del tipo «Privacidad y datos» ──
+        p5.evaluate("A.openPrivacyContact()")
+        check('se abre ya con su tipo y sin datos técnicos marcados', p5.evaluate("document.querySelector('#rpp [data-a=reportChooseKind][data-v=p]').classList.contains('on') && !document.getElementById('rpd').checked"))
+        p5.evaluate("document.getElementById('rpx').value='Quiero saber qué datos míos guardáis';A.reportSend()")
+        wait(p5, "S.reports && S.reports[0] && S.reports[0].s==1", 15000)
+        pid = p5.evaluate('S.reports[0].id')
+        rdoc = fb.data('reports/' + pid) or {}
+        check('y llega como tal, sin datos técnicos', rdoc.get('k') == 'p' and rdoc.get('dx') == '' and rdoc.get('uid') == leo and rdoc.get('u') == 'Leo_9', str(rdoc))
+        p5.evaluate('sheet()')
+
+        # ── retirar el consentimiento: se borran los registros (de la nube y del móvil) y la cuenta queda a la espera ──
+        wait(p5, "!!S.cloudBackup", 30000)
+        sync(p5)
+        before = fb.tree(leo)
+        check('(antes: registros, foto y copia en la nube)', all(('users/%s/' % leo) + x in before for x in ('data/core', 'data/index', 'logs/2026', 'meals/2026-11', 'private/avatar', 'backup/meta')), str(before))
+        p5.evaluate("S.tab=3;R();A.openSettings();A.openLegal(0,{dataset:{v:'privacy'}})")
+        p5.click('#lgl [data-a=consentWithdrawAsk]')
+        check('antes de retirar se dice qué se borra', 'se borrarán' in p5.inner_text('#dg') and 'Tu usuario se mantiene' in p5.inner_text('#dg'))
+        fb.set_offline(c5, True)
+        p5.evaluate("document.querySelector('#dg [data-v=consentWithdraw]').click()")
+        wait(p5, "document.getElementById('tt').textContent.includes('Sin conexión')", 30000)
+        check('sin conexión no se retira ni se borra nada', p5.evaluate('account.cs.h.st === 1 && S.logs.length == 1') and fb.tree(leo) == before)
+        fb.set_offline(c5, False)
+        with p5.expect_navigation(timeout=30000):
+            p5.evaluate('A.consentWithdraw()')
+        wait(p5, GATE)
+        left = fb.tree(leo)
+        prof = fb.data('users/' + leo) or {}
+        cs = prof.get('cs') or {}
+        check('con conexión: fuera de la nube los registros, la foto y la copia; quedan el perfil y el aviso enviado', left == sorted(['users/' + leo, 'reports/' + pid]), str(left))
+        check('en el perfil queda anotada la retirada, con su momento y el de cuando se dio; las condiciones siguen aceptadas',
+              cs.get('h', {}).get('st') == 0 and cs['h'].get('ga', 0) > 0 and cs['h'].get('at', 0) >= cs['h']['ga'] and cs.get('t', {}).get('v') == '1.0' and prof.get('sx') == '' and prof.get('u') == 'Leo_9', str(prof))
+        check('en el móvil no queda ningún registro ni copia, y la app pide el consentimiento de nuevo',
+              p5.evaluate("S.logs.length == 0 && !(S.weightLog || []).length && !S.profile.img") and p5.evaluate("snapList().then(a => a.length)") == 0 and 'Has retirado tu consentimiento' in p5.inner_text('#lgw .login-card')
+              and p5.evaluate("!document.querySelector('#lgw [data-a=backupDownload]') && !!document.querySelector('#lgw [data-a=openDeleteAccount]')"))
+        st = sync(p6)
+        wait(p6, GATE, 30000)
+        check('el otro móvil se entera al sincronizar: deja de sincronizar y pide el consentimiento, sin devolver nada a la nube', st == 'idle' and fb.tree(leo) == left, '%s %s' % (st, fb.tree(leo)))
+        tick(p5)
+        with p5.expect_navigation(timeout=30000):
+            p5.click('[data-a=consentAccept]')
+        wait(p5, APP)
+        st = sync(p5)
+        cs2 = (fb.data('users/' + leo) or {}).get('cs') or {}
+        check('al darlo de nuevo se vuelve a entrar, con la cuenta vacía', st == 'ok' and p5.evaluate('S.logs.length') == 0 and cs2.get('h', {}).get('st') == 1 and cs2['h'].get('at', 0) >= cs['h']['at'] and 'ga' not in cs2['h'], '%s %s' % (st, cs2))
+        p6.reload()
+        wait(p6, APP, 30000)
+        sync(p6)
+        check('y el otro móvil entra y se queda igual: lo que tenía de antes de la retirada no vuelve', p6.evaluate('S.logs.length == 0 && !(S.weightLog || []).length') and fb.data('users/%s/logs/2026' % leo) is None, str(p6.evaluate('[S.logs.length, (S.weightLog || []).length]')))
+
+        # ── «Eliminar cuenta» ──
+        p5.evaluate(DATA)
+        sync(p5)
+        p5.evaluate("A.openBackup();document.querySelector('#sh [data-a=cloudBackupSave]').click()")
+        wait(p5, "!!S.cloudBackup", 30000)
+        p5.evaluate('sheet()')
+        sync(p5)
+        full = fb.tree(leo)
+        check('(antes: la cuenta con registros, foto, copia y un aviso)', len(full) >= 8 and 'reports/' + pid in full, str(full))
+        p5.evaluate("S.tab=3;R();A.openSettings();A.openSettingsPage(0,{dataset:{v:'cuenta'}})")
+        p5.click('#ajs [data-a=openDeleteAccount]')
+        check('Ajustes → Cuenta → «Eliminar cuenta»: dice qué se borra y pide la contraseña', 'Se borrarán para siempre' in p5.inner_text('#dlc') and p5.evaluate("document.getElementById('dlp').type") == 'password')
+
+        def delete_account(pw):
+            """Escribe la contraseña y confirma; devuelve lo que acaba diciendo la página (o '' si la app se abre de nuevo)."""
+            p5.fill('#dlp', pw)
+            p5.click('#dlc [data-a=deleteAccountAsk]')
+            p5.evaluate("document.querySelector('#dg [data-v=deleteAccountConfirmed]').click()")
+            wait(p5, "!document.getElementById('dle') || /\\.$/.test(document.getElementById('dle').textContent)", 40000)
+            return p5.evaluate("(document.getElementById('dle') || {}).textContent || ''")
+
+        said = delete_account('otra-clave-00')
+        check('con una contraseña que no es no se borra nada', said == 'La contraseña no es correcta.' and fb.tree(leo) == full and fb.has_account('Leo_9'), said)
+        if not EMU:
+            fb.fail_delete.add('users/%s/data/core' % leo)
+            said = delete_account('clave-leo-99')
+            check('si los datos no se pueden borrar, la cuenta no se elimina y se dice', 'No se han podido borrar todos tus datos' in said and fb.has_account('Leo_9') and 'users/' + leo in fb.tree(leo), said)
+            fb.fail_delete.clear()
+            fb.no_delete = True
+            said = delete_account('clave-leo-99')
+            check('si el servidor no deja eliminar cuentas: los datos se borran, la cuenta sigue y se dice cómo pedirlo', 'el servidor no deja eliminar la cuenta' in said and fb.tree(leo) == [] and fb.has_account('Leo_9'), said)
+            fb.no_delete = False
+        p5.fill('#dlp', 'clave-leo-99')
+        p5.click('#dlc [data-a=deleteAccountAsk]')
+        check('antes de eliminar, confirma', '¿Eliminar la cuenta?' in p5.inner_text('#dg') and 'No se puede deshacer' in p5.inner_text('#dg'))
+        with p5.expect_navigation(timeout=40000):
+            p5.evaluate("document.querySelector('#dg [data-v=deleteAccountConfirmed]').click()")
+        wait(p5, "window.__ffok && !!document.getElementById('lgu')")
+        wait(p5, "!!document.querySelector('#dg h3')", 10000)
+        check('al eliminarla, la app se abre sin sesión y lo dice', 'Cuenta eliminada' in p5.inner_text('#dg') and p5.evaluate("!account"))
+        p5.evaluate("document.querySelector('#dg [data-v=doNothing]').click()")
+        left = p5.evaluate("Object.keys(localStorage).filter(k => /^ff(:|$|acct|sync|own|w|pre|bad|gone)/.test(k))")
+        check('en el móvil no queda nada de la cuenta', left == [] and p5.evaluate("snapList().then(a => a.length)") == 0, str(left))
+        check('en la nube no queda nada suyo: ni registros, ni foto, ni copia, ni perfil, ni avisos', fb.tree(leo) == [], str(fb.tree(leo)))
+        check('y la cuenta ya no existe', not fb.has_account('Leo_9'))
+        login(p5, 'Leo_9', 'clave-leo-99', wait_app=False)
+        wait(p5, "document.getElementById('lge').textContent.length > 5", 30000)
+        check('con ese usuario y esa contraseña ya no se entra', 'incorrectos' in p5.inner_text('#lge'), p5.inner_text('#lge'))
+        p5.reload()
+        wait(p5, 'window.__ffok')
+        check('el aviso de la cuenta eliminada sale una sola vez', p5.evaluate("!document.querySelector('#dg').firstChild && !localStorage.getItem('ffgone')"))
+        # el otro móvil, que seguía con la sesión abierta
+        p6.evaluate("S.weightLog=(S.weightLog||[]).concat([{d:'2026-11-06',w:76}]);saveState()")
+        st = sync(p6)
+        check('en otro móvil que seguía abierto: deja de sincronizar, no devuelve nada a la nube y dice que la cuenta ya no existe',
+              st == 'dead' and fb.tree(leo) == [] and 'Esta cuenta ya no existe' in p6.inner_text('#dg') and p6.evaluate("account.x") == 2, '%s %s %s' % (st, fb.tree(leo), p6.inner_text('#dg')[:80]))
+        with p6.expect_navigation(timeout=30000):
+            p6.evaluate("document.querySelector('#dg [data-v=signOutConfirmed]').click()")
+        wait(p6, "window.__ffok && !!document.getElementById('lgu')")
+        left = p6.evaluate("Object.keys(localStorage).filter(k => /^ff(:|$|acct|sync|own|w|pre|bad)/.test(k))")
+        check('y con «Cerrar sesión» se borra también lo que quedaba en él', left == [], str(left))
+        if EMU:
+            # la limpieza periódica de verdad (tools/admin/limpieza.mjs). Restos: datos y un aviso de una cuenta que ya no existe
+            # (como los que deja un móvil que sube algo justo después de eliminarse su cuenta) y una contraseña temporal caducada
+            fb.put('users/fantasma/data/core', {'j': {'stringValue': '{}'}, 'm': {'integerValue': '1'}, 'r': {'stringValue': 'r1'}, 'v': {'integerValue': '1'}, 'd': {'stringValue': 'movil'}})
+            fb.put('reports/fantasma-1', {'uid': {'stringValue': 'fantasma'}, 'u': {'stringValue': 'Leo_9'}, 'k': {'stringValue': 'f'}, 't': {'stringValue': 'un aviso de prueba'}, 'st': {'stringValue': 'p'}})
+            fb.put('adminInbox/caducada', {'u': {'stringValue': 'Leo_9'}, 'p': {'stringValue': 'x'}, 't': {'integerValue': '1'}, 'exp': {'integerValue': '2'}})
+            rest = fb.tree('fantasma')
+            code, out = fb.sweep('simulacro')
+            check('la limpieza, en simulacro: cuenta lo que borraría sin borrarlo y sin nombrar a nadie',
+                  code == 0 and len(rest) == 2 and bool(re.search(r'Datos de cuentas que ya no existen \| 1\b', out)) and bool(re.search(r'Contraseñas temporales caducadas \| [1-9]', out))
+                  and fb.tree('fantasma') == rest and fb.data('adminInbox/caducada') is not None and 'Leo_9' not in out and 'Ana_1' not in out and 'fantasma' not in out and '@' not in out, out[-600:])
+            code, out = fb.sweep('aplicar')
+            check('al aplicarla: fuera los restos de la cuenta eliminada y la contraseña temporal caducada; las cuentas con actividad, intactas',
+                  code == 0 and fb.tree('fantasma') == [] and fb.data('adminInbox/caducada') is None and fb.has_account('Ana_1') and fb.data('users/' + uid) is not None
+                  and bool(re.search(r'Cuentas eliminadas ahora \| 0', out)) and bool(re.search(r'Restos borrados ahora \| 1', out)), out[-600:])
+            admin_uid = fb.uid_of('VictorAdmin_')
+            code, out = fb.sweep('simulacro', days=735)
+            idle = re.search(r'Sin actividad desde hace 2 años \| (\d+)', out)
+            check('pasados dos años sin que nadie entre, el simulacro las cuenta todas menos la del administrador', code == 0 and idle and int(idle.group(1)) >= 1 and bool(re.search(r'De administrador sin actividad \(no se eliminan\) \| 1', out)) and fb.has_account('Ana_1'), out[-600:])
+            code, out = fb.sweep('aplicar', days=735)
+            check('y al aplicarla se eliminan con todos sus datos; la del administrador, no',
+                  code == 0 and not fb.has_account('Ana_1') and fb.tree(uid) == [] and fb.has_account('VictorAdmin_') and fb.data('users/' + admin_uid) is not None
+                  and bool(re.search(r'Cuentas eliminadas ahora \| %s\b' % idle.group(1), out)), out[-600:])
 
         csp = [x for pg in (p1, p2) for x in (pg.evaluate('window.__csp||[]') or [])]
         check('sin choques con la política de seguridad (CSP)', not csp, str(csp[:3]))

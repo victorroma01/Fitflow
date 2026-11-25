@@ -28,7 +28,7 @@ export const dayTotals = m => sumMacros(dayItems(m).map(itemMacros));
     (4 kcal por gramo de hidratos y de proteína, 9 por gramo de grasa). */
 export const macroTargets = n => [n.k, n.k * n.c / 400, n.k * n.p / 400, n.k * n.f / 900];
 /** Entre qué valores valen la edad (años), la altura (cm) y el peso (kg): los de la bienvenida (system/welcome). */
-export const BIO_RANGES = { age: [14, 99], h: [120, 230], w: [30, 300] };
+export const BIO_RANGES = { age: [16, 99], h: [120, 230], w: [30, 300] };
 /** Por cuánto se multiplica el metabolismo basal según la actividad diaria (de baja a muy alta). */
 const ACTIVITY_FACTORS = [1.2, 1.375, 1.55, 1.725, 1.9];
 /** Gasto diario con los datos biométricos `b` ({ sex, age, h, w, act }): { bm: metabolismo basal (Mifflin-St Jeor), td: con la

@@ -26,7 +26,7 @@
    se lee con los nombres del programa (core/schema).
    Leer y escribir comparten lo que se sabe de cada clave (savedText), dónde están las partes (idb) y si se puede guardar
    (saveLocked): por eso van juntos en este módulo, y lo que no tiene estado, fuera (core/parts y core/idb).
-   Define: stateRecovered, partsLost, badParts, savedText, coreAtLoad, queued, queuedParts, saveLocked, lastKey, dropCount, idb, expectedParts, leftovers, lastState, allSaved, unsaved, pendingWrites, inFlight, failGen, savesBroken, knownRev, instanceStale, staleNotice, onInstanceStale, outdated, INSTANCE, BYE_KEY, savedByPredecessor, touchRev, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, goStale, staleCheck, staleNow, claim, takeOver, pendingChanges, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
+   Define: stateRecovered, partsLost, badParts, savedText, coreAtLoad, queued, queuedParts, saveLocked, lastKey, dropCount, idb, expectedParts, leftovers, lastState, allSaved, unsaved, pendingWrites, inFlight, failGen, savesBroken, knownRev, instanceStale, staleNotice, onInstanceStale, outdated, INSTANCE, BYE_KEY, savedByPredecessor, touchRev, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, goStale, staleCheck, staleNow, claim, takeOver, pendingChanges, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState
 */
 import { newId } from './util.js';
 import { Store } from './store.js';
@@ -849,9 +849,4 @@ export const dropSavedState = () => {
       logError('borrar las partes', e);
       return false;
     }));
-};
-/** Borra el estado guardado y bloquea los guardados hasta recargar. */
-export const clearSavedState = () => {
-  lockSaves();
-  dropSavedState();
 };

@@ -1,4 +1,4 @@
-"""Capturas de 47 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
+"""Capturas de 50 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
 
   python3 tests/shots.py snap ARCHIVO.html carpeta a,b,c,d,e,f [mapa.txt]   (genera carpeta/<cfg>_<pantalla>.png)
   Con mapa.txt («registro viejo nuevo», tests/nombres-1.0.2.txt), ARCHIVO es de antes de renombrar las acciones: las pantallas se
@@ -63,6 +63,10 @@ SCR={
  'inicio':"S.tab=3;R();A.openSettings&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'inicio'}}))",
  'recorrido':"S.tab=0;R();A.tourReplay&&A.tourReplay()",
  'recorrido_fin':"S.tab=0;R();A.tourReplay&&(A.tourReplay(),A.tourNext(),A.tourNext(),A.tourNext(),A.tourNext(),A.tourNext())",
+ # los textos legales (V1.0.4), que se abren al terminar de cargarse (una promesa, que la prueba espera), y «Eliminar cuenta»
+ 'privacidad':"S.tab=3;R();A.openLegal&&(A.openSettings(),A.openLegal(0,{dataset:{v:'privacy'}}))",
+ 'aviso_legal':"S.tab=3;R();A.openLegal&&(A.openSettings(),A.openLegal(0,{dataset:{v:'terms'}}))",
+ 'eliminar_cuenta':"S.tab=3;R();A.openDeleteAccount&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'cuenta'}}),A.openDeleteAccount())",
 }
 CFG={ # nombre: (w,h,scheme,gm,gl)
  'a':(390,844,'dark',3,1),'b':(390,844,'light',3,1),'c':(390,844,'dark',0,0),'d':(390,844,'dark',1,1),'e':(320,568,'dark',3,1),'f':(430,932,'light',2,1),

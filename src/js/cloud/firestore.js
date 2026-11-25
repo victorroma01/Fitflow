@@ -1,8 +1,8 @@
 /* ═══ cloud/firestore ═══
    Firestore por su API REST, con el token de la sesión (las reglas, firestore.rules, deciden qué puede leer y escribir cada
-   cuenta). Solo lo que usa la app: leer un documento, leer varios, listar una colección, escribir varios a la vez (commit,
-   todo o nada, con condición de versión) y borrar. Los valores van con su tipo de Firestore (stringValue, integerValue…).
-   Define: DB_PATH, docName, fsUrl, encValue, encFields, decValue, decFields, fsDoc, fsCall, getDoc, batchGet, listDocs, commitWrites, deleteDoc, setWrite, delWrite
+   cuenta). Solo lo que usa la app: leer un documento, leer varios, listar una colección, buscar en una por un campo, escribir
+   varios a la vez (commit, todo o nada, con condición de versión) y borrar. Los valores van con su tipo de Firestore (stringValue, integerValue…).
+   Define: DB_PATH, docName, fsUrl, encValue, encFields, decValue, decFields, fsDoc, fsCall, getDoc, batchGet, listDocs, queryDocs, commitWrites, deleteDoc, setWrite, delWrite
 */
 import { FIREBASE, FIRESTORE_URL } from './config.js';
 import { fetchJson } from './net.js';
@@ -88,6 +88,15 @@ export const listDocs = async (path) => {
       break;
   }
   return out;
+};
+/** Documentos de la colección de primer nivel `coll` cuyo campo `field` vale `value` (hasta 500): [{ id, data, ut }]. Las
+    reglas solo dejan a cada cuenta pedir así lo suyo (sus avisos: reports, con uid).
+    @param {string} coll
+    @param {string} field
+    @param {any} value */
+export const queryDocs = async (coll, field, value) => {
+  const r = await fsCall(fsUrl(DB_PATH + ':runQuery'), { method: 'POST', body: { structuredQuery: { from: [{ collectionId: coll }], where: { fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value: encValue(value) } }, limit: 500 } } });
+  return (Array.isArray(r) ? r : []).filter(x => x && x.document).map(x => ({ id: x.document.name.split('/').pop(), ...fsDoc(x.document) }));
 };
 /** Escribe varios documentos a la vez: o todos o ninguno. Si una condición no se cumple, lanza un error de cloud/net
   (FAILED_PRECONDITION, ALREADY_EXISTS o NOT_FOUND). Devuelve la versión (updateTime) de cada escritura, en orden.

@@ -106,7 +106,9 @@ def main(path):
                          ('menú', 'A.openMenu()'), ('copia de seguridad', 'A.openBackup()'), ('WOD', 'A.openWod()'), ('cardio', 'A.openCardio()'), ('medidas', 'A.openMeasures()'),
                          ('logros', 'A.openAchievements()'), ('exportar CSV', 'A.openCsvExport()'), ('peso corporal', 'A.openWeight()'), ('mis workouts', 'A.routineEditorBack()'),
                          ('mi nutrición', 'A.openMyNutrition()'), ('ajustar a mano', 'A.openManualGoals()'), ('buscar alimento en internet', 'A.openFoodSearch(0)'), ('ajustes', 'A.openSettings()'),
-                         ('informar de un fallo', 'A.openReport()'), ('privacidad', "A.openSettings();A.openSettingsPage(0,{dataset:{v:'privacidad'}})")]:
+                         ('informar de un fallo', 'A.openReport()'), ('privacidad', "A.openSettings();A.openLegal(0,{dataset:{v:'privacy'}})"),
+                         ('aviso legal', "A.openSettings();A.openLegal(0,{dataset:{v:'terms'}})"), ('eliminar cuenta', "A.openSettings();A.openSettingsPage(0,{dataset:{v:'cuenta'}});A.openDeleteAccount()"),
+                         ('contacto de privacidad', 'A.openPrivacyContact()')]:
             try:
                 ev(js)
                 pg.clock.run_for(300)

@@ -1,7 +1,7 @@
 /* ═══ core/boot ═══
    Arranque: lee de IndexedDB los entrenos, el historial y las comidas (core/persist, I-04), deja válido el estado
-   (core/repair), recupera el entreno en curso, pinta la app (o el inicio de sesión, si no hay cuenta: account/login) y, con
-   sesión, empieza a sincronizar con Firebase (cloud/sync). Si esos datos no se pudieron leer, no se guarda ni se sincroniza
+   (core/repair), recupera el entreno en curso, pinta la app (o el inicio de sesión, si no hay cuenta o le falta aceptar las
+   condiciones: account/login) y, con sesión y lo aceptado al día, empieza a sincronizar con Firebase (cloud/sync). Si esos datos no se pudieron leer, no se guarda ni se sincroniza
    nada (con la mitad de los datos, la nube creería que se borró el resto) y se avisa, con «Reintentar» y, con sesión, «Bajar
    de mi cuenta». window.__ffready se cumple al terminar el arranque; window.__ffok vale 1 desde el primer pintado.
    También decide qué pasa si la app está abierta dos veces y la otra guarda después: esta se recarga (onInstanceStale).
@@ -38,6 +38,8 @@ import { tourCheck } from '../system/tour.js';
 import { iconNoticeCheck } from '../system/iconnotice.js';
 import { cleanDay, repairState } from './repair.js';
 import { signedIn } from '../cloud/session.js';
+import { consentPending } from '../cloud/consent.js';
+import { deletedNotice } from '../account/privacy.js';
 import { startSync, stopSync } from '../cloud/sync.js';
 import { spaceCheck } from '../system/space.js';
 /* los datos de este móvil no se pudieron leer (core/persist: partsLost): nada se guarda ni se sincroniza hasta que se lean */
@@ -225,7 +227,8 @@ const afterFirstPaint = () => {
     setTimeout(() => dialog('No se pudo leer una parte de tus datos', say `Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. ${RESTORE_HINT}`, [['Entendido', 'doNothing', 'primary']]), 600);
   /* lo arreglado al arrancar se guarda (solo se escribe lo que cambió: core/persist) */
   setTimeout(saveState, 1000);
-  if (signedIn()) {
+  /* sin la aceptación de las condiciones y el consentimiento (cloud/consent) solo se ve la pantalla que los pide: nada de esto */
+  if (signedIn() && !consentPending()) {
     startSnapshots();
     if (whatsNewDue())
       setTimeout(showWhatsNew, 900);
@@ -261,7 +264,7 @@ const start = () => {
   catch (e) {
     logError('arranque: borrar fotos de progreso', e);
   }
-  if (signedIn())
+  if (signedIn() && !consentPending())
     setTimeout(checkAchievements, 2500);
   buildTabbar();
   /* la pestaña elegida para abrir la app (Ajustes) y, si se abrió desde un acceso directo del icono, su pantalla */
@@ -269,6 +272,8 @@ const start = () => {
   launchAction();
   R();
   window.__ffok = 1;
+  /* recién eliminada la cuenta en este dispositivo (account/privacy), se dice */
+  deletedNotice();
   /* sin los datos de este móvil, solo el aviso: ni guardar, ni sincronizar, ni copias, ni otros avisos */
   if (partsLost) {
     lostDialog();

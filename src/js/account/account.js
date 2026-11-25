@@ -13,7 +13,8 @@ import { confirmDialog } from '../core/ui.js';
 import { plural } from '../system/backup.js';
 import { account, acctDrop, acctName, acctSave, isAdmin, wipeAccountData } from '../cloud/session.js';
 import { authMessage, changePassword, passProblem, signIn } from '../cloud/auth.js';
-import { pendingDocs, stopSync, syncLine, syncNow, syncState } from '../cloud/sync.js';
+import { everSynced, pendingDocs, stopSync, syncLine, syncNow, syncState } from '../cloud/sync.js';
+import { consentPending } from '../cloud/consent.js';
 import { html, raw } from '../core/html.js';
 /** Estado de la sincronización en una palabra (valor de la fila de Ajustes). */
 export const syncShort = () => account && (account.x || syncState().st == 'dead') ? 'Vuelve a entrar' : { run: 'Sincronizando…', off: 'Sin conexión', wait: 'Tras el entreno', err: 'Reintentando' }[syncState().st] || 'Al día';
@@ -29,7 +30,8 @@ export const accountPage = () => html`
   <button data-a="openSettingsPage" data-v="clave" class="w-full">Cambiar contraseña</button>
   <p class="muted fs-13 m-14-2">
     Tus datos se guardan en este móvil y en tu cuenta. Sin conexión todo sigue funcionando: lo que hagas se sube solo al volver la red.
-  </p>`;
+  </p>
+  <button data-a="openDeleteAccount" class="w-full danger-btn mt-12">Eliminar cuenta</button>`;
 /* el último aviso de «Cambiar contraseña» (la página se vuelve a pintar con cada R(): así no se pierde) */
 let pwMsg = '';
 /** Página «Cambiar contraseña». */
@@ -88,13 +90,16 @@ A.accountChangePassword = async () => {
   A.openSettings();
 };
 A.signOut = async () => {
-  if (account && !account.x && pendingDocs()) {
+  /* en la pantalla de la aceptación (account/login) no se sube nada: lo que haya solo en este dispositivo se queda sin subir */
+  const gate = consentPending();
+  if (account && !account.x && !gate && pendingDocs()) {
     toast('Subiendo tus cambios…');
     await syncNow();
   }
-  const n = pendingDocs();
+  /* (recién entrado y sin haber bajado nada, este dispositivo no tiene nada de la cuenta que perder) */
+  const n = gate && !everSynced() ? 0 : pendingDocs();
   const t = n ? 'Hay cambios sin subir' : '¿Cerrar sesión?';
-  const p = n ? say `No se han podido subir a tu cuenta (${plural(n, 'parte', 'partes')})${account && account.x ? ' porque la sesión ha caducado: vuelve a entrar primero' : ': prueba con conexión'}. Si cierras la sesión ahora, se perderán.` : 'Tus datos están en tu cuenta. Se borran de este móvil hasta que vuelvas a entrar.';
+  const p = n && gate ? 'Lo que has hecho en este dispositivo y aún no estaba en tu cuenta no se sube sin tu aceptación. Si cierras la sesión ahora, se perderá.' : n ? say `No se han podido subir a tu cuenta (${plural(n, 'parte', 'partes')})${account && account.x ? ' porque la sesión ha caducado: vuelve a entrar primero' : ': prueba con conexión'}. Si cierras la sesión ahora, se perderán.` : 'Tus datos están en tu cuenta. Se borran de este móvil hasta que vuelvas a entrar.';
   confirmDialog(t, p, 'signOutConfirmed', n ? 'Cerrar igualmente' : 'Cerrar sesión');
 };
 A.signOutConfirmed = () => {

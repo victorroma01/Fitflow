@@ -4,8 +4,9 @@ Se engancha a un contexto de Playwright con `install(contexto)`: las peticiones 
 sin red. Dos contextos con el mismo FakeFirebase son dos móviles con la misma nube.
 Las reglas de verdad (firestore.rules) se prueban aparte con el emulador (tests/rules.test.mjs); aquí solo se aplica lo
 esencial: cada cuenta lo suyo, el admin además los perfiles y adminInbox, y los avisos (reports): cada cuenta crea los suyos
-(id con su uid) y los lee; el admin los lista, los cambia y los borra. `set_offline(contexto, True)` corta la red de un
-móvil (como sin cobertura).
+(id con su uid), los lee, los busca (runQuery, solo pidiendo los suyos) y los borra; el admin los lista, los cambia y los
+borra. Una cuenta se puede eliminar a sí misma (accounts:delete), como en Firebase. `set_offline(contexto, True)` corta la
+red de un móvil (como sin cobertura).
 """
 import json, base64, secrets, time, re
 from urllib.parse import urlparse, parse_qs, unquote
@@ -28,6 +29,8 @@ class FakeFirebase:
         self.off = set()        # contextos (móviles) sin red
         self.calls = []          # (método, ruta corta) de cada petición, para las comprobaciones
         self.exchanges = []      # (dirección, cuerpo) de cada token de reCAPTCHA cambiado por uno de App Check
+        self.no_delete = False   # True: el proyecto no deja que una cuenta se elimine a sí misma (ADMIN_ONLY_OPERATION)
+        self.fail_delete = set() # rutas de documentos que no se dejan borrar (para probar un borrado que falla a medias)
         self._t = 0
 
     # ── utilidades de prueba ───────────────────────────────────────────────────────────────────────────────────────────
@@ -169,6 +172,8 @@ class FakeFirebase:
         if host == 'securetoken.googleapis.com':
             ent = self.refresh.get(b.get('refresh_token'))
             u = ent and next((x for e, x in self.users.items() if x['uid'] == ent[0]), None)
+            if ent and not u:
+                raise _Fail(400, 'USER_NOT_FOUND', 'INVALID_ARGUMENT')
             if not u or ent[1] < u['valid_after']:
                 raise _Fail(400, 'INVALID_REFRESH_TOKEN', 'INVALID_ARGUMENT')
             email = next(e for e, x in self.users.items() if x['uid'] == ent[0])
@@ -193,13 +198,24 @@ class FakeFirebase:
             email = next(e for e, x in self.users.items() if x['uid'] == p['user_id'])
             self.users[email]['pw'] = b['password']
             self.users[email]['valid_after'] = self._now()
+        elif op == 'delete':
+            # eliminar la propia cuenta: con su token de sesión; `no_delete` simula un proyecto que no lo permite
+            p = self._who(_Req(b.get('idToken')))
+            if not p:
+                raise _Fail(400, 'INVALID_ID_TOKEN')
+            if self.no_delete:
+                raise _Fail(400, 'ADMIN_ONLY_OPERATION')
+            self.users.pop(next(e for e, x in self.users.items() if x['uid'] == p['user_id']))
+            return 200, {'kind': 'identitytoolkit#DeleteAccountResponse'}
         else:
             raise _Fail(400, 'OPERATION_NOT_ALLOWED')
         it, rt = self._tokens(email)
         return 200, {'localId': self.users[email]['uid'], 'email': email, 'idToken': it, 'refreshToken': rt, 'expiresIn': '3600'}
 
-    def _can(self, who, path, write):
+    def _can(self, who, path, write, delete=False):
         if not who:
+            return False
+        if delete and path in self.fail_delete:
             return False
         parts = path.split('/')
         admin = who.get('role') == 'admin'
@@ -215,9 +231,11 @@ class FakeFirebase:
             if admin:
                 return True
             d = self.docs.get(path)
+            mine = d is not None and _dec(d['fields'].get('uid', {'nullValue': None})) == who['user_id']
             if not write:
-                return d is None or _dec(d['fields'].get('uid', {'nullValue': None})) == who['user_id']
-            return d is None and parts[1].startswith(who['user_id'] + '-')
+                return d is None or mine
+            # crea los suyos (id con su uid) y, al eliminar su cuenta, los borra
+            return mine if delete else d is None and parts[1].startswith(who['user_id'] + '-')
         return False
 
     def _firestore(self, req, path, q, b):
@@ -239,7 +257,7 @@ class FakeFirebase:
             writes = b.get('writes', [])
             for w in writes:
                 p = (w.get('update') or {}).get('name', w.get('delete', ''))[len(DB) + 1:]
-                if not self._can(who, p, True):
+                if not self._can(who, p, True, 'delete' in w):
                     raise _Fail(403, 'Missing or insufficient permissions.', 'PERMISSION_DENIED')
                 pre = w.get('currentDocument')
                 if pre and 'exists' in pre and pre['exists'] != (p in self.docs):
@@ -258,13 +276,24 @@ class FakeFirebase:
                     f = dict(self.docs[p]['fields'], **{k: f[k] for k in w['updateMask']['fieldPaths'] if k in f})
                 res.append({'updateTime': self._put(p, f)})
             return 200, {'writeResults': res, 'commitTime': self._stamp()}
+        if rest == ':runQuery':
+            # buscar en una colección por un campo: lo justo que usa la app (sus avisos, por uid). Como las reglas, solo deja a
+            # cada cuenta pedir lo suyo; el admin, lo de cualquiera
+            q = b.get('structuredQuery', {})
+            coll = (q.get('from') or [{}])[0].get('collectionId')
+            f = (q.get('where') or {}).get('fieldFilter') or {}
+            field, value = (f.get('field') or {}).get('fieldPath'), _dec(f.get('value') or {})
+            if coll != 'reports' or f.get('op') != 'EQUAL' or field != 'uid' or (value != who['user_id'] and who.get('role') != 'admin'):
+                raise _Fail(403, 'Missing or insufficient permissions.', 'PERMISSION_DENIED')
+            found = [self._doc(k) for k in sorted(self.docs) if k.rsplit('/', 1)[0] == coll and _dec(self.docs[k]['fields'].get(field, {})) == value]
+            return 200, ([{'document': d, 'readTime': self._stamp()} for d in found] or [{'readTime': self._stamp()}])
         p = rest.lstrip('/')
         if req.method == 'GET' and p.count('/') % 2 == 0:     # colección
             if p == 'reports' and who.get('role') != 'admin' or not self._can(who, p + '/x' if p != 'users' else 'users', False):
                 raise _Fail(403, 'Missing or insufficient permissions.', 'PERMISSION_DENIED')
             docs = [self._doc(k) for k in sorted(self.docs) if k.rsplit('/', 1)[0] == p]
             return 200, ({'documents': docs} if docs else {})
-        if not self._can(who, p, req.method != 'GET'):
+        if not self._can(who, p, req.method != 'GET', req.method == 'DELETE'):
             raise _Fail(403, 'Missing or insufficient permissions.', 'PERMISSION_DENIED')
         if req.method == 'GET':
             if p not in self.docs:

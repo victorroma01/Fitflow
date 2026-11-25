@@ -1,0 +1,56 @@
+# Limpieza de cuentas de StrataFit, lo que la Política de privacidad de la app dice que se hace solo:
+#   · elimina, con todos sus datos, las cuentas que llevan dos años sin actividad (nunca las de administrador);
+#   · borra los datos que quedan en Firestore de cuentas que ya no existen (eliminadas desde la app o desde la consola);
+#   · borra las contraseñas temporales caducadas.
+# Se lanza sola el día 3 de cada mes, en modo «aplicar». A mano (Actions → Limpieza de cuentas → Run workflow) se elige:
+# «simulacro», que solo cuenta lo que se borraría, o «aplicar».
+# Si sale algo fuera de lo normal (demasiadas cuentas, ninguna cuenta en Authentication…) no borra nada y falla: GitHub avisa
+# por correo y se mira a mano. Las reglas y las cautelas, en tools/admin/inactivas.mjs.
+# El registro es público: no escribe usuarios ni correos, solo recuentos. Usa la cuenta de servicio de Firebase, que solo
+# existe como secreto del repositorio (FIREBASE_SERVICE_ACCOUNT). Código: tools/admin/limpieza.mjs.
+# (GitHub desactiva las tareas programadas de un repositorio que lleva 60 días sin cambios, y avisa antes por correo: basta
+# con volver a activarla en Actions.)
+name: Limpieza de cuentas
+
+on:
+  schedule:
+    - cron: '17 4 3 * *'
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: «simulacro» solo cuenta lo que se borraría; «aplicar» lo borra
+        required: true
+        type: choice
+        default: simulacro
+        options:
+          - simulacro
+          - aplicar
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-firebase
+  cancel-in-progress: false
+
+jobs:
+  limpieza:
+    name: ${{ inputs.modo || 'aplicar' }}
+    # solo desde main: lo que se ejecuta es lo publicado
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          package-manager-cache: false
+          node-version: 22
+      - name: firebase-admin
+        run: npm install --no-save --no-audit --no-fund firebase-admin@13
+      # el modo llega por una variable de entorno, nunca pegado en el código del paso; la pasada programada no trae modo: aplica
+      - name: Limpiar
+        env:
+          MODO: ${{ inputs.modo || 'aplicar' }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tools/admin/limpieza.mjs "$MODO"

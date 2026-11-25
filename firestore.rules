@@ -11,6 +11,10 @@ rules_version = '2';
 // · La copia de seguridad (users/{uid}/backup: meta y trozos c0…c23) es solo de su dueño, como el resto de sus datos.
 // · Fallos y sugerencias (reports/{uid}-{ms}): cada cuenta crea los suyos, pendientes y con su usuario, y lee solo los suyos;
 //   el admin los lee todos y solo cambia el estado (pendiente, vista, arreglada) y la respuesta.
+// · «Eliminar cuenta» (cloud/erase): cada cuenta puede borrar su perfil y sus avisos, además de sus datos; para dar con sus
+//   avisos puede listarlos, pero solo pidiendo los suyos (where uid == el suyo).
+// · La constancia de la aceptación de las condiciones y del consentimiento (cs, en el perfil: cloud/consent) la escribe su
+//   cuenta y, como el resto del perfil, la lee también el admin.
 // · Lo que no está aquí está denegado.
 // Se prueban con el emulador de Firebase (tests/rules.test.mjs) y se despliegan desde GitHub Actions al fusionar en main.
 service cloud.firestore {
@@ -43,7 +47,17 @@ service cloud.firestore {
     function validProfile(d) {
       return (!('sx' in d) || d.sx in ['M', 'F', '']) && (!('pr' in d) || validPrefs(d.pr))
         && (!('m' in d) || d.m is int) && (!('ca' in d) || d.ca is int) && (!('mc' in d) || d.mc is bool)
-        && (!('os' in d) || d.os in ['ios', 'android', 'otro']);
+        && (!('os' in d) || d.os in ['ios', 'android', 'otro']) && (!('cs' in d) || validConsent(d.cs));
+    }
+    // una marca de la constancia (cloud/consent): versión del texto, cuándo y, en el consentimiento, su estado (1 dado, 0
+    // retirado) y, retirado, cuándo se había dado
+    function validMark(m) {
+      return m is map && m.keys().hasOnly(['v', 'at', 'st', 'ga']) && m.v is string && m.v.size() >= 1 && m.v.size() <= 12
+        && m.at is int && (!('st' in m) || m.st in [0, 1]) && (!('ga' in m) || m.ga is int);
+    }
+    // lo aceptado: las condiciones de uso (t) y el consentimiento para tratar los datos de salud (h)
+    function validConsent(c) {
+      return c is map && c.keys().hasOnly(['t', 'h']) && (!('t' in c) || validMark(c.t)) && (!('h' in c) || validMark(c.h));
     }
     // una parte del estado: su contenido en texto JSON (j), cuándo y desde qué dispositivo se escribió, y su versión
     function validPart(d, max) {
@@ -66,11 +80,12 @@ service cloud.firestore {
     function validBackupChunk(d) {
       return d.keys().hasOnly(['j', 'i']) && d.j is string && d.j.size() <= 300000 && d.i is int;
     }
-    // un aviso nuevo: de quien lo crea (uid y usuario de su correo técnico), fallo o sugerencia, pendiente y sin respuesta
+    // un aviso nuevo: de quien lo crea (uid y usuario de su correo técnico), fallo, sugerencia o consulta de privacidad (p),
+    // pendiente y sin respuesta
     function validReport(d) {
       return d.keys().hasOnly(['uid', 'u', 'k', 'a', 't', 'dx', 'v', 'ca', 'st', 'm'])
         && d.uid == request.auth.uid && ownName(d.u)
-        && d.k in ['f', 's'] && d.a is string && d.a.size() <= 60 && d.t is string && d.t.size() >= 10 && d.t.size() <= 1500
+        && d.k in ['f', 's', 'p'] && d.a is string && d.a.size() <= 60 && d.t is string && d.t.size() >= 10 && d.t.size() <= 1500
         && d.dx is string && d.dx.size() <= 1500 && d.v is string && d.v.size() <= 20 && d.ca is int && d.st == 'p' && d.m is int;
     }
     // lo que cambia el admin: estado, respuesta (y cuándo) y cuándo cambió el estado
@@ -85,12 +100,13 @@ service cloud.firestore {
       allow create: if isOwner(uid) && request.resource.data.keys().hasOnly(['u', 'sx', 'pr', 'ca', 'm'])
         && ownName(request.resource.data.u)
         && validProfile(request.resource.data);
-      // después: sexo, preferencias y sistema del móvil; «debe cambiar la contraseña» (mc) solo se puede quitar (lo pone GitHub
-      // Actions)
-      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sx', 'pr', 'm', 'mc', 'os'])
+      // después: sexo, preferencias, sistema del móvil y la constancia de lo aceptado; «debe cambiar la contraseña» (mc) solo se
+      // puede quitar (lo pone GitHub Actions)
+      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sx', 'pr', 'm', 'mc', 'os', 'cs'])
         && validProfile(request.resource.data)
         && (!('mc' in request.resource.data.diff(resource.data).affectedKeys()) || request.resource.data.mc == false);
-      allow delete: if false;
+      // «Eliminar cuenta»: el perfil lo borra su cuenta, después de sus datos
+      allow delete: if isOwner(uid);
 
       match /data/{doc} {
         allow read: if isOwner(uid);
@@ -132,11 +148,13 @@ service cloud.firestore {
     // fallos y sugerencias (F-27): el id es el uid de quien lo envía y el momento (ms), así nadie crea uno en nombre de otro
     match /reports/{id} {
       allow get: if techUser() && (resource == null || isAdmin() || resource.data.uid == request.auth.uid);
-      allow list: if isAdmin();
+      // el admin los lista todos; cada cuenta, solo los suyos (la consulta tiene que pedirlos así: where uid == el suyo)
+      allow list: if isAdmin() || techUser() && resource.data.uid == request.auth.uid;
       allow create: if techUser() && id == request.auth.uid + '-' + string(request.resource.data.ca) && validReport(request.resource.data);
       allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['st', 'rp', 'ra', 'sa', 'm'])
         && validReview(request.resource.data);
-      allow delete: if isAdmin();
+      // los borra el admin y, al eliminar su cuenta, quien los envió
+      allow delete: if isAdmin() || techUser() && resource.data.uid == request.auth.uid;
     }
   }
 }

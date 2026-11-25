@@ -40,6 +40,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Portadas nuevas para los días de CrossFit, Hyrox y funcional y para sus descansos; con el perfil de mujer, todas.
 - Idiomas: la app está también en inglés. Se pone sola en el idioma del móvil (inglés o español) y se cambia cuando
   quieras en Ajustes → Idiomas.
+- Aviso legal y Política de privacidad nuevos, también en inglés: se leen sin tener cuenta, desde el inicio de sesión, y en
+  Ajustes. Para crear la cuenta hay que aceptar las condiciones (con 16 años o más) y dar el consentimiento para los datos de
+  salud; con una cuenta que ya tenías, la app te lo pide una vez al abrirla.
+- Tus datos, en Privacidad: exportar una copia, escribirnos sobre privacidad, retirar el consentimiento, borrar los datos y
+  «Eliminar cuenta», que borra la cuenta y todo lo suyo (también en Ajustes → Cuenta). Una cuenta que lleve dos años sin
+  usarse se elimina sola.
 
 ### Mejoras
 - Librería revisada: los músculos de cada ejercicio, comprobados, y fuera los repetidos (el mismo ejercicio con otro nombre).
@@ -51,6 +57,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   ella ni la línea del ejercicio repiten ya el descanso («10 s al siguiente», «Descanso de la ronda»): va en cada serie, en
   la columna «Desc.».
 - Entreno: fuera el botón «+ Drop set» de debajo de las series. El drop set se sigue eligiendo como técnica del ejercicio.
+- «Borrar todos los datos» borra también el sexo del perfil y las copias automáticas del móvil: lo borrado no se recupera.
 - Mejoras técnicas y correcciones de errores. Optimización del sistema y funcionalidades.
 
 ### Correcciones

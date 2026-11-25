@@ -3,7 +3,8 @@
    entre dispositivos. Cada parte del estado que se guarda (core/persist) se avisa aquí (Store.remote) y, como mucho 30 s
    después del primer cambio sin subir (lo cambiado entretanto va en la misma subida: menos escrituras de Firestore), al pasar
    la app a segundo plano y si hay red, se sincroniza:
-     1. el perfil (users/{uid}: usuario, sexo y preferencias, que el admin ve);
+     1. el perfil (users/{uid}: usuario, sexo y preferencias, que el admin ve), y con él la constancia de la aceptación de las
+        condiciones y del consentimiento (cloud/consent);
      2. el índice (users/{uid}/data/index: la versión de cada documento) dice qué ha cambiado en la nube desde la última vez;
         lo cambiado se baja y se junta con lo local (cloud/merge), sin esperas por medio: nada cambia S mientras tanto;
      3. lo que cambió en el móvil se sube en una sola escritura con el índice, con la condición de que el índice no haya
@@ -22,7 +23,7 @@
    cierra entre lo uno y lo otro), algo borrado justo después vuelve a aparecer (docs/tecnica/backend.md). Y si la app está
    abierta en otra pestaña o ventana que ha guardado después (core/persist: instanceStale), esta no sincroniza: subiría lo
    suyo, que ya no es lo último.
-   Define: newMeta, readMeta, meta, storeMeta, metaWaiting, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, noteWaiting, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
+   Define: newMeta, readMeta, meta, storeMeta, metaWaiting, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, noteWaiting, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, everSynced, wipeCloudData
 */
 import { say } from '../core/i18n.js';
 import { $, LOCALE, newId } from '../core/util.js';
@@ -42,6 +43,7 @@ import { idToken } from './auth.js';
 import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.js';
 import { hashMap, hashOf, hashText, KINDS, merge3, sameHashes } from './merge.js';
 import { afterSync } from './hooks.js';
+import { consentOk, syncConsent } from './consent.js';
 import { applyDoc, applyPrefs, docPath, indexPath, localDocs, okType, PREF_KEYS, prefsLocal, profilePath } from './docs.js';
 /** @param {any} fresh
     @returns {SyncMeta} */
@@ -119,7 +121,11 @@ const setStatus = (st, code) => {
     R();
   if (st == 'dead' && !deadShown) {
     deadShown = 1;
-    dialog('Tu sesión ha caducado', 'Vuelve a entrar para subir tus datos a la nube. Mientras, todo se sigue guardando en este móvil.', [['Más tarde', 'doNothing', ''], ['Entrar', 'reloginShow', 'primary']]);
+    /* la cuenta ya no existe (se eliminó desde otro dispositivo, o por inactividad): lo que queda aquí se quita cerrando sesión */
+    if (account && account.x == 2)
+      dialog('Cuenta eliminada', 'Esta cuenta ya no existe: se eliminó desde otro dispositivo o por llevar mucho tiempo sin usarse. Cierra la sesión para borrar también lo que queda en este.', [['Más tarde', 'doNothing', ''], ['Cerrar sesión', 'signOutConfirmed', 'primary']]);
+    else
+      dialog('Tu sesión ha caducado', 'Vuelve a entrar para subir tus datos a la nube. Mientras, todo se sigue guardando en este móvil.', [['Más tarde', 'doNothing', ''], ['Entrar', 'reloginShow', 'primary']]);
   }
 };
 /** Estado de la sincronización en una línea (Ajustes y Diagnóstico). */
@@ -157,10 +163,13 @@ const afterApply = () => {
 };
 /* paso 1: el perfil. Si no existe (cuenta recién creada), se crea con el usuario; las preferencias se juntan como el núcleo */
 const syncProfile = async () => {
-  if (meta.base.profile && Date.now() - profileAt < 6e5 && sameHashes(hashMap(new Map(Object.entries(prefsLocal()))), meta.base.profile.h))
+  if (meta.base.profile && Date.now() - profileAt < 6e5 && !( /** @type {Account} */(account)).csu && sameHashes(hashMap(new Map(Object.entries(prefsLocal()))), meta.base.profile.h))
     return;
   const d = await getDoc(profilePath());
   const rd = d ? d.data : null;
+  /* el perfil ya estaba y no está: la cuenta se ha eliminado (desde otro dispositivo, o por inactividad). No se vuelve a crear */
+  if (!rd && meta.base.profile)
+    throw netError('GONE');
   /** @type {Record<string, any>} */
   const remote = {};
   if (rd) {
@@ -193,6 +202,10 @@ const syncProfile = async () => {
   if (rd && typeof rd.u == 'string' && rd.u != /** @type {Account} */ (account).u && rd.u.toLowerCase() == /** @type {Account} */ (account).u.toLowerCase())
     acctSave({ ...account, u: rd.u });
   await syncDeviceOS(rd);
+  /* la constancia de la aceptación y del consentimiento (cloud/consent): la de este dispositivo y la del perfil se juntan. Si
+     con ello falta algo (se retiró el consentimiento en otro dispositivo), aquí se acaba la vuelta: no se baja ni se sube nada */
+  if (!await syncConsent(profilePath(), rd ? rd.cs : null))
+    throw netError('CONSENT');
 };
 /* El sistema del último móvil que abrió la app (T-28), solo para contar en Administración cuántos usan iPhone y cuántos
    Android. Va en una escritura aparte: si las reglas aún no lo admiten (una app publicada antes que ellas), solo falla esto y
@@ -395,8 +408,9 @@ const syncRound = async () => {
   clearTimeout(timer);
   timerAt = 0;
   /* sin los datos del móvil (core/persist: partsLost), la nube creería que se borraron: no se sincroniza nada. Tampoco si otra
-     apertura de la app ha guardado después (instanceStale): lo de esta ya no es lo último */
-  if (!account || partsLost || staleNow())
+     apertura de la app ha guardado después (instanceStale): lo de esta ya no es lo último. Ni sin la aceptación de las
+     condiciones y el consentimiento para los datos de salud (cloud/consent): sin ellos no se trata nada */
+  if (!account || partsLost || staleNow() || !consentOk(account))
     return;
   if (account.x) {
     setStatus('dead');
@@ -411,9 +425,20 @@ const syncRound = async () => {
       if (isAdmin() != was && !quiet)
         R();
     }
+    const readAt = profileAt;
     await syncProfile();
+    /* ¿se ha leído el perfil en esta vuelta? (leído hace poco y sin cambios en las preferencias, no se vuelve a leer) */
+    let profileSeen = profileAt != readAt;
     for (let i = 0; i < 4; i++) {
       const idx = await getDoc(indexPath());
+      /* el índice ya no está y este dispositivo tenía cosas sincronizadas: los datos de la cuenta se han borrado desde otro
+         («Borrar todos los datos», retirar el consentimiento o eliminar la cuenta). Antes de bajar o subir nada se lee el
+         perfil, si no se ha leído en esta vuelta: dice si la cuenta sigue y si sigue dando su consentimiento */
+      if (!idx && !profileSeen && Object.keys(meta.base).some(k => k != 'profile')) {
+        profileAt = 0;
+        await syncProfile();
+        profileSeen = true;
+      }
       if (await pull(idx) == 'wait') {
         setStatus('wait');
         retryLater(6e4);
@@ -443,6 +468,22 @@ const syncRound = async () => {
     }
     if (e.code == 'NO_SESSION')
       return;
+    /* la cuenta ya no existe: como una sesión que ya no vale, pero diciéndolo (setStatus) */
+    if (e.code == 'GONE') {
+      stopSync();
+      if (account)
+        acctSave({ ...account, x: 2 });
+      setStatus('dead');
+      return;
+    }
+    /* falta la aceptación o el consentimiento: se deja de sincronizar y sale la pantalla que los pide (core/render) */
+    if (e.code == 'CONSENT') {
+      stopSync();
+      setStatus('idle');
+      if (!quiet)
+        R();
+      return;
+    }
     fails++;
     if (e.code != 'NETWORK')
       logError('sincronizar', e);
@@ -584,6 +625,8 @@ export const firstSync = async () => {
 };
 /** Documentos con cambios del móvil aún sin subir. */
 export const pendingDocs = () => unsynced(localDocs()).length;
+/** ¿Ha sincronizado alguna vez este dispositivo con la cuenta? (si no, lo que tiene es el estado de partida: nada suyo) */
+export const everSynced = () => +meta.last > 0;
 /** Borra de la nube todos los datos de la cuenta (no la cuenta ni su perfil): «Borrar todos los datos» en Ajustes. */
 export const wipeCloudData = async () => {
   const idx = await getDoc(indexPath());

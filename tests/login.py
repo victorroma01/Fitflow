@@ -1,5 +1,7 @@
 """Prueba del aspecto del inicio de sesión (F-33, T-18): la foto del gimnasio detrás, siempre en oscuro, a varios tamaños, y el
-contraste de cada texto contra lo que tiene detrás de verdad (la foto oscurecida), medido como en tests/contrast.py.
+contraste de cada texto contra lo que tiene detrás de verdad (la foto oscurecida), medido como en tests/contrast.py. También las
+dos casillas de crear la cuenta (sin marcar, con su texto a un toque) y la pantalla de la aceptación de una cuenta que no
+tiene aceptadas las condiciones, y los textos legales abiertos sin sesión.
 
   python3 tests/login.py dist/stratafit.html
 
@@ -102,13 +104,42 @@ def main(path):
         pg.evaluate("A.loginMode(0,{dataset:{v:'up'}})")
         check('al pasar a «Crear cuenta» la foto es la misma (no se vuelve a cargar)', pg.evaluate("(i => !!i && i.complete && i.naturalWidth == 720)(document.querySelector('#lgw .login-photo'))"))
         check('al crear cuenta no hay nota' + (', solo la línea de reCAPTCHA' if rc else ''), pg.evaluate(notes) == rc, str(pg.evaluate(notes)))
-        check('y Privacidad sigue a mano, en las dos', pg.evaluate("!!document.querySelector('#lgw button.login-link[data-a=loginPrivacy]')"))
-        if rc:
-            pg.click('[data-a=loginPrivacy]')
-            pg.wait_for_timeout(300)
-            seen = pg.evaluate("document.querySelector('#sh') ? document.querySelector('#sh').textContent : ''")
-            check('Privacidad cuenta para qué se usa reCAPTCHA, sin nombrar las condiciones de Google',
-                  'reCAPTCHA Enterprise' in seen and 'Condiciones de servicio' not in seen and 'No se guarda ningún dato personal' in seen, seen[-200:])
+        links = "[...document.querySelectorAll('#lgw .login-links button.login-link[data-a=openLegal]')].map(b => b.dataset.v + ':' + b.textContent.trim()).join()"
+        check('y Privacidad y Aviso legal siguen a mano, en las dos', pg.evaluate(links) == 'privacy:Privacidad,terms:Aviso legal', pg.evaluate(links))
+        pg.evaluate("A.loginMode(0,{dataset:{v:'in'}})")
+        check('también al entrar', pg.evaluate(links) == 'privacy:Privacidad,terms:Aviso legal', pg.evaluate(links))
+        pg.evaluate("A.loginMode(0,{dataset:{v:'up'}})")
+        # las dos casillas de crear la cuenta: sin marcar, pequeñas, cada una con su texto (lo que lee un lector de pantalla) y con
+        # el texto legal a un toque, sin que tocarlo marque la casilla
+        boxes = pg.evaluate("""[...document.querySelectorAll('#lgw .consent-check')].map(l => { const i = l.querySelector('input'), s = getComputedStyle(l), r = i.getBoundingClientRect();
+          return { id: i.id, type: i.type, on: i.checked, label: i.labels.length == 1 && i.labels[0] === l, text: l.textContent.replace(/\\s+/g, ' ').trim(), size: parseFloat(s.fontSize), box: Math.round(r.width) }; })""")
+        check('al crear cuenta, dos casillas sin marcar: las condiciones (con la edad) y el consentimiento para los datos de salud',
+              [x['id'] for x in boxes] == ['lgc1', 'lgc2'] and all(x['type'] == 'checkbox' and not x['on'] and x['label'] for x in boxes)
+              and boxes[0]['text'] == 'Tengo 16 años o más y acepto las Condiciones de uso.' and boxes[1]['text'].startswith('Consiento expresamente que StrataFit trate los datos relativos a mi salud')
+              and 'Puedo retirar mi consentimiento en cualquier momento desde Privacidad' in boxes[1]['text'], str(boxes))
+        check('pequeñas: letra de menos de 14 px y casilla de 18', all(x['size'] < 14 and x['box'] == 18 for x in boxes), str([(x['size'], x['box']) for x in boxes]))
+        check('al entrar no hay casillas', pg.evaluate("(A.loginMode(0,{dataset:{v:'in'}}), !document.querySelector('#lgw .consent-check'))"))
+        pg.evaluate("A.loginMode(0,{dataset:{v:'up'}})")
+        pg.click('#lgw .consent-check [data-a=openLegal][data-v=terms]')
+        wait(pg, "!!document.querySelector('#lgl .page-title')", 10000)
+        check('el enlace de la casilla abre las Condiciones de uso, sin sesión, y no marca la casilla',
+              pg.inner_text('#lgl .page-title') == 'Aviso legal y condiciones de uso' and not pg.is_checked('#lgc1'), pg.inner_text('#lgl .page-title'))
+        pg.click('#sh [aria-label=Volver]')
+        pg.locator('#lgw .consent-check').first.click(position={'x': 30, 'y': 8})
+        check('tocar el texto de la casilla la marca', pg.is_checked('#lgc1') and not pg.is_checked('#lgc2'))
+        pg.fill('#lgu', 'Luz_0')
+        pg.evaluate("A.loginToggleEye()")
+        check('y sigue marcada al volver a pintarse el formulario (como lo escrito)', pg.is_checked('#lgc1') and pg.input_value('#lgu') == 'Luz_0')
+        pg.click('#lgw .login-links [data-a=openLegal][data-v=privacy]')
+        wait(pg, "!!document.querySelector('#lgl .page-title')", 10000)
+        seen = pg.evaluate("document.querySelector('#sh').textContent")
+        code = pg.evaluate("document.querySelector('#sh').innerHTML")
+        check('Privacidad, sin sesión: la política entera, con su resumen y sin «Tus datos»',
+              pg.inner_text('#lgl .page-title') == 'Política de privacidad de StrataFit' and pg.evaluate("document.querySelectorAll('#lgl .legal-card').length") == 6
+              and pg.evaluate("document.querySelectorAll('#lgl section').length") == 20 and pg.evaluate("!document.querySelector('#lgl [data-a=consentWithdrawAsk]') && !document.querySelector('#lgl [data-a=openDeleteAccount]')"))
+        check('cuenta para qué se usa reCAPTCHA, sin remitir a las condiciones de Google',
+              'reCAPTCHA Enterprise' in seen and 'como encargado del tratamiento' in seen and 'policies.google.com' not in code and 'Condiciones del servicio' not in seen, seen[-200:])
+        check('sin datos pendientes a la vista (corchetes de los borradores)', '[' not in seen and ']' not in seen)
         c.close()
 
         print('A cada tamaño')
@@ -122,15 +153,51 @@ def main(path):
                 for mode in ('in', 'up'):
                     pg.evaluate("A.loginMode(0,{dataset:{v:'%s'}})" % mode)
                     bad += contrast(pg)
+                    k2 = pg.evaluate(LOOK)
+                    ok = ok and k2['over'] <= 0 and k2['cardBox'][2] <= w
                 check('%d × %d, móvil en %s: la foto cubre la pantalla, nada se sale de ancho y todo el texto se lee (AA), al entrar y al crear cuenta' % (w, h, 'claro' if scheme == 'light' else 'oscuro'),
                       ok and not bad, str({'foto': k['rect'], 'ancho de más': k['over']}) + ' ' + '; '.join(sorted(set(bad))[:4]))
                 c.close()
+
+        print('La pantalla de la aceptación')
+        for w, h in [(320, 568), (393, 852), (932, 430)]:
+            # una sesión sin nada aceptado, como la de una cuenta anterior a la V1.0.4 (el Firebase de mentira no la conoce: la
+            # pantalla se queda, que es lo que pasa sin conexión)
+            c, pg = open_login(b, path, w, h, 'light', FakeFirebase())
+            pg.evaluate("localStorage.setItem('ffacct', JSON.stringify({uid:'prueba',u:'Prueba',it:'x.e30.x',rt:'x',exp:4102444800000}));localStorage.setItem('ffown','prueba')")
+            pg.reload()
+            wait(pg, "window.__ffok && !!document.getElementById('lgc1')")
+            k = pg.evaluate(LOOK)
+            g = pg.evaluate("""({ app: !!document.querySelector('#app .page-head'), nav: document.querySelector('nav').style.display, boxes: [...document.querySelectorAll('#lgw .consent-check input')].map(i => i.checked),
+              user: document.querySelector('#lgw .login-card').textContent.includes('Prueba'), acts: [...document.querySelectorAll('#lgw .login-links button')].map(b => b.dataset.a + (b.dataset.v ? ':' + b.dataset.v : '')).join() })""")
+            bad = contrast(pg)
+            check('%d × %d: en lugar de la app, las dos casillas sin marcar, de qué cuenta es y lo que se puede hacer sin aceptar; nada se sale y todo se lee (AA)' % (w, h),
+                  not g['app'] and g['nav'] == 'none' and g['boxes'] == [False, False] and g['user'] and g['acts'] == 'backupDownload,resetAllAsk,openDeleteAccount,signOut,openLegal:privacy,openLegal:terms'
+                  and k['theme'] == 'dark' and k['over'] <= 0 and k['cardBox'][0] >= 0 and k['cardBox'][2] <= w and k['btn'][2] <= w and not bad, str(g) + ' ' + '; '.join(sorted(set(bad))[:4]))
+            if (w, h) == (393, 852):
+                pg.click('[data-a=consentAccept]')
+                check('sin marcar las casillas no se entra: dice cuál falta', '16 años' in pg.inner_text('#lge') and pg.evaluate("!!document.getElementById('lgc1')"), pg.inner_text('#lge'))
+                pg.evaluate("document.getElementById('lgc1').click()")
+                pg.click('[data-a=consentAccept]')
+                check('con una sola, tampoco', 'consentimiento' in pg.inner_text('#lge') and pg.evaluate("!account.cs"), pg.inner_text('#lge'))
+                pg.evaluate("document.getElementById('lgc2').click()")
+                with pg.expect_navigation(timeout=20000):
+                    pg.click('[data-a=consentAccept]')
+                wait(pg, "window.__ffok && !document.getElementById('lgw') && document.querySelector('nav').style.display != 'none'", 30000)
+                cs = pg.evaluate("account.cs")
+                check('con las dos se entra en la app, y queda anotado qué versión se aceptó y cuándo',
+                      cs['t']['v'] == '1.0' and cs['h']['v'] == '1.0' and cs['h']['st'] == 1 and abs(cs['t']['at'] - pg.evaluate('Date.now()')) < 60000 and cs['t']['at'] == cs['h']['at'], str(cs))
+                pg.reload()
+                wait(pg, 'window.__ffok')
+                check('y al abrir de nuevo ya no se pide', pg.evaluate("!document.getElementById('lgw') && document.querySelector('nav').style.display != 'none'"))
+            c.close()
 
         print('Al entrar')
         fb = FakeFirebase()
         c, pg = open_login(b, path, 393, 852, 'light', fb)
         pg.click('[data-a=loginMode][data-v=up]')
         pg.fill('#lgu', 'Luz_1'); pg.fill('#lgp', 'clave-luz-11'); pg.fill('#lgp2', 'clave-luz-11')
+        pg.evaluate("document.getElementById('lgc1').click();document.getElementById('lgc2').click()")
         pg.click('[data-a=loginSubmit]')
         wait(pg, "window.__ffok && !document.getElementById('lgw') && document.querySelector('nav').style.display != 'none'", 30000)
         check('ya dentro, la app va con el tema del móvil (claro): el oscuro era solo del inicio de sesión',

@@ -1,9 +1,10 @@
 /* ═══ cloud/auth ═══
-   Cuentas con Firebase Authentication (API REST): registro, entrada, renovación del token de sesión y cambio de contraseña.
+   Cuentas con Firebase Authentication (API REST): registro, entrada, renovación del token de sesión, cambio de contraseña y
+   eliminación de la cuenta.
    Firebase trabaja con correo y contraseña; aquí el correo es técnico, `usuario@` y el dominio del proyecto (T-09,
    cloud/config: TECH_DOMAIN): el usuario solo ve su nombre de usuario. El token de sesión dura una hora y se renueva solo
    con el de renovación.
-   Define: userProblem, passProblem, techEmail, authCall, sessionFrom, signUp, passwordSignIn, NO_SUCH_ACCOUNT, signIn, refreshing, DEAD_SESSION, idToken, changePassword, AUTH_MESSAGES, authMessage
+   Define: userProblem, passProblem, techEmail, authCall, sessionFrom, signUp, passwordSignIn, NO_SUCH_ACCOUNT, signIn, refreshing, DEAD_SESSION, idToken, changePassword, deleteAuthAccount, AUTH_MESSAGES, authMessage
 */
 import { say } from '../core/i18n.js';
 import { AUTH_URL, FIREBASE, OLD_TECH_DOMAIN, TECH_DOMAIN, TOKEN_URL } from './config.js';
@@ -62,7 +63,8 @@ export const idToken = async (force) => {
       }
       catch (e) {
         if (DEAD_SESSION.includes(e.code) && account && account.uid == a.uid) {
-          acctSave({ ...account, x: 1 });
+          /* 2: no es que la sesión haya caducado, es que la cuenta ya no existe (se eliminó: account/privacy) */
+          acctSave({ ...account, x: e.code == 'USER_NOT_FOUND' ? 2 : 1 });
           throw netError('SESSION');
         }
         throw e;
@@ -77,6 +79,11 @@ export const idToken = async (force) => {
 export const changePassword = async (p) => {
   const r = await authCall('update', { idToken: await idToken(), password: p, returnSecureToken: true });
   acctSave({ ...account, it: r.idToken, rt: r.refreshToken, exp: Date.now() + (+r.expiresIn || 3600) * 1e3, x: 0 });
+};
+/** Elimina de Authentication la cuenta con la que se ha entrado (cloud/erase, después de borrar sus datos). Firebase solo lo
+    admite con una sesión recién abierta: quien lo pide vuelve a escribir su contraseña justo antes. */
+export const deleteAuthAccount = async () => {
+  await authCall('delete', { idToken: await idToken() });
 };
 /** Textos para cada código de error de Authentication o de red. */
 const AUTH_MESSAGES = {

@@ -634,10 +634,10 @@ def main(path):
             run(400)
             check('deslizar el dedo de izquierda a derecha vuelve a Ajustes', title() == 'Ajustes',
                   str(ev("(p => [document.querySelector('#ajs .page-title').textContent, p.scrollWidth + '/' + p.clientWidth, innerWidth, document.documentElement.scrollWidth, (backTarget() || {}).k, (e => e ? e.tagName + '.' + e.className : '')(document.elementFromPoint(%d, %d))])(document.querySelector('#sh > .sheet:not(.sheet-under)'))" % (tx, ty))))
-            ev("A.openSettingsPage(0,{dataset:{v:'privacidad'}})")
+            ev("A.openLegal(0,{dataset:{v:'privacy'}})")
             run()
             pg.wait_for_timeout(450)
-            tx, ty = at('#ajs .setting-text p')
+            tx, ty = at('#lgl .legal-meta')
             touch('touchStart', tx, ty)
             for i in range(1, 11):
                 run(16)
@@ -645,7 +645,7 @@ def main(path):
             touch('touchEnd')
             pg.wait_for_timeout(300)
             run(400)
-            check('deslizar hacia arriba desplaza la página con normalidad y no vuelve', title() == 'Privacidad' and ev("document.querySelector('#sh .sheet').scrollTop") > 50, str(ev("document.querySelector('#sh .sheet').scrollTop")))
+            check('deslizar hacia arriba desplaza la página con normalidad y no vuelve', ev("(e=>e?e.textContent:'')(document.querySelector('#lgl .page-title'))") == 'Política de privacidad de StrataFit' and ev("document.querySelector('#sh .sheet').scrollTop") > 50, str(ev("document.querySelector('#sh .sheet').scrollTop")))
             ev("A.closeSheet()")
             run()
         else:

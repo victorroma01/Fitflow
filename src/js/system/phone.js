@@ -2,11 +2,13 @@
    Más integración con el móvil (F-39), además de «atrás» (core/back) y de los gestos (core/swipe y core/tabbar):
    - Accesos directos del icono (en Android, al mantener pulsado el icono de la app; static/manifest.webmanifest): «Entreno de
      hoy», «Nutrición de hoy» y «Registrar el peso». Abren la app con ?a=…: aquí se va a esa pantalla y se quita de la dirección.
+   - Las direcciones públicas de los textos legales: la de la app acabada en ?a=privacidad o ?a=aviso-legal (en inglés,
+     ?a=privacy y ?a=terms) abre ese texto (profile/legal), con sesión o sin ella.
    - Globo en el icono de la app (opcional, en Ajustes → Sonido y avisos; donde el sistema lo permite: iPhone con iOS 16.4 o
      posterior, con la app en la pantalla de inicio, y ordenadores): al salir de la app enseña cuántas cosas quedan pendientes,
      el pesaje de hoy (F-25) y las respuestas nuevas a tus fallos y sugerencias (F-27). En iPhone pide permiso de avisos: sin él,
      el sistema no deja poner el globo. Es de este móvil (no se sincroniza).
-   Define: LAUNCH, launchAction, badgeOk, badgeCount, badgeLast, badgeSync, badgeCard  · acciones/registros: 1
+   Define: LAUNCH, LEGAL_ROUTES, launchAction, badgeOk, badgeCount, badgeLast, badgeSync, badgeCard  · acciones/registros: 1
 */
 import { logError } from '../core/errors.js';
 import { A, C } from '../core/registry.js';
@@ -22,6 +24,9 @@ import { html } from '../core/html.js';
 /** Accesos directos: [?a=…, pestaña]. */
 /** @type {[string, number][]} */
 const LAUNCH = [['entreno', 0], ['comida', 1], ['peso', 2]];
+/** Las direcciones de los textos legales: ?a=… → cuál (profile/legal). */
+/** @type {Record<string, string>} */
+const LEGAL_ROUTES = { privacidad: 'privacy', privacy: 'privacy', 'aviso-legal': 'terms', terms: 'terms' };
 /** Al arrancar, antes de pintar: la pantalla del acceso directo con que se abrió la app; la dirección queda limpia. */
 export const launchAction = () => {
   try {
@@ -32,6 +37,11 @@ export const launchAction = () => {
     q.delete('a');
     const rest = q.toString();
     history.replaceState(history.state, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
+    /* un texto legal: se abre sobre lo que haya (la app o el inicio de sesión), en cuanto esté pintado */
+    if (Object.prototype.hasOwnProperty.call(LEGAL_ROUTES, a)) {
+      setTimeout(() => A.openLegal(0, { dataset: { v: LEGAL_ROUTES[a] } }), 0);
+      return;
+    }
     const t = LAUNCH.find(x => x[0] == a);
     if (!t || W)
       return;

@@ -1,0 +1,155 @@
+/* ═══ css/99-legal ═══ Los textos legales (Privacidad y Aviso legal: profile/legal), las casillas de la aceptación (account/login) y «Eliminar cuenta» */
+/* el texto: se lee de corrido, con sus apartados; como mucho 68 caracteres por línea en una pantalla ancha */
+.legal-page {
+  max-width:720px;
+  margin:0 auto;
+}
+.legal-motto {
+  margin:-6px 0 10px;
+  font-size:17px;
+  font-weight:700;
+  color:var(--at);
+}
+.legal-meta {
+  margin:0 0 18px;
+  font-size:13.5px;
+}
+.legal-h {
+  margin:22px 0 6px;
+  font-size:20px;
+  letter-spacing:-.01em;
+}
+.legal-lead {
+  margin:0 0 10px;
+  font-size:14.5px;
+}
+.legal-text {
+  margin-top:18px;
+  outline:0;
+}
+.legal-text h2 {
+  margin:26px 0 8px;
+  font-size:19px;
+  line-height:1.25;
+  outline:0;
+  scroll-margin-top:12px;
+}
+.legal-text p,.legal-text li {
+  font-size:15.5px;
+  line-height:1.55;
+  color:var(--tx);
+  overflow-wrap:anywhere;
+}
+.legal-text ul {
+  margin:0 0 12px;
+  padding-left:22px;
+}
+.legal-text li {
+  margin-bottom:8px;
+}
+/* un enlace dentro de un texto: a otra pantalla de la app (un botón) o a otra web (un enlace), con el mismo aspecto */
+.legal-link {
+  display:inline;
+  min-height:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  font:inherit;
+  font-weight:700;
+  line-height:inherit;
+  text-align:left;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  color:var(--at);
+}
+html.glass .legal-link {
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+}
+/* Privacidad: el resumen, en tarjetas (dos columnas si caben) */
+.legal-cards {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:10px;
+  margin:0 0 12px;
+}
+.legal-card {
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  margin:0;
+}
+.legal-card h3 {
+  margin:1px 0 4px;
+  font-size:15.5px;
+  line-height:1.25;
+}
+.legal-card p {
+  margin:0;
+  font-size:13.5px;
+  line-height:1.4;
+}
+.legal-status {
+  display:grid;
+  gap:4px;
+  margin:0 2px 8px;
+  font-size:13.5px;
+}
+/* el índice: cada apartado, numerado, a un toque */
+.legal-index {
+  margin:18px 0 6px;
+}
+.legal-index .legal-h {
+  margin-top:0;
+}
+.legal-index ol {
+  margin:0;
+  padding-left:26px;
+}
+.legal-index li {
+  padding:7px 0;
+  font-size:15px;
+  line-height:1.3;
+}
+/* las casillas de la aceptación (crear la cuenta y la pantalla que la pide): pequeñas, con el texto en varias líneas */
+.consent-checks {
+  display:grid;
+  gap:10px;
+  margin:10px 0 2px;
+}
+.setting-check.consent-check {
+  align-items:flex-start;
+  margin:0;
+  font-size:12.5px;
+  line-height:1.4;
+}
+.setting-check.consent-check input {
+  width:18px;
+  height:18px;
+}
+/* el enlace de dentro de una casilla queda por encima de la zona táctil ampliada de su etiqueta (css/97-touch-targets): al
+   tocarlo se abre el texto y no se marca la casilla */
+.consent-check .legal-link {
+  position:relative;
+  z-index:1;
+}
+.consent-note {
+  margin:0;
+  font-size:12.5px;
+  line-height:1.4;
+}
+/* los enlaces del pie del inicio de sesión, en una fila que salta de línea si no caben */
+.login-links {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:2px 6px;
+}
+/* «Eliminar cuenta» */
+.danger-btn {
+  color:var(--ctx);
+}

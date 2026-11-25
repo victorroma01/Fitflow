@@ -5,21 +5,19 @@
 */
 import { say } from '../core/i18n.js';
 import { APPV, clampInt, dayKey, fmtDateShort, roundInt, safeImage, typedNum } from '../core/util.js';
-import { Store } from '../core/store.js';
-import { clearSavedState, reloadApp } from '../core/persist.js';
+import { reloadApp } from '../core/persist.js';
 import { A, C } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
 import { toast } from '../core/toast.js';
 import { icon } from '../core/icons.js';
 import { confirmDialog, dialog, linkRow } from '../core/ui.js';
 import { R } from '../core/render.js';
-import { WIP_KEY } from '../workout/resume.js';
 import { levelsActive, levelTag, programName, programRow } from '../programs/levels.js';
 import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, goalName, tdee } from '../nutrition/diet.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { acctName, isAdmin, signedIn } from '../cloud/session.js';
-import { wipeCloudData } from '../cloud/sync.js';
-import { wipeCloudBackup } from '../cloud/backup.js';
+import { wipeDevice, wipeRecords } from '../cloud/erase.js';
+import { wipeFailText } from '../account/privacy.js';
 import { reportsLine } from '../system/report.js';
 import { html, raw } from '../core/html.js';
 import { perWeekText } from '../workout/week.js';
@@ -54,18 +52,17 @@ A.resetAllConfirmed = async () => {
   if (signedIn())
     try {
       toast('Borrando…');
-      await wipeCloudData();
-      await wipeCloudBackup();
+      await wipeRecords();
     }
     catch (e) {
-      toast(e.code == 'NETWORK' ? 'Sin conexión: para borrar también los datos de tu cuenta hace falta internet' : say `No se pudieron borrar los datos de tu cuenta (${e.code})`);
+      toast(wipeFailText(e));
       return;
     }
-  clearSavedState();
-  Store.del(WIP_KEY);
+  /* y de este dispositivo, con sus copias automáticas: lo borrado no vuelve */
+  await wipeDevice();
   reloadApp();
 };
-A.resetAllAsk = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta, y también la copia de seguridad de la nube. Tu usuario se mantiene. No se puede deshacer.', 'resetAllConfirmed', 'Borrar todo');
+A.resetAllAsk = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán tus programas, entrenos, comidas, medidas y peso, en este móvil y en tu cuenta, con tu foto, el sexo del perfil, las copias automáticas de este móvil y la copia de seguridad de la nube. Se mantienen tu usuario y las preferencias de la app. No se puede deshacer.', 'resetAllConfirmed', 'Borrar todo');
 /* el sexo (con «Sin indicar» mientras no se haya elegido) */
 const bioSex = bio => html`
   <label>Sexo</label>

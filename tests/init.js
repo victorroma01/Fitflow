@@ -6,8 +6,9 @@
 // y cada bloqueo de la CSP (build.py) queda en window.__csp: las pruebas comprueban que la app no choca con ella
 document.addEventListener('securitypolicyviolation',function(e){(window.__csp=window.__csp||[]).push(e.violatedDirective+' '+String(e.blockedURI).slice(0,80))});
 // Sesión de prueba: sin cuenta, la app solo enseña el inicio de sesión (account/login). tests/cloud.py prueba la cuenta de
-// verdad y la quita antes con window.__sfNoSession.
-if(!window.__sfNoSession)try{if(!localStorage.getItem('ffacct')){localStorage.setItem('ffacct',JSON.stringify({uid:'prueba',u:'Prueba',it:'x.e30.x',rt:'x',exp:4102444800000}));localStorage.setItem('ffown','prueba')}}catch(e){}
+// verdad y la quita antes con window.__sfNoSession. Lleva aceptadas las condiciones y dado el consentimiento (cs: cloud/consent):
+// sin ellos, la app solo enseña la pantalla que los pide (tests/login.py la prueba quitándolos).
+if(!window.__sfNoSession)try{if(!localStorage.getItem('ffacct')){localStorage.setItem('ffacct',JSON.stringify({uid:'prueba',u:'Prueba',it:'x.e30.x',rt:'x',exp:4102444800000,cs:{t:{v:'1.0',at:1},h:{v:'1.0',at:1,st:1}}}));localStorage.setItem('ffown','prueba')}}catch(e){}
 // con el recorrido de la primera vez (system/tour) ya visto, para que no tape las pantallas de las pruebas: tests/experience.py
 // lo prueba quitándolo (delete S.tourSeen) y tests/cloud.py, con cuentas nuevas de verdad
 if(!window.__sfNoSession)try{if(!localStorage.getItem('ff'))localStorage.setItem('ff',JSON.stringify({_parts:1,tour:1}))}catch(e){}
