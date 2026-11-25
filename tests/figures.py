@@ -122,13 +122,29 @@ def main(path, shots=None):
                 pg.wait_for_timeout(50)
             pg.wait_for_timeout(150)
 
+        SNAP = STAGE + ".innerHTML.length + ':' + " + STAGE + ".innerHTML.slice(2000, 2400)"
+
         def frames(n, ms, steps):
             """La figura grande en steps momentos, cada ms de reloj."""
-            out = [ev(STAGE + ".innerHTML.length + ':' + " + STAGE + ".innerHTML.slice(2000, 2400)")]
+            out = [ev(SNAP)]
             for _ in range(steps):
                 pg.clock.run_for(ms)
-                out.append(ev(STAGE + ".innerHTML.length + ':' + " + STAGE + ".innerHTML.slice(2000, 2400)"))
+                out.append(ev(SNAP))
             return out
+
+        def moving():
+            """Espera a que la figura grande esté en marcha. Solo se mueve mientras se ve, y quien avisa de que se ve
+            (IntersectionObserver) va con el reloj de verdad: en Firefox tarda unos fotogramas más que en los otros dos
+            motores, y medir un ciclo desde antes daba sus primeros momentos iguales."""
+            last = ev(SNAP)
+            for _ in range(40):
+                pg.clock.run_for(40)
+                pg.wait_for_timeout(25)
+                now = ev(SNAP)
+                if now != last:
+                    return True
+                last = now
+            return False
 
         check('arranca', ev('!!window.__ffok'))
         ev("S.reduceMotion=0;S.customExercises=[{n:'Mi ejercicio',c:'Culturismo',g:'Propio',t:'Personalizado',p:['ps'],s:['tr'],q:'Otro'}];saveState()")
@@ -247,6 +263,7 @@ def main(path, shots=None):
         # un ciclo (pedalear, correr, saltar a la comba) no para en ningún momento
         for n, cycle in [('Bicicleta', 1400), ('Carrera 1 km', 1260), ('Comba', 1150)]:
             how(n)
+            moving()
             seen = frames(n, cycle // 24, 30)
             check('hoja de «%s»: no se detiene en ningún momento del ciclo' % n, all(a != b for a, b in zip(seen, seen[1:])), str([i for i, (a, b) in enumerate(zip(seen, seen[1:])) if a == b][:5]))
         # solo se dibuja mientras se ve: con la figura fuera de la vista, no cambia

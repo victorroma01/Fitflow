@@ -39,11 +39,16 @@ historial por año, las comidas por mes, las preferencias en el perfil y la foto
 | `ffsync` (`sync`) | Sincronización (`cloud/sync`): `{ dev: id del dispositivo, base: { parte: { r: versión, h: huellas de cada elemento } }, lt: último cambio local por tipo, pt: de las preferencias, fresh: 1 tras entrar, last: última sincronización }`. |
 | `fflgn` (`lgn`) | Intentos fallidos de entrar `{ n, t }`, para la espera creciente (`account/login`). |
 | `ffspace` (`space`) | Cuándo se avisó por última vez de que queda poco espacio (`system/space`, I-04): como mucho, una vez a la semana. No se sincroniza. |
-| `ffrev` (`rev`) | Marca de lo último guardado: cambia con cada guardado, y por ella una apertura de la app sabe si otra ha guardado después ([la app abierta dos veces](#la-app-abierta-dos-veces)). No es un dato: no se sincroniza ni entra en las copias. |
+| `ffrev` (`rev`) | Marca de lo último guardado: cambia con cada guardado, y por ella una apertura de la app sabe si otra ha guardado después ([la app abierta dos veces](#la-app-abierta-dos-veces)). Empieza por el identificador de la apertura que la deja. No es un dato: no se sincroniza ni entra en las copias. |
 
 En IndexedDB: `ffdata` (almacén `parts`: las partes del estado, con las mismas claves `ff:logs`, `ff:hist` y `ff:meals:AAAA-MM`, su
 texto JSON tal cual; almacén `aside`: lo grande que no es del estado, como la copia previa a restaurar) y `ffsnap` (copias automáticas diarias, las 7 últimas; se borran al cerrar sesión). La base `ffph` de las
 fotos de progreso de la serie de prueba se borra al arrancar.
+
+En `sessionStorage` (de la pestaña: sobrevive a una recarga y no lo ven las demás): `ffbye`, el identificador de la apertura
+de la app que se acaba de cerrar en esa pestaña, para que la que carga a continuación sepa que quien termina de guardar es su
+anterior y no otra ventana ([una recarga no es otra ventana](#la-app-abierta-dos-veces)). Es un identificador al azar de esa
+apertura: no dice nada de nadie.
 
 ### Si un guardado falla
 
@@ -72,8 +77,20 @@ guardaran, la segunda pisaría con lo suyo lo que guardó la primera. Por eso **
   viendo, con el aviso «La app está abierta en otra ventana», que solo se quita recargando.
 - El entreno en curso lo lleva una sola: la que lo empieza o lo reanuda se queda con lo guardado (como si acabara de guardar)
   y la otra se queda atrás; al recargarse, se le ofrece reanudarlo, como cuando el móvil cierra la app.
+- **Una recarga no es otra ventana.** Al recargar, la página anterior de la pestaña sigue viva un momento, y dos cosas
+  suyas pueden llegarle a la nueva: el aviso (`storage`) de lo que guardó justo antes de cerrarse, y lo que termine de
+  guardar con la nueva ya abierta (lo que va a IndexedDB no se escribe al instante). Lo primero no cuenta: si lo que el aviso
+  anuncia es el núcleo que esta apertura leyó al arrancar, o el que ella dejó en su último guardado, nadie le ha cambiado
+  nada. Lo segundo sí la deja atrás, y con razón (puede haber leído el núcleo de antes y las partes de después), pero no hay
+  otra ventana: se recarga sola, sin aviso. Lo sabe porque cada marca empieza por el identificador de quien la deja y la
+  página que se cierra deja dicho en la pestaña quién era (`ffbye`, en `sessionStorage`, que sobrevive a la recarga y no ven
+  las demás pestañas): si la marca nueva es de la anterior, es una recarga (`savedByPredecessor`). Vale una vez por cierre.
+  Antes, recargar a los pocos segundos de guardar algo enseñaba a veces «La app está abierta en otra ventana» con una sola
+  abierta: la mitad de las veces, en la prueba, si quedaba pendiente el repaso con un cambio del núcleo.
+- Cuando es la propia app la que se recarga (tras actualizar, entrar, cerrar sesión o restaurar: `reloadApp`), hace antes el
+  repaso pendiente y espera a que quede escrito.
 
-Con una sola apertura, que es lo normal, nada de esto se nota: la marca son dos escrituras de 12 caracteres por guardado.
+Con una sola apertura, que es lo normal, nada de esto se nota: la marca son dos escrituras de 25 caracteres por guardado.
 
 ## El estado `S`
 

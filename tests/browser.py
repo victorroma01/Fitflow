@@ -72,9 +72,12 @@ def _quiet(page, expr):
 
 
 def _settled(nav):
-    """page.goto / page.reload que antes esperan a lo pendiente de guardar y después a que la app arranque."""
+    """page.goto / page.reload que antes esperan a lo pendiente de guardar y después a que la app arranque. Lo pendiente incluye
+    lo que la app guarda al cerrarse (el repaso de core/persist, al recibir «pagehide»): se le pide antes de salir y se espera
+    a que quede escrito. Si no, empieza al cerrarse la página y termina con la nueva ya abierta, que entonces se recarga sola
+    (core/boot, savedByPredecessor) en mitad de la prueba."""
     def run(self, *a, **k):
-        _quiet(self, 'window.savesDone ? savesDone() : null')
+        _quiet(self, "window.savesDone ? (window.dispatchEvent(new Event('pagehide')), savesDone()) : null")
         r = nav(self, *a, **k)
         _quiet(self, 'window.__ffready || null')
         return r

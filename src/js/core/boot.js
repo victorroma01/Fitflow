@@ -14,7 +14,7 @@ import { Store } from './store.js';
 import { logError, setErrorNotice } from './errors.js';
 import { toast } from './toast.js';
 import { loadEnglish } from './lazy.js';
-import { dropSavedState, loadParts, onInstanceStale, partsLost, reloadApp, stateRecovered } from './persist.js';
+import { dropSavedState, loadParts, onInstanceStale, partsLost, reloadApp, savedByPredecessor, stateRecovered } from './persist.js';
 import { A } from './registry.js';
 import { applyTheme, S, saveState, W } from './state.js';
 import { confirmDialog, dialog } from './ui.js';
@@ -61,7 +61,9 @@ A.partsFromCloud = () => {
    guarda ni sincroniza, y hay que recargarla con lo último. Si no se estaba usando (no se ve, o se sabe justo al volver a
    ella), se recarga sola; si se está viendo, se dice con un aviso que tapa la app y solo se quita recargando (si se cierra
    de otra forma, con el gesto de volver, se recarga igual). El entreno en curso no se pierde: está guardado aparte
-   (workout/resume) y, tras recargar, se ofrece reanudarlo. */
+   (workout/resume) y, tras recargar, se ofrece reanudarlo.
+   Si quien ha guardado después es la página anterior de esta misma pestaña (una recarga: la anterior termina su último
+   guardado con esta ya abierta), no hay otra ventana: se recarga sola, sin aviso (core/persist, savedByPredecessor). */
 let staleWaiting = 0;
 let staleDialog = null;
 onInstanceStale(arriving => {
@@ -75,7 +77,7 @@ onInstanceStale(arriving => {
   /* con el aviso puesto no hay nada más que hacer (esto se llama otra vez cada vez que algo intenta guardar) */
   if (staleDialog && staleDialog.isConnected)
     return;
-  if (arriving || staleDialog) {
+  if (arriving || staleDialog || savedByPredecessor()) {
     location.reload();
     return;
   }

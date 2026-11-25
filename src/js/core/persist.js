@@ -26,7 +26,7 @@
    se lee con los nombres del programa (core/schema).
    Leer y escribir comparten lo que se sabe de cada clave (savedText), dónde están las partes (idb) y si se puede guardar
    (saveLocked): por eso van juntos en este módulo, y lo que no tiene estado, fuera (core/parts y core/idb).
-   Define: stateRecovered, partsLost, badParts, savedText, queued, queuedParts, saveLocked, lastKey, dropCount, idb, expectedParts, leftovers, lastState, allSaved, unsaved, pendingWrites, inFlight, failGen, savesBroken, knownRev, instanceStale, staleNotice, onInstanceStale, outdated, touchRev, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, goStale, staleCheck, staleNow, claim, takeOver, pendingChanges, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
+   Define: stateRecovered, partsLost, badParts, savedText, coreAtLoad, queued, queuedParts, saveLocked, lastKey, dropCount, idb, expectedParts, leftovers, lastState, allSaved, unsaved, pendingWrites, inFlight, failGen, savesBroken, knownRev, instanceStale, staleNotice, onInstanceStale, outdated, INSTANCE, BYE_KEY, savedByPredecessor, touchRev, setAside, loadSavedState, dbTx, partsTx, asideSet, asideGet, writing, enqueue, savesDone, reloadApp, readIdbParts, moveToIdb, loadParts, partSizes, saveFailedAt, saveFailed, CHECK_MS, checkTimer, failStreak, checkLater, checkNow, goStale, staleCheck, staleNow, claim, takeOver, pendingChanges, writeLocal, writeIdb, hintCheck, writeSplit, writeState, scheduleWrite, replaceSavedState, lockSaves, dropSavedState, clearSavedState
 */
 import { newId } from './util.js';
 import { Store } from './store.js';
@@ -48,6 +48,9 @@ export const badParts = [];
   undefined: no se sabe si se escribió, se vuelve a escribir).
     @type {Map<string, string | null | undefined>} */
 const savedText = new Map();
+/** El núcleo tal como lo leyó esta apertura al arrancar (loadSavedState): lo último que dejó la anterior.
+    @type {string | null} */
+let coreAtLoad = null;
 /** Estado pendiente de escribir al terminar la acción (scheduleWrite), o null.
     @type {Record<string, any> | null} */
 let queued = null;
@@ -130,9 +133,29 @@ const outdated = () => {
     return false;
   }
 };
+/* Quién deja cada marca: la de esta apertura empieza por su identificador (INSTANCE). Sirve para un caso. Al recargar la app,
+   la página anterior de la pestaña sigue viva un momento y termina entonces lo que estaba guardando (el repaso de al salir, o
+   un guardado a medias): la nueva, que ya había leído, se queda atrás, y con razón, porque lo que leyó puede ser de antes.
+   Pero no hay otra ventana abierta: basta con que se recargue sola, sin el aviso (core/boot). Para saberlo, la que se
+   cierra deja dicho en la pestaña quién era (BYE_KEY, en sessionStorage: sobrevive a la recarga y no lo ven otras pestañas),
+   y la nueva mira si la marca que encuentra es suya (savedByPredecessor). */
+const INSTANCE = newId();
+const BYE_KEY = 'ffbye';
+/** ¿Quien ha guardado después de lo que esta apertura sabe es la página anterior de esta misma pestaña, que se estaba
+  cerrando? Vale una vez por cierre: lo que dejó dicho se borra al mirarlo. */
+export const savedByPredecessor = () => {
+  try {
+    const who = sessionStorage.getItem(BYE_KEY);
+    sessionStorage.removeItem(BYE_KEY);
+    return !!who && String(Store.get(Store.K.rev) || '').startsWith(who + '.');
+  }
+  catch (e) {
+    return false;
+  }
+};
 /* deja una marca nueva, que solo conoce esta apertura: las demás se quedan atrás. Si no cabe ni la marca, sigue la de antes */
 const touchRev = () => {
-  const r = newId();
+  const r = INSTANCE + '.' + newId();
   try {
     Store.set(Store.K.rev, r, 1);
     knownRev = r;
@@ -176,6 +199,7 @@ export const loadSavedState = () => {
   /** @type {any} */
   let core = null;
   if (raw != null) {
+    coreAtLoad = raw;
     savedText.set(Store.K.app, raw);
     try {
       core = JSON.parse(raw);
@@ -292,6 +316,8 @@ export const reloadApp = () => {
       location.reload();
     }
   };
+  /* el repaso pendiente se hace ya: si no, empezaría al cerrarse la página y terminaría con la nueva ya abierta */
+  checkNow();
   savesDone().then(go);
   setTimeout(go, 5000);
 };
@@ -509,14 +535,31 @@ document.addEventListener('visibilitychange', () => {
   else
     staleCheck(1);
 });
-window.addEventListener('pagehide', checkNow);
+window.addEventListener('pagehide', () => {
+  /* quién se cierra (una que se quedó atrás ya no guarda: no deja nada dicho) */
+  if (!instanceStale)
+    try {
+      sessionStorage.setItem(BYE_KEY, INSTANCE);
+    }
+    catch (e) {
+      /* sin sessionStorage, la página nueva enseñaría el aviso de siempre */
+    }
+  checkNow();
+});
 /* lo que guarda otra pestaña o ventana se sabe al momento (el evento storage solo llega a las demás): por su marca o, si es
    una versión anterior de la app, que no la deja, porque cambia el núcleo. Y si el navegador tenía esta parada, al volver */
 window.addEventListener('storage', e => {
   if (e.storageArea != localStorage)
     return;
-  if (e.key == Store.K.app && !instanceStale && !saveLocked)
+  if (e.key == Store.K.app && !instanceStale && !saveLocked) {
+    /* El aviso puede llegar tarde: al recargar, el de lo último que guardó la página anterior le llega a veces a la nueva,
+       que ya lo ha leído. Si lo que anuncia es el núcleo que esta apertura leyó al arrancar, o el que ella dejó en su último
+       guardado, nadie le ha cambiado nada. Antes se quedaba atrás igual, y salía «La app está abierta en otra ventana»
+       con una sola abierta (una de cada varias decenas de recargas) */
+    if (e.newValue != null && (e.newValue === coreAtLoad || e.newValue === savedText.get(Store.K.app)))
+      return;
     goStale(0);
+  }
   else if (e.key == null || e.key == Store.K.rev)
     staleCheck(0);
 });
