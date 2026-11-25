@@ -4,7 +4,7 @@
    dibujar cada figura trece veces para saber lo que ocupa. De cada ejercicio: el recuadro [x, y, ancho, alto] del gesto
    entero, el momento de la miniatura y su recuadro, el recuadro de las posturas quietas y los momentos de esas posturas. Va
    con el motor, en lo que se descarga al usarlo (core/lazy).
-   Huella de lo calculado: 089fdb74beb946e14e4a
+   Huella de lo calculado: 6694d6faaef44a6c61f1
    Define: FIG_BOXES
 */
 export const FIG_BOXES = {

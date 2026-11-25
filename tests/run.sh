@@ -28,6 +28,7 @@ run node tools/figboxes.js --check
 run python3 build.py --check
 run node tools/types.js
 run node tools/classes.js --check tests/clases-1.0.32.txt
+run node tools/i18n.js --check
 run python3 tests/changelog.py
 run node --test --test-reporter=dot tests/aviso.test.mjs
 run node --test --test-reporter=dot tests/templates.test.mjs
@@ -38,6 +39,7 @@ run node --test --test-reporter=dot tests/calc.test.mjs
 run node --test --test-reporter=dot tests/parts.test.mjs
 run node --test --test-reporter=dot tests/fig3d.test.mjs
 run node --test --test-reporter=dot tests/dominio.test.mjs
+run node --test --test-reporter=dot tests/i18n.test.mjs
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
 run python3 tests/figures.py dist/stratafit.html
@@ -59,6 +61,7 @@ run python3 tests/storage.py dist/stratafit.html
 run python3 tests/calc.py dist/stratafit.html
 run python3 tests/dashboard.py dist/stratafit.html
 run python3 tests/render.py dist/stratafit.html
+run python3 tests/english.py dist/stratafit.html
 # la app con App Check configurado con valores de prueba y su CSP (dist/appcheck/): la usa tests/cloud.py
 run python3 build.py --appcheck
 run python3 tests/cloud.py dist/stratafit.html

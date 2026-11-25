@@ -585,7 +585,7 @@ const analysisPdf = async (ym) => {
     para('No hay comidas registradas este mes.', { color: MU });
   else {
     para(say `${n.verdict || 'Sin datos suficientes'} · ${n.logged} de ${m.nd} días con comidas registradas, ${n.ok} dentro del objetivo (±10 %).`, { bold: true });
-    para(say `De media, ${fmtN(n.ak)} kcal (objetivo ${fmtN(n.tk)}) y ${fmtN(n.ap)} g de proteína (objetivo ${fmtN(n.tp)} g)${n.side ? ': ' + n.side : ''}.${n.water ? say ` Agua: ${fmtN(n.water / 1000, 1)} l al día.` : ''}`, { color: MU, size: 9.5 });
+    para(say `De media, ${fmtN(n.ak)} kcal (objetivo ${fmtN(n.tk)}) y ${fmtN(n.ap)} g de proteína (objetivo ${fmtN(n.tp)} g)${n.side ? ': ' + trAs('veredicto', n.side) : ''}.${n.water ? say ` Agua: ${fmtN(n.water / 1000, 1)} l al día.` : ''}`, { color: MU, size: 9.5 });
     need(120);
     const D = n.days;
     const mx = Math.max(n.tk * 1.3, ...D) || 1;
@@ -649,7 +649,7 @@ A.analysisMonth = i => {
 A.analysisDownloadPdf = async () => {
   try {
     const b = await analysisPdf(anaYm);
-    const r = await downloadFile('StrataFit-analisis-' + anaYm + '.pdf', b, 'application/pdf');
+    const r = await downloadFile('StrataFit-' + trAs('archivo', 'analisis') + '-' + anaYm + '.pdf', b, 'application/pdf');
     toast(r == 'saved' ? 'PDF guardado' : r == 'declined' ? 'No se ha guardado el PDF' : 'No se ha podido guardar el PDF');
   }
   catch (e) {

@@ -2,6 +2,7 @@
    Modelo de ejercicios: lista completa, músculos, filas y orden.
    Define: LIB_BY_NAME, libByName, exByName, liveName, groupOfName, overlapCount, exAll, exOrder, exMuscles, searchText, SEARCH_TEXT, exSearchText, exSubtitle, exMusclesHtml, ROWS_WITH_PICTURE, exCellHtml, exRowHtml, exCompare, categoryOf
 */
+import { EN, tr } from '../core/i18n.js';
 import { X } from '../core/util.js';
 import { EXERCISES, groupOf, GROUPS, MUSCLES } from '../data/library.js';
 import { EX_ALIASES, EX_RETIRED } from '../data/aliases.js';
@@ -34,13 +35,16 @@ export const exAll = () => EXERCISES.concat(S.customExercises);
 export const exOrder = e => e.k == null ? 9999 : e.k;
 export const exMuscles = (e, k) => (e[k] || []).map(c => MUSCLES[c]).filter(Boolean);
 const searchText = e => {
-  const s = (e.n + ' ' + (e.t || '') + ' ' + (e.q || '') + ' ' + exMuscles(e, 'p').concat(exMuscles(e, 's')).join(' ') + ' ' + (EX_ALIASES[e.n] || '')).toLowerCase();
+  const es = e.n + ' ' + (e.t || '') + ' ' + (e.q || '') + ' ' + exMuscles(e, 'p').concat(exMuscles(e, 's')).join(' ') + ' ' + (EX_ALIASES[e.n] || '');
+  /* con la app en inglés, además, como se lee en inglés: «bench press» encuentra el press banca */
+  const s = (EN ? es + ' ' + [e.n, e.t || '', e.q || ''].concat(exMuscles(e, 'p'), exMuscles(e, 's')).map(tr).join(' ') : es).toLowerCase();
   return s + ' ' + s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 /* el de los de la biblioteca, que no cambian, se calcula una vez: el buscador lo pide para todos en cada letra. El de los
    propios, que se pueden editar, cada vez */
 const SEARCH_TEXT = new WeakMap();
-/** El texto en el que busca el buscador: nombre, tipo, material, músculos y otros nombres, también sin tildes. */
+/** El texto en el que busca el buscador: nombre, tipo, material, músculos y otros nombres, también sin tildes (y, con la app
+    en inglés, también en inglés). */
 export const exSearchText = e => {
   if (libByName().get(e.n) !== e)
     return searchText(e);

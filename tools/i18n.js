@@ -7,15 +7,22 @@
    De dónde salen las frases:
      · plantillas html`…`: cada trozo de texto entre dos etiquetas y cada atributo que se lee;
      · textos compuestos say`…`;
-     · textos sueltos del código que parecen una frase (con un espacio, una tilde o una mayúscula inicial) y que no son un
-       selector, un mensaje del registro de errores, una clave que solo se compara…;
+     · textos sueltos del código que parecen una frase (dos palabras, una tilde, una mayúscula inicial, unos puntos
+       suspensivos) y que no son un selector, un mensaje del registro de errores, una clave que solo se compara…;
+     · los que se enseñan tal cual aunque no lo parezcan: un valor que una plantilla pone en su texto o en un atributo que
+       se lee (${on ? 'descarga' : ''}) y lo que reciben tr(), trAs(), toast(), raw() y commas();
      · los datos: nombres de ejercicios, grupos, material, músculos, alimentos, programas, niveles, técnicas, logros…
        (DATA, más abajo: de cada módulo de datos, lo que se enseña).
    Una frase que no se enseña, o que es igual en inglés, va en tools/i18n-skip.json. Las que el código compone de un modo
    que aquí no se ve («3 series», que la app busca como «# series») van en i18n/en-more.js, que no se mira si sobra.
 
+   Además avisa de lo que no se traduciría: un texto escrito en la página sin plantilla (e.textContent = 'Texto', sin tr()),
+   una plantilla con texto al cargar el módulo (el diccionario aún no está) y un raw() dentro de una etiqueta (una clase, un
+   atributo) cuyo texto es una frase del diccionario (raw la traduciría).
+
    Uso:  node tools/i18n.js --check            falla si falta una frase, si sobra una, si una traducción pierde un valor
-                                               ({0}, #) o si algo se traduce al cargar un módulo (el diccionario aún no está)
+                                               ({0}, #) o con uno de esos avisos
+         node tools/i18n.js --dump             el diccionario entero, en JSON (español → inglés), para las pruebas
          node tools/i18n.js --todo [módulo]    escribe las que faltan, numeradas, en /tmp/i18n/todo.txt (y sus claves en
                                                todo.json); con módulo (ui, library…), solo las suyas
          node tools/i18n.js --apply archivo módulo   añade al módulo las traducciones de «número<tab>inglés» (las de todo.txt);
@@ -80,7 +87,7 @@ const COMPARES = new Set([ts.SyntaxKind.EqualsEqualsToken, ts.SyntaxKind.Exclama
    mayúscula inicial («Aceptar», «% Hidratos») o una que empieza con un signo de los que unen textos («· descarga», «+ parciales») */
 const LETTER = 'A-Za-zÀ-ÖØ-öø-ÿ';
 const looksProse = v => (u => core.WORDS.test(u) && (new RegExp('[' + LETTER + ']{2} [' + LETTER + '¿¡«(]|[' + LETTER + '] [' + LETTER + ']{2}').test(u) || /[áéíóúñ¿¡…]/i.test(u)
-  || new RegExp('(^|[^' + LETTER + '_])[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+([^' + LETTER + '_]|$)').test(u) || /^[·+(,] ?[a-záéíóúñ]/.test(u)))(v.trim());
+  || new RegExp('(^|[^' + LETTER + '_])[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+([^' + LETTER + '_]|$)').test(u) || /^[·+(] ?[a-záéíóúñ]/.test(u)))(v.trim());
 /* y uno que es código: una etiqueta, un selector, una dirección, una regla de estilo, una ruta */
 const looksCode = u => /[<>{}=\\]|:\/\/|^[.#\[][A-Za-z]|^\w+\(|;$|^[\w-]+:[\w-]|\.(js|json|png|webp|svg|css|html)\b|cubic-bezier|\d(ms|s) ease|^[a-z0-9]+(-[a-z0-9]+)*( [a-z0-9]+(-[a-z0-9]+)*)*-[a-z0-9-]+( [a-z0-9-]+)*$/.test(u);
 const lineOf = (sf, n) => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
@@ -115,6 +122,11 @@ const phrasesOf = rel => {
     }
     if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && (SHOWN_CALLS.test(n.expression.text) || n.expression.text == 'trAs')) {
       const at = n.expression.text == 'trAs' ? 1 : 0;
+      /* trAs('archivo', 'pesaje'): la frase que se busca es «archivo:pesaje» */
+      if (at && n.arguments.length == 2 && n.arguments.every(a => ts.isStringLiteral(a))) {
+        out.push([n.arguments[0].text + ':' + n.arguments[1].text, 'lit', lineOf(sf, n)]);
+        return;
+      }
       /* raw() dentro de una etiqueta lleva clases o atributos, no texto: no se enseña, y no puede coincidir con una frase
          del diccionario (raw la traduciría) */
       const tag = hidden && n.expression.text == 'raw';
@@ -290,6 +302,8 @@ if (require.main === module) {
     fs.writeFileSync(SKIP, JSON.stringify([...st.skip].filter(k => !gone.has(k)).sort(), null, 1) + '\n');
     console.log(gone.size + ' frases que sobraban, quitadas');
   }
+  else if (args[0] == '--dump')
+    process.stdout.write(JSON.stringify(Object.fromEntries(st.all)));
   else if (args[0] == '--check') {
     st.missing.slice(0, 40).forEach(([k, v]) => console.error('ERROR: sin traducir (' + v.where + '): ' + JSON.stringify(k)));
     st.stale.slice(0, 40).forEach(([name, k]) => console.error('ERROR: sobra en ' + (name == 'skip' ? 'tools/i18n-skip.json' : 'en-' + name + '.js') + ' (la app ya no la busca): ' + JSON.stringify(k)));

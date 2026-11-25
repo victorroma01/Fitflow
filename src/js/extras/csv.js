@@ -2,7 +2,7 @@
    Exportación a CSV.
    Define: CSV_SEP, csvCell, csvBody, CSV_EXPORTS  · acciones/registros: 2
 */
-import { say, tr } from '../core/i18n.js';
+import { say, tr, trAs } from '../core/i18n.js';
 import { dayKey, LANG, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -94,6 +94,6 @@ A.csvDownload = async (i, b) => {
     toast('No se pudo preparar el archivo');
     return;
   }
-  const r = await downloadFile('stratafit-' + c.f + '-' + dayKey(new Date) + '.csv', txt, 'text/csv;charset=utf-8');
+  const r = await downloadFile('stratafit-' + trAs('archivo', c.f) + '-' + dayKey(new Date) + '.csv', txt, 'text/csv;charset=utf-8');
   toast(r == 'saved' ? 'Archivo listo' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
 };

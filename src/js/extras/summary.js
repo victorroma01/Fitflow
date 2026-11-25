@@ -2,7 +2,7 @@
    Resumen del entreno e imagen para compartir.
    Define: pctChange, signed, summaryData, deltaChip, showSummary, summaryImage  · acciones/registros: 1
 */
-import { say, tr } from '../core/i18n.js';
+import { say, tr, trAs } from '../core/i18n.js';
 import { fmtDateShort } from '../core/util.js';
 import { liftScore } from '../core/calc.js';
 import { toast } from '../core/toast.js';
@@ -261,7 +261,8 @@ A.summaryShare = async () => {
       if (lastSummary)
         lastSummary.blob = b;
     }
-    const f = new File([b], 'stratafit-entreno.png', { type: 'image/png' });
+    const name = 'stratafit-' + trAs('archivo', 'entreno') + '.png';
+    const f = new File([b], name, { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [f] })) {
       try {
         await navigator.share({ files: [f], title: tr('Mi entreno') });
@@ -272,7 +273,7 @@ A.summaryShare = async () => {
           return;
       }
     }
-    saveBlob(b, 'stratafit-entreno.png');
+    saveBlob(b, name);
     toast('Imagen guardada');
   }
   catch (e) {

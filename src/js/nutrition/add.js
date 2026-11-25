@@ -4,8 +4,8 @@
    guardan solos al añadirlos a una comida (sin repetirse) con su Nutri-Score (F-43). Cualquiera se puede borrar.
    Define: ownFoods, allFoods, NUTRI_SCORE, nutriScore, nutriScoreBadge, nutriScoreRow, saveOwnFood, foldText, groupNames, groupOfFood, foodList, addSheetBase, typedGrams, addMealItem, addSheet, onlineSheet, ownFoodDel  · acciones/registros: 15
 */
-import { say } from '../core/i18n.js';
-import { $, clampNum, dayKey, round1, roundInt, typedNum, X } from '../core/util.js';
+import { EN, say, tr } from '../core/i18n.js';
+import { $, clampNum, dayKey, LOCALE, round1, roundInt, typedNum, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
@@ -54,7 +54,8 @@ const foldText = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-
 const groupNames = () => FOOD_GROUPS.concat(S.myFoods.length ? ['Mis alimentos'] : []);
 const groupOfFood = f => f.g >= 0 ? f.g : FOOD_GROUPS.length;
 /** Lista de alimentos de la hoja «Añadir»: con texto en `q`, los que tienen todas sus palabras (sin tildes) y primero los que
-    empiezan por la primera; sin texto, los del grupo elegido (o todos), por orden alfabético. */
+    empiezan por la primera; sin texto, los del grupo elegido (o todos), por orden alfabético. Se busca y se ordena por el
+    nombre que se ve: con la app en inglés, el inglés (y se encuentra también por el español). */
 function foodList(q) {
   const e = $('#rs');
   if (!e)
@@ -63,15 +64,15 @@ function foodList(q) {
   const k = foldText(raw0);
   const ws = k.split(/\s+/).filter(Boolean);
   const cat = addState && addState.cat >= 0 ? addState.cat : -1;
-  let L = allFoods().map((f, i) => ({ f, i, n: foldText(f.n) }));
+  let L = allFoods().map((f, i) => ({ f, i, n: foldText(tr(f.n)), k: EN ? foldText(tr(f.n) + ' ' + f.n) : '' }));
   if (ws.length) {
-    L = L.filter(o => ws.every(w => o.n.includes(w)));
-    L.sort((a, b) => (b.n.startsWith(ws[0]) ? 1 : 0) - (a.n.startsWith(ws[0]) ? 1 : 0) || a.n.localeCompare(b.n, 'es'));
+    L = L.filter(o => ws.every(w => (o.k || o.n).includes(w)));
+    L.sort((a, b) => (b.n.startsWith(ws[0]) ? 1 : 0) - (a.n.startsWith(ws[0]) ? 1 : 0) || a.n.localeCompare(b.n, LOCALE));
   }
   else {
     if (cat >= 0)
       L = L.filter(o => groupOfFood(o.f) == cat);
-    L.sort((a, b) => a.n.localeCompare(b.n, 'es'));
+    L.sort((a, b) => a.n.localeCompare(b.n, LOCALE));
   }
   document.querySelectorAll('.food-groups button').forEach(b => {
     b.classList.toggle('on', !ws.length && +b.dataset.i == cat);

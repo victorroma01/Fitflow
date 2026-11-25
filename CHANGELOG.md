@@ -245,6 +245,32 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.
 - Documentación: la V1.0.31 comprobada en el iPhone del propietario, las versiones 1.0.3 y 1.0.31 en la documentación
   funcional y el estado de App Check (en marcha, sin exigir); el pendiente 7 de la auditoría (el nombre de «Log out»), hecho.
+- Idiomas ([cómo está hecho](docs/tecnica/idiomas.md)): el código y los datos siguen en español y el inglés se aplica al
+  pintar, con el español de clave. `core/util` decide el idioma al cargar (`LANG`: el elegido en Ajustes, `fflang`, o el del
+  móvil; `LOCALE` para fechas y números) y `src/index.html` hace la misma cuenta antes de que cargue el código (`<html
+  lang>`, las pestañas, el manifiesto en inglés y la pantalla de error del arranque, escrita en los dos). En inglés,
+  `core/boot` carga el diccionario antes del primer pintado (`loadEnglish`: `i18n/en-ui`, `en-library`, `en-foods`,
+  `en-programs` y `en-more`, unos 160 KB que en español no se descargan) y `core/html` traduce cada plantilla: el texto
+  entre etiquetas y los atributos que se leen son frases, con sus valores como `{0}`; un valor que es una frase del
+  diccionario se traduce donde se lee, nunca en un `value`, un `data-…` o una clase. Los textos compuestos se escriben con
+  ``say`…` `` en vez de sumando trozos (unas 330 sumas cambiadas), y lo que no pasa por una plantilla, con `tr()` (el reloj
+  del WOD, la imagen para compartir, el PDF del análisis, el `.ics` del pesaje, los nombres de archivo). Los consejos y la
+  ejecución de los 527 ejercicios van en `i18n/en-exinfo`, que se carga en lugar de `data/exinfo`.
+- Lo que se guarda no depende del idioma: va en español y se traduce al enseñarlo (el título y el resultado de un cardio o
+  de un WOD ya no se componen con el idioma de la app). Una cuenta sirve igual en un móvil en español y en otro en inglés.
+- La nota de cada versión en inglés: `CHANGELOG.en.md`, que `build.py` (`english`) mete en `data/release` y en
+  `version.json` como `en`, al lado de la española; la compilación se detiene si la versión no la tiene o si no dice lo
+  mismo. Las apps instaladas hasta la 1.0.31 no miran ese campo.
+- `tools/i18n.js` (en la batería, `--check`): saca del código las frases que la app va a buscar, con las mismas claves, y
+  dice cuáles faltan en el diccionario y cuáles sobran; avisa de un texto escrito en la página sin `tr()`, de una plantilla
+  con texto al cargar un módulo y de un `raw()` de una clase que es una frase. Lo que no se traduce (igual en inglés, o no
+  se enseña) está en `tools/i18n-skip.json`.
+- Pruebas del inglés: `tests/i18n.test.mjs` (el motor, sin navegador), `tests/english.py` (qué idioma sale con cada móvil y
+  cada elección, Ajustes → Idiomas, las 107 pantallas y otras doce en inglés sin un texto en español a la vista, el PDF, la
+  imagen y los archivos, y que con los mismos pasos se guarda lo mismo en los dos idiomas), el catálogo en inglés en
+  `tests/exinfo.test.mjs`, la nota en inglés en `tests/changelog.py` y el manifiesto y los trozos del diccionario en
+  `tests/deploy.py`. Las demás pruebas abren la app con el navegador en español (`tests/browser.py`). Pintar tarda lo
+  mismo en los dos idiomas (medido con la CPU cuatro veces más lenta: las mismas siete pantallas, sin diferencia).
 
 ## [1.0.31] — 2026-11-16
 

@@ -8,7 +8,7 @@
    sn: pospuesto hasta ese día, c: id del evento del calendario }.
    Define: WEIGH_STEPS, WEIGH_UNITS, weighCustom, weighEvery, addStep, lastWeighIn, weighNext, weighDue, weighBanner, reminderCard, checkWeighIn, icsText, weighIcs  · acciones/registros: 7
 */
-import { say, tr } from '../core/i18n.js';
+import { say, tr, trAs } from '../core/i18n.js';
 import { $, dayKey, fmtDateShort, newId } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -211,6 +211,6 @@ A.weighReminderCalendar = async () => {
     S.weighReminder.c = newId();
     saveState();
   }
-  const r = await downloadFile('StrataFit-pesaje.ics', weighIcs(), 'text/calendar');
+  const r = await downloadFile('StrataFit-' + trAs('archivo', 'pesaje') + '.ics', weighIcs(), 'text/calendar');
   toast(r == 'saved' ? 'Ábrelo para añadirlo a tu calendario' : r == 'declined' ? 'No se ha guardado' : 'No se ha podido crear el archivo');
 };

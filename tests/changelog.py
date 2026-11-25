@@ -1,7 +1,7 @@
 """Prueba de cómo `build.py` lee CHANGELOG.md y compone las tarjetas de versión que enseña la app (el aviso de versión
 nueva, las novedades y Ajustes), sin navegador: las entradas normales, las revisiones de una versión (con una cuarta cifra,
 1.1.0.1 de la 1.1.0, o diciéndolo, 1.0.31 de la 1.0.3), la cabecera de una versión, lo que leen de version.json las apps
-instaladas hasta la 1.0.31, lo que no se admite y el historial de verdad.
+instaladas hasta la 1.0.31, las notas en inglés (CHANGELOG.en.md), lo que no se admite y el historial de verdad.
 
   python3 tests/changelog.py
 """
@@ -38,6 +38,21 @@ def parsed(text):
 
 def titles(card):
     return [s['title'] for s in card['sections']]
+
+
+def parsed_en(text, english):
+    """Las tarjetas de un historial escrito aquí con sus notas en inglés (CHANGELOG.en.md); si la compilación se detendría, su mensaje."""
+    real = build.read
+    build.read = lambda path: text if path == build.CHANGELOG else english if path == build.CHANGELOG_EN else real(path)
+    try:
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), contextlib.redirect_stdout(err):
+            try:
+                return build.cards(build.english(build.changelog())), ''
+            except SystemExit:
+                return None, err.getvalue() or 'se detiene'
+    finally:
+        build.read = real
 
 
 PLAIN = """# Historial
@@ -181,6 +196,50 @@ def main():
     card = cards[0] if cards else {'sections': []}
     check('la tarjeta de una revisión lleva delante la cabecera de la versión que revisa, sin apellido', titles(card)[:2] == ['La cabecera de la 1.0.3', 'Correcciones de la 1.0.31'] and card['sections'][0].get('lead') and sum(1 for s in card['sections'] if s.get('lead')) == 1, str(err or titles(card)))
 
+    print('Las notas en inglés')
+    EN_PLAIN = """# Release notes
+
+## [1.1.0] — 2026-12-01
+
+### What's new
+- Something new, with `code` and **bold**,
+  on two lines.
+"""
+    cards, err = parsed_en(PLAIN, EN_PLAIN)
+    check('la versión que tiene su entrada en inglés la lleva en `en`, con sus apartados; las demás, no', cards and cards[0].get('en') == [{'title': "What's new", 'items': ['Something new, with code and bold, on two lines.']}] and not any('en' in c for c in cards[1:]), str(err or cards[0]))
+    vj = json.loads(build.version_json(cards)) if cards else {}
+    check('version.json la lleva arriba y en la lista, al lado de la española', vj.get('en') == cards[0]['en'] and vj['history'][0].get('en') == cards[0]['en'] and vj['sections'] == cards[0]['sections'] and 'en' not in vj['history'][1], str(vj.get('en')))
+    cards, err = parsed_en(PLAIN, EN_PLAIN.replace('- Something new', '- One thing.\n- Something new'))
+    check('si en inglés no tiene los mismos puntos, la compilación se detiene', cards is None and '1.1.0' in err and 'CHANGELOG.en.md' in err, err[:200])
+    cards, err = parsed_en(PLAIN, EN_PLAIN.replace("### What's new", '### Fixes'))
+    check('ni si el apartado es otro', cards is None and 'CHANGELOG.en.md' in err, err[:200])
+    cards, err = parsed_en(PLAIN, EN_PLAIN.replace('## [1.1.0]', '## [1.2.0]'))
+    check('ni si es de una versión que no está en CHANGELOG.md', cards is None and '1.2.0' in err, err[:200])
+    cards, err = parsed_en(PLAIN.replace('## [1.1.0] — 2026-12-01\n', '## [1.1.0] — 2026-12-01\n\n> El titular\n>\n> Y su texto.\n'), EN_PLAIN.replace('## [1.1.0] — 2026-12-01\n', '## [1.1.0] — 2026-12-01\n\n> The headline\n>\n> And its text.\n'))
+    check('el titular, también en inglés', cards and cards[0]['en'][0] == {'title': 'The headline', 'items': ['And its text.'], 'lead': True}, str(err or cards[0].get('en')))
+    cards, err = parsed_en(PLAIN.replace('## [1.1.0] — 2026-12-01\n', '## [1.1.0] — 2026-12-01\n\n> El titular\n>\n> Y su texto.\n'), EN_PLAIN)
+    check('y si falta en inglés, la compilación se detiene', cards is None and 'CHANGELOG.en.md' in err, err[:200])
+    EN_FOURTH = """## [1.1.0.2] — 2026-12-09
+
+### Fixes
+- Another fix.
+
+## [1.1.0.1] — 2026-12-05
+
+### Fixes
+- A fix for 1.1.0.
+
+## [1.1.0] — 2026-12-01
+
+### What's new
+- Something new, with `code` and **bold**,
+  on two lines.
+"""
+    cards, err = parsed_en(FOURTH, EN_FOURTH)
+    check('la tarjeta de una revisión, en inglés: lo suyo y lo de la versión, con el número de cada una', cards and [s['title'] for s in cards[0].get('en', [])] == ['Fixes in 1.1.0.2', 'Fixes in 1.1.0.1', "What's new in 1.1.0"], str(err or cards[0].get('en')))
+    cards, err = parsed_en(FOURTH, EN_FOURTH.split('## [1.1.0.1]')[0] + '## [1.1.0]' + EN_FOURTH.split('## [1.1.0]')[1])
+    check('si a una de las versiones de la tarjeta le falta el inglés, la tarjeta se enseña en español', cards is not None and 'en' not in cards[0], str(err or cards[0].get('en')))
+
     print('version.json y las apps instaladas hasta la 1.0.31')
     # su aviso solo compara tres cifras (old_newer es su comparador): la 1.0.4 no sería posterior a la 1.0.31
     check('para una 1.0.31 instalada, «1.0.4» no es posterior a la suya; para una 1.0.3, sí', not build.old_newer('1.0.4', '1.0.31') and build.old_newer('1.0.4', '1.0.3'))
@@ -207,6 +266,11 @@ def main():
     check('cada versión es posterior a la que tiene debajo, como las compara el aviso (número a número; la 1.0.31, como 1.0.3.1)', all(newer(a['version'], b['version']) for a, b in zip(entries, entries[1:])), str([e['version'] for e in entries][:6]))
     vj = json.loads(build.version_json(cards))
     check('version.json: su versión (%s) y lo que leen de ella las apps instaladas hasta la 1.0.31, para las que es posterior' % ver, vj['number'] == ver and build.old_newer(vj['version'], build.LAST_OLD) and vj['version'].split(' ')[0].replace(build.DOT, '.') == ver, vj['version'])
+    # las notas en inglés de la versión: obligatorias (build.py se detiene sin ellas), con los mismos apartados y puntos
+    en = build.cards(build.english(build.changelog()))[0].get('en') or []
+    shape = lambda sections, name: [('cabecera' if s.get('lead') else name(s['title']), len(s['items'])) for s in sections]
+    check('la versión tiene su nota en inglés (CHANGELOG.en.md), que dice lo mismo: los mismos apartados, con los mismos puntos', bool(en) and shape(en, lambda x: build.EN_SECTIONS[x]) == shape(cards[0]['sections'], lambda x: x), str(shape(en, lambda x: x)))
+    check('y está en inglés: ni «» ni letras del español', bool(en) and not any(c in json.dumps(en, ensure_ascii=False) for c in '«»áéíóúñ¿¡'), json.dumps(en, ensure_ascii=False)[:200])
     lead = [s for s in cards[0]['sections'] if s.get('lead')]
     if lead:
         check('su cabecera va la primera, con título y texto, y cabe en el aviso', cards[0]['sections'][0] is lead[0] and len(lead) == 1 and lead[0]['title'] and 1 <= len(lead[0]['items']) <= 8, str(lead))

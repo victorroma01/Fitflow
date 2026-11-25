@@ -224,6 +224,18 @@ def main(app):
                 check('manifiesto válido, con los accesos directos del icono (F-39)', m == ['./', 'standalone', 3, './?a=entreno,./?a=comida,./?a=peso'], str(m))
                 ic = ev("""fetch('manifest.webmanifest').then(r=>r.json()).then(j=>Promise.all([...j.icons.map(i=>i.src+':'+(i.purpose||'any')),...j.shortcuts.map(s=>s.icons[0].src)].map(u=>fetch(u.split(':')[0]).then(r=>[u,r.ok,r.headers.get('content-type')]))))""")
                 check('iconos del logo nuevo: el de la app, el adaptable de Android y uno propio para cada acceso directo (F-40, I-15)', [x[0] for x in ic] == ['icon-192.png:any', 'icon-512.png:any', 'icon-512-maskable.png:maskable', 'atajo-entreno.png', 'atajo-comida.png', 'atajo-peso.png'] and all(x[1] and 'png' in (x[2] or '') for x in ic), str(ic))
+                # con la app en inglés (tests/english.py), el manifiesto es el inglés: el mismo, con los textos de los accesos en inglés
+                c2 = b.new_context(viewport={'width': 390, 'height': 844}, locale='en-US', **CTX)
+                c2.add_init_script(INIT)
+                p2 = c2.new_page()
+                p2.goto(url)
+                p2.wait_for_timeout(800)
+                check('en inglés, el manifiesto es el inglés', p2.evaluate("[document.documentElement.lang, ...[...document.querySelectorAll('link[rel=manifest]')].map(l=>l.getAttribute('href'))].join()") == 'en,manifest.en.webmanifest')
+                me = p2.evaluate("Promise.all(['manifest.webmanifest','manifest.en.webmanifest'].map(u=>fetch(u).then(r=>r.json())))")
+                shape = lambda j: [j['start_url'], j['scope'], j['display'], j['icons'], [[s['url'], s['icons']] for s in j['shortcuts']]]
+                check('que es el mismo, con los nombres de los accesos directos en inglés', shape(me[0]) == shape(me[1]) and [me[0]['lang'], me[1]['lang']] == ['es', 'en'] and [s['name'] for s in me[1]['shortcuts']] == ["Today's workout", "Today's nutrition", 'Log your weight'], str([s['name'] for s in me[1]['shortcuts']]))
+                loaded_en = p2.evaluate("performance.getEntriesByType('resource').map(e=>e.name.split('/').pop())")
+                c2.close()
                 code = ['js/' + f for f in os.listdir(os.path.join(orig, 'js'))]
                 if SW:
                     ev("navigator.serviceWorker.ready.then(()=>1)")
@@ -231,12 +243,12 @@ def main(app):
                     pg.wait_for_timeout(1200)
                     check('service worker controla la página', ev('!!navigator.serviceWorker.controller'))
                     cached = ev("caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url.split('/fitflow/')[1]))))).then(a=>a.flat())")
-                    need = ['index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', ''] + code
+                    need = ['index.html', 'manifest.webmanifest', 'manifest.en.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', ''] + code
                     check('precarga completa (también el código js/)', all(n in cached for n in need), str([n for n in need if n not in cached]))
                     # lo que pide la página pasa por el service worker: el código sale de la caché sin volver a pedirlo al servidor y un
                     # icono (o el documento, o una foto), de la caché pero revalidado (I-09)
                     del REQS[:]
-                    eager = sorted(f for f in code if not re.match(r'js/(wod|csv|foods-online|exinfo|analysis|pdf)-', f))[0]
+                    eager = sorted(f for f in code if not re.match(r'js/(wod|csv|foods-online|exinfo|analysis|pdf|en-[a-z]+)-', f))[0]
                     ev("Promise.all([fetch('%s'),fetch('icon-192.png')]).then(()=>1)" % eager)
                     pg.wait_for_timeout(800)
                     check('el código sale de la caché sin pedirlo otra vez; un icono se revalida (I-09)', ('/fitflow/' + eager) not in REQS and '/fitflow/icon-192.png' in REQS, str(REQS[:12]))
@@ -245,12 +257,17 @@ def main(app):
                 # comprimido: líneas muy largas, de media más de 500 caracteres (los saltos que quedan son los de dentro de los textos;
                 # un archivo de menos de 5 KB no cuenta, ni el catálogo de ejercicios, que es texto, una línea por ejercicio)
                 check('el código va aparte y comprimido', bool(code) and ev("!!document.querySelector('script[type=module][src^=\"js/\"]')") and
-                      all(len(s) < 5000 or len(s) / (s.count('\n') + 1) > 500 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not f.startswith('js/exinfo-'))))
+                      all(len(s) < 5000 or len(s) / (s.count('\n') + 1) > 500 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not re.match(r'js/(en-)?exinfo-', f))))
                 # lo poco usado (WOD, CSV, escáner, el catálogo de consejos y ejecución, el análisis mensual y el PDF) va aparte y no se
                 # descarga al arrancar
                 lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo|analysis|pdf)-', f)]
                 loaded = ev("performance.getEntriesByType('resource').map(e=>e.name.split('/').pop())")
                 check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 6 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
+                # el inglés (el diccionario, en cinco trozos, y los consejos): en español no se descarga; en inglés, el diccionario
+                # al arrancar y los consejos, como en español, al abrir una ficha
+                english = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'en-(ui|more|library|foods|programs|exinfo)-', f)]
+                check('el inglés va aparte y, en español, no se carga', len(english) == 6 and not any(f in loaded for f in english), str(english))
+                check('en inglés se carga el diccionario al arrancar, y los consejos no', sorted(f for f in english if f in loaded_en) == sorted(f for f in english if not f.startswith('en-exinfo-')), str(loaded_en))
                 assets = ev("[...new Set([...document.documentElement.outerHTML.matchAll(/(?:src=\"|url\\()((?:img)\\/[^\"')]+)/g)].map(m=>m[1]))]")
                 # sin conexión
                 if SW:
