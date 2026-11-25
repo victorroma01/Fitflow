@@ -673,6 +673,11 @@ def main(path):
                 # (el texto se carga al abrirlo: se espera a que esté. Si falla, dice si la configuración sigue puesta, si el texto
                 # está en la página aunque no se lea, y cómo acaba)
                 wait(pa, "!!document.querySelector('#lgl .legal-text h2')", 15000)
+                # (y a que se vea: mientras la página entra, su texto aún no cuenta como visible)
+                for _ in range(60):
+                    if pa.evaluate("(e => !!e && e.innerText.includes('reCAPTCHA Enterprise'))(document.querySelector('#sh'))"):
+                        break
+                    pa.wait_for_timeout(100)
                 seen = pa.inner_text('#sh')
                 check('y Privacidad lo cuenta', 'reCAPTCHA Enterprise' in seen,
                       repr([pa.evaluate('appCheckOn()'), 'reCAPTCHA Enterprise' in pa.evaluate("document.querySelector('#sh').textContent"), len(seen), seen[-160:]]))

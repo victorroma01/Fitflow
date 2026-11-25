@@ -110,11 +110,12 @@ def contrast(pg):
     total = pg.evaluate('document.documentElement.scrollHeight')
     h = pg.evaluate('innerHeight')
     for y in range(0, max(1, total - h + 1), max(60, h // 2)):
-        pg.evaluate('window.scrollTo(0, %d)' % y)
+        # (de golpe: la app desplaza suave (scroll-behavior) y, a medio camino, cada texto se medía en otro sitio de la captura)
+        pg.evaluate("y => window.scrollTo({ top: y, behavior: 'instant' })", y)
         for r in measure(pg):
             if r[0] < r[1] - .005:
                 bad.append('«%s» %.2f:1 (pide %.1f) %s sobre %s' % (r[2][:22], r[0], r[1], r[4], r[5]) + ('' if bad else ' (bajado %d de %d: %s)' % (y, total, behind(pg, r[2][:22]))))
-    pg.evaluate('window.scrollTo(0, 0)')
+    pg.evaluate("window.scrollTo({ top: 0, behavior: 'instant' })")
     return bad
 
 
