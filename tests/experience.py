@@ -566,7 +566,8 @@ def main(path):
             run(1500)
             check('?a=%s abre %s y deja limpia la dirección' % (a, {'peso': 'Evolución del peso', 'comida': 'Nutrición', 'entreno': 'Workout', 'otra': 'la app (no existe: se ignora)'}[a]), ev('S.tab') == tb and ev('weightView') == wv and ev('location.search') == '', '%s %s %s' % (ev('S.tab'), ev('weightView'), ev('location.search')))
         # los textos legales tienen también su dirección (V1.0.4), para enlazarlos: con sesión se abren sobre la app
-        for a, text in [('privacidad', 'Política de privacidad de StrataFit'), ('aviso-legal', 'Aviso legal y condiciones de uso'), ('privacy', 'Política de privacidad de StrataFit'), ('terms', 'Aviso legal y condiciones de uso')]:
+        for a, text in [('privacidad', 'Política de privacidad de StrataFit'), ('aviso-legal', 'Aviso legal y condiciones de uso'), ('privacy', 'Política de privacidad de StrataFit'), ('terms', 'Aviso legal y condiciones de uso'),
+                        ('consentimiento', 'Consentimiento informado para el tratamiento de datos de salud')]:
             pg.goto(url + '?a=' + a)
             run(1500)
             # el texto se carga al abrirlo: se pregunta desde aquí hasta que está (la CSP no deja evaluar texto dentro de la página)

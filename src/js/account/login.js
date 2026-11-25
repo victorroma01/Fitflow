@@ -119,8 +119,9 @@ const signUpExtra = () => html`
     Usuario de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo. Contraseña de 8 caracteres o más.
   </p>`;
 /** Las dos casillas, sin marcar, de crear la cuenta y de la pantalla de la aceptación: las condiciones de uso (con la edad) y el
-    consentimiento expreso para los datos de salud, cada una con su texto a un toque. Su texto es el de la versión vigente del
-    consentimiento (cloud/consent, LEGAL.health): si cambia, cambia su versión. */
+    consentimiento expreso para los datos de salud, cada una con su texto entero a un toque (el Aviso legal y el consentimiento
+    informado, data/legal). La casilla y ese texto son los de la versión vigente del consentimiento (cloud/consent,
+    LEGAL.health): si cambian, cambia su versión. */
 const consentChecks = () => html`
   <div class="consent-checks">
     <label class="setting-check consent-check">
@@ -133,7 +134,9 @@ const consentChecks = () => html`
     <label class="setting-check consent-check">
       <input type="checkbox" id="lgc2" data-c="loginConsent" data-i="2"${raw(loginState.c2 ? ' checked' : '')}>
       <span>
-        Consiento expresamente que StrataFit trate los datos relativos a mi salud que decida introducir para gestionar mi seguimiento físico, deportivo y nutricional. Puedo retirar mi consentimiento en cualquier momento desde Privacidad, sin afectar al tratamiento realizado anteriormente.
+        Acepto el tratamiento de mis datos de salud por StrataFit según el <button type="button" class="legal-link" data-a="openLegal"
+            data-v="consent">Consentimiento informado</button>
+        .
       </span>
     </label>
     <p class="muted consent-note">

@@ -4,7 +4,8 @@
 // · Ningún dato pendiente: ni un marcador entre corchetes de los borradores, ni un correo, una dirección postal o un NIF que el
 //   titular no ha confirmado.
 // · Lo decidido está escrito: 16 años, dos años sin actividad, sin delegado de protección de datos, y reCAPTCHA sin remitir a
-//   las condiciones de Google (Google lo trata por encargo desde el 2 de abril de 2026 y pide no nombrarlas).
+//   las condiciones de Google (Google lo trata por encargo desde el 2 de abril de 2026 y pide no nombrarlas). Y el
+//   consentimiento informado para los datos de salud: el texto entero de la segunda casilla, que dice lo mismo que ella.
 // · El inglés es el mismo texto: los mismos apartados, con los mismos párrafos, listas y enlaces, y dice que vale el español.
 // · Los enlaces: a otra pantalla de la app o a una dirección https de las conocidas; nada más sale como enlace, y lo que se
 //   escribe se escapa.
@@ -15,7 +16,7 @@ import { readFileSync } from 'node:fs';
 import { legalBlock, parseLegal } from '../src/js/profile/legaltext.js';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
-/* los tres textos de un módulo (terms, privacy y cards), tal como están escritos */
+/* los textos de un módulo (terms, privacy, consent y cards), tal como están escritos */
 const texts = f => {
   const src = read(f);
   const part = k => {
@@ -23,7 +24,7 @@ const texts = f => {
     assert.ok(m, f + ': falta ' + k);
     return m[1];
   };
-  return { terms: part('terms'), privacy: part('privacy'), cards: part('cards') };
+  return { terms: part('terms'), privacy: part('privacy'), consent: part('consent'), cards: part('cards') };
 };
 const ES = texts('src/js/data/legal.js');
 const EN = texts('src/js/i18n/en-legal.js');
@@ -58,13 +59,15 @@ test('lo escrito se escapa; solo salen negritas y enlaces a la app o a una direc
   assert.equal(legalBlock(['uno', '**dos**'], esc), '<ul><li>uno</li><li><b>dos</b></li></ul>');
 });
 
-test('los dos textos, enteros: 16 apartados el aviso y 20 la política, numerados, con título y sin restos del borrador', () => {
+test('los textos, enteros: 16 apartados el aviso, 20 la política y 9 el consentimiento, numerados, con título y sin restos del borrador', () => {
   for (const [lang, T] of [['es', ES], ['en', EN]]) {
     const terms = parseLegal(T.terms);
     const privacy = parseLegal(T.privacy);
+    const consent = parseLegal(T.consent);
     assert.equal(terms.sections.length, 16, lang);
     assert.equal(privacy.sections.length, 20, lang);
-    for (const d of [terms, privacy]) {
+    assert.equal(consent.sections.length, 9, lang);
+    for (const d of [terms, privacy, consent]) {
       assert.ok(d.title.length > 10, lang + ': título');
       d.sections.forEach((s, i) => {
         assert.ok(s.t.startsWith(i + 1 + '. '), lang + ': ' + s.t);
@@ -75,7 +78,7 @@ test('los dos textos, enteros: 16 apartados el aviso y 20 la política, numerado
     const cards = T.cards.trim().split('\n').map(l => l.split('|'));
     assert.equal(cards.length, 6, lang + ': seis tarjetas');
     assert.ok(cards.every(c => c.length == 2 && c[0].trim() && c[1].trim()), lang);
-    const all = T.terms + T.privacy + T.cards;
+    const all = T.terms + T.privacy + T.consent + T.cards;
     /* marcadores de los borradores ([FECHA_VIGENCIA], [CORREO OFICIAL DE SOPORTE]…) y corchetes sueltos que no son un enlace */
     assert.deepEqual(all.match(/\[[A-ZÁÉÍÓÚÑ_ ,]{4,}\]/g), null, lang);
     assert.deepEqual(all.replace(/\[[^\]\n]+\]\([^)\s]+\)/g, '').match(/[\[\]]/g), null, lang + ': corchetes que no son enlaces');
@@ -83,7 +86,7 @@ test('los dos textos, enteros: 16 apartados el aviso y 20 la política, numerado
     assert.ok(!/@[\w-]+\.\w|\bNIF\b|\bDNI\b|github\.io|mailto:/i.test(all), lang + ': un dato sin confirmar');
     assert.ok(!/TODO|PENDIENTE|XXX/.test(all), lang);
     /* el HTML que sale no lleva nada sin cerrar ni etiquetas que no sean las cinco de siempre */
-    for (const d of [terms, privacy]) {
+    for (const d of [terms, privacy, consent]) {
       const h = html(d);
       assert.deepEqual([...new Set((h.match(/<\/?([a-z]+)/g) || []).map(x => x.replace(/[</]/g, '')))].sort(), ['a', 'b', 'button', 'li', 'p', 'ul'].filter(t => new RegExp('<' + t + '[ >]').test(h)), lang);
       for (const t of ['p', 'b', 'ul', 'li', 'a', 'button'])
@@ -95,13 +98,16 @@ test('los dos textos, enteros: 16 apartados el aviso y 20 la política, numerado
 
 test('los enlaces: a las pantallas de la app y a direcciones https conocidas', () => {
   for (const [lang, T] of [['es', ES], ['en', EN]]) {
-    const all = links(T.terms).concat(links(T.privacy));
+    const all = links(T.terms).concat(links(T.privacy), links(T.consent));
     assert.ok(all.length >= 12, lang);
     for (const u of all)
-      assert.ok(['#privacy', '#terms', '#contact'].includes(u) || HOSTS.includes(new URL(u).host) && u.startsWith('https://'), lang + ': ' + u);
-    /* cada texto lleva al otro, y los dos al contacto */
+      assert.ok(['#privacy', '#terms', '#consent', '#contact'].includes(u) || HOSTS.includes(new URL(u).host) && u.startsWith('https://'), lang + ': ' + u);
+    /* cada texto lleva al otro, y los dos al contacto; la política, al consentimiento, y este a la política y al contacto */
     assert.ok(links(T.terms).includes('#privacy') && links(T.privacy).includes('#terms'), lang);
     assert.ok(links(T.terms).includes('#contact') && links(T.privacy).includes('#contact'), lang);
+    assert.ok(links(T.privacy).includes('#consent') && links(T.consent).includes('#privacy') && links(T.consent).includes('#contact'), lang);
+    /* el consentimiento solo lleva a la app: nada de otras webs */
+    assert.ok(links(T.consent).every(u => u.startsWith('#')), lang);
     assert.equal(links(T.cards).length, 0);
   }
 });
@@ -130,12 +136,25 @@ test('lo decidido por el titular está escrito', () => {
     assert.equal(links(recaptcha.b.join(' ')).length, 0);
   }
   assert.match(ES.privacy, /Google trata esa información por cuenta de StrataFit, como encargado del tratamiento/);
+  /* el consentimiento: lo que dice la casilla, su base, quién lo ve, qué pasa sin él y al retirarlo, y su constancia */
+  const consent = ES.consent;
+  const box = read('src/js/account/login.js').replace(/\s+/g, ' ');
+  const said = /«(Acepto el tratamiento de mis datos de salud por StrataFit)»/.exec(consent);
+  assert.ok(said && box.includes(said[1] + ' según el <button type="button" class="legal-link" data-a="openLegal" data-v="consent">Consentimiento informado</button>'), 'la casilla dice lo que cita el texto');
+  assert.match(consent, /^# Consentimiento informado para el tratamiento de datos de salud$/m);
+  assert.match(consent, /artículo 9\.2\.a del Reglamento General de Protección de Datos/);
+  assert.match(consent, /El administrador de StrataFit no ve tus entrenamientos, tus comidas, tus medidas ni tu copia de seguridad/);
+  assert.match(consent, /sin tu consentimiento no puedes usar la aplicación con tu cuenta/);
+  assert.match(consent, /Privacidad → Tus datos → Retirar el consentimiento/);
+  assert.match(consent, /Retirarlo no afecta a la licitud del tratamiento anterior/);
+  assert.match(consent, /la versión de este texto que aceptaste, la fecha y la hora/);
+  assert.match(EN.consent, /"I accept the processing of my health data by StrataFit"/);
   /* sin pagos ni precios */
   assert.ok(!/€|\beuros?\b|14 días/i.test(terms + privacy));
 });
 
 test('el inglés es el mismo texto: mismos apartados, bloques y enlaces, y dice que vale el español', () => {
-  for (const k of ['terms', 'privacy']) {
+  for (const k of ['terms', 'privacy', 'consent']) {
     const es = parseLegal(ES[k]);
     const en = parseLegal(EN[k]);
     /* el inglés lleva un párrafo más antes del primer apartado: el que dice que es una traducción */
@@ -163,7 +182,7 @@ test('versión y fecha de cada texto, y lo que se da por aceptado', async () => 
   const m = /export const LEGAL = (\{[\s\S]*?\n\});/.exec(src);
   assert.ok(m);
   const LEGAL = Function('return ' + m[1])();
-  for (const k of ['terms', 'privacy']) {
+  for (const k of ['terms', 'privacy', 'health']) {
     assert.match(LEGAL[k].v, /^\d+\.\d+$/);
     assert.match(LEGAL[k].date, /^20\d\d-\d\d-\d\d$/);
     assert.ok(!Number.isNaN(Date.parse(LEGAL[k].date + 'T12:00:00')));

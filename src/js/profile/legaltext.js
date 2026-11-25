@@ -42,7 +42,7 @@ export const parseLegal = src => {
 /* A dónde lleva un enlace de los textos a otra pantalla de la app: [acción, dato]. (#privacy) la Política de privacidad,
    (#terms) el Aviso legal y (#contact) el contacto de privacidad (system/report). */
 /** @type {Record<string, [string, string]>} */
-const LEGAL_LINKS = { '#privacy': ['openLegal', 'privacy'], '#terms': ['openLegal', 'terms'], '#contact': ['openPrivacyContact', ''] };
+const LEGAL_LINKS = { '#privacy': ['openLegal', 'privacy'], '#terms': ['openLegal', 'terms'], '#consent': ['openLegal', 'consent'], '#contact': ['openPrivacyContact', ''] };
 /* El texto de un párrafo, ya en HTML: escapado con `esc` (core/util, X), con sus **negritas** y sus [enlaces](destino). Un
    enlace a otra cosa que una pantalla de la app o una dirección https se queda en su texto. */
 /** @param {string} s

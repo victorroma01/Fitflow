@@ -1,4 +1,4 @@
-"""Capturas de 50 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
+"""Capturas de 51 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
 
   python3 tests/shots.py snap ARCHIVO.html carpeta a,b,c,d,e,f [mapa.txt]   (genera carpeta/<cfg>_<pantalla>.png)
   Con mapa.txt («registro viejo nuevo», tests/nombres-1.0.2.txt), ARCHIVO es de antes de renombrar las acciones: las pantallas se
@@ -66,6 +66,7 @@ SCR={
  # los textos legales (V1.0.4), que se abren al terminar de cargarse (una promesa, que la prueba espera), y «Eliminar cuenta»
  'privacidad':"S.tab=3;R();A.openLegal&&(A.openSettings(),A.openLegal(0,{dataset:{v:'privacy'}}))",
  'aviso_legal':"S.tab=3;R();A.openLegal&&(A.openSettings(),A.openLegal(0,{dataset:{v:'terms'}}))",
+ 'consentimiento':"S.tab=3;R();A.openLegal&&(A.openSettings(),A.openLegal(0,{dataset:{v:'consent'}}))",
  'eliminar_cuenta':"S.tab=3;R();A.openDeleteAccount&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'cuenta'}}),A.openDeleteAccount())",
 }
 CFG={ # nombre: (w,h,scheme,gm,gl)

@@ -1,10 +1,11 @@
 /* ═══ profile/legal ═══
-   Las dos páginas legales: «Privacidad» (la Política de privacidad, con su resumen en seis tarjetas y, con la sesión abierta,
-   «Tus datos»: copia, retirar el consentimiento, borrar los datos, eliminar la cuenta y contacto) y «Aviso legal» (Aviso legal
-   y condiciones de uso). Cada una, con su fecha y su versión (cloud/consent, LEGAL), un índice que lleva a cada apartado y el
-   texto entero a la vista, con sus títulos.
-   Se abren sin sesión: desde el inicio de sesión y sus casillas (account/login), desde Ajustes → Información y con la dirección
-   de la app acabada en ?a=privacidad o ?a=aviso-legal (system/phone).
+   Las páginas legales: «Privacidad» (la Política de privacidad, con su resumen en seis tarjetas y, con la sesión abierta, «Tus
+   datos»: copia, retirar el consentimiento, borrar los datos, eliminar la cuenta y contacto), «Aviso legal» (Aviso legal y
+   condiciones de uso) y el consentimiento informado para los datos de salud, que es el texto entero de la segunda casilla de
+   crear la cuenta. Cada una, con su fecha y su versión (cloud/consent, LEGAL), un índice que lleva a cada apartado y el texto
+   entero a la vista, con sus títulos.
+   Se abren sin sesión: desde el inicio de sesión y sus casillas (account/login), desde Ajustes → Información (las dos primeras)
+   y con la dirección de la app acabada en ?a=privacidad, ?a=aviso-legal o ?a=consentimiento (system/phone).
    Los textos son los de data/legal (en inglés, i18n/en-legal), que se descargan la primera vez que se abren (core/lazy) y se
    apuntan aquí (setLegal). Van escritos en un Markdown mínimo, que lee y pasa a HTML profile/legaltext: de él solo salen
    párrafos, listas, negritas y enlaces, a otra pantalla de la app o a una dirección https, que se abre aparte.
@@ -22,13 +23,13 @@ import { account } from '../cloud/session.js';
 import { consentOf, consentPending, LEGAL } from '../cloud/consent.js';
 import { legalBlock, parseLegal } from './legaltext.js';
 import { html, raw } from '../core/html.js';
-/** Los textos cargados: { terms, privacy: { title, motto, intro: bloques, sections: [{ t, b: bloques }] }, cards: [[título,
-    texto]…] }; null hasta que llegan. Un bloque es un párrafo (un texto) o una lista (varios).
+/** Los textos cargados: { terms, privacy, consent: { title, motto, intro: bloques, sections: [{ t, b: bloques }] }, cards:
+    [[título, texto]…] }; null hasta que llegan. Un bloque es un párrafo (un texto) o una lista (varios).
     @type {any} */
 let legal = null;
 /** Lo llaman data/legal o i18n/en-legal al cargarse, con los textos tal como están escritos. */
 export const setLegal = src => {
-  legal = { terms: parseLegal(src.terms), privacy: parseLegal(src.privacy), cards: String(src.cards).trim().split('\n').map(l => l.split('|')) };
+  legal = { terms: parseLegal(src.terms), privacy: parseLegal(src.privacy), consent: parseLegal(src.consent), cards: String(src.cards).trim().split('\n').map(l => l.split('|')) };
 };
 /* ejecuta `f` con los textos cargados (la primera vez los descarga; si no llegan, avisa). Promesa: se cumple al terminar */
 const withLegal = f => (legal ? Promise.resolve() : loadLegal()).then(f).catch(e => {
@@ -66,6 +67,7 @@ const dataBlock = () => {
     <div class="muted legal-status">
       ${c.t ? html`<div>· ${say `Condiciones de uso aceptadas el ${markDay(c.t)} (versión ${c.t.v})`}</div>` : ''}
       ${c.h ? html`<div>· ${say `Consentimiento para tratar tus datos de salud, dado el ${markDay(c.h)} (versión ${c.h.v})`}</div>` : ''}
+      <button class="legal-link" data-a="openLegal" data-v="consent">Leer el consentimiento</button>
     </div>
     ${linkRow('bkp', 'Exportar una copia', 'Tus datos en un archivo, para guardarlos o llevártelos', 'legalBackup')}
     ${linkRow('shd', 'Contactar sobre privacidad', 'Dudas o solicitudes sobre tus datos; te contestamos en la app', 'openPrivacyContact')}
@@ -75,10 +77,10 @@ const dataBlock = () => {
 };
 /* adónde vuelve «←»: a Ajustes si se abrió desde allí; si no, se cierra */
 let legalBack = '';
-/* una de las dos páginas: 'privacy' o 'terms' */
+/* una de las páginas: 'privacy', 'terms' o 'consent' (la fecha y la versión de este último, las del consentimiento: health) */
 const legalPage = kind => {
   const d = legal[kind];
-  const meta = LEGAL[kind];
+  const meta = LEGAL[kind == 'consent' ? 'health' : kind];
   return html`
     <div id="lgl" class="legal-page" lang="${LANG}">
       ${pgHead(X(d.title), legalBack)}
@@ -100,9 +102,11 @@ const legalPage = kind => {
     </div>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
-/** Abre «Privacidad» (data-v="privacy") o «Aviso legal» (data-v="terms"), con sesión o sin ella. */
+/** Abre «Privacidad» (data-v="privacy"), «Aviso legal» (data-v="terms") o el consentimiento informado (data-v="consent"),
+    con sesión o sin ella. */
 A.openLegal = (i, b) => {
-  const kind = b && b.dataset && b.dataset.v == 'terms' ? 'terms' : 'privacy';
+  const v = b && b.dataset ? b.dataset.v : '';
+  const kind = v == 'terms' || v == 'consent' ? v : 'privacy';
   /* «←» vuelve a Ajustes si se abrió desde allí; al pasar de un texto al otro, o al volver de «Eliminar cuenta», adonde ya
      volvía */
   if ($('#ajs'))

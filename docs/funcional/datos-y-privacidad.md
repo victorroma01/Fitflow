@@ -8,9 +8,10 @@ son esos.
 
 Desde la V1.0.4:
 
-- **Para crear una cuenta** hay que marcar dos casillas, que salen sin marcar: tener 16 años o más y aceptar las condiciones de
-  uso, y consentir que la app trate los datos de salud que decidas introducir (entrenos, comidas, medidas, peso). Sin las dos no
-  se crea.
+- **Para crear una cuenta** hay que marcar dos casillas, que salen sin marcar: «Tengo 16 años o más y acepto las Condiciones de
+  uso» y «Acepto el tratamiento de mis datos de salud por StrataFit según el Consentimiento informado». Sin las dos no se crea.
+  Cada casilla enlaza su texto entero: el Aviso legal y el **consentimiento informado**, que explica qué datos de salud son
+  (entrenos, comidas, medidas, peso…), para qué se usan, quién los ve, qué pasa si no lo das y cómo retirarlo.
 - **Con una cuenta que ya tenías**, la app te lo pide una vez, al abrirla: hasta aceptarlo no enseña tus datos ni sincroniza. Si
   prefieres no aceptar, desde esa pantalla puedes exportar una copia, borrar tus datos, eliminar la cuenta o cerrar la sesión.
 - **Qué queda anotado**: qué aceptaste, qué versión del texto y cuándo. Nada más. Lo ves en Privacidad → Tus datos.

@@ -158,8 +158,7 @@ def main(path):
           return { id: i.id, type: i.type, on: i.checked, label: i.labels.length == 1 && i.labels[0] === l, text: l.textContent.replace(/\\s+/g, ' ').trim(), size: parseFloat(s.fontSize), box: Math.round(r.width) }; })""")
         check('al crear cuenta, dos casillas sin marcar: las condiciones (con la edad) y el consentimiento para los datos de salud',
               [x['id'] for x in boxes] == ['lgc1', 'lgc2'] and all(x['type'] == 'checkbox' and not x['on'] and x['label'] for x in boxes)
-              and boxes[0]['text'] == 'Tengo 16 años o más y acepto las Condiciones de uso.' and boxes[1]['text'].startswith('Consiento expresamente que StrataFit trate los datos relativos a mi salud')
-              and 'Puedo retirar mi consentimiento en cualquier momento desde Privacidad' in boxes[1]['text'], str(boxes))
+              and boxes[0]['text'] == 'Tengo 16 años o más y acepto las Condiciones de uso.' and boxes[1]['text'] == 'Acepto el tratamiento de mis datos de salud por StrataFit según el Consentimiento informado.', str(boxes))
         check('pequeñas: letra de menos de 14 px y casilla de 18', all(x['size'] < 14 and x['box'] == 18 for x in boxes), str([(x['size'], x['box']) for x in boxes]))
         check('al entrar no hay casillas', pg.evaluate("(A.loginMode(0,{dataset:{v:'in'}}), !document.querySelector('#lgw .consent-check'))"))
         pg.evaluate("A.loginMode(0,{dataset:{v:'up'}})")
@@ -168,6 +167,16 @@ def main(path):
         check('el enlace de la casilla abre las Condiciones de uso, sin sesión, y no marca la casilla',
               pg.inner_text('#lgl .page-title') == 'Aviso legal y condiciones de uso' and not pg.is_checked('#lgc1'), pg.inner_text('#lgl .page-title'))
         pg.click('#sh [aria-label=Volver]')
+        # la segunda casilla es corta; su enlace abre el consentimiento entero, explicado
+        pg.click('#lgw .consent-check [data-a=openLegal][data-v=consent]')
+        wait(pg, "!!document.querySelector('#lgl .legal-text h2')", 10000)
+        told = pg.inner_text('#lgl')
+        check('el enlace de la segunda abre el consentimiento informado entero, sin sesión, y no marca la casilla',
+              pg.inner_text('#lgl .page-title') == 'Consentimiento informado para el tratamiento de datos de salud' and not pg.is_checked('#lgc2')
+              and pg.evaluate("document.querySelectorAll('#lgl section').length") == 9 and 'Retirar el consentimiento' in told and 'Versión 1.0' in told
+              and not pg.evaluate("!!document.querySelector('#lgl .legal-card, #lgl [data-a=openDeleteAccount]')"), told[:200])
+        pg.click('#sh [aria-label=Volver]')
+        wait(pg, "!document.getElementById('lgl')", 5000)
         pg.locator('#lgw .consent-check').first.click(position={'x': 30, 'y': 8})
         check('tocar el texto de la casilla la marca', pg.is_checked('#lgc1') and not pg.is_checked('#lgc2'))
         pg.fill('#lgu', 'Luz_0')
@@ -185,7 +194,8 @@ def main(path):
         check('sin datos pendientes a la vista (corchetes de los borradores)', '[' not in seen and ']' not in seen)
         # cada texto tiene su dirección, que vale sin cuenta: es la que se puede enlazar desde fuera
         base = pg.url.split('?')[0]
-        for a, title in (('privacidad', 'Política de privacidad de StrataFit'), ('aviso-legal', 'Aviso legal y condiciones de uso'), ('privacy', 'Política de privacidad de StrataFit'), ('terms', 'Aviso legal y condiciones de uso')):
+        for a, title in (('privacidad', 'Política de privacidad de StrataFit'), ('aviso-legal', 'Aviso legal y condiciones de uso'), ('privacy', 'Política de privacidad de StrataFit'), ('terms', 'Aviso legal y condiciones de uso'),
+                         ('consentimiento', 'Consentimiento informado para el tratamiento de datos de salud'), ('consent', 'Consentimiento informado para el tratamiento de datos de salud')):
             pg.goto(base + '?a=' + a)
             wait(pg, 'window.__ffok')
             wait(pg, "!!document.querySelector('#lgl .page-title')", 10000)

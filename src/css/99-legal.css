@@ -104,6 +104,12 @@ html.glass .legal-link {
   margin:0 2px 8px;
   font-size:13.5px;
 }
+/* «Leer el consentimiento», debajo de lo aceptado: un enlace con su altura para tocarlo (44 px) */
+.legal-status .legal-link {
+  display:inline-flex;
+  align-items:center;
+  min-height:44px;
+}
 /* el índice: cada apartado, con su número, a un toque; responde toda la fila */
 .legal-index {
   margin:18px 0 6px;

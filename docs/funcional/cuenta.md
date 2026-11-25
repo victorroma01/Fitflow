@@ -10,8 +10,9 @@ Al abrir la app sin cuenta solo se ve la pantalla de inicio, con dos pestañas:
 - **Crear cuenta**: usuario, contraseña y repetirla. El usuario tiene de 3 a 20 caracteres (letras sin tilde, números, punto, guion
   y guion bajo) y es único: si ya existe, la app lo dice. La contraseña tiene 8 caracteres o más. Da igual escribir el usuario con
   mayúsculas o minúsculas: sale siempre como se registró. Desde la V1.0.4 hay que marcar además dos casillas, que salen sin
-  marcar: una dice que tienes 16 años o más y aceptas las condiciones de uso; la otra, que consientes el tratamiento de los
-  datos de salud que introduzcas. Sin las dos, la app dice cuál falta y no crea la cuenta.
+  marcar: una dice que tienes 16 años o más y aceptas las condiciones de uso; la otra, que aceptas el tratamiento de tus datos
+  de salud según el consentimiento informado. Cada una enlaza su texto entero. Sin las dos, la app dice cuál falta y no crea la
+  cuenta.
 - **Entrar**: usuario y contraseña. El ojo del campo enseña u oculta la contraseña.
 
 Debajo, **Privacidad** y **Aviso legal** abren los dos textos sin tener cuenta, igual que los enlaces de las casillas.

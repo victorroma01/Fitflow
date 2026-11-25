@@ -390,6 +390,9 @@ def main(path):
         ev("A.openLegal(0,{dataset:{v:'terms'}})")
         pg.wait_for_timeout(300)
         look('y el aviso legal', lambda t: 'Legal notice and terms of use' in t and 'the Spanish version prevails' in t)
+        ev("A.openLegal(0,{dataset:{v:'consent'}})")
+        pg.wait_for_timeout(300)
+        look('y el consentimiento para los datos de salud', lambda t: 'Informed consent for the processing of health data' in t and 'the Spanish version prevails' in t and 'Withdraw consent' in t)
         c.close()
         c, pg = context('en-US')
         ev = pg.evaluate

@@ -1,11 +1,13 @@
 /* ═══ data/legal ═══
    Los textos legales de StrataFit, en español: el Aviso legal y condiciones de uso (terms) y la Política de privacidad
-   (privacy), con las tarjetas de su resumen (cards). Es la única fuente de estos textos (en inglés, i18n/en-legal): va en un
+   (privacy), con las tarjetas de su resumen (cards), y el consentimiento informado para los datos de salud (consent), que es el
+   texto entero de la segunda casilla de crear la cuenta. Es la única fuente de estos textos (en inglés, i18n/en-legal): va en un
    archivo aparte que se descarga al abrirlos (core/lazy) y se lo pasa a profile/legal, que los pinta. Su versión y su fecha
    de vigencia están en cloud/consent (LEGAL), que es también lo que se anota al aceptarlos.
    Cada texto va escrito como un Markdown mínimo, que lee profile/legal: «# » el título, «> » el lema, «## » cada apartado,
    «- » una lista, una línea en blanco entre párrafos, **negrita** y [enlaces](https://…). Los enlaces a otras pantallas de la
-   app: (#privacy) la Política de privacidad, (#terms) el Aviso legal y (#contact) el contacto (Fallos y sugerencias).
+   app: (#privacy) la Política de privacidad, (#terms) el Aviso legal, (#consent) el consentimiento y (#contact) el contacto
+   (Fallos y sugerencias).
    Las tarjetas, una por línea: «Título|Texto».
 */
 import { setLegal } from '../profile/legal.js';
@@ -172,7 +174,7 @@ El tratamiento se rige por el Reglamento (UE) 2016/679, Reglamento General de Pr
 
 **Datos de la cuenta.** Para registrarte necesitas un nombre de usuario y una contraseña. No es necesario proporcionar tu nombre y apellidos reales, correo electrónico personal, teléfono, documento de identidad, dirección postal, ubicación precisa ni datos bancarios para utilizar las funcionalidades descritas en esta política. Te recomendamos elegir un nombre de usuario que no te identifique directamente. Las credenciales se gestionan mediante Firebase Authentication, que para ello asocia a tu nombre de usuario un identificador técnico que no es un buzón de correo real; las contraseñas se protegen mediante mecanismos criptográficos y no se muestran al administrador de StrataFit. La única excepción es la contraseña temporal que el administrador genera si le pides restablecer la tuya: puede verla durante 24 horas para entregártela y la aplicación te obliga a sustituirla por una nueva al entrar.
 
-**Entrenamiento, nutrición y progreso.** Según las funciones que utilices y la información que decidas introducir, podemos almacenar rutinas, ejercicios, sesiones, series, repeticiones, cargas, marcas, historial deportivo, comidas, calorías, macronutrientes, objetivos nutricionales, peso, medidas corporales y registros de evolución. Estos datos permiten ofrecer las funcionalidades solicitadas y hacer el seguimiento de tus objetivos. Determinados datos pueden revelar información relativa a la salud; por eso te pedimos tu consentimiento explícito antes de tratarlos, al crear la cuenta o, si tu cuenta es anterior a esta política, al abrir la aplicación.
+**Entrenamiento, nutrición y progreso.** Según las funciones que utilices y la información que decidas introducir, podemos almacenar rutinas, ejercicios, sesiones, series, repeticiones, cargas, marcas, historial deportivo, comidas, calorías, macronutrientes, objetivos nutricionales, peso, medidas corporales y registros de evolución. Estos datos permiten ofrecer las funcionalidades solicitadas y hacer el seguimiento de tus objetivos. Determinados datos pueden revelar información relativa a la salud; por eso te pedimos tu consentimiento explícito antes de tratarlos, al crear la cuenta o, si tu cuenta es anterior a esta política, al abrir la aplicación. Su alcance se explica en el [consentimiento informado para el tratamiento de datos de salud](#consent).
 
 **Perfil y preferencias.** Podemos almacenar el nombre de usuario, el sexo indicado en el perfil, la fotografía de perfil opcional, la apariencia, las unidades de medida, los ajustes de sonido, el estado del recorrido introductorio y otros ajustes que configures.
 
@@ -330,6 +332,60 @@ StrataFit se compromete a tratar tu información de manera responsable, transpar
 **Tu esfuerzo te pertenece. Tu progreso también.**
 
 StrataFit — Entrenamiento, nutrición y progreso personal.
+`,
+  consent: `
+# Consentimiento informado para el tratamiento de datos de salud
+
+Es el consentimiento que das al marcar la casilla «Acepto el tratamiento de mis datos de salud por StrataFit» al crear tu cuenta o al aceptar las condiciones. Aquí te explicamos qué datos son, para qué los usamos, quién puede verlos y cómo puedes retirarlo. Complementa la [Política de privacidad](#privacy).
+
+## 1. Qué consientes
+
+Consientes de forma expresa que StrataFit trate los datos relativos a tu salud que decidas introducir en la aplicación, con la única finalidad de gestionar tu seguimiento físico, deportivo y nutricional.
+
+## 2. Qué datos son
+
+Son los registros que introduces y lo que la aplicación calcula a partir de ellos, porque pueden revelar información sobre tu salud:
+
+- **Entrenamiento:** rutinas, ejercicios, series, repeticiones, cargas, esfuerzo percibido, notas y marcas.
+- **Nutrición:** comidas, calorías, macronutrientes, agua y objetivos nutricionales.
+- **Cuerpo:** peso, medidas corporales y los datos del perfil que se usan en los cálculos, como el sexo, la edad, la altura, el nivel de actividad y el objetivo.
+- **Progreso:** historial, récords, logros y estadísticas que salen de lo anterior.
+
+La aplicación no te pide diagnósticos, enfermedades ni medicación. Te recomendamos no escribirlos en las notas.
+
+## 3. Para qué los usamos
+
+Solo para prestarte las funciones de StrataFit: guardar y mostrar tus registros; calcular cifras como calorías, macronutrientes, cargas sugeridas y progresión; enseñarte tu evolución y tus récords; sincronizarlos entre tus dispositivos; y guardar tu copia de seguridad en la nube.
+
+No los vendemos, no los usamos con fines publicitarios y no se toman con ellos decisiones automatizadas que produzcan efectos jurídicos sobre ti.
+
+## 4. Base jurídica
+
+Tu consentimiento explícito (artículo 9.2.a del Reglamento General de Protección de Datos), junto con la base del artículo 6 que corresponda a cada uso, como explica la [Política de privacidad](#privacy).
+
+## 5. Quién puede verlos y dónde se guardan
+
+Tus registros están asociados a tu cuenta y protegidos mediante autenticación y reglas de seguridad: solo tú puedes verlos. El administrador de StrataFit no ve tus entrenamientos, tus comidas, tus medidas ni tu copia de seguridad; solo los datos de la cuenta que detalla la Política de privacidad, como el sexo indicado en el perfil.
+
+Se guardan en tu dispositivo y en la nube asociada a tu cuenta (Firebase, de Google, con la base de datos principal en Madrid). Los proveedores que intervienen y las transferencias internacionales se explican en la Política de privacidad.
+
+## 6. Si no lo das
+
+Darlo es voluntario. Como la función de StrataFit es precisamente registrar y analizar estos datos, sin tu consentimiento no puedes usar la aplicación con tu cuenta: hasta que lo des, no muestra ni sincroniza tus registros. Aun así, puedes exportar una copia, borrar tus datos o eliminar tu cuenta en cualquier momento.
+
+## 7. Cómo retirarlo
+
+Puedes retirarlo cuando quieras desde Privacidad → Tus datos → Retirar el consentimiento. Al hacerlo, la aplicación deja de tratar estos datos y borra tus registros de tu dispositivo y de tu cuenta, también de tus otros dispositivos en cuanto se conecten; tu usuario se conserva.
+
+Retirarlo no afecta a la licitud del tratamiento anterior. Si vuelves a darlo, empezarás con la cuenta vacía: si quieres conservar tus registros, exporta antes una copia.
+
+## 8. Constancia de tu consentimiento
+
+Guardamos, vinculadas a tu cuenta, la versión de este texto que aceptaste, la fecha y la hora y, si lo retiras, el momento en que lo hiciste. Puedes consultarlo en Privacidad → Tus datos. Si este texto cambia de forma que haga falta un consentimiento nuevo, te lo pediremos al abrir la aplicación.
+
+## 9. Tus derechos y contacto
+
+Además de retirar el consentimiento, puedes ejercer los derechos de acceso, rectificación, supresión, limitación, portabilidad y oposición, como se explica en la Política de privacidad. Para cualquier duda o solicitud, escríbenos por el [contacto de privacidad](#contact).
 `,
   cards: `
 Registro con los datos imprescindibles|Sin necesidad de facilitar tu nombre real, correo electrónico o teléfono.

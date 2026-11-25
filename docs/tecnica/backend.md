@@ -140,8 +140,9 @@ datos» los borra primero de la nube (sin conexión no borra nada: si no, la sig
 ## Condiciones y consentimiento
 
 Desde la V1.0.4 (`cloud/consent`). Hay tres textos con versión: las condiciones de uso (el Aviso legal), la Política de
-privacidad y el texto del consentimiento para los datos de salud, que es el de la casilla. `LEGAL` guarda la versión vigente de
-cada uno, su fecha y, de las condiciones y del consentimiento, qué versiones aceptadas siguen valiendo (`valid`).
+privacidad y el consentimiento informado para los datos de salud (`health`: la segunda casilla, corta, y su texto entero, que
+enlaza: `data/legal`, `consent`). `LEGAL` guarda la versión vigente de cada uno, su fecha y, de las condiciones y del
+consentimiento, qué versiones aceptadas siguen valiendo (`valid`).
 
 - **Qué se anota.** `cs` en el perfil y en la sesión del dispositivo: `t` (condiciones) y `h` (consentimiento), cada uno con
   `v`, la versión del texto, y `at`, cuándo; `h` lleva además `st` (1 dado, 0 retirado) y, retirado, `ga`: cuándo se había

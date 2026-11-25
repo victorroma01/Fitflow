@@ -238,6 +238,14 @@ def main(path):
               priv['h1'] == 'Política de privacidad de StrataFit' and priv['cards'] == 6 and priv['sections'] == 20 and priv['status'] == 2 and priv['top'] == 0
               and priv['data'] == 'legalBackup,openPrivacyContact,consentWithdrawAsk,resetAllAsk,openDeleteAccount', str(priv))
         check('y «←» vuelve a Ajustes desde las dos', legal['back'] == 'openSettings' == priv['back'])
+        # en «Tus datos», el consentimiento dado se puede leer entero
+        ev("document.querySelector('#lgl .legal-status [data-a=openLegal][data-v=consent]').click()")
+        run()
+        cons = ev("({ h1: (document.querySelector('#lgl h1') || {}).textContent, sections: document.querySelectorAll('#lgl section').length, back: document.querySelector('#lgl [aria-label=Volver]').dataset.a, meta: document.querySelector('#lgl .legal-meta').textContent })")
+        check('«Leer el consentimiento» abre su texto entero, con su fecha y su versión, y «←» vuelve a Ajustes',
+              cons['h1'] == 'Consentimiento informado para el tratamiento de datos de salud' and cons['sections'] == 9 and cons['back'] == 'openSettings' and cons['meta'] == legal_meta('health'), str(cons))
+        ev("A.openSettings();A.openLegal(0,{dataset:{v:'privacy'}})")
+        run()
         ev("document.querySelector('#lgl [data-a=legalBackup]').click()")
         run()
         check('«Exportar una copia» abre la copia de seguridad, con «←» a Ajustes', ev("!!document.querySelector('#sh [data-a=backupDownload]') && !!document.querySelector('#sh [aria-label=Volver][data-a=openSettings]')"))

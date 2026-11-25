@@ -2,8 +2,8 @@
    Más integración con el móvil (F-39), además de «atrás» (core/back) y de los gestos (core/swipe y core/tabbar):
    - Accesos directos del icono (en Android, al mantener pulsado el icono de la app; static/manifest.webmanifest): «Entreno de
      hoy», «Nutrición de hoy» y «Registrar el peso». Abren la app con ?a=…: aquí se va a esa pantalla y se quita de la dirección.
-   - Las direcciones públicas de los textos legales: la de la app acabada en ?a=privacidad o ?a=aviso-legal (en inglés,
-     ?a=privacy y ?a=terms) abre ese texto (profile/legal), con sesión o sin ella.
+   - Las direcciones públicas de los textos legales: la de la app acabada en ?a=privacidad, ?a=aviso-legal o ?a=consentimiento
+     (en inglés, ?a=privacy, ?a=terms y ?a=consent) abre ese texto (profile/legal), con sesión o sin ella.
    - Globo en el icono de la app (opcional, en Ajustes → Sonido y avisos; donde el sistema lo permite: iPhone con iOS 16.4 o
      posterior, con la app en la pantalla de inicio, y ordenadores): al salir de la app enseña cuántas cosas quedan pendientes,
      el pesaje de hoy (F-25) y las respuestas nuevas a tus fallos y sugerencias (F-27). En iPhone pide permiso de avisos: sin él,
@@ -26,7 +26,7 @@ import { html } from '../core/html.js';
 const LAUNCH = [['entreno', 0], ['comida', 1], ['peso', 2]];
 /** Las direcciones de los textos legales: ?a=… → cuál (profile/legal). */
 /** @type {Record<string, string>} */
-const LEGAL_ROUTES = { privacidad: 'privacy', privacy: 'privacy', 'aviso-legal': 'terms', terms: 'terms' };
+const LEGAL_ROUTES = { privacidad: 'privacy', privacy: 'privacy', 'aviso-legal': 'terms', terms: 'terms', consentimiento: 'consent', consent: 'consent' };
 /** Al arrancar, antes de pintar: la pantalla del acceso directo con que se abrió la app; la dirección queda limpia. */
 export const launchAction = () => {
   try {

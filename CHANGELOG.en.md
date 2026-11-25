@@ -26,8 +26,8 @@ have no entry: the app shows them in Spanish.
 - Languages: the app is now in English too. It follows your phone's language (English or Spanish), and you can change it
   anytime in Settings → Languages.
 - New Legal notice and Privacy policy, also in English: you can read them without an account, from the sign-in screen, and
-  in Settings. To create an account you need to accept the terms (being 16 or older) and give your consent for health data;
-  with an account you already had, the app asks once when you open it.
+  in Settings. To create an account you need to accept the terms (being 16 or older) and the processing of your health data,
+  with the full consent explained; with an account you already had, the app asks once when you open it.
 - Your data, in Privacy: export a copy, write to us about privacy, withdraw consent, delete your data, and “Delete account,”
   which deletes the account and everything in it (also in Settings → Account). An account that goes unused for two years is
   deleted automatically.

@@ -1,8 +1,9 @@
 /* ═══ i18n/en-legal ═══
    Inglés (de Estados Unidos): los textos legales de StrataFit (data/legal), el Aviso legal y condiciones de uso y la Política
-   de privacidad, con las tarjetas de su resumen. Es una traducción: cada texto dice al empezar que, si hay diferencias, vale el
-   español. Se descarga en lugar de data/legal con la app en inglés (core/lazy, loadLegal) y tiene sus mismos apartados, en el
-   mismo orden (tests/legal.test.mjs lo comprueba). El formato, el de data/legal.
+   de privacidad, con las tarjetas de su resumen, y el consentimiento informado para los datos de salud. Es una traducción:
+   cada texto dice al empezar que, si hay diferencias, vale el español. Se descarga en lugar de data/legal con la app en inglés
+   (core/lazy, loadLegal) y tiene sus mismos apartados, en el mismo orden (tests/legal.test.mjs lo comprueba). El formato, el
+   de data/legal.
 */
 import { setLegal } from '../profile/legal.js';
 setLegal({
@@ -172,7 +173,7 @@ The processing is governed by Regulation (EU) 2016/679, the General Data Protect
 
 **Account data.** To sign up, you need a username and a password. You do not need to provide your real first and last name, personal email address, phone number, identity document, postal address, precise location, or bank details to use the features described in this policy. We recommend choosing a username that does not identify you directly. Credentials are managed through Firebase Authentication, which links your username to a technical identifier that is not a real mailbox; passwords are protected by cryptographic mechanisms and are not shown to the StrataFit administrator. The only exception is the temporary password that the administrator generates if you ask to reset yours: the administrator can see it for 24 hours in order to give it to you, and the application requires you to replace it with a new one when you sign in.
 
-**Training, nutrition, and progress.** Depending on the features you use and the information you choose to enter, we may store routines, exercises, sessions, sets, reps, loads, records, training history, meals, calories, macronutrients, nutrition goals, weight, body measurements, and progress records. This data makes it possible to offer the requested features and to track your goals. Some of this data may reveal information about your health; that is why we ask for your explicit consent before processing it, when you create your account or, if your account predates this policy, when you open the application.
+**Training, nutrition, and progress.** Depending on the features you use and the information you choose to enter, we may store routines, exercises, sessions, sets, reps, loads, records, training history, meals, calories, macronutrients, nutrition goals, weight, body measurements, and progress records. This data makes it possible to offer the requested features and to track your goals. Some of this data may reveal information about your health; that is why we ask for your explicit consent before processing it, when you create your account or, if your account predates this policy, when you open the application. Its scope is explained in the [informed consent for the processing of health data](#consent).
 
 **Profile and preferences.** We may store the username, the sex indicated in the profile, the optional profile photo, the appearance, the units of measurement, the sound settings, the status of the introductory tour, and other settings you configure.
 
@@ -330,6 +331,62 @@ StrataFit is committed to handling your information responsibly, transparently, 
 **Your effort belongs to you. So does your progress.**
 
 StrataFit — Training, nutrition, and personal progress.
+`,
+  consent: `
+# Informed consent for the processing of health data
+
+This is a translation provided for convenience. If there is any discrepancy, the Spanish version prevails.
+
+This is the consent you give by checking the box "I accept the processing of my health data by StrataFit" when you create your account or accept the terms. Here we explain what data it covers, what we use it for, who can see it, and how you can withdraw it. It complements the [Privacy policy](#privacy).
+
+## 1. What you consent to
+
+You expressly consent to StrataFit processing the data about your health that you choose to enter in the application, for the sole purpose of managing your physical, sports, and nutrition tracking.
+
+## 2. What data it covers
+
+It covers the records you enter and what the application calculates from them, because they may reveal information about your health:
+
+- **Training:** routines, exercises, sets, reps, loads, perceived exertion, notes, and personal records.
+- **Nutrition:** meals, calories, macronutrients, water, and nutrition goals.
+- **Body:** weight, body measurements, and the profile data used in calculations, such as sex, age, height, activity level, and goal.
+- **Progress:** history, records, achievements, and statistics derived from the above.
+
+The application does not ask you for diagnoses, illnesses, or medication. We recommend not writing them in your notes.
+
+## 3. What we use it for
+
+Only to provide the features of StrataFit: storing and showing your records; calculating figures such as calories, macronutrients, suggested loads, and progression; showing your progress and your records; syncing them across your devices; and keeping your backup in the cloud.
+
+We do not sell it, we do not use it for advertising, and it is not used to make automated decisions that produce legal effects concerning you.
+
+## 4. Legal basis
+
+Your explicit consent (Article 9(2)(a) of the General Data Protection Regulation), together with the Article 6 basis that applies to each use, as explained in the [Privacy policy](#privacy).
+
+## 5. Who can see it and where it is stored
+
+Your records are linked to your account and protected by authentication and security rules: only you can see them. The administrator of StrataFit does not see your workouts, your meals, your measurements, or your backup; only the account data detailed in the Privacy policy, such as the sex stated in your profile.
+
+It is stored on your device and in the cloud linked to your account (Firebase, by Google, with the main database in Madrid). The providers involved and international transfers are explained in the Privacy policy.
+
+## 6. If you do not give it
+
+Giving it is voluntary. Because the purpose of StrataFit is precisely to record and analyze this data, without your consent you cannot use the application with your account: until you give it, the application does not show or sync your records. Even so, you can export a copy, delete your data, or delete your account at any time.
+
+## 7. How to withdraw it
+
+You can withdraw it whenever you want from Privacy, then Your data, then Withdraw consent. When you do, the application stops processing this data and deletes your records from your device and your account, and from your other devices as soon as they connect; your username is kept.
+
+Withdrawing it does not affect the lawfulness of the processing carried out before. If you give it again, you will start with an empty account: if you want to keep your records, export a copy first.
+
+## 8. Record of your consent
+
+We keep, linked to your account, the version of this text that you accepted, the date and time, and, if you withdraw it, the moment you did so. You can check it in Privacy, then Your data. If this text changes in a way that requires new consent, we will ask you for it when you open the application.
+
+## 9. Your rights and contact
+
+In addition to withdrawing your consent, you can exercise the rights of access, rectification, erasure, restriction, portability, and objection, as explained in the Privacy policy. For any question or request, write to us through the [privacy contact](#contact).
 `,
   cards: `
 Sign-up with only the essentials|No need to provide your real name, email address, or phone number.
