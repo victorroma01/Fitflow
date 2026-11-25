@@ -1,6 +1,6 @@
 # Figuras de ejercicio
 
-El modelo anatómico en 3D haciendo cada uno de los 527 ejercicios de la librería, visto en tres cuartos. Llegó con la
+El modelo anatómico en 3D haciendo cada uno de los 525 ejercicios de la librería, visto en tres cuartos. Llegó con la
 V1.0.4 y sustituye a las figuras de perfil de la V1.0.3 (un modelo plano, articulado, que ya no existe). Se hizo y se revisó
 por lotes de ejercicios antes de entrar en la app (ver [Revisión](#revisión)).
 
@@ -77,7 +77,7 @@ verdad, círculos, elipses, el desplazamiento de los discos) y deja fuera lo que
   móvil (IndexedDB, base `fffig`: por cada ejercicio, el tipo de la imagen y sus bytes; y una fila con la huella de las
   figuras, `data/figstamp`, y el tamaño): la siguiente vez se enseña al momento, sin el motor. Son dibujos de la librería,
   iguales para cualquiera, no datos de nadie. Solo se vacían y se rehacen cuando una versión cambia las figuras (otra
-  huella): una actualización que no las toca no hace dibujar otra vez las 527. Donde el navegador no deja leer el lienzo, la
+  huella): una actualización que no las toca no hace dibujar otra vez las 525. Donde el navegador no deja leer el lienzo, la
   imagen es el propio dibujo y no se guarda.
 - **Solo se lee lo que se pide.** Las miniaturas que pide una pantalla se buscan juntas en lo guardado, en una sola lectura;
   abrir la app no trae todas las guardadas.
@@ -131,9 +131,9 @@ densidad 3; «lento» es con la CPU cuatro veces más despacio.
 ## Pruebas
 
 - `tests/fig3d.test.mjs` (sin navegador): el motor tal como va en la app (compuesto como lo hace `build.py`, en modo
-  estricto) hace los 527 ejercicios; cada uno se dibuja en nueve momentos del gesto sin números rotos, lo que ocupa es el de
+  estricto) hace los 525 ejercicios; cada uno se dibuja en nueve momentos del gesto sin números rotos, lo que ocupa es el de
   una figura, lo que usa cada dibujo lo define él o el motor (una miniatura es un dibujo suelto) y su reloj va de 0 a 1.
-- `tests/figures.py` (en navegador): las 527 miniaturas, como imagen de su tamaño; las listas (la figura en cada fila, los
+- `tests/figures.py` (en navegador): las 525 miniaturas, como imagen de su tamaño; las listas (la figura en cada fila, los
   huecos del mismo tamaño que se llenan todos con la lista abierta, al momento al volver a abrirla y, tras recargar, de lo
   guardado y sin el motor; lo guardado con otra huella se tira y se dibuja otra vez); la ficha; la hoja de un ejercicio de cada clase (figura arriba en 4:3, músculos y texto, que se
   mueve y sigue dibujada tras varios gestos; los ciclos no se paran; fuera de la vista no se dibuja); a 320 y 768 px; con

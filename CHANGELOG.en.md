@@ -17,7 +17,7 @@ have no entry: the app shows them in Spanish.
 > more careful with your data.
 
 ### What's new
-- 3D model: all 527 exercises in the library have a 3D figure that performs the whole exercise with its equipment, with
+- 3D model: all 525 exercises in the library have a 3D figure that performs the whole exercise with its equipment, with
   the working muscles in red (primary) and orange (secondary). It stays still in lists, the day, the workout, and the
   exercise page; tap it and, in “How to do it,” it moves through the exercise (with “Reduce animations,” you get its still
   positions).
@@ -32,8 +32,9 @@ have no entry: the app shows them in Spanish.
 - Hyrox distance exercises (sled, farmer's carry, burpee broad jumps) have their meters as the target.
 - The button that saves the workout is called “Save workout” (it used to be “Log out”).
 - Plain app background: black in the dark theme and very light gray in the light one.
-- Supersets, tri-sets, and circuits: each exercise's label says only which one it is and its place (“SUPERSET · 1/2”),
-  without repeating the rest, which already has its own line.
+- Supersets, tri-sets, and circuits: each exercise's label says only which one it is and its place (“SUPERSET · 1/2”).
+  Neither the label nor the exercise's line repeats the rest anymore (“10 s to the next one,” “Round rest”): it is on each
+  set, in the “Rest” column.
 - Workout: the “+ Drop set” button below the sets is gone. You still choose a drop set as the exercise's technique.
 - Technical improvements and bug fixes. System and feature optimization.
 

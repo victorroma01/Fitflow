@@ -56,4 +56,5 @@ python3 pagina.py                  # la página de revisión del lote (sus texto
    balls, balón medicinal, box jump y saltos laterales, muscle-ups, trepa de cuerda, pino, gateos, inchworm, press Svend,
    battle ropes y volteo de neumático: 70 ejercicios (tras juntar los repetidos de Hyrox). En revisión.
 8. Cardio: carrera y marcha (en la calle, en la cinta, en cuesta, con chaleco y con mochila), bicicletas (estática, de aire y
-   de carretera), remo, SkiErg, comba, elíptica, escaladora, natación y saco de boxeo: 52 ejercicios. En revisión.
+   de carretera), remo, SkiErg, comba, elíptica, escaladora, natación y saco de boxeo: 50 ejercicios (tras juntar los «single
+   unders» con la comba y la cinta inclinada con la caminata inclinada). En revisión.

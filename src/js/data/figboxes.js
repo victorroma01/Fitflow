@@ -4,7 +4,7 @@
    dibujar cada figura trece veces para saber lo que ocupa. De cada ejercicio: el recuadro [x, y, ancho, alto] del gesto
    entero, el momento de la miniatura y su recuadro, el recuadro de las posturas quietas y los momentos de esas posturas. Va
    con el motor, en lo que se descarga al usarlo (core/lazy).
-   Huella de lo calculado: 6694d6faaef44a6c61f1
+   Huella de lo calculado: 464a8a6735614465cdc8
    Define: FIG_BOXES
 */
 export const FIG_BOXES = {
@@ -409,7 +409,6 @@ export const FIG_BOXES = {
   "Kettlebell American swing": [-68, -499, 223, 509, 0.5, -68, -281, 182, 291, -68, -499, 223, 509, 0, 0.167, 0.5],
   "GHD sit-up": [-350, -430, 537, 468, 1, -301, -233, 488, 271, -301, -394, 488, 432, 0, 1],
   "GHD hip extension": [-226, -247, 415, 260, 1, -226, -246, 415, 259, -226, -246, 415, 259, 0, 1],
-  "Single unders": [-144, -423, 336, 437, 0.25, -72, -394, 199, 407, -72, -394, 199, 407, 0.25],
   "Toes to bar": [-109, -503, 288, 526, 1, -109, -503, 233, 517, -109, -503, 233, 517, 0, 1],
   "Muscle-up": [-196, -678, 409, 696, 0.583, -100, -678, 140, 686, -100, -678, 303, 696, 0, 0.25, 0.583],
   "Rope climb": [-50, -452, 166, 464, 0.333, -50, -406, 150, 417, -50, -452, 166, 464, 0, 0.333, 0.708],
@@ -493,7 +492,6 @@ export const FIG_BOXES = {
   "Press con banda de pie": [-157, -372, 307, 388, 1, -157, -372, 243, 388, -157, -372, 307, 388, 0, 1],
   "Carrera continua": [-65, -383, 173, 394, 0.417, -62, -383, 163, 394, -62, -383, 163, 394, 0, 0.417, 0.708],
   "Intervalos 400 m": [-65, -383, 173, 394, 0.417, -62, -383, 163, 394, -62, -383, 163, 394, 0, 0.417, 0.708],
-  "Cinta inclinada": [-141, -399, 252, 415, 0.667, -141, -399, 252, 415, -141, -399, 252, 415, 0, 0.292, 0.667],
   "Series 1 km": [-65, -383, 173, 394, 0.417, -62, -383, 163, 394, -62, -383, 163, 394, 0, 0.417, 0.708],
   "Tempo run": [-65, -383, 173, 394, 0.417, -62, -383, 163, 394, -62, -383, 163, 394, 0, 0.417, 0.708],
   "Cuestas": [-161, -379, 322, 407, 0.5, -161, -377, 322, 405, -161, -377, 322, 405, 0, 0.25, 0.5],

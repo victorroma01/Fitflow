@@ -19,12 +19,12 @@ const MOMENTS = Array.from({ length: 9 }, (_, i) => i / 8);
 const SHARED = new Set([...F3.DEFS.matchAll(/\sid="([^"]+)"/g)].map(m => m[1]));
 
 test('cada ejercicio con figura está en la librería, y su familia en el motor', () => {
-  assert.equal(NAMES.length, 527);
+  assert.equal(NAMES.length, 525);
   assert.deepEqual(NAMES.filter(n => !LIB.has(n)), []);
   assert.deepEqual(NAMES.filter(n => !F3.FAMILIES[FIG_POSES[n].split(' ')[0]]), []);
 });
 
-test('el motor hace los 527 ejercicios, cada uno con su cámara y su gesto', () => {
+test('el motor hace los 525 ejercicios, cada uno con su cámara y su gesto', () => {
   const bad = NAMES.filter(n => {
     const ex = exs.get(n);
     return !ex || typeof ex.at != 'function' || !Number.isFinite(ex.yaw) || !Number.isFinite(ex.pitch) || !['a', 'b'].includes(ex.up);

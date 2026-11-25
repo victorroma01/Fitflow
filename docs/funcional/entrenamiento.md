@@ -116,15 +116,16 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
   registrado al marcar la serie hecha. Lo que propone el historial llega también como sugerido.
 - **Descanso**: al marcar una serie empieza la cuenta atrás del descanso de ese ejercicio, con avisos sonoros (y vibración en los
   móviles que la permiten). El descanso y el tempo se cambian en sus desplegables, que solo dicen «Descanso» y «Tempo»: el valor
-  elegido se ve arriba, en el objetivo del ejercicio.
+  elegido se ve arriba, en el objetivo del ejercicio (el descanso de una superserie, en la columna «Desc.» de cada serie).
 - **Superseries y triseries**: se hacen por rondas. Tras la serie 1 del primer ejercicio van 10 s fijos y la serie 1 del
   siguiente; al acabar la ronda, su descanso, que es el del último ejercicio del bloque (el que diga el programa o elijas en su
   desplegable; si no hay ninguno, 2:30), y vuelta al primero. Al acabar cada descanso, la pantalla pasa sola a la serie que toca.
   Se montan al editar el día: **Unir al anterior** (en el Overview, **Enlazar**) junta un ejercicio con el de arriba (y con el
   que lleve unido detrás) y **Separar** parte el bloque por ese ejercicio. De cuatro ejercicios seguidos en adelante, es un
   **circuito**, que se hace igual, por rondas. Cada ejercicio del bloque lleva encima su etiqueta, con el bloque que es y su
-  puesto en él (**SUPERSERIE · 1/2**); desde la V1.0.4 no repite el descanso que le sigue («10 s hasta el siguiente»,
-  «descanso de la ronda»), que ya dicen el propio ejercicio y la columna de descanso.
+  puesto en él (**SUPERSERIE · 1/2**). Desde la V1.0.4, ni la etiqueta ni la línea del ejercicio repiten el descanso que le
+  sigue («10 s al siguiente», «Descanso de la ronda»): va en cada serie, en la columna «Desc.» (0:10 entre los ejercicios y,
+  en el último, el de la ronda).
 - **Tips** (el icono «i»): el consejo propio de cada ejercicio (no hay dos iguales). **Notas**, **Historial** de sus series
   anteriores, **Swap** para cambiarlo por otro parecido sin perder el historial (las series que ya llevaras hechas se guardan
   en el ejercicio con el que las hiciste) y **Discos** (el icono del disco), que calcula qué discos poner en cada lado de la
@@ -145,8 +146,10 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 
 ## Librería de ejercicios
 
-Más de 550 ejercicios, cada uno con su figura haciéndolo y su mapa muscular, y filtros por grupo muscular y por equipo. La búsqueda ignora las tildes y entiende
-nombres habituales. La ficha de cada ejercicio trae su **consejo** y, al tocar su imagen, **cómo se hace**. Desde la ficha se añade
+Más de 500 ejercicios, cada uno con su figura haciéndolo y su mapa muscular, y filtros por grupo muscular y por equipo. La búsqueda ignora las tildes y entiende
+nombres habituales. Desde la V1.0.4 no hay ejercicios repetidos (el mismo con dos nombres, como la comba y los «single unders», o
+la caminata inclinada y la cinta inclinada): queda uno, que se encuentra también buscando el otro nombre, y un plan, un workout o
+un entreno guardado con el nombre que se quitó lo sigue enseñando, con la figura, los músculos y la ficha del que queda. La ficha de cada ejercicio trae su **consejo** y, al tocar su imagen, **cómo se hace**. Desde la ficha se añade
 al día con «+ Al día».
 
 **Ejercicios propios**: se crean al añadir un ejercicio al día («Crear ejercicio nuevo»); si ya hay uno con ese nombre (sin mirar

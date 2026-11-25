@@ -37,7 +37,7 @@ español. Son cinco módulos de `src/js/i18n` que se apuntan solos con `addEngli
 | `en-programs` | Los programas, sus días y sus descripciones. |
 | `en-more` | Lo que el código compone de un modo que la herramienta no ve (más abajo). Se escribe a mano. |
 
-Aparte va `en-exinfo`, el catálogo de consejos y ejecución en inglés (527 ejercicios), que se carga en lugar de `data/exinfo` la
+Aparte va `en-exinfo`, el catálogo de consejos y ejecución en inglés (525 ejercicios), que se carga en lugar de `data/exinfo` la
 primera vez que se abre una ficha.
 
 La traducción se hace en la plantilla, `core/html`:
@@ -121,7 +121,7 @@ puntos). Las versiones anteriores a la 1.0.4, que no tenían inglés, se enseña
 | --- | --- |
 | `node tools/i18n.js --check` | Que no falta ni sobra ninguna frase, y los avisos de arriba. |
 | `tests/i18n.test.mjs` | `core/i18n` y `core/html` sin navegador: qué se traduce de una plantilla y qué no, `say`, `tr`, `trAs` y las listas; que en español todo sale como está escrito. |
-| `tests/exinfo.test.mjs` | Que el catálogo de consejos en inglés tiene los 527 ejercicios, con sus tres campos, y está en inglés. |
+| `tests/exinfo.test.mjs` | Que el catálogo de consejos en inglés tiene los 525 ejercicios, con sus tres campos, y está en inglés. |
 | `tests/english.py` | En el navegador: qué idioma sale con cada móvil y con cada elección; Ajustes → Idiomas; las 107 pantallas en inglés, y otras doce que solo salen en ciertos momentos (el reloj de un WOD, la bienvenida, la entrada sin sesión), sin un texto en español a la vista; lo propio del inglés (fechas, buscadores, consejos, nota de la versión, CSV, PDF, imagen para compartir, recordatorio del calendario y nombres de archivo); que con los mismos pasos se guarda lo mismo en los dos idiomas; y que en español no cambia nada. |
 | `tests/deploy.py` | En el paquete: el manifiesto en inglés, y que el diccionario va aparte y en español no se descarga. |
 | `tests/layout.py` y `tests/a11y.py` con `SF_LOCALE=en-US` | Con los textos en inglés: ningún desborde ni texto cortado en los cinco tamaños de pantalla, y los nombres, los roles y las zonas táctiles de cada control. |

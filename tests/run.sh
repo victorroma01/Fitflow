@@ -35,6 +35,7 @@ run node --test --test-reporter=dot tests/templates.test.mjs
 run node --test --test-reporter=dot tests/classes.test.mjs
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
+run node --test --test-reporter=dot tests/library.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs
 run node --test --test-reporter=dot tests/parts.test.mjs
 run node --test --test-reporter=dot tests/fig3d.test.mjs

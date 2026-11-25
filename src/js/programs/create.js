@@ -322,7 +322,7 @@ export const generateProgram = o => {
   seq.forEach(t => {
     tot[t] = (tot[t] || 0) + 1;
   });
-  const fin = o.obj == 'grasa' ? (o.lug == 'gym' ? 'F:Cinta inclinada*1/12min@0' : 'F:Burpees*3/10@45') : '';
+  const fin = o.obj == 'grasa' ? (o.lug == 'gym' ? 'F:Caminata inclinada*1/12min@0' : 'F:Burpees*3/10@45') : '';
   const noFin = new Set(['hRun', 'hZ2', 'cfE']);
   const days = seq.map(t => {
     const V = P[t];

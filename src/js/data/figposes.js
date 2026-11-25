@@ -422,7 +422,6 @@ export const FIG_POSES = {
   'Kettlebell American swing': 'kbell swing american kb',
   'GHD sit-up': 'crunch situp ghd none',
   'GHD hip extension': 'hyper ghd none',
-  'Single unders': 'jumpRope',
   /* ── CrossFit: gimnásticos ── */
   'Toes to bar': 'pullup t2b',
   'Muscle-up': 'muscleUp rings none',
@@ -511,7 +510,6 @@ export const FIG_POSES = {
   /* ── Cardio ── */
   'Carrera continua': 'run none',
   'Intervalos 400 m': 'run none',
-  'Cinta inclinada': 'run walk treadmill incline',
   'Series 1 km': 'run none',
   'Tempo run': 'run none',
   Cuestas: 'run incline none',

@@ -33,7 +33,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 > cuidadosa con tus datos.
 
 ### Novedades
-- Modelo 3D: los 527 ejercicios de la librería tienen su figura en 3D, haciendo el ejercicio entero con su material y los
+- Modelo 3D: los 525 ejercicios de la librería tienen su figura en 3D, haciendo el ejercicio entero con su material y los
   músculos que trabajan en rojo (principales) y naranja (secundarios). Quieta en las listas, el día, el entreno y la ficha;
   al tocarla, en «Cómo se hace», se mueve con el gesto (con «Reducir animaciones», sus posturas quietas).
 - Inicio de sesión con imagen de fondo: un gimnasio visto desde arriba, en gris y a media luz.
@@ -47,8 +47,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Los ejercicios de distancia de Hyrox (trineo, carga de granjero, burpees con salto) llevan sus metros como objetivo.
 - El botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out»).
 - Fondo de la app liso: negro en el tema oscuro y gris muy claro en el claro.
-- Superseries, triseries y circuitos: la etiqueta de cada ejercicio dice solo cuál es y su lugar («SUPERSERIE · 1/2»), sin
-  repetir el descanso, que ya va en su línea.
+- Superseries, triseries y circuitos: la etiqueta de cada ejercicio dice solo cuál es y su lugar («SUPERSERIE · 1/2»). Ni
+  ella ni la línea del ejercicio repiten ya el descanso («10 s al siguiente», «Descanso de la ronda»): va en cada serie, en
+  la columna «Desc.».
 - Entreno: fuera el botón «+ Drop set» de debajo de las series. El drop set se sigue eligiendo como técnica del ejercicio.
 - Mejoras técnicas y correcciones de errores. Optimización del sistema y funcionalidades.
 
@@ -95,22 +96,29 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   desplazamiento de los discos de la barra.
 - Las figuras se hicieron y revisaron por lotes, cada uno con su página: sentadillas, press de banca y de hombro (57);
   jalones, remos y dominadas (54); piernas (65); brazos (75); pecho y hombros (72); core y el resto de pierna (82); CrossFit,
-  Hyrox y funcional (70); y cardio (52). Antes de cada página, las pruebas de `tools/figuras3d`: manos que no llegan, pies
+  Hyrox y funcional (70); y cardio (50). Antes de cada página, las pruebas de `tools/figuras3d`: manos que no llegan, pies
   fuera del suelo, el material contra el cuerpo, el grosor del dibujo, las piezas fijas y los saltos de un fotograma a otro.
 - `data/figposes`: cada ejercicio con todas sus palabras para el 3D (el material, el agarre, el banco, la pausa), que antes
   añadía `tools/figuras3d/datos.mjs` al sacar cada lote.
-- Librería: fuera 24 ejercicios repetidos (de 551 a 527), con su nombre en `data/aliases` (`EX_RETIRED`) para que lo guardado
+- Librería: fuera 26 ejercicios repetidos (de 551 a 525; los dos últimos, Single unders, que era la Comba, y Cinta inclinada,
+  que era la Caminata inclinada, que dicen ahora lo de los dos), con su nombre en `data/aliases` (`EX_RETIRED`) para que lo guardado
   con ellos siga encontrando el que queda (`liveName`, también para la figura), y los músculos de los ejercicios de cada lote,
   comprobados con su figura. Los de distancia de Hyrox, en metros por su nombre (`core/calc`, `unitFromName`).
+- Prueba nueva, `tests/library.test.mjs` (sin navegador): que los programas, los cambios y los días por nivel, las plantillas
+  del programa guiado, los grupos de rotación y los otros nombres del buscador solo nombran ejercicios de la librería; que cada
+  ejercicio tiene su figura; y que de cada ejercicio juntado el nombre viejo ya no está, el que queda sí, y lo guardado con el
+  viejo se mide en lo mismo.
 - Clases CSS, quinto lote: las siete de las figuras, que esperaban a las figuras nuevas (`fgs` → `figure-stage`, `hwm` →
   `howto-head`, `hwf` → `howto-maps`, `hwl` → `howto-muscles`, `anb` → `anatomy-box`, `anf` → `anatomy-full`, `anl` →
   `anatomy-legend`) ([clases CSS](docs/tecnica/clases.md)).
 - `build.py`: la entrada del paquete es la de `main.js`. Con más `import()` dinámicos, esbuild ya no la listaba la primera.
-- Pruebas: `tests/fig3d.test.mjs` (el motor tal como va en la app, en los 527 ejercicios y en todo el gesto; encontró que los
+- Pruebas: `tests/fig3d.test.mjs` (el motor tal como va en la app, en los 525 ejercicios y en todo el gesto; encontró que los
   guantes del saco pedían un color de brillo que no tenían) y `tests/figures.py`, rehecha para el 3D (202 comprobaciones).
 - Entreno: el botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out», que suena a cerrar la sesión de la
   cuenta), también en los textos que lo nombran. La etiqueta de un bloque (`blockBadge`, en `workout/day`) ya no lleva «10 s
-  hasta el siguiente» ni «descanso de la ronda»: lo dice la línea de objetivo del ejercicio. Y fuera el botón «+ Drop set»
+  hasta el siguiente» ni «descanso de la ronda», y la línea de objetivo de un ejercicio de un bloque (`targetLine`, en
+  `workout/targets`) tampoco dice su descanso: va en la columna «Desc.» de cada serie (un ejercicio suelto sigue diciendo el
+  suyo). Y fuera el botón «+ Drop set»
   (`addDropSet`, en `workout/session`), por decisión del propietario; la técnica Drop set del ejercicio sigue igual.
 - Inicio de sesión (F-33, T-18, que estaba pospuesto): detrás va la imagen de un gimnasio visto desde arriba, del propietario
   (hecha con Gemini: ni el sitio ni la gente son reales), en gris y desenfocada, a media luz, como en su ejemplo
@@ -255,7 +263,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   diccionario se traduce donde se lee, nunca en un `value`, un `data-…` o una clase. Los textos compuestos se escriben con
   ``say`…` `` en vez de sumando trozos (unas 330 sumas cambiadas), y lo que no pasa por una plantilla, con `tr()` (el reloj
   del WOD, la imagen para compartir, el PDF del análisis, el `.ics` del pesaje, los nombres de archivo). Los consejos y la
-  ejecución de los 527 ejercicios van en `i18n/en-exinfo`, que se carga en lugar de `data/exinfo`.
+  ejecución de los 525 ejercicios van en `i18n/en-exinfo`, que se carga en lugar de `data/exinfo`.
 - Lo que se guarda no depende del idioma: va en español y se traduce al enseñarlo (el título y el resultado de un cardio o
   de un WOD ya no se componen con el idioma de la app). Una cuenta sirve igual en un móvil en español y en otro en inglés.
 - La nota de cada versión en inglés: `CHANGELOG.en.md`, que `build.py` (`english`) mete en `data/release` y en

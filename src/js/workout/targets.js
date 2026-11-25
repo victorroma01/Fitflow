@@ -154,14 +154,14 @@ const thenDot = t => {
 export const targetLine = (e, i) => {
   const U = unitOf(e);
   const dl = !!(W && W.deload);
-  /* la segunda línea: el descanso y el tempo, cada uno [lo que puede partirse, lo que va junto] */
+  /* la segunda línea: el descanso y el tempo, cada uno en una pieza que no se parte. En una superserie, una triserie o un
+     circuito el descanso no se dice aquí (son 10 s hasta el siguiente ejercicio y, al acabar la ronda, el suyo): va en cada
+     serie, en la columna «Desc.» */
   const p = [];
-  if (e.s > 1) {
-    const rest = fmtMinSec(restAt(S.plan[S.selectedDay], i));
-    p.push(inSuperset(i) ? ['', '10 s al siguiente'] : blockEnd(S.plan[S.selectedDay], i) ? ['Descanso de la ', say `ronda ${rest}`] : ['', say `Descanso ${rest}`]);
-  }
+  if (e.s > 1 && !inSuperset(i) && !blockEnd(S.plan[S.selectedDay], i))
+    p.push(say `Descanso ${fmtMinSec(restAt(S.plan[S.selectedDay], i))}`);
   if (!U)
-    p.push(['', say `Tempo ${tempoOf(e)}`]);
+    p.push(say `Tempo ${tempoOf(e)}`);
   /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */
   const [a, b] = targetRange(e).map(x => Math.max(1, x - 2));
   const ob = U ? planLine(e) : dl ? html`${thenDot(say `${e.s} × ${a == b ? a : a + '-' + b} reps`)}${together('RIR 3-4')}` : html`
@@ -169,7 +169,7 @@ export const targetLine = (e, i) => {
     ${together('RIR ' + rirOf(e))}`;
   return html`
     <div class="muted">Objetivo: ${ob}</div>
-    ${p.length ? html`<div class="muted">${p.map(([head, pair], k) => html`${head}${together(pair, k < p.length - 1)}`)}</div>` : ''}
+    ${p.length ? html`<div class="muted">${p.map((t, k) => together(t, k < p.length - 1))}</div>` : ''}
     ${raw(warmupHtml(e, i))}`;
 };
 const RANGE_OPTIONS = ['3-5', '5-8', '6-10', '8-10', '8-12', '10-12', '10-15', '12-15', '15-20'];

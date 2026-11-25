@@ -1,7 +1,7 @@
 """Prueba de las figuras de ejercicio: el modelo 3D haciendo cada ejercicio de la librería, en las miniaturas (una imagen que
 se dibuja una vez y se guarda en el móvil) y, al tocar la imagen, en la hoja «Cómo se hace»: figura grande que se mueve con
 el gesto (o sus posturas quietas, con «Reducir animaciones»), músculos en pequeño a la izquierda con sus nombres, y el
-texto. Las 527 miniaturas se dibujan todas; unas cuantas hojas, de cada clase de gesto, se miran con detalle. El motor por
+texto. Las 525 miniaturas se dibujan todas; unas cuantas hojas, de cada clase de gesto, se miran con detalle. El motor por
 dentro (todos los ejercicios en todo el gesto) lo prueba tests/fig3d.test.mjs, sin navegador.
 
   python3 tests/figures.py dist/stratafit.html [carpeta_capturas]
@@ -132,13 +132,13 @@ def main(path, shots=None):
 
         # datos: todos los ejercicios de la librería tienen su figura; uno propio, no
         n_lib = ev("exAll().length - S.customExercises.length")
-        check('la librería tiene sus 527 ejercicios', n_lib == 527, str(n_lib))
+        check('la librería tiene sus 525 ejercicios', n_lib == 525, str(n_lib))
         miss = ev("exAll().filter(e=>!exHasFigure(e.n)).map(e=>e.n)")
         check('todos los ejercicios de la librería tienen figura, y el propio no', miss == ['Mi ejercicio'], str(miss[:8]))
         check('cada figura de la tabla es de un ejercicio que existe', ev("Object.keys(FIG_POSES).every(n=>exAll().some(e=>e.n==n))"))
         check('el motor no se descarga al abrir la app', not ev("!!document.getElementById('g3Ne0')"))
 
-        # las 527 miniaturas, dibujadas: cada una es una imagen de su tamaño (WebP en Chromium; PNG donde no hay WebP)
+        # las 525 miniaturas, dibujadas: cada una es una imagen de su tamaño (WebP en Chromium; PNG donde no hay WebP)
         bad = ev("""(async () => { const f = await loadFigures(); const bad = [];
           for (const e of exAll()) { if (!exHasFigure(e.n)) continue;
             try { const o = await f.thumb(e.n, 96);
@@ -147,7 +147,7 @@ def main(path, shots=None):
               URL.revokeObjectURL(img.src); }
             catch (err) { bad.push(e.n + ': ' + err); } }
           return bad; })()""")
-        check('las 527 miniaturas se dibujan, cada una como imagen de su tamaño', not bad, str(bad[:6]))
+        check('las 525 miniaturas se dibujan, cada una como imagen de su tamaño', not bad, str(bad[:6]))
         check('los degradados del motor están en la página, una sola vez', ev("['g3Ne0','g3Rd0','g3Or0'].every(i=>document.querySelectorAll('[id=\"'+i+'\"]').length==1)"))
 
         # librería: en las listas, la miniatura es el modelo haciendo el ejercicio; la de uno propio, sus músculos
@@ -260,6 +260,21 @@ def main(path, shots=None):
         pg.clock.run_for(300)
         check('al cerrar la hoja no queda ninguna figura grande', ev("!document.querySelector('svg[data-f3]')"))
         # un ejercicio propio: sus músculos, como antes
+        # uno que se juntó con otro porque era el mismo (data/aliases: EX_RETIRED): lo guardado con el nombre que se quitó
+        # conserva ese nombre y enseña la figura, los músculos y la ejecución del que queda, con el enlace a su ficha
+        for old, kept in (('Single unders', 'Comba'), ('Cinta inclinada', 'Caminata inclinada'), ('Prensa 45°', 'Prensa')):
+            how(old)
+            got = ev("[(s => s && s.dataset.f3)(" + STAGE + "), document.querySelector('#sh .howto-title').textContent, document.querySelector('#sh .howto-text').innerText]")
+            how(kept)
+            same = ev("document.querySelector('#sh .howto-text').innerText")
+            how(old)
+            check('«%s», que era el mismo que «%s»: con su nombre, la figura y la ejecución del que queda' % (old, kept), ev(DRAWN) and got[0] == kept and got[1] == old and len(got[2]) > 80 and got[2] == same, str(got)[:200])
+            ev("document.querySelector('#sh [data-a=exerciseDetailByName]').click()")
+            pg.clock.run_for(400)
+            settle("!!document.querySelector('#sh h2')")
+            check('y su ficha es la del que queda', ev("(h => h && h.textContent)(document.querySelector('#sh h2'))") == kept, ev("document.querySelector('#sh').innerText.slice(0, 80)"))
+            ev("A.closeSheet()")
+            pg.clock.run_for(300)
         how('Mi ejercicio')
         check('ejercicio propio: sus músculos, sin figura', ev("!!document.querySelector('#sh .howto-anatomy svg') && !document.querySelector('#sh .figure-stage') && document.querySelector('#sh .howto-title').textContent == 'Mi ejercicio'"))
         ev("A.closeSheet()")

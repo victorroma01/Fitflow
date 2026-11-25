@@ -69,7 +69,8 @@ const howHead = n => {
     </div>
   ` : html`<h3 class="howto-title">${n}</h3>`;
 };
-/** Hoja de la ejecución; `back`, la vuelta a la ficha de la librería (si se abrió desde ella); si no, un enlace a la ficha.
+/** Hoja de la ejecución; `back`, la vuelta a la ficha de la librería (si se abrió desde ella); si no, un enlace a la ficha
+    (la de uno guardado con un nombre que ya no está en la librería es la del que queda: data/aliases, EX_RETIRED).
     La imagen grande es el modelo haciendo el ejercicio; en un ejercicio propio, que no tiene postura, sus músculos. */
 const howSheet = (n, back) => {
   const top = exMotion(n, stillFigures());
@@ -79,7 +80,7 @@ const howSheet = (n, back) => {
     ${top ? howHead(n) : html`<h3 class="howto-title">${n}</h3>`}
     <div class="section-label">Cómo se hace</div>
     <p class="howto-text">${exHow(n) || 'Es un ejercicio tuyo: muévete con control, en todo el recorrido que tu técnica permita.'}</p>
-    ${raw(back || !exAll().some(e => e.n == n) ? '' : html`
+    ${raw(back || !exAll().some(e => e.n == liveName(n)) ? '' : html`
       <button data-a="exerciseDetailByName" data-n="${n}" class="w-full mt-6">Ver la ficha del ejercicio</button>`)}`;
 };
 /* — manejadores de esta función (registros A / C / U) — */

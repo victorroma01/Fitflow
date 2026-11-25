@@ -103,6 +103,14 @@ Los saltos de línea de una plantilla sin la etiqueta `html` (un texto, un CSV) 
   en ninguno.
 - **Catálogo** (`data/exinfo`): una línea por ejercicio de la librería, `Nombre|consejo|cómo se hace`. Cada ejercicio nuevo
   necesita la suya, con textos propios: `tests/exinfo.test.mjs` falla si falta alguno o si dos se parecen demasiado.
+- **Juntar dos ejercicios que son el mismo**: se quita uno de `data/library` (y su figura de `data/figposes`, su línea de
+  `data/exinfo` y de `i18n/en-exinfo`) y se apunta en `data/aliases`: en `EX_RETIRED`, su nombre → el del que queda (lo guardado
+  con el nombre viejo lo sigue enseñando, con los músculos, la figura y la ficha del que queda: `library/model`, `exByName` y
+  `liveName`), y en `EX_ALIASES`, para que el buscador lo encuentre por el nombre de antes. El que queda dice en su consejo y
+  en su ejecución lo de los dos. Lo que lo nombraba (un programa, un cambio por nivel, una plantilla, un grupo de rotación) pasa
+  al que queda: `tests/library.test.mjs` falla si algo nombra un ejercicio que no está, o si lo guardado con el nombre viejo
+  dejara de medirse como antes (la unidad sale del nombre: `core/calc`, `unitFromName`). El nombre viejo conserva su
+  traducción al inglés (`i18n/en-library`), porque se sigue viendo en lo guardado.
 
 ## Fotos
 
