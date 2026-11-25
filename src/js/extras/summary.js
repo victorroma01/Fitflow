@@ -78,7 +78,7 @@ export function showSummary() {
     if (o.dv != null)
       ch.push(deltaChip(say `${signed(o.dv)} % volumen`, o.dv > 0 ? 'up' : o.dv < 0 ? 'down' : ''));
     if (o.ds)
-      ch.push(deltaChip(signed(o.ds) + (Math.abs(o.ds) == 1 ? ' serie' : ' series')));
+      ch.push(deltaChip(say `${signed(o.ds)}${Math.abs(o.ds) == 1 ? ' serie' : ' series'}`));
     if (o.dm)
       ch.push(deltaChip(say `${signed(o.dm)} min`));
     if (o.volRec)
@@ -241,7 +241,7 @@ function summaryImage(o) {
       if (o.dv != null)
         cm.push(say `${signed(o.dv)} % de volumen`);
       if (o.ds)
-        cm.push(signed(o.ds) + (Math.abs(o.ds) == 1 ? ' serie' : ' series'));
+        cm.push(say `${signed(o.ds)}${Math.abs(o.ds) == 1 ? ' serie' : ' series'}`);
       if (cm.length)
         tx(say `${cm.join('  ·  ')} vs. el entreno anterior`, P, Math.max(yy + 30, 1215), 34, 600, '#7ee0b5');
       tx('Registrado con StrataFit', W_ / 2, 1295, 28, 500, '#7c7c8c', 'center');

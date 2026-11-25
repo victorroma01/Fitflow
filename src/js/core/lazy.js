@@ -83,5 +83,12 @@ export const loadFigures = () => Promise.all([
   lazyLoad('figboxes', () => import('../data/figboxes.js')),
   lazyLoad('figure3d', () => import('../extras/figure3d.js')),
 ]).then(() => figureTools);
-/** El inglés (core/i18n): sus módulos, que se apuntan en el diccionario al cargarse. */
-export const loadEnglish = () => Promise.all([lazyLoad('en-ui', () => import('../i18n/en-ui.js'))]);
+/** El inglés (core/i18n): sus módulos, que se apuntan en el diccionario al cargarse. Los consejos de los ejercicios en inglés
+    (i18n/en-exinfo) van aparte, con loadExInfo. */
+export const loadEnglish = () => Promise.all([
+  lazyLoad('en-ui', () => import('../i18n/en-ui.js')),
+  lazyLoad('en-more', () => import('../i18n/en-more.js')),
+  lazyLoad('en-library', () => import('../i18n/en-library.js')),
+  lazyLoad('en-foods', () => import('../i18n/en-foods.js')),
+  lazyLoad('en-programs', () => import('../i18n/en-programs.js')),
+]);

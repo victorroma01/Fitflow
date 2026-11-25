@@ -2,7 +2,7 @@
    Copias de seguridad, restauración y avisos.
    Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, parseBackup, backupDate, askRestore, preRestore, preCopy, savePre, restoreBackup, backupFileCard, backupContents, backupText, backupSnapshots, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
 */
-import { say } from '../core/i18n.js';
+import { listAnd, say } from '../core/i18n.js';
 import { stateToStored } from '../core/schema.js';
 import { cleanProfile, isPlan } from '../core/repair.js';
 import { $, APPV, LOCALE, X } from '../core/util.js';
@@ -53,8 +53,8 @@ const backupRows = (s, wip) => {
   const weights = say `Historial de pesos de ${plural(countOf(s.hist), 'ejercicio', 'ejercicios')} y ${plural(countOf(s.pr), 'récord personal', 'récords personales')}`;
   const bodyWeight = plural(countOf(s.wl), 'registro de peso corporal', 'registros de peso corporal');
   const food = say `Comidas de ${plural(countOf(s.meals), 'día', 'días')} (${plural(it, 'alimento anotado', 'alimentos anotados')}) y agua de ${plural(countOf(s.wt), 'día', 'días')}`;
-  const mine = plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos') + ', ' + plural(countOf(s.lib), 'plato guardado', 'platos guardados') + ' y ' + plural(Object.keys(s.tp || {}).length, 'plantilla de día', 'plantillas de día');
-  const plans = plural(countOf(s.cr), 'rutina personalizada', 'rutinas personalizadas') + ', ' + plural(countOf(s.cp), 'programa guardado', 'programas guardados') + ' y ' + plural(countOf(s.cx), 'ejercicio propio', 'ejercicios propios');
+  const mine = listAnd([plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos'), plural(countOf(s.lib), 'plato guardado', 'platos guardados'), plural(Object.keys(s.tp || {}).length, 'plantilla de día', 'plantillas de día')]);
+  const plans = listAnd([plural(countOf(s.cr), 'rutina personalizada', 'rutinas personalizadas'), plural(countOf(s.cp), 'programa guardado', 'programas guardados'), plural(countOf(s.cx), 'ejercicio propio', 'ejercicios propios')]);
   const notes = say `Notas de ${plural(countOf(s.notes), 'ejercicio', 'ejercicios')}`;
   const r = [training, weights, bodyWeight, food, mine, plans, notes, ...backupRowsFull(s), 'Perfil, objetivos de nutrición, nivel y ajustes (tema, acento, estilo, unidades, avisos)'];
   if (wip)
@@ -369,7 +369,7 @@ function backupRowsFull(s) {
   const wd = L.filter(l => l.k == 'w').length;
   const r = [];
   if (cd || wd)
-    r.push(plural(cd, 'sesión de cardio', 'sesiones de cardio') + ' y ' + plural(wd, 'WOD', 'WOD'));
+    r.push(listAnd([plural(cd, 'sesión de cardio', 'sesiones de cardio'), plural(wd, 'WOD', 'WOD')]));
   const ms = Array.isArray(s.ms) ? s.ms.length : 0;
   if (ms)
     r.push(plural(ms, 'medición corporal', 'mediciones corporales'));

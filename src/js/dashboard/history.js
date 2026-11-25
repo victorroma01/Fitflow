@@ -3,7 +3,7 @@
    Define: MONTH_YEAR, WEEKDAY_DAY, calendarPage, logsPage, logSeries, dropSeries, logIndex, logText, logRight  · acciones/registros: 5
 */
 import { say } from '../core/i18n.js';
-import { $, dayKey, fmtDate, fmtDateShort, round1, roundInt, X } from '../core/util.js';
+import { $, DAY_LETTERS, dayKey, fmtDate, fmtDateShort, round1, roundInt, X } from '../core/util.js';
 import { A } from '../core/registry.js';
 import { calMonthOffset, S, saveState, setCalMonthOffset } from '../core/state.js';
 import { confirmDialog, fullPage, pgHead, sheet } from '../core/ui.js';
@@ -31,7 +31,7 @@ export function calendarPage() {
       <b>${fmtDate(d, MONTH_YEAR)}</b>
       <button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente" class="touch-target">›</button>
     </div>
-    <div class="calendar mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
+    <div class="calendar mt-8">${DAY_LETTERS.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
 const logsPage = () => {
   /* del día más reciente al más antiguo y, dentro de un día, el último que se guardó primero: un cardio se puede apuntar con

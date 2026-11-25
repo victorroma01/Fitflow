@@ -4,7 +4,7 @@
    así que al renombrarlo se cambia en todos esos sitios a la vez y nada se queda con el nombre viejo. No se elimina uno que esté
    en el plan, en un programa propio o en un workout: antes hay que quitarlo de ahí. Con un entreno en curso no se toca ninguno.
 */
-import { say } from '../core/i18n.js';
+import { listAnd, say } from '../core/i18n.js';
 import { typedName } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -131,7 +131,7 @@ A.customDeleteAsk = i => {
   const uses = exerciseUses(e.n);
   if (uses.length) {
     dialog('Antes, quítalo de donde está', html`
-      «${e.n}» está en ${uses.length > 1 ? uses.slice(0, -1).join(', ') + ' y ' + uses[uses.length - 1] : uses[0]}. Quítalo de ahí o cámbialo por otro y vuelve a eliminarlo.
+      «${e.n}» está en ${listAnd(uses)}. Quítalo de ahí o cámbialo por otro y vuelve a eliminarlo.
     `, [['Entendido', 'doNothing', 'primary']]);
     return;
   }

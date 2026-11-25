@@ -3,7 +3,7 @@
    Define: statCell, kcalToday, volumeBars, dashboardBase, recordsCard, weekStats, weekCard, dashboardTab
 */
 import { say } from '../core/i18n.js';
-import { dayKey, roundInt } from '../core/util.js';
+import { DAY_LETTERS, dayKey, roundInt } from '../core/util.js';
 import { S } from '../core/state.js';
 import { icon } from '../core/icons.js';
 import { bestOf } from '../workout/finish.js';
@@ -111,7 +111,7 @@ export const weekStats = () => {
   }
   const dots = [...Array(7)].map((_, i) => {
     const d = new Date(m0.getFullYear(), m0.getMonth(), m0.getDate() + i);
-    return { l: 'LMXJVSD'[i], on: !!day[dayKey(d)], td: dayKey(d) == dayKey(now), fu: d > now && dayKey(d) != dayKey(now) };
+    return { l: DAY_LETTERS[i], on: !!day[dayKey(d)], td: dayKey(d) == dayKey(now), fu: d > now && dayKey(d) != dayKey(now) };
   });
   return { c: wk(0), g, t, st, best: Math.max(best, st), dots, any: !!ks.length };
 };

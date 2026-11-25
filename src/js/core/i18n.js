@@ -12,12 +12,12 @@
      las claves con las que trabaja la app, que siguen en español (los datos guardados no cambian con el idioma).
    - Un texto compuesto fuera de una plantilla (un aviso, el texto de un PDF): se escribe con say`Ronda ${r} de ${n}`, que en
      español lo junta sin más y en inglés busca «Ronda {0} de {1}».
-   - tr también entiende una frase con espacios a los lados, con números («3 series» se busca como «# series») y varias
-     unidas con « · ».
+   - tr también entiende una frase con espacios a los lados, con números («3 series» se busca como «# series»), varias
+     unidas con « · » y una lista de frases separadas por comas («Bíceps, Braquial»).
    Lo que escribe el usuario no se traduce (salvo que sea, letra por letra, una frase del diccionario).
    Las funciones que leen una plantilla (scanTemplate, phraseKey) no dependen de la página: las usa también tools/i18n.js
    (leyendo este mismo archivo) para sacar del código las frases que hay que traducir, con las mismas claves.
-   Define: words, EN, missed, HOLE_OPEN, HOLE_CLOSE, HOLES, WORDS, SHOWN_ATTRS, RAW_TEXT, phraseKey, scanTemplate, htmlPlans, htmlPlan, NUMBERS, loose, trLoose, tr, phrasePlans, phrasePlan, say, trAs, addEnglish, startEnglish
+   Define: words, EN, missed, HOLE_OPEN, HOLE_CLOSE, HOLES, WORDS, SHOWN_ATTRS, RAW_TEXT, phraseKey, scanTemplate, htmlPlans, htmlPlan, NUMBERS, loose, trLoose, tr, phrasePlans, phrasePlan, say, listAnd, trAs, addEnglish, startEnglish
 */
 /* lo que traen los módulos del inglés (i18n/en-*.js), que se apuntan aquí al cargarse (addEnglish) */
 /** @type {Map<string, string>} */
@@ -158,8 +158,8 @@ export const htmlPlan = parts => {
 const NUMBERS = /\d+(?:[.,:]\d+)*/g;
 /* lo ya buscado sin encontrar la frase tal cual: frase → lo que se enseña */
 const loose = new Map();
-/* una frase que no está tal cual: sin los espacios de sus lados (« entreno»), con sus números como # («3 series» → «# series»)
-   o por partes, si son varias unidas con « · ». Lo que lleva etiquetas no es una frase */
+/* una frase que no está tal cual: sin los espacios de sus lados (« entreno»), con sus números como # («3 series» → «# series»),
+   por partes si son varias unidas con « · », o una lista de frases separadas por comas. Lo que lleva etiquetas no es una frase */
 const trLoose = s => {
   let out = loose.get(s);
   if (out !== undefined)
@@ -181,6 +181,14 @@ const trLoose = s => {
     }
     if (out === s && s.includes(' · '))
       out = s.split(' · ').map(tr).join(' · ');
+    if (out === s && s.startsWith('· '))
+      out = '· ' + tr(s.slice(2));
+    /* una lista («Bíceps, Braquial»): solo si cada cosa es una frase del diccionario (una frase con comas no es una lista) */
+    if (out === s && s.includes(', ')) {
+      const items = s.split(', ');
+      if (items.every(x => EN.has(x)))
+        out = items.map(x => EN.get(x)).join(', ');
+    }
     if (out === s && missed && WORDS.test(s))
       missed.add(s);
   }
@@ -238,6 +246,13 @@ export const say = (parts, ...values) => {
   for (let k = 0; k < p.idx.length; k++)
     out += tr(values[p.idx[k]]) + p.lits[k + 1];
   return out;
+};
+/** Una lista, con su «y» antes de la última: «a, b y c»; en inglés, «a, b, and c» (con su coma si son tres o más). Cada
+    cosa, en el idioma de la app.
+    @param {any[]} items */
+export const listAnd = items => {
+  const a = items.map(tr);
+  return a.length < 2 ? a[0] || '' : a.slice(0, -1).join(', ') + (EN ? (a.length > 2 ? ', and ' : ' and ') : ' y ') + a[a.length - 1];
 };
 /** Una frase que en inglés se dice de otra forma según de qué se hable: trAs('objetivo', 'Volumen') busca «objetivo:Volumen»
     («Bulk») y, si no está, «Volumen» («Volume»). En español, la frase tal cual.

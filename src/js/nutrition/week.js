@@ -3,16 +3,15 @@
    días anotados y cuántos quedaron en objetivo. Las cuentas son las de core/calc (nutritionPeriod), las mismas reglas que el
    análisis mensual: un día cuenta como anotado con más de 50 kcal y está en objetivo a ±10 % de las kcal. Es la semana del
    día que se está viendo; al tocar un día se va a él. Las medias no cuentan hoy, que aún no ha terminado.
-   Define: DAY_LETTERS, DAY_NAMES, dayNumber, weekDayColumn, weekFigures, nutritionWeekCard, nutritionRecentCard  · acciones/registros: 2
+   Define: DAY_NAMES, dayNumber, weekDayColumn, weekFigures, nutritionWeekCard, nutritionRecentCard  · acciones/registros: 2
 */
 import { say } from '../core/i18n.js';
-import { dayKey, fmtDateShort, roundInt } from '../core/util.js';
+import { DAY_LETTERS, dayKey, fmtDateShort, roundInt } from '../core/util.js';
 import { nutritionPeriod, weekKeys } from '../core/calc.js';
 import { A } from '../core/registry.js';
 import { nutriDate, S, setNutriDayOffset } from '../core/state.js';
 import { R } from '../core/render.js';
 import { html } from '../core/html.js';
-const DAY_LETTERS = 'LMXJVSD';
 const DAY_NAMES = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 /* el número de un día (clave AAAA-MM-DD) contando días enteros: para restar dos fechas sin que cuente el cambio de hora */
 const dayNumber = k => {
@@ -26,7 +25,7 @@ const weekDayColumn = (d, i, top, seen, today) => {
   /* en objetivo, anotado fuera de objetivo o sin anotar (las clases, enteras: nutri-week-day ok · nutri-week-day on · nutri-week-day) */
   const cls = (d.ok ? 'nutri-week-day ok' : d.on ? 'nutri-week-day on' : 'nutri-week-day') + (d.k == seen ? ' selected' : '');
   const what = !d.on ? 'sin anotar' : d.k == today ? say `${kcal} kcal por ahora` : say `${kcal} kcal, ${d.ok ? 'en objetivo' : 'fuera de objetivo'}`;
-  const said = DAY_NAMES[i] + ' ' + (+d.k.slice(8)) + (d.k == today ? ' (hoy)' : '') + ': ' + what;
+  const said = say `${DAY_NAMES[i]} ${+d.k.slice(8)}${d.k == today ? ' (hoy)' : ''}: ${what}`;
   return html`
     <button class="${cls}" data-a="nutritionGoDay" data-v="${d.k}" aria-label="${said}" aria-current="${d.k == seen ? 'date' : 'false'}">
       <span class="nutri-week-bar"><i data-style="height:${d.on ? Math.max(4, Math.min(100, d.v[0] / top * 100)) : 0}%"></i></span>

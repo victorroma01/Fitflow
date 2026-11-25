@@ -2,7 +2,7 @@
    Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones.
    Define: MACRO_CLASSES, nutritionDayHead, nutritionTotals, macroBar, mealItemRow, mealButtons, mealCard, mealName, nutritionBase  · acciones/registros: 2
 */
-import { say } from '../core/i18n.js';
+import { say, trAs } from '../core/i18n.js';
 import { clampNum, dayKey, fmtDate, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
 import { MEAL_NAMES, MEAL_SPLITS } from '../data/foods.js';
@@ -100,7 +100,11 @@ const mealCard = (m, i, nm, v, goal) => {
     </div>`;
 };
 /** Nombre de la comida `i` de `n` comidas al día (Desayuno, Comida, Cena…). */
-export const mealName = (i, n) => (n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x => n == 3 ? [0, 2, 4].includes(x) : n == 4 ? [0, 2, 3, 4].includes(x) : n == 2 ? [0, 4].includes(x) : 1)[i]] : MEAL_NAMES[i]) || say `Comida ${i + 1}`;
+export const mealName = (i, n) => {
+  const name = n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x => n == 3 ? [0, 2, 4].includes(x) : n == 4 ? [0, 2, 3, 4].includes(x) : n == 2 ? [0, 4].includes(x) : 1)[i]] : MEAL_NAMES[i];
+  /* «Comida» es aquí la del mediodía («Lunch»); suelta, una comida cualquiera («Meal») */
+  return name ? trAs('comida', name) : say `Comida ${i + 1}`;
+};
 /** Pestaña Nutrición; `water` es la tarjeta del agua (nutrition/water), que va tras el resumen. */
 export function nutritionBase(water) {
   const dt = nutriDate();

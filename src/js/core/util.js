@@ -1,7 +1,7 @@
 /* ═══ core/util ═══
    Utilidades puras (no importa nada): versión, idioma de esta apertura, selector $, escape HTML X, redondeos, fechas (dayKey)
    y formatos.
-   Define: APPV, FFDEP, LANG_KEY, langChoice, phoneLang, LANG, LOCALE, $, X, safeImage, round1, roundInt, fmtMinSec, dayKey, est1RM, fmtDuration, clampInt, typedNum, typedName, clampNum, fmtClock, dateFormats, fmtDate, fmtDateShort, newId
+   Define: APPV, FFDEP, LANG_KEY, langChoice, phoneLang, LANG, LOCALE, DAY_LETTERS, $, X, safeImage, round1, roundInt, fmtMinSec, dayKey, est1RM, fmtDuration, clampInt, typedNum, typedName, clampNum, fmtClock, dateFormats, fmtDate, fmtDateShort, newId
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
@@ -35,6 +35,8 @@ export const phoneLang = () => {
 export const LANG = langChoice() || phoneLang();
 /** La región con la que se escriben las fechas y los números: la del idioma. */
 export const LOCALE = LANG == 'en' ? 'en-US' : 'es';
+/** La inicial de cada día de la semana, de lunes a domingo. */
+export const DAY_LETTERS = LANG == 'en' ? 'MTWTFSS' : 'LMXJVSD';
 /** El primer elemento de la página que encaja con el selector `q`, o null. Para el comprobador de tipos vale por cualquier
     elemento (un <input>, un <video>…): quien lo pide sabe cuál es.
     @param {string} q

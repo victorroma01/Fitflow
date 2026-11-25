@@ -1,0 +1,50 @@
+/* ═══ i18n/en-more ═══
+   Inglés (de Estados Unidos): las frases que el código compone de un modo que tools/i18n.js no ve en el código. Una frase con
+   un número, que la app busca con # en su sitio («3 series» → «# series»); una palabra suelta que se junta con otra; y las que
+   se dicen distinto según de qué se hable, con su contexto delante (core/i18n, trAs: «objetivo:Volumen»). No se comprueba si
+   sobran: las encuentra el paseo en inglés de tests/english.py, que apunta lo que la app busca y no encuentra.
+*/
+import { addEnglish } from '../core/i18n.js';
+addEnglish({
+  "objetivo:Volumen": "Bulk",
+  "peso:baja": "is down",
+  "peso:sube": "is up",
+  "comida:Comida": "Lunch",
+  "enero": "January",
+  "febrero": "February",
+  "marzo": "March",
+  "abril": "April",
+  "mayo": "May",
+  "junio": "June",
+  "julio": "July",
+  "agosto": "August",
+  "septiembre": "September",
+  "octubre": "October",
+  "noviembre": "November",
+  "diciembre": "December",
+  "lunes": "Monday",
+  "martes": "Tuesday",
+  "jueves": "Thursday",
+  "viernes": "Friday",
+  "domingo": "Sunday",
+  "serie": "set",
+  "semana": "week",
+  "# ejercicio": "# exercise",
+  "# ejercicios": "# exercises",
+  "# serie": "# set",
+  "# series": "# sets",
+  "+# serie": "+# set",
+  "+# series": "+# sets",
+  "−# serie": "−# set",
+  "−# series": "−# sets",
+  "# entreno": "# workout",
+  "# entrenos": "# workouts",
+  "# semana": "# week",
+  "# semanas": "# weeks",
+  "Cada # semanas": "Every # weeks",
+  "# día": "# day",
+  "# días": "# days",
+  "# ronda": "# round",
+  "# rondas": "# rounds",
+  "# rondas + # reps": "# rounds + # reps",
+});

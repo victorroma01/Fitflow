@@ -2,7 +2,7 @@
    Logros.
    Define: achStats, ACHIEVEMENTS, checkAchievements, achProgress, achievementsPage  · acciones/registros: 1
 */
-import { say } from '../core/i18n.js';
+import { listAnd, say } from '../core/i18n.js';
 import { dayKey, fmtDateShort, round1, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
@@ -62,7 +62,7 @@ export function checkAchievements() {
       saveState();
     }
     if (nw.length)
-      setTimeout(() => toast(nw.length == 1 ? say `Logro: ${nw[0][1]}` : say `Logros: ${nw.slice(0, 2).map(x => x[1]).join(' y ')}${nw.length > 2 ? say ` y ${nw.length - 2} más` : ''}`), 1900);
+      setTimeout(() => toast(nw.length == 1 ? say `Logro: ${nw[0][1]}` : say `Logros: ${listAnd(nw.slice(0, 2).map(x => x[1]))}${nw.length > 2 ? say ` y ${nw.length - 2} más` : ''}`), 1900);
   }
   catch (e) {
     logError('comprobar logros', e);

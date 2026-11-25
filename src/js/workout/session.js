@@ -2,7 +2,7 @@
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
    Define: foldPassed, sessionHeader, setRow, restRunning, doneBefore, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 17
 */
-import { say } from '../core/i18n.js';
+import { listAnd, say, tr } from '../core/i18n.js';
 import { $, clampNum, fmtDuration, fmtMinSec, round1, roundInt, typedNum } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -65,7 +65,7 @@ const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
       <span>${raw(setNo(W.sets[exIndex], setIndex))}</span>
       ${raw(setLabelButton(set))}
       <input type="number" inputmode="decimal" data-c="setReps" data-i="${exIndex}" data-j="${setIndex}"
-          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')} aria-label="${unitName(exercise) + ', ' + name}">
+          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')} aria-label="${say `${unitName(exercise)}, ${name}`}">
       ${raw(!usesWeight(exercise) ? '<span class="muted ta-c">–</span>' : weightInput)}
       <span class="fs-13">${raw(rest ? fmtMinSec(rest) : '–')}</span>
       <button class="check ${set.ok ? 'on' : ''}" data-a="toggleSetDone" data-i="${exIndex}" data-j="${setIndex}"
@@ -87,7 +87,7 @@ const restRunning = (exIndex, setIndex) => W.restEndsAt && W.restAfter && W.rest
 const doneBefore = exIndex => {
   const names = [...new Set(W.sets[exIndex].filter(s => s.ok && s.n).map(s => s.n))];
   return names.length ? html`
-    <div class="muted fs-12">Las series ya hechas se guardan en ${names.map(n => '«' + n + '»').join(' y ')}</div>` : '';
+    <div class="muted fs-12">Las series ya hechas se guardan en ${listAnd(names.map(n => say `«${n}»`))}</div>` : '';
 };
 /* la cabecera de un ejercicio: foto o figura, nombre, objetivo, la última vez y, si se cambió con Swap, desde cuál */
 const exerciseHead = (exercise, exIndex) => html`
@@ -290,7 +290,7 @@ const setToggle = (i, b) => {
   R();
 };
 /** Cómo se llama una fila de series para los lectores de pantalla: «serie 2, Press banca» (o «drop set, …»). */
-const setName = (j, s, e) => say `${s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : say `serie ${j + 1}${(k => k == 'WRK' ? '' : ', ' + TECHNIQUES[k][0].toLowerCase())(setTechnique(s))}`}, ${e.n}`;
+const setName = (j, s, e) => say `${s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : say `serie ${j + 1}${(k => k == 'WRK' ? '' : ', ' + tr(TECHNIQUES[k][0]).toLowerCase())(setTechnique(s))}`}, ${e.n}`;
 /** Número que se ve a la izquierda de la fila: el de la serie (sin contar las filas extra), D en el drop set y + en el bloque
     de rest-pause. */
 const setNo = (a, j) => a[j].t == 1 ? 'D' : a[j].t == 2 ? '+' : a.slice(0, j + 1).filter(x => !x.t).length;
