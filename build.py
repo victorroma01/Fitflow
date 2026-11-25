@@ -50,7 +50,10 @@ FIG3D = os.path.join(SRC, 'fig3d')
 # los archivos del motor 3D, en el orden en que se cargan: cada uno usa lo que dejan los anteriores en Fig3D
 FIG3D_FILES = ('fig3d.js', 'gear3d.js', 'mov3d.js', 'tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js', 'core3d.js', 'funcional3d.js', 'cardio3d.js')
 CHANGELOG = os.path.join(ROOT, 'CHANGELOG.md')
+CHANGELOG_EN = os.path.join(ROOT, 'CHANGELOG.en.md')
 USER_SECTIONS = ('Novedades', 'Mejoras', 'Correcciones')  # apartados que la app enseña al usuario
+# los mismos apartados en CHANGELOG.en.md (las notas de cada versión en inglés), con el nombre del que son en español
+EN_SECTIONS = {"What's new": 'Novedades', 'Improvements': 'Mejoras', 'Fixes': 'Correcciones'}
 VERSION = r'\d+\.\d+\.\d+(?:\.\d+)?'  # 1.1.0 o, la revisión de una versión, 1.1.0.1
 
 
@@ -197,8 +200,9 @@ def version_key(v):
     return [int(x) for x in OLD_REVISIONS.get(v, v).split('.')]
 
 
-def changelog():
+def changelog(path=None, titles=USER_SECTIONS):
     """Versiones de CHANGELOG.md, de la más nueva a la más antigua: [{version, date, sections: [{title, items}]}].
+    (Con `path` y `titles`, las de otro archivo con otros nombres de apartado: CHANGELOG.en.md, las notas en inglés.)
     Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. Antes del primer apartado, las líneas
     que empiezan por «> » son la cabecera de la versión: la primera, su título, y las demás, su texto. Es un apartado más, el
     primero y marcado (`lead`): la app lo enseña destacado encima de los otros, y una instalada anterior a la 1.0.4, que no
@@ -206,7 +210,7 @@ def changelog():
     primeras cifras si tiene cuatro (1.1.0.1 revisa la 1.1.0) o la que diga antes de su primer apartado («Revisión de la
     [1.0.3]…»: las de la 1.0.3, que se numeraron 1.0.31 y 1.0.32)."""
     out, cur, sec, head = [], None, None, False
-    for raw in read(CHANGELOG).splitlines():
+    for raw in read(path or CHANGELOG).splitlines():
         l = raw.rstrip()
         if l.startswith('## '):
             m = re.match(r'^## \[(' + VERSION + r')\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})$', l)
@@ -220,7 +224,7 @@ def changelog():
             continue
         elif l.startswith('### '):
             title = l[4:].strip()
-            sec = {'title': title, 'items': []} if title in USER_SECTIONS else None
+            sec = {'title': title, 'items': []} if title in titles else None
             if sec:
                 cur['sections'].append(sec)
             head = False
@@ -246,6 +250,28 @@ def changelog():
     return out
 
 
+def english(entries):
+    """Pone a cada versión sus notas en inglés (`en`: los apartados de su entrada en CHANGELOG.en.md), que son las que enseña
+    la app cuando está en inglés. La entrada en inglés tiene que decir lo mismo que la de CHANGELOG.md: los mismos apartados,
+    en el mismo orden y con los mismos puntos (y su cabecera, si la tiene). Una versión sin entrada en inglés se enseña en
+    español; solo las hay desde la 1.0.4, que es la primera con la app en inglés."""
+    en = {e['version']: e for e in changelog(CHANGELOG_EN, tuple(EN_SECTIONS))} if os.path.exists(CHANGELOG_EN) else {}
+    known = {e['version'] for e in entries}
+    for v in en:
+        if v not in known:
+            die('CHANGELOG.en.md: la versión %s no está en CHANGELOG.md' % v)
+    shape = lambda sections, name: [('cabecera' if s.get('lead') else name(s['title']), len(s['items'])) for s in sections]
+    for e in entries:
+        x = en.get(e['version'])
+        if x is None:
+            continue
+        a, b = shape(e['sections'], lambda t: t), shape(x['sections'], lambda t: EN_SECTIONS[t])
+        if a != b or x['date'] != e['date']:
+            die('CHANGELOG.en.md: la %s no dice lo mismo que en CHANGELOG.md (apartados y puntos de cada uno: %s en español y %s en inglés)' % (e['version'], a, b))
+        e['en'] = x['sections']
+    return entries
+
+
 def cards(entries):
     """Las versiones tal como las enseña la app (el aviso de versión nueva, las novedades y Ajustes). Una revisión no tiene
     tarjeta propia: es la de la versión que revisa con lo suyo delante, y cada apartado dice de cuál es («Correcciones de la
@@ -257,6 +283,8 @@ def cards(entries):
             continue
         if not e.get('base'):
             out.append({'version': e['version'], 'date': e['date'], 'sections': e['sections']})
+            if e.get('en'):
+                out[-1]['en'] = e['en']
             continue
         # de la revisión a la versión que revisa, pasando por las revisiones anteriores de la misma
         chain = [e]
@@ -273,6 +301,11 @@ def cards(entries):
         out.append({'version': e['version'], 'date': e['date'],
                     'sections': leads[:1] + [{'title': '%s de la %s' % (s['title'], x['version']), 'items': s['items']}
                                              for x in chain for s in x['sections'] if not s.get('lead')]})
+        # y lo mismo en inglés, si todas las de la tarjeta tienen sus notas en inglés
+        if all(x.get('en') for x in chain):
+            leads = [s for x in chain for s in x['en'] if s.get('lead')]
+            out[-1]['en'] = leads[:1] + [{'title': '%s in %s' % (s['title'], x['version']), 'items': s['items']}
+                                         for x in chain for s in x['en'] if not s.get('lead')]
         covered.update(x['version'] for x in chain[1:])
     return out
 
@@ -345,8 +378,12 @@ def version_json(entries):
     """version.json del paquete: la versión publicada con sus novedades y las de las anteriores (por si alguien salta varias).
     `number` es la versión; `version`, lo que leen de ella las apps instaladas hasta la 1.0.31 (legacy_version)."""
     top = entries[0]
-    return json.dumps({'version': legacy_version(top['version'], top['date']), 'number': top['version'], 'date': top['date'],
-                       'sections': top['sections'], 'history': entries[:6]}, ensure_ascii=False, indent=1) + '\n'
+    out = {'version': legacy_version(top['version'], top['date']), 'number': top['version'], 'date': top['date'],
+           'sections': top['sections'], 'history': entries[:6]}
+    # las notas en inglés (`en`, arriba y en cada versión de la lista): las apps instaladas hasta la 1.0.31 no las miran
+    if top.get('en'):
+        out['en'] = top['en']
+    return json.dumps(out, ensure_ascii=False, indent=1) + '\n'
 
 
 # ── compilación ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -618,6 +655,30 @@ def static_files():
     return {n: os.path.join(ROOT, 'static', n) for n in sorted(os.listdir(os.path.join(ROOT, 'static'))) if n != 'sw.js'}
 
 
+# Los textos del manifiesto (static/manifest.webmanifest: los accesos directos del icono, en Android), en inglés
+MANIFEST_EN = {
+    'Entreno de hoy': "Today's workout", 'Entreno': 'Workout', 'Abre el entreno que toca hoy': "Opens today's workout",
+    'Nutrición de hoy': "Today's nutrition", 'Nutrición': 'Nutrition', 'Abre las comidas de hoy': "Opens today's meals",
+    'Registrar el peso': 'Log your weight', 'Peso': 'Weight', 'Abre Evolución del peso': 'Opens Weight over time',
+}
+
+
+def manifest_en():
+    """manifest.en.webmanifest: el manifiesto del paquete con sus textos en inglés. La plantilla (src/index.html) lo pone en
+    lugar del otro cuando la app está en inglés. Es el mismo en todo lo demás (misma dirección de inicio: la misma app)."""
+    m = json.loads(read(os.path.join(ROOT, 'static', 'manifest.webmanifest')))
+    if m.get('lang') != 'es':
+        die('static/manifest.webmanifest debe decir "lang": "es"')
+    m['lang'] = 'en'
+    for s in m.get('shortcuts', []):
+        for k in ('name', 'short_name', 'description'):
+            if k in s:
+                if s[k] not in MANIFEST_EN:
+                    die('falta en build.py (MANIFEST_EN) el inglés de «%s», del manifiesto' % s[k])
+                s[k] = MANIFEST_EN[s[k]]
+    return json.dumps(m, ensure_ascii=False, indent=2) + '\n'
+
+
 def static_checks(js, html):
     """Comprobaciones baratas, sin dependencias externas."""
     if len(re.findall(r'window\.__ffok\s*=\s*1\b', js)) != 1:
@@ -655,7 +716,9 @@ def main():
     mods = module_list()
     check_tree(mods)
     m = media()
-    entries = cards(changelog())
+    entries = cards(english(changelog()))
+    if not entries or not entries[0].get('en'):
+        die('CHANGELOG.en.md debe tener la entrada de la versión %s, con sus notas en inglés (es lo que enseña la app en inglés)' % (entries[0]['version'] if entries else '?'))
     css = compile_css()
     tpl = read(os.path.join(SRC, 'index.html'))
     if tpl.count('@@CSS@@') != 1 or tpl.count('@@JS@@') != 1:
@@ -711,6 +774,7 @@ def main():
         write(os.path.join(out, 'version.json'), version_json(entries))
         for n, p in static_files().items():
             shutil.copy(p, os.path.join(out, n))
+        write(os.path.join(out, 'manifest.en.webmanifest'), manifest_en())
         size = 0
         for rel, p in m['files']:
             os.makedirs(os.path.dirname(os.path.join(out, rel)), exist_ok=True)

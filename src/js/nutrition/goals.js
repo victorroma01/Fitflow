@@ -4,7 +4,7 @@
    Mientras estén a mano (S.nutritionGoals.man), cambiar el peso o la actividad no los pisa (nutrition/diet, applyDiet).
    Define: ringSvg, macroCell, goalSelect, goalsRing, goalRow, goalsFields, myNutritionPage, refreshGoals, manualPage, manualValues  · acciones/registros: 9
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $, clampInt, clampNum, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C, U } from '../core/registry.js';
@@ -146,7 +146,7 @@ U.manualGoalsPreview = () => {
     return;
   const [k, c, p, f] = manualValues();
   if ([k, c, p, f].some(isNaN)) {
-    e.textContent = 'Kcal entre 800 y 8000 y porcentajes entre 0 y 100.';
+    e.textContent = tr('Kcal entre 800 y 8000 y porcentajes entre 0 y 100.');
     return;
   }
   const s = c + p + f;

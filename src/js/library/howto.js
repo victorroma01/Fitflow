@@ -18,7 +18,7 @@ import { S } from '../core/state.js';
 import { exAll, exByName, exMuscles, liveName } from './model.js';
 import { exAnatomy, exMusclesSmall } from '../extras/anatomy.js';
 import { exMotion } from '../extras/pictures.js';
-import { html, raw } from '../core/html.js';
+import { commas, html, raw } from '../core/html.js';
 /* consejo de los ejercicios propios (no están en el catálogo), según su grupo */
 const GROUP_TIPS = { Pecho: 'Junta las escápulas y baja hasta notar el estiramiento del pecho.', Espalda: 'Inicia el gesto llevando los codos atrás, sin tirar con los bíceps.', Hombros: 'Evita encoger los hombros y mantén el core apretado.', 'Bíceps': 'Codos pegados al cuerpo y sin balanceo.', 'Tríceps': 'Codos fijos y extensión completa.', Antebrazos: 'Agarre firme y recorrido completo.', Abdomen: 'Redondea la columna y exhala al contraer.', 'Cuádriceps': 'Rodillas alineadas con las puntas de los pies.', 'Isquios y glúteos': 'Cadera atrás y aprieta el glúteo arriba.', Gemelos: 'Pausa de 1 s arriba y estiramiento completo abajo.', CrossFit: 'Prioriza la técnica antes que la velocidad.', Hyrox: 'Gestiona el ritmo: sal al 80 % de tu esfuerzo.', Funcional: 'Controla el movimiento y activa el core.', Cardio: 'Mantén un ritmo constante y respira por el ritmo, no por la prisa.', Propio: 'Muévete con control y en todo el recorrido que tu técnica permita.' };
 /** Catálogo cargado: nombre → { t: consejo, h: cómo se hace } (null hasta que llega data/exinfo). */
@@ -57,7 +57,7 @@ const howHead = n => {
   const e = exByName(n);
   const small = exMusclesSmall(n);
   const line = (k, label, cls) => e && exMuscles(e, k).length ? html`
-    <p class="howto-muscles"><i class="${cls}"></i><b>${label}</b> ${exMuscles(e, k).join(', ')}</p>` : '';
+    <p class="howto-muscles"><i class="${cls}"></i><b>${label}</b> ${commas(exMuscles(e, k))}</p>` : '';
   return small ? html`
     <div class="howto-head">
       ${small}

@@ -8,7 +8,7 @@
    sn: pospuesto hasta ese día, c: id del evento del calendario }.
    Define: WEIGH_STEPS, WEIGH_UNITS, weighCustom, weighEvery, addStep, lastWeighIn, weighNext, weighDue, weighBanner, reminderCard, checkWeighIn, icsText, weighIcs  · acciones/registros: 7
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $, dayKey, fmtDateShort, newId } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -143,7 +143,7 @@ const weighIcs = () => {
   const d = (weighNext() || dayKey(new Date())).replace(/-/g, '');
   const rule = r.u == 'm' ? 'MONTHLY' : r.u == 'w' ? 'WEEKLY' : 'DAILY';
   const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
-  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StrataFit//Recordatorio de pesaje//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT', 'UID:stratafit-pesaje-' + r.c, 'DTSTAMP:' + now, 'DTSTART:' + d + 'T090000', 'DURATION:PT10M', 'RRULE:FREQ=' + rule + ';INTERVAL=' + r.n, 'SUMMARY:' + icsText('Día de pesarse'), 'DESCRIPTION:' + icsText('Toca pesarse: registra tu peso en StrataFit.'), 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText('Día de pesarse'), 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR', ''].join('\r\n');
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StrataFit//Recordatorio de pesaje//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT', 'UID:stratafit-pesaje-' + r.c, 'DTSTAMP:' + now, 'DTSTART:' + d + 'T090000', 'DURATION:PT10M', 'RRULE:FREQ=' + rule + ';INTERVAL=' + r.n, 'SUMMARY:' + icsText(tr('Día de pesarse')), 'DESCRIPTION:' + icsText(tr('Toca pesarse: registra tu peso en StrataFit.')), 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(tr('Día de pesarse')), 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR', ''].join('\r\n');
 };
 /* — manejadores de esta función (registros A / C / U) — */
 C.weighReminderToggle = e => {

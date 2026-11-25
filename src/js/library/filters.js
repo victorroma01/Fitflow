@@ -11,7 +11,7 @@ import { libBody, libState } from './browse.js';
 import { swapBody, swapState } from './swap.js';
 import { pickBody, pickState } from './picker.js';
 import { routineExRows, routineState } from '../routines/builder.js';
-import { html, raw } from '../core/html.js';
+import { commas, html, raw } from '../core/html.js';
 export const equipIn = l => EQUIP_ORDER.filter(q => l.some(e => e.q == q));
 export const filterOpen = {};
 export const equipMatch = (c, e) => !c || !c.length || c.includes(e.q);
@@ -26,7 +26,7 @@ export const equipDropdown = (k, cur, items, base, sh) => {
       <button class="filter-btn${cur.length ? ' on' : ''}" data-a="filterToggleOpen" data-k="${k}" aria-haspopup="true"
           aria-expanded="${open}">
         <span>Equipo</span>
-        <b>${raw(cur.length ? X(sh && cur.length > 1 ? cur[0] + ' +' + (cur.length - 1) : cur.join(', ')) : 'Todos')}</b>
+        <b>${cur.length ? sh && cur.length > 1 ? html`${cur[0]} +${cur.length - 1}` : commas(cur) : 'Todos'}</b>
         ${icon('chev', 16)}
       </button>
       <div class="filter-panel"${open ? '' : ' hidden'}>

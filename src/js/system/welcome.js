@@ -9,7 +9,7 @@
    (core/back). Las cuentas que ya existían no la ven.
    Define: BIO_NUMBERS, welcome, welcomeRoot, welcomeView, sexButtons, bioNumbers, bioFormView, welcomeRender, readBioForm, bioProblem, welcomeShow  · acciones/registros: 3
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { A } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
@@ -155,7 +155,7 @@ A.welcomeSave = () => {
       e.classList.add('bad');
       e.focus();
     }
-    $('#wle').textContent = bad[1];
+    $('#wle').textContent = tr(bad[1]);
     return;
   }
   S.biometrics = { ...(S.biometrics || {}), sex: f.sex, age: f.age, h: f.h, w: f.w, act: f.act, goal: f.goal };

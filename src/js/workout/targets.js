@@ -2,7 +2,7 @@
    Unidades, repeticiones objetivo, duración y volumen semanal.
    Define: repClass, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { fmtMinSec } from '../core/util.js';
 import { unitFromName } from '../core/calc.js';
 import { C } from '../core/registry.js';
@@ -141,7 +141,7 @@ export const planLine = e => {
     return say `${targetText(e)} + ${e.s - 1} mini series de 3-5`;
   if (a == 'CL')
     return say `${e.s} × ${targetText(e)} en bloques de 2-3`;
-  return e.s + ' × ' + targetText(e) + (TECH_TAIL[a] || '');
+  return e.s + ' × ' + targetText(e) + tr(TECH_TAIL[a] || '');
 };
 /* un dato con su nombre («RIR 1-2», «Descanso 3:00»), que no se parte entre dos líneas. Con dot, lleva pegado el punto que
    lo separa del siguiente: si la línea se parte ahí, el punto se queda al final de la primera y no al principio de la otra */

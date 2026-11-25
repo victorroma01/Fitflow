@@ -2,6 +2,7 @@
    Compartir e importar programas mediante código.
    Define: cleanPlan, programCode, parseImport, ensureExercises, shareState, sharePage, importProgram  · acciones/registros: 7
 */
+import { tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -118,7 +119,7 @@ A.shareCopyCode = async () => {
   const code = el.value;
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'Programa StrataFit', text: code });
+      await navigator.share({ title: tr('Programa StrataFit'), text: code });
       return;
     }
     catch (e) {
@@ -160,7 +161,7 @@ const importProgram = t => {
   catch (x) {
     const e = $('#ipe');
     if (e) {
-      e.textContent = 'El código o el archivo no es válido.';
+      e.textContent = tr('El código o el archivo no es válido.');
       e.style.display = 'block';
     }
   }

@@ -2,7 +2,7 @@
    Alimentos en línea (Open Food Facts) y escáner de códigos.
    Define: onlineFoods, onlineQuery, onlineBusy, OFF_ERRORS, offErrorText, isOffline, pause, offFetch, offName, offProduct, OFF_FIELDS, SEARCH_SIZE, SEARCH_KEEP_MS, searchCache, luceneSafe, searchNewUrl, searchOldUrl, searchResult, searchOnline, searchNote, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanTry, scanMsg, stopScan, startScan, scanLoop, offBarcode, lookupBarcode  · acciones/registros: 5
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
@@ -402,7 +402,7 @@ let scanTry = 0;
 const scanMsg = t => {
   const e = document.getElementById('f2sm');
   if (e)
-    e.textContent = t;
+    e.textContent = tr(t);
 };
 function stopScan() {
   scanTry++;

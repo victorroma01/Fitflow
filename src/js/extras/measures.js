@@ -3,6 +3,7 @@
    V1.0.0 (sin datos personales: F-35).
    Define: MEASURES, measureState, measureList, measureDelta, measureChart, measuresTab, measuresPage  · acciones/registros: 7
 */
+import { tr } from '../core/i18n.js';
 import { dayKey, fmtDateShort, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -93,7 +94,7 @@ function measuresTab() {
         <div class="item item-split cur-pointer" data-a="measureDeleteAsk" data-i="${L.length - 1 - i}" role="button" tabindex="0">
           <span>
             <b>${raw(fmtDateShort(m.d, { day: 'numeric', month: 'long', year: 'numeric' }))}</b><br>
-            <small>${raw(MEASURES.filter(x => +m.v[x[0]] > 0).map(x => x[1] + ' ' + round1(+m.v[x[0]])).join(' · '))}</small>
+            <small>${MEASURES.filter(x => +m.v[x[0]] > 0).map(x => tr(x[1]) + ' ' + round1(+m.v[x[0]])).join(' · ')}</small>
           </span>
         </div>`)}
       <p class="muted fs-12 m-8-0-0">Toca una medición para borrarla.</p>

@@ -329,7 +329,7 @@ const kpiGrid = m => {
       ${kpi('Tiempo', hm, '')}
       ${kpi('Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1), t.vol >= m.pt.vol ? 'up' : 'down')}
       ${kpi('Récords', String(ex.rec.length), ex.rec.length ? 'mejor 1RM estimado' : '')}
-      ${kpi('Peso', weightDelta(w), w.d == null ? 'sin pesajes' : w.tr, w.ok == null ? '' : w.ok ? 'up' : 'down')}
+      ${kpi('Peso', weightDelta(w), w.d == null ? 'sin pesajes' : trAs('tendencia', w.tr), w.ok == null ? '' : w.ok ? 'up' : 'down')}
       ${kpi('Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días', '')}
     </div>`;
 };
@@ -473,7 +473,7 @@ const analysisPdf = async (ym) => {
   };
   const para = (s, o = {}) => {
     const size = o.size || 10;
-    for (const l of d.wrap(s, o.w || WD, size, o.bold)) {
+    for (const l of d.wrap(tr(s), o.w || WD, size, o.bold)) {
       need(size * 1.5);
       d.text(o.x || X0, y + size, l, { size, bold: o.bold, color: o.color || INK });
       y += size * 1.45;
@@ -482,7 +482,7 @@ const analysisPdf = async (ym) => {
   const section = s => {
     need(60);
     y += 14;
-    d.text(X0, y + 13, s, { size: 13, bold: true, color: INK });
+    d.text(X0, y + 13, tr(s), { size: 13, bold: true, color: INK });
     d.line(X0, y + 19, X0 + WD, y + 19, { color: LN });
     y += 28;
   };
@@ -495,16 +495,16 @@ const analysisPdf = async (ym) => {
   d.text(X0 + WD - 18, 68, 'STRATAFIT', { size: 11, bold: true, color: [255, 255, 255], align: 'right' });
   y = 128;
   /* cifras */
-  const tiles = [['Entrenos', String(t.n), delta(t.n, m.pt.n)], ['Tiempo', say `${Math.floor(t.min / 60)} h ${String(Math.round(t.min % 60)).padStart(2, '0')} min`, ''], ['Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1)], ['Récords', String(m.ex.rec.length), m.ex.rec.length ? 'mejor 1RM estimado' : ''], ['Peso', weightDelta(w), w.d == null ? 'sin pesajes' : w.tr], ['Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días registrados']];
+  const tiles = [['Entrenos', String(t.n), delta(t.n, m.pt.n)], ['Tiempo', say `${Math.floor(t.min / 60)} h ${String(Math.round(t.min % 60)).padStart(2, '0')} min`, ''], ['Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1)], ['Récords', String(m.ex.rec.length), m.ex.rec.length ? 'mejor 1RM estimado' : ''], ['Peso', weightDelta(w), w.d == null ? 'sin pesajes' : trAs('tendencia', w.tr)], ['Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días registrados']];
   const tw = (WD - 20) / 3;
   tiles.forEach((x, i) => {
     const tx = X0 + i % 3 * (tw + 10);
     const ty = y + Math.floor(i / 3) * 66;
     d.rect(tx, ty, tw, 56, { fill: [246, 246, 250], r: 10 });
-    d.text(tx + 12, ty + 17, x[0], { size: 8.5, color: MU });
+    d.text(tx + 12, ty + 17, tr(x[0]), { size: 8.5, color: MU });
     d.text(tx + 12, ty + 37, x[1], { size: 16, bold: true, color: INK });
     if (x[2])
-      d.text(tx + 12, ty + 50, x[2], { size: 7.5, color: MU });
+      d.text(tx + 12, ty + 50, tr(x[2]), { size: 7.5, color: MU });
   });
   y += 136;
   /* entrenamientos */
@@ -539,11 +539,11 @@ const analysisPdf = async (ym) => {
       return;
     need(30);
     y += 6;
-    d.text(X0, y + 9, head, { size: 8.5, bold: true, color: MU });
+    d.text(X0, y + 9, tr(head), { size: 8.5, bold: true, color: MU });
     y += 16;
     for (const [l, r] of list) {
       need(16);
-      d.text(X0, y + 9, l, { size: 9.5, color: INK });
+      d.text(X0, y + 9, tr(l), { size: 9.5, color: INK });
       d.text(X0 + WD, y + 9, r, { size: 9.5, bold: true, color: INK, align: 'right' });
       d.line(X0, y + 14, X0 + WD, y + 14, { color: [238, 238, 242], lw: .6 });
       y += 18;
@@ -609,8 +609,8 @@ const analysisPdf = async (ym) => {
     let lx = X0;
     lg.forEach(([l, c]) => {
       d.rect(lx, y - 7, 8, 8, { fill: c, r: 2 });
-      d.text(lx + 12, y, l, { size: 8, color: MU });
-      lx += 24 + d.width(l, 8);
+      d.text(lx + 12, y, tr(l), { size: 8, color: MU });
+      lx += 24 + d.width(tr(l), 8);
     });
     y += 8;
   }

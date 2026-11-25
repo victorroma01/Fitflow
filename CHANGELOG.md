@@ -38,6 +38,8 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   al tocarla, en «Cómo se hace», se mueve con el gesto (con «Reducir animaciones», sus posturas quietas).
 - Inicio de sesión con imagen de fondo: un gimnasio visto desde arriba, en gris y a media luz.
 - Portadas nuevas para los días de CrossFit, Hyrox y funcional y para sus descansos; con el perfil de mujer, todas.
+- Idiomas: la app está también en inglés. Se pone sola en el idioma del móvil (inglés o español) y se cambia cuando
+  quieras en Ajustes → Idiomas.
 
 ### Mejoras
 - Librería revisada: los músculos de cada ejercicio, comprobados, y fuera los repetidos (el mismo ejercicio con otro nombre).

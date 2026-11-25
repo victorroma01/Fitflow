@@ -1,8 +1,8 @@
 /* ═══ system/updates ═══
    Actualización de la app: service worker, uso sin conexión, Ajustes → Actualizaciones y aviso de versión nueva con sus novedades.
-   Define: swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, OLD_REVISIONS, plainVersion, versionKey, isNewerVersion, fetchVersionInfo, sectionHtml, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
+   Define: swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, OLD_REVISIONS, plainVersion, versionKey, isNewerVersion, fetchVersionInfo, notesOf, sectionHtml, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
-import { say } from '../core/i18n.js';
+import { EN, say, tr } from '../core/i18n.js';
 import { APPV, FFDEP, LOCALE, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
@@ -128,6 +128,9 @@ const fetchVersionInfo = async () => {
     return null;
   }
 };
+/** Los apartados de la nota de una versión en el idioma de la app: en inglés, los que trae escritos en inglés (`en`: build.py,
+    de CHANGELOG.en.md) y, si no los trae (las versiones anteriores a la 1.0.4), los de siempre, en español. */
+const notesOf = v => EN && Array.isArray(v.en) && v.en.length ? v.en : v.sections || [];
 /** Un apartado de la nota de una versión: su título y su lista (hasta `max` puntos; sin `max`, todos). La cabecera de la
     versión (su primer apartado, marcado `lead`: build.py, changelog) va destacada, con su título y su texto, sin lista. */
 const sectionHtml = (s, max) => s.lead ? html`
@@ -142,7 +145,7 @@ const releaseNotesHtml = (info, current) => {
   const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
   const notes = shown.map(v => (shown.length > 1 ? html`
     <p class="update-version">Versión ${plainVersion(v.version)}</p>
-  ` : '') + (v.sections || []).map(s => sectionHtml(s, 8)).join('')).join('');
+  ` : '') + notesOf(v).map(s => sectionHtml(s, 8)).join('')).join('');
   return notes || html`<ul><li>Mejoras y correcciones.</li></ul>`;
 };
 /** Ajustes → «Ver nota de actualización» (F-28): la nota de la versión instalada, solo la última, con todos sus cambios y,
@@ -150,7 +153,7 @@ const releaseNotesHtml = (info, current) => {
 export const releaseNotePage = () => {
   const r = RELEASE;
   const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-  const body = (r.sections || []).map(s => sectionHtml(s, 0)).join('');
+  const body = notesOf(r).map(s => sectionHtml(s, 0)).join('');
   return html`
     <div class="card release-notes">
       <b class="release-version">Versión ${r.version || APPV}</b>
@@ -264,7 +267,7 @@ export const showWhatsNew = () => {
 A.updateApply = async (i, b) => {
   if (b) {
     b.disabled = true;
-    b.textContent = 'Actualizando…';
+    b.textContent = tr('Actualizando…');
   }
   try {
     await Promise.all(['./', 'index.html'].map(u => fetch(u + '?fresh=' + Date.now(), { cache: 'reload' })));
@@ -298,7 +301,7 @@ A.updateCheck = async (i, b) => {
   const label = tx ? tx.textContent : '';
   if (b) {
     b.disabled = true;
-    tx.textContent = 'Comprobando…';
+    tx.textContent = tr('Comprobando…');
   }
   const info = await fetchVersionInfo();
   if (b) {

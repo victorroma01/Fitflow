@@ -5,7 +5,7 @@
    animado en cada fotograma y la cuenta al día al volver a la app.
    Define: WOD_MODES, WOD_DEFAULTS, WOD_INFO, wodConfig, wodTotal, wodSetup, wodState, wodName, wodSkeleton, wodNext, wodFill, RING, wodRing, wodFrame, wodTick, wodStart, wodClose, wodEnd  · acciones/registros: 14
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { clampInt, dayKey, fmtClock } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -94,7 +94,7 @@ C.wodValue = e => {
   const t = document.getElementById('f2tt');
   if (t) {
     const T = wodTotal(wodConfig());
-    t.textContent = T ? fmtClock(T) : 'Sin límite';
+    t.textContent = T ? fmtClock(T) : tr('Sin límite');
   }
 };
 function wodState() {
@@ -133,7 +133,7 @@ function wodState() {
     return { ph: 'work', rem: Math.ceil(c.tw - w), id: 'w' + i, len: c.tw, el: w, rd: i + 1, tot: c.tn, t };
   return { ph: 'rest', rem: Math.ceil(cy - w), id: 'x' + i, len: c.tr, el: w - c.tw, rd: i + 1, tot: c.tn, t };
 }
-const wodName = c => c.m == 'amrap' ? say `AMRAP ${c.a} min` : c.m == 'emom' ? 'EMOM ' + (c.ei == 60 ? say `${c.en} min` : c.en + ' × ' + c.ei + ' s') : c.m == 'tabata' ? say `Tabata ${c.tw}/${c.tr} · ${c.tn} rondas` : say `For time${c.ct ? say ` · tope ${c.ct} min` : ''}`;
+const wodName = c => c.m == 'amrap' ? 'AMRAP ' + c.a + ' min' : c.m == 'emom' ? 'EMOM ' + (c.ei == 60 ? c.en + ' min' : c.en + ' × ' + c.ei + ' s') : c.m == 'tabata' ? 'Tabata ' + c.tw + '/' + c.tr + ' · ' + c.tn + ' rondas' : 'For time' + (c.ct ? ' · tope ' + c.ct + ' min' : '');
 function wodSkeleton() {
   const o = document.getElementById('f2w');
   if (!o || !wodRun)
@@ -214,9 +214,9 @@ const wodNext = s => {
   if (s.ph == 'pre')
     return say `Después: ${c.m == 'tabata' ? say `trabajo ${fmtClock(c.tw)}` : c.m == 'emom' ? say `ronda 1 de ${c.en}` : c.m == 'amrap' ? say `AMRAP ${c.a} min` : 'cronómetro'}`;
   if (c.m == 'tabata')
-    return (s.ph == 'work' ? (s.rd < s.tot && c.tr ? say `Después: descanso ${fmtClock(c.tr)}` : s.rd < s.tot ? say `Después: ronda ${s.rd + 1}` : 'Última ronda') : say `Después: trabajo ${fmtClock(c.tw)}`) + ' · ' + tot;
+    return (s.ph == 'work' ? (s.rd < s.tot && c.tr ? say `Después: descanso ${fmtClock(c.tr)}` : s.rd < s.tot ? say `Después: ronda ${s.rd + 1}` : tr('Última ronda')) : say `Después: trabajo ${fmtClock(c.tw)}`) + ' · ' + tot;
   if (c.m == 'emom')
-    return (s.rd < s.tot ? say `Después: ronda ${s.rd + 1}` : 'Última ronda') + ' · ' + tot;
+    return (s.rd < s.tot ? say `Después: ronda ${s.rd + 1}` : tr('Última ronda')) + ' · ' + tot;
   return '';
 };
 /** Fracción del reloj que se ve llena: en una cuenta atrás, lo que queda del tramo; en el For time, lo que va del límite o
@@ -265,8 +265,8 @@ function wodTick() {
   };
   const c = wodRun.c;
   set('f2t', s.up != null ? fmtClock(s.up) : fmtClock(s.rem));
-  set('f2p', wodRun.pa ? 'En pausa' : s.ph == 'pre' ? 'Prepárate' : s.ph == 'rest' ? 'Descanso' : c.m == 'ft' ? 'Cronómetro' : 'Trabajo');
-  set('f2s', s.rd ? say `Ronda ${s.rd} de ${s.tot}` : s.ph == 'pre' ? say `Empieza en ${s.rem} s` : c.m == 'ft' && c.ct ? say `Límite ${fmtClock(c.ct * 60)}` : c.m == 'amrap' && s.rem <= 60 && s.len > 120 ? 'Último minuto' : '');
+  set('f2p', tr(wodRun.pa ? 'En pausa' : s.ph == 'pre' ? 'Prepárate' : s.ph == 'rest' ? 'Descanso' : c.m == 'ft' ? 'Cronómetro' : 'Trabajo'));
+  set('f2s', s.rd ? say `Ronda ${s.rd} de ${s.tot}` : s.ph == 'pre' ? say `Empieza en ${s.rem} s` : c.m == 'ft' && c.ct ? say `Límite ${fmtClock(c.ct * 60)}` : c.m == 'amrap' && s.rem <= 60 && s.len > 120 ? tr('Último minuto') : '');
   set('f2nx', wodNext(s));
   /* el botón de saltar la cuenta atrás solo existe mientras dura */
   const sk = document.getElementById('f2sk');
@@ -395,7 +395,7 @@ A.wodPause = () => {
     o.classList.toggle('paused', !!wodRun.pa);
   const b = document.getElementById('f2pb');
   if (b)
-    b.textContent = wodRun.pa ? 'Seguir' : 'Pausa';
+    b.textContent = tr(wodRun.pa ? 'Seguir' : 'Pausa');
   wodTick();
   keepAwake();
 };
@@ -458,7 +458,7 @@ A.wodSave = () => {
   if (c.m == 'amrap') {
     const r = clampInt((document.getElementById('f2r') || {}).value, 0, 999, wodRun.r);
     const ex = clampInt((document.getElementById('f2e') || {}).value, 0, 999, 0);
-    x = r + (r == 1 ? ' ronda' : ' rondas') + (ex ? say ` + ${ex} reps` : '');
+    x = r + (r == 1 ? ' ronda' : ' rondas') + (ex ? ' + ' + ex + ' reps' : '');
     w.r = r;
     w.e = ex;
   }
@@ -469,7 +469,7 @@ A.wodSave = () => {
   }
   else {
     const rd = f.rd || 0;
-    x = say `${rd + (rd == 1 ? ' ronda' : ' rondas')}${f.early ? ' (antes de tiempo)' : ''} · ${fmtClock(Math.round(f.t))}`;
+    x = rd + (rd == 1 ? ' ronda' : ' rondas') + (f.early ? ' (antes de tiempo)' : '') + ' · ' + fmtClock(Math.round(f.t));
     w.r = rd;
     w.t = Math.round(f.t);
   }

@@ -9,7 +9,7 @@
    Android, Chrome cambia el icono solo.
    Define: iconNoticeApplies, iconSyncInfo, iconNoticeBody, iconTries, iconNoticeCheck  · acciones/registros: 3
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -112,7 +112,7 @@ export const iconNoticeCheck = () => {
 A.iconNoticeSync = async (i, b) => {
   if (b) {
     b.disabled = true;
-    b.textContent = 'Sincronizando…';
+    b.textContent = tr('Sincronizando…');
   }
   await syncNow();
   const e = $('#sh .icon-notice');

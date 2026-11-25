@@ -7,7 +7,7 @@ import { EXERCISES, groupOf, GROUPS, MUSCLES } from '../data/library.js';
 import { EX_ALIASES, EX_RETIRED } from '../data/aliases.js';
 import { S } from '../core/state.js';
 import { exPicture, exPictureLater } from '../extras/pictures.js';
-import { html, raw } from '../core/html.js';
+import { commas, html, raw } from '../core/html.js';
 /* los ejercicios de la biblioteca por nombre (el primero, si alguno se repitiera). La biblioteca no cambia después de
    arrancar; los propios, sí (se renombran en su sitio), y por eso esos se buscan en su lista, que es corta */
 let LIB_BY_NAME = null;
@@ -51,8 +51,8 @@ export const exSearchText = e => {
 };
 const exSubtitle = e => X((e.q || 'Personalizado') + (e.t && e.t != 'Otros' ? ' · ' + e.t : ''));
 const exMusclesHtml = e => (exMuscles(e, 'p').length ? html`
-  <small class="c-at">Principal: ${exMuscles(e, 'p').join(', ')}</small>
-` : '') + (exMuscles(e, 's').length ? html`<br><small class="muted">Secundarios: ${exMuscles(e, 's').join(', ')}</small>` : '');
+  <small class="c-at">Principal: ${commas(exMuscles(e, 'p'))}</small>
+` : '') + (exMuscles(e, 's').length ? html`<br><small class="muted">Secundarios: ${commas(exMuscles(e, 's'))}</small>` : '');
 /* las filas de una lista que llevan su figura desde el principio: las que se ven al abrirla, con algo de margen. Las
    siguientes la reciben al acercarse a la pantalla (extras/anatomy, exPictureLater) */
 const ROWS_WITH_PICTURE = 12;

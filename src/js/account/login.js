@@ -7,7 +7,7 @@
    de nuevo con ellos.
    Define: loginState, waitLeft, noteFail, BAD_LOGIN, clearFails, loginBusy, loginError, waitTimer, loginField, loginModeTabs, signUpExtra, loginBackdrop, RECAPTCHA_NOTE, loginView, passwordView, loginSync, enterAccount, finishLogin, reloginBusy  · acciones/registros: 7
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $, APPV } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -318,7 +318,7 @@ A.reloginSubmit = async () => {
   const out = t => {
     const e = $('#lre');
     if (e)
-      e.textContent = t;
+      e.textContent = tr(t);
   };
   if (passProblem(p)) {
     out(passProblem(p));

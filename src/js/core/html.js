@@ -10,7 +10,7 @@
    HTML (entre dos atributos de una etiqueta es el espacio que los separa). Los quita build.py antes de compilar y los pone
    «npm run format»; la regla entera está en tools/templates.js.
    En inglés (core/i18n), la plantilla pinta su texto fijo traducido y traduce los valores que van donde se lee texto.
-   Define: raw, part, partEn, html
+   Define: raw, commas, part, partEn, html
 */
 import { X } from './util.js';
 import { EN, htmlPlan, tr } from './i18n.js';
@@ -22,6 +22,10 @@ export class Html extends String {
     @param {any} v
     @returns {string} */
 export const raw = v => /** @type {any} */ (v instanceof Html ? v : new Html(EN ? tr(v) : v));
+/** Una lista separada por comas («Tríceps, Core»), con cada cosa en el idioma de la app.
+    @param {any[]} items
+    @returns {string} */
+export const commas = items => /** @type {any} */ (new Html(items.map(v => X(tr(v))).join(', ')));
 /** Un valor insertado: el Html tal cual, el resto escapado; una lista (p. ej. el resultado de un map) se une sin separador. */
 const part = v => Array.isArray(v) ? v.map(part).join('') : v instanceof Html ? v : X(v);
 /** Lo mismo, en inglés, para un valor que va donde se lee texto: si es una frase del diccionario, su traducción. */

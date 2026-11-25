@@ -2,7 +2,7 @@
    Plantillas de comidas, tipo de día (entreno o descanso, según la rutina) y hábitos.
    Define: nutriDayKey, planDayOf, dayInfo, dayType, templateCard, habitGrams, habitsCard  · acciones/registros: 7
 */
-import { say } from '../core/i18n.js';
+import { say, tr, trAs } from '../core/i18n.js';
 import { $, dayKey, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -174,13 +174,13 @@ A.saveDishAsk = (i, b) => {
   setAddState({ m: i });
   sheet(html`
     <h3>Guardar plato en la librería</h3>
-    <input id="pn" maxlength="80" aria-label="Nombre del plato" value="${b.dataset.n}">
+    <input id="pn" maxlength="80" aria-label="Nombre del plato" value="${trAs('comida', b.dataset.n)}">
     <button class="primary w-full mt-10" data-a="saveDish">Guardar</button>`);
 };
 A.saveDish = () => {
   const k = dayKey(nutriDate());
   const it = ((S.meals[k] || {})[addState.m] || []).map(x => ({ ...x }));
-  const n = $('#pn').value.trim() || 'Plato';
+  const n = $('#pn').value.trim() || tr('Plato');
   if (it.length) {
     S.savedDishes = S.savedDishes.filter(p => p.n != n).concat({ n, it });
     saveState();

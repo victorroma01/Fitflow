@@ -10,7 +10,7 @@
    Estado: S.cloudBackup = { at, lg, md }: la última copia en la nube (cuándo, entrenos y días de comidas), para todos los móviles.
    Define: CHUNK, MAX_CHUNKS, BACKUP_EVERY, cloudBusy, autoTried, pendingOld, backupPath, toB64, fromB64, canZip, zip, unzip, dataCounts, shrinks, writeCloudBackup, readCloudBackup, autoBackup, cloudBackupCard, wipeCloudBackup, saveNow  · acciones/registros: 3
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $, APPV, LOCALE } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
@@ -161,7 +161,7 @@ const saveNow = async (old) => {
   cloudBusy = 1;
   const l = $('#cbl');
   if (l)
-    l.textContent = 'Guardando…';
+    l.textContent = tr('Guardando…');
   try {
     await writeCloudBackup(old);
     toast('Copia guardada en la nube');

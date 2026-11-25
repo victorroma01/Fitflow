@@ -3,7 +3,7 @@
    (F-29), que antes intenta subir lo pendiente y luego borra del móvil los datos de la cuenta.
    Define: syncShort, infoRow, accountPage, pwMsg, passwordPage  · acciones/registros: 4
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { lockSaves, reloadApp } from '../core/persist.js';
@@ -61,7 +61,7 @@ A.accountChangePassword = async () => {
     pwMsg = t;
     const e = $('#ace');
     if (e)
-      e.textContent = t;
+      e.textContent = tr(t);
   };
   const pr = !v('acp0') ? 'Escribe tu contraseña actual.' : passProblem(v('acp1')) || (v('acp1') !== v('acp2') ? 'Las dos contraseñas nuevas no coinciden.' : '');
   if (pr) {

@@ -104,8 +104,8 @@ A.cardioSave = () => {
   }
   const d = /^\d{4}-\d{2}-\d{2}$/.test(r.d) && r.d <= dayKey(new Date) ? r.d : dayKey(new Date);
   const pc = cardioPace(cardioState.t, r.km, r.sec);
-  const x = (r.km ? say `${round1(r.km)} km · ` : '') + fmtClock(r.sec) + (pc ? ' · ' + pc : '');
-  S.logs.push({ d, n: say `Cardio · ${cardioLabel(cardioState.t)}`, v: 0, s: 0, m: Math.max(1, Math.round(r.sec / 60)), q: 0, k: 'c', x, c: { t: cardioState.t, km: r.km, sec: r.sec } });
+  const x = (r.km ? round1(r.km) + ' km · ' : '') + fmtClock(r.sec) + (pc ? ' · ' + pc : '');
+  S.logs.push({ d, n: 'Cardio · ' + cardioLabel(cardioState.t), v: 0, s: 0, m: Math.max(1, Math.round(r.sec / 60)), q: 0, k: 'c', x, c: { t: cardioState.t, km: r.km, sec: r.sec } });
   S.logs.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
   saveState();
   sheet();

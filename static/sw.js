@@ -5,7 +5,7 @@
    Todo se guarda y se busca por su dirección sin parámetros (keyOf): hasta la V1.0.2, abrir la app con conexión desde un acceso
    directo del icono (./?a=peso) dejaba otra copia del documento con esa dirección, que nadie actualizaba y que podía salir
    antes que la buena: tras publicar una versión, la app seguía abriendo la vieja y, borrado su código, dejaba de arrancar. */
-const C='ff-app-2',PRE=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png','icon-dark-192.png'/*@@FILES@@*/];
+const C='ff-app-2',PRE=['./','index.html','manifest.webmanifest','manifest.en.webmanifest','icon-180.png','icon-192.png','icon-512.png','icon-dark-192.png'/*@@FILES@@*/];
 const abs=u=>new URL(u,self.registration.scope).href;
 const DOCS=['./','index.html'];
 /* la clave de algo en la caché: su dirección sin parámetros (?a=…, ?fresh=…) */

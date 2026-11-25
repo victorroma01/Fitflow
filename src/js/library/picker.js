@@ -2,7 +2,7 @@
    Selector para añadir ejercicios al día.
    Define: addToDay, pickState, pickBody, pickSheet  · acciones/registros: 6
 */
-import { say } from '../core/i18n.js';
+import { say, tr } from '../core/i18n.js';
 import { $, typedName } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { exerciseNamed } from './custom.js';
@@ -35,7 +35,7 @@ const addToDay = n => {
 A.libraryAddToDay = (i, b) => {
   addToDay(EXERCISES.concat(S.customExercises)[i].n);
   R();
-  b.textContent = '✓ Añadido';
+  b.textContent = tr('✓ Añadido');
 };
 export let pickState = { g: '', gs: [], q: '', eq: [] };
 export const pickBody = () => {

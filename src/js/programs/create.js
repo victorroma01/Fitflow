@@ -168,7 +168,7 @@ const createHome = () => html`
     <span>
       <b>Con mis workouts</b>
       <small>
-        ${raw(S.routines.length ? say `${S.routines.length + (S.routines.length == 1 ? ' workout creado' : ' workouts creados')}. Te propongo la semana con descansos y tú la ordenas.` : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}
+        ${raw(S.routines.length ? S.routines.length == 1 ? '1 workout creado. Te propongo la semana con descansos y tú la ordenas.' : say `${S.routines.length} workouts creados. Te propongo la semana con descansos y tú la ordenas.` : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}
       </small>
     </span>›
   </button>

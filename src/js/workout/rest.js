@@ -52,9 +52,9 @@ export const restSelect = (e, short) => {
   const d = S.plan[S.selectedDay];
   const i = d.ex.indexOf(e);
   const r = restAt(d, i);
-  const l = blockEnd(d, i) ? 'Descanso de la ronda, ' : 'Descanso, ';
+  const l = blockEnd(d, i) ? say `Descanso de la ronda, ${e.n}` : say `Descanso, ${e.n}`;
   return html`
-    <select data-c="setRest" data-i="${i}" aria-label="${say `${l}${e.n}`}"${raw(short ? '' : ' class="w-auto p-5-10 fs-13"')}>
+    <select data-c="setRest" data-i="${i}" aria-label="${l}"${raw(short ? '' : ' class="w-auto p-5-10 fs-13"')}>
       ${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`
         <option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : say `Descanso ${fmtMinSec(v)} por serie`)}</option>`)}
     </select>`;

@@ -276,7 +276,10 @@ const start = () => {
 };
 /* en inglés, el diccionario (core/i18n), que se descarga mientras se leen los datos. Si no llega (sin conexión y sin tenerlo
    guardado), la app abre en español */
-const language = LANG == 'en' ? loadEnglish().then(startEnglish).catch(e => logError('arranque: el inglés', e)) : null;
+const language = LANG == 'en' ? loadEnglish().then(startEnglish).catch(e => {
+  logError('arranque: el inglés', e);
+  document.documentElement.lang = 'es';
+}) : null;
 /* primero, las partes del estado (IndexedDB) y el idioma; después, el arranque. Un fallo antes del primer pintado enseña la
    pantalla de error de index.html al momento */
 window.__ffready = loadParts(S).catch(e => logError('arranque: leer los datos', e)).then(() => language).then(start).catch(e => {

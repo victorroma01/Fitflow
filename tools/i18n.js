@@ -76,13 +76,20 @@ ${body}
 /* funciones cuyo texto no se enseña: el registro de errores, selectores, nombres de eventos, claves… */
 const SILENT_CALLS = /^(logError|console\.\w+|\$|\$\$|document\.querySelector(All)?|[\w.]+\.querySelector(All)?|[\w.]+\.closest|[\w.]+\.matches|document\.getElementById|[\w.]+\.addEventListener|[\w.]+\.removeEventListener|[\w.]+\.setAttribute|[\w.]+\.getAttribute|[\w.]+\.removeAttribute|[\w.]+\.classList\.\w+|matchMedia|window\.matchMedia|document\.createElement(NS)?|lazyLoad|lazyAction|fetch|[\w.]+\.includes|[\w.]+\.indexOf|[\w.]+\.startsWith|[\w.]+\.endsWith|[\w.]+\.split|[\w.]+\.join|[\w.]+\.replace|[\w.]+\.test|[\w.]+\.match|new RegExp|RegExp|Store\.\w+|[\w.]+\.getContext|[\w.]+\.postMessage|[\w.]+\.setProperty|[\w.]+\.getPropertyValue|[\w.]+\.createObjectStore|[\w.]+\.transaction|[\w.]+\.objectStore|idbStore|figDb|[\w.]+\.padStart|[\w.]+\.padEnd|parseInt|parseFloat|typeof)$/;
 const COMPARES = new Set([ts.SyntaxKind.EqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsToken, ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.InKeyword]);
-/* un texto que parece una frase: dos letras seguidas y un espacio, una letra con tilde o una mayúscula inicial seguida de minúsculas */
-const looksProse = u => core.WORDS.test(u) && (/[a-záéíóúñ] [a-záéíóúñA-Z¿¡«(]/.test(u) || /[áéíóúñ¿¡]/i.test(u) || /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(u));
+/* un texto que parece una frase: dos palabras con su espacio, una letra con tilde, unos puntos suspensivos, una palabra con
+   mayúscula inicial («Aceptar», «% Hidratos») o una que empieza con un signo de los que unen textos («· descarga», «+ parciales») */
+const LETTER = 'A-Za-zÀ-ÖØ-öø-ÿ';
+const looksProse = v => (u => core.WORDS.test(u) && (new RegExp('[' + LETTER + ']{2} [' + LETTER + '¿¡«(]|[' + LETTER + '] [' + LETTER + ']{2}').test(u) || /[áéíóúñ¿¡…]/i.test(u)
+  || new RegExp('(^|[^' + LETTER + '_])[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+([^' + LETTER + '_]|$)').test(u) || /^[·+(,] ?[a-záéíóúñ]/.test(u)))(v.trim());
 /* y uno que es código: una etiqueta, un selector, una dirección, una regla de estilo, una ruta */
 const looksCode = u => /[<>{}=\\]|:\/\/|^[.#\[][A-Za-z]|^\w+\(|;$|^[\w-]+:[\w-]|\.(js|json|png|webp|svg|css|html)\b|cubic-bezier|\d(ms|s) ease|^[a-z0-9]+(-[a-z0-9]+)*( [a-z0-9]+(-[a-z0-9]+)*)*-[a-z0-9-]+( [a-z0-9-]+)*$/.test(u);
 const lineOf = (sf, n) => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
 /* funciones que juntan una palabra con un número: sus palabras se enseñan aunque no parezcan una frase */
 const WORD_CALLS = /^(plural)$/;
+/* funciones que enseñan su primer texto tal cual (o el segundo, trAs): se enseña aunque no parezca una frase */
+const SHOWN_CALLS = /^(tr|toast|raw|listAnd|commas)$/;
+/* lo que se escribe en la página sin pasar por una plantilla: tiene que ir con tr() o say`…` */
+const DOM_TEXT = /^(textContent|innerText|placeholder|title|alt)$/;
 /** Las frases de un módulo: [clave, clase, línea]… con clase 'tpl' (plantilla html), 'say' (say`…`), 'lit' (texto suelto que
     parece una frase) o 'word' (cualquier otro texto con letras: no hace falta traducirlo, pero puede estar en el diccionario); y
     los sitios donde algo se traduce al cargar el módulo (early). Un texto suelto va sin los espacios de sus lados, que es como
@@ -90,9 +97,10 @@ const WORD_CALLS = /^(plural)$/;
 const phrasesOf = rel => {
   const code = flatten(read(path.join(JS, rel)), rel);
   const sf = ts.createSourceFile(rel, code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS);
-  const out = [], early = [];
+  const out = [], early = [], inTags = [];
   const cooked = t => ts.isNoSubstitutionTemplateLiteral(t) ? [t.text] : [t.head.text, ...t.templateSpans.map(s => s.literal.text)];
-  const visit = (n, depth, said) => {
+  /* said: lo que se visita se enseña tal cual; hidden: va dentro de una etiqueta de una plantilla html (una clase, un atributo) */
+  const visit = (n, depth, said, hidden) => {
     if (ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) return;
     const fn = ts.isFunctionLike(n) ? 1 : 0;
     if (ts.isTaggedTemplateExpression(n) && ts.isIdentifier(n.tag) && (n.tag.text == 'html' || n.tag.text == 'say')) {
@@ -100,8 +108,25 @@ const phrasesOf = rel => {
       const keys = n.tag.text == 'html' ? core.scanTemplate(parts).segs.map(g => g.key) : (s => core.WORDS.test(s.replace(/\u0001\d+\u0002/g, '')) ? [core.phraseKey(s).key] : [])(parts.map((p, i) => i ? '\u0001' + (i - 1) + '\u0002' + p : p).join(''));
       keys.forEach(k => out.push([k, n.tag.text == 'html' ? 'tpl' : 'say', lineOf(sf, n)]));
       if (keys.length && !depth) early.push(rel + ':' + lineOf(sf, n) + ': ' + n.tag.text + '`…` con texto al cargar el módulo');
-      if (!ts.isNoSubstitutionTemplateLiteral(n.template)) n.template.templateSpans.forEach(s => visit(s.expression, depth, n.tag.text == 'say'));
+      /* los valores de un say`…` se enseñan; los de una plantilla html, los que van en su texto o en un atributo que se lee */
+      const shownHole = n.tag.text == 'html' ? core.scanTemplate(parts).shown : null;
+      if (!ts.isNoSubstitutionTemplateLiteral(n.template)) n.template.templateSpans.forEach((s, i) => visit(s.expression, depth, shownHole ? shownHole[i] : true, shownHole ? !shownHole[i] : false));
       return;
+    }
+    if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && (SHOWN_CALLS.test(n.expression.text) || n.expression.text == 'trAs')) {
+      const at = n.expression.text == 'trAs' ? 1 : 0;
+      /* raw() dentro de una etiqueta lleva clases o atributos, no texto: no se enseña, y no puede coincidir con una frase
+         del diccionario (raw la traduciría) */
+      const tag = hidden && n.expression.text == 'raw';
+      if (tag) (function lits(x) { if (ts.isStringLiteral(x) || ts.isNoSubstitutionTemplateLiteral(x)) inTags.push([x.text.trim(), lineOf(sf, x)]); else ts.forEachChild(x, c => { lits(c); }); })(n);
+      n.arguments.forEach((a, i) => visit(a, depth, i == at && !tag, hidden));
+      return;
+    }
+    /* e.textContent = 'Texto' (o uno de dos): no pasa por ninguna plantilla, así que no se traduce */
+    if (ts.isBinaryExpression(n) && n.operatorToken.kind == ts.SyntaxKind.EqualsToken && ts.isPropertyAccessExpression(n.left) && DOM_TEXT.test(n.left.name.text)) {
+      const bare = x => ts.isParenthesizedExpression(x) ? bare(x.expression) : ts.isConditionalExpression(x) ? bare(x.whenTrue) || bare(x.whenFalse)
+        : (ts.isStringLiteral(x) || ts.isNoSubstitutionTemplateLiteral(x)) && core.WORDS.test(x.text);
+      if (bare(n.right)) early.push(rel + ':' + lineOf(sf, n) + ': texto escrito en la página (.' + n.left.name.text + ') sin tr()');
     }
     if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text == 'tr' && !depth) early.push(rel + ':' + lineOf(sf, n) + ': tr() al cargar el módulo');
     /* un texto escrito en varios trozos ('…' + '…'): es una sola frase. Los trozos de una suma con algo que no es texto no
@@ -128,10 +153,10 @@ const phrasesOf = rel => {
       if (!silent) out.push([n.text.trim(), shown || looksProse(n.text) && !isPlus(p) ? 'lit' : 'word', lineOf(sf, n)]);
     }
     /* un valor de un say`…` se enseña tal cual si es un texto o uno de dos (a ? 'x' : 'y'), no si es el argumento de otra cosa */
-    ts.forEachChild(n, c => visit(c, depth + fn, said && (ts.isConditionalExpression(n) || ts.isParenthesizedExpression(n) || ts.isBinaryExpression(n) && n.operatorToken.kind == ts.SyntaxKind.BarBarToken)));
+    ts.forEachChild(n, c => visit(c, depth + fn, said && (ts.isConditionalExpression(n) || ts.isParenthesizedExpression(n) || ts.isBinaryExpression(n) && n.operatorToken.kind == ts.SyntaxKind.BarBarToken), hidden));
   };
-  visit(sf, 0, false);
-  return { out, early };
+  visit(sf, 0, false, false);
+  return { out, early, inTags };
 };
 
 /* ── las frases de los datos ──────────────────────────────────────────────────────────────────────────────────────── */
@@ -174,15 +199,17 @@ const collect = () => {
   const need = new Map();   // frase → { kind, where, group }
   const words = new Set();  // textos del código que no hace falta traducir, pero pueden estar en el diccionario
   const early = [];
+  const inTags = [];        // textos de raw() dentro de una etiqueta: [texto, dónde]
   const add = (k, kind, where, group) => { if (k && !need.has(k)) need.set(k, { kind, where, group }); };
   for (const m of UI_MODULES()) {
     const r = phrasesOf(m);
     r.out.forEach(([k, kind, line]) => kind == 'word' ? words.add(k) : add(k, kind, m + ':' + line, 'ui'));
     early.push(...r.early);
+    r.inTags.forEach(([k, line]) => inTags.push([k, m + ':' + line]));
   }
   for (const group in DATA)
     for (const k of DATA[group]()) if (k && core.WORDS.test(k)) add(k.trim(), 'data', group, group);
-  return { need, words, early };
+  return { need, words, early, inTags };
 };
 const skipped = () => new Set(fs.existsSync(SKIP) ? JSON.parse(read(SKIP)) : []);
 /* lo que una traducción tiene que conservar: sus valores ({0}…) y sus números (#) */
@@ -191,7 +218,7 @@ const hashes = s => (s.match(/#/g) || []).length;
 const tags = s => (s.match(/<[^>]*>/g) || []).length;
 
 const status = () => {
-  const { need, words, early } = collect();
+  const { need, words, early, inTags } = collect();
   const skip = skipped();
   const dicts = new Map(dictFiles().map(f => [f.slice(3, -3), dictOf(f)]));
   const all = new Map();
@@ -205,6 +232,8 @@ const status = () => {
       else if (/"/.test(v) && !/"/.test(k)) errors.push('comillas rectas en la traducción (usa “ ”) en en-' + name + '.js: ' + JSON.stringify(k));
       if (skip.has(k)) errors.push('está en tools/i18n-skip.json y en en-' + name + '.js: ' + JSON.stringify(k));
     }
+  for (const [k, where] of inTags)
+    if (k && (all.has(k) || all.has(k.replace(/\d+(?:[.,:]\d+)*/g, '#')))) errors.push(where + ': raw(' + JSON.stringify(k) + ') va dentro de una etiqueta y es una frase del diccionario: en inglés se traduciría');
   const missing = [...need].filter(([k]) => !all.has(k) && !skip.has(k));
   const stale = [];
   for (const [name, d] of dicts)
