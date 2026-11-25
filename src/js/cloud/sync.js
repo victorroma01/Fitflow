@@ -23,7 +23,7 @@
    cierra entre lo uno y lo otro), algo borrado justo después vuelve a aparecer (docs/tecnica/backend.md). Y si la app está
    abierta en otra pestaña o ventana que ha guardado después (core/persist: instanceStale), esta no sincroniza: subiría lo
    suyo, que ya no es lo último.
-   Define: newMeta, readMeta, meta, storeMeta, metaWaiting, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, noteWaiting, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, everSynced, wipeCloudData
+   Define: newMeta, readMeta, meta, storeMeta, metaWaiting, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, noteWaiting, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, forgetSynced, freshDevice, withRemoteState, firstSync, pendingDocs, everSynced, wipeCloudData
 */
 import { say } from '../core/i18n.js';
 import { $, LOCALE, newId } from '../core/util.js';
@@ -32,7 +32,7 @@ import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
 import { badParts, instanceStale, partsLost, savesBroken, savesDone, staleNow, stateRecovered } from '../core/persist.js';
 import { partKey } from '../core/parts.js';
-import { applyTheme, flushState, W } from '../core/state.js';
+import { applyTheme, flushState, S, W } from '../core/state.js';
 import { R } from '../core/render.js';
 import { dialog } from '../core/ui.js';
 import { repairState } from '../core/repair.js';
@@ -42,8 +42,8 @@ import { netError } from './net.js';
 import { idToken } from './auth.js';
 import { batchGet, commitWrites, delWrite, getDoc, setWrite } from './firestore.js';
 import { hashMap, hashOf, hashText, KINDS, merge3, sameHashes } from './merge.js';
-import { afterSync } from './hooks.js';
-import { consentOk, syncConsent } from './consent.js';
+import { afterSync, afterWithdrawal } from './hooks.js';
+import { consentGone, consentOk, syncConsent } from './consent.js';
 import { applyDoc, applyPrefs, docPath, indexPath, localDocs, okType, PREF_KEYS, prefsLocal, profilePath } from './docs.js';
 /** @param {any} fresh
     @returns {SyncMeta} */
@@ -476,10 +476,17 @@ const syncRound = async () => {
       setStatus('dead');
       return;
     }
-    /* falta la aceptación o el consentimiento: se deja de sincronizar y sale la pantalla que los pide (core/render) */
+    /* falta la aceptación o el consentimiento: se deja de sincronizar y sale la pantalla que los pide (core/render). Si es
+       porque el consentimiento se retiró en otro dispositivo, los registros de la nube ya se borraron allí: los que quedan en
+       este se borran también (account/privacy), y la app se abre de nuevo en esa pantalla */
     if (e.code == 'CONSENT') {
       stopSync();
       setStatus('idle');
+      if (consentGone() && afterWithdrawal.length) {
+        for (const f of afterWithdrawal)
+          f();
+        return;
+      }
       if (!quiet)
         R();
       return;
@@ -609,11 +616,71 @@ export const stopSync = () => {
   clearTimeout(timer);
   timerAt = 0;
 };
+/** Olvida lo sincronizado: desde ahora, y hasta la primera sincronización que termine bien, lo que hay en el dispositivo no
+    cuenta como de la cuenta (es el estado de partida) y en un conflicto gana la nube. Al entrar en una cuenta (account/login:
+    también si antes de bajar nada sale la pantalla de la aceptación y la app se cierra en ella) y al quedarse el dispositivo
+    sin sus datos porque se retiró el consentimiento (account/privacy). */
+export const forgetSynced = () => {
+  meta = newMeta(1);
+  storeMeta();
+};
+/** ¿Está el dispositivo a la espera de su primera sincronización con la cuenta? Entonces aún no tiene los datos de ella. */
+export const freshDevice = () => !!meta.fresh;
+/** Lo que la cuenta tiene en la nube (sus datos, y del perfil el sexo y las preferencias), puesto en `S` solo mientras dura
+    `use` (se llama enseguida, sin esperas por medio, y se devuelve lo que dé); después `S` vuelve a ser exactamente el de
+    antes. No guarda ni sube nada, ni apunta nada como sincronizado. Para un dispositivo que aún no tiene los datos de la
+    cuenta (account/privacy: exportar una copia sin haber aceptado todavía). null si la cuenta no tiene nada guardado. Lanza
+    un error de cloud/net si no se puede leer.
+    @template T
+    @param {() => T} use
+    @returns {Promise<T | null>} */
+export const withRemoteState = async (use) => {
+  const [idx, prof] = await Promise.all([getDoc(indexPath()), getDoc(profilePath())]);
+  const rv = idx && idx.data.p && typeof idx.data.p == 'object' ? idx.data.p : {};
+  const ids = Object.keys(rv).filter(id => KINDS[id.split(':')[0]]);
+  if (!ids.length)
+    return null;
+  const got = await batchGet(ids.map(docPath));
+  /* desde aquí, sin esperas: lo bajado no llega a guardarse. Lo de antes, copiado entero (S solo lleva datos) para dejarlo
+     después tal cual: applyDoc cambia también objetos de dentro (las comidas, el historial, el perfil) */
+  const before = JSON.stringify(S);
+  applying = 1;
+  try {
+    if (prof) {
+      const pr = prof.data.pr && typeof prof.data.pr == 'object' ? prof.data.pr : {};
+      /** @type {Record<string, any>} */
+      const p = {};
+      for (const k of PREF_KEYS)
+        if (pr[k] !== undefined && pr[k] !== null)
+          p[k] = pr[k];
+      applyPrefs({ ...p, sx: prof.data.sx });
+    }
+    for (const id of ids) {
+      const d = got[docPath(id)];
+      let val;
+      try {
+        val = d ? JSON.parse(d.data.j) : undefined;
+      }
+      catch (e) {
+        val = undefined;
+      }
+      if (val !== undefined && okType(id, val))
+        applyDoc(id, val);
+    }
+    repairState();
+    return use();
+  }
+  finally {
+    for (const k of Object.keys(S))
+      delete /** @type {Record<string, any>} */ (S)[k];
+    Object.assign(S, JSON.parse(before));
+    applying = 0;
+  }
+};
 /** Primera sincronización tras entrar (account/login), con los datos del móvil ya borrados: baja todo lo de la cuenta (o,
   si es nueva, crea su perfil y sube el estado inicial) sin pintar la app. true si terminó bien. */
 export const firstSync = async () => {
-  meta = newMeta(1);
-  storeMeta();
+  forgetSynced();
   quiet = 1;
   try {
     await syncNow();

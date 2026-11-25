@@ -153,13 +153,21 @@ cada uno, su fecha y, de las condiciones y del consentimiento, qué versiones ac
   entrar se lee su perfil y, si no consta, la app enseña la pantalla que lo pide en vez de bajar sus datos; con la sesión ya
   abierta, `core/render` pinta esa pantalla, `core/boot` no arranca la sincronización y `syncRound` no hace nada. Desde ella se
   puede exportar una copia, borrar los datos, eliminar la cuenta o cerrar la sesión. No se da por aceptado nada a nadie.
+  Exportar, en un dispositivo que acaba de entrar y aún no ha bajado nada (`freshDevice`: lo sincronizado se olvida al entrar,
+  `forgetSynced`), baja de la nube los datos y el perfil solo para hacer el archivo (`withRemoteState`): no se guardan ni
+  cuentan como sincronizados, y el estado del dispositivo queda exactamente como estaba.
 - **Entre dispositivos** vale lo más reciente de cada cosa (`syncConsent`): al aceptar en uno, el otro lo recibe con el perfil
-  y sigue; al retirar el consentimiento en uno, el otro deja de sincronizar y enseña la pantalla.
+  y sigue; al retirar el consentimiento en uno, el otro, en cuanto sincroniza, borra también los registros que le quedaban
+  (`afterWithdrawal`, de `cloud/hooks`) y enseña la pantalla.
 - **Retirar el consentimiento** (`account/privacy`): borra los registros de la nube (`wipeRecords`), anota la retirada en el
   perfil y borra lo del dispositivo (`wipeDevice`). La cuenta sigue: al volver a darlo, empieza vacía.
 - **Cambiar un texto**: el cambio va en `data/legal` y en `i18n/en-legal`, con su versión y su fecha nuevas en `LEGAL`. Si el
   cambio no pide volver a aceptar, la versión anterior se deja en `valid`; si lo pide, se quita, y cada cuenta verá la pantalla
   la próxima vez que abra la app. `tests/legal.test.mjs` comprueba que los dos idiomas tienen la misma forma.
+- **Dos dispositivos con versiones distintas de la app**: una versión del texto posterior a la que conoce la app (aceptada en
+  otro dispositivo, ya actualizado) vale también; así el que aún no se ha actualizado no pide aceptar otra vez el texto
+  anterior, que con su fecha más reciente le quitaría el sitio al nuevo en el perfil. Las versiones se comparan por números
+  («1.10» va después de «1.9»): hay que numerarlas siempre hacia arriba.
 
 ## Borrar
 

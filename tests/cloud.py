@@ -156,6 +156,12 @@ class EmuFirebase:
         """Deja el perfil como el de una cuenta anterior a la V1.0.4: sin nada aceptado."""
         self._req('%s/v1/projects/%s/databases/(default)/documents/users/%s?updateMask.fieldPaths=cs' % (self.FS, self.P, uid), {'fields': {}}, 'PATCH')
 
+    def set_terms(self, uid, v, at):
+        """Deja en el perfil las condiciones aceptadas con la versión `v` en el momento `at` (ms), como lo dejaría otro
+        dispositivo de la cuenta."""
+        self._req('%s/v1/projects/%s/databases/(default)/documents/users/%s?updateMask.fieldPaths=cs.t' % (self.FS, self.P, uid),
+                  {'fields': {'cs': {'mapValue': {'fields': {'t': {'mapValue': {'fields': {'v': {'stringValue': v}, 'at': {'integerValue': str(at)}}}}}}}}}, 'PATCH')
+
     def sweep(self, mode, days=0):
         """La limpieza periódica de verdad (tools/admin/limpieza.mjs), como si pasaran `days` días: (código de salida, salida)."""
         env = dict(os.environ, FIREBASE_AUTH_EMULATOR_HOST='127.0.0.1:9099', FIRESTORE_EMULATOR_HOST='127.0.0.1:8080', LIMPIEZA_AHORA=str(int((time.time() + days * 86400) * 1000)))
@@ -206,6 +212,12 @@ class FakeBackend(FakeFirebase):
     def strip_consent(self, uid):
         """Deja el perfil como el de una cuenta anterior a la V1.0.4: sin nada aceptado."""
         self.docs['users/' + uid]['fields'].pop('cs', None)
+
+    def set_terms(self, uid, v, at):
+        """Deja en el perfil las condiciones aceptadas con la versión `v` en el momento `at` (ms), como lo dejaría otro
+        dispositivo de la cuenta."""
+        cs = self.docs['users/' + uid]['fields'].setdefault('cs', {'mapValue': {'fields': {}}})
+        cs['mapValue']['fields']['t'] = {'mapValue': {'fields': {'v': {'stringValue': v}, 'at': {'integerValue': str(at)}}}}
 
 
 def offline_noise(text):
@@ -658,7 +670,9 @@ def main(path):
                 check('el sello de reCAPTCHA no se ve ni ocupa sitio en la página', badge == ['hidden', 'fixed', True], str(badge))
                 pa.evaluate("A.openSettings()")
                 pa.evaluate("A.openLegal(0,{dataset:{v:'privacy'}})")
-                # (si falla, dice si la configuración sigue puesta, si el texto está en la página aunque no se lea, y cómo acaba)
+                # (el texto se carga al abrirlo: se espera a que esté. Si falla, dice si la configuración sigue puesta, si el texto
+                # está en la página aunque no se lea, y cómo acaba)
+                wait(pa, "!!document.querySelector('#lgl .legal-text h2')", 15000)
                 seen = pa.inner_text('#sh')
                 check('y Privacidad lo cuenta', 'reCAPTCHA Enterprise' in seen,
                       repr([pa.evaluate('appCheckOn()'), 'reCAPTCHA Enterprise' in pa.evaluate("document.querySelector('#sh').textContent"), len(seen), seen[-160:]]))
@@ -1090,9 +1104,9 @@ def main(path):
         check('sin lo aceptado, la app no se abre ni sincroniza: los datos del móvil siguen en él y los de la nube no cambian',
               st == 'idle' and p5.evaluate('S.logs.length') == 1 and fb.data('users/%s/data/index' % leo) == idx0 and (fb.part('users/%s/data/core' % leo) or {}).get('wl') == [{'d': today, 'w': 78}], st)
         check('la pantalla dice de qué cuenta es y deja exportar, borrar, eliminar la cuenta o cerrar sesión', 'Leo_9' in p5.inner_text('#lgw .login-card')
-              and p5.evaluate("['backupDownload','resetAllAsk','openDeleteAccount','signOut'].every(a => !!document.querySelector('#lgw .login-links [data-a=' + a + ']'))"))
+              and p5.evaluate("['gateExport','resetAllAsk','openDeleteAccount','signOut'].every(a => !!document.querySelector('#lgw .login-links [data-a=' + a + ']'))"))
         with p5.expect_download(timeout=20000) as dl:
-            p5.click('#lgw [data-a=backupDownload]')
+            p5.click('#lgw [data-a=gateExport]')
         copy = json.load(open(dl.value.path(), encoding='utf-8'))
         check('«Exportar una copia» da el archivo con los datos del móvil, sin aceptar nada', len(copy.get('logs', [])) == 1 and copy.get('_sf', {}).get('app') == 'StrataFit', str(sorted(copy))[:200])
         p5.click('[data-a=consentAccept]')
@@ -1108,6 +1122,71 @@ def main(path):
         p6.reload()
         wait(p6, APP, 30000)
         check('el otro móvil, al abrirse, ve que la cuenta ya aceptó y entra sin pedirlo otra vez', p6.evaluate('account.cs.h.st') == 1 and sync(p6) == 'ok' and p6.evaluate('S.weightLog.length') == 2)
+
+        # los textos cambiarán de versión: lo aceptado en otro dispositivo con una app más nueva (una versión posterior) vale
+        # también en esta, que ni lo pide otra vez ni lo pisa; una versión que ya no vale sí se pide de nuevo
+        fb.set_terms(leo, '9.0', int(time.time() * 1000))
+        p6.reload()
+        wait(p6, APP, 30000)
+        st = sync(p6)
+        seen = ((fb.data('users/' + leo) or {}).get('cs') or {}).get('t', {})
+        check('unas condiciones posteriores, aceptadas con una app más nueva, valen aquí: no se piden otra vez ni se pisan en el perfil',
+              st == 'ok' and p6.evaluate('account.cs.t.v') == '9.0' and seen.get('v') == '9.0' and p6.evaluate(APP), '%s %s' % (st, seen))
+        fb.set_terms(leo, '0.9', int(time.time() * 1000))
+        p6.reload()
+        wait(p6, GATE, 30000)
+        check('unas que ya no valen se piden de nuevo, sin tocar los datos del móvil ni borrar nada',
+              p6.evaluate('S.weightLog.length') == 2 and 'acepta las condiciones' in p6.inner_text('#lgw .login-card') and p6.evaluate("!!document.querySelector('#lgw [data-a=gateExport]')"), p6.inner_text('#lgw .login-card')[:120])
+        tick(p6)
+        with p6.expect_navigation(timeout=30000):
+            p6.click('[data-a=consentAccept]')
+        wait(p6, APP, 30000)
+        st = sync(p6)
+        seen = ((fb.data('users/' + leo) or {}).get('cs') or {}).get('t', {})
+        check('y al aceptarlas queda anotada la versión de ahora, con los datos donde estaban', st == 'ok' and seen.get('v') == '1.0' and p6.evaluate('S.weightLog.length') == 2, '%s %s' % (st, seen))
+
+        # ── un móvil que acaba de entrar en una cuenta sin lo aceptado no ha bajado nada: «Exportar una copia» baja de la nube
+        # lo de la cuenta solo para el archivo; y si la app se cierra en esa pantalla, al aceptar después baja lo de la cuenta
+        # sin que lo de partida del móvil pise nada ──
+        for pg in (p5, p6):
+            pg.evaluate('stopSync()')
+        fb.strip_consent(leo)
+        core0 = fb.part('users/%s/data/core' % leo) or {}
+        cloud0 = [fb.tree(leo), core0, fb.part('users/%s/logs/2026' % leo)]
+        c7, p7 = device()
+        login(p7, 'Leo_9', 'clave-leo-99', wait_app=False)
+        wait(p7, GATE, 30000)
+        empty = "S.logs.length == 0 && !(S.weightLog || []).length && !Object.keys(S.meals || {}).length && !(S.biometrics || {}).sex"
+        check('un móvil que entra en la cuenta sin lo aceptado ve la pantalla que lo pide, sin haber bajado nada', p7.evaluate(empty))
+
+        def export(pg, why):
+            with pg.expect_download(timeout=20000) as dl:
+                pg.click('#lgw [data-a=gateExport]')
+            copy = json.load(open(dl.value.path(), encoding='utf-8'))
+            check(why, copy.get('_sf', {}).get('app') == 'StrataFit' and len(copy.get('logs', [])) == 1 and copy.get('wl') == core0.get('wl') and len(copy.get('wl') or []) == 2
+                  and today in (copy.get('meals') or {}) and (copy.get('bio') or {}).get('sex') == 'M', str({k: copy.get(k) for k in ('logs', 'wl', 'bio')})[:300])
+            # (que tampoco se ha guardado lo dice la pantalla al abrirse de nuevo, abajo)
+            check('y lo bajado no se queda en el móvil ni cambia nada en la nube', pg.evaluate(empty)
+                  and [fb.tree(leo), fb.part('users/%s/data/core' % leo) or {}, fb.part('users/%s/logs/2026' % leo)] == cloud0)
+
+        export(p7, '«Exportar una copia» baja de la nube lo de la cuenta para el archivo: entrenos, comidas, peso y el sexo del perfil')
+        p7.reload()
+        wait(p7, GATE, 30000)
+        check('si la app se cierra en esa pantalla, al abrirla sigue en ella y sin nada de la cuenta', p7.evaluate(empty))
+        export(p7, 'y la copia, también entonces, es la de la cuenta (no lo vacío del móvil)')
+        tick(p7)
+        with p7.expect_navigation(timeout=30000):
+            p7.click('[data-a=consentAccept]')
+        wait(p7, APP, 30000)
+        st = sync(p7)
+        core1 = fb.part('users/%s/data/core' % leo) or {}
+        check('al aceptar, el móvil baja lo de la cuenta y lo de partida no pisa nada en la nube',
+              st == 'ok' and p7.evaluate('S.logs.length') == 1 and p7.evaluate('S.weightLog.length') == 2 and p7.evaluate("S.biometrics.sex") == 'M'
+              and core1.get('wl') == core0.get('wl') and core1.get('bio') == core0.get('bio') and fb.part('users/%s/logs/2026' % leo) == cloud0[2], '%s %s' % (st, {k: core1.get(k) for k in ('wl', 'bio')}))
+        c7.close()
+        for pg in (p5, p6):
+            pg.reload()
+            wait(pg, APP, 30000)
 
         # ── el contacto de privacidad: un aviso del tipo «Privacidad y datos» ──
         p5.evaluate("A.openPrivacyContact()")
@@ -1143,10 +1222,19 @@ def main(path):
               cs.get('h', {}).get('st') == 0 and cs['h'].get('ga', 0) > 0 and cs['h'].get('at', 0) >= cs['h']['ga'] and cs.get('t', {}).get('v') == '1.0' and prof.get('sx') == '' and prof.get('u') == 'Leo_9', str(prof))
         check('en el móvil no queda ningún registro ni copia, y la app pide el consentimiento de nuevo',
               p5.evaluate("S.logs.length == 0 && !(S.weightLog || []).length && !S.profile.img") and p5.evaluate("snapList().then(a => a.length)") == 0 and 'Has retirado tu consentimiento' in p5.inner_text('#lgw .login-card')
-              and p5.evaluate("!document.querySelector('#lgw [data-a=backupDownload]') && !!document.querySelector('#lgw [data-a=openDeleteAccount]')"))
-        st = sync(p6)
+              and p5.evaluate("!document.querySelector('#lgw [data-a=gateExport]') && !!document.querySelector('#lgw [data-a=openDeleteAccount]')"))
+        # el otro móvil seguía con sus registros: al sincronizar ve la retirada, los borra también y se abre de nuevo
+        had = p6.evaluate('S.logs.length + (S.weightLog || []).length')
+        with p6.expect_navigation(timeout=30000):
+            try:
+                p6.evaluate('syncNow()')
+            except Exception:
+                pass  # la app se abre de nuevo mientras se espera la respuesta
         wait(p6, GATE, 30000)
-        check('el otro móvil se entera al sincronizar: deja de sincronizar y pide el consentimiento, sin devolver nada a la nube', st == 'idle' and fb.tree(leo) == left, '%s %s' % (st, fb.tree(leo)))
+        check('el otro móvil se entera al sincronizar: borra también lo que le quedaba, pide el consentimiento y no devuelve nada a la nube',
+              had > 0 and p6.evaluate("S.logs.length == 0 && !(S.weightLog || []).length && !S.profile.img") and p6.evaluate("snapList().then(a => a.length)") == 0
+              and 'Has retirado tu consentimiento' in p6.inner_text('#lgw .login-card') and p6.evaluate('syncState().st') == 'idle' and fb.tree(leo) == left,
+              '%s %s %s' % (had, p6.evaluate('[S.logs.length, (S.weightLog || []).length, syncState().st]'), fb.tree(leo)))
         tick(p5)
         with p5.expect_navigation(timeout=30000):
             p5.click('[data-a=consentAccept]')

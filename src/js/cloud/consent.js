@@ -8,7 +8,7 @@
    una). Sin las dos al día, la app solo enseña la pantalla que las pide (account/login) y no sincroniza nada (cloud/sync).
    Los textos (data/legal) pueden cambiar de versión sin pedir otra aceptación: solo se pide de nuevo si la versión aceptada
    deja de estar entre las que valen (`valid`).
-   Define: LEGAL, mark, consentOf, consentOk, consentPending, consentGiven, consentWithdrawn, newer, sameConsent, syncConsent
+   Define: LEGAL, versionAfter, accepted, mark, consentOf, consentOk, consentGone, consentPending, consentGiven, consentWithdrawn, newer, sameConsent, syncConsent
 */
 import { logError } from '../core/errors.js';
 import { account, acctSave } from './session.js';
@@ -21,6 +21,23 @@ export const LEGAL = {
   privacy: { v: '1.0', date: '2026-11-25' },
   health: { v: '1.0', valid: ['1.0'] }
 };
+/** ¿Va la versión `v` después de la `ref`? Por números: «1.10» va después de «1.9».
+    @param {string} v
+    @param {string} ref */
+const versionAfter = (v, ref) => {
+  const a = String(v).split('.').map(Number);
+  const b = String(ref).split('.').map(Number);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const d = (a[i] || 0) - (b[i] || 0);
+    if (d)
+      return d > 0;
+  }
+  return false;
+};
+/* ¿vale haber aceptado la versión `v` de un texto? Sí, si es una de las que valen o es posterior a la de esta app: se aceptó
+   en otro dispositivo con una app más nueva, y pedirlo aquí otra vez sería volver a aceptar el texto anterior (y, con la
+   fecha más reciente, quitarle el sitio al nuevo en el perfil) */
+const accepted = (v, text) => text.valid.includes(v) || versionAfter(v, text.v);
 /* una marca de la constancia, con la forma que admiten las reglas de Firestore, o null si no la tiene */
 const mark = m => m && typeof m == 'object' && typeof m.v == 'string' && m.v && m.v.length <= 12 && Number.isInteger(m.at) && m.at > 0 ? m : null;
 /** La constancia `c` (la de la sesión o la del perfil de la nube), solo con lo que vale: { t, h } o null si no hay nada.
@@ -41,7 +58,13 @@ export const consentOf = c => {
     @param {Account | null} [a] */
 export const consentOk = (a = account) => {
   const c = consentOf(a && a.cs);
-  return !!(c && c.t && LEGAL.terms.valid.includes(c.t.v) && c.h && c.h.st === 1 && LEGAL.health.valid.includes(c.h.v));
+  return !!(c && c.t && accepted(c.t.v, LEGAL.terms) && c.h && c.h.st === 1 && accepted(c.h.v, LEGAL.health));
+};
+/** ¿Consta que la cuenta `a` ha retirado el consentimiento?
+    @param {Account | null} [a] */
+export const consentGone = (a = account) => {
+  const c = consentOf(a && a.cs);
+  return !!(c && c.h && c.h.st === 0);
 };
 /** Con sesión, ¿falta la aceptación o el consentimiento? Entonces la app no se abre: solo la pantalla que los pide. */
 export const consentPending = () => !!account && !consentOk(account);

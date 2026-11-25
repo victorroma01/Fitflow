@@ -15,7 +15,8 @@ Desde la V1.0.4:
   prefieres no aceptar, desde esa pantalla puedes exportar una copia, borrar tus datos, eliminar la cuenta o cerrar la sesión.
 - **Qué queda anotado**: qué aceptaste, qué versión del texto y cuándo. Nada más. Lo ves en Privacidad → Tus datos.
 - **Retirar el consentimiento** (Privacidad → Tus datos): la app deja de tratar tus datos de salud y, como no funciona sin
-  ellos, los borra del móvil y de tu cuenta. Tu usuario se queda; si vuelves a darlo, empiezas de cero.
+  ellos, los borra del móvil y de tu cuenta; en tus otros móviles se borran en cuanto abren la app con conexión. Tu usuario
+  se queda; si vuelves a darlo, empiezas de cero.
 - Si un texto cambia de forma que haya que aceptarlo otra vez, la app lo pedirá al abrirla.
 
 ## Qué se guarda y dónde

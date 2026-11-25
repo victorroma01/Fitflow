@@ -30,8 +30,8 @@ import { appCheckOn } from '../cloud/appcheck.js';
 import { account, acctSave, wipeAccountData } from '../cloud/session.js';
 import { authMessage, changePassword, passProblem, signIn, signUp, userProblem } from '../cloud/auth.js';
 import { commitWrites, getDoc, setWrite } from '../cloud/firestore.js';
-import { firstSync, syncNow } from '../cloud/sync.js';
-import { consentGiven, consentOf, consentPending, syncConsent } from '../cloud/consent.js';
+import { firstSync, forgetSynced, syncNow } from '../cloud/sync.js';
+import { consentGiven, consentGone, consentPending, syncConsent } from '../cloud/consent.js';
 import { html, raw } from '../core/html.js';
 /* m: 'in' entrar | 'up' crear cuenta; busy: texto del botón mientras se espera al servidor; err: el último error; eye: 1 si
    la contraseña se ve; c1 y c2: 1 con la casilla de las condiciones o la del consentimiento marcada */
@@ -182,8 +182,7 @@ const loginView = () => {
 /** La pantalla de la aceptación, en lugar de la app, para una cuenta que no tiene aceptadas las condiciones vigentes o no ha dado
     (o ha retirado) el consentimiento: las dos casillas y, para quien no quiera aceptar, lo que puede hacer con sus datos. */
 const consentView = () => {
-  const c = consentOf(account.cs);
-  const gone = !!(c && c.h && c.h.st === 0);
+  const gone = consentGone();
   return html`
     <div id="lgw" class="login-page">
       ${loginBackdrop()}
@@ -203,7 +202,7 @@ const consentView = () => {
       <p class="muted login-note">Si prefieres no aceptar:</p>
       <div class="login-links">
         ${gone ? '' : html`
-          <button class="login-link" data-a="backupDownload">Exportar una copia</button>
+          <button class="login-link" data-a="gateExport">Exportar una copia</button>
           <button class="login-link" data-a="resetAllAsk">Borrar todos los datos</button>`}
         <button class="login-link" data-a="openDeleteAccount">Eliminar cuenta</button>
         <button class="login-link" data-a="signOut">Cerrar sesión</button>
@@ -291,6 +290,9 @@ const enterAccount = async (s, fresh) => {
     Store.set(Store.K.own, s.uid);
   }
   acctSave(s);
+  /* lo que hay ahora en el dispositivo no es de la cuenta: hasta que baje lo suyo, en un conflicto gana la nube. Se apunta ya,
+     no al empezar la primera sincronización: antes puede salir la pantalla de la aceptación, y cerrarse la app en ella */
+  forgetSynced();
   /* recién creada: sin programa y con la bienvenida por ver (se suben con la primera sincronización) */
   if (fresh)
     markNewAccount();

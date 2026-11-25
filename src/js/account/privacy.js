@@ -8,7 +8,7 @@
      la contraseña; tras confirmarlo, cloud/erase borra todo lo de la cuenta en la nube, comprueba que no queda nada y elimina
      la cuenta; después se borra lo de este dispositivo y la app se abre de nuevo, sin sesión, diciendo que la cuenta ya no
      existe (deletedNotice). Si falla a medias se dice hasta dónde llegó, la cuenta sigue y se puede repetir.
-   Define: wipeFailText, deleteBack, deleteMsg, deleteBusy, deletePage, deleteOut, deletedNotice  · acciones/registros: 5
+   Define: wipeFailText, deleteBack, deleteMsg, deleteBusy, deletePage, deleteOut, deletedNotice, exportBusy  · acciones/registros: 6
 */
 import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
@@ -20,9 +20,12 @@ import { toast } from '../core/toast.js';
 import { confirmDialog, dialog, fullPage, pgHead } from '../core/ui.js';
 import { account, acctDrop, acctSave } from '../cloud/session.js';
 import { authMessage } from '../cloud/auth.js';
-import { stopSync } from '../cloud/sync.js';
+import { forgetSynced, freshDevice, stopSync, withRemoteState } from '../cloud/sync.js';
 import { consentWithdrawn, syncConsent } from '../cloud/consent.js';
+import { afterWithdrawal } from '../cloud/hooks.js';
 import { eraseAccount, wipeDevice, wipeRecords } from '../cloud/erase.js';
+import { BACKUP_FILE, buildBackup } from '../system/backup.js';
+import { downloadFile } from '../system/files.js';
 import { html } from '../core/html.js';
 /** Lo que se dice cuando los datos de la cuenta no se han podido borrar de la nube (sin eso no se borra nada del dispositivo:
     la próxima sincronización los volvería a bajar). */
@@ -66,6 +69,20 @@ export const deletedNotice = () => {
   }
   setTimeout(() => dialog('Cuenta eliminada', 'Tu cuenta y todos sus datos se han borrado. Gracias por haber usado StrataFit.', [['Entendido', 'doNothing', 'primary']]), 300);
 };
+/* El consentimiento se retiró en otro dispositivo de la cuenta y este se entera al sincronizar (cloud/sync): los registros de
+   la nube ya se borraron allí; los que quedan aquí se borran también, y la app se abre de nuevo en la pantalla que lo pide */
+afterWithdrawal.push(async () => {
+  try {
+    await wipeDevice();
+    forgetSynced();
+  }
+  catch (e) {
+    logError('consentimiento retirado en otro dispositivo: borrar lo de este', e);
+  }
+  reloadApp();
+});
+/* 1 mientras se bajan los datos para exportarlos desde la pantalla de la aceptación */
+let exportBusy = 0;
 /* — manejadores de esta función (registros A / C / U) — */
 A.consentWithdrawAsk = () => confirmDialog('¿Retirar el consentimiento?', 'StrataFit dejará de tratar tus datos de salud. Como no puede funcionar sin ellos, se borrarán de este dispositivo y de tu cuenta tus programas, entrenos, comidas, medidas y peso, con la foto y la copia de seguridad de la nube. Tu usuario se mantiene y podrás volver a darlo cuando quieras. No se puede deshacer.', 'consentWithdraw', 'Retirar y borrar');
 A.consentWithdraw = async () => {
@@ -90,7 +107,37 @@ A.consentWithdraw = async () => {
     logError('retirar el consentimiento: anotarlo', e);
   }
   await wipeDevice();
+  /* si se vuelve a dar el consentimiento, se empieza de cero: lo que otro dispositivo haya subido entretanto gana a este */
+  forgetSynced();
   reloadApp();
+};
+/* «Exportar una copia» en la pantalla de la aceptación (account/login). Con los datos de la cuenta ya en este dispositivo, la
+   copia de siempre (system/backup). En uno recién entrado, que aún no los ha bajado (no se baja nada sin la aceptación),
+   están solo en la nube: se bajan para hacer el archivo y no se quedan en el dispositivo (cloud/sync: withRemoteState) */
+A.gateExport = async () => {
+  if (!account || exportBusy)
+    return;
+  if (!freshDevice()) {
+    A.backupDownload();
+    return;
+  }
+  exportBusy = 1;
+  toast('Bajando tus datos…');
+  try {
+    const text = await withRemoteState(buildBackup);
+    if (text === null)
+      toast('Tu cuenta no tiene datos guardados');
+    else {
+      const r = await downloadFile(BACKUP_FILE, text);
+      toast(r == 'saved' ? 'Copia guardada' : r == 'declined' ? 'No se guardó la copia' : 'No se pudo guardar el archivo');
+    }
+  }
+  catch (e) {
+    if (e.code != 'NETWORK')
+      logError('exportar una copia desde la nube', e);
+    toast(e.code == 'NETWORK' ? 'Sin conexión: para exportar tus datos hace falta internet' : say `No se pudieron bajar tus datos (${e.code})`);
+  }
+  exportBusy = 0;
 };
 A.openDeleteAccount = () => {
   deleteBack = $('#ajs') ? 'settingsBackToAccount' : $('#lgl') ? 'openLegal' : '';

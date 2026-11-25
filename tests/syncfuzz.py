@@ -674,6 +674,8 @@ def signup(pg, user='Ana_1', pw='contraseña-1'):
     pg.fill('#lgu', user)
     pg.fill('#lgp', pw)
     pg.fill('#lgp2', pw)
+    # las dos casillas de crear la cuenta (V1.0.4): las condiciones y el consentimiento para los datos de salud
+    pg.evaluate("for (const id of ['lgc1', 'lgc2']) { const e = document.getElementById(id); if (!e.checked) e.click(); }")
     pg.click('[data-a=loginSubmit]')
     wait(pg, "window.__ffok && !document.getElementById('lgw') && document.querySelector('nav').style.display!='none'")
     wait(pg, "!!document.getElementById('wlc')", 30000)

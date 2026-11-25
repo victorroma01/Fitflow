@@ -8,14 +8,16 @@ tiene aceptadas las condiciones, y los textos legales abiertos sin sesión.
 También mira el paquete (dist/app), si está compilado: la foto es un archivo y el service worker la guarda para abrir sin
 conexión. Lo que hace el inicio de sesión (entrar, registrarse, esperas…) lo prueba tests/cloud.py.
 """
-import os, sys
+import io, os, sys
+import numpy as np
+from PIL import Image
 from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from browser import launch, app_url, context_opts  # noqa: E402
-from contrast import measure  # noqa: E402
+from contrast import HIDE, lum, measure  # noqa: E402
 from fakefb import FakeFirebase  # noqa: E402
 
 INIT = '\n'.join(l for l in open(os.path.join(HERE, 'init.js'), encoding='utf-8').read().split('\n') if not l.startswith('//'))
@@ -62,8 +64,48 @@ def open_login(b, path, w, h, scheme='light', fb=None):
     return c, pg
 
 
+# dónde está, en la pantalla, el trozo de texto que empieza por `t`: sus líneas
+WHERE = r"""t => {
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let n;
+  while ((n = w.nextNode()) && !n.nodeValue.trim().startsWith(t));
+  if (!n) return null;
+  const r = document.createRange();
+  r.selectNodeContents(n);
+  return [...r.getClientRects()].map(x => [x.left, x.top, x.right, x.bottom].map(Math.round));
+}"""
+LAYERS = "([x, y]) => document.elementsFromPoint(x, y).slice(0, 5).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.classList.length ? '.' + [...e.classList].join('.') : ''))"
+
+
+def behind(pg, text):
+    """Para el mensaje de un fallo: qué hay detrás del texto `text` que lo aclara (sin la letra, los píxeles más claros que la
+    mediana del fondo de cada línea: cuántos, dónde y qué hay en el más claro)."""
+    rects = pg.evaluate(WHERE, text)
+    if not rects:
+        return 'no se encuentra'
+    pg.evaluate("css => { const s = new CSSStyleSheet(); s.replaceSync(css); document.adoptedStyleSheets = [...document.adoptedStyleSheets, s]; window.__hide = s; }", HIDE)
+    b = np.asarray(Image.open(io.BytesIO(pg.screenshot(animations='disabled'))).convert('RGB'), dtype=float)
+    pg.evaluate("document.adoptedStyleSheets = document.adoptedStyleSheets.filter(s => s !== window.__hide)")
+    out = []
+    for x0, y0, x1, y1 in rects:
+        x0, y0, x1, y1 = max(0, x0), max(0, y0), min(b.shape[1], x1), min(b.shape[0], y1)
+        if x1 - x0 < 2 or y1 - y0 < 2:
+            continue
+        L = lum(b[y0:y1, x0:x1])
+        ys, xs = np.nonzero(L > np.median(L) + .004)
+        if not len(ys):
+            out.append('[%d,%d,%d,%d] uniforme' % (x0, y0, x1, y1))
+            continue
+        k = int(np.argmax(L[ys, xs]))
+        px, py = x0 + int(xs[k]), y0 + int(ys[k])
+        out.append('[%d,%d,%d,%d] %d de %d más claros (filas %d-%d, columnas %d-%d), el más claro #%02x%02x%02x en %s: %s' % (
+            x0, y0, x1, y1, len(ys), L.size, y0 + ys.min(), y0 + ys.max(), x0 + xs.min(), x0 + xs.max(), *[int(v) for v in b[py, px]], (px, py), ' > '.join(pg.evaluate(LAYERS, [px, py]))))
+    return '; '.join(out)
+
+
 def contrast(pg):
-    """Lo que no llega al contraste AA en lo que hay en pantalla, bajando hasta el final: [texto, contraste, mínimo]."""
+    """Lo que no llega al contraste AA en lo que hay en pantalla, bajando hasta el final: [texto, contraste, mínimo]. Del
+    primero que no llega dice también qué tiene detrás (behind)."""
     bad = []
     total = pg.evaluate('document.documentElement.scrollHeight')
     h = pg.evaluate('innerHeight')
@@ -71,7 +113,7 @@ def contrast(pg):
         pg.evaluate('window.scrollTo(0, %d)' % y)
         for r in measure(pg):
             if r[0] < r[1] - .005:
-                bad.append('«%s» %.2f:1 (pide %.1f) %s sobre %s' % (r[2][:22], r[0], r[1], r[4], r[5]))
+                bad.append('«%s» %.2f:1 (pide %.1f) %s sobre %s' % (r[2][:22], r[0], r[1], r[4], r[5]) + ('' if bad else ' (bajado %d de %d: %s)' % (y, total, behind(pg, r[2][:22]))))
     pg.evaluate('window.scrollTo(0, 0)')
     return bad
 
@@ -183,7 +225,7 @@ def main(path):
               user: document.querySelector('#lgw .login-card').textContent.includes('Prueba'), acts: [...document.querySelectorAll('#lgw .login-links button')].map(b => b.dataset.a + (b.dataset.v ? ':' + b.dataset.v : '')).join() })""")
             bad = contrast(pg)
             check('%d × %d: en lugar de la app, las dos casillas sin marcar, de qué cuenta es y lo que se puede hacer sin aceptar; nada se sale y todo se lee (AA)' % (w, h),
-                  not g['app'] and g['nav'] == 'none' and g['boxes'] == [False, False] and g['user'] and g['acts'] == 'backupDownload,resetAllAsk,openDeleteAccount,signOut,openLegal:privacy,openLegal:terms'
+                  not g['app'] and g['nav'] == 'none' and g['boxes'] == [False, False] and g['user'] and g['acts'] == 'gateExport,resetAllAsk,openDeleteAccount,signOut,openLegal:privacy,openLegal:terms'
                   and k['theme'] == 'dark' and k['over'] <= 0 and k['cardBox'][0] >= 0 and k['cardBox'][2] <= w and k['btn'][2] <= w and not bad, str(g) + ' ' + '; '.join(sorted(set(bad))[:4]))
             if (w, h) == (393, 852):
                 pg.click('[data-a=consentAccept]')

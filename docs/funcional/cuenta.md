@@ -18,7 +18,8 @@ Debajo, **Privacidad** y **Aviso legal** abren los dos textos sin tener cuenta, 
 
 Con una cuenta creada antes de la V1.0.4, la app pide lo mismo una vez, al abrirla o al entrar: la pantalla **Condiciones y
 privacidad**, con las dos casillas y **Aceptar y continuar**. Hasta aceptar no baja ni enseña tus datos. Quien prefiera no
-aceptar tiene ahí **Exportar una copia**, **Borrar todos los datos**, **Eliminar cuenta** y **Cerrar sesión**
+aceptar tiene ahí **Exportar una copia** (en un móvil en el que acabas de entrar, la copia se hace con lo que tu cuenta tiene en
+la nube, sin que se quede en el móvil), **Borrar todos los datos**, **Eliminar cuenta** y **Cerrar sesión**
 ([Datos y privacidad](datos-y-privacidad.md#condiciones-y-consentimiento)).
 
 Una cuenta recién creada empieza con la [bienvenida](experiencia.md#la-primera-vez): pide tus datos biométricos y, tras el recorrido,
