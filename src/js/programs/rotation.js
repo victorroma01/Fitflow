@@ -8,6 +8,7 @@
    S.rotationWeek: semana de la última rotación (o del inicio del plan) · S.rotationPostponed: semana en que se dijo «Ahora no».
    Define: ROTATE_EVERY, HOME_EQUIP, cycleOf, equipOf, rotatedName, rotationChanges, rotationDue, rotationCard, rotationSheet  · acciones/registros: 3
 */
+import { say } from '../core/i18n.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { EXERCISES } from '../data/library.js';
@@ -120,5 +121,5 @@ A.rotationApply = () => {
   saveState();
   sheet();
   R();
-  toast(ch.length ? 'Ejercicios rotados: ' + ch.length + (ch.length == 1 ? ' cambio' : ' cambios') : 'No hay nada que rotar');
+  toast(ch.length ? say `Ejercicios rotados: ${ch.length}${ch.length == 1 ? ' cambio' : ' cambios'}` : 'No hay nada que rotar');
 };

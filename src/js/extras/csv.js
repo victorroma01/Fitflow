@@ -2,6 +2,7 @@
    Exportación a CSV.
    Define: csvCell, csvBody, CSV_EXPORTS  · acciones/registros: 2
 */
+import { say } from '../core/i18n.js';
 import { dayKey, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -38,7 +39,7 @@ const CSV_EXPORTS = {
       return r;
     } },
   peso: { t: 'Peso corporal', s: 'Registro de peso con fecha', f: 'peso-corporal', n: () => (S.weightLog || []).length, b: () => /** @type {any[][]} */ ([['Fecha', 'Peso (kg)']]).concat((S.weightLog || []).filter(p => p && p.d).slice().sort((a, b) => a.d < b.d ? -1 : 1).map(p => [p.d, +p.w || 0])) },
-  med: { t: 'Medidas', s: 'Cuello, hombros, pecho, brazo, cintura…', f: 'medidas', n: () => measureList().length, b: () => /** @type {any[][]} */ ([['Fecha'].concat(MEASURES.map(x => x[1] + ' (cm)'))]).concat(measureList().map(m => /** @type {any[]} */ ([m.d]).concat(MEASURES.map(x => +m.v[x[0]] > 0 ? +m.v[x[0]] : '')))) },
+  med: { t: 'Medidas', s: 'Cuello, hombros, pecho, brazo, cintura…', f: 'medidas', n: () => measureList().length, b: () => /** @type {any[][]} */ ([['Fecha'].concat(MEASURES.map(x => say `${x[1]} (cm)`))]).concat(measureList().map(m => /** @type {any[]} */ ([m.d]).concat(MEASURES.map(x => +m.v[x[0]] > 0 ? +m.v[x[0]] : '')))) },
   com: { t: 'Comidas', s: 'Alimentos, gramos y macros por día', f: 'comidas', n: () => Object.keys(S.meals || {}).length, b: () => {
       /** @type {any[][]} */
       const r = [['Fecha', 'Comida', 'Alimento', 'Gramos', 'Kcal', 'Hidratos (g)', 'Proteínas (g)', 'Grasas (g)', 'Fibra (g)', 'Sal (g)']];

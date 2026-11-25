@@ -7,6 +7,7 @@
    de nuevo con ellos.
    Define: loginState, waitLeft, noteFail, BAD_LOGIN, clearFails, loginBusy, loginError, waitTimer, loginField, loginModeTabs, signUpExtra, loginBackdrop, RECAPTCHA_NOTE, loginView, passwordView, loginSync, enterAccount, finishLogin, reloginBusy  · acciones/registros: 7
 */
+import { say } from '../core/i18n.js';
 import { $, APPV } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -120,7 +121,7 @@ const loginView = () => {
     return passwordView();
   const up = loginState.m == 'up';
   const wait = waitLeft();
-  const label = loginState.busy || (wait ? 'Espera ' + Math.ceil(wait / 1e3) + ' s' : up ? 'Crear cuenta' : 'Entrar');
+  const label = loginState.busy || (wait ? say `Espera ${Math.ceil(wait / 1e3)} s` : up ? 'Crear cuenta' : 'Entrar');
   const form = html`
     ${loginModeTabs(up)}
     ${raw(loginField('lgu', 'Usuario', { ac: 'username', go: 'loginSubmit' }))}
@@ -324,7 +325,7 @@ A.reloginSubmit = async () => {
     return;
   }
   if (waitLeft()) {
-    out('Demasiados intentos. Espera ' + Math.ceil(waitLeft() / 1e3) + ' s antes de volver a probar.');
+    out(say `Demasiados intentos. Espera ${Math.ceil(waitLeft() / 1e3)} s antes de volver a probar.`);
     return;
   }
   reloginBusy = true;

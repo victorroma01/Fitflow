@@ -2,6 +2,7 @@
    Alimentos en línea (Open Food Facts) y escáner de códigos.
    Define: onlineFoods, onlineQuery, onlineBusy, OFF_ERRORS, offErrorText, isOffline, pause, offFetch, offName, offProduct, OFF_FIELDS, SEARCH_SIZE, SEARCH_KEEP_MS, searchCache, luceneSafe, searchNewUrl, searchOldUrl, searchResult, searchOnline, searchNote, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanTry, scanMsg, stopScan, startScan, scanLoop, offBarcode, lookupBarcode  · acciones/registros: 5
 */
+import { say } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
@@ -192,7 +193,7 @@ A.searchFoodOnline = async () => {
           <span>${f.n}${raw(nutriScoreBadge(f.ns))}</span>
           <small>${raw(f.b[0])} kcal</small>
         </div>`)}
-    ` : searchNote(r.dropped ? 'Hay ' + r.dropped + (r.dropped == 1 ? ' producto' : ' productos') + ' para «' + q + '», pero sin datos nutricionales. Prueba con otra palabra o crea el alimento en «Nuevo».' : 'No hay resultados para «' + q + '». Prueba con otra palabra o crea el alimento en «Nuevo».'));
+    ` : searchNote(r.dropped ? say `Hay ${r.dropped}${r.dropped == 1 ? ' producto' : ' productos'} para «${q}», pero sin datos nutricionales. Prueba con otra palabra o crea el alimento en «Nuevo».` : say `No hay resultados para «${q}». Prueba con otra palabra o crea el alimento en «Nuevo».`));
   }
   catch (x) {
     show(html`${raw(searchNote(offErrorText(x)))}<button data-a="searchFoodOnline" class="w-full">Reintentar</button>`);
@@ -576,7 +577,7 @@ async function lookupBarcode(code) {
      respuesta que llega después no abre nada ni cambia el mensaje */
   const mine = scanTry;
   const current = () => mine === scanTry && !!document.getElementById('f2sm');
-  scanMsg('Buscando ' + code + '…');
+  scanMsg(say `Buscando ${code}…`);
   try {
     const c = S.barcodeCache && S.barcodeCache[code];
     let it = c && Array.isArray(c.b) && c.b.length == 6 ? { n: String(c.n || '').slice(0, 80), b: c.b.map(Number), ns: nutriScore(c.ns) } : null;

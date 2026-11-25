@@ -2,6 +2,7 @@
    Logros.
    Define: achStats, ACHIEVEMENTS, checkAchievements, achProgress, achievementsPage  · acciones/registros: 1
 */
+import { say } from '../core/i18n.js';
 import { dayKey, fmtDateShort, round1, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
@@ -61,7 +62,7 @@ export function checkAchievements() {
       saveState();
     }
     if (nw.length)
-      setTimeout(() => toast(nw.length == 1 ? 'Logro: ' + nw[0][1] : 'Logros: ' + nw.slice(0, 2).map(x => x[1]).join(' y ') + (nw.length > 2 ? ' y ' + (nw.length - 2) + ' más' : '')), 1900);
+      setTimeout(() => toast(nw.length == 1 ? say `Logro: ${nw[0][1]}` : say `Logros: ${nw.slice(0, 2).map(x => x[1]).join(' y ')}${nw.length > 2 ? say ` y ${nw.length - 2} más` : ''}`), 1900);
   }
   catch (e) {
     logError('comprobar logros', e);
@@ -70,7 +71,7 @@ export function checkAchievements() {
 function achProgress(x, st) {
   const v = st[x[3]];
   const t = x[4];
-  return x[3] == 'vol' ? roundInt(v / 1000) + ' / ' + roundInt(t / 1000) + ' t' : x[3] == 'km' ? round1(v) + ' / ' + t + ' km' : Math.min(roundInt(v), t) + ' / ' + t;
+  return x[3] == 'vol' ? roundInt(v / 1000) + ' / ' + roundInt(t / 1000) + ' t' : x[3] == 'km' ? say `${round1(v)} / ${t} km` : Math.min(roundInt(v), t) + ' / ' + t;
 }
 function achievementsPage() {
   const st = achStats();

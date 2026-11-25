@@ -2,6 +2,7 @@
    Registro de cardio.
    Define: CARDIO_TYPES, cardioState, cardioLabel, cardioPace, paceLabel, cardioTypeChips, cardioInputs, cardioPaceBox, cardioSheet, readCardio, cardioLogs, cardioCard  · acciones/registros: 4
 */
+import { say } from '../core/i18n.js';
 import { clampInt, clampNum, dayKey, fmtClock, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
@@ -18,12 +19,12 @@ export function cardioPace(t, km, sec) {
   if (!(km > 0 && sec > 0))
     return '';
   if (t == 'bike' || t == 'ell' || t == 'oth')
-    return round1(km / (sec / 3600)) + ' km/h';
+    return say `${round1(km / (sec / 3600))} km/h`;
   if (t == 'row')
     return fmtClock(sec / (km * 2)) + ' /500 m';
   if (t == 'swim')
     return fmtClock(sec / (km * 10)) + ' /100 m';
-  return fmtClock(sec / km) + ' /km';
+  return say `${fmtClock(sec / km)} /km`;
 }
 const paceLabel = t => t == 'bike' || t == 'ell' || t == 'oth' ? 'Velocidad media' : 'Ritmo';
 /* el tipo de cardio, como chips */
@@ -103,8 +104,8 @@ A.cardioSave = () => {
   }
   const d = /^\d{4}-\d{2}-\d{2}$/.test(r.d) && r.d <= dayKey(new Date) ? r.d : dayKey(new Date);
   const pc = cardioPace(cardioState.t, r.km, r.sec);
-  const x = (r.km ? round1(r.km) + ' km · ' : '') + fmtClock(r.sec) + (pc ? ' · ' + pc : '');
-  S.logs.push({ d, n: 'Cardio · ' + cardioLabel(cardioState.t), v: 0, s: 0, m: Math.max(1, Math.round(r.sec / 60)), q: 0, k: 'c', x, c: { t: cardioState.t, km: r.km, sec: r.sec } });
+  const x = (r.km ? say `${round1(r.km)} km · ` : '') + fmtClock(r.sec) + (pc ? ' · ' + pc : '');
+  S.logs.push({ d, n: say `Cardio · ${cardioLabel(cardioState.t)}`, v: 0, s: 0, m: Math.max(1, Math.round(r.sec / 60)), q: 0, k: 'c', x, c: { t: cardioState.t, km: r.km, sec: r.sec } });
   S.logs.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
   saveState();
   sheet();
@@ -142,7 +143,7 @@ export function cardioCard() {
           ${W4.map(w => html`
             <div>
               <i data-style="height:${Math.max(4, Math.round((w.km || w.sec / 600) / mx * 56))}px"></i>
-              <small>${raw(w.k ? '−' + w.k + ' sem' : 'Ahora')}</small>
+              <small>${raw(w.k ? say `−${w.k} sem` : 'Ahora')}</small>
             </div>`)}
         </div>
       </div>`;

@@ -3,8 +3,9 @@ módulo) no cambia nada de lo que se pinta. Más rápido y preciso que comparar 
 
 Abre en las dos las pantallas de tests/shots.py con los mismos datos y la misma fecha, y compara el HTML de la página (sin el
 código ni los estilos, y con los estilos puestos por core/dynstyle). No es una prueba de la batería: se usa a mano.
-Lo que depende del momento y no del código no se compara: los tiempos y el espacio medidos de Diagnóstico y la clase que
-anima la burbuja de la barra de pestañas (se pone en el siguiente fotograma). Así, dos compilaciones iguales dan 0 distintas.
+Lo que depende del momento y no del código no se compara: los tiempos y el espacio medidos de Diagnóstico, la clase que
+anima la burbuja de la barra de pestañas (se pone en el siguiente fotograma) y si la figura pequeña de un ejercicio está ya
+dibujada o aún es su hueco. Así, dos compilaciones iguales dan 0 distintas.
 
   python3 tests/samehtml.py antes.html despues.html [pantalla,pantalla…]
   python3 tests/samehtml.py antes.html despues.html --mas     (además, las pantallas de MORE: subpáginas, avisos y estados
@@ -25,6 +26,8 @@ BODY = "(()=>{const c=document.body.cloneNode(true);c.querySelectorAll('script,s
 # las líneas de Diagnóstico con medidas del momento, y la dirección de la página (cada compilación va en su puerto)
 NOISE = re.compile(r'(Tiempo de pintado|Espacio usado): [^\n<]*')
 ADDRESS = re.compile(r'127\.0\.0\.1:\d+/[\w.-]+')
+# la figura pequeña de un ejercicio, que se dibuja poco a poco: su hueco (svg[data-pic]) o ya su imagen, según el momento
+THUMB = re.compile(r'<svg [^>]*data-pic="[^"]*"[^>]*></svg>|<img src="blob:[^"]*" width="\d+" height="\d+" alt="" draggable="false">')
 
 
 # más estados que los de las capturas: lo que se ve al editar, las subpáginas de Ajustes, los avisos y las ventanas de un entreno
@@ -136,7 +139,7 @@ def grab(path, screens, ren=None):
                     pg.wait_for_function("!document.querySelector('#sh svg[data-pic]')", timeout=8000)
                 except Exception:
                     pass
-                out[k] = ADDRESS.sub('(dirección)', NOISE.sub(r'\1: …', pg.evaluate(old(BODY))))
+                out[k] = THUMB.sub('(figura)', ADDRESS.sub('(dirección)', NOISE.sub(r'\1: …', pg.evaluate(old(BODY)))))
                 if ren:
                     out[k] = new_classes(out[k], ren, path)
             except Exception as e:

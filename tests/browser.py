@@ -8,6 +8,9 @@ Dirección: todo se sirve por HTTP desde su carpeta, como en GitHub Pages: el pa
 sus módulos ES no cargan desde file://, y también el archivo único (con file://, WebKit no guarda datos, y Chromium a veces
 abre la página recargada con el almacenamiento vacío). SF_HTTP=0 abre el archivo único como archivo, con Chromium.
 
+Idioma: las pruebas abren la app con el navegador en español (new_context lo pone si la prueba no pide otro). La del inglés
+(tests/english.py) lo pide en inglés.
+
 La app lee de IndexedDB los entrenos, el historial y las comidas antes de pintar nada, y los guarda allí sin esperar
 (core/persist, I-04). Por eso, en todas las pruebas, page.goto y page.reload esperan antes a que lo guardado quede escrito
 (savesDone) y, después, a que la app termine de arrancar (window.__ffready). En otras páginas no esperan nada.
@@ -136,8 +139,10 @@ def recaptcha_route(route):
 
 def _with_setup(make):
     """browser.new_context que prepara cada página del contexto: con SF_FONT, pone esa letra; en Firefox, lee bien el texto de las
-    hojas; y reCAPTCHA, siempre de prueba."""
+    hojas; y reCAPTCHA, siempre de prueba. El idioma del navegador es el español salvo que la prueba pida otro (locale): la app
+    se pone en el idioma del móvil, y el de Playwright, si no se dice, es el inglés."""
     def run(self, *a, **k):
+        k.setdefault('locale', 'es-ES')
         c = make(self, *a, **k)
         if FONT:
             c.add_init_script(FONT_JS)

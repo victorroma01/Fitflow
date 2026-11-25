@@ -2,6 +2,7 @@
    Lista de programas, vista previa y activación.
    Define: previewProgram, presetRow, presetList  · acciones/registros: 5
 */
+import { say } from '../core/i18n.js';
 import { X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -48,7 +49,7 @@ const presetRow = i => {
       <span class="fx-1 minw-0">
         ${programRow(PROGRAM_NAMES[i], levelTag(S.level))}
         <small>
-          ${raw(act ? '<b class="c-at">Plan actual</b> · ' : '')}
+          ${raw(act ? html`<b class="c-at">Plan actual</b> · ` : '')}
           ${perWeekText(pl)} · ${raw(pl.reduce((s, d) => s + d.ex.length, 0))} ejercicios
         </small>
       </span>›
@@ -87,7 +88,7 @@ A.openPrograms = () => fullPage(html`
         <span class="fx-1 minw-0">
           ${programRow(p.n, p.o && isLevel(p.o.niv) ? levelTag(p.o.niv) : '')}
           <small>
-            ${raw(S.ownProgramIndex == k ? '<b class="c-at">Plan actual</b> · ' : '')}
+            ${raw(S.ownProgramIndex == k ? html`<b class="c-at">Plan actual</b> · ` : '')}
             ${perWeekText(p.plan)} · ${raw(p.plan.reduce((s, d) => s + d.ex.length, 0))} ejercicios
           </small>
         </span>›
@@ -110,9 +111,9 @@ A.programSelect = i => {
   previewProgram = i;
   const v = isLevel(previewLevel) ? previewLevel : S.level;
   if (S.noProgram)
-    confirmDialog('¿Empezar con este programa?', 'Empezarás con «' + X(PROGRAM_NAMES[i]) + '», con nivel ' + LEVEL_NAMES[v].toLowerCase() + '. Puedes cambiarlo cuando quieras.', 'programSelectConfirmed', 'Empezar');
+    confirmDialog('¿Empezar con este programa?', say `Empezarás con «${X(PROGRAM_NAMES[i])}», con nivel ${LEVEL_NAMES[v].toLowerCase()}. Puedes cambiarlo cuando quieras.`, 'programSelectConfirmed', 'Empezar');
   else
-    confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(PROGRAM_NAMES[i]) + '» con nivel ' + LEVEL_NAMES[v].toLowerCase() + '. Se reiniciará el progreso de la semana.', 'programSelectConfirmed', 'Cambiar');
+    confirmDialog('¿Cambiar de plan?', say `Pasarás a «${X(PROGRAM_NAMES[i])}» con nivel ${LEVEL_NAMES[v].toLowerCase()}. Se reiniciará el progreso de la semana.`, 'programSelectConfirmed', 'Cambiar');
 };
 A.programSelectConfirmed = () => {
   syncCustomProgram();

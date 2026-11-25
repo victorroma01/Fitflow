@@ -57,7 +57,7 @@ function measureChart(k) {
 function measuresTab() {
   const L = measureList();
   const has = MEASURES.filter(x => measureDelta(x[0]));
-  let h = '<button class="primary w-full mt-12" data-a="measureNew">Nueva medición</button>';
+  let h = html`<button class="primary w-full mt-12" data-a="measureNew">Nueva medición</button>`;
   if (!L.length)
     return html`
       ${raw(h)}

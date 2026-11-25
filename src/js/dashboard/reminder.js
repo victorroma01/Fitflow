@@ -8,6 +8,7 @@
    sn: pospuesto hasta ese día, c: id del evento del calendario }.
    Define: WEIGH_STEPS, WEIGH_UNITS, weighCustom, weighEvery, addStep, lastWeighIn, weighNext, weighDue, weighBanner, reminderCard, checkWeighIn, icsText, weighIcs  · acciones/registros: 7
 */
+import { say } from '../core/i18n.js';
 import { $, dayKey, fmtDateShort, newId } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -68,7 +69,7 @@ export const weighBanner = () => {
       <span class="weigh-icon">${icon('scale', 26)}</span>
       <span>
         <b>Día de pesarse</b>
-        <small>${l ? 'Último pesaje: ' + fmtDateShort(l) + ' · ' : ''}cada ${weighEvery(S.weighReminder)}</small>
+        <small>${l ? say `Último pesaje: ${fmtDateShort(l)} · ` : ''}cada ${weighEvery(S.weighReminder)}</small>
       </span>
       <button class="primary" data-a="weighReminderGo">Registrar</button>
     </div>`;
@@ -126,7 +127,7 @@ export const checkWeighIn = () => {
   saveState();
   const l = lastWeighIn();
   dialog('Día de pesarse', html`
-    Toca pesarse: ${l ? 'tu último pesaje fue el ' + fmtDateShort(l, { day: 'numeric', month: 'long' }) : 'aún no has registrado tu peso'}. Pésate a la misma hora, mejor por la mañana y en ayunas, para comparar bien.
+    Toca pesarse: ${l ? say `tu último pesaje fue el ${fmtDateShort(l, { day: 'numeric', month: 'long' })}` : 'aún no has registrado tu peso'}. Pésate a la misma hora, mejor por la mañana y en ayunas, para comparar bien.
   `, [['Mañana', 'weighReminderLater', ''], ['Registrar peso', 'weighReminderGo', 'primary']]);
 };
 document.addEventListener('visibilitychange', () => {

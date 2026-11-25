@@ -8,7 +8,6 @@
    Los ejercicios propios no están en el catálogo: su consejo es el de su grupo muscular y no tienen hoja de ejecución.
    Define: GROUP_TIPS, info, setExInfo, withExInfo, exTip, exHow, stillFigures, howHead, howSheet  · acciones/registros: 1
 */
-import { X } from '../core/util.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
 import { toast } from '../core/toast.js';
@@ -87,7 +86,10 @@ const howSheet = (n, back) => {
 /* al tocar la imagen del ejercicio (F-14): su ejecución; desde la ficha de la librería, con vuelta a la ficha (data-i) */
 A.exerciseHowTo = (i, b) => {
   const n = b.dataset.n;
-  const back = b.dataset.i != null && b.dataset.i !== '' ? '<div class="row"><button data-a="exerciseDetail" data-i="' + X(b.dataset.i) + '" aria-label="Volver a la ficha" class="bd-0 bg-none fs-24 p-6-10">←</button></div>' : '';
+  const back = b.dataset.i != null && b.dataset.i !== '' ? html`
+    <div class="row">
+      <button data-a="exerciseDetail" data-i="${b.dataset.i}" aria-label="Volver a la ficha" class="bd-0 bg-none fs-24 p-6-10">←</button>
+    </div>` : '';
   withExInfo(() => {
     sheet(howSheet(n, back));
     sheetToTop();

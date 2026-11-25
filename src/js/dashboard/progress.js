@@ -101,7 +101,7 @@ const progressChart = (pts, m, sel, inter) => {
 export const progressBody = (stat) => {
   const L = progressExercises();
   if (!L.length)
-    return '<p class="muted m-8-0-0">Cuando registres pesos verás aquí la evolución de cada ejercicio.</p>';
+    return html`<p class="muted m-8-0-0">Cuando registres pesos verás aquí la evolución de cada ejercicio.</p>`;
   if (!stat && !L.includes(progressState.n))
     progressState.n = L[0];
   const n = stat || progressState.n;
@@ -112,7 +112,7 @@ export const progressBody = (stat) => {
   const ML = { e: '1RM estimado', w: 'Peso máximo', v: 'Volumen' };
   let h = '';
   if (!stat) {
-    const metric = reps ? segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="segmented"', 'class="segmented pgm"') : '<p class="muted fs-13 m-0-0-6">Se mide en tiempo o distancia: se ve el peso máximo de cada sesión.</p>';
+    const metric = reps ? segmented('progressMetric', m, [['e', '1RM'], ['w', 'Peso máx.'], ['v', 'Volumen']]).replace('class="segmented"', 'class="segmented pgm"') : html`<p class="muted fs-13 m-0-0-6">Se mide en tiempo o distancia: se ve el peso máximo de cada sesión.</p>`;
     h += html`
       <select data-c="progressExercise" aria-label="Ejercicio" class="m-10-0-8">
         ${L.map((x, i) => html`<option value="${i}"${x == n ? ' selected' : ''}>${x}</option>`)}
@@ -125,7 +125,7 @@ export const progressBody = (stat) => {
   const p = pts[sel];
   h += html`
     <div class="progress-total">
-      <span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? ' <em class="record-tag">RÉCORD</em>' : '')}</span>
+      <span><b>${raw(progressFmt(p.v, m))}</b>${raw(p.pr ? html` <em class="record-tag">RÉCORD</em>` : '')}</span>
       <small>${raw(ML[m])} · ${fmtDateShort(p.d)}</small>
     </div>
     ${progressChart(pts, m, sel, !stat)}`;
@@ -139,11 +139,11 @@ export const progressBody = (stat) => {
           ${dl >= 0 ? '+' : ''}
           ${Math.round(dl * 10) / 10} %
         </b>
-        ${raw(m != 'v' ? '<br><span class="fs-11_5">Punto relleno = récord personal</span>' : '')}
+        ${raw(m != 'v' ? html`<br><span class="fs-11_5">Punto relleno = récord personal</span>` : '')}
       </div>`;
   }
   else
-    h += '<div class="muted progress-summary">Con una segunda sesión verás la tendencia.</div>';
+    h += html`<div class="muted progress-summary">Con una segunda sesión verás la tendencia.</div>`;
   return h;
 };
 const refreshProgress = () => {

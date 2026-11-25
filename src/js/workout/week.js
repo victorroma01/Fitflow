@@ -7,6 +7,7 @@
    Lo marcado como hecho va por semana y día de la semana (S.doneDays['semana-día']).
    Define: planIndex, isCycle, WEEK, trainingDays, gcd, sessionsPerWeek, perWeekText, syncSel, advanceDay, weekOffset
 */
+import { say } from '../core/i18n.js';
 import { S } from '../core/state.js';
 import { weekMonday } from '../core/calc.js';
 /** Índice en `pl` del día `j` (0-6) de la semana `wk`. */
@@ -34,7 +35,7 @@ export const sessionsPerWeek = (pl = S.plan) => {
 /** «4 entrenos por semana» o, en un ciclo que cambia de una semana a otra, «4-5 entrenos por semana». */
 export const perWeekText = (pl = S.plan) => {
   const [a, b] = sessionsPerWeek(pl);
-  return (a == b ? a : a + '-' + b) + (b == 1 ? ' entreno' : ' entrenos') + ' por semana';
+  return say `${(a == b ? a : a + '-' + b) + (b == 1 ? ' entreno' : ' entrenos')} por semana`;
 };
 /** Pone en S.selectedDay el día del plan que toca en el día elegido de la semana (tras cambiar de día, de semana o de plan). */
 export const syncSel = () => {
@@ -58,5 +59,5 @@ export const advanceDay = () => {
   }
   syncSel();
 };
-/** Semanas de calendario entre la de hoy y la de la fecha `t` (negativo si es de una semana anterior). */
+/** Semanas de calendario entre la de hoy y la de la fecha `say` (negativo si es de una semana anterior). */
 export const weekOffset = t => Math.round((weekMonday(t) - weekMonday(new Date())) / 6048e5);

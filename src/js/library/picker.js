@@ -2,6 +2,7 @@
    Selector para añadir ejercicios al día.
    Define: addToDay, pickState, pickBody, pickSheet  · acciones/registros: 6
 */
+import { say } from '../core/i18n.js';
 import { $, typedName } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { exerciseNamed } from './custom.js';
@@ -49,9 +50,7 @@ export const pickBody = () => {
       <span class="exercise-cell">${exCellHtml(o.e, row)}</span>
       <small class="muted">Añadir +</small>
     </div>
-  `).join('') + (l.length > lim ? html`
-    <p class="muted ta-c">Mostrando ${lim} de ${l.length}. Usa la búsqueda o un grupo.</p>
-  ` : '') || '<p class="muted">Sin resultados.</p>';
+  `).join('') + (l.length > lim ? html`<p class="muted ta-c">Mostrando ${lim} de ${l.length}. Usa la búsqueda o un grupo.</p>` : '') || html`<p class="muted">Sin resultados.</p>`;
 };
 function pickSheet() {
   return html`
@@ -94,7 +93,7 @@ A.newExerciseSave = () => {
   /* con el nombre de uno que ya existe (sin mirar mayúsculas ni tildes) no se crea otro igual: se añade ese al día */
   const had = exerciseNamed(n);
   if (had)
-    toast('«' + had.n + '» ya existe: se ha añadido al día');
+    toast(say `«${had.n}» ya existe: se ha añadido al día`);
   else
     S.customExercises.push({ n, c: categoryOf(pickState.g), g: 'Propio', t: 'Personalizado', p: [], s: [], q: 'Otro' });
   addToDay(had ? had.n : n);

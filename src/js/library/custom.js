@@ -4,6 +4,7 @@
    así que al renombrarlo se cambia en todos esos sitios a la vez y nada se queda con el nombre viejo. No se elimina uno que esté
    en el plan, en un programa propio o en un workout: antes hay que quitarlo de ahí. Con un entreno en curso no se toca ninguno.
 */
+import { say } from '../core/i18n.js';
 import { typedName } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -111,7 +112,7 @@ A.customRename = (i, b) => {
   }
   const had = exerciseNamed(nn);
   if (had && had !== e) {
-    toast('Ya hay un ejercicio que se llama «' + had.n + '»');
+    toast(say `Ya hay un ejercicio que se llama «${had.n}»`);
     return;
   }
   if (nn != e.n) {
@@ -139,7 +140,7 @@ A.customDeleteAsk = i => {
   if (n)
     dialog(html`
       ¿Eliminar «${e.n}»?
-    `, 'Tiene ' + n + (n == 1 ? ' sesión registrada' : ' sesiones registradas') + '. Puedes eliminar solo el ejercicio y conservar su historial en tus gráficas y récords, o eliminarlo con su historial.', [['Cancelar', 'doNothing', ''], ['Solo el ejercicio', 'customDelete', ''], ['Con su historial', 'customDeleteAll', 'c-ctx']]);
+    `, say `Tiene ${n}${n == 1 ? ' sesión registrada' : ' sesiones registradas'}. Puedes eliminar solo el ejercicio y conservar su historial en tus gráficas y récords, o eliminarlo con su historial.`, [['Cancelar', 'doNothing', ''], ['Solo el ejercicio', 'customDelete', ''], ['Con su historial', 'customDeleteAll', 'c-ctx']]);
   else
     confirmDialog(html`¿Eliminar «${e.n}»?`, 'Dejará de salir en la librería.', 'customDelete', 'Eliminar');
 };

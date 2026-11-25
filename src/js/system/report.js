@@ -11,6 +11,7 @@
    primero (los 30 últimos).
    Define: REPORT_KINDS, REPORT_AREAS, REPORT_MAX, REPORT_KEEP, REFRESH_EVERY, reportKind, reportArea, reportBack, refreshedAt, reportTech, reportKindChips, reportAreaChips, reportTextField, reportTechField, reportPage, reportStatus, reportDoc, sendReport, flushReports, refreshReports, reportsUnseen, reportsLine, reportListPage, reportListSync  · acciones/registros: 7
 */
+import { say } from '../core/i18n.js';
 import { $, APPV, dayKey, fmtDateShort } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
@@ -181,7 +182,7 @@ export const reportsLine = () => {
   const nw = reportsUnseen();
   const off = L.filter(x => !x.s).length;
   const open = L.filter(x => x.s && !x.rp).length;
-  return nw ? nw + (nw == 1 ? ' respuesta nueva' : ' respuestas nuevas') : off ? off + ' sin enviar: se envía al volver la red' : L.length ? open ? open + (open == 1 ? ' pendiente de respuesta' : ' pendientes de respuesta') : 'Todos contestados' : 'Avisa de un fallo o propón una mejora';
+  return nw ? nw + (nw == 1 ? ' respuesta nueva' : ' respuestas nuevas') : off ? say `${off} sin enviar: se envía al volver la red` : L.length ? open ? open + (open == 1 ? ' pendiente de respuesta' : ' pendientes de respuesta') : 'Todos contestados' : 'Avisa de un fallo o propón una mejora';
 };
 /** Perfil → Fallos y sugerencias: los avisos propios con su estado y la respuesta. */
 const reportListPage = () => {
@@ -206,7 +207,7 @@ const reportListPage = () => {
       ${pgHead('Fallos y sugerencias')}
       <p class="muted m-n6-0-12">Lo que nos has enviado, con su estado: pendiente, vista o contestada.</p>
       <button class="primary w-full mb-12" data-a="reportNew">Nuevo aviso</button>
-      ${raw(items || '<p class="muted">Aún no has enviado ninguno.</p>')}
+      ${raw(items || html`<p class="muted">Aún no has enviado ninguno.</p>`)}
     </div>`;
 };
 /* con la lista abierta, se pinta de nuevo al llegar estados nuevos; las respuestas a la vista quedan vistas */

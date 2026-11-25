@@ -5,7 +5,8 @@
    se añade aquí.
    Define: DEBUG_NAMES
 */
-import { APPV, dayKey, FFDEP } from './util.js';
+import { APPV, dayKey, FFDEP, LANG } from './util.js';
+import { say, tr } from './i18n.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
 import { instanceStale, partSizes, partsLost, savesBroken, savesDone, stateRecovered } from './persist.js';
@@ -61,6 +62,9 @@ const DEBUG_NAMES = {
   addState: [() => addState],
   applyTheme: [() => applyTheme],
   APPV: [() => APPV],
+  LANG: [() => LANG],
+  tr: [() => tr],
+  say: [() => say],
   backTarget: [() => backTarget],
   buildBackup: [() => buildBackup],
   C: [() => C],

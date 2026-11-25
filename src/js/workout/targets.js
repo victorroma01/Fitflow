@@ -2,6 +2,7 @@
    Unidades, repeticiones objetivo, duración y volumen semanal.
    Define: repClass, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
 */
+import { say } from '../core/i18n.js';
 import { fmtMinSec } from '../core/util.js';
 import { unitFromName } from '../core/calc.js';
 import { C } from '../core/registry.js';
@@ -135,11 +136,11 @@ const TECH_TAIL = { DS: ' + drop set', RP: ' + rest-pause', PAR: ' + parciales' 
 export const planLine = e => {
   const [a, f] = (unitOf(e) ? '' : e.tk || '').split('+');
   if (a == 'PIR')
-    return e.s + ' × ' + pyramidReps(targetRange(e), e.s).join('/') + ' reps' + (TECH_TAIL[f] || '');
+    return say `${e.s} × ${pyramidReps(targetRange(e), e.s).join('/')} reps${TECH_TAIL[f] || ''}`;
   if (a == 'MYO' && e.s > 1)
-    return targetText(e) + ' + ' + (e.s - 1) + ' mini series de 3-5';
+    return say `${targetText(e)} + ${e.s - 1} mini series de 3-5`;
   if (a == 'CL')
-    return e.s + ' × ' + targetText(e) + ' en bloques de 2-3';
+    return say `${e.s} × ${targetText(e)} en bloques de 2-3`;
   return e.s + ' × ' + targetText(e) + (TECH_TAIL[a] || '');
 };
 /* un dato con su nombre («RIR 1-2», «Descanso 3:00»), que no se parte entre dos líneas. Con dot, lleva pegado el punto que
@@ -157,13 +158,13 @@ export const targetLine = (e, i) => {
   const p = [];
   if (e.s > 1) {
     const rest = fmtMinSec(restAt(S.plan[S.selectedDay], i));
-    p.push(inSuperset(i) ? ['', '10 s al siguiente'] : blockEnd(S.plan[S.selectedDay], i) ? ['Descanso de la ', 'ronda ' + rest] : ['', 'Descanso ' + rest]);
+    p.push(inSuperset(i) ? ['', '10 s al siguiente'] : blockEnd(S.plan[S.selectedDay], i) ? ['Descanso de la ', say `ronda ${rest}`] : ['', say `Descanso ${rest}`]);
   }
   if (!U)
-    p.push(['', 'Tempo ' + tempoOf(e)]);
+    p.push(['', say `Tempo ${tempoOf(e)}`]);
   /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */
   const [a, b] = targetRange(e).map(x => Math.max(1, x - 2));
-  const ob = U ? planLine(e) : dl ? html`${thenDot(e.s + ' × ' + (a == b ? a : a + '-' + b) + ' reps')}${together('RIR 3-4')}` : html`
+  const ob = U ? planLine(e) : dl ? html`${thenDot(say `${e.s} × ${a == b ? a : a + '-' + b} reps`)}${together('RIR 3-4')}` : html`
     ${thenDot(planLine(e))}
     ${together('RIR ' + rirOf(e))}`;
   return html`
@@ -177,7 +178,7 @@ export const rangeSelect = (e, i) => {
     return '';
   const c = targetRange(e).join('-');
   return html`
-    <select data-c="setRepRange" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" class="w-auto p-5-10 fs-13">
+    <select data-c="setRepRange" data-i="${i}" aria-label="${say `Repeticiones objetivo, ${e.n}`}" class="w-auto p-5-10 fs-13">
       ${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}
     </select>`;
 };

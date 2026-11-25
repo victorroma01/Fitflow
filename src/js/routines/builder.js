@@ -2,6 +2,7 @@
    Mis workouts: lista, editor de bloques y lanzamiento.
    Define: routineState, BLOCK_KINDS, routineExRows, routineListPage, routineBlock, routineEditor, routineBlockPicker, openRoutines, routineCard, routineRows, routineList, refreshRoutineRows, routineSnapshot, routineEditIndex, overviewSnapshot, setOverviewSnapshot, routineToDay, restorePlanBackup  · acciones/registros: 25
 */
+import { say } from '../core/i18n.js';
 import { $, clampNum, fmtMinSec, roundInt, typedName, typedNum, X } from '../core/util.js';
 import { A, C, U } from '../core/registry.js';
 import { groupLabel } from '../data/library.js';
@@ -26,7 +27,7 @@ export const routineExRows = () => {
       <span class="exercise-cell">${exCellHtml(e, row)}</span>
       <small class="muted">Añadir +</small>
     </div>
-  `).join('') || '<p class="muted">Sin resultados.</p>';
+  `).join('') || html`<p class="muted">Sin resultados.</p>`;
 };
 const routineListPage = () => routineList();
 /* un bloque del workout (A, B, C…): si es superserie o triserie, sus ejercicios, las series (− +) y el descanso */
@@ -37,11 +38,11 @@ const routineBlock = (block, j) => {
     <div class="exercise-row"><div class="thumb">${exPicture(n, 64)}</div><b class="fx-1">${n}</b></div>`);
   const sets = html`
     <span>
-      <button data-a="routineBlockSets" data-i="${j}" data-v="-1" aria-label="${'Una serie menos, serie ' + letter}">−</button> ${raw(block.s)} series <button data-a="routineBlockSets"
-          data-i="${j}" data-v="1" aria-label="${'Una serie más, serie ' + letter}">+</button>
+      <button data-a="routineBlockSets" data-i="${j}" data-v="-1" aria-label="${say `Una serie menos, serie ${letter}`}">−</button> ${raw(block.s)} series <button data-a="routineBlockSets"
+          data-i="${j}" data-v="1" aria-label="${say `Una serie más, serie ${letter}`}">+</button>
     </span>`;
   const rest = html`
-    <select data-c="routineBlockReps" data-i="${j}" aria-label="${'Descanso, serie ' + letter}" class="w-auto">
+    <select data-c="routineBlockReps" data-i="${j}" aria-label="${say `Descanso, serie ${letter}`}" class="w-auto">
       ${REST_OPTIONS.map(v => html`<option value="${v}"${v == block.r ? ' selected' : ''}>Descanso ${raw(fmtMinSec(v))}</option>`)}
     </select>`;
   return html`
@@ -59,7 +60,7 @@ export const routineEditor = () => {
   return html`
     <div class="row">
       <button data-a="routineEditorBack" data-back="1">‹ Rutinas</button>
-      ${raw(routineState.nw ? '' : '<button data-a="routineDeleteAsk" class="c-ctx">Eliminar</button>')}
+      ${raw(routineState.nw ? '' : html`<button data-a="routineDeleteAsk" class="c-ctx">Eliminar</button>`)}
     </div>
     <h2 class="m-14-0-4 ls-n0_02em">Workout personalizado</h2>
     <label>Nombre</label>
@@ -121,7 +122,7 @@ const routineCard = (routine, i) => {
   const groups = [...new Set(exercises.map(n => groupLabel(groupOfName(n))))];
   const sets = routine.bl.reduce((s, b) => s + b.s * b.ex.length, 0);
   const menu = html`
-    <button data-a="routineMenu" data-i="${i}" aria-label="${'Opciones de ' + routine.n}" class="bd-0 bg-none p-4-8">
+    <button data-a="routineMenu" data-i="${i}" aria-label="${say `Opciones de ${routine.n}`}" class="bd-0 bg-none p-4-8">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
         <circle cx="12" cy="5" r="2"/>
         <circle cx="12" cy="12" r="2"/>
@@ -159,7 +160,8 @@ function routineRows() {
     l.sort((a, b) => a.r.n.localeCompare(b.r.n));
   else
     l.reverse();
-  return l.map(({ r, i }) => routineCard(r, i)).join('') || '<p class="muted">Aún no tienes workouts. Crea el primero con el botón de abajo.</p>';
+  return l.map(({ r, i }) => routineCard(r, i)).join('') || html`
+    <p class="muted">Aún no tienes workouts. Crea el primero con el botón de abajo.</p>`;
 }
 function routineList() {
   return html`
@@ -199,7 +201,7 @@ export const setOverviewSnapshot = v => {
 };
 A.routineNew = () => {
   routineState.nw = true;
-  S.routines.push({ n: 'Mi workout ' + (S.routines.length + 1), bl: [] });
+  S.routines.push({ n: say `Mi workout ${S.routines.length + 1}`, bl: [] });
   routineState.i = S.routines.length - 1;
   saveState();
   sheet(routineEditor());

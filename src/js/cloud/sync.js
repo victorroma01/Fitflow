@@ -24,7 +24,8 @@
    suyo, que ya no es lo último.
    Define: newMeta, readMeta, meta, storeMeta, metaWaiting, saveMeta, status, quiet, applying, lastPrefs, profileAt, timer, fails, tokenFresh, running, again, syncState, syncBusy, deadShown, setStatus, syncLine, afterApply, syncProfile, syncDeviceOS, pull, pruneIndex, lastHashes, unsynced, push, syncRound, noteWaiting, syncNow, CHANGE_WAIT, timerAt, syncSoon, syncAfterChange, retryLater, adapter, forgetDamaged, startSync, stopSync, firstSync, pendingDocs, wipeCloudData
 */
-import { $, newId } from '../core/util.js';
+import { say } from '../core/i18n.js';
+import { $, LOCALE, newId } from '../core/util.js';
 import { deviceOS } from '../core/platform.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -127,8 +128,8 @@ export const syncLine = () => {
     return 'sin cuenta';
   if (account.x || status.st == 'dead')
     return 'la sesión ha caducado: vuelve a entrar';
-  const t = meta.last ? new Date(meta.last).toLocaleString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-  return { run: 'sincronizando…', off: 'sin conexión; se sube al volver la red', wait: 'al terminar el entreno', err: 'no se pudo (' + status.code + '); se reintenta sola' }[status.st] || (t ? 'al día · ' + t : 'pendiente');
+  const t = meta.last ? new Date(meta.last).toLocaleString(LOCALE, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+  return { run: 'sincronizando…', off: 'sin conexión; se sube al volver la red', wait: 'al terminar el entreno', err: say `no se pudo (${status.code}); se reintenta sola` }[status.st] || (t ? say `al día · ${t}` : 'pendiente');
 };
 /* tras aplicar lo de la nube: estado válido, guardado (sin contarlo como cambio local), tema y color, y la app pintada.
    Promesa: se cumple cuando lo aplicado queda escrito en el móvil (o se sabe que no se pudo: savesBroken) */

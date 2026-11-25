@@ -15,6 +15,7 @@
    para medirlo. El motor hace cada ejercicio con sus músculos de la librería, como en las páginas de revisión.
    Define: F3, figs, exOf, fit, boxText, uid, STAGE, raster, LIGHTEN, defsById, defsFor, thumb, SLOW_FRAME, EARLY, WARM_UP, SAMPLE, frameCosts, plain, middle, frameCost, play, STILL_LABELS, stills, stages
 */
+import { say } from '../core/i18n.js';
 import { AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
 import { FIG_POSES } from '../data/figposes.js';
 import { FIG_BOXES } from '../data/figboxes.js';
@@ -182,7 +183,7 @@ const stills = box => {
   /* el mismo encuadre para todas: el de todas las posturas, con la proporción de cada una en su sitio */
   const vb = boxText(fit(b.slice(9, 13), stops.length > 1 ? (STAGE - .08) / stops.length : STAGE));
   const one = (t, k) => {
-    const label = ex.beat ? stops.length > 1 ? 'Postura ' + (k + 1) + ' de ' + stops.length : 'La postura del ejercicio' : STILL_LABELS[k][1];
+    const label = ex.beat ? stops.length > 1 ? say `Postura ${k + 1} de ${stops.length}` : 'La postura del ejercicio' : STILL_LABELS[k][1];
     return html`<svg viewBox="${vb}" role="img" aria-label="${label}">${raw(F3.draw(ex, t, cam, 'f' + (++uid) + '_'))}</svg>`;
   };
   if (stops.length > 1) {

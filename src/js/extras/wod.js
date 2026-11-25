@@ -5,6 +5,7 @@
    animado en cada fotograma y la cuenta al día al volver a la app.
    Define: WOD_MODES, WOD_DEFAULTS, WOD_INFO, wodConfig, wodTotal, wodSetup, wodState, wodName, wodSkeleton, wodNext, wodFill, RING, wodRing, wodFrame, wodTick, wodStart, wodClose, wodEnd  · acciones/registros: 14
 */
+import { say } from '../core/i18n.js';
 import { clampInt, dayKey, fmtClock } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -132,7 +133,7 @@ function wodState() {
     return { ph: 'work', rem: Math.ceil(c.tw - w), id: 'w' + i, len: c.tw, el: w, rd: i + 1, tot: c.tn, t };
   return { ph: 'rest', rem: Math.ceil(cy - w), id: 'x' + i, len: c.tr, el: w - c.tw, rd: i + 1, tot: c.tn, t };
 }
-const wodName = c => c.m == 'amrap' ? 'AMRAP ' + c.a + ' min' : c.m == 'emom' ? 'EMOM ' + (c.ei == 60 ? c.en + ' min' : c.en + ' × ' + c.ei + ' s') : c.m == 'tabata' ? 'Tabata ' + c.tw + '/' + c.tr + ' · ' + c.tn + ' rondas' : 'For time' + (c.ct ? ' · tope ' + c.ct + ' min' : '');
+const wodName = c => c.m == 'amrap' ? say `AMRAP ${c.a} min` : c.m == 'emom' ? 'EMOM ' + (c.ei == 60 ? say `${c.en} min` : c.en + ' × ' + c.ei + ' s') : c.m == 'tabata' ? say `Tabata ${c.tw}/${c.tr} · ${c.tn} rondas` : say `For time${c.ct ? say ` · tope ${c.ct} min` : ''}`;
 function wodSkeleton() {
   const o = document.getElementById('f2w');
   if (!o || !wodRun)
@@ -149,7 +150,7 @@ function wodSkeleton() {
     </div>`;
   if (wodRun.done) {
     const f = wodRun.fin;
-    h += '<div class="wod-done"><small>Terminado</small>';
+    h += html`<div class="wod-done"><small>Terminado</small>`;
     if (m == 'amrap')
       h += html`
         <b class="wod-result" id="f2rs">${raw(wodRun.r)}${wodRun.r == 1 ? ' ronda' : ' rondas'}</b>
@@ -168,12 +169,18 @@ function wodSkeleton() {
       h += html`
         <b class="wod-result">${raw(f.rd || '')}${f.rd ? (f.rd == 1 ? ' ronda' : ' rondas') : ''}</b>
         <small>${f.early ? 'Terminado antes de tiempo' : 'Completado'} · ${raw(fmtClock(Math.round(f.t)))}</small>`;
-    h += '<input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" class="mt-12"><div class="grid-2 w-full mt-12"><button data-a="wodDiscard">Descartar</button><button class="primary" data-a="wodSave">Guardar</button></div></div>';
+    h += html`
+      <input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" class="mt-12">
+      <div class="grid-2 w-full mt-12">
+        <button data-a="wodDiscard">Descartar</button>
+        <button class="primary" data-a="wodSave">Guardar</button>
+      </div>
+      </div>`;
   }
   else {
     h += '<div class="wod-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="wod-ring-track" cx="60" cy="60" r="54"/><circle class="wod-ring-progress" id="f2rp" cx="60" cy="60" r="54"/></svg><div class="wod-ring-center"><div class="wod-phase" id="f2p" aria-live="polite"></div><div class="wod-time" id="f2t">0:00</div><div class="wod-status" id="f2s"></div></div></div><div class="wod-next" id="f2nx"></div><div class="wod-spacer"></div>';
     if (wodRun.ph == 'pre' && !wodRun.pa)
-      h += '<div class="ta-c"><button class="wod-skip" data-a="wodSkipCountdown" id="f2sk">Saltar la cuenta atrás</button></div>';
+      h += html`<div class="ta-c"><button class="wod-skip" data-a="wodSkipCountdown" id="f2sk">Saltar la cuenta atrás</button></div>`;
     if (m == 'amrap')
       h += html`
         <button class="wod-count-btn" data-a="wodRound" aria-label="Sumar una ronda">
@@ -188,7 +195,7 @@ function wodSkeleton() {
           <small>Vueltas</small>
           <b id="f2rn">${raw(wodRun.r)}</b>
           <small id="f2lp">
-            ${raw(wodRun.laps.length ? 'Última: ' + fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0)) : 'Toca para marcar una vuelta')}
+            ${raw(wodRun.laps.length ? say `Última: ${fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0))}` : 'Toca para marcar una vuelta')}
           </small>
         </button>`;
     h += html`
@@ -203,13 +210,13 @@ function wodSkeleton() {
 const wodNext = s => {
   const c = wodRun.c;
   const T = wodTotal(c);
-  const tot = s.t != null && T ? 'Total ' + fmtClock(Math.floor(s.t)) + ' de ' + fmtClock(T) : '';
+  const tot = s.t != null && T ? say `Total ${fmtClock(Math.floor(s.t))} de ${fmtClock(T)}` : '';
   if (s.ph == 'pre')
-    return 'Después: ' + (c.m == 'tabata' ? 'trabajo ' + fmtClock(c.tw) : c.m == 'emom' ? 'ronda 1 de ' + c.en : c.m == 'amrap' ? 'AMRAP ' + c.a + ' min' : 'cronómetro');
+    return say `Después: ${c.m == 'tabata' ? say `trabajo ${fmtClock(c.tw)}` : c.m == 'emom' ? say `ronda 1 de ${c.en}` : c.m == 'amrap' ? say `AMRAP ${c.a} min` : 'cronómetro'}`;
   if (c.m == 'tabata')
-    return (s.ph == 'work' ? (s.rd < s.tot && c.tr ? 'Después: descanso ' + fmtClock(c.tr) : s.rd < s.tot ? 'Después: ronda ' + (s.rd + 1) : 'Última ronda') : 'Después: trabajo ' + fmtClock(c.tw)) + ' · ' + tot;
+    return (s.ph == 'work' ? (s.rd < s.tot && c.tr ? say `Después: descanso ${fmtClock(c.tr)}` : s.rd < s.tot ? say `Después: ronda ${s.rd + 1}` : 'Última ronda') : say `Después: trabajo ${fmtClock(c.tw)}`) + ' · ' + tot;
   if (c.m == 'emom')
-    return (s.rd < s.tot ? 'Después: ronda ' + (s.rd + 1) : 'Última ronda') + ' · ' + tot;
+    return (s.rd < s.tot ? say `Después: ronda ${s.rd + 1}` : 'Última ronda') + ' · ' + tot;
   return '';
 };
 /** Fracción del reloj que se ve llena: en una cuenta atrás, lo que queda del tramo; en el For time, lo que va del límite o
@@ -259,7 +266,7 @@ function wodTick() {
   const c = wodRun.c;
   set('f2t', s.up != null ? fmtClock(s.up) : fmtClock(s.rem));
   set('f2p', wodRun.pa ? 'En pausa' : s.ph == 'pre' ? 'Prepárate' : s.ph == 'rest' ? 'Descanso' : c.m == 'ft' ? 'Cronómetro' : 'Trabajo');
-  set('f2s', s.rd ? 'Ronda ' + s.rd + ' de ' + s.tot : s.ph == 'pre' ? 'Empieza en ' + s.rem + ' s' : c.m == 'ft' && c.ct ? 'Límite ' + fmtClock(c.ct * 60) : c.m == 'amrap' && s.rem <= 60 && s.len > 120 ? 'Último minuto' : '');
+  set('f2s', s.rd ? say `Ronda ${s.rd} de ${s.tot}` : s.ph == 'pre' ? say `Empieza en ${s.rem} s` : c.m == 'ft' && c.ct ? say `Límite ${fmtClock(c.ct * 60)}` : c.m == 'amrap' && s.rem <= 60 && s.len > 120 ? 'Último minuto' : '');
   set('f2nx', wodNext(s));
   /* el botón de saltar la cuenta atrás solo existe mientras dura */
   const sk = document.getElementById('f2sk');
@@ -359,7 +366,7 @@ A.wodRound = () => {
     wodRun.laps.push(Math.round(s.up != null ? s.up : 0));
     const l = document.getElementById('f2lp');
     if (l)
-      l.textContent = 'Última: ' + fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0));
+      l.textContent = say `Última: ${fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0))}`;
   }
   const n = document.getElementById('f2rn');
   if (n)
@@ -451,7 +458,7 @@ A.wodSave = () => {
   if (c.m == 'amrap') {
     const r = clampInt((document.getElementById('f2r') || {}).value, 0, 999, wodRun.r);
     const ex = clampInt((document.getElementById('f2e') || {}).value, 0, 999, 0);
-    x = r + (r == 1 ? ' ronda' : ' rondas') + (ex ? ' + ' + ex + ' reps' : '');
+    x = r + (r == 1 ? ' ronda' : ' rondas') + (ex ? say ` + ${ex} reps` : '');
     w.r = r;
     w.e = ex;
   }

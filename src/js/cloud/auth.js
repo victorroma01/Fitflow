@@ -5,6 +5,7 @@
    con el de renovación.
    Define: userProblem, passProblem, techEmail, authCall, sessionFrom, signUp, passwordSignIn, NO_SUCH_ACCOUNT, signIn, refreshing, DEAD_SESSION, idToken, changePassword, AUTH_MESSAGES, authMessage
 */
+import { say } from '../core/i18n.js';
 import { AUTH_URL, FIREBASE, OLD_TECH_DOMAIN, TECH_DOMAIN, TOKEN_URL } from './config.js';
 import { fetchJson, netError } from './net.js';
 import { appCheckToken } from './appcheck.js';
@@ -91,4 +92,4 @@ const AUTH_MESSAGES = {
   OPERATION_NOT_ALLOWED: 'El acceso con usuario y contraseña no está activado en el servidor.',
   SESSION: 'Tu sesión ha caducado: vuelve a entrar.'
 };
-export const authMessage = e => AUTH_MESSAGES[e && e.code] || 'No se ha podido conectar con el servidor (' + (e && e.code || 'error') + '). Inténtalo de nuevo.';
+export const authMessage = e => AUTH_MESSAGES[e && e.code] || say `No se ha podido conectar con el servidor (${e && e.code || 'error'}). Inténtalo de nuevo.`;

@@ -10,7 +10,8 @@
    Se carga al usarlo (core/lazy).
    Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, nutritionStats, otherStats, monthStats, sessionsText, setsText, planText, shouldText, weightChange, goalNote, weightDelta, conclusions, overPlan, svgBars, svgLine, svgKcal, kpi, delta, monthBar, kpiGrid, trainingCard, weightCard, nutritionCard, otherCard, conclusionCard, analysisPage, analysisPdf  · acciones/registros: 3
 */
-import { APPV, dayKey, fmtDateShort } from '../core/util.js';
+import { say } from '../core/i18n.js';
+import { APPV, dayKey, fmtDateShort, LOCALE } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -36,7 +37,7 @@ let anaYm = '';
 const monthName = ym => MONTHS[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 /** Número en español: coma decimal y `d` decimales como mucho. */
-const fmtN = (v, d = 0) => (+v || 0).toLocaleString('es', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+const fmtN = (v, d = 0) => (+v || 0).toLocaleString(LOCALE, { maximumFractionDigits: d, minimumFractionDigits: 0 });
 /* las cargas, en la unidad elegida en Ajustes (profile/units): un peso, en kg o en lb, y un volumen, en toneladas o en miles
    de libras. El peso corporal va siempre en kg */
 const loadNum = v => usesLb() ? toDisplayWeight(v) : v;
@@ -176,19 +177,19 @@ const monthStats = ym => {
 };
 /* — frases que dicen lo mismo en la pantalla y en el PDF — */
 /* «3 entrenos de fuerza, 1 WOD, 2 sesiones de cardio (10,5 km) en 5 días» */
-const sessionsText = t => t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza') + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? ', ' + t.nc + (t.nc == 1 ? ' sesión' : ' sesiones') + ' de cardio' + (t.km ? ' (' + fmtN(t.km, 1) + ' km)' : '') : '') + ' en ' + t.days + (t.days == 1 ? ' día' : ' días');
+const sessionsText = t => say `${t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza') + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? say `, ${t.nc}${t.nc == 1 ? ' sesión' : ' sesiones'} de cardio${t.km ? say ` (${fmtN(t.km, 1)} km)` : ''}` : '')} en ${t.days}${t.days == 1 ? ' día' : ' días'}`;
 /* «120 series · esfuerzo medio 7,8» */
-const setsText = t => fmtN(t.sets) + ' series' + (t.rpe ? ' · esfuerzo medio ' + fmtN(t.rpe, 1) : '');
+const setsText = t => say `${fmtN(t.sets)} series${t.rpe ? say ` · esfuerzo medio ${fmtN(t.rpe, 1)}` : ''}`;
 /* «Tu plan marca unos 4 entrenos por semana: has hecho el 75 % de lo previsto hasta hoy.» */
-const planText = m => 'Tu plan marca unos ' + fmtN(m.pwk, 1) + ' entrenos por semana: has hecho el ' + Math.round((m.t.ns + m.t.nw) / m.plan * 100) + ' % de lo previsto' + (m.open ? ' hasta hoy' : '') + '.';
+const planText = m => say `Tu plan marca unos ${fmtN(m.pwk, 1)} entrenos por semana: has hecho el ${Math.round((m.t.ns + m.t.nw) / m.plan * 100)} % de lo previsto${m.open ? ' hasta hoy' : ''}.`;
 /* lo que debería hacer el peso con el objetivo elegido: «debería mantenerse», «debería bajar» o «debería subir» */
-const shouldText = w => KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : 'debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir');
+const shouldText = w => KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : say `debería ${KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'}`;
 /* «Baja 1,2 kg» o «Estable» */
-const weightChange = w => cap(w.tr) + (w.tr == 'estable' ? '' : ' ' + fmtN(Math.abs(w.d), 1) + ' kg');
+const weightChange = w => cap(w.tr) + (w.tr == 'estable' ? '' : say ` ${fmtN(Math.abs(w.d), 1)} kg`);
 /* « · objetivo Definir: va bien» o « · objetivo Definir: debería bajar» ('' sin objetivo) */
-const goalNote = w => w.goal >= 0 ? ' · objetivo ' + GOAL_LABELS[w.goal] + (w.ok ? ': va bien' : ': ' + shouldText(w)) : '';
+const goalNote = w => w.goal >= 0 ? say ` · objetivo ${GOAL_LABELS[w.goal]}${w.ok ? ': va bien' : ': ' + shouldText(w)}` : '';
 /* el cambio de peso del mes, con su signo: «+1,2 kg», «−0,8 kg» o «—» si no hay pesajes */
-const weightDelta = w => w.d == null ? '—' : (w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1) + ' kg';
+const weightDelta = w => w.d == null ? '—' : say `${(w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1)} kg`;
 /** La conclusión del mes, en frases cortas (para la pantalla y el PDF). */
 const conclusions = m => {
   const out = [];
@@ -200,22 +201,22 @@ const conclusions = m => {
   else {
     const dif = t.n - m.pt.n;
     const pct = m.plan > 0 ? Math.round(done / m.plan * 100) : 0;
-    out.push('Has entrenado ' + t.n + (t.n == 1 ? ' vez' : ' veces') + (m.pt.n ? ' (' + (dif == 0 ? 'igual que' : Math.abs(dif) + (dif > 0 ? ' más que' : ' menos que')) + ' en ' + prevName + ')' : '') + (pct ? ', el ' + pct + ' % de lo que marca tu plan' : '') + '.' + (pct && pct < 60 && !m.open ? ' Intenta no saltarte sesiones: la constancia es lo que más cuenta.' : ''));
+    out.push(say `Has entrenado ${t.n}${t.n == 1 ? ' vez' : ' veces'}${m.pt.n ? say ` (${dif == 0 ? 'igual que' : Math.abs(dif) + (dif > 0 ? ' más que' : ' menos que')} en ${prevName})` : ''}${pct ? say `, el ${pct} % de lo que marca tu plan` : ''}.${pct && pct < 60 && !m.open ? ' Intenta no saltarte sesiones: la constancia es lo que más cuenta.' : ''}`);
   }
   if (m.ex.rec.length)
-    out.push('Has mejorado tu marca en ' + m.ex.rec.length + (m.ex.rec.length == 1 ? ' ejercicio' : ' ejercicios') + '; el que más, ' + m.ex.rec[0].n + ' (+' + fmtN(m.ex.rec[0].g * 100) + ' %).');
+    out.push(say `Has mejorado tu marca en ${m.ex.rec.length}${m.ex.rec.length == 1 ? ' ejercicio' : ' ejercicios'}; el que más, ${m.ex.rec[0].n} (+${fmtN(m.ex.rec[0].g * 100)} %).`);
   const w = m.w;
   if (w.d != null)
-    out.push(w.tr == 'estable' ? 'Tu peso se mantiene estable' + (w.goal >= 0 ? (w.ok ? ', como buscas con tu objetivo (' + GOAL_LABELS[w.goal] + ').' : '; con tu objetivo (' + GOAL_LABELS[w.goal] + ') debería ' + (KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir') + ' poco a poco.') : '.') : 'Tu peso ' + w.tr + ' ' + fmtN(Math.abs(w.d), 1) + ' kg' + (w.goal >= 0 ? (w.ok ? ', como buscas con tu objetivo (' + GOAL_LABELS[w.goal] + ').' : '; con tu objetivo (' + GOAL_LABELS[w.goal] + ') ' + shouldText(w) + ': revisa las calorías.') : '.'));
+    out.push(w.tr == 'estable' ? say `Tu peso se mantiene estable${w.goal >= 0 ? (w.ok ? say `, como buscas con tu objetivo (${GOAL_LABELS[w.goal]}).` : say `; con tu objetivo (${GOAL_LABELS[w.goal]}) debería ${KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'} poco a poco.`) : '.'}` : say `Tu peso ${w.tr} ${fmtN(Math.abs(w.d), 1)} kg${w.goal >= 0 ? (w.ok ? say `, como buscas con tu objetivo (${GOAL_LABELS[w.goal]}).` : say `; con tu objetivo (${GOAL_LABELS[w.goal]}) ${shouldText(w)}: revisa las calorías.`) : '.'}`);
   else
     out.push('No has registrado tu peso este mes: pésate cada 2-4 semanas para ver cómo cambia.');
   const n = m.nu;
   if (n.logged >= 3)
-    out.push('Comiste dentro de tu objetivo ' + n.ok + ' de los ' + n.logged + ' días que registraste (' + Math.round(n.adh * 100) + ' %)' + (n.side ? ', y de media ' + n.side + ' de kcal' : '') + '.');
+    out.push(say `Comiste dentro de tu objetivo ${n.ok} de los ${n.logged} días que registraste (${Math.round(n.adh * 100)} %)${n.side ? say `, y de media ${n.side} de kcal` : ''}.`);
   else
-    out.push(n.logged ? 'Solo registraste comidas ' + n.logged + (n.logged == 1 ? ' día' : ' días') + ': anótalas para saber si cumples tu objetivo.' : 'Este mes no has registrado comidas: anótalas para saber si cumples tu objetivo.');
+    out.push(n.logged ? say `Solo registraste comidas ${n.logged}${n.logged == 1 ? ' día' : ' días'}: anótalas para saber si cumples tu objetivo.` : 'Este mes no has registrado comidas: anótalas para saber si cumples tu objetivo.');
   for (const [name, d] of m.o.ms.slice(0, 2))
-    out.push(name + ': ' + (d > 0 ? '+' : '−') + fmtN(Math.abs(d), 1) + ' cm.');
+    out.push(say `${name}: ${d > 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)} cm.`);
   return out;
 };
 /* ── gráficas de la pantalla (SVG) ─────────────────────────────────────────────────────────────────────────────────── */
@@ -298,7 +299,7 @@ const svgKcal = m => {
 /** Cifra de la cabecera: [texto, valor, comparación, clase de color]. */
 const kpi = (l, v, s, c) => html`
   <div class="analysis-kpi"><small>${l}</small><b>${v}</b>${s ? html`<small class="${c || ''}">${s}</small>` : ''}</div>`;
-const delta = (v, p, u, d = 0) => !p && !v ? '' : (v - p > 0 ? '+' : v - p < 0 ? '−' : '±') + fmtN(Math.abs(v - p), d) + (u || '') + ' vs. mes anterior';
+const delta = (v, p, u, d = 0) => !p && !v ? '' : say `${(v - p > 0 ? '+' : v - p < 0 ? '−' : '±') + fmtN(Math.abs(v - p), d) + (u || '')} vs. mes anterior`;
 /* — las partes de la página, de arriba abajo — */
 /* el mes que se ve, con las flechas al anterior y al siguiente (`i`: su sitio entre los `count` meses con datos; `f`: el
    primer día con datos, si cae dentro del mes) */
@@ -308,8 +309,8 @@ const monthBar = (m, i, count, f) => html`
     <div>
       <b>${cap(monthName(anaYm))}</b>
       <small class="muted">
-        ${m.open ? 'del 1 al ' + m.nd + ' (en curso)' : 'del 1 al ' + m.nd}
-        ${f && f > m.a ? ' · desde el ' + +f.slice(8, 10) : ''}
+        ${m.open ? say `del 1 al ${m.nd} (en curso)` : say `del 1 al ${m.nd}`}
+        ${f && f > m.a ? say ` · desde el ${+f.slice(8, 10)}` : ''}
       </small>
     </div>
     <button data-a="analysisMonth" data-i="1" aria-label="Mes siguiente"${i < count - 1 ? '' : ' disabled'}>›</button>
@@ -387,7 +388,7 @@ const nutritionCard = m => {
           <div><small>Proteína de media</small><b>${fmtN(n.ap)} g</b><small class="muted">objetivo ${fmtN(n.tp)} g</small></div>
         </div>
         <p class="muted">
-          ${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? ' · de media ' + n.side : ''}.${n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''}
+          ${n.logged} de ${m.nd} días con comidas registradas · ${n.ok} dentro del objetivo (±10 %)${n.side ? say ` · de media ${n.side}` : ''}.${n.water ? say ` Agua: ${fmtN(n.water / 1000, 1)} l al día.` : ''}
         </p>
         ${raw(svgKcal(m))}
         <div class="analysis-legend">
@@ -425,7 +426,7 @@ const analysisPage = () => {
         <div class="card">
           <b>Aún no hay análisis</b>
           <p class="muted">
-            ${from ? 'Estará disponible a partir del ' + fmtDateShort(from, { day: 'numeric', month: 'long' }) + ', cuando tengas un mes de datos.' : 'Estará disponible cuando lleves un mes registrando entrenos, comidas o tu peso.'}
+            ${from ? say `Estará disponible a partir del ${fmtDateShort(from, { day: 'numeric', month: 'long' })}, cuando tengas un mes de datos.` : 'Estará disponible cuando lleves un mes registrando entrenos, comidas o tu peso.'}
           </p>
         </div>
       </div>`;
@@ -458,8 +459,8 @@ const analysisPdf = async (ym) => {
   const INK = [24, 24, 28];
   const MU = [118, 118, 128];
   const LN = [226, 226, 232];
-  const title = 'Análisis mensual de ' + monthName(ym);
-  const d = makePdf('StrataFit · ' + title);
+  const title = say `Análisis mensual de ${monthName(ym)}`;
+  const d = makePdf(say `StrataFit · ${title}`);
   const X0 = 42;
   const WD = d.W - 84;
   let y = 0;
@@ -489,11 +490,11 @@ const analysisPdf = async (ym) => {
   d.rect(X0, 36, WD, 74, { fill: [27, 24, 40], r: 14 });
   d.rect(X0, 36, 6, 74, { fill: ac });
   d.text(X0 + 22, 68, cap(title), { size: 19, bold: true, color: [255, 255, 255] });
-  d.text(X0 + 22, 90, (acctName() || 'StrataFit') + ' · del 1 al ' + m.nd + (m.open ? ' (mes en curso)' : ''), { size: 10, color: [196, 196, 210] });
+  d.text(X0 + 22, 90, say `${acctName() || 'StrataFit'} · del 1 al ${m.nd}${m.open ? ' (mes en curso)' : ''}`, { size: 10, color: [196, 196, 210] });
   d.text(X0 + WD - 18, 68, 'STRATAFIT', { size: 11, bold: true, color: [255, 255, 255], align: 'right' });
   y = 128;
   /* cifras */
-  const tiles = [['Entrenos', String(t.n), delta(t.n, m.pt.n)], ['Tiempo', Math.floor(t.min / 60) + ' h ' + String(Math.round(t.min % 60)).padStart(2, '0') + ' min', ''], ['Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1)], ['Récords', String(m.ex.rec.length), m.ex.rec.length ? 'mejor 1RM estimado' : ''], ['Peso', weightDelta(w), w.d == null ? 'sin pesajes' : w.tr], ['Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días registrados']];
+  const tiles = [['Entrenos', String(t.n), delta(t.n, m.pt.n)], ['Tiempo', say `${Math.floor(t.min / 60)} h ${String(Math.round(t.min % 60)).padStart(2, '0')} min`, ''], ['Volumen', fmtN(volNum(t.vol), 1) + volUnit(), delta(volNum(t.vol), volNum(m.pt.vol), volUnit(), 1)], ['Récords', String(m.ex.rec.length), m.ex.rec.length ? 'mejor 1RM estimado' : ''], ['Peso', weightDelta(w), w.d == null ? 'sin pesajes' : w.tr], ['Alimentación', n.logged >= 3 ? Math.round(n.adh * 100) + ' %' : '—', n.logged >= 3 ? 'días en objetivo' : 'pocos días registrados']];
   const tw = (WD - 20) / 3;
   tiles.forEach((x, i) => {
     const tx = X0 + i % 3 * (tw + 10);
@@ -522,7 +523,7 @@ const analysisPdf = async (ym) => {
       if (r[1])
         d.rect(bx, yy(r[1]), bw * .6, top + ch - yy(r[1]), { fill: ac, r: 3 });
       d.text(bx + bw * .3, overPlan(yy(r[1]) - 4, m.pwk > 0 ? yy(m.pwk) : null, 6.5), String(r[1]), { size: 9, bold: true, align: 'center', color: INK });
-      d.text(bx + bw * .3, top + ch + 13, 'días ' + r[0], { size: 8, align: 'center', color: MU });
+      d.text(bx + bw * .3, top + ch + 13, say `días ${r[0]}`, { size: 8, align: 'center', color: MU });
     });
     if (m.pwk > 0) {
       d.line(X0 + 10, yy(m.pwk), X0 + WD - 10, yy(m.pwk), { color: MU, dash: [3, 3], lw: .8 });
@@ -547,14 +548,14 @@ const analysisPdf = async (ym) => {
       y += 18;
     }
   };
-  rows('Récords del mes (1RM estimado)', m.ex.rec.slice(0, 6).map(r => [r.n, 'de ' + fmtN(loadNum(r.p)) + ' a ' + fmtN(loadNum(r.m)) + ' ' + weightUnit() + ' (+' + fmtN(r.g * 100) + ' %)']));
+  rows('Récords del mes (1RM estimado)', m.ex.rec.slice(0, 6).map(r => [r.n, say `de ${fmtN(loadNum(r.p))} a ${fmtN(loadNum(r.m))} ${weightUnit()} (+${fmtN(r.g * 100)} %)`]));
   rows('Más volumen', m.ex.vol.map(r => [r.n, fmtN(volNum(r.v), 1) + volUnit()]));
   /* peso */
   section('Peso corporal');
   if (w.d == null)
     para('No hay pesajes este mes.', { color: MU });
   else {
-    para(weightChange(w) + goalNote(w) + ' · último: ' + fmtN(w.last, 1) + ' kg.', { bold: true });
+    para(say `${weightChange(w) + goalNote(w)} · último: ${fmtN(w.last, 1)} kg.`, { bold: true });
     need(120);
     const P = /** @type {any[]} */ (w.before ? [{ d: m.a, w: w.before.w, pre: 1 }] : []).concat(w.pts);
     const v = P.map(p => p.w);
@@ -582,8 +583,8 @@ const analysisPdf = async (ym) => {
   if (!n.logged)
     para('No hay comidas registradas este mes.', { color: MU });
   else {
-    para((n.verdict || 'Sin datos suficientes') + ' · ' + n.logged + ' de ' + m.nd + ' días con comidas registradas, ' + n.ok + ' dentro del objetivo (±10 %).', { bold: true });
-    para('De media, ' + fmtN(n.ak) + ' kcal (objetivo ' + fmtN(n.tk) + ') y ' + fmtN(n.ap) + ' g de proteína (objetivo ' + fmtN(n.tp) + ' g)' + (n.side ? ': ' + n.side : '') + '.' + (n.water ? ' Agua: ' + fmtN(n.water / 1000, 1) + ' l al día.' : ''), { color: MU, size: 9.5 });
+    para(say `${n.verdict || 'Sin datos suficientes'} · ${n.logged} de ${m.nd} días con comidas registradas, ${n.ok} dentro del objetivo (±10 %).`, { bold: true });
+    para(say `De media, ${fmtN(n.ak)} kcal (objetivo ${fmtN(n.tk)}) y ${fmtN(n.ap)} g de proteína (objetivo ${fmtN(n.tp)} g)${n.side ? ': ' + n.side : ''}.${n.water ? say ` Agua: ${fmtN(n.water / 1000, 1)} l al día.` : ''}`, { color: MU, size: 9.5 });
     need(120);
     const D = n.days;
     const mx = Math.max(n.tk * 1.3, ...D) || 1;
@@ -615,10 +616,10 @@ const analysisPdf = async (ym) => {
   /* otros datos y conclusión */
   if (m.o.ms.length || m.o.ach.length) {
     section('Otros datos');
-    rows('Medidas', m.o.ms.map((/** @type {[string, number]} */ [k, v]) => [k, (v > 0 ? '+' : '−') + fmtN(Math.abs(v), 1) + ' cm']));
+    rows('Medidas', m.o.ms.map((/** @type {[string, number]} */ [k, v]) => [k, say `${(v > 0 ? '+' : '−') + fmtN(Math.abs(v), 1)} cm`]));
     if (m.o.ach.length) {
       y += 4;
-      para('Logros conseguidos: ' + m.o.ach.join(' · ') + '.', { size: 9.5 });
+      para(say `Logros conseguidos: ${m.o.ach.join(' · ')}.`, { size: 9.5 });
     }
   }
   section('Conclusión');
@@ -630,8 +631,8 @@ const analysisPdf = async (ym) => {
   }
   return d.bytes((i, k) => {
     d.line(X0, d.H - 40, X0 + WD, d.H - 40, { color: LN, lw: .6 });
-    d.text(X0, d.H - 26, 'StrataFit · ' + title + ' · generado el ' + fmtDateShort(dayKey(new Date()), { day: 'numeric', month: 'long', year: 'numeric' }) + ' · V' + APPV, { size: 7.5, color: MU });
-    d.text(X0 + WD, d.H - 26, 'Página ' + (i + 1) + ' de ' + k, { size: 7.5, color: MU, align: 'right' });
+    d.text(X0, d.H - 26, say `StrataFit · ${title} · generado el ${fmtDateShort(dayKey(new Date()), { day: 'numeric', month: 'long', year: 'numeric' })} · V${APPV}`, { size: 7.5, color: MU });
+    d.text(X0 + WD, d.H - 26, say `Página ${i + 1} de ${k}`, { size: 7.5, color: MU, align: 'right' });
   });
 };
 /* — manejadores de esta función (registros A / C / U) — */

@@ -4,6 +4,7 @@
    Mientras estén a mano (S.nutritionGoals.man), cambiar el peso o la actividad no los pisa (nutrition/diet, applyDiet).
    Define: ringSvg, macroCell, goalSelect, goalsRing, goalRow, goalsFields, myNutritionPage, refreshGoals, manualPage, manualValues  · acciones/registros: 9
 */
+import { say } from '../core/i18n.js';
 import { $, clampInt, clampNum, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C, U } from '../core/registry.js';
@@ -85,7 +86,7 @@ function myNutritionPage() {
   const activity = S.biometrics.act == null ? 1 : clampInt(S.biometrics.act, 0, ACTIVITY_LEVELS.length - 1, 1);
   const mode = goals.man ? 'A mano' : spend ? 'Según tu plan' : 'Por defecto';
   const diff = spend ? roundInt(goals.k - spend.td) : null;
-  const note = spend ? DIET_TYPES[diet][4] + '. Gasto diario estimado: ' + roundInt(spend.td) + ' kcal (metabolismo basal ' + roundInt(spend.bm) + ' kcal).' : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.';
+  const note = spend ? say `${DIET_TYPES[diet][4]}. Gasto diario estimado: ${roundInt(spend.td)} kcal (metabolismo basal ${roundInt(spend.bm)} kcal).` : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.';
   return html`
     <div id="mny">
       ${backRow()}
@@ -149,7 +150,7 @@ U.manualGoalsPreview = () => {
     return;
   }
   const s = c + p + f;
-  e.textContent = s != 100 ? 'Los porcentajes suman ' + s + ' %: tienen que sumar 100.' : 'Hidratos ' + roundInt(k * c / 400) + ' g · proteínas ' + roundInt(k * p / 400) + ' g · grasas ' + roundInt(k * f / 900) + ' g al día.';
+  e.textContent = s != 100 ? say `Los porcentajes suman ${s} %: tienen que sumar 100.` : say `Hidratos ${roundInt(k * c / 400)} g · proteínas ${roundInt(k * p / 400)} g · grasas ${roundInt(k * f / 900)} g al día.`;
 };
 A.manualGoalsSave = () => {
   const [k, c, p, f] = manualValues();

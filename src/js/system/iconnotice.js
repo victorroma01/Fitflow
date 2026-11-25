@@ -9,6 +9,7 @@
    Android, Chrome cambia el icono solo.
    Define: iconNoticeApplies, iconSyncInfo, iconNoticeBody, iconTries, iconNoticeCheck  · acciones/registros: 3
 */
+import { say } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -48,7 +49,7 @@ const iconSyncInfo = () => {
   catch (e) {
     logError('aviso del icono nuevo: cambios por subir', e);
   }
-  return n || st != 'ok' ? [false, 'Quedan cambios por subir (' + syncLine() + '). Espera a tener conexión antes de quitar la app.'] : [true, 'Todo está sincronizado (' + syncLine() + ').'];
+  return n || st != 'ok' ? [false, say `Quedan cambios por subir (${syncLine()}). Espera a tener conexión antes de quitar la app.`] : [true, say `Todo está sincronizado (${syncLine()}).`];
 };
 /** La explicación con los pasos. withButtons: con «Más tarde» y «Entendido» (la ventana que sale sola); sin ellos, la página de
     Ajustes → App → El icono nuevo. */

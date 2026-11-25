@@ -37,7 +37,13 @@ const overviewHero = (d, editing) => {
     </div>`;
 };
 /* en una semana de descarga, qué cambia al empezar */
-const DELOAD_NOTE = '<div class="card m-12-0-0"><b>Semana de descarga</b><div class="muted fs-13 mt-4">Al empezar el entreno, el peso baja al 65 % y cada serie lleva 2 repeticiones menos, con las mismas series.</div></div>';
+const DELOAD_NOTE = html`
+  <div class="card m-12-0-0">
+    <b>Semana de descarga</b>
+    <div class="muted fs-13 mt-4">
+      Al empezar el entreno, el peso baja al 65 % y cada serie lleva 2 repeticiones menos, con las mismas series.
+    </div>
+  </div>`;
 /* los botones de un ejercicio al editar: una serie menos o más, descanso, rango, enlazar con el anterior, cambiar y quitar */
 const overviewEditButtons = (d, e, i) => {
   const link = i ? html`
@@ -76,9 +82,11 @@ const overviewBlock = (d, k, n, editing) => {
 export function overviewPage() {
   const d = S.plan[S.selectedDay];
   const editing = overviewMode == 2;
-  const add = editing ? '<button data-a="openPicker" class="w-full m-12-0">+ Añadir ejercicio</button>' : '';
+  const add = editing ? html`<button data-a="openPicker" class="w-full m-12-0">+ Añadir ejercicio</button>` : '';
   /* sin ejercicios no hay entreno que empezar: se dice cómo añadirlos */
-  const start = editing ? '' : d.ex.length ? '<button class="sticky-btn bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="startWorkout">Empezar entreno</button>' : '<p class="muted ta-c">Este día no tiene ejercicios. Pulsa «Editar» para añadir alguno.</p>';
+  const start = editing ? '' : d.ex.length ? html`
+    <button class="sticky-btn bg-tx c-bg bd-0 p-16 fs-16 r-16" data-a="startWorkout">Empezar entreno</button>
+  ` : html`<p class="muted ta-c">Este día no tiene ejercicios. Pulsa «Editar» para añadir alguno.</p>`;
   return html`
     ${overviewHead(editing)}
     ${overviewHero(d, editing)}

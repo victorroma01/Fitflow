@@ -5,7 +5,8 @@
    Hasta entonces, los botones que lo abren tienen aquí un manejador provisional: carga el módulo, que registra los de
    verdad, y repite la acción. En el archivo único todo va dentro y carga al instante. Si la descarga tarda, se dice
    «Cargando…»; si falla, se avisa y la siguiente vez se vuelve a pedir (lazyLoad).
-   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, figureTools, setFigureTools, loadFigures
+   También el inglés (i18n/en-*.js): solo se descarga con la app en inglés, antes del primer pintado (loadEnglish).
+   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, figureTools, setFigureTools, loadFigures, loadEnglish
 */
 import { logError } from './errors.js';
 import { toast } from './toast.js';
@@ -82,3 +83,5 @@ export const loadFigures = () => Promise.all([
   lazyLoad('figboxes', () => import('../data/figboxes.js')),
   lazyLoad('figure3d', () => import('../extras/figure3d.js')),
 ]).then(() => figureTools);
+/** El inglés (core/i18n): sus módulos, que se apuntan en el diccionario al cargarse. */
+export const loadEnglish = () => Promise.all([lazyLoad('en-ui', () => import('../i18n/en-ui.js'))]);

@@ -2,6 +2,7 @@
    Descansos por defecto y selector de descanso.
    Define: COMPOUND_RE, REST_OPTIONS, restByName, restOf, ROUND_REST, blockEnd, restAt, restSelect, HEAVY_TYPES, restDefault  · acciones/registros: 1
 */
+import { say } from '../core/i18n.js';
 import { fmtMinSec } from '../core/util.js';
 import { C } from '../core/registry.js';
 import { groupOf } from '../data/library.js';
@@ -55,7 +56,7 @@ export const restSelect = (e, short) => {
   return html`
     <select data-c="setRest" data-i="${i}" aria-label="${l + e.n}"${raw(short ? '' : ' class="w-auto p-5-10 fs-13"')}>
       ${REST_OPTIONS.concat(REST_OPTIONS.includes(r) ? [] : [r]).sort((a, b) => a - b).map(v => html`
-        <option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : 'Descanso ' + fmtMinSec(v) + ' por serie')}</option>`)}
+        <option value="${v}"${v == r ? ' selected' : ''}>${raw(short ? fmtMinSec(v) : say `Descanso ${fmtMinSec(v)} por serie`)}</option>`)}
     </select>`;
 };
 const HEAVY_TYPES = new Set(['Press plano', 'Press inclinado', 'Press declinado', 'Press vertical', 'Dominadas', 'Remo horizontal', 'Cadena posterior', 'Sentadilla', 'Prensa y hack', 'Bisagra de cadera', 'Empuje de cadera', 'Halterofilia']);

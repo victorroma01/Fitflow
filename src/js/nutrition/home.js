@@ -2,6 +2,7 @@
    Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones.
    Define: MACRO_CLASSES, nutritionDayHead, nutritionTotals, macroBar, mealItemRow, mealButtons, mealCard, mealName, nutritionBase  · acciones/registros: 2
 */
+import { say } from '../core/i18n.js';
 import { clampNum, dayKey, fmtDate, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
 import { MEAL_NAMES, MEAL_SPLITS } from '../data/foods.js';
@@ -59,23 +60,24 @@ const mealItemRow = (it, i, j) => {
     <div class="item">
       <div>${it.n}<br><small>${roundInt(v[0])} kcal · C ${round1(v[1])} P ${round1(v[2])} G ${round1(v[3])}</small></div>
       <input type="number" inputmode="decimal" min="0" max="5000" value="${it.g}" data-c="setItemGrams" data-i="${i}" data-j="${j}"
-          aria-label="${'Gramos de ' + it.n}">
-      <button data-a="removeMealItem" data-i="${i}" data-j="${j}" aria-label="${'Quitar ' + it.n}" class="p-2-6 touch-target">✕</button>
+          aria-label="${say `Gramos de ${it.n}`}">
+      <button data-a="removeMealItem" data-i="${i}" data-j="${j}" aria-label="${say `Quitar ${it.n}`}" class="p-2-6 touch-target">✕</button>
     </div>`;
 };
 /* los botones de una comida: añadir, guardarla como plato, buscar en internet y escanear */
 const mealButtons = (i, nm) => html`
   <div class="meal-actions">
-    <button class="meal-btn meal-btn-icon" data-a="openAddFood" data-i="${i}" aria-label="${'Añadir alimento, ' + nm}">
+    <button class="meal-btn meal-btn-icon" data-a="openAddFood" data-i="${i}" aria-label="${say `Añadir alimento, ${nm}`}">
       ${icon('plus', 20)}
     </button>
-    <button class="meal-btn meal-btn-icon" data-a="saveDishAsk" data-i="${i}" data-n="${nm}"
-        aria-label="${'Guardar ' + nm + ' como plato'}">${icon('bkm', 18)}</button>
-    <button class="meal-btn" data-a="openFoodSearch" data-i="${i}" aria-label="${'Buscar alimento en internet, ' + nm}">
+    <button class="meal-btn meal-btn-icon" data-a="saveDishAsk" data-i="${i}" data-n="${nm}" aria-label="${say `Guardar ${nm} como plato`}">
+      ${icon('bkm', 18)}
+    </button>
+    <button class="meal-btn" data-a="openFoodSearch" data-i="${i}" aria-label="${say `Buscar alimento en internet, ${nm}`}">
       ${icon('srch', 17)}
       <span>Buscar</span>
     </button>
-    <button class="meal-btn" data-a="openMealScanner" data-i="${i}" aria-label="${'Escanear código de barras, ' + nm}">
+    <button class="meal-btn" data-a="openMealScanner" data-i="${i}" aria-label="${say `Escanear código de barras, ${nm}`}">
       ${icon('bar', 17)}
       <span>Scan</span>
     </button>
@@ -84,7 +86,7 @@ const mealButtons = (i, nm) => html`
    comida de fuera del reparto del día, que no tiene) y sus botones */
 const mealCard = (m, i, nm, v, goal) => {
   const of = x => goal ? ' / ' + roundInt(goal[x]) : '';
-  const note = goal ? 'Objetivo ' + roundInt(goal[0]) + ' kcal' : 'Fuera de tus comidas del día';
+  const note = goal ? say `Objetivo ${roundInt(goal[0])} kcal` : 'Fuera de tus comidas del día';
   return html`
     <div class="card">
       <div class="row"><b>${raw(nm)}</b><small>${note}</small></div>
@@ -98,7 +100,7 @@ const mealCard = (m, i, nm, v, goal) => {
     </div>`;
 };
 /** Nombre de la comida `i` de `n` comidas al día (Desayuno, Comida, Cena…). */
-export const mealName = (i, n) => (n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x => n == 3 ? [0, 2, 4].includes(x) : n == 4 ? [0, 2, 3, 4].includes(x) : n == 2 ? [0, 4].includes(x) : 1)[i]] : MEAL_NAMES[i]) || 'Comida ' + (i + 1);
+export const mealName = (i, n) => (n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x => n == 3 ? [0, 2, 4].includes(x) : n == 4 ? [0, 2, 3, 4].includes(x) : n == 2 ? [0, 4].includes(x) : 1)[i]] : MEAL_NAMES[i]) || say `Comida ${i + 1}`;
 /** Pestaña Nutrición; `water` es la tarjeta del agua (nutrition/water), que va tras el resumen. */
 export function nutritionBase(water) {
   const dt = nutriDate();
@@ -116,7 +118,7 @@ export function nutritionBase(water) {
   let h = html`${nutritionDayHead(dt, t)}${nutritionTotals(tt, tg)}${raw(water || '')}${templateCard(k)}`;
   for (let i = 0; i < n.n; i++)
     h += mealCard(m, i, mealName(i, n.n), mt[i], tg.map(v => v * w[i]));
-  extra.forEach((i, x) => h += mealCard(m, i, 'Comida ' + (i + 1), mt[n.n + x], null));
+  extra.forEach((i, x) => h += mealCard(m, i, say `Comida ${i + 1}`, mt[n.n + x], null));
   return h + nutritionWeekCard();
 }
 /* — manejadores de esta función (registros A / C / U) — */

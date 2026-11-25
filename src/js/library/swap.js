@@ -125,7 +125,7 @@ export const swapBody = () => {
           <small class="muted">Elegir ›</small>
         </div>`)}`;
   });
-  return h || '<p class="muted">No hay alternativas con esos filtros.</p>';
+  return h || html`<p class="muted">No hay alternativas con esos filtros.</p>`;
 };
 const swapScope = () => ['Este día', 'Todo el programa'].map((x, i) => html`
   <button class="chip${!!swapState.all == !!i ? ' on' : ''}" data-a="swapScopeChoose" data-i="${i}">${raw(x)}</button>`).join('');

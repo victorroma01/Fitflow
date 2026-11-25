@@ -51,7 +51,7 @@ const weightChart = (log, range) => {
         <text x="316" y="154" font-size="9" text-anchor="end" fill="var(--mu)">${periodName(periods[periods.length - 1], range)}</text>
       ` : html`<text x="160" y="154" font-size="9" text-anchor="middle" fill="var(--mu)">${periodName(periods[0], range)}</text>`}
     </svg>
-  ` : '<p class="muted">Registra tu peso para ver la gráfica.</p>';
+  ` : html`<p class="muted">Registra tu peso para ver la gráfica.</p>`;
   return html`
     <div class="card">
       <div>
@@ -75,7 +75,7 @@ const weightSummary = log => {
         Peso saludable para tu altura (OMS): ${roundInt(18.5 * (height / 100) ** 2)}-${roundInt(24.9 * (height / 100) ** 2)} kg. El IMC puede sobrestimar el sobrepeso en personas con mucha masa muscular.
       </small>
     </p>
-  ` : '<p class="muted"><small>Añade tu altura en Perfil para clasificar tu peso según el IMC (OMS).</small></p>';
+  ` : html`<p class="muted"><small>Añade tu altura en Perfil para clasificar tu peso según el IMC (OMS).</small></p>`;
   return html`
     <div class="card">
       <b>Actual: ${+current} kg</b>

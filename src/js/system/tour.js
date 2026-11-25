@@ -53,11 +53,13 @@ const tourShow = () => {
   $('nav').classList.toggle('tour-live', i >= 0 && i < n && !!TOUR_STEPS[i].live);
   if (i < 0) {
     r.className = 'trs';
-    r.innerHTML = tourSheet('workout', 'Te damos la bienvenida a StrataFit', '¿Te enseñamos lo principal? Son 5 pasos y menos de un minuto.', '<button class="primary" data-a="tourStart">Empezar el recorrido</button><button data-a="tourSkip">Omitir</button>');
+    r.innerHTML = tourSheet('workout', 'Te damos la bienvenida a StrataFit', '¿Te enseñamos lo principal? Son 5 pasos y menos de un minuto.', html`
+      <button class="primary" data-a="tourStart">Empezar el recorrido</button>
+      <button data-a="tourSkip">Omitir</button>`);
   }
   else if (i >= n) {
     r.className = 'trs';
-    r.innerHTML = tourSheet('chk', '¡Listo!', tour.again ? 'Ya conoces lo principal. Puedes volver a verlo cuando quieras en Ajustes.' : 'Ya conoces lo principal. Este recorrido no vuelve a salir; si quieres verlo otra vez, está en Ajustes.', S.noProgram ? '<button class="primary" data-a="tourDone">Seleccionar programa</button>' : '<button class="primary" data-a="tourDone">Empezar a entrenar</button>');
+    r.innerHTML = tourSheet('chk', '¡Listo!', tour.again ? 'Ya conoces lo principal. Puedes volver a verlo cuando quieras en Ajustes.' : 'Ya conoces lo principal. Este recorrido no vuelve a salir; si quieres verlo otra vez, está en Ajustes.', S.noProgram ? html`<button class="primary" data-a="tourDone">Seleccionar programa</button>` : html`<button class="primary" data-a="tourDone">Empezar a entrenar</button>`);
   }
   else {
     const st = TOUR_STEPS[i];

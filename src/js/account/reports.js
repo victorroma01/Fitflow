@@ -5,6 +5,7 @@
    al admin leerlos todos y cambiar el estado y la respuesta.
    Define: ADMIN_STATES, repState, repDate, repCounts, repCard, reportsAdminView, loadReports, repSync, repWrite  · acciones/registros: 5
 */
+import { say } from '../core/i18n.js';
 import { $, fmtDateShort, dayKey } from '../core/util.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -77,7 +78,7 @@ const reportsAdminView = () => {
         <button class="${s.f == x[0] ? 'on' : ''}" data-a="reportsFilter" data-v="${x[0] || 'all'}" role="tab"
             aria-selected="${s.f == x[0] ? 'true' : 'false'}">${x[1]} (${x[2]})</button>`)}
     </div>
-    ${raw(L.length ? L.map(repCard).join('') : '<p class="muted m-14-2">No hay ninguno.</p>')}`;
+    ${raw(L.length ? L.map(repCard).join('') : html`<p class="muted m-14-2">No hay ninguno.</p>`)}`;
 };
 const loadReports = async () => {
   try {
@@ -108,7 +109,7 @@ const repWrite = async (id, data) => {
     Object.assign(d.data, f);
   }
   catch (e) {
-    toast('No se ha podido guardar (' + (e.code || 'error') + ')');
+    toast(say `No se ha podido guardar (${e.code || 'error'})`);
   }
   repState.busy = '';
   repSync();

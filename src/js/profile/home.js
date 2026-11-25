@@ -3,6 +3,7 @@
    «Borrar todos los datos». La foto de perfil se sube a la cuenta solo con consentimiento (pf.pc: cuándo se dio).
    Define: pfSummary, profileHead, bioSex, bioNumber, bioChoices, bioCard, planCard, firstUseDay, analysisFrom, analysisLine, profileTab  · acciones/registros: 8
 */
+import { say } from '../core/i18n.js';
 import { APPV, clampInt, dayKey, fmtDateShort, roundInt, safeImage, typedNum } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { clearSavedState, reloadApp } from '../core/persist.js';
@@ -57,7 +58,7 @@ A.resetAllConfirmed = async () => {
       await wipeCloudBackup();
     }
     catch (e) {
-      toast(e.code == 'NETWORK' ? 'Sin conexión: para borrar también los datos de tu cuenta hace falta internet' : 'No se pudieron borrar los datos de tu cuenta (' + e.code + ')');
+      toast(e.code == 'NETWORK' ? 'Sin conexión: para borrar también los datos de tu cuenta hace falta internet' : say `No se pudieron borrar los datos de tu cuenta (${e.code})`);
       return;
     }
   clearSavedState();
@@ -69,7 +70,7 @@ A.resetAllAsk = () => confirmDialog('¿Borrar todos los datos?', 'Se eliminarán
 const bioSex = bio => html`
   <label>Sexo</label>
   <select data-c="bioField" data-i="sex" aria-label="Sexo">
-    ${raw(bio.sex == 'M' || bio.sex == 'F' ? '' : '<option value="" selected disabled>Sin indicar</option>')}
+    ${raw(bio.sex == 'M' || bio.sex == 'F' ? '' : html`<option value="" selected disabled>Sin indicar</option>`)}
     <option value="M"${bio.sex == 'M' ? ' selected' : ''}>Hombre</option>
     <option value="F"${bio.sex == 'F' ? ' selected' : ''}>Mujer</option>
   </select>`;
@@ -98,7 +99,7 @@ function bioCard() {
       <b>Metabolismo basal: ${roundInt(spend.bm)} kcal</b><br>
       <small>Gasto diario estimado: ${roundInt(spend.td)} kcal (fórmula Mifflin-St Jeor)</small>
     </p>
-  ` : '<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>';
+  ` : html`<p><small>Rellena edad, altura y peso para calcular tu metabolismo basal.</small></p>`;
   return html`
     <details class="card">
       ${pfSummary('bio', 'Datos biométricos', 'Edad, altura, peso, actividad y objetivo')}
@@ -151,7 +152,7 @@ export const analysisFrom = () => {
 };
 const analysisLine = () => {
   const a = analysisFrom()[1];
-  return !a ? 'Disponible tras tu primer mes de uso' : a > dayKey(new Date()) ? 'Disponible desde el ' + fmtDateShort(a, { day: 'numeric', month: 'long' }) : 'Entrenos, peso y alimentación de cada mes, también en PDF';
+  return !a ? 'Disponible tras tu primer mes de uso' : a > dayKey(new Date()) ? say `Disponible desde el ${fmtDateShort(a, { day: 'numeric', month: 'long' })}` : 'Entrenos, peso y alimentación de cada mes, también en PDF';
 };
 export function profileTab() {
   const a = S.achievements || {};
@@ -160,14 +161,14 @@ export function profileTab() {
     ${profileHead()}
     ${planCard()}
     ${linkRow('ruler', 'Medidas', 'Cintura, brazo, pecho… y cómo cambian', 'openMeasures')}
-    ${linkRow('trf', 'Logros', nd + ' de ' + ACHIEVEMENTS.length + ' conseguidos', 'openAchievements')}
+    ${linkRow('trf', 'Logros', say `${nd} de ${ACHIEVEMENTS.length} conseguidos`, 'openAchievements')}
     ${linkRow('bar', 'Ver análisis mensual', analysisLine(), 'openAnalysis')}
     ${linkRow('dwn', 'Exportar datos (CSV)', 'Entrenos, series, peso, medidas, comidas y cardio', 'openCsvExport')}
     ${bioCard()}
     ${linkRow('bug', 'Fallos y sugerencias', reportsLine(), 'openMyReports')}
     ${isAdmin() ? linkRow('adm', 'Administración', 'Fallos y sugerencias, contraseñas temporales y cuentas', 'openAdmin') : ''}
     ${linkRow('gear', 'Ajustes', 'Cuenta, apariencia, unidades, sonido, copias y más', 'openSettings')}
-    <div class="brand" aria-label="${'StrataFit, versión ' + APPV}">
+    <div class="brand" aria-label="${say `StrataFit, versión ${APPV}`}">
       <span class="brand-word">STRATAFIT</span>
       <span class="brand-version">V${APPV}</span>
     </div>`;
@@ -179,7 +180,7 @@ C.bioField = e => {
   if (BIO_RANGES[k]) {
     const v = typedNum(e.value);
     if (!(v >= BIO_RANGES[k][0] && v <= BIO_RANGES[k][1])) {
-      toast('Escribe un valor entre ' + BIO_RANGES[k][0] + ' y ' + BIO_RANGES[k][1]);
+      toast(say `Escribe un valor entre ${BIO_RANGES[k][0]} y ${BIO_RANGES[k][1]}`);
       R();
       return;
     }

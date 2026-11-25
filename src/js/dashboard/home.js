@@ -2,6 +2,7 @@
    Pestaña Dashboard: tarjetas de resumen.
    Define: statCell, kcalToday, volumeBars, dashboardBase, recordsCard, weekStats, weekCard, dashboardTab
 */
+import { say } from '../core/i18n.js';
 import { dayKey, roundInt } from '../core/util.js';
 import { S } from '../core/state.js';
 import { icon } from '../core/icons.js';
@@ -27,7 +28,7 @@ const volumeBars = logs => {
   const mx = Math.max(1, ...last.map(l => l.v));
   const bars = last.length ? last.map(l => html`
     <div class="fx-1 bg-ac r-4" data-style="height:${Math.max(6, l.v / mx * 100)}%"></div>
-  `).join('') : '<small>Completa un entreno para ver tu progreso.</small>';
+  `).join('') : html`<small>Completa un entreno para ver tu progreso.</small>`;
   return html`<div class="card"><b>Volumen por sesión</b><div class="d-flex ai-end gap-6 h-90 mt-8">${raw(bars)}</div></div>`;
 };
 function dashboardBase() {
@@ -65,7 +66,7 @@ const recordsCard = () => {
             <small>1RM est. ${roundInt(toDisplayWeight(x[1].e))} ${weightUnit()}</small>
           </span>
         </div>
-      `).join('') : '<p class="muted m-8-0-0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>')}
+      `).join('') : html`<p class="muted m-8-0-0">Aquí aparecerán tus mejores marcas cuando registres pesos.</p>`)}
     </div>`;
 };
 export const weekStats = () => {
@@ -127,12 +128,12 @@ const weekCard = () => {
         <div><b>${s.best}</b><small>mejor racha</small></div>
       </div>
       <small class="muted week-note">
-        ${raw(s.any ? 'La semana cuenta con ' + s.t + ' o más entrenos.' : 'Completa tu primer entreno para empezar la racha.')}
+        ${raw(s.any ? say `La semana cuenta con ${s.t} o más entrenos.` : 'Completa tu primer entreno para empezar la racha.')}
       </small>
     </div>`;
 };
 export function dashboardTab() {
   const h = dashboardBase() + recordsCard();
-  const m = '<div class="card"><b>Volumen por sesión</b>';
+  const m = html`<div class="card"><b>Volumen por sesión</b>`;
   return (h.indexOf(m) >= 0 ? h.replace(m, weekCard() + m) : h + weekCard()) + stagnationCard() + cardioCard() + nutritionRecentCard() + progressCard() + recordsTimeline();
 }

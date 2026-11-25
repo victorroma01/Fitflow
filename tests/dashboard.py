@@ -355,7 +355,8 @@ def main(path):
         check('al borrarlo, todo vuelve a como estaba', back == d, json.dumps({k: [back[k], d[k]] for k in d if back[k] != d[k]}, ensure_ascii=False)[:400])
 
         print('Exportar (CSV)')
-        ev("""(() => { window.__blobs = []; const o = URL.createObjectURL; URL.createObjectURL = b => { window.__blobs.push(b); return o.call(URL, b); }; })()""")
+        # lo que se descarga: los CSV (las figuras de los ejercicios también pasan por createObjectURL, y no son esto)
+        ev("""(() => { window.__blobs = []; const o = URL.createObjectURL; URL.createObjectURL = b => { if (/csv/.test(b.type)) window.__blobs.push(b); return o.call(URL, b); }; })()""")
 
         def csv(kind):
             ev("A.openCsvExport()")

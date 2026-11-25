@@ -2,6 +2,7 @@
    Plantillas de comidas, tipo de día (entreno o descanso, según la rutina) y hábitos.
    Define: nutriDayKey, planDayOf, dayInfo, dayType, templateCard, habitGrams, habitsCard  · acciones/registros: 7
 */
+import { say } from '../core/i18n.js';
 import { $, dayKey, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -29,15 +30,15 @@ const planDayOf = k => {
 export const dayInfo = k => {
   const { i, d } = planDayOf(k);
   const planT = !!(d && Array.isArray(d.ex) && d.ex.length);
-  const dn = 'Día ' + (i + 1) + (d && d.n ? ' · ' + d.n : '');
+  const dn = say `Día ${i + 1}${d && d.n ? ' · ' + d.n : ''}`;
   if ((S.logs || []).some(l => l && l.d == k))
-    return { t: 't', why: planT ? 'Entreno registrado este día (' + dn + ').' : 'Entreno registrado este día, aunque tu rutina marcaba descanso.' };
+    return { t: 't', why: planT ? say `Entreno registrado este día (${dn}).` : 'Entreno registrado este día, aunque tu rutina marcaba descanso.' };
   const today = dayKey(new Date());
   if (k < today)
-    return { t: 'r', why: planT ? 'Tocaba entreno (' + dn + '), pero no se registró: cuenta como descanso.' : 'Descanso según tu rutina.' };
+    return { t: 'r', why: planT ? say `Tocaba entreno (${dn}), pero no se registró: cuenta como descanso.` : 'Descanso según tu rutina.' };
   if (planT)
-    return { t: 't', why: dn + ' de tu rutina.' + (k == today ? ' Si el día termina sin entreno registrado, contará como descanso.' : '') };
-  return { t: 'r', why: 'Descanso según tu rutina.' + (k == today ? ' Si entrenas, contará como día de entreno.' : '') };
+    return { t: 't', why: say `${dn} de tu rutina.${k == today ? ' Si el día termina sin entreno registrado, contará como descanso.' : ''}` };
+  return { t: 'r', why: say `Descanso según tu rutina.${k == today ? ' Si entrenas, contará como día de entreno.' : ''}` };
 };
 export const dayType = k => dayInfo(k).t;
 /* ayudas de los botones de plantilla (el «?» de cada uno; core/ui) */
@@ -67,7 +68,7 @@ export const templateCard = k => {
         </div>
       </div>
       <small class="muted d-block mt-8">
-        ${raw(has ? 'Plantilla de ' + nm + ' guardada · ' + kc + ' kcal. Solo se rellenan las comidas vacías.' : 'Todavía no tienes plantilla de día de ' + nm + '. Rellena el día y pulsa Guardar.')}
+        ${raw(has ? say `Plantilla de ${nm} guardada · ${kc} kcal. Solo se rellenan las comidas vacías.` : say `Todavía no tienes plantilla de día de ${nm}. Rellena el día y pulsa Guardar.`)}
       </small>
     </details>`;
 };
@@ -95,7 +96,7 @@ A.templateSave = () => {
   S.mealTemplates[t] = o;
   saveState();
   R();
-  toast('Plantilla de ' + (t == 't' ? 'entreno' : 'descanso') + ' guardada', before && (() => {
+  toast(say `Plantilla de ${t == 't' ? 'entreno' : 'descanso'} guardada`, before && (() => {
     S.mealTemplates[t] = before;
     saveState();
     R();
@@ -123,7 +124,7 @@ A.templateApply = () => {
   }
   saveState();
   R();
-  toast('Plantilla aplicada a ' + n + (n == 1 ? ' comida' : ' comidas'));
+  toast(say `Plantilla aplicada a ${n}${n == 1 ? ' comida' : ' comidas'}`);
 };
 /* gramos de un habitual: los guardados (S.frequentFoods, que puede venir de una copia antigua o tocada) solo si son un número válido */
 const habitGrams = f => Math.min(5000, Math.max(0, Math.round(+(f && f.g) || 0))) || 100;
@@ -136,7 +137,7 @@ export const habitsCard = m => {
   return html`
     <div class="muted fs-12 m-2-0-6">Habituales · un toque los añade</div>
     <div class="quick-add">
-      ${raw(ys.length ? '<button class="chip" data-a="copyYesterday">Repetir comida de ayer</button>' : '')}
+      ${raw(ys.length ? html`<button class="chip" data-a="copyYesterday">Repetir comida de ayer</button>` : '')}
       ${l.map(x => html`<button class="chip" data-a="frequentAdd" data-n="${x[0]}">${x[0]} · ${habitGrams(x[1])} g</button>`)}
     </div>`;
 };
@@ -152,7 +153,7 @@ A.frequentAdd = (i, b) => {
   saveState();
   sheet();
   R();
-  toast('Añadido: ' + n);
+  toast(say `Añadido: ${n}`);
 };
 A.copyYesterday = () => {
   if (!addState)
@@ -193,7 +194,7 @@ A.libraryDishDelete = i => {
   const [dish] = S.savedDishes.splice(i, 1);
   saveState();
   sheet(addSheet());
-  toast('Plato «' + dish.n + '» borrado', () => {
+  toast(say `Plato «${dish.n}» borrado`, () => {
     S.savedDishes.splice(i, 0, dish);
     saveState();
     if ($('#sh .sheet'))

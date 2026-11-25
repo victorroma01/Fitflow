@@ -2,7 +2,8 @@
    Actualización de la app: service worker, uso sin conexión, Ajustes → Actualizaciones y aviso de versión nueva con sus novedades.
    Define: swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, OLD_REVISIONS, plainVersion, versionKey, isNewerVersion, fetchVersionInfo, sectionHtml, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
-import { APPV, FFDEP, X } from '../core/util.js';
+import { say } from '../core/i18n.js';
+import { APPV, FFDEP, LOCALE, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -77,7 +78,8 @@ export const offlineText = () => {
 };
 export const offlineNote = () => html`
   <small class="muted d-block mt-10">${offlineText()}</small>
-  ${raw(isStandalone() ? '' : '<small class="muted d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
+  ${raw(isStandalone() ? '' : html`
+    <small class="muted d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>`)}`;
 export let updatesOn = FFDEP;
 let updateReady = 0;
 let updateCheckedAt = 0;
@@ -141,19 +143,19 @@ const releaseNotesHtml = (info, current) => {
   const notes = shown.map(v => (shown.length > 1 ? html`
     <p class="update-version">Versión ${plainVersion(v.version)}</p>
   ` : '') + (v.sections || []).map(s => sectionHtml(s, 8)).join('')).join('');
-  return notes || '<ul><li>Mejoras y correcciones.</li></ul>';
+  return notes || html`<ul><li>Mejoras y correcciones.</li></ul>`;
 };
 /** Ajustes → «Ver nota de actualización» (F-28): la nota de la versión instalada, solo la última, con todos sus cambios y,
     debajo, un «Cerrar» pequeño que vuelve a Ajustes. */
 export const releaseNotePage = () => {
   const r = RELEASE;
-  const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const body = (r.sections || []).map(s => sectionHtml(s, 0)).join('');
   return html`
     <div class="card release-notes">
       <b class="release-version">Versión ${r.version || APPV}</b>
       ${d ? html`<small class="muted">${d}</small>` : ''}
-      ${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}
+      ${raw(body || html`<ul><li>Mejoras y correcciones.</li></ul>`)}
     </div>
     <div class="release-close"><button class="link-btn" data-a="openSettings">Cerrar</button></div>`;
 };
@@ -165,7 +167,7 @@ const updatePopupHtml = (info, mode) => {
     <div class="update-box" role="dialog" aria-modal="true" aria-labelledby="updt">
       <button class="update-close" data-a="updateLater" aria-label="Cerrar">×</button>
       <small class="update-label">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small>
-      <h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3>
+      <h3 id="updt">${raw(v ? say `Versión ${X(v)}` : 'Versión nueva')}</h3>
       <div class="update-notes">${raw(releaseNotesHtml(info, mode == 'news'))}</div>
       <button class="update-btn" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">
         ${mode == 'news' ? 'Entendido' : 'Actualizar'}
@@ -308,7 +310,7 @@ A.updateCheck = async (i, b) => {
     return;
   }
   if (!isNewerVersion(info.version, APPV)) {
-    toast('Tienes la última versión (' + APPV + ')');
+    toast(say `Tienes la última versión (${APPV})`);
     return;
   }
   updateInfo = info;
