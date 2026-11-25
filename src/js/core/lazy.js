@@ -8,6 +8,7 @@
    También el inglés (i18n/en-*.js): solo se descarga con la app en inglés, antes del primer pintado (loadEnglish).
    Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, figureTools, setFigureTools, loadFigures, loadEnglish
 */
+import { LANG } from './util.js';
 import { logError } from './errors.js';
 import { toast } from './toast.js';
 import { A } from './registry.js';
@@ -66,8 +67,9 @@ export const setPdfMaker = f => {
 };
 /** La función que crea un PDF (system/pdf, pdfDoc), que se descarga al pedir el primero (análisis mensual). */
 export const loadPdf = () => lazyLoad('pdf', () => import('../system/pdf.js')).then(() => pdfMaker);
-/** Catálogo de consejos y ejecución de los ejercicios (data/exinfo, unos 200 KB): se descarga la primera vez que hace falta. */
-export const loadExInfo = () => lazyLoad('exinfo', () => import('../data/exinfo.js'));
+/** Catálogo de consejos y ejecución de los ejercicios (data/exinfo, unos 200 KB; con la app en inglés, el suyo, i18n/en-exinfo):
+    se descarga la primera vez que hace falta. */
+export const loadExInfo = () => LANG == 'en' ? lazyLoad('en-exinfo', () => import('../i18n/en-exinfo.js')) : lazyLoad('exinfo', () => import('../data/exinfo.js'));
 /* lo que dibuja las figuras 3D: extras/figure3d lo deja aquí al cargarse */
 let figureTools = null;
 /** extras/figure3d se apunta aquí al cargarse, con lo que dibuja la miniatura de un ejercicio (thumb) y lo que pone en marcha

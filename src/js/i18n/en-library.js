@@ -132,7 +132,7 @@ addEnglish({
   "Curl de muñeca inverso": "Reverse wrist curl",
   "Pinza con discos": "Plate pinch",
   "Crunch en máquina": "Machine crunch",
-  "Plancha con desplazamiento": "Walking plank",
+  "Plancha con desplazamiento": "Up-down plank",
   "Ab wheel de rodillas": "Kneeling ab wheel",
   "Toques de talón": "Heel taps",
   "Sentadilla en Smith": "Smith machine squat",
