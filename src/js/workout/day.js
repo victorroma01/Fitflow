@@ -25,7 +25,7 @@ const planEx = (i) => S.plan[S.selectedDay].ex[i];
 /** El botón de una serie menos (by = -1) o una más (by = 1) de un ejercicio del plan (al editar la semana y en Overview). */
 export const planSetButton = (e, i, by) => html`
   <button data-a="${by < 0 ? 'planSetMinus' : 'planSetPlus'}" data-i="${i}"
-      aria-label="${(by < 0 ? 'Una serie menos, ' : 'Una serie más, ') + e.n}" class="touch-target">${by < 0 ? '−' : '+'}</button>`;
+      aria-label="${say `${by < 0 ? 'Una serie menos, ' : 'Una serie más, '}${e.n}`}" class="touch-target">${by < 0 ? '−' : '+'}</button>`;
 /* el botón de un día de la semana: hecho (✓), de descanso (☾) o su número */
 const weekdayButton = j => html`
   <button class="day ${j == S.selectedWeekday ? 'on' : ''}" data-a="selectDay" data-i="${j}">

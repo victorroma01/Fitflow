@@ -10,7 +10,8 @@
    Se carga al usarlo (core/lazy).
    Define: MONTHS, KIND_OK, anaYm, monthName, cap, fmtN, loadNum, volNum, volUnit, monthRange, shiftYm, monthList, logsIn, trainStats, weekRows, bestE1, exerciseStats, weightStats, nutritionStats, otherStats, monthStats, sessionsText, setsText, planText, shouldText, weightChange, goalNote, weightDelta, conclusions, overPlan, svgBars, svgLine, svgKcal, kpi, delta, monthBar, kpiGrid, trainingCard, weightCard, nutritionCard, otherCard, conclusionCard, analysisPage, analysisPdf  · acciones/registros: 3
 */
-import { say } from '../core/i18n.js';
+import { say, tr, trAs } from '../core/i18n.js';
+import { plural } from '../system/backup.js';
 import { APPV, dayKey, fmtDateShort, LOCALE } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
@@ -18,7 +19,7 @@ import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { fullPage, pgHead, sheet } from '../core/ui.js';
 import { acctName } from '../cloud/session.js';
-import { GOAL_LABELS } from '../nutrition/diet.js';
+import { GOAL_LABELS, goalName } from '../nutrition/diet.js';
 import { sessionsPerWeek } from '../workout/week.js';
 import { measureList, MEASURES } from '../extras/measures.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
@@ -34,7 +35,7 @@ const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 
 const KIND_OK = ['baja', 'estable', 'sube', 'estable'];
 /* mes que se ve (AAAA-MM) */
 let anaYm = '';
-const monthName = ym => MONTHS[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
+const monthName = ym => tr(MONTHS[+ym.slice(5, 7) - 1]) + ' ' + ym.slice(0, 4);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 /** Número en español: coma decimal y `d` decimales como mucho. */
 const fmtN = (v, d = 0) => (+v || 0).toLocaleString(LOCALE, { maximumFractionDigits: d, minimumFractionDigits: 0 });
@@ -177,7 +178,7 @@ const monthStats = ym => {
 };
 /* — frases que dicen lo mismo en la pantalla y en el PDF — */
 /* «3 entrenos de fuerza, 1 WOD, 2 sesiones de cardio (10,5 km) en 5 días» */
-const sessionsText = t => say `${t.ns + (t.ns == 1 ? ' entreno de fuerza' : ' entrenos de fuerza') + (t.nw ? ', ' + t.nw + ' WOD' : '') + (t.nc ? say `, ${t.nc}${t.nc == 1 ? ' sesión' : ' sesiones'} de cardio${t.km ? say ` (${fmtN(t.km, 1)} km)` : ''}` : '')} en ${t.days}${t.days == 1 ? ' día' : ' días'}`;
+const sessionsText = t => say `${plural(t.ns, 'entreno de fuerza', 'entrenos de fuerza')}${t.nw ? say `, ${t.nw} WOD` : ''}${t.nc ? say `, ${plural(t.nc, 'sesión de cardio', 'sesiones de cardio')}${t.km ? say ` (${fmtN(t.km, 1)} km)` : ''}` : ''} en ${plural(t.days, 'día', 'días')}`;
 /* «120 series · esfuerzo medio 7,8» */
 const setsText = t => say `${fmtN(t.sets)} series${t.rpe ? say ` · esfuerzo medio ${fmtN(t.rpe, 1)}` : ''}`;
 /* «Tu plan marca unos 4 entrenos por semana: has hecho el 75 % de lo previsto hasta hoy.» */
@@ -185,29 +186,29 @@ const planText = m => say `Tu plan marca unos ${fmtN(m.pwk, 1)} entrenos por sem
 /* lo que debería hacer el peso con el objetivo elegido: «debería mantenerse», «debería bajar» o «debería subir» */
 const shouldText = w => KIND_OK[w.goal] == 'estable' ? 'debería mantenerse' : say `debería ${KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'}`;
 /* «Baja 1,2 kg» o «Estable» */
-const weightChange = w => cap(w.tr) + (w.tr == 'estable' ? '' : say ` ${fmtN(Math.abs(w.d), 1)} kg`);
+const weightChange = w => w.tr == 'estable' ? 'Estable' : w.tr == 'baja' ? say `Baja ${fmtN(Math.abs(w.d), 1)} kg` : say `Sube ${fmtN(Math.abs(w.d), 1)} kg`;
 /* « · objetivo Definir: va bien» o « · objetivo Definir: debería bajar» ('' sin objetivo) */
-const goalNote = w => w.goal >= 0 ? say ` · objetivo ${GOAL_LABELS[w.goal]}${w.ok ? ': va bien' : ': ' + shouldText(w)}` : '';
+const goalNote = w => w.goal >= 0 ? say ` · objetivo ${goalName(w.goal)}${w.ok ? ': va bien' : ': ' + shouldText(w)}` : '';
 /* el cambio de peso del mes, con su signo: «+1,2 kg», «−0,8 kg» o «—» si no hay pesajes */
 const weightDelta = w => w.d == null ? '—' : say `${(w.d > 0 ? '+' : w.d < 0 ? '−' : '') + fmtN(Math.abs(w.d), 1)} kg`;
 /** La conclusión del mes, en frases cortas (para la pantalla y el PDF). */
 const conclusions = m => {
   const out = [];
   const t = m.t;
-  const prevName = MONTHS[+shiftYm(m.ym, -1).slice(5, 7) - 1];
+  const prevName = tr(MONTHS[+shiftYm(m.ym, -1).slice(5, 7) - 1]);
   const done = t.ns + t.nw;
   if (!t.n)
     out.push('Este mes no hay entrenos registrados: marca cada sesión al terminarla para seguir tu evolución.');
   else {
     const dif = t.n - m.pt.n;
     const pct = m.plan > 0 ? Math.round(done / m.plan * 100) : 0;
-    out.push(say `Has entrenado ${t.n}${t.n == 1 ? ' vez' : ' veces'}${m.pt.n ? say ` (${dif == 0 ? 'igual que' : Math.abs(dif) + (dif > 0 ? ' más que' : ' menos que')} en ${prevName})` : ''}${pct ? say `, el ${pct} % de lo que marca tu plan` : ''}.${pct && pct < 60 && !m.open ? ' Intenta no saltarte sesiones: la constancia es lo que más cuenta.' : ''}`);
+    out.push(say `Has entrenado ${t.n}${t.n == 1 ? ' vez' : ' veces'}${m.pt.n ? (dif == 0 ? say ` (igual que en ${prevName})` : dif > 0 ? say ` (${dif} más que en ${prevName})` : say ` (${-dif} menos que en ${prevName})`) : ''}${pct ? say `, el ${pct} % de lo que marca tu plan` : ''}.${pct && pct < 60 && !m.open ? ' Intenta no saltarte sesiones: la constancia es lo que más cuenta.' : ''}`);
   }
   if (m.ex.rec.length)
     out.push(say `Has mejorado tu marca en ${m.ex.rec.length}${m.ex.rec.length == 1 ? ' ejercicio' : ' ejercicios'}; el que más, ${m.ex.rec[0].n} (+${fmtN(m.ex.rec[0].g * 100)} %).`);
   const w = m.w;
   if (w.d != null)
-    out.push(w.tr == 'estable' ? say `Tu peso se mantiene estable${w.goal >= 0 ? (w.ok ? say `, como buscas con tu objetivo (${GOAL_LABELS[w.goal]}).` : say `; con tu objetivo (${GOAL_LABELS[w.goal]}) debería ${KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'} poco a poco.`) : '.'}` : say `Tu peso ${w.tr} ${fmtN(Math.abs(w.d), 1)} kg${w.goal >= 0 ? (w.ok ? say `, como buscas con tu objetivo (${GOAL_LABELS[w.goal]}).` : say `; con tu objetivo (${GOAL_LABELS[w.goal]}) ${shouldText(w)}: revisa las calorías.`) : '.'}`);
+    out.push(w.tr == 'estable' ? say `Tu peso se mantiene estable${w.goal >= 0 ? (w.ok ? say `, como buscas con tu objetivo (${goalName(w.goal)}).` : say `; con tu objetivo (${goalName(w.goal)}) debería ${KIND_OK[w.goal] == 'baja' ? 'bajar' : 'subir'} poco a poco.`) : '.'}` : say `Tu peso ${trAs('peso', w.tr)} ${fmtN(Math.abs(w.d), 1)} kg${w.goal >= 0 ? (w.ok ? say `, como buscas con tu objetivo (${goalName(w.goal)}).` : say `; con tu objetivo (${goalName(w.goal)}) ${shouldText(w)}: revisa las calorías.`) : '.'}`);
   else
     out.push('No has registrado tu peso este mes: pésate cada 2-4 semanas para ver cómo cambia.');
   const n = m.nu;

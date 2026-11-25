@@ -18,7 +18,9 @@
                                                ({0}, #) o si algo se traduce al cargar un módulo (el diccionario aún no está)
          node tools/i18n.js --todo [módulo]    escribe las que faltan, numeradas, en /tmp/i18n/todo.txt (y sus claves en
                                                todo.json); con módulo (ui, library…), solo las suyas
-         node tools/i18n.js --apply archivo módulo   añade al módulo las traducciones de «número<tab>inglés» (las de todo.txt)
+         node tools/i18n.js --apply archivo módulo   añade al módulo las traducciones de «número<tab>inglés» (las de todo.txt);
+                                               «número<tab>!» o «=» apunta la frase en tools/i18n-skip.json: no se traduce
+         node tools/i18n.js --prune            quita del diccionario y de i18n-skip.json las frases que la app ya no busca
          node tools/i18n.js --stats            cuántas frases hay, de qué clase, y cuántas faltan */
 const fs = require('fs'), path = require('path');
 const { ROOT, JS, allModules } = require('./modules');
@@ -83,7 +85,8 @@ const lineOf = (sf, n) => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line 
 const WORD_CALLS = /^(plural)$/;
 /** Las frases de un módulo: [clave, clase, línea]… con clase 'tpl' (plantilla html), 'say' (say`…`), 'lit' (texto suelto que
     parece una frase) o 'word' (cualquier otro texto con letras: no hace falta traducirlo, pero puede estar en el diccionario); y
-    los sitios donde algo se traduce al cargar el módulo (early). */
+    los sitios donde algo se traduce al cargar el módulo (early). Un texto suelto va sin los espacios de sus lados, que es como
+    lo busca la app si no lo encuentra con ellos (core/i18n, tr). */
 const phrasesOf = rel => {
   const code = flatten(read(path.join(JS, rel)), rel);
   const sf = ts.createSourceFile(rel, code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS);
@@ -110,7 +113,7 @@ const phrasesOf = rel => {
       (function flat(x) { if (isPlus(x)) { flat(x.left); flat(x.right); } else ops.push(x); })(n);
       if (ops.every(isLit)) {
         const text = ops.map(o => o.text).join('');
-        if (core.WORDS.test(text) && !looksCode(text)) out.push([said ? text.trim() : text, said || looksProse(text) ? 'lit' : 'word', lineOf(sf, n)]);
+        if (core.WORDS.test(text) && !looksCode(text)) out.push([text.trim(), said || looksProse(text) ? 'lit' : 'word', lineOf(sf, n)]);
         return;
       }
     }
@@ -122,7 +125,7 @@ const phrasesOf = rel => {
         || ts.isBinaryExpression(p) && COMPARES.has(p.operatorToken.kind)
         || (ts.isCallExpression(p) || ts.isNewExpression(p)) && p.expression !== n && SILENT_CALLS.test((ts.isNewExpression(p) ? 'new ' : '') + p.expression.getText(sf))
         || ts.isNewExpression(p) && /Error$/.test(p.expression.getText(sf)) || ts.isThrowStatement(p) || ts.isTaggedTemplateExpression(p);
-      if (!silent) out.push([shown ? n.text.trim() : n.text, shown || looksProse(n.text) && !isPlus(p) ? 'lit' : 'word', lineOf(sf, n)]);
+      if (!silent) out.push([n.text.trim(), shown || looksProse(n.text) && !isPlus(p) ? 'lit' : 'word', lineOf(sf, n)]);
     }
     /* un valor de un say`…` se enseña tal cual si es un texto o uno de dos (a ? 'x' : 'y'), no si es el argumento de otra cosa */
     ts.forEachChild(n, c => visit(c, depth + fn, said && (ts.isConditionalExpression(n) || ts.isParenthesizedExpression(n) || ts.isBinaryExpression(n) && n.operatorToken.kind == ts.SyntaxKind.BarBarToken)));
@@ -132,8 +135,38 @@ const phrasesOf = rel => {
 };
 
 /* ── las frases de los datos ──────────────────────────────────────────────────────────────────────────────────────── */
-/* Cada módulo de datos, con lo que de él se enseña. Se rellena más abajo, módulo a módulo. */
-const DATA = {};
+/* Cada grupo de datos, con lo que de él se enseña (lo que la app pinta tal cual: un nombre, una nota). Lo que es una clave
+   (un código de técnica, la letra de un bloque) no entra. Los nombres de los ejercicios de los programas son los de la
+   librería; los que no están en ella (un rodaje, una caminata) salen de sus fichas («Nombre*series/reps@descanso»). */
+const strings = (v, out = []) => {
+  if (typeof v == 'string') out.push(v);
+  else if (v && typeof v == 'object') for (const x of v instanceof Map || v instanceof Set ? v.values() : Object.values(v)) strings(x, out);
+  return out;
+};
+/* el nombre de un ejercicio en una ficha de programa: sin «+», sin su letra de bloque («M:») y sin lo que sigue a «*» */
+const tokenName = k => k.replace(/^\+/, '').replace(/^[A-Z]:/, '').split('*')[0].split('~')[0].trim();
+const DATA = {
+  library: () => {
+    const L = data('data/library.js', ['EXERCISES', 'GROUPS', 'MUSCLES', 'EQUIP']);
+    return [...L.EXERCISES.map(e => e.n), ...L.EXERCISES.flatMap(e => [e.c, e.g, e.t, e.q]), ...L.GROUPS, ...Object.values(L.MUSCLES), ...Object.values(L.EQUIP)];
+  },
+  foods: () => {
+    const F = data('data/foods.js', ['FOOD_GROUPS', 'FOODS_SRC', 'MEAL_NAMES']);
+    return [...F.FOOD_GROUPS, ...F.MEAL_NAMES, ...F.FOODS_SRC.map(x => x.n)];
+  },
+  programs: () => {
+    const L = data('data/library.js', ['PROGRAMS', 'PROGRAM_NAMES', 'parseProgram', 'PROGRAM_NOTES']);
+    const V = data('data/levels.js', ['LEVEL_NAMES', 'LEVEL_SUMMARY', 'LEVEL_DETAILS', 'LEVEL_PROGRAM_NOTES', 'LEVEL_EXTRA_DAYS']);
+    const T = data('data/techniques.js', ['TECHNIQUES']);
+    const G = data('data/templates.js', ['GUIDE_OPTIONS', 'STYLE_INFO', 'GOAL_INFO', 'GUIDE_DAY_NAMES', 'GUIDE_TEMPLATES']);
+    const days = L.PROGRAMS.flatMap((p, i) => L.parseProgram(i));
+    return [...L.PROGRAM_NAMES, ...days.map(d => d.n), ...days.flatMap(d => d.ex.map(e => e.n)), ...L.PROGRAM_NOTES,
+      ...strings([V.LEVEL_NAMES, V.LEVEL_SUMMARY, V.LEVEL_DETAILS, V.LEVEL_PROGRAM_NOTES]), ...Object.values(V.LEVEL_NAMES).map(n => n.toLowerCase()),
+      ...Object.values(V.LEVEL_EXTRA_DAYS).flatMap(d => [d.split(':')[0], ...d.slice(d.indexOf(':') + 1).split(',').map(tokenName)]),
+      ...strings(Object.values(T.TECHNIQUES)).filter(Boolean),
+      ...Object.values(G.GUIDE_OPTIONS).flatMap(o => o.map(x => x[1])), ...strings([G.STYLE_INFO, G.GOAL_INFO, G.GUIDE_DAY_NAMES]), ...strings(G.GUIDE_TEMPLATES).map(tokenName)];
+  },
+};
 
 /* ── todo junto ───────────────────────────────────────────────────────────────────────────────────────────────────── */
 const UI_MODULES = () => allModules().filter(m => !m.startsWith('data/') && !m.startsWith('i18n/'));
@@ -148,7 +181,7 @@ const collect = () => {
     early.push(...r.early);
   }
   for (const group in DATA)
-    for (const k of DATA[group]()) add(k, 'data', group, group);
+    for (const k of DATA[group]()) if (k && core.WORDS.test(k)) add(k.trim(), 'data', group, group);
   return { need, words, early };
 };
 const skipped = () => new Set(fs.existsSync(SKIP) ? JSON.parse(read(SKIP)) : []);
@@ -203,18 +236,30 @@ if (require.main === module) {
     const name = args[2] || 'ui';
     const d = fs.existsSync(path.join(DIR, 'en-' + name + '.js')) ? dictOf('en-' + name + '.js') : new Map();
     let n = 0;
+    const skip = [...st.skip];
     for (const line of read(args[1]).split('\n')) {
       const m = /^(\d+)\t(.*)$/.exec(line);
       if (!m) { if (line.trim()) { console.error('línea que no se entiende: ' + line.slice(0, 80)); process.exit(1); } continue; }
       const k = keys[+m[1]];
       if (k === undefined) { console.error('no hay frase ' + m[1]); process.exit(1); }
-      d.set(k, m[2].replace(/\\n/g, '\n'));
+      /* «!» o «=»: no se traduce (no se enseña, o en inglés es igual) */
+      if (m[2] == '!' || m[2] == '=' || m[2] == k) { if (!skip.includes(k)) skip.push(k); d.delete(k); }
+      else d.set(k, m[2].replace(/\\n/g, '\n'));
       n++;
     }
+    fs.writeFileSync(SKIP, JSON.stringify(skip.sort(), null, 1) + '\n');
     /* en el orden en que la app las busca; al final, las que ya no busca (las dirá --check) */
     const order = new Map([...st.need.keys()].map((k, i) => [k, i]));
     writeDict(name, new Map([...d].sort((a, b) => (order.has(a[0]) ? order.get(a[0]) : 1e9) - (order.has(b[0]) ? order.get(b[0]) : 1e9))));
     console.log(n + ' traducciones puestas en i18n/en-' + name + '.js (' + d.size + ' en total)');
+  }
+  else if (args[0] == '--prune') {
+    /* quita lo que sobra: las frases del diccionario (menos las de en-more) y de i18n-skip.json que la app ya no busca */
+    const gone = new Set(st.stale.map(([, k]) => k));
+    for (const [name, d] of st.dicts)
+      if (name != 'more' && [...d.keys()].some(k => gone.has(k))) writeDict(name, new Map([...d].filter(([k]) => !gone.has(k))));
+    fs.writeFileSync(SKIP, JSON.stringify([...st.skip].filter(k => !gone.has(k)).sort(), null, 1) + '\n');
+    console.log(gone.size + ' frases que sobraban, quitadas');
   }
   else if (args[0] == '--check') {
     st.missing.slice(0, 40).forEach(([k, v]) => console.error('ERROR: sin traducir (' + v.where + '): ' + JSON.stringify(k)));

@@ -1,9 +1,9 @@
 /* ═══ extras/csv ═══
    Exportación a CSV.
-   Define: csvCell, csvBody, CSV_EXPORTS  · acciones/registros: 2
+   Define: CSV_SEP, csvCell, csvBody, CSV_EXPORTS  · acciones/registros: 2
 */
-import { say } from '../core/i18n.js';
-import { dayKey, round1 } from '../core/util.js';
+import { say, tr } from '../core/i18n.js';
+import { dayKey, LANG, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
@@ -16,15 +16,18 @@ import { measureList, MEASURES } from './measures.js';
 import { setLabel } from '../workout/technique.js';
 import { html, raw } from '../core/html.js';
 import { itemMacros } from '../core/calc.js';
+/* en español, «;» entre columnas y coma decimal (como lo abre Excel en español); en inglés, «,» y punto. Los textos (las
+   cabeceras, los nombres de los ejercicios…), en el idioma de la app */
+const CSV_SEP = LANG == 'en' ? ',' : ';';
 const csvCell = v => {
   if (v == null)
     return '';
-  let s = typeof v == 'number' ? String(Math.round(v * 100) / 100).replace('.', ',') : String(v);
+  let s = typeof v == 'number' ? String(Math.round(v * 100) / 100).replace('.', LANG == 'en' ? '.' : ',') : String(tr(v));
   if (typeof v != 'number' && /^[=+\-@\t\r]/.test(s))
     s = "'" + s;
-  return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  return s.includes('"') || s.includes(CSV_SEP) || /[\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 };
-const csvBody = rows => '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
+const csvBody = rows => '﻿' + rows.map(r => r.map(csvCell).join(CSV_SEP)).join('\r\n') + '\r\n';
 const CSV_EXPORTS = {
   ent: { t: 'Entrenos', s: 'Fecha, tipo, series, volumen, minutos y esfuerzo', f: 'entrenos', n: () => (S.logs || []).length, b: () => /** @type {any[][]} */ ([['Fecha', 'Tipo', 'Entreno', 'Series', 'Volumen (kg)', 'Minutos', 'RPE medio', 'Detalle']]).concat((S.logs || []).filter(l => l && typeof l.d == 'string').slice().sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0).map(l => [l.d, l.k == 'c' ? 'Cardio' : l.k == 'w' ? 'WOD' : 'Fuerza', l.n, +l.s || 0, +l.v || 0, +l.m || 0, +l.q || '', (l.x || '') + (l.nt ? ' · ' + l.nt : '')])) },
   ser: { t: 'Series por ejercicio', s: 'Cada serie: repeticiones, peso, esfuerzo y técnica', f: 'series', n: () => Object.keys(S.exerciseHistory || {}).length, b: () => {

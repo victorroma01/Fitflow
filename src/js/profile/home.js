@@ -15,7 +15,7 @@ import { confirmDialog, dialog, linkRow } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { WIP_KEY } from '../workout/resume.js';
 import { levelsActive, levelTag, programName, programRow } from '../programs/levels.js';
-import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, tdee } from '../nutrition/diet.js';
+import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, goalName, tdee } from '../nutrition/diet.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
 import { acctName, isAdmin, signedIn } from '../cloud/session.js';
 import { wipeCloudData } from '../cloud/sync.js';
@@ -88,7 +88,8 @@ const bioChoices = bio => html`
   </select>
   <label>Objetivo físico</label>
   <select data-c="bioField" data-i="goal" aria-label="Objetivo físico">
-    ${GOAL_LABELS.map((g, i) => html`<option value="${i}"${(bio.goal == null ? 1 : bio.goal) == i ? ' selected' : ''}>${raw(g)}</option>`)}
+    ${GOAL_LABELS.map((g, i) => html`
+      <option value="${i}"${(bio.goal == null ? 1 : bio.goal) == i ? ' selected' : ''}>${goalName(i)}</option>`)}
   </select>`;
 /* Perfil → Datos biométricos, con el metabolismo basal y el gasto diario cuando hay edad, altura y peso */
 function bioCard() {

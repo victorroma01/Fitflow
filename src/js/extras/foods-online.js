@@ -606,7 +606,7 @@ async function lookupBarcode(code) {
   }
   catch (x) {
     if (current())
-      scanMsg(offErrorText(x) + (x == 'offline' ? '' : ' Los productos ya escaneados funcionan sin conexión.'));
+      scanMsg(say `${offErrorText(x)}${x == 'offline' ? '' : ' Los productos ya escaneados funcionan sin conexión.'}`);
   }
 }
 /* — manejadores de esta función (registros A / C / U) — */

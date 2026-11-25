@@ -58,7 +58,7 @@ const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
     <input type="number" inputmode="decimal" data-c="setWeight" data-i="${exIndex}" data-j="${setIndex}"
         value="${set.w ? toDisplayWeight(set.w) : ''}"
         placeholder="${weightUnit()}"${raw(set.ws && !set.ok ? (W.deload ? ' class="deload-weight"' : ' class="suggested"') : '')}
-        aria-label="${say `Peso${set.ws && !set.ok ? ' sugerido' : ''}, ${name}`}">`;
+        aria-label="${say `${set.ws && !set.ok ? 'Peso sugerido' : 'Peso'}, ${name}`}">`;
   const rest = restAfterSet(exIndex, setIndex);
   return html`
     <div class="set-row${isCurrent ? ' current' : ''}">
@@ -290,7 +290,7 @@ const setToggle = (i, b) => {
   R();
 };
 /** Cómo se llama una fila de series para los lectores de pantalla: «serie 2, Press banca» (o «drop set, …»). */
-const setName = (j, s, e) => (s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : say `serie ${j + 1}${(k => k == 'WRK' ? '' : ', ' + TECHNIQUES[k][0].toLowerCase())(setTechnique(s))}`) + ', ' + e.n;
+const setName = (j, s, e) => say `${s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : say `serie ${j + 1}${(k => k == 'WRK' ? '' : ', ' + TECHNIQUES[k][0].toLowerCase())(setTechnique(s))}`}, ${e.n}`;
 /** Número que se ve a la izquierda de la fila: el de la serie (sin contar las filas extra), D en el drop set y + en el bloque
     de rest-pause. */
 const setNo = (a, j) => a[j].t == 1 ? 'D' : a[j].t == 2 ? '+' : a.slice(0, j + 1).filter(x => !x.t).length;

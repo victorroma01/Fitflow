@@ -17,7 +17,7 @@
    Lo que escribe el usuario no se traduce (salvo que sea, letra por letra, una frase del diccionario).
    Las funciones que leen una plantilla (scanTemplate, phraseKey) no dependen de la página: las usa también tools/i18n.js
    (leyendo este mismo archivo) para sacar del código las frases que hay que traducir, con las mismas claves.
-   Define: words, EN, missed, HOLE_OPEN, HOLE_CLOSE, HOLES, WORDS, SHOWN_ATTRS, RAW_TEXT, phraseKey, scanTemplate, htmlPlans, htmlPlan, NUMBERS, loose, trLoose, tr, phrasePlans, phrasePlan, say, addEnglish, startEnglish
+   Define: words, EN, missed, HOLE_OPEN, HOLE_CLOSE, HOLES, WORDS, SHOWN_ATTRS, RAW_TEXT, phraseKey, scanTemplate, htmlPlans, htmlPlan, NUMBERS, loose, trLoose, tr, phrasePlans, phrasePlan, say, trAs, addEnglish, startEnglish
 */
 /* lo que traen los módulos del inglés (i18n/en-*.js), que se apuntan aquí al cargarse (addEnglish) */
 /** @type {Map<string, string>} */
@@ -238,6 +238,16 @@ export const say = (parts, ...values) => {
   for (let k = 0; k < p.idx.length; k++)
     out += tr(values[p.idx[k]]) + p.lits[k + 1];
   return out;
+};
+/** Una frase que en inglés se dice de otra forma según de qué se hable: trAs('objetivo', 'Volumen') busca «objetivo:Volumen»
+    («Bulk») y, si no está, «Volumen» («Volume»). En español, la frase tal cual.
+    @param {string} about
+    @param {string} s */
+export const trAs = (about, s) => {
+  if (!EN)
+    return s;
+  const hit = EN.get(about + ':' + s);
+  return hit !== undefined ? hit : tr(s);
 };
 /** Un módulo del inglés (i18n/en-*.js) se apunta aquí al cargarse, con sus frases: español → inglés.
     @param {Record<string, string>} dict */

@@ -469,7 +469,7 @@ A.wodSave = () => {
   }
   else {
     const rd = f.rd || 0;
-    x = rd + (rd == 1 ? ' ronda' : ' rondas') + (f.early ? ' (antes de tiempo)' : '') + ' · ' + fmtClock(Math.round(f.t));
+    x = say `${rd + (rd == 1 ? ' ronda' : ' rondas')}${f.early ? ' (antes de tiempo)' : ''} · ${fmtClock(Math.round(f.t))}`;
     w.r = rd;
     w.t = Math.round(f.t);
   }

@@ -182,7 +182,7 @@ export const reportsLine = () => {
   const nw = reportsUnseen();
   const off = L.filter(x => !x.s).length;
   const open = L.filter(x => x.s && !x.rp).length;
-  return nw ? nw + (nw == 1 ? ' respuesta nueva' : ' respuestas nuevas') : off ? say `${off} sin enviar: se envía al volver la red` : L.length ? open ? open + (open == 1 ? ' pendiente de respuesta' : ' pendientes de respuesta') : 'Todos contestados' : 'Avisa de un fallo o propón una mejora';
+  return nw ? say `${nw}${nw == 1 ? ' respuesta nueva' : ' respuestas nuevas'}` : off ? say `${off} sin enviar: se envía al volver la red` : L.length ? open ? say `${open}${open == 1 ? ' pendiente de respuesta' : ' pendientes de respuesta'}` : 'Todos contestados' : 'Avisa de un fallo o propón una mejora';
 };
 /** Perfil → Fallos y sugerencias: los avisos propios con su estado y la respuesta. */
 const reportListPage = () => {

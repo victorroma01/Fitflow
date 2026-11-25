@@ -15,7 +15,7 @@ import { A } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
 import { brandLogo } from '../core/brand.js';
 import { R } from '../core/render.js';
-import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS } from '../nutrition/diet.js';
+import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, goalName } from '../nutrition/diet.js';
 import { html, raw } from '../core/html.js';
 /** Los datos con número: [clave en S.biometrics, rótulo, unidad, mínimo, máximo]. */
 /** @type {[string, string, string, number, number][]} */
@@ -84,7 +84,7 @@ const bioFormView = () => {
       ${sexButtons(sx)}
       ${bioNumbers(b)}
       ${raw(sel('act', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1])))}
-      ${raw(sel('goal', 'Objetivo físico', GOAL_LABELS))}
+      ${raw(sel('goal', 'Objetivo físico', GOAL_LABELS.map((g, i) => goalName(i))))}
       <p id="wle" class="welcome-error" role="alert"></p>
       <button class="primary" data-a="welcomeSave">Guardar y continuar</button>
     </div>`;

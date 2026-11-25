@@ -1,13 +1,16 @@
 /* ═══ nutrition/diet ═══
    Cálculo de gasto energético (TDEE), tipos de dieta y objetivos de kcal y macros.
-   Define: DIET_TYPES, ACTIVITY_LEVELS, GOAL_LABELS, GOAL_DIET, tdee, goalTargets, dietIndex, applyDiet, cleanGoals
+   Define: DIET_TYPES, ACTIVITY_LEVELS, GOAL_LABELS, goalName, GOAL_DIET, tdee, goalTargets, dietIndex, applyDiet, cleanGoals
 */
 import { clampInt } from '../core/util.js';
+import { trAs } from '../core/i18n.js';
 import { S } from '../core/state.js';
 import { dietPlan, energyNeeds, macroTargets } from '../core/calc.js';
 export const DIET_TYPES = [['Mini cut', .75, 2.4, .8, 'Déficit fuerte y corto (2-4 semanas) con mucha proteína'], ['Recomposición', 1, 2.2, .9, 'Calorías de mantenimiento con proteína alta'], ['Hipocalórica', .85, 2.2, .8, 'Déficit moderado para perder grasa'], ['Mantenimiento', 1, 1.8, 1, 'Peso estable'], ['Hipercalórica', 1.12, 2, 1, 'Superávit para ganar masa']];
 export const ACTIVITY_LEVELS = [['Baja', 'sedentario, menos de 5.000 pasos'], ['Media', '5.000-8.000 pasos o 1-3 entrenos'], ['Moderada', '8.000-10.000 pasos o 3-5 entrenos'], ['Alta', '10.000-12.000 pasos o 6-7 entrenos'], ['Muy alta', 'más de 12.000 pasos o trabajo físico']];
 export const GOAL_LABELS = ['Definir', 'Mantenimiento', 'Volumen', 'Recomposición'];
+/** El nombre del objetivo físico `g`, en el idioma de la app («Volumen» es «Bulk» como objetivo y «Volume» en un entreno). */
+export const goalName = g => trAs('objetivo', GOAL_LABELS[g]);
 export const GOAL_DIET = [2, 3, 4, 1];
 /** Gasto diario del usuario ({ bm, td }), o 0 si faltan datos biométricos o no son posibles (core/calc: energyNeeds). */
 export const tdee = () => energyNeeds(S.biometrics);

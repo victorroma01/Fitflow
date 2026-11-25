@@ -1,6 +1,6 @@
 /* ═══ workout/overview ═══
    Resumen y edición del día de entreno.
-   Define: overviewHead, overviewHero, DELOAD_NOTE, overviewEditButtons, overviewExercise, overviewBlock, overviewPage, toggleOverviewEdit  · acciones/registros: 6
+   Define: overviewHead, overviewHero, deloadNote, overviewEditButtons, overviewExercise, overviewBlock, overviewPage, toggleOverviewEdit  · acciones/registros: 6
 */
 import { fmtMinSec } from '../core/util.js';
 import { A } from '../core/registry.js';
@@ -37,7 +37,7 @@ const overviewHero = (d, editing) => {
     </div>`;
 };
 /* en una semana de descarga, qué cambia al empezar */
-const DELOAD_NOTE = html`
+const deloadNote = () => html`
   <div class="card m-12-0-0">
     <b>Semana de descarga</b>
     <div class="muted fs-13 mt-4">
@@ -90,7 +90,7 @@ export function overviewPage() {
   return html`
     ${overviewHead(editing)}
     ${overviewHero(d, editing)}
-    ${raw(isDeloadWeek(S.week) ? DELOAD_NOTE : '')}
+    ${raw(isDeloadWeek(S.week) ? deloadNote() : '')}
     ${dayBlocks(d).map((k, n) => overviewBlock(d, k, n, editing))}
     ${raw(add)}
     <div class="h-80"></div>
