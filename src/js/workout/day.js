@@ -2,6 +2,7 @@
    Pestaña Workout: vista del día, tempos, superseries y atajos.
    Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
 */
+import { say } from '../core/i18n.js';
 import { typedName } from '../core/util.js';
 import { A, C } from '../core/registry.js';
 import { toast } from '../core/toast.js';
@@ -24,7 +25,7 @@ const planEx = (i) => S.plan[S.selectedDay].ex[i];
 /** El botón de una serie menos (by = -1) o una más (by = 1) de un ejercicio del plan (al editar la semana y en Overview). */
 export const planSetButton = (e, i, by) => html`
   <button data-a="${by < 0 ? 'planSetMinus' : 'planSetPlus'}" data-i="${i}"
-      aria-label="${(by < 0 ? 'Una serie menos, ' : 'Una serie más, ') + e.n}" class="touch-target">${by < 0 ? '−' : '+'}</button>`;
+      aria-label="${say `${by < 0 ? 'Una serie menos, ' : 'Una serie más, '}${e.n}`}" class="touch-target">${by < 0 ? '−' : '+'}</button>`;
 /* el botón de un día de la semana: hecho (✓), de descanso (☾) o su número */
 const weekdayButton = j => html`
   <button class="day ${j == S.selectedWeekday ? 'on' : ''}" data-a="selectDay" data-i="${j}">
@@ -56,7 +57,7 @@ const dayEditRow = (d, e, i) => {
     <div class="item cols-1fr-auto-24">
       <span>${blockBadge(d.ex, i)}${e.n}<br>${restSelect(e)}${rangeSelect(e, i)}${link}</span>
       ${sets}
-      <button data-a="removePlanExercise" data-i="${i}" aria-label="${'Quitar ' + e.n}" class="p-2-6">✕</button>
+      <button data-a="removePlanExercise" data-i="${i}" aria-label="${say `Quitar ${e.n}`}" class="p-2-6">✕</button>
     </div>`;
 };
 /* el día al editar la semana: su nombre y sus ejercicios, «+ Añadir ejercicio» y «Listo» */
@@ -114,7 +115,7 @@ const shortSelect = (l, sel) => html`<label class="chip-select"><span>${l}</span
 const tempoSelect = (e, i) => {
   const t = tempoOf(e) || '2/0/2/0';
   return html`
-    <select data-c="setPlanTempo" data-i="${i}" aria-label="${'Tempo, ' + e.n}">
+    <select data-c="setPlanTempo" data-i="${i}" aria-label="${say `Tempo, ${e.n}`}">
       ${TEMPOS.map(m => html`<option value="${m[0]}"${m[0] == t ? ' selected' : ''}>${raw(m[0])} · ${raw(m[1])}</option>`)}
     </select>`;
 };
@@ -124,8 +125,8 @@ export function exToolsHtml(e, i) {
   const tipOn = W.openPanels[i + 't'];
   const notesOn = W.openPanels[i + 'n'];
   const tipButton = html`
-    <button class="chip icon-only${tipOn ? ' on' : ''}" data-a="toggleExerciseTip" data-i="${i}" data-v="t" aria-label="${'Tips, ' + e.n}"
-        aria-pressed="${tipOn ? 'true' : 'false'}">${icon('info', 18)}</button>`;
+    <button class="chip icon-only${tipOn ? ' on' : ''}" data-a="toggleExerciseTip" data-i="${i}" data-v="t"
+        aria-label="${say `Tips, ${e.n}`}" aria-pressed="${tipOn ? 'true' : 'false'}">${icon('info', 18)}</button>`;
   const notesButton = html`
     <button class="chip${notesOn ? ' on' : ''} m-0" data-a="toggleExerciseTip" data-i="${i}" data-v="n">Notas</button>`;
   /* lo que se mide en tiempo o en distancia no lleva tempo */
@@ -134,7 +135,7 @@ export function exToolsHtml(e, i) {
   const rest = inSuperset(i) ? '' : shortSelect('Descanso', restSelect(e, 1));
   const tip = tipOn ? html`<div class="muted tip">${exTip(e.n) || 'Cargando…'}</div>` : '';
   const notes = notesOn ? html`
-    <textarea rows="3" maxlength="2000" data-c="setExerciseNote" data-i="${i}" aria-label="${'Notas, ' + e.n}"
+    <textarea rows="3" maxlength="2000" data-c="setExerciseNote" data-i="${i}" aria-label="${say `Notas, ${e.n}`}"
         placeholder="Anota lo que quieras sobre este ejercicio" class="mb-8">${S.exerciseNotes[e.n] || ''}</textarea>` : '';
   return html`<div class="exercise-tools">${tipButton}${notesButton}${tempo}${rest}</div>${tip}${notes}`;
 }
@@ -146,7 +147,9 @@ A.toggleExerciseTip = (i, b) => {
   if (W.openPanels[k] && b.dataset.v == 't')
     withExInfo(R);
 };
-/** Etiqueta del ejercicio `i` dentro de su bloque (el de los ejercicios seguidos que van unidos: dayBlocks). */
+/** Etiqueta del ejercicio `i` dentro de su bloque (el de los ejercicios seguidos que van unidos: dayBlocks): qué bloque es y
+    qué puesto ocupa en él («SUPERSERIE · 1/2»). El descanso que le sigue (10 s hasta el siguiente o el de la ronda) no va
+    aquí: lo dice el ejercicio, donde los demás dicen el suyo. */
 export const blockBadge = (a, i) => {
   if (a[i].b == null)
     return '';
@@ -154,10 +157,7 @@ export const blockBadge = (a, i) => {
   const m = x.length;
   const k = x.indexOf(i) + 1;
   return m < 2 ? '' : html`
-    <small class="c-wnx fw-700">
-      ${m > 3 ? 'CIRCUITO' : m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}
-      ${k < m ? ' · 10 s hasta el siguiente' : ' · descanso de la ronda'}
-    </small><br>`;
+    <small class="c-wnx fw-700">${m > 3 ? 'CIRCUITO' : m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}</small><br>`;
 };
 /** «Unir al anterior» y «Separar» (en la semana y en el Overview). Une el ejercicio `i` de la lista `a` al bloque del
     anterior, con los que vayan unidos a él detrás, o, si ya va unido al anterior, parte el bloque por ahí. Un bloque que
@@ -323,7 +323,7 @@ A.removePlanExercise = i => {
   const [e] = d.ex.splice(i, 1);
   saveState('core');
   R();
-  toast('«' + e.n + '» quitado del día', () => {
+  toast(say `«${e.n}» quitado del día`, () => {
     d.ex.splice(i, 0, e);
     saveState('core');
     R();

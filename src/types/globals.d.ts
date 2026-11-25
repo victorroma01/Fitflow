@@ -11,6 +11,8 @@ interface Window {
   __ffe?: (message: string) => void;
   /** tests/walk.py: la lista donde core/persist anota las partes que una acción tocó sin decirlo */
   __ffHintCheck?: string[];
+  /** las pruebas del inglés: donde core/i18n anota las frases que busca en el diccionario y no encuentra */
+  __i18nMiss?: Set<string>;
   /** reCAPTCHA Enterprise, cuando lo ha cargado cloud/appcheck */
   grecaptcha?: any;
   /** el AudioContext de los Safari antiguos */

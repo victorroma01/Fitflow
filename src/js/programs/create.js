@@ -2,6 +2,7 @@
    Crear programa: guiado y a partir de mis workouts.
    Define: progDraft, clone, restDay, syncCustomProgram, addOwnProgram, startPlanFromWeekOne, WEEK_LAYOUTS, layoutWeek, MOVE_GROUP, routineMoveGroups, overlapRatio, orderRoutines, buildFromMine, techLegend, programDaysHtml, programRowsHtml, createHome, programNameBox, createFromMine, optionChips, guidedForm, makeEx, ANTAGONISTS, antagonist, guideTechniques, generateProgram, parseDays, programNameFor, programAdvice, guidedProposal, orderWeekPage, refreshCreate, setProgramDeload, refreshDeload  · acciones/registros: 22
 */
+import { say } from '../core/i18n.js';
 import { fmtMinSec, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C, U } from '../core/registry.js';
@@ -38,7 +39,7 @@ export const addOwnProgram = (p, title) => {
   progDraft.k = S.ownPrograms.length - 1;
   saveState();
   A.openPrograms();
-  dialog(title, '«' + X(p.n) + '» ya está en Mis programas. ¿Quieres empezar con él ahora?' + (S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'), [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'primary']]);
+  dialog(title, say `«${X(p.n)}» ya está en Mis programas. ¿Quieres empezar con él ahora?${S.noProgram ? '' : ' Se reiniciará el progreso de la semana.'}`, [['Más tarde', 'doNothing', ''], ['Usar ahora', 'ownProgramApply', 'primary']]);
 };
 /** Tras cambiar de programa: el plan empieza por la semana 1 y su primer día, sin días hechos; se guarda, se cierra la hoja y
     se pinta. */
@@ -136,7 +137,7 @@ export const programDaysHtml = pl => (isCycle(pl) ? html`
         ${raw(techLabel(e) ? html`<b class="technique-code">${techLabel(e)}</b>` : '')}
         ${e.n} · ${raw(planLine(e))} · ${raw(fmtMinSec(restAt(d, i)))}
       </div>
-    `).join('') : '<div class="muted fs-13 mt-3">Descanso</div>')}
+    `).join('') : html`<div class="muted fs-13 mt-3">Descanso</div>`)}
   </div>`).join('');
 const programRowsHtml = pl => pl.map((d, j) => {
   const r = !d.ex.length;
@@ -151,7 +152,7 @@ const programRowsHtml = pl => pl.map((d, j) => {
           </button>
         </span>
       </div>
-      ${raw(r ? '<div class="muted fs-13">Descanso</div>' : html`
+      ${raw(r ? html`<div class="muted fs-13">Descanso</div>` : html`
         <div class="muted fs-12 mt-2">
           ${d.ex.length}
           ${d.ex.length == 1 ? ' ejercicio' : ' ejercicios'} · ${raw(d.ex.reduce((s, e) => s + e.s, 0))} series · ~${dayMinutes(d)} min
@@ -167,7 +168,7 @@ const createHome = () => html`
     <span>
       <b>Con mis workouts</b>
       <small>
-        ${raw(S.routines.length ? S.routines.length + (S.routines.length == 1 ? ' workout creado' : ' workouts creados') + '. Te propongo la semana con descansos y tú la ordenas.' : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}
+        ${raw(S.routines.length ? S.routines.length == 1 ? '1 workout creado. Te propongo la semana con descansos y tú la ordenas.' : say `${S.routines.length} workouts creados. Te propongo la semana con descansos y tú la ordenas.` : 'Aún no has creado ninguno. Créalos y monta aquí tu semana.')}
       </small>
     </span>›
   </button>
@@ -321,7 +322,7 @@ export const generateProgram = o => {
   seq.forEach(t => {
     tot[t] = (tot[t] || 0) + 1;
   });
-  const fin = o.obj == 'grasa' ? (o.lug == 'gym' ? 'F:Cinta inclinada*1/12min@0' : 'F:Burpees*3/10@45') : '';
+  const fin = o.obj == 'grasa' ? (o.lug == 'gym' ? 'F:Caminata inclinada*1/12min@0' : 'F:Burpees*3/10@45') : '';
   const noFin = new Set(['hRun', 'hZ2', 'cfE']);
   const days = seq.map(t => {
     const V = P[t];
@@ -350,7 +351,7 @@ export const generateProgram = o => {
     return d;
   });
   if ((o.obj == 'grasa' || o.obj == 'salud') && o.dias <= 4 && o.est != 'hibrido') {
-    const c = parseDays('Cardio suave (opcional):' + (o.niv == 'ini' || o.obj == 'salud' ? 'Caminata rápida*1/40min@0' : (o.lug == 'gym' ? 'Bicicleta zona 2*1/35min@0' : 'Rodaje suave zona 2*1/35min@0')))[0];
+    const c = parseDays(say `Cardio suave (opcional):${o.niv == 'ini' || o.obj == 'salud' ? 'Caminata rápida*1/40min@0' : (o.lug == 'gym' ? 'Bicicleta zona 2*1/35min@0' : 'Rodaje suave zona 2*1/35min@0')}`)[0];
     c.cu = 1;
     c.img = 'cardio';
     const l = layoutWeek(pl2, o.dias);
@@ -377,7 +378,7 @@ export const parseDays = b => b.split('|').map(x => {
 });
 const programNameFor = o => {
   const N = { clasico: { musculo: 'Hipertrofia', fuerza: o.niv == 'ava' ? 'Fuerza avanzada' : 'Fuerza base', grasa: 'Definición', rendimiento: 'Atlético', salud: 'Forma y salud' }, crossfit: { musculo: 'CrossFit + músculo', fuerza: 'CrossFit fuerza', grasa: 'CrossFit metabólico', rendimiento: 'CrossFit rendimiento', salud: 'CrossFit para todos' }, hibrido: { musculo: 'Híbrido músculo y motor', fuerza: 'Híbrido fuerza y carrera', grasa: 'Híbrido quema grasa', rendimiento: 'Híbrido Hyrox', salud: 'Híbrido salud' } };
-  return N[o.est][o.obj] + ' · ' + o.dias + ' días' + (o.lug == 'home' ? ' · Casa' : '');
+  return say `${N[o.est][o.obj]} · ${o.dias} días${o.lug == 'home' ? ' · Casa' : ''}`;
 };
 const programAdvice = o => {
   const G = { musculo: 'Apuesta por 10-20 series semanales por grupo muscular, cerca del fallo (1-3 repeticiones en reserva), y sube el peso cuando llegues al tope del rango. En Nutrición, un ligero superávit y 1,6-2,2 g de proteína por kg.', fuerza: 'Prioriza los básicos con descansos largos (3 min o más) y sube la carga en saltos pequeños. Mantén 1-3 repeticiones en reserva. En Nutrición, calorías de mantenimiento o ligero superávit y proteína alta.', grasa: 'Conserva el peso en la barra para proteger el músculo, descansos cortos y un final de cardio. En Nutrición, un déficit moderado (10-20 %) con proteína alta; el cardio suave suma, pero la dieta decide.', rendimiento: 'Combina fuerza, técnica y condición física. Mejor calidad que cantidad: si la técnica se rompe, baja la carga. Dormir y comer bien es parte del plan.', salud: 'Volumen moderado, técnica limpia y constancia. Entre 2 y 4 entrenos por semana ya aportan mucho; añade paseos y mueve el cuerpo a diario.' };
@@ -391,7 +392,7 @@ const programAdvice = o => {
 const guidedProposal = () => {
   const o = progDraft.o;
   const pl = progDraft.plan;
-  const lab = [o.lug == 'gym' ? 'Gimnasio' : 'Casa' + (o.mat == 'db' ? ' · mancuernas y bandas' : ' · peso corporal'), GUIDE_OPTIONS.est.find(x => x[0] == o.est)[1], GUIDE_OPTIONS.obj.find(x => x[0] == o.obj)[1], o.dias + ' días', GUIDE_OPTIONS.niv.find(x => x[0] == o.niv)[1]];
+  const lab = [o.lug == 'gym' ? 'Gimnasio' : say `Casa${o.mat == 'db' ? ' · mancuernas y bandas' : ' · peso corporal'}`, GUIDE_OPTIONS.est.find(x => x[0] == o.est)[1], GUIDE_OPTIONS.obj.find(x => x[0] == o.obj)[1], say `${o.dias} días`, GUIDE_OPTIONS.niv.find(x => x[0] == o.niv)[1]];
   return html`
     ${pgHead('Tu propuesta', 'createGuided')}
     <div class="d-flex wrap gap-6 m-n4-0-12">${lab.map(x => html`<span class="tag">${x}</span>`)}</div>
@@ -441,7 +442,7 @@ A.createToggleRoutine = (i, b) => {
     progDraft.sel.push(k);
   }
   if (!progDraft.name || /^Mi programa( \d+)?$/.test(progDraft.name))
-    progDraft.name = 'Mi programa ' + (S.ownPrograms.length + 1);
+    progDraft.name = say `Mi programa ${S.ownPrograms.length + 1}`;
   buildFromMine();
   fullPage(createFromMine());
 };
@@ -493,7 +494,7 @@ U.programName = v => {
 A.createSave = () => {
   if (!progDraft.plan || !progDraft.plan.some(d => d.ex.length))
     return;
-  const nme = (progDraft.name || '').trim() || 'Mi programa ' + (S.ownPrograms.length + 1);
+  const nme = (progDraft.name || '').trim() || say `Mi programa ${S.ownPrograms.length + 1}`;
   addOwnProgram({ n: nme, plan: clone(progDraft.plan), t: Date.now(), src: progDraft.m, o: progDraft.m == 'guide' ? { ...progDraft.o, vr: progDraft.vr || 0 } : undefined, d: progDraft.m == 'guide' ? 'Programa guiado' : 'Hecho con tus workouts', dl: progDraft.dl != null ? progDraft.dl : undefined }, 'Programa creado');
 };
 A.openOwnProgram = (i, b) => {
@@ -510,7 +511,7 @@ A.ownProgramShow = () => {
   const pl = act ? S.plan : p.plan;
   sheet(html`
     ${pgHead(X(p.n), 'openPrograms')}
-    <p class="muted m-n6-0-10">${p.d || ''}${raw(act ? ' · <b class="c-at">Plan actual</b>' : '')}</p>
+    <p class="muted m-n6-0-10">${p.d || ''}${raw(act ? html` · <b class="c-at">Plan actual</b>` : '')}</p>
     ${raw(programDaysHtml(pl))}
     ${raw(deloadChips(p.dl, 'p'))}
     <div class="grid-2 mt-12">
@@ -519,7 +520,7 @@ A.ownProgramShow = () => {
     </div>
     <button data-a="ownProgramShare" class="w-full mt-8">Compartir programa</button>
     <div class="h-84"></div>
-    ${raw(act ? '' : '<button class="sticky-btn primary p-16 fs-16 r-16" data-a="ownProgramApplyAsk">Usar este programa</button>')}`);
+    ${raw(act ? '' : html`<button class="sticky-btn primary p-16 fs-16 r-16" data-a="ownProgramApplyAsk">Usar este programa</button>`)}`);
   sheetToTop();
 };
 A.ownProgramApplyAsk = () => {
@@ -527,9 +528,9 @@ A.ownProgramApplyAsk = () => {
   if (!p)
     return;
   if (S.noProgram)
-    confirmDialog('¿Empezar con este programa?', 'Empezarás con «' + X(p.n) + '». Puedes cambiarlo cuando quieras.', 'ownProgramApply', 'Empezar');
+    confirmDialog('¿Empezar con este programa?', say `Empezarás con «${X(p.n)}». Puedes cambiarlo cuando quieras.`, 'ownProgramApply', 'Empezar');
   else
-    confirmDialog('¿Cambiar de plan?', 'Pasarás a «' + X(p.n) + '» y se reiniciará el progreso de la semana.', 'ownProgramApply', 'Cambiar');
+    confirmDialog('¿Cambiar de plan?', say `Pasarás a «${X(p.n)}» y se reiniciará el progreso de la semana.`, 'ownProgramApply', 'Cambiar');
 };
 A.ownProgramApply = () => {
   const p = S.ownPrograms[progDraft.k];
@@ -575,7 +576,7 @@ A.ownProgramDeleteAsk = () => {
     toast('Es tu plan actual y no se puede borrar');
     return;
   }
-  confirmDialog('¿Borrar este programa?', 'Se eliminará «' + X(p.n) + '» de tu lista.', 'ownProgramDelete', 'Borrar');
+  confirmDialog('¿Borrar este programa?', say `Se eliminará «${X(p.n)}» de tu lista.`, 'ownProgramDelete', 'Borrar');
 };
 A.ownProgramDelete = () => {
   const k = progDraft.k;

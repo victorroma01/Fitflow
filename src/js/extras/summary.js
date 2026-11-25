@@ -2,6 +2,7 @@
    Resumen del entreno e imagen para compartir.
    Define: pctChange, signed, summaryData, deltaChip, showSummary, summaryImage  · acciones/registros: 1
 */
+import { say, tr, trAs } from '../core/i18n.js';
 import { fmtDateShort } from '../core/util.js';
 import { liftScore } from '../core/calc.js';
 import { toast } from '../core/toast.js';
@@ -75,11 +76,11 @@ export function showSummary() {
       </div>`;
     const ch = [];
     if (o.dv != null)
-      ch.push(deltaChip(signed(o.dv) + ' % volumen', o.dv > 0 ? 'up' : o.dv < 0 ? 'down' : ''));
+      ch.push(deltaChip(say `${signed(o.dv)} % volumen`, o.dv > 0 ? 'up' : o.dv < 0 ? 'down' : ''));
     if (o.ds)
-      ch.push(deltaChip(signed(o.ds) + (Math.abs(o.ds) == 1 ? ' serie' : ' series')));
+      ch.push(deltaChip(say `${signed(o.ds)}${Math.abs(o.ds) == 1 ? ' serie' : ' series'}`));
     if (o.dm)
-      ch.push(deltaChip(signed(o.dm) + ' min'));
+      ch.push(deltaChip(say `${signed(o.dm)} min`));
     if (o.volRec)
       ch.push(deltaChip('Más volumen que nunca en este entreno', 'up'));
     if (ch.length)
@@ -87,7 +88,7 @@ export function showSummary() {
     if (o.pr.length)
       h += html`
         <div class="card summary-records">
-          <b>${raw(o.pr.length == 1 ? 'Récord personal' : o.pr.length + ' récords personales')}</b>
+          <b>${raw(o.pr.length == 1 ? 'Récord personal' : say `${o.pr.length} récords personales`)}</b>
           ${o.pr.map(p => html`
             <div class="item cols-1fr-auto">
               <span>${p.n}</span>
@@ -122,7 +123,7 @@ export function showSummary() {
   catch (e) {
     const l = S.logs[S.logs.length - 1];
     if (l)
-      dialog('Entreno guardado', l.s + ' series · ' + l.m + ' min', [['Listo', 'doNothing', 'primary']]);
+      dialog('Entreno guardado', say `${l.s} series · ${l.m} min`, [['Listo', 'doNothing', 'primary']]);
   }
 }
 function summaryImage(o) {
@@ -180,7 +181,7 @@ function summaryImage(o) {
         x += g.measureText(ch).width + 9;
       });
       const l = o.l;
-      const words = String(l.n).split(' ');
+      const words = String(tr(l.n)).split(' ');
       let ln = [''];
       let mw = W_ - 2 * P;
       g.font = '800 92px ' + FNT;
@@ -201,7 +202,7 @@ function summaryImage(o) {
       const ty = ln.length > 1 ? 500 : 430;
       const TW = (W_ - 2 * P - 36) / 2;
       const TH = 230;
-      const tiles = [[String(l.s), l.s == 1 ? 'serie' : 'series'], [volumeText(l.v, 1), 'volumen'], [l.m + ' min', 'tiempo'], [l.q > 0 ? String(l.q) : '—', 'esfuerzo (RPE)']];
+      const tiles = [[String(l.s), tr(l.s == 1 ? 'serie' : 'series')], [volumeText(l.v, 1), tr('volumen')], [say `${l.m} min`, tr('tiempo')], [l.q > 0 ? String(l.q) : '—', tr('esfuerzo (RPE)')]];
       tiles.forEach((t, i) => {
         const tx0 = P + (i % 2) * (TW + 36);
         const ty0 = ty + Math.floor(i / 2) * (TH + 36);
@@ -217,12 +218,12 @@ function summaryImage(o) {
       let yy = ty + 2 * TH + 36 + 90;
       const lines = [];
       if (o.pr.length) {
-        lines.push(['Récords personales', a1]);
-        o.pr.slice(0, 3).forEach(p => lines.push([fit(p.n, 560, 40, 600) + '|' + toDisplayWeight(p.w) + ' ' + weightUnit() + (p.u ? '' : ' × ' + p.r), '#fff']));
+        lines.push([tr('Récords personales'), a1]);
+        o.pr.slice(0, 3).forEach(p => lines.push([fit(tr(p.n), 560, 40, 600) + '|' + toDisplayWeight(p.w) + ' ' + weightUnit() + (p.u ? '' : ' × ' + p.r), '#fff']));
       }
       else if (o.ex.length) {
-        lines.push(['Mejores series', a1]);
-        o.ex.filter(e => e.b && !e.u).slice(0, 3).forEach(e => lines.push([fit(e.n, 560, 40, 600) + '|' + toDisplayWeight(e.b[1]) + ' ' + weightUnit() + ' × ' + e.b[0], '#fff']));
+        lines.push([tr('Mejores series'), a1]);
+        o.ex.filter(e => e.b && !e.u).slice(0, 3).forEach(e => lines.push([fit(tr(e.n), 560, 40, 600) + '|' + toDisplayWeight(e.b[1]) + ' ' + weightUnit() + ' × ' + e.b[0], '#fff']));
       }
       lines.forEach((r, i) => {
         if (i == 0) {
@@ -238,12 +239,12 @@ function summaryImage(o) {
       });
       const cm = [];
       if (o.dv != null)
-        cm.push(signed(o.dv) + ' % de volumen');
+        cm.push(say `${signed(o.dv)} % de volumen`);
       if (o.ds)
-        cm.push(signed(o.ds) + (Math.abs(o.ds) == 1 ? ' serie' : ' series'));
+        cm.push(say `${signed(o.ds)}${Math.abs(o.ds) == 1 ? ' serie' : ' series'}`);
       if (cm.length)
-        tx(cm.join('  ·  ') + ' vs. el entreno anterior', P, Math.max(yy + 30, 1215), 34, 600, '#7ee0b5');
-      tx('Registrado con StrataFit', W_ / 2, 1295, 28, 500, '#7c7c8c', 'center');
+        tx(say `${cm.join('  ·  ')} vs. el entreno anterior`, P, Math.max(yy + 30, 1215), 34, 600, '#7ee0b5');
+      tx(tr('Registrado con StrataFit'), W_ / 2, 1295, 28, 500, '#7c7c8c', 'center');
       c.toBlob(b => b ? res(b) : rej('blob'), 'image/png');
     }
     catch (e) {
@@ -260,10 +261,11 @@ A.summaryShare = async () => {
       if (lastSummary)
         lastSummary.blob = b;
     }
-    const f = new File([b], 'stratafit-entreno.png', { type: 'image/png' });
+    const name = 'stratafit-' + trAs('archivo', 'entreno') + '.png';
+    const f = new File([b], name, { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [f] })) {
       try {
-        await navigator.share({ files: [f], title: 'Mi entreno' });
+        await navigator.share({ files: [f], title: tr('Mi entreno') });
         return;
       }
       catch (e) {
@@ -271,7 +273,7 @@ A.summaryShare = async () => {
           return;
       }
     }
-    saveBlob(b, 'stratafit-entreno.png');
+    saveBlob(b, name);
     toast('Imagen guardada');
   }
   catch (e) {

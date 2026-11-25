@@ -2,7 +2,8 @@
    Registro de entrenos y calendario.
    Define: MONTH_YEAR, WEEKDAY_DAY, calendarPage, logsPage, logSeries, dropSeries, logIndex, logText, logRight  · acciones/registros: 5
 */
-import { $, dayKey, fmtDate, fmtDateShort, round1, roundInt, X } from '../core/util.js';
+import { say } from '../core/i18n.js';
+import { $, DAY_LETTERS, dayKey, fmtDate, fmtDateShort, round1, roundInt, X } from '../core/util.js';
 import { A } from '../core/registry.js';
 import { calMonthOffset, S, saveState, setCalMonthOffset } from '../core/state.js';
 import { confirmDialog, fullPage, pgHead, sheet } from '../core/ui.js';
@@ -30,7 +31,7 @@ export function calendarPage() {
       <b>${fmtDate(d, MONTH_YEAR)}</b>
       <button data-a="calendarMonth" data-i="1" aria-label="Mes siguiente" class="touch-target">›</button>
     </div>
-    <div class="calendar mt-8">${'LMXJVSD'.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
+    <div class="calendar mt-8">${DAY_LETTERS.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
 const logsPage = () => {
   /* del día más reciente al más antiguo y, dentro de un día, el último que se guardó primero: un cardio se puede apuntar con
@@ -111,7 +112,7 @@ A.logDeleteAsk = i => {
   /* un entreno se borra con sus series: si no, sus pesos seguirían en los récords, las gráficas y la progresión */
   const series = logSeries(l);
   const n = series ? new Set(series.map(x => x[0])).size : 0;
-  const also = !series ? ' Sus series se quedan en el historial: ese día hay otro entreno y no se sabe de cuál son.' : n ? ' También se borran sus series (' + n + (n == 1 ? ' ejercicio' : ' ejercicios') + '): los récords y las gráficas se recalculan.' : '';
+  const also = !series ? ' Sus series se quedan en el historial: ese día hay otro entreno y no se sabe de cuál son.' : n ? say ` También se borran sus series (${n}${n == 1 ? ' ejercicio' : ' ejercicios'}): los récords y las gráficas se recalculan.` : '';
   confirmDialog('¿Borrar este registro?', html`${l.n} · ${l.d}.${also}`, 'logDelete', 'Borrar');
 };
 let logIndex = -1;
@@ -131,10 +132,10 @@ A.openCalendar = () => fullPage(html`
   <div class="card" id="cl">${calendarPage()}</div>
   <p class="muted fs-13">Los días marcados son los que registraste un entreno.</p>`);
 function logText(l) {
-  return l.k == 'c' && l.x ? ' · ' + X(l.x) : l.k == 'w' && l.x ? ' · ' + X(l.x) + (l.nt ? ' · ' + X(l.nt) : '') : ' · ' + l.s + ' series · ' + l.m + ' min';
+  return l.k == 'c' && l.x ? ' · ' + X(l.x) : l.k == 'w' && l.x ? ' · ' + X(l.x) + (l.nt ? ' · ' + X(l.nt) : '') : say ` · ${l.s} series · ${l.m} min`;
 }
 function logRight(l) {
-  return l.k == 'c' ? (l.c && +l.c.km > 0 ? round1(+l.c.km) + ' km' : l.m + ' min') : l.k == 'w' ? 'WOD' : roundInt(toDisplayWeight(l.v)) + ' ' + weightUnit();
+  return l.k == 'c' ? (l.c && +l.c.km > 0 ? say `${round1(+l.c.km)} km` : say `${l.m} min`) : l.k == 'w' ? 'WOD' : roundInt(toDisplayWeight(l.v)) + ' ' + weightUnit();
 }
 /* — manejadores de esta función (registros A / C / U) — */
 A.calendarMonth = i => {

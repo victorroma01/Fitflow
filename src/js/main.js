@@ -3,6 +3,7 @@
    build.py lo compila con esbuild en un solo archivo (archivo único) o en el paquete con carga diferida.
 */
 import './core/util.js';
+import './core/i18n.js';
 import './core/calc.js';
 import './core/platform.js';
 import './core/html.js';
@@ -28,8 +29,8 @@ import './data/release.js';
 import './data/photos.js';
 import './data/aliases.js';
 import './data/anatomy.js';
-import './data/figure.js';
 import './data/figposes.js';
+import './data/figstamp.js';
 import './data/templates.js';
 import './data/levels.js';
 import './data/techniques.js';
@@ -102,11 +103,8 @@ import './system/iconnotice.js';
 import './system/space.js';
 import './system/welcome.js';
 import './system/tour.js';
-import './extras/rig.js';
-import './extras/figure.js';
-import './extras/gear.js';
-import './extras/moves.js';
 import './extras/anatomy.js';
+import './extras/pictures.js';
 import './extras/summary.js';
 import './extras/stagnation.js';
 import './extras/cardio.js';

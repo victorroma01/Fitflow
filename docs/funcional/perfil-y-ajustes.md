@@ -24,7 +24,7 @@ Página propia, ordenada por secciones. Cada fila abre su página, con «←» p
 | Sección | Filas |
 | --- | --- |
 | Cuenta | **Cuenta** (usuario, tipo de cuenta, sincronización y Cambiar contraseña) y **Sincronización** (su estado; al tocarla, sincroniza). |
-| Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico; reducir animaciones), **Color de acento** y **Al abrir la app** ([abajo](#apariencia)). |
+| Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico; reducir animaciones), **Color de acento**, **Al abrir la app** ([abajo](#apariencia)) e **Idiomas** ([abajo](#idiomas)). |
 | Entreno | **Unidades de carga** (kg o lb: cambia los pesos, los discos, el volumen y los récords, también en el análisis mensual y su PDF; el peso corporal sigue en kg) y **Sonido y avisos** (sonidos del descanso, vibración y, en iPhone, el [globo en el icono](experiencia.md#globo-en-el-icono-iphone)). |
 | Datos | **Copia de seguridad** y **Borrar todos los datos**. |
 | App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **El icono nuevo** (solo en un iPhone que aún tiene el icono de antes del logo nuevo: [cómo cambiarlo](experiencia.md#logo-e-icono)), **Ver el recorrido** (el de la [primera vez](experiencia.md#recorrido-de-la-primera-vez)), **Diagnóstico** (versión, dispositivo, lo que ocupa cada dato y dónde está, el espacio usado, errores registrados y el **tiempo de pintado**: lo que tarda en verse cada pantalla, para comparar, por ejemplo, un color de serie con uno propio) e **Informar de un fallo**. |
@@ -52,6 +52,23 @@ Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesió
   Dashboard o Perfil).
 
 El tema, el color, el estilo, las animaciones y la pestaña al abrir van con tu cuenta: salen igual en tus otros móviles.
+
+### Idiomas
+
+StrataFit está en **español** y en **inglés** (desde la V1.0.4). Sin elegir nada sale en el idioma del móvil: en inglés si el
+móvil está en inglés y, si no, en español (con varios idiomas en el móvil, manda el primero de ellos que sea español o inglés).
+En **Ajustes → Idiomas** se elige **Automático** (el del móvil), **Español** o **English**; al cambiarlo, la app se recarga en
+ese idioma. La elección es de cada móvil: no va con la cuenta, y se conserva al cerrar sesión.
+
+En inglés está todo: las pantallas, los 525 ejercicios con sus consejos y su «Cómo se hace», los alimentos, los programas, los
+logros, la nota de cada versión, los avisos, los CSV (con coma y punto decimal), el PDF del análisis mensual, la imagen para
+compartir un entreno y los accesos directos del icono. Las fechas y los números van como se escriben en inglés. El buscador de
+ejercicios y el de alimentos encuentran por el nombre en inglés y por el español.
+
+Lo que escribes tú se queda como lo escribiste: los nombres de tus workouts, programas, platos y ejercicios propios, y tus notas.
+Tus datos son los mismos en los dos idiomas: lo guardado con la app en español se ve en inglés al cambiar, y al revés. Se queda
+en español el **informe de Diagnóstico** (y los datos técnicos que acompañan a un fallo que envías), que es para quien arregla
+la app.
 
 **Borrar todos los datos** borra tus programas, entrenos, comidas, medidas y peso del móvil y de tu cuenta, y la copia de seguridad
 de la nube (tu usuario se queda).

@@ -186,7 +186,10 @@ export const glassCard = () => {
           <button class="${m == /** @type {any} */ (x[0]) ? 'on' : ''}" data-a="glassLevel" data-v="${x[0]}">${raw(x[1])}</button>`)}
       </div>
       <small class="muted d-block mt-4">${raw(GLASS_INFO[m])}${m > 1 ? ' Si notas lentitud, elige Mínimo o Clásico.' : ''}</small>
-    ` : '<small class="muted d-block mt-4">Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.</small>')}`;
+    ` : html`
+      <small class="muted d-block mt-4">
+        Modo Clásico: el aspecto de siempre y el más ligero. Pulsa Cristal para elegir su intensidad.
+      </small>`)}`;
 };
 /** «Reducir animaciones» (S.reduceMotion): sin deslizamientos ni fundidos al abrir páginas y ventanas. */
 export const motionCard = () => html`

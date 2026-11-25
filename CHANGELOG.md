@@ -11,26 +11,128 @@ Una **revisión** arregla una versión ya publicada sin ser otra. La app enseña
 revisión y, debajo, los de la versión que revisa (y los de sus revisiones anteriores), cada uno con el número de la suya
 («Correcciones de la 1.0.31», «Novedades de la 1.0.3»).
 
-- **Desde la versión que siga a la 1.0.32**, una revisión lleva una cuarta cifra: 1.1.0.1 es la primera revisión de la 1.1.0, y
-  no hace falta decir más. El aviso de versión nueva compara todas las cifras: 1.1.0.1 es posterior a 1.1.0 y anterior a 1.1.1.
-- **Las revisiones de la 1.0.3** se numeraron añadiendo una cifra al tercer número (1.0.31 y 1.0.32) y dicen, antes de su primer
-  apartado, «Revisión de la [1.0.3]». Entonces el aviso solo comparaba tres números, y para él 1.0.31 es posterior a 1.0.3 pero
-  también a 1.0.4: por eso la versión que siga a la 1.0.32 tiene que ser mayor que ella (1.1.0).
+- **Desde la 1.0.4**, una revisión lleva una cuarta cifra: 1.0.4.1 es la primera revisión de la 1.0.4, y no hace falta decir
+  más. El aviso de versión nueva compara todas las cifras: 1.0.4.1 es posterior a 1.0.4 y anterior a 1.0.5.
+- **Las revisiones de la 1.0.3** se numeraron añadiendo una cifra al tercer número (1.0.31) y dicen, antes de su primer
+  apartado, «Revisión de la [1.0.3]». La 1.0.32 no llegó a publicarse: pasó a ser la 1.0.4. Desde la 1.0.4, el aviso y
+  `build.py` las cuentan como 1.0.3.1 y 1.0.3.2. El de la 1.0.31 instalada solo compara tres números y para él la 1.0.4
+  sería anterior. Por eso `version.json` lleva en `version` un texto que ese comparador ve como más nuevo y que se lee como
+  la versión («1.0.4 de nov. 2026»: sus tres números son 1, 0 y 2026), y el número de verdad en `number`, que es el que
+  miran la 1.0.4 y las siguientes. Así la 1.0.31 instalada también avisa, con las novedades, antes de actualizar.
+- Antes del primer apartado, una línea que empieza por «> » es el **titular** de la versión: la app lo enseña encima de sus
+  apartados.
 
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
-## [1.0.32] — 2026-11-16
+## [1.0.4] — 2026-11-25
 
-Revisión de la [1.0.3]. No tiene tarjeta propia ni detalla sus cambios en la app: va delante en la de la 1.0.3, con una sola
-línea.
+> Revisión de la aplicación y modelo 3D
+>
+> Los ejercicios tienen ahora su figura en 3D, la librería está revisada ejercicio a ejercicio y la app, más rápida y más
+> cuidadosa con tus datos.
+
+### Novedades
+- Modelo 3D: los 525 ejercicios de la librería tienen su figura en 3D, haciendo el ejercicio entero con su material y los
+  músculos que trabajan en rojo (principales) y naranja (secundarios). Quieta en las listas, el día, el entreno y la ficha;
+  al tocarla, en «Cómo se hace», se mueve con el gesto (con «Reducir animaciones», sus posturas quietas).
+- Inicio de sesión con imagen de fondo: un gimnasio visto desde arriba, en gris y a media luz.
+- Portadas nuevas para los días de CrossFit, Hyrox y funcional y para sus descansos; con el perfil de mujer, todas.
+- Idiomas: la app está también en inglés. Se pone sola en el idioma del móvil (inglés o español) y se cambia cuando
+  quieras en Ajustes → Idiomas.
 
 ### Mejoras
-- Corrección y mejoras de la app.
+- Librería revisada: los músculos de cada ejercicio, comprobados, y fuera los repetidos (el mismo ejercicio con otro nombre).
+  Un plan o un entreno guardado con uno de ellos lo sigue enseñando, con la figura y los músculos del que queda.
+- Los ejercicios de distancia de Hyrox (trineo, carga de granjero, burpees con salto) llevan sus metros como objetivo.
+- El botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out»).
+- Fondo de la app liso: negro en el tema oscuro y gris muy claro en el claro.
+- Superseries, triseries y circuitos: la etiqueta de cada ejercicio dice solo cuál es y su lugar («SUPERSERIE · 1/2»). Ni
+  ella ni la línea del ejercicio repiten ya el descanso («10 s al siguiente», «Descanso de la ronda»): va en cada serie, en
+  la columna «Desc.».
+- Entreno: fuera el botón «+ Drop set» de debajo de las series. El drop set se sigue eligiendo como técnica del ejercicio.
+- Mejoras técnicas y correcciones de errores. Optimización del sistema y funcionalidades.
+
+### Correcciones
+- Gráfica de progreso: al elegir un punto que es récord sale «RÉCORD» junto a la cifra.
+- El nombre de un programa (Programas y Perfil) va como el resto de títulos.
+- Inicio de sesión: el logo llena su marco.
 
 ### Interno
+- Versión: la que iba a ser la 1.0.32 (revisión de la 1.0.3, sin publicar) pasa a ser la 1.0.4, con su propia tarjeta, por
+  decisión del propietario, en vez de la 1.1.0 que pedía la numeración. El aviso de versión nueva (`isNewerVersion`) y
+  `build.py` (`version_key`) cuentan la 1.0.31 y la 1.0.32 como 1.0.3.1 y 1.0.3.2. Cada versión puede llevar un titular
+  (`> …`, antes de sus apartados), que la app enseña encima de ellos en el aviso y en Ajustes (`lead`, en `data/release` y en
+  `version.json`).
+- El aviso de versión nueva en un móvil con la 1.0.31: su comparador solo mira tres números («1.0.4» le parece anterior a
+  «1.0.31») y, sin aviso, la app se actualizaba sola al volver a abrirla, sin enseñar nada antes. `build.py`
+  (`legacy_version`) escribe en `version.json` un `version` que ese comparador ve como más nuevo y que, en el título del
+  aviso, se lee como la versión: «1.0.4 de nov. 2026» (el punto entre el 0 y el 4 es otro carácter, U+2024, para que no
+  cuente como separador; los tres números que ve son 1, 0 y 2026). El número de verdad va en `number`, que es lo que leen la
+  1.0.4 y las siguientes (`fetchVersionInfo`, `plainVersion`). Comprobado con la 1.0.31 publicada, compilada de su etiqueta:
+  avisa, enseña la tarjeta y actualiza; y sin navegador, con su comparador copiado tal cual (`tests/aviso.test.mjs`).
+- Figuras de ejercicio: el modelo 3D sustituye a las figuras de perfil ([Figuras](docs/tecnica/figuras.md)). El motor y sus 82
+  familias de movimiento están en `src/fig3d` (scripts clásicos, los mismos que usan las páginas de revisión de
+  `tools/figuras3d`); `build.py` (`motor3d_js`) los mete en el molde `extras/motor3d`, dentro de una función que les pasa el
+  mapa muscular y las regiones de cada músculo en vez de `window` (así van en modo estricto), y `core/lazy` (`loadFigures`) lo
+  carga con `extras/figure3d` la primera vez que hace falta una figura: unos 340 KB (130 KB comprimidos) que solo se
+  descargan al usarlos. Lo que carga al arrancar baja de 578 a 485 KB: fuera las figuras de perfil (`extras/figure`, `moves`,
+  `rig` y `gear`, `data/figure`, `tools/figure.js` y `tests/rig.test.mjs`).
+- Miniaturas (`extras/pictures`): la figura quieta, sin el rayado y con los tonos oscuros aclarados, encuadrada con
+  `Fig3D.bounds` y pasada a WebP (PNG donde no hay WebP) de 72 px por la densidad de la pantalla. Se guardan en memoria y en
+  el móvil (IndexedDB, base `fffig`: el tipo y los bytes de cada una, con la huella de las figuras y el tamaño): la siguiente
+  vez salen al momento, sin el motor, y una actualización que no cambie las figuras no las hace dibujar otra vez. Mientras,
+  su hueco. Las que se ven se dibujan ya, de dos en dos; las demás, de una en una y solo con la pantalla quieta y sin una
+  figura grande moviéndose, para que deslizar una lista o marcar una serie no dé tirones; se deja de dibujar lo que ya nadie
+  espera. Las del plan se dibujan en un rato libre tras abrir la app. La figura grande, en un sitio de proporción fija (4:3),
+  solo se dibuja mientras se ve y nunca ocupa más de la mitad del tiempo; en un móvil lento va sin el rayado de los músculos.
+  Quieta, enseña el inicio y el final o las posturas más distintas de un gesto con su propio reloj (hasta tres).
+- Encuadres ya calculados (`tools/figboxes.js` → `data/figboxes`): lo que ocupa el gesto de cada ejercicio, el momento y el
+  recuadro de su miniatura y los de sus posturas quietas. Antes, al abrir «Cómo se hace» la app dibujaba la figura trece veces
+  solo para encuadrarla (unos 50 ms; 200 ms en un móvil lento, mientras la hoja entra). La huella de lo que decide cómo se ve
+  una figura va también aparte (`data/figstamp`), y la batería comprueba que las dos están al día.
+- `Fig3D.bounds`: lo que ocupa un dibujo del motor, recorriendo sus etiquetas, sin la página; da lo mismo que `getBBox` pieza a
+  pieza en la cuarta parte de tiempo. Las páginas de revisión encuadran con él: antes, `getBBox` de cada grupo dejaba fuera el
+  desplazamiento de los discos de la barra.
+- Las figuras se hicieron y revisaron por lotes, cada uno con su página: sentadillas, press de banca y de hombro (57);
+  jalones, remos y dominadas (54); piernas (65); brazos (75); pecho y hombros (72); core y el resto de pierna (82); CrossFit,
+  Hyrox y funcional (70); y cardio (50). Antes de cada página, las pruebas de `tools/figuras3d`: manos que no llegan, pies
+  fuera del suelo, el material contra el cuerpo, el grosor del dibujo, las piezas fijas y los saltos de un fotograma a otro.
+- `data/figposes`: cada ejercicio con todas sus palabras para el 3D (el material, el agarre, el banco, la pausa), que antes
+  añadía `tools/figuras3d/datos.mjs` al sacar cada lote.
+- Librería: fuera 26 ejercicios repetidos (de 551 a 525; los dos últimos, Single unders, que era la Comba, y Cinta inclinada,
+  que era la Caminata inclinada, que dicen ahora lo de los dos), con su nombre en `data/aliases` (`EX_RETIRED`) para que lo guardado
+  con ellos siga encontrando el que queda (`liveName`, también para la figura), y los músculos de los ejercicios de cada lote,
+  comprobados con su figura. Los de distancia de Hyrox, en metros por su nombre (`core/calc`, `unitFromName`).
+- Figuras 3D: si el motor no se puede descargar (sin conexión y sin el código guardado aún, o una página abierta de una
+  versión que ya no está en el servidor), las miniaturas esperan en su hueco y el motor se vuelve a pedir a los 4 s, a los 8…
+  hasta cada 5 minutos, o ya al volver la conexión o al abrir una figura grande (`extras/pictures`, `figures`). Antes lo pedía
+  cada miniatura de la cola, sin pausa (169 peticiones en dos segundos y medio con 59 en cola) y llenaba el registro de errores.
+  Salió al pasar las pruebas en Safari, que aquí va sin service worker; `tests/deploy.py` lo comprueba en los tres motores.
+- Carga diferida (`core/lazy`): al reintentar una descarga que falló, el archivo se pide con otra dirección porque el
+  navegador recuerda el fallo. La dirección se leía del mensaje del error, y Safari no la da («Importing a module script
+  failed.»): ahora, si falta, se lee de lo que se iba a importar (`importedUrl`).
+- Pruebas en Safari (WebKit), que hasta la solicitud de fusión no se habían pasado con las figuras 3D ni con el inglés: el
+  aviso de WebKit por una lectura de Blob cortada al recargar no cuenta como error de página (`tests/browser.py`,
+  `BLOB_NOISE`); la captura de `tests/figures.py` descarta también el bloqueo de la hoja de estilos que mete Playwright; el
+  rojo de una miniatura se mide con el margen de los tres motores; y, sin service worker, `tests/deploy.py` no cuenta el 404
+  de un archivo de código de una versión que ya no está en el servidor.
+- Prueba nueva, `tests/library.test.mjs` (sin navegador): que los programas, los cambios y los días por nivel, las plantillas
+  del programa guiado, los grupos de rotación y los otros nombres del buscador solo nombran ejercicios de la librería; que cada
+  ejercicio tiene su figura; y que de cada ejercicio juntado el nombre viejo ya no está, el que queda sí, y lo guardado con el
+  viejo se mide en lo mismo.
+- Clases CSS, quinto lote: las siete de las figuras, que esperaban a las figuras nuevas (`fgs` → `figure-stage`, `hwm` →
+  `howto-head`, `hwf` → `howto-maps`, `hwl` → `howto-muscles`, `anb` → `anatomy-box`, `anf` → `anatomy-full`, `anl` →
+  `anatomy-legend`) ([clases CSS](docs/tecnica/clases.md)).
+- `build.py`: la entrada del paquete es la de `main.js`. Con más `import()` dinámicos, esbuild ya no la listaba la primera.
+- Pruebas: `tests/fig3d.test.mjs` (el motor tal como va en la app, en los 525 ejercicios y en todo el gesto; encontró que los
+  guantes del saco pedían un color de brillo que no tenían) y `tests/figures.py`, rehecha para el 3D (202 comprobaciones).
 - Entreno: el botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out», que suena a cerrar la sesión de la
-  cuenta), también en los textos que lo nombran.
+  cuenta), también en los textos que lo nombran. La etiqueta de un bloque (`blockBadge`, en `workout/day`) ya no lleva «10 s
+  hasta el siguiente» ni «descanso de la ronda», y la línea de objetivo de un ejercicio de un bloque (`targetLine`, en
+  `workout/targets`) tampoco dice su descanso: va en la columna «Desc.» de cada serie (un ejercicio suelto sigue diciendo el
+  suyo). Y fuera el botón «+ Drop set»
+  (`addDropSet`, en `workout/session`), por decisión del propietario; la técnica Drop set del ejercicio sigue igual.
 - Inicio de sesión (F-33, T-18, que estaba pospuesto): detrás va la imagen de un gimnasio visto desde arriba, del propietario
   (hecha con Gemini: ni el sitio ni la gente son reales), en gris y desenfocada, a media luz, como en su ejemplo
   (`tools/fondo.py`). La pantalla va siempre en oscuro, también su tarjeta, tenga el móvil el tema que tenga, y cada texto
@@ -127,16 +229,15 @@ línea.
   (`tools/templates.js`), y se rechazan donde se esperaría un espacio, como entre dos palabras. `npm run format` reparte
   solo las que pasan de 140 columnas: 429 de las 657. La app compilada es idéntica, byte a byte, a la de antes de
   repartirlas; lo único que cambia es anterior a la regla: la pantalla del análisis mensual ya no lleva en su HTML los seis
-  saltos de línea que tenía escritos (no se veían). Quedan para cuando se resuelva la solicitud de las figuras nuevas los
-  dos módulos que esa reescribe, `extras/figure` y `extras/anatomy`
+  saltos de línea que tenía escritos (no se veían). Los dos módulos que reescribían las figuras nuevas siguen ya la regla
   ([plantillas HTML](docs/tecnica/desarrollo.md#plantillas-html)).
 - Nombres legibles para las clases CSS. Primer lote: las 53 de dos letras (`cd` → `card`, `sp` → `sheet`, `mu` → `muted`…).
   Segundo lote: 104 de las piezas comunes, el entreno, la librería, los programas y la descarga (`dgc` → `dialog-box`,
   `eqb` → `filter-btn`, `lvp` → `level-pill`, `dlo` → `deload-skip`…). Tercer lote: 117 del seguimiento, la apariencia, el
   recorrido, el primer arranque, la cuenta y el perfil (`rnp` → `release-notes`, `trtp` → `tour-tip`, `lgc` → `login-card`,
   `srl` → `setting-label`…). Cuarto lote: 61 del WOD, el resumen del entreno, las medidas y la nutrición (`f2t` → `wod-time`,
-  `f2dc` → `delta-chip`, `mnk` → `goals-ring`, `nwd` → `nutri-week-day`…). Quedan las siete de las figuras, que reescribe
-  la solicitud de las figuras nuevas, y cinco que no tienen estilo.
+  `f2dc` → `delta-chip`, `mnk` → `goals-ring`, `nwd` → `nutri-week-day`…). Quedan cinco que no tienen estilo (las siete de
+  las figuras, en el quinto lote, más arriba).
   `tools/classes.js` las cambia a la vez en los estilos, el código y las pruebas, y solo donde el nombre es una clase. Lo que
   se ve no cambia: con el mapa `tests/clases-1.0.32.txt`, que traduce los nombres de la versión anterior, el HTML de las 106
   pantallas es el mismo, el paseo al azar no encuentra diferencias y las 282 capturas salen iguales, píxel a píxel. La app
@@ -165,6 +266,34 @@ línea.
   parezca) y la cuarta cifra en `tests/changelog.py`, `tests/followup.py` y `tests/deploy.py`.
 - Documentación: la V1.0.31 comprobada en el iPhone del propietario, las versiones 1.0.3 y 1.0.31 en la documentación
   funcional y el estado de App Check (en marcha, sin exigir); el pendiente 7 de la auditoría (el nombre de «Log out»), hecho.
+- Idiomas ([cómo está hecho](docs/tecnica/idiomas.md)): el código y los datos siguen en español y el inglés se aplica al
+  pintar, con el español de clave. `core/util` decide el idioma al cargar (`LANG`: el elegido en Ajustes, `fflang`, o el del
+  móvil; `LOCALE` para fechas y números) y `src/index.html` hace la misma cuenta antes de que cargue el código (`<html
+  lang>`, las pestañas, el manifiesto en inglés y la pantalla de error del arranque, escrita en los dos). En inglés,
+  `core/boot` carga el diccionario antes del primer pintado (`loadEnglish`: `i18n/en-ui`, `en-library`, `en-foods`,
+  `en-programs` y `en-more`, unos 160 KB que en español no se descargan) y `core/html` traduce cada plantilla: el texto
+  entre etiquetas y los atributos que se leen son frases, con sus valores como `{0}`; un valor que es una frase del
+  diccionario se traduce donde se lee, nunca en un `value`, un `data-…` o una clase. Los textos compuestos se escriben con
+  ``say`…` `` en vez de sumando trozos (unas 330 sumas cambiadas), y lo que no pasa por una plantilla, con `tr()` (el reloj
+  del WOD, la imagen para compartir, el PDF del análisis, el `.ics` del pesaje, los nombres de archivo). Los consejos y la
+  ejecución de los 525 ejercicios van en `i18n/en-exinfo`, que se carga en lugar de `data/exinfo`.
+- Lo que se guarda no depende del idioma: va en español y se traduce al enseñarlo (el título y el resultado de un cardio o
+  de un WOD ya no se componen con el idioma de la app). Una cuenta sirve igual en un móvil en español y en otro en inglés.
+- La nota de cada versión en inglés: `CHANGELOG.en.md`, que `build.py` (`english`) mete en `data/release` y en
+  `version.json` como `en`, al lado de la española; la compilación se detiene si la versión no la tiene o si no dice lo
+  mismo. Las apps instaladas hasta la 1.0.31 no miran ese campo.
+- `tools/i18n.js` (en la batería, `--check`): saca del código las frases que la app va a buscar, con las mismas claves, y
+  dice cuáles faltan en el diccionario y cuáles sobran; avisa de un texto escrito en la página sin `tr()`, de una plantilla
+  con texto al cargar un módulo y de un `raw()` de una clase que es una frase. Lo que no se traduce (igual en inglés, o no
+  se enseña) está en `tools/i18n-skip.json`.
+- Pruebas del inglés: `tests/i18n.test.mjs` (el motor, sin navegador), `tests/english.py` (qué idioma sale con cada móvil y
+  cada elección, Ajustes → Idiomas, las 107 pantallas y otras doce en inglés sin un texto en español a la vista, el PDF, la
+  imagen y los archivos, y que con los mismos pasos se guarda lo mismo en los dos idiomas), el catálogo en inglés en
+  `tests/exinfo.test.mjs`, la nota en inglés en `tests/changelog.py` y el manifiesto y los trozos del diccionario en
+  `tests/deploy.py`. Las demás pruebas abren la app con el navegador en español (`tests/browser.py`); los tamaños de
+  pantalla y las zonas táctiles (`tests/layout.py`, `tests/a11y.py`) se pasan además en inglés (`SF_LOCALE=en-US`), porque
+  los textos miden otra cosa: así salió que «Skip», más corto que «Saltar», dejaba su zona táctil en 38 px. Pintar tarda lo
+  mismo en los dos idiomas (medido con la CPU cuatro veces más lenta: las mismas siete pantallas, sin diferencia).
 
 ## [1.0.31] — 2026-11-16
 

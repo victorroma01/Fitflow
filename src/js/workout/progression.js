@@ -2,6 +2,7 @@
    Sugerencias de progresión y autorrelleno de series.
    Define: EXTRA_ROW, setText, stepUp, deloadOf, prefillSets, suggestAfter, progressionOf, differsFromSuggested, suggestionBox, lastTimeLine  · acciones/registros: 1
 */
+import { say } from '../core/i18n.js';
 import { A } from '../core/registry.js';
 import { S, W } from '../core/state.js';
 import { R } from '../core/render.js';
@@ -156,20 +157,20 @@ const suggestionBox = (e, i, P) => {
     return '';
   const wv = toDisplayWeight(P.w);
   const nv = toDisplayWeight(P.nw);
-  const rpe = 'RPE ' + (Math.round(P.ra * 10) / 10) + ' la última vez';
+  const rpe = say `RPE ${Math.round(P.ra * 10) / 10} la última vez`;
   let t;
   /* con el mismo peso en todas las series, el peso que toca; con pesos distintos, lo que cambia en cada una */
   if (P.up)
-    t = (P.even ? 'sube a ' + nv + ' ' + u : 'sube ' + (usesLb() ? (weightStep(e) == 5 ? 10 : 5) : weightStep(e)) + ' ' + u + ' en cada serie') + ' (hiciste ' + P.hi + ' reps en todas)';
+    t = say `${P.even ? say `sube a ${nv} ${u}` : say `sube ${usesLb() ? (weightStep(e) == 5 ? 10 : 5) : weightStep(e)} ${u} en cada serie`} (hiciste ${P.hi} reps en todas)`;
   else if (P.dn)
-    t = (P.even ? 'baja a ' + nv + ' ' + u : 'baja un 8 % en cada serie') + ' (no llegaste a ' + P.lo + ' reps)';
+    t = say `${P.even ? say `baja a ${nv} ${u}` : 'baja un 8 % en cada serie'} (no llegaste a ${P.lo} reps)`;
   else if (P.why == 'rpe')
-    t = P.even ? 'mantén ' + wv + ' ' + u + ' (' + rpe + ')' : 'mantén el peso de cada serie (' + rpe + ')';
+    t = P.even ? say `mantén ${wv} ${u} (${rpe})` : say `mantén el peso de cada serie (${rpe})`;
   else
-    t = (P.even ? 'mantén ' + wv + ' ' + u : 'mantén el peso de cada serie') + ' y busca 1 rep más hasta ' + P.hi;
+    t = say `${P.even ? say `mantén ${wv} ${u}` : 'mantén el peso de cada serie'} y busca 1 rep más hasta ${P.hi}`;
   /* pirámide: cada serie lleva su peso (sube en cada una) */
   if (/^PIR/.test(e.tk || ''))
-    t = 'pirámide: sube el peso en cada serie' + (W.sets[i].some(s => !s.t && +s.w > 0) ? '' : ' (empieza con uno que te permita 12 repeticiones)');
+    t = say `pirámide: sube el peso en cada serie${W.sets[i].some(s => !s.t && +s.w > 0) ? '' : ' (empieza con uno que te permita 12 repeticiones)'}`;
   return html`<div class="suggestion"><span><b>Sugerido</b> · ${raw(t)}</span>${/^PIR/.test(e.tk || '') ? '' : ap}</div>`;
 };
 A.applySuggestion = i => {

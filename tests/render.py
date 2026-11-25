@@ -20,10 +20,13 @@ fails = []
 
 # valores de los campos de #app (no están en el HTML)
 VALS = "[...document.querySelectorAll('#app input,#app select,#app textarea')].map(x=>x.type=='checkbox'||x.type=='radio'?x.checked:x.value).join('|')"
+# el HTML de #app. La figura pequeña de un ejercicio se dibuja aparte y llega cuando llega: su hueco (svg[data-pic]) y su imagen
+# cuentan como lo mismo
+HTML = "document.querySelector('#app').innerHTML.replace(/<svg [^>]*data-pic=\"[^\"]*\"[^>]*><\\/svg>|<img src=\"blob:[^\"]*\"[^>]*>/g,'(figura)')"
 # pinta de cero (sin nada debajo) y guarda el resultado como referencia
-FRESH = "(()=>{document.querySelector('#app').innerHTML='';%s;R();window.__ref={h:document.querySelector('#app').innerHTML,v:" + VALS + "}})()"
+FRESH = "(()=>{document.querySelector('#app').innerHTML='';%s;R();window.__ref={h:" + HTML + ",v:" + VALS + "}})()"
 # ¿#app es igual que la referencia?
-SAME = "document.querySelector('#app').innerHTML===window.__ref.h&&" + VALS + "===window.__ref.v"
+SAME = HTML + "===window.__ref.h&&" + VALS + "===window.__ref.v"
 
 
 def check(name, cond, info=''):

@@ -50,6 +50,23 @@
   -webkit-overflow-scrolling:touch;
   margin:0 0 18px;
 }
+/* la cabecera de una versión (su primer apartado, marcado): su título y su texto, encima de los demás apartados. También en
+   Ajustes → «Ver nota de actualización» */
+.notes-lead {
+  margin:10px 0 2px;
+  font-size:14px;
+  line-height:1.4;
+}
+.notes-lead b {
+  display:block;
+  margin-bottom:4px;
+  font-size:16px;
+  line-height:1.25;
+}
+.notes-lead span {
+  display:block;
+  opacity:.82;
+}
 #upd .update-version {
   margin:14px 0 0;
   font-weight:700;

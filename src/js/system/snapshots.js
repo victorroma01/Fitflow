@@ -76,7 +76,7 @@ const snapshotRows = l => l.length ? l.map(x => html`
     </span>
     <button data-a="snapshotRestore" data-v="${x.d}">Restaurar</button>
   </div>
-`).join('') : '<p class="muted fs-13 m-8-0-0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>';
+`).join('') : html`<p class="muted fs-13 m-8-0-0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>`;
 /** Rellena la lista de copias automáticas de la hoja de copia de seguridad (se carga aparte porque IndexedDB es asíncrono). */
 export const fillSnapshots = () => snapList().then(l => {
   const e = $('#snapl');
@@ -85,7 +85,7 @@ export const fillSnapshots = () => snapList().then(l => {
 }).catch(err => {
   const e = $('#snapl');
   if (e)
-    e.innerHTML = '<p class="muted fs-13 m-8-0-0">Este navegador no permite guardar copias automáticas.</p>';
+    e.innerHTML = html`<p class="muted fs-13 m-8-0-0">Este navegador no permite guardar copias automáticas.</p>`;
   logError('copias automáticas', err);
 });
 /* — manejadores de esta función (registros A / C / U) — */

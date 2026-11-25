@@ -8,6 +8,7 @@
    sn: pospuesto hasta ese día, c: id del evento del calendario }.
    Define: WEIGH_STEPS, WEIGH_UNITS, weighCustom, weighEvery, addStep, lastWeighIn, weighNext, weighDue, weighBanner, reminderCard, checkWeighIn, icsText, weighIcs  · acciones/registros: 7
 */
+import { say, tr, trAs } from '../core/i18n.js';
 import { $, dayKey, fmtDateShort, newId } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -68,7 +69,7 @@ export const weighBanner = () => {
       <span class="weigh-icon">${icon('scale', 26)}</span>
       <span>
         <b>Día de pesarse</b>
-        <small>${l ? 'Último pesaje: ' + fmtDateShort(l) + ' · ' : ''}cada ${weighEvery(S.weighReminder)}</small>
+        <small>${l ? say `Último pesaje: ${fmtDateShort(l)} · ` : ''}cada ${weighEvery(S.weighReminder)}</small>
       </span>
       <button class="primary" data-a="weighReminderGo">Registrar</button>
     </div>`;
@@ -126,7 +127,7 @@ export const checkWeighIn = () => {
   saveState();
   const l = lastWeighIn();
   dialog('Día de pesarse', html`
-    Toca pesarse: ${l ? 'tu último pesaje fue el ' + fmtDateShort(l, { day: 'numeric', month: 'long' }) : 'aún no has registrado tu peso'}. Pésate a la misma hora, mejor por la mañana y en ayunas, para comparar bien.
+    Toca pesarse: ${l ? say `tu último pesaje fue el ${fmtDateShort(l, { day: 'numeric', month: 'long' })}` : 'aún no has registrado tu peso'}. Pésate a la misma hora, mejor por la mañana y en ayunas, para comparar bien.
   `, [['Mañana', 'weighReminderLater', ''], ['Registrar peso', 'weighReminderGo', 'primary']]);
 };
 document.addEventListener('visibilitychange', () => {
@@ -142,7 +143,7 @@ const weighIcs = () => {
   const d = (weighNext() || dayKey(new Date())).replace(/-/g, '');
   const rule = r.u == 'm' ? 'MONTHLY' : r.u == 'w' ? 'WEEKLY' : 'DAILY';
   const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
-  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StrataFit//Recordatorio de pesaje//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT', 'UID:stratafit-pesaje-' + r.c, 'DTSTAMP:' + now, 'DTSTART:' + d + 'T090000', 'DURATION:PT10M', 'RRULE:FREQ=' + rule + ';INTERVAL=' + r.n, 'SUMMARY:' + icsText('Día de pesarse'), 'DESCRIPTION:' + icsText('Toca pesarse: registra tu peso en StrataFit.'), 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText('Día de pesarse'), 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR', ''].join('\r\n');
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StrataFit//Recordatorio de pesaje//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT', 'UID:stratafit-pesaje-' + r.c, 'DTSTAMP:' + now, 'DTSTART:' + d + 'T090000', 'DURATION:PT10M', 'RRULE:FREQ=' + rule + ';INTERVAL=' + r.n, 'SUMMARY:' + icsText(tr('Día de pesarse')), 'DESCRIPTION:' + icsText(tr('Toca pesarse: registra tu peso en StrataFit.')), 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(tr('Día de pesarse')), 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR', ''].join('\r\n');
 };
 /* — manejadores de esta función (registros A / C / U) — */
 C.weighReminderToggle = e => {
@@ -210,6 +211,6 @@ A.weighReminderCalendar = async () => {
     S.weighReminder.c = newId();
     saveState();
   }
-  const r = await downloadFile('StrataFit-pesaje.ics', weighIcs(), 'text/calendar');
+  const r = await downloadFile('StrataFit-' + trAs('archivo', 'pesaje') + '.ics', weighIcs(), 'text/calendar');
   toast(r == 'saved' ? 'Ábrelo para añadirlo a tu calendario' : r == 'declined' ? 'No se ha guardado' : 'No se ha podido crear el archivo');
 };

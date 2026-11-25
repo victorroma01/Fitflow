@@ -76,7 +76,7 @@ def measure(path):
         out['ver qué hay que subir (ms)'] = round(pg.evaluate(TIMED % (15, 'pendingDocs()')), 1)
         for t, name in enumerate(['Workout', 'Nutrición', 'Dashboard', 'Perfil']):
             out['pintar %s (ms)' % name] = round(pg.evaluate(TIMED % (15, 'S.tab=%d;R()' % t)), 1)
-        # escribir en el buscador de la Librería: cada letra vuelve a buscar en los 551 ejercicios y pinta hasta 80 filas, con su
+        # escribir en el buscador de la Librería: cada letra vuelve a buscar en los 525 ejercicios y pinta hasta 80 filas, con su
         # figura (desde la V1.0.32)
         pg.evaluate("sheet();A.openLibrary()")
         out['buscar en la Librería (ms)'] = round(pg.evaluate(TIMED % (15, "const i=document.querySelector('#sh input');window.__q=(window.__q||0)+1;"

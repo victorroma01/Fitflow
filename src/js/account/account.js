@@ -3,6 +3,7 @@
    (F-29), que antes intenta subir lo pendiente y luego borra del móvil los datos de la cuenta.
    Define: syncShort, infoRow, accountPage, pwMsg, passwordPage  · acciones/registros: 4
 */
+import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { lockSaves, reloadApp } from '../core/persist.js';
@@ -52,7 +53,7 @@ A.accountSyncNow = async () => {
   }
   toast('Sincronizando…');
   await syncNow();
-  toast(syncState().st == 'ok' ? 'Todo al día' : 'No se pudo: ' + syncLine());
+  toast(syncState().st == 'ok' ? 'Todo al día' : say `No se pudo: ${syncLine()}`);
 };
 A.accountChangePassword = async () => {
   const v = id => ($('#' + id) || {}).value || '';
@@ -60,7 +61,7 @@ A.accountChangePassword = async () => {
     pwMsg = t;
     const e = $('#ace');
     if (e)
-      e.textContent = t;
+      e.textContent = tr(t);
   };
   const pr = !v('acp0') ? 'Escribe tu contraseña actual.' : passProblem(v('acp1')) || (v('acp1') !== v('acp2') ? 'Las dos contraseñas nuevas no coinciden.' : '');
   if (pr) {
@@ -93,7 +94,7 @@ A.signOut = async () => {
   }
   const n = pendingDocs();
   const t = n ? 'Hay cambios sin subir' : '¿Cerrar sesión?';
-  const p = n ? 'No se han podido subir a tu cuenta (' + plural(n, 'parte', 'partes') + ')' + (account && account.x ? ' porque la sesión ha caducado: vuelve a entrar primero' : ': prueba con conexión') + '. Si cierras la sesión ahora, se perderán.' : 'Tus datos están en tu cuenta. Se borran de este móvil hasta que vuelvas a entrar.';
+  const p = n ? say `No se han podido subir a tu cuenta (${plural(n, 'parte', 'partes')})${account && account.x ? ' porque la sesión ha caducado: vuelve a entrar primero' : ': prueba con conexión'}. Si cierras la sesión ahora, se perderán.` : 'Tus datos están en tu cuenta. Se borran de este móvil hasta que vuelvas a entrar.';
   confirmDialog(t, p, 'signOutConfirmed', n ? 'Cerrar igualmente' : 'Cerrar sesión');
 };
 A.signOutConfirmed = () => {

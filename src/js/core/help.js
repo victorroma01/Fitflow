@@ -3,6 +3,7 @@
    módulo añade sus textos con HELP.clave = 'texto'; la burbuja se cierra con otro toque o al desplazar.
    Define: HELP, helpDot, tipFor, tipOff, hideTip, showTip  · acciones/registros: 1
 */
+import { tr } from './i18n.js';
 import { $ } from './util.js';
 import { A } from './registry.js';
 import { html } from './html.js';
@@ -32,7 +33,7 @@ const showTip = (b, text) => {
   const t = document.createElement('div');
   t.id = 'tip';
   t.setAttribute('role', 'status');
-  t.textContent = text;
+  t.textContent = tr(text);
   document.body.appendChild(t);
   const w = Math.min(290, innerWidth - 24);
   t.style.width = w + 'px';

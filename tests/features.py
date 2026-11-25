@@ -192,7 +192,7 @@ def main(path):
         ev("A.openSettings()")
         run()
         rows = ev("[...document.querySelectorAll('#ajs .setting-row')].map(b=>b.dataset.a+(b.dataset.v?':'+b.dataset.v:''))")
-        want = ['openSettingsPage:cuenta', 'accountSyncNow', 'openSettingsPage:tema', 'openSettingsPage:acento', 'openSettingsPage:inicio', 'openSettingsPage:unidades', 'openSettingsPage:sonido', 'openBackup', 'resetAllAsk', 'updateCheck', 'openSettingsPage:nota', 'tourReplay', 'openDiagnostics', 'openReport', 'openSettingsPage:avanzado', 'openSettingsPage:privacidad', 'openSettingsPage:legal', 'signOut']
+        want = ['openSettingsPage:cuenta', 'accountSyncNow', 'openSettingsPage:tema', 'openSettingsPage:acento', 'openSettingsPage:inicio', 'openSettingsPage:idioma', 'openSettingsPage:unidades', 'openSettingsPage:sonido', 'openBackup', 'resetAllAsk', 'updateCheck', 'openSettingsPage:nota', 'tourReplay', 'openDiagnostics', 'openReport', 'openSettingsPage:avanzado', 'openSettingsPage:privacidad', 'openSettingsPage:legal', 'signOut']
         check('Ajustes tiene todas sus filas', rows == want, str(rows))
         check('con secciones', ev("[...document.querySelectorAll('#ajs .section-label')].map(e=>e.innerText.trim().toLowerCase())") == ['cuenta', 'apariencia', 'entreno', 'datos', 'app', 'ajustes avanzados', 'información'])
         check('«Cerrar sesión», en rojo y con su icono, al final', ev("(()=>{const b=document.querySelector('#ajs .setting-signout [data-a=signOut]');return !!b&&!!b.querySelector('.setting-label.red')&&!!b.querySelector('.setting-icon.red svg')})()"))

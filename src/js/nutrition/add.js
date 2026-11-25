@@ -4,7 +4,8 @@
    guardan solos al añadirlos a una comida (sin repetirse) con su Nutri-Score (F-43). Cualquiera se puede borrar.
    Define: ownFoods, allFoods, NUTRI_SCORE, nutriScore, nutriScoreBadge, nutriScoreRow, saveOwnFood, foldText, groupNames, groupOfFood, foodList, addSheetBase, typedGrams, addMealItem, addSheet, onlineSheet, ownFoodDel  · acciones/registros: 15
 */
-import { $, clampNum, dayKey, round1, roundInt, typedNum, X } from '../core/util.js';
+import { EN, say, tr } from '../core/i18n.js';
+import { $, clampNum, dayKey, LOCALE, round1, roundInt, typedNum, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
 import { FOOD_GROUPS, FOODS_SRC } from '../data/foods.js';
@@ -25,10 +26,10 @@ const NUTRI_SCORE = { a: 'ns-a', b: 'ns-b', c: 'ns-c', d: 'ns-d', e: 'ns-e' };
 export const nutriScore = v => typeof v == 'string' && Object.prototype.hasOwnProperty.call(NUTRI_SCORE, v) ? v : '';
 /** La letra del Nutri-Score, pequeña (en las listas), o '' si no la hay. */
 export const nutriScoreBadge = v => nutriScore(v) ? html`
-  <i class="nutri-score ${NUTRI_SCORE[v]}" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">${v.toUpperCase()}</i>` : '';
+  <i class="nutri-score ${NUTRI_SCORE[v]}" role="img" aria-label="${say `Nutri-Score ${v.toUpperCase()}`}">${v.toUpperCase()}</i>` : '';
 /** El Nutri-Score con sus cinco letras y la del alimento destacada, o '' si no lo tiene. */
 const nutriScoreRow = v => nutriScore(v) ? html`
-  <div class="nutri-score-scale" role="img" aria-label="${'Nutri-Score ' + v.toUpperCase()}">
+  <div class="nutri-score-scale" role="img" aria-label="${say `Nutri-Score ${v.toUpperCase()}`}">
     <span>Nutri-Score</span>
     ${Object.keys(NUTRI_SCORE).map(x => html`<i class="${NUTRI_SCORE[x]}${x == v ? ' on' : ''}">${x.toUpperCase()}</i>`)}
   </div>` : '';
@@ -53,7 +54,8 @@ const foldText = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-
 const groupNames = () => FOOD_GROUPS.concat(S.myFoods.length ? ['Mis alimentos'] : []);
 const groupOfFood = f => f.g >= 0 ? f.g : FOOD_GROUPS.length;
 /** Lista de alimentos de la hoja «Añadir»: con texto en `q`, los que tienen todas sus palabras (sin tildes) y primero los que
-    empiezan por la primera; sin texto, los del grupo elegido (o todos), por orden alfabético. */
+    empiezan por la primera; sin texto, los del grupo elegido (o todos), por orden alfabético. Se busca y se ordena por el
+    nombre que se ve: con la app en inglés, el inglés (y se encuentra también por el español). */
 function foodList(q) {
   const e = $('#rs');
   if (!e)
@@ -62,15 +64,15 @@ function foodList(q) {
   const k = foldText(raw0);
   const ws = k.split(/\s+/).filter(Boolean);
   const cat = addState && addState.cat >= 0 ? addState.cat : -1;
-  let L = allFoods().map((f, i) => ({ f, i, n: foldText(f.n) }));
+  let L = allFoods().map((f, i) => ({ f, i, n: foldText(tr(f.n)), k: EN ? foldText(tr(f.n) + ' ' + f.n) : '' }));
   if (ws.length) {
-    L = L.filter(o => ws.every(w => o.n.includes(w)));
-    L.sort((a, b) => (b.n.startsWith(ws[0]) ? 1 : 0) - (a.n.startsWith(ws[0]) ? 1 : 0) || a.n.localeCompare(b.n, 'es'));
+    L = L.filter(o => ws.every(w => (o.k || o.n).includes(w)));
+    L.sort((a, b) => (b.n.startsWith(ws[0]) ? 1 : 0) - (a.n.startsWith(ws[0]) ? 1 : 0) || a.n.localeCompare(b.n, LOCALE));
   }
   else {
     if (cat >= 0)
       L = L.filter(o => groupOfFood(o.f) == cat);
-    L.sort((a, b) => a.n.localeCompare(b.n, 'es'));
+    L.sort((a, b) => a.n.localeCompare(b.n, LOCALE));
   }
   document.querySelectorAll('.food-groups button').forEach(b => {
     b.classList.toggle('on', !ws.length && +b.dataset.i == cat);
@@ -83,7 +85,7 @@ function foodList(q) {
       <small>${o.f.b[0]} kcal/100 g</small>
       ${o.i >= own ? html`
         <button class="own-food-delete" data-a="ownFoodDeleteAsk" data-i="${o.i - own}"
-            aria-label="${'Borrar ' + o.f.n + ' de Mis alimentos'}">✕</button>` : ''}
+            aria-label="${say `Borrar ${o.f.n} de Mis alimentos`}">✕</button>` : ''}
     </div>
   `).join('') + (ws.length && !L.length ? html`
     <p class="muted fs-13 m-10-2">No está en la lista. Búscalo en internet o créalo en «Nuevo».</p>
@@ -124,9 +126,9 @@ function addSheetBase() {
       <div class="item cols-1fr-auto-auto">
         <span>${p.n}<br><small>${roundInt(sumMacros(p.it.map(itemMacros))[0])} kcal</small></span>
         <button data-a="addLibraryDish" data-i="${i}">Añadir</button>
-        <button data-a="libraryDishDelete" data-i="${i}" aria-label="${'Borrar ' + p.n}" class="p-6">✕</button>
+        <button data-a="libraryDishDelete" data-i="${i}" aria-label="${say `Borrar ${p.n}`}" class="p-6">✕</button>
       </div>
-    `).join('') : '<p class="muted">Aún no hay platos. Pulsa el icono de guardar de una comida para guardarla como plato.</p>');
+    `).join('') : html`<p class="muted">Aún no hay platos. Pulsa el icono de guardar de una comida para guardarla como plato.</p>`);
   return html`
     ${raw(h)}
     <label for="n0">Nombre</label>
@@ -238,7 +240,7 @@ A.ownFoodDeleteAsk = i => {
   if (!f)
     return;
   ownFoodDel = i;
-  confirmDialog('¿Borrar de Mis alimentos?', '«' + X(f.n) + '» deja de salir en la lista. Lo que ya anotaste en tus comidas no cambia.', 'ownFoodDelete', 'Borrar');
+  confirmDialog('¿Borrar de Mis alimentos?', say `«${X(f.n)}» deja de salir en la lista. Lo que ya anotaste en tus comidas no cambia.`, 'ownFoodDelete', 'Borrar');
 };
 A.ownFoodDelete = () => {
   const f = ownFoods()[ownFoodDel];
@@ -261,7 +263,7 @@ A.removeMealItem = (i, b) => {
   const [it] = meal.splice(j, 1);
   saveState(mealsPart(k));
   R();
-  toast('«' + it.n + '» quitado', () => {
+  toast(say `«${it.n}» quitado`, () => {
     mealList(k, i).splice(j, 0, it);
     saveState(mealsPart(k));
     R();
@@ -271,7 +273,7 @@ U.foodGrams = v => {
   const e = $('#pv');
   if (e && addState.pick) {
     const t = addState.pick.b.map(x => x * v / 100);
-    e.textContent = roundInt(t[0]) + ' kcal · C ' + round1(t[1]) + ' · P ' + round1(t[2]) + ' · G ' + round1(t[3]) + ' · Fibra ' + round1(t[4]) + ' · Sal ' + round1(t[5]);
+    e.textContent = say `${roundInt(t[0])} kcal · C ${round1(t[1])} · P ${round1(t[2])} · G ${round1(t[3])} · Fibra ${round1(t[4])} · Sal ${round1(t[5])}`;
   }
 };
 U.foodSearch = foodList;

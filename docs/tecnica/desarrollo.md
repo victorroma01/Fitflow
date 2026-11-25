@@ -20,7 +20,8 @@ python -m playwright install chromium webkit
 | `python3 build.py --appcheck` | Solo el archivo único, en `dist/appcheck/`, con App Check configurado con valores de prueba y la CSP que eso abre (lo usa `tests/cloud.py`). |
 | `npm run format` | Formatea JS y CSS, reparte en líneas las [plantillas HTML](#plantillas-html) que no caben en una, y pone al día la línea «Define:» de cada módulo y el [mapa de módulos](modulos.md). |
 | `node tools/types.js` | Comprueba los tipos de todos los módulos ([Tipos comprobados](tipos.md)); con `--resumen`, lo que le falta a cada módulo para el nivel estricto. |
-| `node tools/figure.js` | Rehace `src/js/data/figure.js` (el modelo de perfil de las [figuras de ejercicio](figuras.md)) a partir de los puntos del dibujo. |
+| `cd tools/figuras3d && node datos.mjs N && python3 pagina.py` | La página de revisión de un lote de [figuras de ejercicio](figuras.md) (y, antes, sus pruebas: ver `tools/figuras3d/README.md`). |
+| `node tools/i18n.js --check` | El inglés: qué frases faltan en el diccionario, cuáles sobran y qué no se traduciría. Con `--todo`, `--apply` y `--prune` se añaden y se quitan ([Idiomas](idiomas.md#añadir-o-cambiar-una-frase)). |
 | `bash tests/run.sh` | Formato, reglas, tipos, mapa de módulos y todas las pruebas. |
 | `python3 tests/syncfuzz.py dist/stratafit.html 20-200 80` | Pruebas al azar del guardado y la sincronización con otras semillas que las de la batería ([cómo son](pruebas.md#pruebas-al-azar-del-guardado-y-la-sincronización)). |
 | `bash tests/compare.sh vieja.html nueva.html` | Compara el comportamiento y la imagen de dos compilaciones. |
@@ -45,7 +46,9 @@ python -m playwright install chromium webkit
    ([la app abierta dos veces](estado.md#la-app-abierta-dos-veces)).
 4. Si cambia lo que se guarda en Firestore (un documento o un campo nuevo), cambia también `firestore.rules` y su prueba,
    `tests/rules.test.mjs`.
-5. Si el usuario lo ve, descríbelo en la [documentación funcional](../funcional/README.md).
+5. Si el usuario lo ve, descríbelo en la [documentación funcional](../funcional/README.md) y tradúcelo: `node tools/i18n.js
+   --check` dice qué frases faltan en inglés ([Idiomas](idiomas.md#añadir-o-cambiar-una-frase)). Un texto compuesto se escribe
+   con ``say`…` ``, no sumando trozos, y lo que se guarda va siempre en español.
 6. `npm run format` y `bash tests/run.sh`.
 
 ## Plantillas HTML
@@ -100,6 +103,14 @@ Los saltos de línea de una plantilla sin la etiqueta `html` (un texto, un CSV) 
   en ninguno.
 - **Catálogo** (`data/exinfo`): una línea por ejercicio de la librería, `Nombre|consejo|cómo se hace`. Cada ejercicio nuevo
   necesita la suya, con textos propios: `tests/exinfo.test.mjs` falla si falta alguno o si dos se parecen demasiado.
+- **Juntar dos ejercicios que son el mismo**: se quita uno de `data/library` (y su figura de `data/figposes`, su línea de
+  `data/exinfo` y de `i18n/en-exinfo`) y se apunta en `data/aliases`: en `EX_RETIRED`, su nombre → el del que queda (lo guardado
+  con el nombre viejo lo sigue enseñando, con los músculos, la figura y la ficha del que queda: `library/model`, `exByName` y
+  `liveName`), y en `EX_ALIASES`, para que el buscador lo encuentre por el nombre de antes. El que queda dice en su consejo y
+  en su ejecución lo de los dos. Lo que lo nombraba (un programa, un cambio por nivel, una plantilla, un grupo de rotación) pasa
+  al que queda: `tests/library.test.mjs` falla si algo nombra un ejercicio que no está, o si lo guardado con el nombre viejo
+  dejara de medirse como antes (la unidad sale del nombre: `core/calc`, `unitFromName`). El nombre viejo conserva su
+  traducción al inglés (`i18n/en-library`), porque se sigue viendo en lo guardado.
 
 ## Fotos
 
@@ -159,7 +170,8 @@ como un archivo sin formatear, igual que una [plantilla HTML](#plantillas-html) 
 
 1. Sube la versión en `src/js/core/util.js` (`APPV`) siguiendo el [versionado semántico](https://semver.org/lang/es/).
 2. Escribe su entrada en `CHANGELOG.md`: Novedades, Mejoras y Correcciones en frases cortas para el usuario; Interno para desarrollo.
-   La compilación se detiene si falta.
+   Y la misma, en inglés, en `CHANGELOG.en.md` (*What's new*, *Improvements*, *Fixes*): es lo que enseña la app en inglés
+   ([Idiomas](idiomas.md#la-nota-de-cada-versión)). La compilación se detiene si falta una de las dos o si no dicen lo mismo.
 3. `npm run format` y `bash tests/run.sh`.
 4. Abre una solicitud de fusión y, cuando las pruebas estén en verde, fusiónala. Al llegar a `main`, GitHub Actions vuelve a probar en
    Chrome y Safari, crea la etiqueta `vX.Y.Z` con sus notas y publica la app; la app instalada enseña el aviso con las novedades.
@@ -172,11 +184,14 @@ una vez. El aviso de versión nueva compara todas las cifras (`isNewerVersion`):
 la 1.1.1.
 
 Las dos revisiones de la V1.0.3 son anteriores a esa regla. Se numeraron añadiendo una cifra al tercer número (1.0.31 y 1.0.32) y
-lo dicen en su entrada del `CHANGELOG.md`, antes del primer apartado, con una línea que empieza por «Revisión de la [1.0.3]». El
-aviso solo comparaba entonces tres números, y para él la 1.0.31 es posterior a la 1.0.3 pero también a una 1.0.4: **lo que siga
-a la 1.0.32 tiene que llevar un número mayor que ella** (1.1.0 para una versión nueva). La cuenta la hace la app que ya está en
-el móvil, y la primera que mira la cuarta cifra es la 1.0.32: por eso vale a partir de la versión siguiente. `tests/changelog.py`
-comprueba las dos formas, y `tests/deploy.py`, que la app instalada anuncia la revisión de su propia versión.
+lo dicen en su entrada del `CHANGELOG.md`, antes del primer apartado, con una línea que empieza por «Revisión de la [1.0.3]». La
+1.0.32 no llegó a publicarse: pasó a ser la **1.0.4**. Desde ella, el aviso y `build.py` cuentan la 1.0.31 y la 1.0.32 como
+1.0.3.1 y 1.0.3.2 (`isNewerVersion`, `version_key`). Pero la cuenta la hace la app que ya está en el móvil, y la 1.0.31
+instalada solo compara tres números: para ella la 1.0.4 sería anterior (4 < 31) y no avisaría. Por eso `version.json` lleva en
+`version` un texto que ese comparador ve como más nuevo y que se lee como la versión («1.0.4 de nov. 2026»; `legacy_version`,
+en `build.py`) y, en `number`, la versión de verdad, que es la que miran la 1.0.4 y las siguientes. Hará falta mientras la
+versión no sea posterior a la 1.0.31 también con tres números (lo será la 1.1.0). `tests/changelog.py` y `tests/aviso.test.mjs`
+lo comprueban, y `tests/deploy.py`, que la app instalada anuncia la revisión de su propia versión.
 
 GitHub Pages publica desde GitHub Actions (*Settings → Pages → Source*: **GitHub Actions**), así que el repositorio no guarda ninguna
 copia compilada: lo publicado siempre sale del código de `main`. Si algún día se vuelve a *Deploy from a branch*, lo publicado sería

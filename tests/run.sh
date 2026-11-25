@@ -24,19 +24,23 @@ run() {
 run node tools/format.js --check
 run node tools/format_css.js --check
 run node tools/modindex.js --check
-run node tools/figure.js --check
+run node tools/figboxes.js --check
 run python3 build.py --check
 run node tools/types.js
 run node tools/classes.js --check tests/clases-1.0.32.txt
+run node tools/i18n.js --check
 run python3 tests/changelog.py
+run node --test --test-reporter=dot tests/aviso.test.mjs
 run node --test --test-reporter=dot tests/templates.test.mjs
 run node --test --test-reporter=dot tests/classes.test.mjs
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
+run node --test --test-reporter=dot tests/library.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs
 run node --test --test-reporter=dot tests/parts.test.mjs
-run node --test --test-reporter=dot tests/rig.test.mjs
+run node --test --test-reporter=dot tests/fig3d.test.mjs
 run node --test --test-reporter=dot tests/dominio.test.mjs
+run node --test --test-reporter=dot tests/i18n.test.mjs
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
 run python3 tests/figures.py dist/stratafit.html
@@ -58,6 +62,10 @@ run python3 tests/storage.py dist/stratafit.html
 run python3 tests/calc.py dist/stratafit.html
 run python3 tests/dashboard.py dist/stratafit.html
 run python3 tests/render.py dist/stratafit.html
+run python3 tests/english.py dist/stratafit.html
+# con la app en inglés los textos miden otra cosa: los tamaños de pantalla y las zonas táctiles, también en inglés
+run env SF_LOCALE=en-US python3 tests/layout.py dist/stratafit.html
+run env SF_LOCALE=en-US python3 tests/a11y.py dist/stratafit.html
 # la app con App Check configurado con valores de prueba y su CSP (dist/appcheck/): la usa tests/cloud.py
 run python3 build.py --appcheck
 run python3 tests/cloud.py dist/stratafit.html

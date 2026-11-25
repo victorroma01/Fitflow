@@ -19,7 +19,7 @@ export const warmupHtml = (e, i) => {
     return '';
   const w = +W.sets[i][0].w || 0;
   if (!w)
-    return '<div class="muted fs-12">Calentamiento: 2-3 series de aproximación al 50 %, 70 % y 85 % de tu peso de trabajo</div>';
+    return html`<div class="muted fs-12">Calentamiento: 2-3 series de aproximación al 50 %, 70 % y 85 % de tu peso de trabajo</div>`;
   const lb = usesLb();
   const wl = toDisplayWeight(w);
   const bar = lb ? 45 : 20;
@@ -31,7 +31,7 @@ export const warmupHtml = (e, i) => {
   /* sin repetir pesos y siempre por debajo del de trabajo (con menos que la barra, no hay aproximación que proponer) */
   st = st.filter((x, k) => (!k || x[0] != st[k - 1][0]) && x[0] < wl);
   if (!st.length)
-    return '<div class="muted fs-12">Calentamiento: movilidad y un par de series ligeras antes de la primera serie</div>';
+    return html`<div class="muted fs-12">Calentamiento: movilidad y un par de series ligeras antes de la primera serie</div>`;
   W.warmupsDone = W.warmupsDone || {};
   return html`
     <div class="warmup">

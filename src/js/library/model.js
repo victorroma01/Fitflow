@@ -1,13 +1,14 @@
 /* ═══ library/model ═══
    Modelo de ejercicios: lista completa, músculos, filas y orden.
-   Define: LIB_BY_NAME, libByName, exByName, groupOfName, overlapCount, exAll, exOrder, exMuscles, searchText, SEARCH_TEXT, exSearchText, exSubtitle, exMusclesHtml, ROWS_WITH_PICTURE, exCellHtml, exRowHtml, exCompare, categoryOf
+   Define: LIB_BY_NAME, libByName, exByName, liveName, groupOfName, overlapCount, exAll, exOrder, exMuscles, searchText, SEARCH_TEXT, exSearchText, exSubtitle, exMusclesHtml, ROWS_WITH_PICTURE, exCellHtml, exRowHtml, exCompare, categoryOf
 */
+import { EN, tr } from '../core/i18n.js';
 import { X } from '../core/util.js';
 import { EXERCISES, groupOf, GROUPS, MUSCLES } from '../data/library.js';
-import { EX_ALIASES } from '../data/aliases.js';
+import { EX_ALIASES, EX_RETIRED } from '../data/aliases.js';
 import { S } from '../core/state.js';
-import { exPicture, exPictureLater } from '../extras/anatomy.js';
-import { html, raw } from '../core/html.js';
+import { exPicture, exPictureLater } from '../extras/pictures.js';
+import { commas, html, raw } from '../core/html.js';
 /* los ejercicios de la biblioteca por nombre (el primero, si alguno se repitiera). La biblioteca no cambia después de
    arrancar; los propios, sí (se renombran en su sitio), y por eso esos se buscan en su lista, que es corta */
 let LIB_BY_NAME = null;
@@ -18,9 +19,13 @@ const libByName = () => {
   }
   return LIB_BY_NAME;
 };
-/** El ejercicio llamado `n`: el de la biblioteca o, si no lo hay, el propio con ese nombre; undefined si no existe. Lo mismo
-    que buscarlo en exAll(), sin juntar ni recorrer las dos listas en cada llamada (las listas y las figuras lo piden por fila). */
-export const exByName = n => libByName().get(n) || (S.customExercises || []).find(x => x.n == n);
+/** El ejercicio llamado `n`: el de la biblioteca o, si no lo hay, el propio con ese nombre, o el que sustituye a uno que ya no
+    está en la biblioteca (data/aliases: EX_RETIRED); undefined si no existe. Lo mismo que buscarlo en exAll(), sin juntar ni
+    recorrer las dos listas en cada llamada (las listas y las figuras lo piden por fila). */
+export const exByName = n => libByName().get(n) || (S.customExercises || []).find(x => x.n == n) || libByName().get(EX_RETIRED.get(n));
+/** El nombre con el que la biblioteca conoce a `n`: el suyo o, si es uno que ya no está en ella, el del que lo sustituye (para
+    su ficha y su figura, que van por nombre). */
+export const liveName = n => EX_RETIRED.has(n) && !libByName().has(n) && !(S.customExercises || []).some(x => x.n == n) ? EX_RETIRED.get(n) : n;
 export const groupOfName = n => {
   const e = exByName(n);
   return e ? groupOf(e) : 'Propio';
@@ -30,13 +35,16 @@ export const exAll = () => EXERCISES.concat(S.customExercises);
 export const exOrder = e => e.k == null ? 9999 : e.k;
 export const exMuscles = (e, k) => (e[k] || []).map(c => MUSCLES[c]).filter(Boolean);
 const searchText = e => {
-  const s = (e.n + ' ' + (e.t || '') + ' ' + (e.q || '') + ' ' + exMuscles(e, 'p').concat(exMuscles(e, 's')).join(' ') + ' ' + (EX_ALIASES[e.n] || '')).toLowerCase();
+  const es = e.n + ' ' + (e.t || '') + ' ' + (e.q || '') + ' ' + exMuscles(e, 'p').concat(exMuscles(e, 's')).join(' ') + ' ' + (EX_ALIASES[e.n] || '');
+  /* con la app en inglés, además, como se lee en inglés: «bench press» encuentra el press banca */
+  const s = (EN ? es + ' ' + [e.n, e.t || '', e.q || ''].concat(exMuscles(e, 'p'), exMuscles(e, 's')).map(tr).join(' ') : es).toLowerCase();
   return s + ' ' + s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 /* el de los de la biblioteca, que no cambian, se calcula una vez: el buscador lo pide para todos en cada letra. El de los
    propios, que se pueden editar, cada vez */
 const SEARCH_TEXT = new WeakMap();
-/** El texto en el que busca el buscador: nombre, tipo, material, músculos y otros nombres, también sin tildes. */
+/** El texto en el que busca el buscador: nombre, tipo, material, músculos y otros nombres, también sin tildes (y, con la app
+    en inglés, también en inglés). */
 export const exSearchText = e => {
   if (libByName().get(e.n) !== e)
     return searchText(e);
@@ -47,8 +55,8 @@ export const exSearchText = e => {
 };
 const exSubtitle = e => X((e.q || 'Personalizado') + (e.t && e.t != 'Otros' ? ' · ' + e.t : ''));
 const exMusclesHtml = e => (exMuscles(e, 'p').length ? html`
-  <small class="c-at">Principal: ${exMuscles(e, 'p').join(', ')}</small>
-` : '') + (exMuscles(e, 's').length ? html`<br><small class="muted">Secundarios: ${exMuscles(e, 's').join(', ')}</small>` : '');
+  <small class="c-at">Principal: ${commas(exMuscles(e, 'p'))}</small>
+` : '') + (exMuscles(e, 's').length ? html`<br><small class="muted">Secundarios: ${commas(exMuscles(e, 's'))}</small>` : '');
 /* las filas de una lista que llevan su figura desde el principio: las que se ven al abrirla, con algo de margen. Las
    siguientes la reciben al acercarse a la pantalla (extras/anatomy, exPictureLater) */
 const ROWS_WITH_PICTURE = 12;

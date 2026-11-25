@@ -3,15 +3,15 @@
    días anotados y cuántos quedaron en objetivo. Las cuentas son las de core/calc (nutritionPeriod), las mismas reglas que el
    análisis mensual: un día cuenta como anotado con más de 50 kcal y está en objetivo a ±10 % de las kcal. Es la semana del
    día que se está viendo; al tocar un día se va a él. Las medias no cuentan hoy, que aún no ha terminado.
-   Define: DAY_LETTERS, DAY_NAMES, dayNumber, weekDayColumn, weekFigures, nutritionWeekCard, nutritionRecentCard  · acciones/registros: 2
+   Define: DAY_NAMES, dayNumber, weekDayColumn, weekFigures, nutritionWeekCard, nutritionRecentCard  · acciones/registros: 2
 */
-import { dayKey, fmtDateShort, roundInt } from '../core/util.js';
+import { say } from '../core/i18n.js';
+import { DAY_LETTERS, dayKey, fmtDateShort, roundInt } from '../core/util.js';
 import { nutritionPeriod, weekKeys } from '../core/calc.js';
 import { A } from '../core/registry.js';
 import { nutriDate, S, setNutriDayOffset } from '../core/state.js';
 import { R } from '../core/render.js';
 import { html } from '../core/html.js';
-const DAY_LETTERS = 'LMXJVSD';
 const DAY_NAMES = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 /* el número de un día (clave AAAA-MM-DD) contando días enteros: para restar dos fechas sin que cuente el cambio de hora */
 const dayNumber = k => {
@@ -24,8 +24,8 @@ const weekDayColumn = (d, i, top, seen, today) => {
   const kcal = roundInt(d.v[0]);
   /* en objetivo, anotado fuera de objetivo o sin anotar (las clases, enteras: nutri-week-day ok · nutri-week-day on · nutri-week-day) */
   const cls = (d.ok ? 'nutri-week-day ok' : d.on ? 'nutri-week-day on' : 'nutri-week-day') + (d.k == seen ? ' selected' : '');
-  const what = !d.on ? 'sin anotar' : d.k == today ? kcal + ' kcal por ahora' : kcal + ' kcal, ' + (d.ok ? 'en objetivo' : 'fuera de objetivo');
-  const said = DAY_NAMES[i] + ' ' + (+d.k.slice(8)) + (d.k == today ? ' (hoy)' : '') + ': ' + what;
+  const what = !d.on ? 'sin anotar' : d.k == today ? say `${kcal} kcal por ahora` : say `${kcal} kcal, ${d.ok ? 'en objetivo' : 'fuera de objetivo'}`;
+  const said = say `${DAY_NAMES[i]} ${+d.k.slice(8)}${d.k == today ? ' (hoy)' : ''}: ${what}`;
   return html`
     <button class="${cls}" data-a="nutritionGoDay" data-v="${d.k}" aria-label="${said}" aria-current="${d.k == seen ? 'date' : 'false'}">
       <span class="nutri-week-bar"><i data-style="height:${d.on ? Math.max(4, Math.min(100, d.v[0] / top * 100)) : 0}%"></i></span>
@@ -53,9 +53,9 @@ export const nutritionWeekCard = () => {
   /* la barra más alta: el día que más, o el objetivo y un cuarto más, para que la línea del objetivo quede a la vista */
   const top = Math.max(kcalGoal * 1.25, ...week.days.map(d => d.v[0]), 1);
   const current = keys.includes(today);
-  const title = current ? 'Esta semana' : 'Semana del ' + fmtDateShort(keys[0]);
-  const logged = p.logged + ' de ' + done.length + (done.length == 1 ? ' día anotado' : ' días anotados');
-  const note = !done.length ? (current ? 'Empieza hoy' : 'Aún no ha llegado') : current ? 'Hasta ayer, ' + logged : logged;
+  const title = current ? 'Esta semana' : say `Semana del ${fmtDateShort(keys[0])}`;
+  const logged = say `${p.logged} de ${done.length}${done.length == 1 ? ' día anotado' : ' días anotados'}`;
+  const note = !done.length ? (current ? 'Empieza hoy' : 'Aún no ha llegado') : current ? say `Hasta ayer, ${logged}` : logged;
   const empty = !done.length ? 'Las medias de la semana salen con los días ya terminados. La línea es tu objetivo de kcal.' : 'Sin comidas anotadas en los días terminados de esta semana. La línea es tu objetivo de kcal.';
   return html`
     <div class="card nwk">

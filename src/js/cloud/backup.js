@@ -10,7 +10,8 @@
    Estado: S.cloudBackup = { at, lg, md }: la última copia en la nube (cuándo, entrenos y días de comidas), para todos los móviles.
    Define: CHUNK, MAX_CHUNKS, BACKUP_EVERY, cloudBusy, autoTried, pendingOld, backupPath, toB64, fromB64, canZip, zip, unzip, dataCounts, shrinks, writeCloudBackup, readCloudBackup, autoBackup, cloudBackupCard, wipeCloudBackup, saveNow  · acciones/registros: 3
 */
-import { $, APPV } from '../core/util.js';
+import { say, tr } from '../core/i18n.js';
+import { $, APPV, LOCALE } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -132,7 +133,7 @@ afterSync.push(autoBackup);
 export const cloudBackupCard = () => {
   const c = S.cloudBackup;
   const line = c && +c.at > 0 ? html`
-    Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas
+    Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas
   ` : 'Aún no hay ninguna copia en la nube.';
   return html`
     <div class="card backup-card" id="cbk">
@@ -160,13 +161,13 @@ const saveNow = async (old) => {
   cloudBusy = 1;
   const l = $('#cbl');
   if (l)
-    l.textContent = 'Guardando…';
+    l.textContent = tr('Guardando…');
   try {
     await writeCloudBackup(old);
     toast('Copia guardada en la nube');
   }
   catch (e) {
-    toast(e.code == 'NETWORK' ? 'Sin conexión: guarda la copia cuando vuelvas a tener internet' : e.code == 'TOO_BIG' ? 'La copia es demasiado grande para la nube: guárdala en un archivo' : 'No se ha podido guardar la copia (' + (e.code || 'error') + ')');
+    toast(e.code == 'NETWORK' ? 'Sin conexión: guarda la copia cuando vuelvas a tener internet' : e.code == 'TOO_BIG' ? 'La copia es demasiado grande para la nube: guárdala en un archivo' : say `No se ha podido guardar la copia (${e.code || 'error'})`);
   }
   finally {
     cloudBusy = 0;
@@ -186,7 +187,7 @@ A.cloudBackupSave = async () => {
   }
   catch (e) {
     cloudBusy = 0;
-    toast(e.code == 'NETWORK' ? 'Sin conexión: guarda la copia cuando vuelvas a tener internet' : 'No se ha podido leer la copia de la nube (' + (e.code || 'error') + ')');
+    toast(e.code == 'NETWORK' ? 'Sin conexión: guarda la copia cuando vuelvas a tener internet' : say `No se ha podido leer la copia de la nube (${e.code || 'error'})`);
     return;
   }
   cloudBusy = 0;
@@ -213,7 +214,7 @@ A.cloudBackupRestore = async () => {
       toast('Aún no hay ninguna copia en la nube');
   }
   catch (e) {
-    toast(e.code == 'NETWORK' ? 'Sin conexión: para restaurar la copia de la nube hace falta internet' : e.code == 'DAMAGED' ? 'La copia de la nube está incompleta: no se puede restaurar' : 'No se ha podido bajar la copia (' + (e.code || 'error') + ')');
+    toast(e.code == 'NETWORK' ? 'Sin conexión: para restaurar la copia de la nube hace falta internet' : e.code == 'DAMAGED' ? 'La copia de la nube está incompleta: no se puede restaurar' : say `No se ha podido bajar la copia (${e.code || 'error'})`);
   }
   finally {
     cloudBusy = 0;

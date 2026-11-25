@@ -5,7 +5,8 @@
    se añade aquí.
    Define: DEBUG_NAMES
 */
-import { APPV, dayKey, FFDEP } from './util.js';
+import { APPV, dayKey, FFDEP, LANG } from './util.js';
+import { say, tr } from './i18n.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
 import { instanceStale, partSizes, partsLost, savesBroken, savesDone, stateRecovered } from './persist.js';
@@ -15,8 +16,8 @@ import { A, C, U } from './registry.js';
 import { EXERCISES, groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_ALIASES } from '../data/aliases.js';
 import { FIG_POSES } from '../data/figposes.js';
-import { figPose } from '../extras/moves.js';
-import { exPicture } from '../extras/anatomy.js';
+import { exHasFigure, exMotion, exPicture } from '../extras/pictures.js';
+import { loadFigures } from './lazy.js';
 import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, overviewMode, S, saveState, setOverviewMode, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
@@ -32,7 +33,7 @@ import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { spaceCheck, spaceUse } from '../system/space.js';
-import { isNewerVersion, updatesOn } from '../system/updates.js';
+import { isNewerVersion, plainVersion, updatesOn } from '../system/updates.js';
 import { showSummary } from '../extras/summary.js';
 import { medalSvg } from '../extras/medals.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
@@ -61,6 +62,9 @@ const DEBUG_NAMES = {
   addState: [() => addState],
   applyTheme: [() => applyTheme],
   APPV: [() => APPV],
+  LANG: [() => LANG],
+  tr: [() => tr],
+  say: [() => say],
   backTarget: [() => backTarget],
   buildBackup: [() => buildBackup],
   C: [() => C],
@@ -77,11 +81,12 @@ const DEBUG_NAMES = {
   exAll: [() => exAll],
   exByName: [() => exByName],
   EXERCISES: [() => EXERCISES],
+  exHasFigure: [() => exHasFigure],
+  exMotion: [() => exMotion],
   exPicture: [() => exPicture],
   exSearchText: [() => exSearchText],
   FFDEP: [() => FFDEP],
   FIG_POSES: [() => FIG_POSES],
-  figPose: [() => figPose],
   flushState: [() => flushState],
   FOOD_GROUPS: [() => FOOD_GROUPS],
   FOODS_SRC: [() => FOODS_SRC],
@@ -89,6 +94,7 @@ const DEBUG_NAMES = {
   icon: [() => icon],
   isDeloadWeek: [() => isDeloadWeek],
   levelPlan: [() => levelPlan],
+  loadFigures: [() => loadFigures],
   libBody: [() => libBody],
   libState: [() => libState],
   logError: [() => logError],
@@ -144,6 +150,7 @@ const DEBUG_NAMES = {
   iconNoticeApplies: [() => iconNoticeApplies],
   iconNoticeCheck: [() => iconNoticeCheck],
   isNewerVersion: [() => isNewerVersion],
+  plainVersion: [() => plainVersion],
   dayImage: [() => dayImage],
   photoUrl: [() => photoUrl],
   routineImage: [() => routineImage],

@@ -4,6 +4,8 @@
    una vez a la semana, para hacer una copia y liberar espacio antes de que deje de guardarse. Diagnóstico enseña el uso.
    Define: LS_LIMIT, SPACE_WARN, SPACE_EVERY, lastSpace, spaceUse, mb, spaceText, spaceTries, spaceCheck
 */
+import { LOCALE } from '../core/util.js';
+import { say } from '../core/i18n.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
 import { appBusy, dialog } from '../core/ui.js';
@@ -43,7 +45,7 @@ export const spaceUse = async () => {
   lastSpace = { ls, usage, quota, ratio: Math.max(ls / LS_LIMIT, quota ? usage / quota : 0) };
   return lastSpace;
 };
-const mb = n => (n / 1048576).toLocaleString('es-ES', { maximumFractionDigits: n < 10485760 ? 1 : 0 }) + ' MB';
+const mb = n => (n / 1048576).toLocaleString(LOCALE, { maximumFractionDigits: n < 10485760 ? 1 : 0 }) + ' MB';
 /** La medida en una línea, para Diagnóstico. */
 export const spaceText = u => !u ? '' : 'localStorage ' + mb(u.ls * 2) + ' de unos ' + mb(LS_LIMIT * 2) + ' (' + Math.round(u.ls / LS_LIMIT * 100) + ' %)' + (u.quota ? ' · IndexedDB y caché ' + mb(u.usage) + ' de ' + mb(u.quota) + ' (' + Math.round(u.usage / u.quota * 100) + ' %)' : '');
 /* intentos de enseñar el aviso mientras la app está ocupada (cada 30 s) */
@@ -65,7 +67,7 @@ export const spaceCheck = async () => {
     }
     spaceTries = 0;
     Store.set(Store.K.space, String(Date.now()));
-    dialog('Queda poco espacio', 'La app ya usa el ' + Math.round(u.ratio * 100) + ' % del espacio que el navegador le deja en este móvil. Si se llena, lo nuevo no se podrá guardar aquí. Haz una copia de seguridad y libera espacio en el móvil.', [['Más tarde', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'primary']]);
+    dialog('Queda poco espacio', say `La app ya usa el ${Math.round(u.ratio * 100)} % del espacio que el navegador le deja en este móvil. Si se llena, lo nuevo no se podrá guardar aquí. Haz una copia de seguridad y libera espacio en el móvil.`, [['Más tarde', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'primary']]);
   }
   catch (e) {
     logError('aviso de espacio', e);

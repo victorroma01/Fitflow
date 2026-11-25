@@ -7,7 +7,8 @@
    - Arriba, el enlace a Fallos y sugerencias (account/reports), con cuántos hay pendientes.
    Define: adminState, adminDate, OS_NAMES, osName, osCounts, waitingView, adminView, loadAdmin  · acciones/registros: 5
 */
-import { $ } from '../core/util.js';
+import { say } from '../core/i18n.js';
+import { $, LOCALE } from '../core/util.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
 import { toast } from '../core/toast.js';
@@ -16,7 +17,7 @@ import { deleteDoc, listDocs } from '../cloud/firestore.js';
 import { html, raw } from '../core/html.js';
 /* st: 'load' | 'ok' | 'err'; inbox: contraseñas temporales vigentes; users: cuentas; show: id de la contraseña visible */
 let adminState = { st: 'load', inbox: [], users: [], err: '', show: '', del: '', rp: -1 };
-const adminDate = t => +t > 0 ? new Date(+t).toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const adminDate = t => +t > 0 ? new Date(+t).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 /** Sistemas del móvil (perfil, os) → su nombre; en el orden del recuento. */
 const OS_NAMES = { ios: 'iPhone', android: 'Android', otro: 'Otro' };
 const osName = v => OS_NAMES[v] || '';
@@ -135,7 +136,7 @@ A.adminDelete = async () => {
     adminState.inbox = adminState.inbox.filter(x => x.id != id);
   }
   catch (e) {
-    toast('No se pudo borrar (' + (e.code || 'error') + ')');
+    toast(say `No se pudo borrar (${e.code || 'error'})`);
   }
   if ($('#adm'))
     sheet(adminView());

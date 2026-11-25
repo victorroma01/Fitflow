@@ -2,6 +2,7 @@
    Niveles de programa (aplicar, variantes, selector).
    Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, programName, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
 */
+import { say } from '../core/i18n.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { parseProgram, PROGRAM_NAMES } from '../data/library.js';
@@ -222,7 +223,7 @@ const applyLevel = v => {
     saveState();
     sheet();
     R();
-    toast('Nivel ' + LEVEL_NAMES[v].toLowerCase() + ': programa reorganizado');
+    toast(say `Nivel ${LEVEL_NAMES[v].toLowerCase()}: programa reorganizado`);
   }
   catch (e) {
     toast('No se pudo cambiar el nivel');
@@ -247,7 +248,7 @@ A.levelChoose = (i, b) => {
   const zr = !!pendingResume;
   if (ed || dn || zr) {
     R();
-    confirmDialog('Cambiar a nivel ' + LEVEL_NAMES[v].toLowerCase(), 'Se reorganizarán los días del programa para el nivel ' + LEVEL_NAMES[v].toLowerCase() + '.' + (ed ? ' Perderás los cambios que hayas hecho a mano en los días.' : '') + (dn ? ' Se reiniciará el progreso de esta semana.' : '') + (zr ? ' Se descartará el entreno pausado.' : ''), 'levelConfirm', 'Cambiar');
+    confirmDialog(say `Cambiar a nivel ${LEVEL_NAMES[v].toLowerCase()}`, say `Se reorganizarán los días del programa para el nivel ${LEVEL_NAMES[v].toLowerCase()}.${ed ? ' Perderás los cambios que hayas hecho a mano en los días.' : ''}${dn ? ' Se reiniciará el progreso de esta semana.' : ''}${zr ? ' Se descartará el entreno pausado.' : ''}`, 'levelConfirm', 'Cambiar');
   }
   else
     applyLevel(v);

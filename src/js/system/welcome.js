@@ -9,12 +9,13 @@
    (core/back). Las cuentas que ya existían no la ven.
    Define: BIO_NUMBERS, welcome, welcomeRoot, welcomeView, sexButtons, bioNumbers, bioFormView, welcomeRender, readBioForm, bioProblem, welcomeShow  · acciones/registros: 3
 */
+import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { A } from '../core/registry.js';
 import { S, saveState } from '../core/state.js';
 import { brandLogo } from '../core/brand.js';
 import { R } from '../core/render.js';
-import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS } from '../nutrition/diet.js';
+import { ACTIVITY_LEVELS, applyDiet, GOAL_DIET, GOAL_LABELS, goalName } from '../nutrition/diet.js';
 import { html, raw } from '../core/html.js';
 /** Los datos con número: [clave en S.biometrics, rótulo, unidad, mínimo, máximo]. */
 /** @type {[string, string, string, number, number][]} */
@@ -83,7 +84,7 @@ const bioFormView = () => {
       ${sexButtons(sx)}
       ${bioNumbers(b)}
       ${raw(sel('act', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1])))}
-      ${raw(sel('goal', 'Objetivo físico', GOAL_LABELS))}
+      ${raw(sel('goal', 'Objetivo físico', GOAL_LABELS.map((g, i) => goalName(i))))}
       <p id="wle" class="welcome-error" role="alert"></p>
       <button class="primary" data-a="welcomeSave">Guardar y continuar</button>
     </div>`;
@@ -108,7 +109,7 @@ const bioProblem = f => {
   for (const [k, l, u, lo, hi] of BIO_NUMBERS) {
     const v = +f[k];
     if (!f[k] || !(v >= lo && v <= hi))
-      return ['wl_' + k, 'Escribe tu ' + l.toLowerCase() + ' en ' + u + ', de ' + lo + ' a ' + hi + '.'];
+      return ['wl_' + k, say `Escribe tu ${l.toLowerCase()} en ${u}, de ${lo} a ${hi}.`];
   }
   if (f.act === '')
     return ['wl_act', 'Elige tu actividad diaria.'];
@@ -154,7 +155,7 @@ A.welcomeSave = () => {
       e.classList.add('bad');
       e.focus();
     }
-    $('#wle').textContent = bad[1];
+    $('#wle').textContent = tr(bad[1]);
     return;
   }
   S.biometrics = { ...(S.biometrics || {}), sex: f.sex, age: f.age, h: f.h, w: f.w, act: f.act, goal: f.goal };

@@ -2,7 +2,7 @@
 .thumb {
   background:radial-gradient(circle at 50% 30%,#2e3248,#0e0f15 80%)!important;
 }
-.anf {
+.anatomy-full {
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
@@ -13,15 +13,15 @@
   background:radial-gradient(120% 90% at 50% 0,#2a2e44,#0d0e14 85%);
   border:1px solid var(--ln);
 }
-.anf>div:not(.anl) {
+.anatomy-full>div:not(.anatomy-legend) {
   text-align:center;
   color:#8d93ad;
 }
-.anf svg {
+.anatomy-full svg {
   display:block;
   margin:auto;
 }
-.anf small {
+.anatomy-full small {
   display:block;
   margin-top:4px;
   color:#8d93ad;
@@ -29,7 +29,7 @@
   text-transform:uppercase;
   font-size:11px;
 }
-.anl {
+.anatomy-legend {
   width:100%;
   display:flex;
   justify-content:center;
@@ -38,7 +38,7 @@
   font-size:13px;
   font-weight:600;
 }
-.anl i {
+.anatomy-legend i {
   display:inline-block;
   width:12px;
   height:12px;
@@ -53,17 +53,17 @@
   margin:2px auto;
 }
 /* la figura de cada grupo no pasa del ancho de su tarjeta (en pantallas estrechas encoge, cuadrada) */
-.group-grid .anb {
+.group-grid .anatomy-box {
   width:min(88px,100%)!important;
   height:auto!important;
   aspect-ratio:1;
 }
-.group-grid .anb svg {
+.group-grid .anatomy-box svg {
   width:100%;
   height:100%;
   margin:0;
 }
-.anb {
+.anatomy-box {
   display:block;
   border-radius:16px;
   overflow:hidden;
@@ -71,7 +71,7 @@
   margin:0 auto;
   border:1px solid #ffffff12;
 }
-.anb svg {
+.anatomy-box svg,.anatomy-box img {
   display:block;
 }
 .exercise-cell {
@@ -92,14 +92,15 @@
   border:1px solid #ffffff12;
   font-style:normal;
 }
-.exercise-thumb svg {
+/* la miniatura del ejercicio (extras/pictures): la figura como imagen o, mientras se dibuja, su hueco */
+.exercise-thumb svg,.exercise-thumb img,.thumb>img {
   display:block;
 }
 .exercise-text {
   min-width:0;
   display:block;
 }
-.row .anb {
+.row .anatomy-box {
   margin:0;
 }
 .item-split {

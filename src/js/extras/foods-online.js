@@ -2,7 +2,8 @@
    Alimentos en línea (Open Food Facts) y escáner de códigos.
    Define: onlineFoods, onlineQuery, onlineBusy, OFF_ERRORS, offErrorText, isOffline, pause, offFetch, offName, offProduct, OFF_FIELDS, SEARCH_SIZE, SEARCH_KEEP_MS, searchCache, luceneSafe, searchNewUrl, searchOldUrl, searchResult, searchOnline, searchNote, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanTry, scanMsg, stopScan, startScan, scanLoop, offBarcode, lookupBarcode  · acciones/registros: 5
 */
-import { $ } from '../core/util.js';
+import { say, tr } from '../core/i18n.js';
+import { $, LANG } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
 import { addState, S, saveState } from '../core/state.js';
@@ -52,13 +53,14 @@ async function offFetch(url, ms) {
       clearTimeout(t);
   }
 }
-/* el nombre de un producto: un texto o, en el buscador nuevo, a veces un objeto por idiomas ({ main, es, en… }) */
-const offName = v => typeof v == 'string' ? v : v && typeof v == 'object' ? String(v.es || v.main || v.en || Object.values(v).find(x => typeof x == 'string') || '') : '';
+/* el nombre de un producto: un texto o, en el buscador nuevo, a veces un objeto por idiomas ({ main, es, en… }); con la app
+   en inglés, antes el inglés */
+const offName = v => typeof v == 'string' ? v : v && typeof v == 'object' ? String((LANG == 'en' ? v.en || v.main || v.es : v.es || v.main || v.en) || Object.values(v).find(x => typeof x == 'string') || '') : '';
 function offProduct(p) {
   try {
     if (!p || typeof p != 'object')
       return null;
-    const nm = (offName(p.product_name_es) || offName(p.product_name)).trim();
+    const nm = (LANG == 'en' ? offName(p.product_name_en) || offName(p.product_name) || offName(p.product_name_es) : offName(p.product_name_es) || offName(p.product_name)).trim();
     if (!nm)
       return null;
     const m = p.nutriments && typeof p.nutriments == 'object' ? p.nutriments : {};
@@ -102,13 +104,13 @@ function offProduct(p) {
       Lucene, así que al texto del usuario se le quitan los signos que allí son órdenes (dos puntos, comillas, paréntesis…);
    2. el antiguo (cgi/search.pl), más lento y limitado a 10 búsquedas por minuto: solo si el nuevo falla o no trae nada.
    Si fallan los dos, se espera un momento y se prueba el nuevo otra vez. Lo ya buscado se recuerda un rato (SEARCH_KEEP_MS). */
-const OFF_FIELDS = 'code,product_name,product_name_es,brands,nutriments,nutriscore_grade';
+const OFF_FIELDS = 'code,product_name,product_name_es' + (LANG == 'en' ? ',product_name_en' : '') + ',brands,nutriments,nutriscore_grade';
 const SEARCH_SIZE = 24;
 const SEARCH_KEEP_MS = 6e5;
 /* texto → { t: cuándo, r: resultado } */
 const searchCache = new Map();
 const luceneSafe = q => q.toLowerCase().replace(/[+\-&|!(){}[\]^"~*?:\\/]/g, ' ').replace(/\s+/g, ' ').trim();
-const searchNewUrl = q => 'https://search.openfoodfacts.org/search?q=' + encodeURIComponent(luceneSafe(q)) + '&langs=es,en&page_size=' + SEARCH_SIZE + '&fields=' + OFF_FIELDS;
+const searchNewUrl = q => 'https://search.openfoodfacts.org/search?q=' + encodeURIComponent(luceneSafe(q)) + (LANG == 'en' ? '&langs=en,es' : '&langs=es,en') + '&page_size=' + SEARCH_SIZE + '&fields=' + OFF_FIELDS;
 const searchOldUrl = q => 'https://world.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + '&search_simple=1&action=process&json=1&page_size=' + SEARCH_SIZE + '&sort_by=unique_scans_n&fields=' + OFF_FIELDS;
 /* de la respuesta de un buscador: { list: alimentos que valen, sin repetir; dropped: productos sin nombre o sin calorías } */
 const searchResult = j => {
@@ -192,7 +194,7 @@ A.searchFoodOnline = async () => {
           <span>${f.n}${raw(nutriScoreBadge(f.ns))}</span>
           <small>${raw(f.b[0])} kcal</small>
         </div>`)}
-    ` : searchNote(r.dropped ? 'Hay ' + r.dropped + (r.dropped == 1 ? ' producto' : ' productos') + ' para «' + q + '», pero sin datos nutricionales. Prueba con otra palabra o crea el alimento en «Nuevo».' : 'No hay resultados para «' + q + '». Prueba con otra palabra o crea el alimento en «Nuevo».'));
+    ` : searchNote(r.dropped ? say `Hay ${r.dropped}${r.dropped == 1 ? ' producto' : ' productos'} para «${q}», pero sin datos nutricionales. Prueba con otra palabra o crea el alimento en «Nuevo».` : say `No hay resultados para «${q}». Prueba con otra palabra o crea el alimento en «Nuevo».`));
   }
   catch (x) {
     show(html`${raw(searchNote(offErrorText(x)))}<button data-a="searchFoodOnline" class="w-full">Reintentar</button>`);
@@ -401,7 +403,7 @@ let scanTry = 0;
 const scanMsg = t => {
   const e = document.getElementById('f2sm');
   if (e)
-    e.textContent = t;
+    e.textContent = tr(t);
 };
 function stopScan() {
   scanTry++;
@@ -576,7 +578,7 @@ async function lookupBarcode(code) {
      respuesta que llega después no abre nada ni cambia el mensaje */
   const mine = scanTry;
   const current = () => mine === scanTry && !!document.getElementById('f2sm');
-  scanMsg('Buscando ' + code + '…');
+  scanMsg(say `Buscando ${code}…`);
   try {
     const c = S.barcodeCache && S.barcodeCache[code];
     let it = c && Array.isArray(c.b) && c.b.length == 6 ? { n: String(c.n || '').slice(0, 80), b: c.b.map(Number), ns: nutriScore(c.ns) } : null;
@@ -605,7 +607,7 @@ async function lookupBarcode(code) {
   }
   catch (x) {
     if (current())
-      scanMsg(offErrorText(x) + (x == 'offline' ? '' : ' Los productos ya escaneados funcionan sin conexión.'));
+      scanMsg(say `${offErrorText(x)}${x == 'offline' ? '' : ' Los productos ya escaneados funcionan sin conexión.'}`);
   }
 }
 /* — manejadores de esta función (registros A / C / U) — */

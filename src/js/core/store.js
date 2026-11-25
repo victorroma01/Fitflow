@@ -5,6 +5,7 @@
    (core/persist, I-04): core/persist avisa de ellas con Store.note.
    Define: Store
 */
+import { LANG_KEY } from './util.js';
 import { logError } from './errors.js';
 /* Claves que usa la app (y, por tanto, lo único que habría que sincronizar con un servidor):
    app  → estado S: el núcleo (perfil, plan, programas, ajustes, peso…); los entrenos, el historial y las comidas
@@ -28,9 +29,11 @@ import { logError } from './errors.js';
    space → cuándo se avisó por última vez de que queda poco espacio (system/space; no se sincroniza)
    rev  → marca de lo último guardado: cada apertura de la app la cambia al guardar, y así otra pestaña o ventana sabe que lo
           suyo ya no es lo último (core/persist; no se sincroniza)
+   lang → idioma elegido en Ajustes para este móvil, 'es' o 'en'; si falta, manda el del móvil. Lo lee core/util al cargar,
+          antes que nada (LANG_KEY), y no se sincroniza ni se borra al cerrar sesión: es del dispositivo
    Las copias automáticas viven en IndexedDB (base "ffsnap"; ver system/snapshots). */
 export const Store = {
-  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn', space: 'ffspace', rev: 'ffrev' },
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn', space: 'ffspace', rev: 'ffrev', lang: LANG_KEY },
   /** @type {RemoteAdapter | null} */
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…).

@@ -2,18 +2,19 @@
    Librería de ejercicios y ficha de cada ejercicio.
    Define: libState, libBody, libPage, exDetailHead, exDetailMuscles, exDetailExtras, exDetailHtml, exDetailSheet  · acciones/registros: 6
 */
-import { $, roundInt, X } from '../core/util.js';
+import { $, roundInt } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { groupLabel, groupOf, GROUPS } from '../data/library.js';
 import { groupIcon } from '../core/icons.js';
 import { fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
-import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText } from './model.js';
+import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText, liveName } from './model.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
 import { exTip, withExInfo } from './howto.js';
 import { customTools, isCustomExercise } from './custom.js';
 import { bestOf } from '../workout/finish.js';
 import { toDisplayWeight, weightUnit } from '../profile/units.js';
-import { exAnatomyFull, exHasFigure, exPicture } from '../extras/anatomy.js';
+import { exAnatomyFull } from '../extras/anatomy.js';
+import { exHasFigure, exPicture } from '../extras/pictures.js';
 import { html, raw } from '../core/html.js';
 export let libState = { g: '', q: '' };
 export function libBody() {
@@ -50,7 +51,7 @@ export function libBody() {
       <b>${groupLabel(g)} <span class="muted fw-400">· ${base.length}</span></b>
       ${groupIcon(g, 60)}
     </div>
-  ` : '') + equipDropdown('lb', eq, equipIn(base.map(o => o.e)), base.map(o => o.e)) + (h || '<p class="muted">Sin resultados.</p>');
+  ` : '') + equipDropdown('lb', eq, equipIn(base.map(o => o.e)), base.map(o => o.e)) + (h || html`<p class="muted">Sin resultados.</p>`);
 }
 const libPage = () => html`
   ${pgHead('Librería de ejercicios')}
@@ -74,13 +75,23 @@ A.libraryGroup = (i, b) => {
 };
 /* la ficha de un ejercicio: nombre, etiquetas (grupo, material y tipo) y su imagen, que abre cómo se hace: la figura
    haciéndolo o, en uno propio, que no tiene, sus músculos o el icono de su grupo */
-const exDetailHead = (e, g, tap) => '<div class="row ai-start m-6-0-4"><div class="fx-1 minw-0"><h2 class="m-0-0-8 ls-n0_02em">' + X(e.n) + '</h2><div class="exchips">' + [groupLabel(g), e.q, e.t && e.t != 'Otros' ? e.t : ''].filter(Boolean).map(x => html`<span class="tag mr-6 fs-12 p-4-9">${x}</span>`).join('') + '</div></div><span class="anb w-72 h-72 fx-none"' + tap + '>' + exPicture(e.n, 72) + '</span></div><p class="muted howto-hint">Toca la ' + (exHasFigure(e.n) ? 'figura' : 'imagen') + ' para ver cómo se hace.</p>';
+const exDetailHead = (e, g, tap) => html`
+  <div class="row ai-start m-6-0-4">
+    <div class="fx-1 minw-0">
+      <h2 class="m-0-0-8 ls-n0_02em">${e.n}</h2>
+      <div class="exchips">
+        ${[groupLabel(g), e.q, e.t && e.t != 'Otros' ? e.t : ''].filter(Boolean).map(x => html`<span class="tag mr-6 fs-12 p-4-9">${x}</span>`)}
+      </div>
+    </div>
+    <span class="anatomy-box w-72 h-72 fx-none"${raw(tap)}>${raw(exPicture(e.n, 72))}</span>
+  </div>
+  <p class="muted howto-hint">Toca la ${exHasFigure(e.n) ? 'figura' : 'imagen'} para ver cómo se hace.</p>`;
 /* los músculos principales y, si los hay, los secundarios */
-const exDetailMuscles = e => '<h4 class="section-label">Músculos principales</h4>' + (exMuscles(e, 'p').map(m => html`<span class="muscle-chip on">${m}</span>`).join('') || '<small class="muted">Sin datos</small>') + (exMuscles(e, 's').length ? html`
+const exDetailMuscles = e => html`<h4 class="section-label">Músculos principales</h4>` + (exMuscles(e, 'p').map(m => html`<span class="muscle-chip on">${m}</span>`).join('') || html`<small class="muted">Sin datos</small>`) + (exMuscles(e, 's').length ? html`
   <h4 class="section-label">Músculos secundarios</h4>
   ${exMuscles(e, 's').map(m => html`<span class="muscle-chip">${m}</span>`)}` : '');
 /* su consejo, tu mejor marca y las variantes del mismo grupo y tipo, cada una con «+ Al día» */
-const exDetailExtras = (e, pr, vr) => '<h4 class="section-label">Consejo</h4>' + html`<p class="m-6-0">${exTip(e.n)}</p>` + (pr ? html`
+const exDetailExtras = (e, pr, vr) => html`<h4 class="section-label">Consejo</h4>` + html`<p class="m-6-0">${exTip(e.n)}</p>` + (pr ? html`
   <h4 class="section-label">Tu mejor marca</h4>
   <p class="m-6-0">
     ${toDisplayWeight(pr.w)} ${weightUnit()} × ${raw(pr.r)} · 1RM estimado ${roundInt(toDisplayWeight(pr.e))} ${weightUnit()}
@@ -111,8 +122,11 @@ const exDetailSheet = i => {
     </div>`));
   sheetToTop();
 };
+/* (la de un ejercicio que se guardó con un nombre que ya no está en la librería, porque era el mismo que otro, es la del que
+   queda: data/aliases, EX_RETIRED) */
 A.exerciseDetailByName = (i, b) => {
-  const j = exAll().findIndex(x => x.n == b.dataset.n);
+  const n = liveName(b.dataset.n);
+  const j = exAll().findIndex(x => x.n == n);
   if (j < 0)
     return;
   withExInfo(() => {

@@ -5,12 +5,15 @@
    nada (con la mitad de los datos, la nube creería que se borró el resto) y se avisa, con «Reintentar» y, con sesión, «Bajar
    de mi cuenta». window.__ffready se cumple al terminar el arranque; window.__ffok vale 1 desde el primer pintado.
    También decide qué pasa si la app está abierta dos veces y la otra guarda después: esta se recarga (onInstanceStale).
-   Define: RESTORE_HINT, lostDialog, staleWaiting, staleDialog, watchSheet, startClocks, tidyLeftovers, recoverWorkout, restoreNotice, afterFirstPaint, start  · acciones/registros: 4
+   Define: RESTORE_HINT, lostDialog, staleWaiting, staleDialog, watchSheet, startClocks, tidyLeftovers, recoverWorkout, restoreNotice, afterFirstPaint, start, language  · acciones/registros: 4
 */
-import { $, fmtDuration, fmtMinSec, roundInt } from './util.js';
+import { say } from './i18n.js';
+import { $, fmtDuration, fmtMinSec, LANG, roundInt } from './util.js';
+import { startEnglish } from './i18n.js';
 import { Store } from './store.js';
 import { logError, setErrorNotice } from './errors.js';
 import { toast } from './toast.js';
+import { loadEnglish } from './lazy.js';
 import { dropSavedState, loadParts, onInstanceStale, partsLost, reloadApp, stateRecovered } from './persist.js';
 import { A } from './registry.js';
 import { applyTheme, S, saveState, W } from './state.js';
@@ -40,7 +43,7 @@ import { spaceCheck } from '../system/space.js';
 /* los datos de este móvil no se pudieron leer (core/persist: partsLost): nada se guarda ni se sincroniza hasta que se lean */
 /* cómo recuperar los datos, en los avisos de datos dañados */
 const RESTORE_HINT = 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.';
-const lostDialog = () => dialog('No se pudieron leer tus datos', 'Tus entrenos y comidas de este móvil no se han podido leer. Para no perder nada, la app no guardará ni sincronizará hasta que se puedan leer: prueba a cerrarla y abrirla de nuevo.' + (signedIn() ? ' Si sigue igual, puedes bajar otra vez los datos de tu cuenta (lo que no se hubiera sincronizado se perderá).' : ''), signedIn() ? [['Bajar de mi cuenta', 'partsFromCloudAsk', ''], ['Reintentar', 'partsRetry', 'primary']] : [['Reintentar', 'partsRetry', 'primary']]);
+const lostDialog = () => dialog('No se pudieron leer tus datos', say `Tus entrenos y comidas de este móvil no se han podido leer. Para no perder nada, la app no guardará ni sincronizará hasta que se puedan leer: prueba a cerrarla y abrirla de nuevo.${signedIn() ? ' Si sigue igual, puedes bajar otra vez los datos de tu cuenta (lo que no se hubiera sincronizado se perderá).' : ''}`, signedIn() ? [['Bajar de mi cuenta', 'partsFromCloudAsk', ''], ['Reintentar', 'partsRetry', 'primary']] : [['Reintentar', 'partsRetry', 'primary']]);
 A.partsRetry = () => location.reload();
 A.partsFromCloudAsk = () => confirmDialog('¿Bajar los datos de tu cuenta?', 'Se borran los datos de este móvil y se bajan otra vez los de tu cuenta. Lo que no se hubiera sincronizado se perderá.', 'partsFromCloud', 'Bajar');
 /* sin la sincronización de antes, la nube no ve lo de este móvil como borrado: se baja todo de nuevo */
@@ -215,9 +218,9 @@ const restoreNotice = () => {
 const afterFirstPaint = () => {
   /* después del primer render: aviso de datos dañados, copia automática del día y almacenamiento persistente */
   if (stateRecovered == 1)
-    setTimeout(() => dialog('No se pudieron leer tus datos', 'Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ' + (S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : '') + RESTORE_HINT, [['Entendido', 'doNothing', 'primary']]), 600);
+    setTimeout(() => dialog('No se pudieron leer tus datos', say `Estaban dañados. Se ha guardado una copia aparte para no perderlos: en Perfil → Ajustes → Diagnóstico puedes descargarla. ${S.logs.length || Object.keys(S.meals).length ? 'Tus entrenos y comidas se han podido conservar. ' : ''}${RESTORE_HINT}`, [['Entendido', 'doNothing', 'primary']]), 600);
   else if (stateRecovered == 2)
-    setTimeout(() => dialog('No se pudo leer una parte de tus datos', 'Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. ' + RESTORE_HINT, [['Entendido', 'doNothing', 'primary']]), 600);
+    setTimeout(() => dialog('No se pudo leer una parte de tus datos', say `Algunos registros estaban dañados y se han apartado; el resto de tus datos está intacto. En Perfil → Ajustes → Diagnóstico puedes descargar lo apartado. ${RESTORE_HINT}`, [['Entendido', 'doNothing', 'primary']]), 600);
   /* lo arreglado al arrancar se guarda (solo se escribe lo que cambió: core/persist) */
   setTimeout(saveState, 1000);
   if (signedIn()) {
@@ -271,9 +274,15 @@ const start = () => {
   }
   afterFirstPaint();
 };
-/* primero, las partes del estado (IndexedDB); después, el arranque. Un fallo antes del primer pintado enseña la pantalla de
-   error de index.html al momento */
-window.__ffready = loadParts(S).catch(e => logError('arranque: leer los datos', e)).then(start).catch(e => {
+/* en inglés, el diccionario (core/i18n), que se descarga mientras se leen los datos. Si no llega (sin conexión y sin tenerlo
+   guardado), la app abre en español */
+const language = LANG == 'en' ? loadEnglish().then(startEnglish).catch(e => {
+  logError('arranque: el inglés', e);
+  document.documentElement.lang = 'es';
+}) : null;
+/* primero, las partes del estado (IndexedDB) y el idioma; después, el arranque. Un fallo antes del primer pintado enseña la
+   pantalla de error de index.html al momento */
+window.__ffready = loadParts(S).catch(e => logError('arranque: leer los datos', e)).then(() => language).then(start).catch(e => {
   logError('arranque', e);
   if (!window.__ffok && window.__ffe)
     window.__ffe(String(e && (e.stack || e.message) || e));

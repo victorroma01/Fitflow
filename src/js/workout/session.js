@@ -1,8 +1,9 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: foldPassed, sessionHeader, setRow, restRunning, doneBefore, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 18
+   Define: foldPassed, sessionHeader, setRow, restRunning, doneBefore, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 17
 */
-import { $, clampNum, fmtDuration, fmtMinSec, round1, roundInt, typedNum, X } from '../core/util.js';
+import { listAnd, say, tr } from '../core/i18n.js';
+import { $, clampNum, fmtDuration, fmtMinSec, round1, roundInt, typedNum } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
 import { S, setOverviewMode, setW, W } from '../core/state.js';
@@ -15,13 +16,13 @@ import { targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from '
 import { lastTimeLine, prefillSets, setText, suggestAfter } from './progression.js';
 import { usesBarbell } from './plates.js';
 import { deloadStrip, isDeloadWeek } from './deload.js';
-import { dropWeight, restAfterSet, setLabel, setTechnique, withTechnique } from './technique.js';
+import { restAfterSet, setLabel, setTechnique, withTechnique } from './technique.js';
 import { currentSet, setOrder } from './order.js';
 import { TECHNIQUES } from '../data/techniques.js';
 import { progressBody } from '../dashboard/progress.js';
 import { fromDisplayWeight, toDisplayWeight, weightUnit } from '../profile/units.js';
 import { buzz } from '../profile/feedback.js';
-import { exPicture } from '../extras/anatomy.js';
+import { exPicture } from '../extras/pictures.js';
 import { rpeOn } from './rpe.js';
 import { html, raw } from '../core/html.js';
 import { elapsedMs, liftScore } from '../core/calc.js';
@@ -57,18 +58,18 @@ const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
     <input type="number" inputmode="decimal" data-c="setWeight" data-i="${exIndex}" data-j="${setIndex}"
         value="${set.w ? toDisplayWeight(set.w) : ''}"
         placeholder="${weightUnit()}"${raw(set.ws && !set.ok ? (W.deload ? ' class="deload-weight"' : ' class="suggested"') : '')}
-        aria-label="${'Peso' + (set.ws && !set.ok ? ' sugerido' : '') + ', ' + name}">`;
+        aria-label="${say `${set.ws && !set.ok ? 'Peso sugerido' : 'Peso'}, ${name}`}">`;
   const rest = restAfterSet(exIndex, setIndex);
   return html`
     <div class="set-row${isCurrent ? ' current' : ''}">
       <span>${raw(setNo(W.sets[exIndex], setIndex))}</span>
       ${raw(setLabelButton(set))}
       <input type="number" inputmode="decimal" data-c="setReps" data-i="${exIndex}" data-j="${setIndex}"
-          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')} aria-label="${unitName(exercise) + ', ' + name}">
+          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')} aria-label="${say `${unitName(exercise)}, ${name}`}">
       ${raw(!usesWeight(exercise) ? '<span class="muted ta-c">–</span>' : weightInput)}
       <span class="fs-13">${raw(rest ? fmtMinSec(rest) : '–')}</span>
       <button class="check ${set.ok ? 'on' : ''}" data-a="toggleSetDone" data-i="${exIndex}" data-j="${setIndex}"
-          aria-label="${'Hecha, ' + name}" aria-pressed="${set.ok ? 'true' : 'false'}">✓</button>
+          aria-label="${say `Hecha, ${name}`}" aria-pressed="${set.ok ? 'true' : 'false'}">✓</button>
     </div>`;
 };
 /* el descanso en marcha, bajo la serie que lo lanzó: −15 s, la cuenta atrás con «Saltar» y +15 s */
@@ -86,7 +87,7 @@ const restRunning = (exIndex, setIndex) => W.restEndsAt && W.restAfter && W.rest
 const doneBefore = exIndex => {
   const names = [...new Set(W.sets[exIndex].filter(s => s.ok && s.n).map(s => s.n))];
   return names.length ? html`
-    <div class="muted fs-12">Las series ya hechas se guardan en ${names.map(n => '«' + n + '»').join(' y ')}</div>` : '';
+    <div class="muted fs-12">Las series ya hechas se guardan en ${listAnd(names.map(n => say `«${n}»`))}</div>` : '';
 };
 /* la cabecera de un ejercicio: foto o figura, nombre, objetivo, la última vez y, si se cambió con Swap, desde cuál */
 const exerciseHead = (exercise, exIndex) => html`
@@ -110,7 +111,7 @@ const exerciseTools2 = (exercise, exIndex) => html`
     <button class="chip" data-a="exerciseHistory" data-i="${exIndex}">Historial</button>
     <button class="chip" data-a="openSwap" data-i="${exIndex}">${icon('swp', 15)} Swap</button>
     ${usesBarbell(exercise.n) ? html`
-      <button class="chip icon-only" data-a="openPlates" data-i="${exIndex}" aria-label="${'Discos, ' + exercise.n}">
+      <button class="chip icon-only" data-a="openPlates" data-i="${exIndex}" aria-label="${say `Discos, ${exercise.n}`}">
         ${icon('plate', 18)}
       </button>` : ''}
   </div>`;
@@ -200,7 +201,8 @@ A.exerciseHistory = i => {
     <div class="item cols-1fr"><b>${raw(x.d)}</b><small>${raw(x.s.map(s => setText(E, s)).join(' · '))}</small></div>`).join('');
   sheet(html`
     <h3>${n}</h3>
-    ${raw(h.length ? best + chart + list : '<p class="muted">Aún no hay registros de este ejercicio. Se guardan al pulsar «Guardar entreno».</p>')}`);
+    ${raw(h.length ? best + chart + list : html`
+      <p class="muted">Aún no hay registros de este ejercicio. Se guardan al pulsar «Guardar entreno».</p>`)}`);
 };
 A.togglePause = () => {
   if (W.pausedAt) {
@@ -288,7 +290,7 @@ const setToggle = (i, b) => {
   R();
 };
 /** Cómo se llama una fila de series para los lectores de pantalla: «serie 2, Press banca» (o «drop set, …»). */
-const setName = (j, s, e) => (s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : 'serie ' + (j + 1) + (k => k == 'WRK' ? '' : ', ' + TECHNIQUES[k][0].toLowerCase())(setTechnique(s))) + ', ' + e.n;
+const setName = (j, s, e) => say `${s.t == 1 ? 'drop set' : s.t == 2 ? 'rest-pause' : say `serie ${j + 1}${(k => k == 'WRK' ? '' : ', ' + tr(TECHNIQUES[k][0]).toLowerCase())(setTechnique(s))}`}, ${e.n}`;
 /** Número que se ve a la izquierda de la fila: el de la serie (sin contar las filas extra), D en el drop set y + en el bloque
     de rest-pause. */
 const setNo = (a, j) => a[j].t == 1 ? 'D' : a[j].t == 2 ? '+' : a.slice(0, j + 1).filter(x => !x.t).length;
@@ -325,8 +327,8 @@ const exThumb = (n, i) => {
   const on = anLiveOn(i);
   const s = exPicture(n, 64);
   /* al tocar la imagen, cómo se hace el ejercicio (F-14: library/howto) */
-  const at = ' data-a="exerciseHowTo" data-n="' + X(n) + '" role="button" tabindex="0" aria-label="Cómo se hace: ' + X(n) + '"';
-  return html`<div class="thumb${raw(on ? ' live' : '')}"${raw(at)}>${raw(s)}</div>`;
+  const at = html` data-a="exerciseHowTo" data-n="${n}" role="button" tabindex="0" aria-label="Cómo se hace: ${n}"`;
+  return html`<div class="thumb${raw(on ? ' live' : '')}"${at}>${raw(s)}</div>`;
 };
 const restPill = () => W && W.restEndsAt ? html`
   <button class="rest-pill" data-a="scrollToRest" aria-label="Ir al descanso">
@@ -350,7 +352,7 @@ A.toggleSetDone = (i, b) => {
     const before = Math.max(0, ...h.flatMap(x => x.s.map(y => +y[1] || 0)), ...W.sets[i].filter(x => x !== s && x.ok && !x.n).map(x => +x.w || 0));
     const hadHistory = h.some(x => x.s.some(y => +y[1] > 0));
     if (s.w > 0 && hadHistory && s.w > before)
-      toast('Nuevo récord en ' + e.n + ': ' + toDisplayWeight(s.w) + ' ' + weightUnit());
+      toast(say `Nuevo récord en ${e.n}: ${toDisplayWeight(s.w)} ${weightUnit()}`);
     /* era la última que faltaba: en vez del descanso, la ventana de guardar el entreno, como con «Siguiente serie» (I-28) */
     if (W.sets.every(a => a.every(x => x.ok))) {
       W.restEndsAt = 0;
@@ -402,14 +404,14 @@ const rpeRow = (i, j, s) => {
   const e = S.plan[S.selectedDay].ex[i];
   if (!e || unitOf(e))
     return '';
-  /* el esfuerzo, solo si se activó en Ajustes avanzados (F-42); «+ Drop set», siempre que haya peso */
-  const rpe = rpeOn() ? html`
-    <span>RPE</span>
-    ${[6, 7, 8, 9, 10].map(v => html`
-      <button class="chip${s.q == v ? ' on' : ''}" data-a="setRpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}` : '';
-  const drop = usesWeight(e) && (+s.w || 0) > 0 ? html`
-    <button class="chip" data-a="addDropSet" data-i="${i}" data-j="${j}">+ Drop set</button>` : '';
-  return rpe || drop ? html`<div class="rpe">${raw(rpe)}${raw(drop)}</div>` : '';
+  /* el esfuerzo, solo si se activó en Ajustes avanzados (F-42). Hasta la 1.0.31 iba aquí, además, el botón «+ Drop set», que
+     añadía una serie con menos peso: se quitó en la 1.0.4. El drop set de un programa sigue saliendo solo (workout/technique) */
+  return !rpeOn() ? '' : html`
+    <div class="rpe">
+      <span>RPE</span>
+      ${[6, 7, 8, 9, 10].map(v => html`
+        <button class="chip${s.q == v ? ' on' : ''}" data-a="setRpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}
+    </div>`;
 };
 A.setRpe = (i, b) => {
   const s = W.sets[i] && W.sets[i][+b.dataset.j];
@@ -417,20 +419,6 @@ A.setRpe = (i, b) => {
     return;
   const v = +b.dataset.v;
   s.q = s.q == v ? 0 : v;
-  R();
-};
-A.addDropSet = (i, b) => {
-  const j = +b.dataset.j;
-  const a = W.sets[i];
-  const s = a && a[j];
-  if (!s)
-    return;
-  const w = +s.w || 0;
-  if (!(w > 0))
-    return;
-  a.splice(j + 1, 0, { r: s.r, w: dropWeight(w), ws: 1, ok: 0, t: 1, k: 'DS' });
-  W.restEndsAt = 0;
-  W.restAfter = null;
   R();
 };
 export const avgEffort = () => {
@@ -443,7 +431,7 @@ export const avgEffort = () => {
 };
 const nextUpBar = (d, cur) => {
   if (!cur)
-    return '<div class="session-now done"><span>Entreno completado</span></div>';
+    return html`<div class="session-now done"><span>Entreno completado</span></div>`;
   const e = d.ex[cur[0]];
   const a = W.sets[cur[0]];
   const n = a.filter(s => s.ok).length;
@@ -477,7 +465,7 @@ const setLabelButton = s => {
   const k = setTechnique(s);
   return html`
     <button class="set-kind${k != 'WRK' ? ' technique' : ''}" data-a="techniqueInfo" data-v="${k}"
-        aria-label="${'Técnica: ' + TECHNIQUES[k][0]}">${setLabel(s)}</button>`;
+        aria-label="${say `Técnica: ${TECHNIQUES[k][0]}`}">${setLabel(s)}</button>`;
 };
 const blockHeader = (L, n, cur) => html`
   <div class="series-label">

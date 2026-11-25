@@ -2,9 +2,10 @@
    Copias de seguridad, restauración y avisos.
    Define: pendingRestore, setPendingRestore, backupAge, BACKUP_FILE, BACKUP_FORMAT, countOf, plural, wipSession, backupRows, backupSummary, buildBackup, BACKUP_ERRORS, parseBackup, backupDate, askRestore, preRestore, preCopy, savePre, restoreBackup, backupFileCard, backupContents, backupText, backupSnapshots, isFreshInstall, restoreBanner, backupRowsFull  · acciones/registros: 8
 */
+import { listAnd, say } from '../core/i18n.js';
 import { stateToStored } from '../core/schema.js';
 import { cleanProfile, isPlan } from '../core/repair.js';
-import { $, APPV, X } from '../core/util.js';
+import { $, APPV, LOCALE, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -27,13 +28,13 @@ const backupAge = () => {
   if (!S.lastBackupDate)
     return 'Aún no has guardado ningún archivo.';
   const d = Math.floor((Date.now() - S.lastBackupDate) / 864e5);
-  return 'Último archivo: ' + (d <= 0 ? 'hoy' : d == 1 ? 'ayer' : 'hace ' + d + ' días') + '.';
+  return say `Último archivo: ${d <= 0 ? 'hoy' : d == 1 ? 'ayer' : say `hace ${d} días`}.`;
 };
 /** Nombre del archivo de copia (T-14): siempre el mismo, así cada copia sustituye a la anterior en el teléfono. */
 const BACKUP_FILE = 'StrataFit-copia.json';
 const BACKUP_FORMAT = 2;
 export const countOf = x => Array.isArray(x) ? x.length : (x && typeof x == 'object' ? Object.keys(x).length : 0);
-export const plural = (n, a, b) => n + ' ' + (n == 1 ? a : b);
+export const plural = (n, a, b) => say `${n} ${n == 1 ? a : b}`;
 const wipSession = () => {
   try {
     const z = JSON.parse(Store.get(WIP_KEY));
@@ -49,18 +50,18 @@ const backupRows = (s, wip) => {
   const it = Object.values(s.meals || {}).reduce((t, d) => t + (d && typeof d == 'object' ? Object.values(d).reduce((u, l) => u + (Array.isArray(l) ? l.length : 0), 0) : 0), 0);
   const dias = new Set((s.logs || []).map(l => l && l.d)).size;
   const training = plural(countOf(s.logs), 'entreno registrado', 'entrenos registrados') + (dias ? ' (' + plural(dias, 'día', 'días') + ')' : '');
-  const weights = 'Historial de pesos de ' + plural(countOf(s.hist), 'ejercicio', 'ejercicios') + ' y ' + plural(countOf(s.pr), 'récord personal', 'récords personales');
+  const weights = say `Historial de pesos de ${plural(countOf(s.hist), 'ejercicio', 'ejercicios')} y ${plural(countOf(s.pr), 'récord personal', 'récords personales')}`;
   const bodyWeight = plural(countOf(s.wl), 'registro de peso corporal', 'registros de peso corporal');
-  const food = 'Comidas de ' + plural(countOf(s.meals), 'día', 'días') + ' (' + plural(it, 'alimento anotado', 'alimentos anotados') + ') y agua de ' + plural(countOf(s.wt), 'día', 'días');
-  const mine = plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos') + ', ' + plural(countOf(s.lib), 'plato guardado', 'platos guardados') + ' y ' + plural(Object.keys(s.tp || {}).length, 'plantilla de día', 'plantillas de día');
-  const plans = plural(countOf(s.cr), 'rutina personalizada', 'rutinas personalizadas') + ', ' + plural(countOf(s.cp), 'programa guardado', 'programas guardados') + ' y ' + plural(countOf(s.cx), 'ejercicio propio', 'ejercicios propios');
-  const notes = 'Notas de ' + plural(countOf(s.notes), 'ejercicio', 'ejercicios');
+  const food = say `Comidas de ${plural(countOf(s.meals), 'día', 'días')} (${plural(it, 'alimento anotado', 'alimentos anotados')}) y agua de ${plural(countOf(s.wt), 'día', 'días')}`;
+  const mine = listAnd([plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos'), plural(countOf(s.lib), 'plato guardado', 'platos guardados'), plural(Object.keys(s.tp || {}).length, 'plantilla de día', 'plantillas de día')]);
+  const plans = listAnd([plural(countOf(s.cr), 'rutina personalizada', 'rutinas personalizadas'), plural(countOf(s.cp), 'programa guardado', 'programas guardados'), plural(countOf(s.cx), 'ejercicio propio', 'ejercicios propios')]);
+  const notes = say `Notas de ${plural(countOf(s.notes), 'ejercicio', 'ejercicios')}`;
   const r = [training, weights, bodyWeight, food, mine, plans, notes, ...backupRowsFull(s), 'Perfil, objetivos de nutrición, nivel y ajustes (tema, acento, estilo, unidades, avisos)'];
   if (wip)
     r.push('Entreno en curso, para retomarlo');
   return r;
 };
-const backupSummary = s => [plural(countOf(s.logs), 'entreno', 'entrenos'), plural(countOf(s.cr), 'rutina', 'rutinas'), plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos'), 'comidas de ' + plural(countOf(s.meals), 'día', 'días')].join(' · ');
+const backupSummary = s => [plural(countOf(s.logs), 'entreno', 'entrenos'), plural(countOf(s.cr), 'rutina', 'rutinas'), plural(countOf(s.cf), 'alimento nuevo', 'alimentos nuevos'), say `comidas de ${plural(countOf(s.meals), 'día', 'días')}`].join(' · ');
 /** La copia: S con las claves guardadas (core/schema), como en el móvil y en la nube, más su descripción en _sf. */
 export const buildBackup = () => {
   const wip = wipSession();
@@ -122,7 +123,7 @@ export const parseBackup = txt => {
 };
 export const backupDate = (t, l) => {
   const d = new Date(t);
-  return isNaN(d) ? '' : d.toLocaleDateString('es', l ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' });
+  return isNaN(d) ? '' : d.toLocaleDateString(LOCALE, l ? { day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'short' });
 };
 export const askRestore = txt => {
   let r;
@@ -136,9 +137,9 @@ export const askRestore = txt => {
   pendingRestore = r;
   const ds = r.meta && r.meta.at ? backupDate(r.meta.at, 1) : '';
   confirmDialog('¿Restaurar esta copia?', html`
-    <b>Copia${raw(ds ? ' del ' + X(ds) : '')}</b><br>
+    <b>Copia${raw(ds ? say ` del ${X(ds)}` : '')}</b><br>
     ${backupSummary(r.s)}
-    ${raw(r.wip ? '<br>Incluye un entreno en curso.' : '')}<br><br>
+    ${raw(r.wip ? html`<br>Incluye un entreno en curso.` : '')}<br><br>
     <b>Ahora tienes</b><br>
     ${backupSummary(stateToStored(S))}<br><br>
     Se reemplazarán los datos actuales. Antes se guarda lo que tienes ahora, para que puedas deshacerlo.
@@ -238,7 +239,7 @@ A.backupUndoAsk = async () => {
       toast('No se encontró la copia de antes de restaurar');
     return;
   }
-  confirmDialog('¿Deshacer la última restauración?', 'Volverás a los datos que tenías antes (' + X(backupSummary(c.s)) + '). Lo que tienes ahora se guardará por si cambias de idea.', 'backupUndo', 'Deshacer');
+  confirmDialog('¿Deshacer la última restauración?', say `Volverás a los datos que tenías antes (${X(backupSummary(c.s))}). Lo que tienes ahora se guardará por si cambias de idea.`, 'backupUndo', 'Deshacer');
 };
 A.backupUndo = async () => {
   const q = preRestore();
@@ -353,14 +354,22 @@ A.backupReminderOff = () => {
   saveState();
   R();
 };
-export const restoreBanner = () => '<div class="card m-0-0-12"><b>¿Ya usabas StrataFit?</b><div class="muted fs-13 m-4-0-10">Importa tu copia de seguridad y sigue por donde ibas.</div><div class="grid-2"><button class="primary" data-a="openBackup">Importar copia</button><button data-a="backupReminderOff">Ahora no</button></div></div>';
+export const restoreBanner = () => html`
+  <div class="card m-0-0-12">
+    <b>¿Ya usabas StrataFit?</b>
+    <div class="muted fs-13 m-4-0-10">Importa tu copia de seguridad y sigue por donde ibas.</div>
+    <div class="grid-2">
+      <button class="primary" data-a="openBackup">Importar copia</button>
+      <button data-a="backupReminderOff">Ahora no</button>
+    </div>
+  </div>`;
 function backupRowsFull(s) {
   const L = (Array.isArray(s.logs) ? s.logs : []).filter(l => l && typeof l == 'object');
   const cd = L.filter(l => l.k == 'c').length;
   const wd = L.filter(l => l.k == 'w').length;
   const r = [];
   if (cd || wd)
-    r.push(plural(cd, 'sesión de cardio', 'sesiones de cardio') + ' y ' + plural(wd, 'WOD', 'WOD'));
+    r.push(listAnd([plural(cd, 'sesión de cardio', 'sesiones de cardio'), plural(wd, 'WOD', 'WOD')]));
   const ms = Array.isArray(s.ms) ? s.ms.length : 0;
   if (ms)
     r.push(plural(ms, 'medición corporal', 'mediciones corporales'));

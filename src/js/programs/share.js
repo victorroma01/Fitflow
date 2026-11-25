@@ -2,6 +2,7 @@
    Compartir e importar programas mediante código.
    Define: cleanPlan, programCode, parseImport, ensureExercises, shareState, sharePage, importProgram  · acciones/registros: 7
 */
+import { tr, trAs } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -118,7 +119,7 @@ A.shareCopyCode = async () => {
   const code = el.value;
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'Programa StrataFit', text: code });
+      await navigator.share({ title: tr('Programa StrataFit'), text: code });
       return;
     }
     catch (e) {
@@ -131,7 +132,7 @@ A.shareCopyCode = async () => {
 A.shareDownload = async () => {
   if (!shareState)
     return;
-  const r = await downloadFile('programa-' + String(shareState.n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) + '.json', JSON.stringify({ ff: 'FFP1', n: shareState.n, plan: cleanPlan(shareState.plan) }));
+  const r = await downloadFile(trAs('archivo', 'programa') + '-' + String(shareState.n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) + '.json', JSON.stringify({ ff: 'FFP1', n: shareState.n, plan: cleanPlan(shareState.plan) }));
   toast(r == 'saved' ? 'Archivo guardado' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
 };
 A.openImport = () => {
@@ -160,7 +161,7 @@ const importProgram = t => {
   catch (x) {
     const e = $('#ipe');
     if (e) {
-      e.textContent = 'El código o el archivo no es válido.';
+      e.textContent = tr('El código o el archivo no es válido.');
       e.style.display = 'block';
     }
   }

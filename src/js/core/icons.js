@@ -26,6 +26,8 @@ IC.ply = '<path d="M7 5l12 7-12 7z"/>';
 IC.swp = '<path d="M8 20V4M4 8l4-4 4 4M16 4v16M12 16l4 4 4-4"/>';
 IC.chev = '<path d="M6 9l6 6 6-6"/>';
 IC.chk = '<path d="M5 12.5l4.5 4.5L19 7.5"/>';
+/* Ajustes: «Idiomas» */
+IC.globe = '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.4 4 5.6 4 9s-1.4 6.6-4 9c-2.6-2.4-4-5.6-4-9s1.4-6.6 4-9z"/>';
 /* Ajustes: «Al abrir la app» (core/tabbar) y «Ver el recorrido» (system/tour) */
 IC.home = '<path d="M4 10.5L12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/>';
 IC.tour = '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>';

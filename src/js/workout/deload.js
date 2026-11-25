@@ -9,6 +9,7 @@
    S.deloadSheetWeek: última semana de descarga cuya hoja de inicio ya salió.
    Define: DELOAD_DEFAULT, deloadEvery, isDeloadWeek, nextDeload, lastWeek, deloadWeekSync, deloadSuggested, sheetTimer, deloadSheet, deloadCard, deloadStrip, deloadChips  · acciones/registros: 7
 */
+import { say } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
@@ -65,7 +66,7 @@ const deloadSheet = () => {
       <div class="deload-icon deload-icon-big">${icon('dlw', 30)}</div>
       <h3>Empieza tu semana de descarga</h3>
       <p class="muted">
-        ${raw(sch ? 'Es la semana ' + n + ' de tu ciclo. ' : '')}Esta semana entrenas más suave para recuperarte y seguir progresando.
+        ${raw(sch ? say `Es la semana ${n} de tu ciclo. ` : '')}Esta semana entrenas más suave para recuperarte y seguir progresando.
       </p>
       <div class="deload-tags"><span>Peso al 65 %</span><span>2 repeticiones menos</span><span>Mismas series</span></div>
       <button class="deload-primary" data-a="deloadSeen">Entendido</button>
@@ -96,7 +97,17 @@ export const deloadCard = () => {
       </div>`;
   }
   if (S.week > 1 && deloadSuggested() && !(S.deloadDeclined && S.deloadDeclined[S.week]))
-    return '<div class="card deload-advice"><b>Esfuerzo muy alto</b><div class="muted fs-13 mt-4">Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.</div><div class="grid-2 mt-10"><button data-a="deloadNotNow">Ahora no</button><button class="primary" data-a="deloadOn">Activar descarga</button></div></div>';
+    return html`
+      <div class="card deload-advice">
+        <b>Esfuerzo muy alto</b>
+        <div class="muted fs-13 mt-4">
+          Tus dos últimos entrenos han salido con RPE 9 o más. Una semana de descarga ayuda a recuperar y a seguir progresando.
+        </div>
+        <div class="grid-2 mt-10">
+          <button data-a="deloadNotNow">Ahora no</button>
+          <button class="primary" data-a="deloadOn">Activar descarga</button>
+        </div>
+      </div>`;
   return '';
 };
 /** Franja del entreno en la semana de descarga. */
@@ -150,7 +161,7 @@ A.deloadSeen = () => {
 /* omitir la descarga (F-19): esta semana, normal; la siguiente llega cuando vuelva a tocar */
 A.deloadSkipAsk = () => {
   const n = nextDeload(S.week);
-  dialog('¿Omitir la semana de descarga?', 'Esta semana entrenarás con tu peso y tus repeticiones normales.' + (n ? ' La próxima descarga llegará en la semana ' + n + '.' : ''), [['Cancelar', 'doNothing', ''], ['Omitir', 'deloadSkip', 'primary deload-primary']]);
+  dialog('¿Omitir la semana de descarga?', say `Esta semana entrenarás con tu peso y tus repeticiones normales.${n ? say ` La próxima descarga llegará en la semana ${n}.` : ''}`, [['Cancelar', 'doNothing', ''], ['Omitir', 'deloadSkip', 'primary deload-primary']]);
 };
 A.deloadSkip = () => {
   S.deloadWeeks = S.deloadWeeks || {};
@@ -160,5 +171,5 @@ A.deloadSkip = () => {
   sheet();
   R();
   const n = nextDeload(S.week);
-  toast('Descarga omitida' + (n ? ' · la próxima, en la semana ' + n : ''));
+  toast(say `Descarga omitida${n ? say ` · la próxima, en la semana ${n}` : ''}`);
 };
