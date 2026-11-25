@@ -2,7 +2,7 @@
    El esfuerzo de cada serie (RPE, del 6 al 10), opcional (F-42): desactivado al principio en todas las cuentas, se activa en
    Ajustes → Ajustes avanzados (S.logRpe = 1). Al activarlo, una ventana explica con dibujos hechos en la propia app la escala (las
    repeticiones que quedaban en reserva), para qué lo usa la app (la semana de descarga y el análisis mensual) y cómo se marca.
-   Sin él, en el entreno solo queda «+ Drop set» bajo la serie recién hecha (workout/session). Lo ya registrado no se borra.
+   Sin él, bajo la serie recién hecha no sale nada (workout/session). Lo ya registrado no se borra.
    Define: RPE_SCALE, rpeOn, rpeScaleSvg, rpeExampleHtml, rpeButtons, rpeExplain, rpeSettings  · acciones/registros: 3
 */
 import { $ } from '../core/util.js';

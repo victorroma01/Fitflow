@@ -252,14 +252,12 @@ def main(path):
         check('en el análisis del mes no cuenta como ejercicio con más volumen', 'Farmers' not in ana and 'Press banca' in ana, ana[:300])
         ev("sheet()")
 
-        set_day([dict(press, s=3)], history={})
+        set_day([dict(press, s=3, tk='DS')], history={})   # con drop set: tras la última serie sale su fila (workout/technique)
         ev("S.records = {}; saveState()")
         start()
         do(0, 0, 0, 200)   # sin repeticiones
         do(0, 1, 35, 50)   # más de 30
         do(0, 2, 5, 100)
-        ev("A.addDropSet(0, { dataset: { j: 2 } })")
-        run()
         do(0, 3, 20, 75)   # el drop set: 75 × 20 daría más 1RM que 100 × 5
         finish()
         r = ev("S.records['Press banca']")

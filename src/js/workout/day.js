@@ -146,7 +146,9 @@ A.toggleExerciseTip = (i, b) => {
   if (W.openPanels[k] && b.dataset.v == 't')
     withExInfo(R);
 };
-/** Etiqueta del ejercicio `i` dentro de su bloque (el de los ejercicios seguidos que van unidos: dayBlocks). */
+/** Etiqueta del ejercicio `i` dentro de su bloque (el de los ejercicios seguidos que van unidos: dayBlocks): qué bloque es y
+    qué puesto ocupa en él («SUPERSERIE · 1/2»). El descanso que le sigue (10 s hasta el siguiente o el de la ronda) no va
+    aquí: lo dice el ejercicio, donde los demás dicen el suyo. */
 export const blockBadge = (a, i) => {
   if (a[i].b == null)
     return '';
@@ -154,10 +156,7 @@ export const blockBadge = (a, i) => {
   const m = x.length;
   const k = x.indexOf(i) + 1;
   return m < 2 ? '' : html`
-    <small class="c-wnx fw-700">
-      ${m > 3 ? 'CIRCUITO' : m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}
-      ${k < m ? ' · 10 s hasta el siguiente' : ' · descanso de la ronda'}
-    </small><br>`;
+    <small class="c-wnx fw-700">${m > 3 ? 'CIRCUITO' : m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}</small><br>`;
 };
 /** «Unir al anterior» y «Separar» (en la semana y en el Overview). Une el ejercicio `i` de la lista `a` al bloque del
     anterior, con los que vayan unidos a él detrás, o, si ya va unido al anterior, parte el bloque por ahí. Un bloque que

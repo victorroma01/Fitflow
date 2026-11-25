@@ -108,7 +108,8 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 - Al final de la pantalla hay dos botones: **Guardar entreno**, que hace esa misma pregunta en cualquier momento y registra las
   series hechas, y **Salir y descartar**, que sale sin guardar nada (también pregunta antes).
 - **Esfuerzo (RPE)**: si lo activas en Ajustes → Ajustes avanzados, al marcar una serie salen debajo los números del 6 al 10 para
-  anotar lo dura que ha sido. Viene desactivado; **+ Drop set** sale siempre bajo la serie recién hecha que lleve peso.
+  anotar lo dura que ha sido. Viene desactivado. Hasta la V1.0.31 salía además, bajo la serie recién hecha, un botón
+  **+ Drop set** que añadía otra con menos peso; se quitó en la V1.0.4 (el drop set de un programa sigue saliendo solo).
 - **Peso sugerido**: al escribir el peso de una serie, las siguientes lo traen sugerido en gris oscuro, menos destacado que un
   peso ya registrado (en una pirámide, un escalón más en cada serie; en la bajada del drop set, un 25 % menos). Si cambias la
   serie 2, las siguientes sugieren el peso nuevo; una serie con el peso escrito a mano no cambia sola. El peso sugerido queda
@@ -121,7 +122,9 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
   desplegable; si no hay ninguno, 2:30), y vuelta al primero. Al acabar cada descanso, la pantalla pasa sola a la serie que toca.
   Se montan al editar el día: **Unir al anterior** (en el Overview, **Enlazar**) junta un ejercicio con el de arriba (y con el
   que lleve unido detrás) y **Separar** parte el bloque por ese ejercicio. De cuatro ejercicios seguidos en adelante, es un
-  **circuito**, que se hace igual, por rondas.
+  **circuito**, que se hace igual, por rondas. Cada ejercicio del bloque lleva encima su etiqueta, con el bloque que es y su
+  puesto en él (**SUPERSERIE · 1/2**); desde la V1.0.4 no repite el descanso que le sigue («10 s hasta el siguiente»,
+  «descanso de la ronda»), que ya dicen el propio ejercicio y la columna de descanso.
 - **Tips** (el icono «i»): el consejo propio de cada ejercicio (no hay dos iguales). **Notas**, **Historial** de sus series
   anteriores, **Swap** para cambiarlo por otro parecido sin perder el historial (las series que ya llevaras hechas se guardan
   en el ejercicio con el que las hiciste) y **Discos** (el icono del disco), que calcula qué discos poner en cada lado de la

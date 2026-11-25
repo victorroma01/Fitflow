@@ -1,6 +1,6 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: foldPassed, sessionHeader, setRow, restRunning, doneBefore, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 18
+   Define: foldPassed, sessionHeader, setRow, restRunning, doneBefore, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 17
 */
 import { $, clampNum, fmtDuration, fmtMinSec, round1, roundInt, typedNum, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -15,7 +15,7 @@ import { targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from '
 import { lastTimeLine, prefillSets, setText, suggestAfter } from './progression.js';
 import { usesBarbell } from './plates.js';
 import { deloadStrip, isDeloadWeek } from './deload.js';
-import { dropWeight, restAfterSet, setLabel, setTechnique, withTechnique } from './technique.js';
+import { restAfterSet, setLabel, setTechnique, withTechnique } from './technique.js';
 import { currentSet, setOrder } from './order.js';
 import { TECHNIQUES } from '../data/techniques.js';
 import { progressBody } from '../dashboard/progress.js';
@@ -402,14 +402,14 @@ const rpeRow = (i, j, s) => {
   const e = S.plan[S.selectedDay].ex[i];
   if (!e || unitOf(e))
     return '';
-  /* el esfuerzo, solo si se activó en Ajustes avanzados (F-42); «+ Drop set», siempre que haya peso */
-  const rpe = rpeOn() ? html`
-    <span>RPE</span>
-    ${[6, 7, 8, 9, 10].map(v => html`
-      <button class="chip${s.q == v ? ' on' : ''}" data-a="setRpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}` : '';
-  const drop = usesWeight(e) && (+s.w || 0) > 0 ? html`
-    <button class="chip" data-a="addDropSet" data-i="${i}" data-j="${j}">+ Drop set</button>` : '';
-  return rpe || drop ? html`<div class="rpe">${raw(rpe)}${raw(drop)}</div>` : '';
+  /* el esfuerzo, solo si se activó en Ajustes avanzados (F-42). Hasta la 1.0.31 iba aquí, además, el botón «+ Drop set», que
+     añadía una serie con menos peso: se quitó en la 1.0.4. El drop set de un programa sigue saliendo solo (workout/technique) */
+  return !rpeOn() ? '' : html`
+    <div class="rpe">
+      <span>RPE</span>
+      ${[6, 7, 8, 9, 10].map(v => html`
+        <button class="chip${s.q == v ? ' on' : ''}" data-a="setRpe" data-i="${i}" data-j="${j}" data-v="${v}">${v}</button>`)}
+    </div>`;
 };
 A.setRpe = (i, b) => {
   const s = W.sets[i] && W.sets[i][+b.dataset.j];
@@ -417,20 +417,6 @@ A.setRpe = (i, b) => {
     return;
   const v = +b.dataset.v;
   s.q = s.q == v ? 0 : v;
-  R();
-};
-A.addDropSet = (i, b) => {
-  const j = +b.dataset.j;
-  const a = W.sets[i];
-  const s = a && a[j];
-  if (!s)
-    return;
-  const w = +s.w || 0;
-  if (!(w > 0))
-    return;
-  a.splice(j + 1, 0, { r: s.r, w: dropWeight(w), ws: 1, ok: 0, t: 1, k: 'DS' });
-  W.restEndsAt = 0;
-  W.restAfter = null;
   R();
 };
 export const avgEffort = () => {
