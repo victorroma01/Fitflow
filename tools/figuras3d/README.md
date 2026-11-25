@@ -51,10 +51,10 @@ python3 pagina.py                  # la página de revisión del lote (sus texto
    elevaciones laterales y frontales, pájaros, face pull y remo al mentón: 72 ejercicios. Revisado.
 6. Core y lo que quedaba de pierna: crunch y sit-up, elevaciones de piernas, planchas y hollow, dead bug, bird dog, giros,
    rueda, leñador, Pallof, vacío, lumbares (hiperextensiones, GHD, superman y máquina), gemelos, tibial, abductores y
-   aductores, patadas de glúteo, step up, sissy, pistol, pasos laterales y zancada lateral: 82 ejercicios. En revisión.
+   aductores, patadas de glúteo, step up, sissy, pistol, pasos laterales y zancada lateral: 82 ejercicios. Revisado.
 7. CrossFit, Hyrox y funcional: halterofilia (con barra y con mancuernas), kettlebell, acarreos y saco, trineo, burpees, wall
    balls, balón medicinal, box jump y saltos laterales, muscle-ups, trepa de cuerda, pino, gateos, inchworm, press Svend,
-   battle ropes y volteo de neumático: 70 ejercicios (tras juntar los repetidos de Hyrox). En revisión.
+   battle ropes y volteo de neumático: 70 ejercicios (tras juntar los repetidos de Hyrox). Revisado.
 8. Cardio: carrera y marcha (en la calle, en la cinta, en cuesta, con chaleco y con mochila), bicicletas (estática, de aire y
    de carretera), remo, SkiErg, comba, elíptica, escaladora, natación y saco de boxeo: 50 ejercicios (tras juntar los «single
-   unders» con la comba y la cinta inclinada con la caminata inclinada). En revisión.
+   unders» con la comba y la cinta inclinada con la caminata inclinada). Revisado.
