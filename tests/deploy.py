@@ -32,6 +32,9 @@ T0 = time.time()
 # la cabecera Cache-Control del servidor. Como GitHub Pages (10 minutos): el service worker debe saltarse la caché HTTP. Con
 # 'no-cache', como si ya hubiera caducado: lo normal días después de instalar la app
 CACHE = ['max-age=600']
+# los archivos de código (js/…) que hay ahora en el servidor (NOW) y los que ha habido con otras versiones (EVER); y las veces
+# que se ha pedido uno que ya no está (STALE): lo pide una página que sigue abierta con una versión anterior
+NOW, EVER, STALE = set(), set(), []
 HERE = os.path.dirname(os.path.abspath(__file__))
 # las copias del documento guardadas con parámetros en su dirección (no debe haber ninguna: static/sw.js, keyOf)
 STRAY = "caches.open('ff-app-2').then(c=>c.keys()).then(k=>k.map(r=>r.url.replace(location.origin,'')).filter(u=>u.includes('?')))"
@@ -55,6 +58,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Cache-Control', CACHE[0])
         super().end_headers()
+
+    def send_error(self, code, *a, **k):
+        name = os.path.basename(self.path.split('?')[0])
+        if code == 404 and name in EVER - NOW:
+            STALE.append(name)
+        super().send_error(code, *a, **k)
 
     def log_message(self, *a):
         pass
@@ -94,6 +103,9 @@ def deploy(orig, dest, ver=None, suffix=''):
     js/ con otro nombre (como hace esbuild cuando cambia el contenido), con todas sus referencias."""
     v0 = json.load(open(os.path.join(orig, 'version.json'), encoding='utf-8'))['number']
     names = {f: (f[:-3] + suffix + '.js' if ver else f) for f in os.listdir(os.path.join(orig, 'js'))}
+    NOW.clear()
+    NOW.update(names.values())
+    EVER.update(names.values())
     def fix(t):
         for a, b in names.items():
             t = t.replace(a, b)
@@ -197,6 +209,8 @@ def main(app):
     orig = os.path.join(site, 'orig')
     shutil.copytree(os.path.abspath(app), orig)
     shutil.copytree(orig, os.path.join(site, 'fitflow'))
+    NOW.update(os.listdir(os.path.join(orig, 'js')))
+    EVER.update(NOW)
     srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(Handler, directory=site))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     url = 'http://localhost:%d/fitflow/' % srv.server_address[1]
@@ -209,7 +223,22 @@ def main(app):
             errs = []
             pg.on('framenavigated', lambda f: log.append('navega ' + f.url[-50:]) if f == pg.main_frame else None)
             pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200]))
-            pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' and 'Service Worker' not in m.text else None)
+
+            def console(m):
+                """Los errores de la consola de la página. Sin service worker (WebKit, en estas pruebas) nadie guarda el código de la
+                versión anterior: una página que sigue abierta con una versión que ya no está en el servidor no encuentra lo que
+                aún no había cargado (el motor de las figuras, que pide ella sola al rato de abrirse). No es un fallo de la app:
+                con service worker lo tiene en su caché, y ahí sí cuenta. Vale solo para un archivo de código de otra versión
+                (por su dirección o, si el aviso no la trae, porque el servidor acaba de negar uno)."""
+                if m.type != 'error' or 'Service Worker' in m.text:
+                    return
+                name = os.path.basename(((m.location or {}).get('url') or '').split('?')[0])
+                if not SW and '404' in m.text and (name in EVER - NOW if name else STALE):
+                    if not name:
+                        STALE.pop()
+                    return
+                errs.append('CONSOLE ' + m.text[:200] + (' · ' + name if name else ''))
+            pg.on('console', console)
             try:
                 pg.goto(url)
                 pg.wait_for_timeout(1500)
@@ -532,6 +561,63 @@ def main(app):
                 p5.wait_for_timeout(1000)
                 check('si lo que no carga es código de la propia app, sí sale la pantalla de error, con su «Reintentar»', p5.evaluate(broke) and 'No se ha podido cargar la app' in p5.evaluate("document.getElementById('ffem').textContent") and p5.evaluate("!!document.getElementById('ffe1')"))
                 c5.close()
+                # El motor de las figuras 3D se descarga la primera vez que hace falta una figura. Si no llega (sin conexión y
+                # sin el código guardado aún, o un servidor que falla), la app sigue, las miniaturas esperan en su hueco y el
+                # motor se pide otra vez al rato; no una vez por cada miniatura de la cola, que es lo que pasaba (tres peticiones
+                # por miniatura, sin pausa). Sin service worker, para que nada salga de su caché.
+                engine = [f for f in os.listdir(os.path.join(site, 'fitflow', 'js')) if f.startswith(('motor3d-', 'figure3d-', 'figboxes-'))]
+                FAIL.update('/js/' + f for f in engine)
+                c6 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, service_workers='block')
+                c6.add_init_script(INIT)
+                p6 = c6.new_page()
+                p6.goto(url)
+                p6.wait_for_timeout(800)
+                k0 = len(REQS)
+                asked6 = lambda: sum(1 for r in REQS[k0:] if os.path.basename(r) in engine)
+                state6 = """[!!window.__ffok, !!document.getElementById('ffe'), document.querySelectorAll('#sh .exercise-thumb').length,
+                  document.querySelectorAll('#sh svg[data-pic]').length, errorLog().map(x => x.w).join()]"""
+
+                def settles(n, limit=8000):
+                    """Espera a que el motor se haya pedido n veces (cada vez, sus tres archivos) y dice cuántas peticiones van un
+                    momento después: si no se quedan en esas, es que se sigue pidiendo."""
+                    for _ in range(limit // 100):
+                        if asked6() >= 3 * n:
+                            break
+                        p6.wait_for_timeout(100)
+                    p6.wait_for_timeout(700)
+                    return asked6()
+                p6.evaluate("A.openLibrary(); U.librarySearch('press')")   # una lista con decenas de miniaturas por dibujar
+                p6.wait_for_timeout(2500)
+                st, n1 = p6.evaluate(state6), asked6()
+                check('si el motor de las figuras no se puede descargar, la app sigue y las miniaturas esperan en su hueco', st[:2] == [True, False] and st[2] > 20 and st[3] == st[2], str(st))
+                check('y se pide una vez (sus tres archivos), no una por miniatura', len(engine) == 3 and n1 == 3, '%d peticiones con %d miniaturas en cola' % (n1, st[2]))
+                check('el fallo queda apuntado una vez', st[4] == 'motor de las figuras', str(st))
+                n2 = settles(2)
+                check('al rato (4 s) lo vuelve a pedir, una vez', n2 == 6, '%d peticiones' % n2)
+                # una figura grande que se abre la ha pedido el usuario: se intenta ya, una vez; volver a pintar la hoja no es otro intento
+                drawn6 = "!!document.querySelector('#sh .figure-stage svg[data-on]')"
+                p6.evaluate("A.exerciseHowTo(0, { dataset: { n: 'Press banca' } })")
+                n3 = settles(3, 3000)
+                p6.evaluate("document.querySelector('#sh .howto-text').append('')")
+                p6.wait_for_timeout(500)
+                n3, st = max(n3, asked6()), p6.evaluate(state6)
+                check('abrir «Cómo se hace» lo pide ya, una sola vez, y la hoja sale con su texto y el sitio de la figura', n3 == 9 and not p6.evaluate(drawn6) and p6.evaluate("document.querySelector('#sh .howto-text').innerText.length > 80 && !!document.querySelector('#sh .figure-stage')") and st[4] == 'motor de las figuras', '%d peticiones · %s' % (n3, st))
+                # al volver la conexión: se pide ya, la figura que esperaba se pone sola y las miniaturas se dibujan
+                FAIL.clear()
+                p6.evaluate("window.dispatchEvent(new Event('online'))")
+                for _ in range(40):
+                    if p6.evaluate(drawn6):
+                        break
+                    p6.wait_for_timeout(250)
+                check('al volver la conexión, la figura que esperaba se pone sola', p6.evaluate(drawn6), '%d peticiones' % asked6())
+                p6.evaluate("A.closeSheet(); A.openLibrary(); U.librarySearch('press')")
+                for _ in range(80):
+                    st = p6.evaluate(state6)
+                    if st[2] > 20 and not st[3]:
+                        break
+                    p6.wait_for_timeout(250)
+                check('y las miniaturas se dibujan', st[2] > 20 and st[3] == 0 and p6.evaluate("document.querySelectorAll('#sh .exercise-thumb img').length") == st[2], str(st))
+                c6.close()
                 # app instalada: compartir copia de seguridad
                 c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
                 c2.add_init_script(INIT)

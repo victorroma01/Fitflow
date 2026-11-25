@@ -104,6 +104,19 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   que era la Caminata inclinada, que dicen ahora lo de los dos), con su nombre en `data/aliases` (`EX_RETIRED`) para que lo guardado
   con ellos siga encontrando el que queda (`liveName`, también para la figura), y los músculos de los ejercicios de cada lote,
   comprobados con su figura. Los de distancia de Hyrox, en metros por su nombre (`core/calc`, `unitFromName`).
+- Figuras 3D: si el motor no se puede descargar (sin conexión y sin el código guardado aún, o una página abierta de una
+  versión que ya no está en el servidor), las miniaturas esperan en su hueco y el motor se vuelve a pedir a los 4 s, a los 8…
+  hasta cada 5 minutos, o ya al volver la conexión o al abrir una figura grande (`extras/pictures`, `figures`). Antes lo pedía
+  cada miniatura de la cola, sin pausa (169 peticiones en dos segundos y medio con 59 en cola) y llenaba el registro de errores.
+  Salió al pasar las pruebas en Safari, que aquí va sin service worker; `tests/deploy.py` lo comprueba en los tres motores.
+- Carga diferida (`core/lazy`): al reintentar una descarga que falló, el archivo se pide con otra dirección porque el
+  navegador recuerda el fallo. La dirección se leía del mensaje del error, y Safari no la da («Importing a module script
+  failed.»): ahora, si falta, se lee de lo que se iba a importar (`importedUrl`).
+- Pruebas en Safari (WebKit), que hasta la solicitud de fusión no se habían pasado con las figuras 3D ni con el inglés: el
+  aviso de WebKit por una lectura de Blob cortada al recargar no cuenta como error de página (`tests/browser.py`,
+  `BLOB_NOISE`); la captura de `tests/figures.py` descarta también el bloqueo de la hoja de estilos que mete Playwright; el
+  rojo de una miniatura se mide con el margen de los tres motores; y, sin service worker, `tests/deploy.py` no cuenta el 404
+  de un archivo de código de una versión que ya no está en el servidor.
 - Prueba nueva, `tests/library.test.mjs` (sin navegador): que los programas, los cambios y los días por nivel, las plantillas
   del programa guiado, los grupos de rotación y los otros nombres del buscador solo nombran ejercicios de la librería; que cada
   ejercicio tiene su figura; y que de cada ejercicio juntado el nombre viejo ya no está, el que queda sí, y lo guardado con el

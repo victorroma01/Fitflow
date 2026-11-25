@@ -6,7 +6,7 @@
    verdad, y repite la acción. En el archivo único todo va dentro y carga al instante. Si la descarga tarda, se dice
    «Cargando…»; si falla, se avisa y la siguiente vez se vuelve a pedir (lazyLoad).
    También el inglés (i18n/en-*.js): solo se descarga con la app en inglés, antes del primer pintado (loadEnglish).
-   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, figureTools, setFigureTools, loadFigures, loadEnglish
+   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, importedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, figureTools, setFigureTools, loadFigures, loadEnglish
 */
 import { LANG } from './util.js';
 import { logError } from './errors.js';
@@ -20,9 +20,21 @@ const failedUrls = new Map();
 /* la dirección del archivo que no se pudo descargar: viene en el mensaje del error («Failed to fetch dynamically imported
    module: https://…/wod-XXXX.js») */
 const failedUrl = e => (/(https?:\/\/[^\s'"]+\.js)/.exec(e && e.message || '') || [])[1] || '';
-/** Carga el módulo diferido `key` con `load` (un import()). Chrome recuerda el fallo de un import() y no vuelve a pedir ese
-    archivo mientras la página siga abierta, así que «inténtalo de nuevo» no serviría: si la vez anterior falló la descarga,
-    se pide con otra dirección (el mismo archivo, con ?r=…). */
+/* y si el error no la trae (Safari solo dice «Importing a module script failed.»), la de lo que `load` iba a importar, leída
+   de su propio texto («() => import("./wod-XXXX.js")»): los archivos de código van todos en la carpeta del principal */
+const importedUrl = load => {
+  const spec = /import\(\s*["'`]([^"'`]+\.js)["'`]\s*\)/.exec(String(load));
+  const main = /** @type {HTMLScriptElement | null} */ (document.querySelector('script[type=module][src]'));
+  try {
+    return spec && main ? new URL(spec[1], main.src).href : '';
+  }
+  catch (e) {
+    return '';
+  }
+};
+/** Carga el módulo diferido `key` con `load` (un import()). El navegador recuerda el fallo de un import() y no vuelve a pedir
+    ese archivo mientras la página siga abierta, así que «inténtalo de nuevo» no serviría: si la vez anterior falló la
+    descarga, se pide con otra dirección (el mismo archivo, con ?r=…). */
 const lazyLoad = (key, load) => {
   if (loadedModules.has(key))
     return Promise.resolve(loadedModules.get(key));
@@ -31,7 +43,7 @@ const lazyLoad = (key, load) => {
     loadedModules.set(key, m);
     return m;
   }, e => {
-    const u = failedUrl(e).split('?')[0];
+    const u = (failedUrl(e) || importedUrl(load)).split('?')[0];
     if (u)
       failedUrls.set(key, u);
     throw e;

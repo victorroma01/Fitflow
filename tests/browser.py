@@ -8,6 +8,9 @@ Dirección: todo se sirve por HTTP desde su carpeta, como en GitHub Pages: el pa
 sus módulos ES no cargan desde file://, y también el archivo único (con file://, WebKit no guarda datos, y Chromium a veces
 abre la página recargada con el almacenamiento vacío). SF_HTTP=0 abre el archivo único como archivo, con Chromium.
 
+Errores de página: en WebKit, el aviso de una lectura de Blob cortada por una recarga no llega a quien los escucha
+(BLOB_NOISE).
+
 Idioma: las pruebas abren la app con el navegador en español (new_context lo pone si la prueba no pide otro). La del inglés
 (tests/english.py) lo pide en inglés. SF_LOCALE=en-US abre en inglés cualquier prueba que no mire los textos: la de los tamaños
 de pantalla (tests/layout.py) se pasa así también, porque en inglés los textos miden otra cosa.
@@ -155,6 +158,25 @@ def _with_setup(make):
     return run
 
 
+# Lo que WebKit apunta como error de JavaScript cuando la página se recarga o se cierra con la lectura de un Blob a medias (la
+# app guarda cada miniatura de figura en el móvil leyendo su imagen: extras/pictures, keep): «Cannot load blob:http://…/<uuid>
+# due to access control checks.». Playwright lo da como error de página, partido por su primer «:» («ttp://…/<uuid> due to
+# access control checks.»). No es un error del código: la lectura se pierde con la página y esa miniatura se dibuja otra vez
+# la próxima (que se guardan y se leen lo comprueba tests/figures.py). Solo vale para la dirección de un Blob, cuya ruta es
+# un UUID: un fallo de red de verdad lleva otra dirección y sigue contando.
+BLOB_NOISE = re.compile(r'\S*://[^/\s]+/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12} due to access control checks\.?\s*$', re.I)
+
+
+def _without_noise(on):
+    """page.on que, en WebKit, no pasa a quien escucha los errores de página el aviso de una lectura de Blob cortada."""
+    def run(self, event, f):
+        if event == 'pageerror' and ENGINE == 'webkit':
+            listener = f
+            f = lambda e: None if BLOB_NOISE.search(str(e)) else listener(e)
+        return on(self, event, f)
+    return run
+
+
 def _page_text(self, selector, **k):
     """page.inner_text en Firefox: Playwright lo lee en un contexto aparte, donde no vale el arreglo de GECKO_TEXT_JS (y el texto
     de #sh sale vacío o a medias). Se lee en la página, esperando a que el elemento exista como hace Playwright."""
@@ -170,6 +192,7 @@ if not getattr(Page, '_ff_settled', False):
     Page.goto = _settled(Page.goto)
     Page.reload = _settled(Page.reload)
     Browser.new_context = _with_setup(Browser.new_context)
+    Page.on = _without_noise(Page.on)
     if ENGINE == 'firefox':
         Page.inner_text = _page_text
     Page._ff_settled = True

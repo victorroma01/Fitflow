@@ -68,6 +68,12 @@ verdad, círculos, elipses, el desplazamiento de los discos) y deja fuera lo que
 
 - **El motor se descarga al usarlo.** Al arrancar no se carga: la primera miniatura que haga falta dibujar, o la primera
   hoja, lo descarga (el service worker lo tiene guardado desde que se instaló la app, así que también va sin conexión).
+- **Si el motor no llega, se espera.** Sin conexión y sin el código guardado todavía (la primera visita, o un navegador sin
+  service worker), o con una página abierta de una versión que ya no está en el servidor, la descarga falla. La app sigue:
+  las miniaturas se quedan en su hueco y en su cola, y el motor se vuelve a pedir a los 4 s, luego a los 8, a los 16… hasta
+  cada 5 minutos (`extras/pictures`, `figures`). Al volver la conexión, o si el usuario abre una figura grande, se pide ya (una
+  vez por figura abierta, no en cada cambio de la hoja). El fallo se apunta una vez por racha. Antes lo pedía cada miniatura
+  de la cola, sin pausa: 169 peticiones en dos segundos y medio con una lista de 59 ejercicios, y el registro de errores lleno.
 - **Nada se dibuja para medirlo.** El recuadro de cada figura y los momentos de las quietas vienen calculados
   (`data/figboxes`). Antes, al abrir la hoja había que dibujar la figura trece veces para encuadrar el gesto: unos 50 ms en un
   ordenador y cuatro veces más en un móvil, justo mientras la hoja entra.

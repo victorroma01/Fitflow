@@ -101,12 +101,15 @@ def main(path, shots=None):
         def capture(loc):
             """Captura de un elemento, para mirar lo pintado. En WebKit, Playwright mete y quita una hoja de estilos vacía en
             cada captura (para acompasar las animaciones) y la política de seguridad de la app la rechaza con un aviso en la
-            consola: ese aviso, y solo ese, se descarta si llega durante la captura. Lo que la app pinte con estilos en
-            línea lo sigue viendo tests/security.py."""
+            consola: ese aviso, y solo ese, se descarta si llega durante la captura, y también su bloqueo, que tests/init.js
+            apunta en window.__csp («style-src-elem inline»). Lo que la app pinte con estilos en línea lo sigue viendo
+            tests/security.py."""
             n = len(errs)
+            k = ev("(window.__csp || []).length")
             png = loc.screenshot(caret='initial')
             pg.wait_for_timeout(80)
             errs[n:] = [e for e in errs[n:] if 'Refused to apply a stylesheet' not in e]
+            ev("k => { const c = window.__csp || []; window.__csp = c.slice(0, k).concat(c.slice(k).filter(x => !/^style-src(-elem)? inline/.test(x))); }", k)
             return png
 
         def settled():
@@ -138,12 +141,13 @@ def main(path, shots=None):
         check('cada figura de la tabla es de un ejercicio que existe', ev("Object.keys(FIG_POSES).every(n=>exAll().some(e=>e.n==n))"))
         check('el motor no se descarga al abrir la app', not ev("!!document.getElementById('g3Ne0')"))
 
-        # las 525 miniaturas, dibujadas: cada una es una imagen de su tamaño (WebP en Chromium; PNG donde no hay WebP)
+        # las 525 miniaturas, dibujadas: cada una es una imagen de su tamaño (WebP en Chromium; PNG donde no hay WebP) y no
+        # está vacía (una en blanco no llega a 300 bytes; la más ligera, la de Wall balls en Firefox, pesa 1.154)
         bad = ev("""(async () => { const f = await loadFigures(); const bad = [];
           for (const e of exAll()) { if (!exHasFigure(e.n)) continue;
             try { const o = await f.thumb(e.n, 96);
               const img = new Image(); img.src = URL.createObjectURL(o.blob); await img.decode();
-              if (!/^image\\/(webp|png)$/.test(o.blob.type) || o.blob.size < 1200 || img.naturalWidth != 96 || img.naturalHeight != 96 || !o.keep) bad.push(e.n + ': ' + o.blob.type + ' ' + o.blob.size + ' ' + img.naturalWidth);
+              if (!/^image\\/(webp|png)$/.test(o.blob.type) || o.blob.size < 600 || img.naturalWidth != 96 || img.naturalHeight != 96 || !o.keep) bad.push(e.n + ': ' + o.blob.type + ' ' + o.blob.size + ' ' + img.naturalWidth);
               URL.revokeObjectURL(img.src); }
             catch (err) { bad.push(e.n + ': ' + err); } }
           return bad; })()""")
@@ -336,7 +340,9 @@ def main(path, shots=None):
         settled()
         red, orange, slate, _, _ = painted(capture(pg.locator('#sh .item-split .exercise-thumb').first))
         print('        pintado: miniatura de la sentadilla %.4f %.4f %.4f' % (red, orange, slate))
-        check('miniatura de la sentadilla: los músculos en color y el cuerpo, claro', red > .0005 and orange > .0015 and slate > .02, '%.4f %.4f %.4f' % (red, orange, slate))
+        # (el rojo, de unos pocos píxeles a este tamaño, depende de cómo reduce la imagen cada motor: 0,0009 en Chromium,
+        # 0,0004 en WebKit y 0,0017 en Firefox; el naranja y el cuerpo salen iguales en los tres)
+        check('miniatura de la sentadilla: los músculos en color y el cuerpo, claro', red > .0002 and orange > .0015 and slate > .02, '%.4f %.4f %.4f' % (red, orange, slate))
         ev("A.closeSheet()")
         pg.clock.run_for(200)
 

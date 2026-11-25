@@ -12,7 +12,7 @@
      actualizar), de una en una y solo mientras no se toca la pantalla ni se mueve la figura grande.
    - Figura grande de la hoja «Cómo se hace» (exMotion): aquí se pone su sitio, de proporción fija para que nada salte al
      llegar el dibujo, y extras/figure3d la dibuja y la mueve en cuanto aparece en la hoja.
-   Define: figuresAt, figures, thumbSize, thumbPx, figDb, STAMP_KEY, storeAt, storeReady, ready, failed, thumbImg, thumbHole, holesOf, fillHole, fillName, toLook, looked, looking, lookUp, soonLine, laterLine, lined, ahead, AT_ONCE, drawing, CALM, movedAt, calmTimer, isCalm, breathe, keep, drawThumb, pump, lineUp, want, warmUp, exHasFigure, exPicture, LATER_MARGIN, laterWatchers, laterWatched, nearView, watchLater, exPictureLater, exMotion, stagesIn
+   Define: RETRY, RETRY_MAX, figuresAt, retryAt, retryWait, retryTimer, engineResting, figures, thumbSize, thumbPx, figDb, STAMP_KEY, storeAt, storeReady, ready, failed, thumbImg, thumbHole, holesOf, fillHole, fillName, toLook, looked, looking, lookUp, soonLine, laterLine, lined, ahead, AT_ONCE, drawing, CALM, movedAt, calmTimer, isCalm, breathe, keep, drawThumb, pump, lineUp, want, warmUp, exHasFigure, exPicture, LATER_MARGIN, laterWatchers, laterWatched, nearView, watchLater, exPictureLater, exMotion, askedStages, stagesIn, wake
 */
 import { idbStore } from '../core/idb.js';
 import { logError } from '../core/errors.js';
@@ -23,11 +23,30 @@ import { FIG_STAMP } from '../data/figstamp.js';
 import { S } from '../core/state.js';
 import { exAnatomy } from './anatomy.js';
 import { liveName } from '../library/model.js';
-/* el motor y lo que dibuja con él (extras/figure3d), cargados una vez: si la descarga falla, se intenta otra vez la
-   siguiente vez que hagan falta */
+/* el motor y lo que dibuja con él (extras/figure3d), cargados una vez. Si la descarga falla (sin conexión y sin el código
+   guardado aún, o con una versión que ya no está en el servidor), no se pide otra vez enseguida: lo pediría cada miniatura
+   de la cola, y son tres archivos cada vez. Se deja pasar RETRY ms, el doble tras cada fallo seguido (hasta RETRY_MAX), y
+   entonces sigue la cola (wake); al volver la conexión, o si el usuario abre una figura grande, ya. Mientras tanto, las
+   miniaturas se quedan en su hueco y en su cola. Se apunta el primer fallo de cada racha, no cada intento. */
+const RETRY = 4000;
+const RETRY_MAX = 300000;
 let figuresAt = null;
-const figures = () => figuresAt || (figuresAt = loadFigures().catch(e => {
+let retryAt = 0;
+let retryWait = RETRY;
+let retryTimer = 0;
+/* ¿se está dejando pasar el rato tras un fallo? */
+const engineResting = () => !figuresAt && performance.now() < retryAt;
+const figures = () => figuresAt || (figuresAt = loadFigures().then(fig => {
+  retryWait = RETRY;
+  return fig;
+}, e => {
   figuresAt = null;
+  if (retryWait == RETRY)
+    logError('motor de las figuras', e);
+  retryAt = performance.now() + retryWait;
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(wake, retryWait + 20);
+  retryWait = Math.min(RETRY_MAX, retryWait * 2);
   throw e;
 }));
 /* el tamaño de las miniaturas en píxeles de la pantalla: la mayor (72 px, la de la ficha) en un móvil de densidad 3, o lo
@@ -126,8 +145,8 @@ const breathe = () => new Promise(res => typeof requestIdleCallback == 'function
 const keep = (n, blob) => storeReady().then(ok => ok && blob.arrayBuffer().then(d => figDb('mini', 'readwrite', st => st.put({ t: blob.type, d }, n)))).catch(() => {
 });
 /* dibuja una miniatura y la pone en sus huecos. Si lo que falla es cargar el motor (sin conexión la primera vez), no se da
-   por perdida: se volverá a pedir */
-const drawThumb = n => {
+   por perdida: vuelve a su cola (hurry, como en lineUp) y se dibujará cuando el motor llegue (figures) */
+const drawThumb = (n, hurry) => {
   drawing++;
   figures().then(fig => fig.thumb(n, thumbPx()).then(out => {
     ready.set(n, URL.createObjectURL(out.blob));
@@ -136,11 +155,10 @@ const drawThumb = n => {
   }, e => {
     failed.add(n);
     logError('miniatura de ' + n, e);
-  }), e => logError('miniaturas', e)).then(() => {
+  }).then(() => {
     ahead.delete(n);
     fillName(n);
-    return breathe();
-  }).then(() => {
+  }), () => lineUp(n, hurry)).then(breathe).then(() => {
     drawing--;
     pump();
   });
@@ -148,9 +166,13 @@ const drawThumb = n => {
 /* la siguiente: una con prisa o, si no queda ninguna ni se está dibujando otra, una de sin prisa con la pantalla tranquila.
    Solo se dibuja la que alguien sigue esperando (un hueco en la página) o es del plan */
 const pump = () => {
+  /* sin el motor (su descarga ha fallado) no se dibuja: la cola sigue cuando toque pedirlo otra vez (figures, wake) */
+  if (engineResting())
+    return;
   while (drawing < AT_ONCE) {
     let n = soonLine.shift();
-    if (n === undefined) {
+    const soon = n !== undefined;
+    if (!soon) {
       if (drawing || !laterLine.length)
         return;
       if (!isCalm()) {
@@ -164,7 +186,7 @@ const pump = () => {
     if (ready.has(n) || failed.has(n) || !ahead.has(n) && !holesOf(n).length)
       fillName(n);
     else
-      drawThumb(n);
+      drawThumb(n, soon ? 2 : 0);
   }
 };
 /* apunta una miniatura para dibujarla: hurry 0, sin prisa; 1, con prisa; 2, la primera (su fila se acerca a lo que se ve) */
@@ -276,12 +298,36 @@ export const exMotion = (n, still) => !exHasFigure(n) ? '' : still ? html`<div c
   <div class="figure-stage">
     <svg data-f3="${liveName(n)}" viewBox="0 0 400 300" role="img" aria-label="El movimiento, del inicio al final"></svg>
   </div>`;
-/* las figuras grandes que haya en root y no estén aún en marcha: se carga el motor y se ponen */
+/* las figuras grandes que haya en root y no estén aún en marcha: se carga el motor y se ponen. Si el motor no se pudo
+   descargar y aún no toca pedirlo otra vez, una figura recién abierta lo pide ya, una sola vez (la ha abierto el usuario):
+   cada cambio en la hoja pasa por aquí, y no puede ser otra petición */
+const askedStages = new WeakSet();
 const stagesIn = root => {
-  if (!root.querySelector('[data-f3]:not([data-on]),[data-f3s]:not([data-on])'))
+  const stage = root.querySelector('[data-f3]:not([data-on]),[data-f3s]:not([data-on])');
+  if (!stage)
     return;
-  figures().then(fig => fig.stages(root)).catch(e => logError('figura grande', e));
+  if (engineResting()) {
+    if (askedStages.has(stage))
+      return;
+    retryAt = 0;
+  }
+  askedStages.add(stage);
+  figures().then(fig => fig.stages(root), () => null).catch(e => logError('figura grande', e));
 };
+/* pasado el rato tras un fallo del motor, o al volver la conexión: sigue la cola de miniaturas y, si hay una figura grande
+   esperando en la hoja, se pone */
+const wake = () => {
+  pump();
+  const sh = document.getElementById('sh');
+  if (sh)
+    stagesIn(sh);
+};
+window.addEventListener('online', () => {
+  if (!engineResting())
+    return;
+  retryAt = 0;
+  wake();
+});
 /* las listas largas y las figuras grandes van en la hoja (#sh): cada vez que se pinta algo en ella, se miran sus huecos y
    sus figuras (no lo que cambia dentro de una figura grande ya puesta, que es cada fotograma de su movimiento) */
 if (document.getElementById('sh') && typeof MutationObserver != 'undefined')
