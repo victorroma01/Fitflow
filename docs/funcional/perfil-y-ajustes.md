@@ -79,7 +79,8 @@ lo mismo que retirar el consentimiento ni que eliminar la cuenta: [las diferenci
 
 Los dos textos, nuevos en la V1.0.4, se leen en Ajustes → Información y, sin tener cuenta, desde el inicio de sesión. Cada uno
 dice su fecha y su versión, y se cruzan con enlaces. En inglés llevan un aviso arriba: son una traducción y, si no dicen lo
-mismo, vale el español.
+mismo, vale el español. Cada uno tiene además su dirección, para enlazarlo desde fuera: la de la app con `?a=privacidad` o
+`?a=aviso-legal` al final (se abren con sesión o sin ella).
 
 - **Privacidad** empieza con un resumen en seis tarjetas (los datos imprescindibles, la protección, dónde se guardan, sin
   publicidad, el escáner y tu control) y **Leer la política completa** baja al texto entero, con su índice: cada apartado se abre desde él y **Volver

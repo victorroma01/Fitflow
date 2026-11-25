@@ -128,8 +128,9 @@ test('perfil: la constancia de lo aceptado (condiciones y consentimiento), con s
   assert.ok(allowed(seen), 'el admin lee el perfil');
   assert.equal(seen.j.fields.cs.mapValue.fields.h.mapValue.fields.st.integerValue, '1', 'con lo aceptado');
   assert.ok(allowed(await set('users/' + ana.uid, { sx: 'F', m: Date.now() }, ana.t, { mask: ['sx', 'm'] })), 'con ella puesta, el resto del perfil se cambia igual');
-  // al crear el perfil no va: la app lo crea primero y la anota después, en una escritura aparte
-  assert.ok(denied(await set('users/' + bea.uid + 'x', { u: 'bea', ca: now, m: now, cs: { t: { v: '1.0', at: now } } }, bea.t, { pre: { exists: false } })), 'en el perfil de otro identificador');
+  // al crear el perfil no va: la app lo crea primero y la anota después, en una escritura aparte (cloud/consent: syncConsent)
+  assert.ok(denied(await set('users/' + old.uid, { u: 'Vieja_1', ca: now, m: now, cs: { t: { v: '1.0', at: now } } }, old.t, { pre: { exists: false } })), 'al crear el perfil');
+  assert.equal((await get('users/' + old.uid, old.t)).status, 404, 'y el perfil no se ha creado');
 });
 
 test('partes del estado: cada cuenta las suyas, con la forma de la app', async () => {

@@ -569,7 +569,12 @@ def main(path):
         for a, text in [('privacidad', 'Política de privacidad de StrataFit'), ('aviso-legal', 'Aviso legal y condiciones de uso'), ('privacy', 'Política de privacidad de StrataFit'), ('terms', 'Aviso legal y condiciones de uso')]:
             pg.goto(url + '?a=' + a)
             run(1500)
-            pg.wait_for_function("!!document.querySelector('#lgl .page-title')", timeout=10000)
+            # el texto se carga al abrirlo: se pregunta desde aquí hasta que está (la CSP no deja evaluar texto dentro de la página)
+            for _ in range(100):
+                if ev("!!document.querySelector('#lgl .page-title')"):
+                    break
+                pg.wait_for_timeout(100)
+                run(100)
             got = ev("({ t: document.querySelector('#lgl .page-title').textContent, q: location.search, data: !!document.querySelector('#lgl [data-a=openDeleteAccount]'), back: document.querySelector('#lgl [aria-label=Volver]').dataset.a, app: !!document.querySelector('#app nav, nav') })")
             check('?a=%s abre %s sobre la app y deja limpia la dirección' % (a, text), got['t'] == text and got['q'] == '' and got['data'] == (text.startswith('Política')) and got['app'], str(got))
         ev("document.querySelector('#lgl [aria-label=Volver]').click()")

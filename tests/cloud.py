@@ -1227,14 +1227,18 @@ def main(path):
             fb.put('reports/fantasma-1', {'uid': {'stringValue': 'fantasma'}, 'u': {'stringValue': 'Leo_9'}, 'k': {'stringValue': 'f'}, 't': {'stringValue': 'un aviso de prueba'}, 'st': {'stringValue': 'p'}})
             fb.put('adminInbox/caducada', {'u': {'stringValue': 'Leo_9'}, 'p': {'stringValue': 'x'}, 't': {'integerValue': '1'}, 'exp': {'integerValue': '2'}})
             rest = fb.tree('fantasma')
+            # (los dos perfiles sueltos de la prueba de Administración tampoco son de ninguna cuenta: son restos, como los que
+            # deja una cuenta borrada desde la consola)
+            loose = ['users/uintruso', 'users/uviejo']
             code, out = fb.sweep('simulacro')
             check('la limpieza, en simulacro: cuenta lo que borraría sin borrarlo y sin nombrar a nadie',
-                  code == 0 and len(rest) == 2 and bool(re.search(r'Datos de cuentas que ya no existen \| 1\b', out)) and bool(re.search(r'Contraseñas temporales caducadas \| [1-9]', out))
-                  and fb.tree('fantasma') == rest and fb.data('adminInbox/caducada') is not None and 'Leo_9' not in out and 'Ana_1' not in out and 'fantasma' not in out and '@' not in out, out[-600:])
+                  code == 0 and len(rest) == 2 and bool(re.search(r'Datos de cuentas que ya no existen \| 3\b', out)) and bool(re.search(r'Contraseñas temporales caducadas \| [1-9]', out))
+                  and fb.tree('fantasma') == rest and all(fb.data(x) is not None for x in loose) and fb.data('adminInbox/caducada') is not None
+                  and 'Leo_9' not in out and 'Ana_1' not in out and 'fantasma' not in out and 'uviejo' not in out and '@' not in out, out[-600:])
             code, out = fb.sweep('aplicar')
-            check('al aplicarla: fuera los restos de la cuenta eliminada y la contraseña temporal caducada; las cuentas con actividad, intactas',
-                  code == 0 and fb.tree('fantasma') == [] and fb.data('adminInbox/caducada') is None and fb.has_account('Ana_1') and fb.data('users/' + uid) is not None
-                  and bool(re.search(r'Cuentas eliminadas ahora \| 0', out)) and bool(re.search(r'Restos borrados ahora \| 1', out)), out[-600:])
+            check('al aplicarla: fuera los restos de las cuentas que ya no existen y la contraseña temporal caducada; las cuentas con actividad, intactas',
+                  code == 0 and fb.tree('fantasma') == [] and all(fb.data(x) is None for x in loose) and fb.data('adminInbox/caducada') is None and fb.has_account('Ana_1') and fb.data('users/' + uid) is not None
+                  and bool(re.search(r'Cuentas eliminadas ahora \| 0', out)) and bool(re.search(r'Restos borrados ahora \| 3', out)), out[-600:])
             admin_uid = fb.uid_of('VictorAdmin_')
             code, out = fb.sweep('simulacro', days=735)
             idle = re.search(r'Sin actividad desde hace 2 años \| (\d+)', out)

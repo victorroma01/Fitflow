@@ -43,7 +43,7 @@ gimnasio sin cobertura (*offline-first*).
 | `account/login` | Inicio de sesión, registro, contraseña temporal y volver a entrar si la sesión caduca. |
 | `account/account` | Ajustes → Cuenta, Cambiar contraseña y «Cerrar sesión». |
 | `account/privacy` | «Retirar el consentimiento» y «Eliminar cuenta». |
-| `profile/legal`, `profile/legaltext` | Las pantallas de Privacidad y Aviso legal, y el paso de su texto a HTML (código puro). El texto, en `data/legal` (en inglés, `i18n/en-legal`), que se carga al abrirlas. |
+| `profile/legal`, `profile/legaltext` | Las pantallas de Privacidad y Aviso legal, y el paso de su texto a HTML (código puro). El texto, en `data/legal` (en inglés, `i18n/en-legal`), que se carga al abrirlas. Con sesión o sin ella, también por su dirección: `?a=privacidad` y `?a=aviso-legal` (`system/phone`). |
 | `account/admin` | Perfil → Administración. |
 | `account/reports` | Administración → Fallos y sugerencias: estado y respuesta. |
 | `cloud/backup` | Copia de seguridad en la nube: escribir, leer, la semanal y borrarla. |
