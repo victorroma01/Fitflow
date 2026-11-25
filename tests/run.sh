@@ -62,6 +62,9 @@ run python3 tests/calc.py dist/stratafit.html
 run python3 tests/dashboard.py dist/stratafit.html
 run python3 tests/render.py dist/stratafit.html
 run python3 tests/english.py dist/stratafit.html
+# con la app en inglés los textos miden otra cosa: los tamaños de pantalla y las zonas táctiles, también en inglés
+run env SF_LOCALE=en-US python3 tests/layout.py dist/stratafit.html
+run env SF_LOCALE=en-US python3 tests/a11y.py dist/stratafit.html
 # la app con App Check configurado con valores de prueba y su CSP (dist/appcheck/): la usa tests/cloud.py
 run python3 build.py --appcheck
 run python3 tests/cloud.py dist/stratafit.html

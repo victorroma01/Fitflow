@@ -9,7 +9,8 @@ sus módulos ES no cargan desde file://, y también el archivo único (con file:
 abre la página recargada con el almacenamiento vacío). SF_HTTP=0 abre el archivo único como archivo, con Chromium.
 
 Idioma: las pruebas abren la app con el navegador en español (new_context lo pone si la prueba no pide otro). La del inglés
-(tests/english.py) lo pide en inglés.
+(tests/english.py) lo pide en inglés. SF_LOCALE=en-US abre en inglés cualquier prueba que no mire los textos: la de los tamaños
+de pantalla (tests/layout.py) se pasa así también, porque en inglés los textos miden otra cosa.
 
 La app lee de IndexedDB los entrenos, el historial y las comidas antes de pintar nada, y los guarda allí sin esperar
 (core/persist, I-04). Por eso, en todas las pruebas, page.goto y page.reload esperan antes a que lo guardado quede escrito
@@ -21,6 +22,7 @@ from playwright.sync_api import Page, Browser
 ENGINE = os.environ.get('SF_BROWSER', 'chromium')
 HTTP = os.environ.get('SF_HTTP', '1') != '0' or ENGINE != 'chromium'
 FONT = os.environ.get('SF_FONT', '')
+LOCALE = os.environ.get('SF_LOCALE', 'es-ES')
 # la letra pedida, puesta con una hoja de estilo creada desde el código (la CSP de la app no deja añadir una etiqueta <style>)
 FONT_JS = "addEventListener('DOMContentLoaded',()=>{try{const s=new CSSStyleSheet();s.replaceSync(%s);document.adoptedStyleSheets=[...document.adoptedStyleSheets,s]}catch(e){}})" % json.dumps('*{font-family:"%s" !important}' % FONT)
 
@@ -142,7 +144,7 @@ def _with_setup(make):
     hojas; y reCAPTCHA, siempre de prueba. El idioma del navegador es el español salvo que la prueba pida otro (locale): la app
     se pone en el idioma del móvil, y el de Playwright, si no se dice, es el inglés."""
     def run(self, *a, **k):
-        k.setdefault('locale', 'es-ES')
+        k.setdefault('locale', LOCALE)
         c = make(self, *a, **k)
         if FONT:
             c.add_init_script(FONT_JS)

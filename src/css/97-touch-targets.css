@@ -16,9 +16,10 @@
   position:absolute;
   inset:-9px 0 -6px;
 }
-/* «Saltar» el descanso: hacia arriba (sobre el contador) más que hacia abajo, donde empiezan los botones de RPE */
+/* «Saltar» el descanso: hacia arriba (sobre el contador) más que hacia abajo, donde empiezan los botones de RPE; a los lados,
+   6 px o lo que le falte para llegar a 44 (en inglés, «Skip», es más corto) */
 .rest-row small[data-a]::after {
-  inset:-20px -6px -9px;
+  inset:-20px min(-6px,calc(50% - 22px)) -9px;
 }
 /* los números de RPE, un poco más anchos para que sus zonas de 44 px no se pisen; y más aire entre filas de chips */
 .rpe .chip {

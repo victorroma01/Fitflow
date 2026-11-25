@@ -269,7 +269,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   cada elección, Ajustes → Idiomas, las 107 pantallas y otras doce en inglés sin un texto en español a la vista, el PDF, la
   imagen y los archivos, y que con los mismos pasos se guarda lo mismo en los dos idiomas), el catálogo en inglés en
   `tests/exinfo.test.mjs`, la nota en inglés en `tests/changelog.py` y el manifiesto y los trozos del diccionario en
-  `tests/deploy.py`. Las demás pruebas abren la app con el navegador en español (`tests/browser.py`). Pintar tarda lo
+  `tests/deploy.py`. Las demás pruebas abren la app con el navegador en español (`tests/browser.py`); los tamaños de
+  pantalla y las zonas táctiles (`tests/layout.py`, `tests/a11y.py`) se pasan además en inglés (`SF_LOCALE=en-US`), porque
+  los textos miden otra cosa: así salió que «Skip», más corto que «Saltar», dejaba su zona táctil en 38 px. Pintar tarda lo
   mismo en los dos idiomas (medido con la CPU cuatro veces más lenta: las mismas siete pantallas, sin diferencia).
 
 ## [1.0.31] — 2026-11-16

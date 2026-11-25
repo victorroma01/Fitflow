@@ -124,6 +124,7 @@ puntos). Las versiones anteriores a la 1.0.4, que no tenían inglés, se enseña
 | `tests/exinfo.test.mjs` | Que el catálogo de consejos en inglés tiene los 527 ejercicios, con sus tres campos, y está en inglés. |
 | `tests/english.py` | En el navegador: qué idioma sale con cada móvil y con cada elección; Ajustes → Idiomas; las 107 pantallas en inglés, y otras doce que solo salen en ciertos momentos (el reloj de un WOD, la bienvenida, la entrada sin sesión), sin un texto en español a la vista; lo propio del inglés (fechas, buscadores, consejos, nota de la versión, CSV, PDF, imagen para compartir, recordatorio del calendario y nombres de archivo); que con los mismos pasos se guarda lo mismo en los dos idiomas; y que en español no cambia nada. |
 | `tests/deploy.py` | En el paquete: el manifiesto en inglés, y que el diccionario va aparte y en español no se descarga. |
+| `tests/layout.py` y `tests/a11y.py` con `SF_LOCALE=en-US` | Con los textos en inglés: ningún desborde ni texto cortado en los cinco tamaños de pantalla, y los nombres, los roles y las zonas táctiles de cada control. |
 | `tests/changelog.py` | Que la nota en inglés de la versión dice lo mismo que la española. |
 
 `tests/english.py` reconoce el español por las palabras de la propia app: las de las frases del diccionario que no salen en
