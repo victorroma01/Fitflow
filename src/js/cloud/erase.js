@@ -61,7 +61,7 @@ const ownPaths = async (uid) => {
   return paths;
 };
 /** «Eliminar cuenta». `password`: la de la cuenta, que se comprueba antes de nada; `step(texto)`: por dónde va. Al terminar
-    bien, la cuenta ya no existe (falta borrar lo de este dispositivo y la sesión: account/delete). Lanza un error de cloud/net:
+    bien, la cuenta ya no existe (falta borrar lo de este dispositivo y la sesión: account/privacy). Lanza un error de cloud/net:
     los de Authentication (contraseña que no es, ADMIN_ONLY_OPERATION si el servidor no deja eliminar cuentas…), NETWORK,
     OTHER_ACCOUNT o NOT_ERASED si tras borrar aún queda algo.
     @param {string} password

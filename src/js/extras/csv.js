@@ -79,6 +79,9 @@ A.openCsvExport = () => fullPage(html`
         </button>
       </div>`;
   })}
+  <p class="muted fs-12 m-12-2">
+    Los archivos que exportes pueden contener información privada. Revisa su contenido y compártelos únicamente con personas o servicios de confianza.
+  </p>
   <p class="muted fs-12 m-12-2">Para guardar todo y poder restaurarlo en StrataFit usa la copia de seguridad, no el CSV.</p>
   <button data-a="openBackup" class="w-full">Copia de seguridad</button>
   <div class="h-30"></div>`);

@@ -140,6 +140,17 @@ def main(path):
         check('cuenta para qué se usa reCAPTCHA, sin remitir a las condiciones de Google',
               'reCAPTCHA Enterprise' in seen and 'como encargado del tratamiento' in seen and 'policies.google.com' not in code and 'Condiciones del servicio' not in seen, seen[-200:])
         check('sin datos pendientes a la vista (corchetes de los borradores)', '[' not in seen and ']' not in seen)
+        # cada texto tiene su dirección, que vale sin cuenta: es la que se puede enlazar desde fuera
+        base = pg.url.split('?')[0]
+        for a, title in (('privacidad', 'Política de privacidad de StrataFit'), ('aviso-legal', 'Aviso legal y condiciones de uso'), ('privacy', 'Política de privacidad de StrataFit'), ('terms', 'Aviso legal y condiciones de uso')):
+            pg.goto(base + '?a=' + a)
+            wait(pg, 'window.__ffok')
+            wait(pg, "!!document.querySelector('#lgl .page-title')", 10000)
+            got = pg.evaluate("({ t: document.querySelector('#lgl .page-title').textContent, q: location.search, login: !!document.getElementById('lgu'), own: !!document.querySelector('#lgl [data-a=openDeleteAccount], #lgl [data-a=consentWithdrawAsk]') })")
+            check('?a=%s abre %s sin sesión, sobre el inicio de sesión, y deja limpia la dirección' % (a, title), got['t'] == title and got['q'] == '' and got['login'] and not got['own'], str(got))
+        pg.click('#lgl [aria-label=Volver]')
+        wait(pg, "!document.getElementById('lgl')", 5000)
+        check('y «←» la cierra y deja el inicio de sesión', pg.is_visible('#lgu'))
         c.close()
 
         print('A cada tamaño')

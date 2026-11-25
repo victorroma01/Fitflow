@@ -16,7 +16,10 @@ gimnasio sin cobertura (*offline-first*).
 | Contraseña | 8 caracteres o más. Firebase bloquea un rato los intentos fallidos repetidos y la app añade una espera que se dobla a partir del quinto fallo (5 s, 10 s… hasta 5 min). |
 | Roles | Admin y Usuario, con *custom claims* (`role: "admin"`) en el token de la sesión: la app no puede cambiarlos. Admin: `VictorAdmin_`. |
 | Contraseña olvidada | La restablece el admin con un flujo de GitHub Actions, solo para el usuario que lo necesita (más adelante, el propio usuario). |
-| Datos personales | Ninguno: ni nombre, ni correo, ni teléfono, ni fotos de progreso. La foto de perfil se queda, con consentimiento, y solo la ve su dueño. |
+| Datos personales | Ninguno que identifique: ni nombre, ni correo, ni teléfono, ni fotos de progreso. La foto de perfil se queda, con consentimiento, y solo la ve su dueño. Los datos de entreno, de nutrición y del cuerpo son datos de salud y se tratan con el consentimiento expreso de la persona ([Condiciones y consentimiento](#condiciones-y-consentimiento)). |
+| Condiciones y consentimiento | Desde la V1.0.4, crear la cuenta pide aceptar las condiciones de uso (con 16 años o más) y, aparte, consentir el tratamiento de los datos de salud. Lo aceptado se anota en el perfil (`cs`); una cuenta sin lo aceptado no sincroniza ni ve la app. |
+| Eliminar cuenta | Desde la app, por su dueño, con su contraseña (`cloud/erase`): todo lo de la cuenta en Firestore y la cuenta de Authentication. Sin Cloud Functions, lo borra el propio móvil y lo que quede lo recoge la limpieza. |
+| Cuentas sin uso | Se eliminan a los dos años sin actividad, con una tarea mensual de GitHub Actions ([Limpieza de cuentas](#limpieza-de-cuentas)). |
 | Aviso de pesaje | Dentro de la app, al abrirla o volver a ella (M5: `dashboard/reminder`). Una notificación con la app cerrada desde el servidor necesitaría Cloud Functions (plan Blaze); en su lugar, la app crea un evento de calendario que se repite con su aviso (archivo .ics). |
 | Copia de seguridad | En la nube (M5: `cloud/backup`): una sola por usuario, que se sustituye entera; semanal y a mano. El archivo del móvil, siempre con el mismo nombre. |
 | Fallos y sugerencias | En Firestore (M5: `system/report`, `account/reports`): cada usuario crea los suyos y lee solo los suyos; el admin los lee todos y solo cambia el estado y la respuesta. Sin consultas ni índices: el usuario lee los suyos por id (los guarda en `S.rp`) y el admin lista la colección. |
@@ -31,12 +34,16 @@ gimnasio sin cobertura (*offline-first*).
 | `cloud/net` | Peticiones JSON con límite de tiempo; cada fallo, un código estable (`NETWORK`, `EMAIL_EXISTS`, `FAILED_PRECONDITION`…). |
 | `cloud/session` | La sesión del dispositivo (Store `acct`) y de quién son los datos del móvil (`own`): si entra otra cuenta, se borran antes de leer el estado. |
 | `cloud/auth` | Registro, entrada, renovación del token (dura una hora) y cambio de contraseña; textos de error en español. |
-| `cloud/firestore` | Leer, leer varios, listar, escribir varios a la vez con condición (`commit`) y borrar. |
+| `cloud/firestore` | Leer, leer varios, listar, buscar por un campo (`queryDocs`), escribir varios a la vez con condición (`commit`) y borrar. |
+| `cloud/consent` | Las versiones de los textos legales (`LEGAL`) y lo aceptado por la cuenta: si vale, darlo, retirarlo y dejarlo igual en el móvil y en el perfil (`syncConsent`). |
+| `cloud/erase` | Borrar: los registros de la cuenta (`wipeRecords`), lo del dispositivo (`wipeDevice`) y la cuenta entera (`eraseAccount`). |
 | `cloud/merge` | Fusión a tres bandas, código puro (`tests/merge.test.mjs`). |
 | `cloud/docs` | Qué va en cada documento de Firestore y cómo vuelve a `S` lo que llega de ellos (`PREF_KEYS`, `LOCAL_ONLY`, `localDocs`, `applyDoc`). Sin red ni estado de la sincronización. |
 | `cloud/sync` | La sincronización (abajo): cuándo se sube y se baja, y qué hacer si algo cambia entretanto. |
 | `account/login` | Inicio de sesión, registro, contraseña temporal y volver a entrar si la sesión caduca. |
 | `account/account` | Ajustes → Cuenta, Cambiar contraseña y «Cerrar sesión». |
+| `account/privacy` | «Retirar el consentimiento» y «Eliminar cuenta». |
+| `profile/legal`, `profile/legaltext` | Las pantallas de Privacidad y Aviso legal, y el paso de su texto a HTML (código puro). El texto, en `data/legal` (en inglés, `i18n/en-legal`), que se carga al abrirlas. |
 | `account/admin` | Perfil → Administración. |
 | `account/reports` | Administración → Fallos y sugerencias: estado y respuesta. |
 | `cloud/backup` | Copia de seguridad en la nube: escribir, leer, la semanal y borrarla. |
@@ -51,7 +58,7 @@ en el campo `j` (Firestore no admite listas dentro de listas, y el historial las
 
 | Documento | Qué guarda | Lee | Escribe |
 | --- | --- | --- | --- |
-| `users/{uid}` | `u` usuario, `sx` sexo, `pr` preferencias (tema, color y color propio, Cristal, animaciones, unidades, sonido y avisos, pestaña al abrir y si ya se vio el recorrido), `ca` alta, `m` último cambio, `mc` si debe cambiar la contraseña y `os` el sistema del último móvil que abrió la app (`ios`, `android` u `otro`; desde la V1.0.1, solo para el recuento de Administración, T-28) | Su dueño y el admin | Su dueño crea `u` (el de su correo técnico) y cambia `sx`, `pr`, `m` y `os`; `mc` solo lo puede quitar |
+| `users/{uid}` | `u` usuario, `sx` sexo, `pr` preferencias (tema, color y color propio, Cristal, animaciones, unidades, sonido y avisos, pestaña al abrir y si ya se vio el recorrido), `ca` alta, `m` último cambio, `mc` si debe cambiar la contraseña y `os` el sistema del último móvil que abrió la app (`ios`, `android` u `otro`; desde la V1.0.1, solo para el recuento de Administración, T-28) | Su dueño y el admin | Su dueño crea `u` (el de su correo técnico) y cambia `sx`, `pr`, `m`, `os` y `cs`; `mc` solo lo puede quitar; lo borra al eliminar su cuenta |
 | `users/{uid}/data/index` | `p`: la versión de cada parte (`{ "core": "…", "logs:2026": "…" }`) | Su dueño | Su dueño |
 | `users/{uid}/data/core` | El núcleo de `S` sin lo que es del dispositivo, ni lo que tiene su propio documento, ni las preferencias | Su dueño | Su dueño |
 | `users/{uid}/logs/{año}` | Entrenos de ese año (cada uno con su `id`) | Su dueño | Su dueño |
@@ -61,7 +68,7 @@ en el campo `j` (Firestore no admite listas dentro de listas, y el historial las
 | `adminInbox/{id}` | Contraseñas temporales (`u`, `p`, `exp`): caducan a las 24 h | El admin | GitHub Actions; el admin las borra al entregarlas |
 | `users/{uid}/backup/meta` | La copia de seguridad: `at` cuándo, `v` versión, `n` trozos (1-24), `z` si va comprimida (gzip en base64), `sz` tamaño, `h` huella, `lg` entrenos y `md` días de comidas que tiene | Su dueño | Su dueño |
 | `users/{uid}/backup/c0` … `c23` | Los trozos de la copia (`j`, de hasta 300.000 caracteres, e `i`, su orden): se escriben con la meta en una sola operación | Su dueño | Su dueño |
-| `reports/{uid}-{ms}` | Un fallo o sugerencia: `uid`, `u` usuario, `k` tipo (`f` fallo, `s` sugerencia), `a` dónde, `t` texto, `dx` datos técnicos, `v` versión, `ca` cuándo, `st` estado (`p` pendiente, `v` vista, `a` arreglada), `rp` respuesta, `ra` cuándo se contestó, `sa` cuándo cambió el estado, `m` último cambio | Quien lo envió y el admin | Quien lo envía lo crea (pendiente, sin respuesta); el admin cambia `st`, `rp`, `ra`, `sa` y `m`, y lo borra |
+| `reports/{uid}-{ms}` | Un fallo o sugerencia: `uid`, `u` usuario, `k` tipo (`f` fallo, `s` sugerencia, `p` privacidad y datos), `a` dónde, `t` texto, `dx` datos técnicos, `v` versión, `ca` cuándo, `st` estado (`p` pendiente, `v` vista, `a` arreglada), `rp` respuesta, `ra` cuándo se contestó, `sa` cuándo cambió el estado, `m` último cambio | Quien lo envió y el admin | Quien lo envía lo crea (pendiente, sin respuesta); el admin cambia `st`, `rp`, `ra`, `sa` y `m`, y lo borra; quien lo envió busca los suyos y los borra al eliminar su cuenta |
 
 Fuera de Firebase, en el código de la app: el catálogo de ejercicios con sus tips y explicaciones (T-05) y la nota de cada versión,
 que sale del `CHANGELOG.md` (T-20). No se sincronizan el entreno en curso, el registro de errores ni las copias automáticas del
@@ -130,13 +137,66 @@ Al entrar, los datos del móvil se borran si son de otra cuenta, se bajan los de
 «Cerrar sesión» intenta subir lo pendiente y avisa si no puede; después borra del móvil los datos de la cuenta. «Borrar todos los
 datos» los borra primero de la nube (sin conexión no borra nada: si no, la siguiente sincronización los volvería a bajar).
 
+## Condiciones y consentimiento
+
+Desde la V1.0.4 (`cloud/consent`). Hay tres textos con versión: las condiciones de uso (el Aviso legal), la Política de
+privacidad y el texto del consentimiento para los datos de salud, que es el de la casilla. `LEGAL` guarda la versión vigente de
+cada uno, su fecha y, de las condiciones y del consentimiento, qué versiones aceptadas siguen valiendo (`valid`).
+
+- **Qué se anota.** `cs` en el perfil y en la sesión del dispositivo: `t` (condiciones) y `h` (consentimiento), cada uno con
+  `v`, la versión del texto, y `at`, cuándo; `h` lleva además `st` (1 dado, 0 retirado) y, retirado, `ga`: cuándo se había
+  dado. Nada más: ni la IP ni el dispositivo. El admin lo lee con el perfil; no lo puede cambiar.
+- **Al crear la cuenta**, las dos casillas salen sin marcar y sin las dos no se crea. Lo aceptado va en la sesión con `csu`
+  (pendiente de subir) y la primera sincronización lo escribe en el perfil, aparte del resto: si las reglas publicadas aún no
+  lo admiten, solo falla eso y se reintenta, como con `os`.
+- **Una cuenta sin lo aceptado** (las de antes de la V1.0.4, o cuando cambie un texto y su versión anterior deje de valer): al
+  entrar se lee su perfil y, si no consta, la app enseña la pantalla que lo pide en vez de bajar sus datos; con la sesión ya
+  abierta, `core/render` pinta esa pantalla, `core/boot` no arranca la sincronización y `syncRound` no hace nada. Desde ella se
+  puede exportar una copia, borrar los datos, eliminar la cuenta o cerrar la sesión. No se da por aceptado nada a nadie.
+- **Entre dispositivos** vale lo más reciente de cada cosa (`syncConsent`): al aceptar en uno, el otro lo recibe con el perfil
+  y sigue; al retirar el consentimiento en uno, el otro deja de sincronizar y enseña la pantalla.
+- **Retirar el consentimiento** (`account/privacy`): borra los registros de la nube (`wipeRecords`), anota la retirada en el
+  perfil y borra lo del dispositivo (`wipeDevice`). La cuenta sigue: al volver a darlo, empieza vacía.
+- **Cambiar un texto**: el cambio va en `data/legal` y en `i18n/en-legal`, con su versión y su fecha nuevas en `LEGAL`. Si el
+  cambio no pide volver a aceptar, la versión anterior se deja en `valid`; si lo pide, se quita, y cada cuenta verá la pantalla
+  la próxima vez que abra la app. `tests/legal.test.mjs` comprueba que los dos idiomas tienen la misma forma.
+
+## Borrar
+
+Tres cosas distintas, las tres en `cloud/erase` y las tres con conexión (sin ella no se borra nada: lo borrado solo en el móvil
+volvería a bajar):
+
+| Qué | Borra | Deja |
+| --- | --- | --- |
+| «Borrar todos los datos» (`wipeRecords` + `wipeDevice`) | Los documentos de `data`, `logs`, `hist`, `meals`, `private` y `backup`, el sexo del perfil y, en el dispositivo, los datos y las copias automáticas (`ffsnap`) | La cuenta, las preferencias, lo aceptado y los avisos enviados |
+| «Retirar el consentimiento» | Lo mismo, y anota la retirada | La cuenta, sin consentimiento: no guarda nada hasta que se vuelva a dar |
+| «Eliminar cuenta» (`eraseAccount`) | Todo: lo anterior, los avisos de la cuenta (`reports`, buscados por `uid`), el perfil y la cuenta de Authentication | Nada |
+
+`eraseAccount` pide la contraseña y entra otra vez con ella (Firebase solo deja borrar una cuenta con una sesión reciente),
+para la sincronización, borra los documentos en lotes de 400, deja el perfil para el final, comprueba que no queda nada y solo
+entonces borra la cuenta de Authentication. Si se corta a medias, la cuenta sigue y se puede repetir; si falla el último paso
+(la consola de Firebase puede tener apagado que cada usuario borre su cuenta: Authentication → Configuración → Acciones del
+usuario → «Habilitar eliminación»; de serie viene encendido), la app lo dice: los datos ya están borrados y queda la cuenta,
+vacía, hasta que el administrador la borre en la consola (la app le dice a la persona que lo pida con un aviso de «Privacidad y
+datos») o pasen los dos años sin uso.
+
+Otro dispositivo de la cuenta se entera al sincronizar. El perfil se lee como mucho cada 10 minutos, así que la sincronización
+lo vuelve a leer en cuanto echa en falta el índice de una cuenta que ya había sincronizado: sin perfil, la cuenta ya no existe
+(`GONE`: «Cuenta eliminada», y «Cerrar sesión» borra lo que queda en ese dispositivo); con el consentimiento retirado
+(`CONSENT`), enseña la pantalla que lo pide. En ningún caso vuelve a subir lo suyo.
+
+Límite conocido: «Borrar todos los datos» no cierra las demás sesiones. Si otro dispositivo tiene cambios sin subir, los sube
+después, como cualquier cambio hecho sin conexión.
+
 ## Seguridad
 
 - **Reglas** (`firestore.rules`): cada cuenta lee y escribe solo lo suyo, con la forma y el tamaño que usa la app (sin campos de más,
   sin documentos con otros nombres, 1 MB por parte, 150 KB la foto, 24 trozos de 300.000 caracteres la copia); el admin lee además
   los perfiles, `adminInbox` y los fallos y sugerencias, nunca los datos ni la copia de nadie; un aviso solo lo crea su dueño (id con
   su uid, su usuario, pendiente y sin respuesta) y el admin solo le cambia el estado y la respuesta; en el perfil, solo las
-  preferencias que conoce la app (el color propio como `#rrggbb`, la pestaña al abrir de 0 a 3, el recorrido y las animaciones 0 o 1);
+  preferencias que conoce la app (el color propio como `#rrggbb`, la pestaña al abrir de 0 a 3, el recorrido y las animaciones 0 o 1)
+  y lo aceptado con su forma (`cs`: versión, momento y estado, sin campos de más); cada cuenta borra su perfil y busca y borra
+  sus avisos, nunca los de otra (V1.0.4, para «Eliminar cuenta»);
   solo valen cuentas con correo técnico (con el dominio de ahora o, mientras [se pasan](#el-dominio-de-las-cuentas), con el
   anterior; un correo que solo se les parezca no entra en nada); lo demás está denegado.
 - **Pruebas**: `tests/rules.test.mjs` las comprueba con el emulador en cada cambio (CI, «Reglas y nube»), junto con la app entera
@@ -196,6 +256,7 @@ cuando casi todo salga verificado, exigirlo.
 
 Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run workflow*) y usan la cuenta de servicio
 (`tools/admin`, con `firebase-admin`). El usuario les llega por una variable de entorno, nunca pegado en el código del paso.
+Solo uno se lanza además solo, cada mes: la limpieza de cuentas.
 
 | Flujo | Archivo | Qué hace |
 | --- | --- | --- |
@@ -203,9 +264,30 @@ Flujos de GitHub Actions que se lanzan a mano (Actions → el flujo → *Run wor
 | Asignar rol | `admin-rol.yml` | Usuario y rol (admin o usuario). Vale la próxima vez que esa persona abra la app. |
 | Desplegar reglas | `firebase-reglas.yml` | Reglas de Firestore (`tools/admin/reglas.mjs`, con la API de reglas de Firebase; sin firebase-tools, que pide a la cuenta de servicio un permiso más). Al publicar, `pruebas.yml` lo llama tras las pruebas si cambian las reglas o el flujo, y la app no se publica hasta que termina bien (T-24). También a mano, desde `main`. |
 | Comprobar Firebase | `firebase-comprobar.yml` | Sin cambiar nada: el secreto, Authentication (cuántas cuentas hay, cuántas tienen el correo técnico con el dominio de ahora y cuántas con el anterior, y el acceso con correo y contraseña), la base de datos y su ubicación, y las reglas. Resultado en el resumen del flujo. |
+| Limpieza de cuentas | `admin-limpieza.yml` | Cada mes, sola, y a mano (`simulacro`, que es lo que sale puesto, o `aplicar`): [Limpieza de cuentas](#limpieza-de-cuentas). Solo desde `main`. Solo escribe recuentos. |
 | Pasar las cuentas al dominio nuevo | `admin-dominio.yml` | `simulacro`, `aplicar` (solo si nadie lo va a notar) o `aplicar-todo` ([El dominio de las cuentas](#el-dominio-de-las-cuentas)). Solo desde `main`. No escribe usuarios ni correos, solo recuentos: el registro es público. |
 
-Los flujos manuales solo aparecen en Actions cuando están en `main`.
+Los flujos manuales solo aparecen en Actions cuando están en `main`, y el que va con fecha solo se lanza desde ella.
+
+### Limpieza de cuentas
+
+Desde la V1.0.4 (`tools/admin/limpieza.mjs`; la lógica, pura y con sus pruebas, en `tools/admin/inactivas.mjs` y
+`tests/limpieza.test.mjs`). El día 3 de cada mes, de madrugada, y a mano cuando se quiera. Hace tres cosas:
+
+1. **Cuentas sin uso.** Elimina (datos, avisos, perfil y cuenta de Authentication) las que llevan dos años sin actividad. La
+   actividad es lo último de: la última vez que entró, la última vez que renovó la sesión (Authentication anota las dos) y la
+   última escritura en su perfil o en su índice. Una app abierta de vez en cuando renueva la sesión, así que basta abrirla
+   para que la cuenta siga.
+2. **Restos.** Documentos de un `uid` que ya no tiene cuenta de Authentication: lo que deja una eliminación cortada a medias o
+   una cuenta borrada desde la consola.
+3. **Contraseñas temporales caducadas** de `adminInbox` que nadie marcó como entregadas.
+
+Frenos: nunca toca a un administrador ni una cuenta sin fechas; no borra nada si Authentication no devuelve ninguna cuenta (un
+fallo de lectura no puede pasar por «no hay cuentas»); cada resto se comprueba de nuevo, uno a uno, antes de borrarlo; y si en
+una pasada salen más de 25 cuentas o 50 restos, no borra nada y termina en fallo para que alguien lo mire. `simulacro` cuenta
+sin borrar. El resumen del flujo solo lleva recuentos (el registro es público) y el identificador técnico de lo que falle.
+
+Antes de la primera pasada de verdad conviene lanzar un `simulacro` a mano y mirar los recuentos.
 
 ## El dominio de las cuentas
 

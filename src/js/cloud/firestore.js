@@ -5,7 +5,7 @@
    Define: DB_PATH, docName, fsUrl, encValue, encFields, decValue, decFields, fsDoc, fsCall, getDoc, batchGet, listDocs, queryDocs, commitWrites, deleteDoc, setWrite, delWrite
 */
 import { FIREBASE, FIRESTORE_URL } from './config.js';
-import { fetchJson } from './net.js';
+import { fetchJson, netError } from './net.js';
 import { idToken } from './auth.js';
 import { appCheckToken } from './appcheck.js';
 const DB_PATH = 'projects/' + FIREBASE.projectId + '/databases/(default)/documents';
@@ -96,7 +96,12 @@ export const listDocs = async (path) => {
     @param {any} value */
 export const queryDocs = async (coll, field, value) => {
   const r = await fsCall(fsUrl(DB_PATH + ':runQuery'), { method: 'POST', body: { structuredQuery: { from: [{ collectionId: coll }], where: { fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value: encValue(value) } }, limit: 500 } } });
-  return (Array.isArray(r) ? r : []).filter(x => x && x.document).map(x => ({ id: x.document.name.split('/').pop(), ...fsDoc(x.document) }));
+  const rows = Array.isArray(r) ? r : [];
+  /* la respuesta llega por partes, y un fallo puede venir dentro de una de ellas: no es «no hay ninguno» */
+  const bad = rows.find(x => x && x.error);
+  if (bad)
+    throw netError(String(bad.error.status || 'QUERY'), +bad.error.code || 0);
+  return rows.filter(x => x && x.document).map(x => ({ id: x.document.name.split('/').pop(), ...fsDoc(x.document) }));
 };
 /** Escribe varios documentos a la vez: o todos o ninguno. Si una condición no se cumple, lanza un error de cloud/net
   (FAILED_PRECONDITION, ALREADY_EXISTS o NOT_FOUND). Devuelve la versión (updateTime) de cada escritura, en orden.

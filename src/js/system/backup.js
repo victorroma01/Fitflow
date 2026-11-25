@@ -305,6 +305,9 @@ const backupFileCard = () => html`
         <input type="file" accept=".json,application/json,text/plain" hidden data-c="backupImportFile">
       </label>
     </div>
+    <p class="muted fs-12 m-10-0-0">
+      Este archivo puede contener información privada. Revisa su contenido y compártelo únicamente con personas o servicios de confianza.
+    </p>
   </div>`;
 /* lo que entra en una copia, contado con los datos de ahora (con las claves guardadas, como en la copia) */
 const backupContents = () => html`

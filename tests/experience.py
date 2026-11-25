@@ -565,6 +565,16 @@ def main(path):
             pg.goto(url + '?a=' + a)
             run(1500)
             check('?a=%s abre %s y deja limpia la dirección' % (a, {'peso': 'Evolución del peso', 'comida': 'Nutrición', 'entreno': 'Workout', 'otra': 'la app (no existe: se ignora)'}[a]), ev('S.tab') == tb and ev('weightView') == wv and ev('location.search') == '', '%s %s %s' % (ev('S.tab'), ev('weightView'), ev('location.search')))
+        # los textos legales tienen también su dirección (V1.0.4), para enlazarlos: con sesión se abren sobre la app
+        for a, text in [('privacidad', 'Política de privacidad de StrataFit'), ('aviso-legal', 'Aviso legal y condiciones de uso'), ('privacy', 'Política de privacidad de StrataFit'), ('terms', 'Aviso legal y condiciones de uso')]:
+            pg.goto(url + '?a=' + a)
+            run(1500)
+            pg.wait_for_function("!!document.querySelector('#lgl .page-title')", timeout=10000)
+            got = ev("({ t: document.querySelector('#lgl .page-title').textContent, q: location.search, data: !!document.querySelector('#lgl [data-a=openDeleteAccount]'), back: document.querySelector('#lgl [aria-label=Volver]').dataset.a, app: !!document.querySelector('#app nav, nav') })")
+            check('?a=%s abre %s sobre la app y deja limpia la dirección' % (a, text), got['t'] == text and got['q'] == '' and got['data'] == (text.startswith('Política')) and got['app'], str(got))
+        ev("document.querySelector('#lgl [aria-label=Volver]').click()")
+        run()
+        check('y «←» la cierra y deja la app', ev("!document.getElementById('lgl') && !!document.getElementById('app').firstChild"))
         ev("S.tab=0;R();A.startWorkout()")
         run()
         pg.goto(url + '?a=peso')

@@ -70,6 +70,11 @@ html.glass .legal-link {
   background:none;
   box-shadow:none;
 }
+/* un enlace a otra web, dentro de una frase: sin mover el texto, responde en algo más que el alto de sus letras (24 px,
+   WCAG 2.2 AA) */
+.legal-text a.legal-link {
+  padding:3px 0;
+}
 /* Privacidad: el resumen, en tarjetas (dos columnas si caben) */
 .legal-cards {
   display:grid;
@@ -99,7 +104,7 @@ html.glass .legal-link {
   margin:0 2px 8px;
   font-size:13.5px;
 }
-/* el índice: cada apartado, numerado, a un toque */
+/* el índice: cada apartado, con su número, a un toque; responde toda la fila */
 .legal-index {
   margin:18px 0 6px;
 }
@@ -108,12 +113,17 @@ html.glass .legal-link {
 }
 .legal-index ol {
   margin:0;
-  padding-left:26px;
+  padding:0;
+  list-style:none;
 }
 .legal-index li {
-  padding:7px 0;
   font-size:15px;
   line-height:1.3;
+}
+.legal-index .legal-link {
+  display:block;
+  width:100%;
+  padding:8px 0;
 }
 /* las casillas de la aceptación (crear la cuenta y la pantalla que la pide): pequeñas, con el texto en varias líneas */
 .consent-checks {
@@ -136,6 +146,12 @@ html.glass .legal-link {
 .consent-check .legal-link {
   position:relative;
   z-index:1;
+}
+/* y responde un poco más allá de sus letras, que son pequeñas */
+.consent-check .legal-link::after {
+  content:'';
+  position:absolute;
+  inset:-5px -3px;
 }
 .consent-note {
   margin:0;

@@ -89,8 +89,7 @@ const legalPage = kind => {
       <div class="card legal-index" role="navigation" aria-label="Índice">
         <h2 class="legal-h">Índice</h2>
         <ol>
-          ${d.sections.map((s, i) => html`
-            <li><button class="legal-link" data-a="legalJump" data-i="${i}">${raw(X(s.t.replace(/^\d+\.\s*/, '')))}</button></li>`)}
+          ${d.sections.map((s, i) => html`<li><button class="legal-link" data-a="legalJump" data-i="${i}">${raw(X(s.t))}</button></li>`)}
         </ol>
       </div>
       <div class="setting-text legal-text">

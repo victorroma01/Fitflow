@@ -288,7 +288,7 @@ After deletion, there may be limited residual retention periods for justified re
 Specifically:
 
 - **Account and records:** for as long as the account is active. If two years pass without activity, the account and all its data are deleted automatically. Opening the application while connected to the internet and signed in counts as activity.
-- **Deleting data, withdrawing consent, and deleting the account:** these are carried out immediately. Anything that might remain (for example, data that another device uploads before it finds out) is removed in an automatic monthly cleanup.
+- **Deleting data, withdrawing consent, and deleting the account:** these are carried out immediately. Anything that might remain of a deleted account (for example, data that another device uploads before it finds out) is removed in an automatic monthly cleanup.
 - **“Bugs and suggestions” reports and the record of acceptance and consent:** for as long as the account exists; they are deleted with it.
 - **Temporary passwords:** the administrator can see them for 24 hours; once expired, they are deleted in the next cleanup.
 - **Providers:** according to its documentation, Firebase may take up to 180 days to remove a deleted account’s authentication data from its systems, including its backups, and it keeps the IP addresses it logs for a few weeks.

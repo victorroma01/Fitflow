@@ -5,7 +5,7 @@
   python3 tests/features.py dist/stratafit.html
 Requiere:  pip install playwright  &&  playwright install chromium   (otro motor: SF_BROWSER=webkit; ver tests/browser.py)
 """
-import os, sys, json, datetime
+import os, re, sys, json, datetime
 from playwright.sync_api import sync_playwright
 from browser import launch, app_url, context_opts
 
@@ -18,6 +18,15 @@ def rd(n):
 
 
 fails = []
+MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+
+
+def legal_meta(kind):
+    """La línea de la fecha y la versión de un texto legal, tal como la tiene que enseñar su pantalla: las dos salen de
+    cloud/consent (LEGAL), que es donde se cambian al publicar."""
+    src = open(os.path.join(HERE, '..', 'src', 'js', 'cloud', 'consent.js'), encoding='utf-8').read()
+    m = re.search(kind + r": \{ v: '([\d.]+)', date: '(\d{4})-(\d{2})-(\d{2})'", src)
+    return 'Última actualización: %d de %s de %s · Versión %s' % (int(m.group(4)), MONTHS[int(m.group(3)) - 1], m.group(2), m.group(1))
 
 
 def check(name, cond, info=''):
@@ -213,7 +222,7 @@ def main(path):
         check('y dice que el uso gratuito es durante la fase de pruebas, con riesgo de perder datos (I-29)', all(s in ev("document.querySelector('#sh').innerText") for s in ('Durante la fase de pruebas, el servicio se ofrece gratuitamente para uso personal y no comercial', 'pérdidas totales o parciales de información')))
         legal = ev("({ h1: document.querySelector('#lgl h1').textContent, meta: document.querySelector('#lgl .legal-meta').textContent, sections: [...document.querySelectorAll('#lgl section h2')].map(h => h.textContent), index: document.querySelectorAll('#lgl .legal-index li button').length, back: document.querySelector('#lgl [aria-label=Volver]').dataset.a })")
         check('con su título, la fecha y la versión, y sus 16 apartados, cada uno en el índice',
-              legal['h1'] == 'Aviso legal y condiciones de uso' and legal['meta'] == 'Última actualización: 25 de noviembre de 2026 · Versión 1.0' and len(legal['sections']) == 16 == legal['index']
+              legal['h1'] == 'Aviso legal y condiciones de uso' and legal['meta'] == legal_meta('terms') and len(legal['sections']) == 16 == legal['index']
               and legal['sections'][0] == '1. Identificación del titular' and legal['sections'][15].startswith('16. '), str(legal))
         ev("document.querySelector('#lgl .legal-index [data-a=legalJump][data-i=\"8\"]').click()")
         run()

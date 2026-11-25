@@ -288,7 +288,7 @@ Tras el borrado, podrán existir periodos limitados de conservación residual po
 En concreto:
 
 - **Cuenta y registros:** mientras la cuenta esté activa. Si pasan dos años sin actividad, la cuenta y todos sus datos se eliminan automáticamente. Se considera actividad abrir la aplicación con conexión a internet y la sesión iniciada.
-- **Borrado, retirada del consentimiento y eliminación de la cuenta:** se ejecutan en el momento. Lo que pudiera quedar (por ejemplo, datos que otro dispositivo suba antes de enterarse) se elimina en una limpieza automática mensual.
+- **Borrado, retirada del consentimiento y eliminación de la cuenta:** se ejecutan en el momento. Lo que pudiera quedar de una cuenta eliminada (por ejemplo, datos que otro dispositivo suba antes de enterarse) se borra en una limpieza automática mensual.
 - **Avisos de «Fallos y sugerencias» y constancia de aceptación y consentimiento:** mientras exista la cuenta; se eliminan con ella.
 - **Contraseñas temporales:** el administrador las ve durante 24 horas; una vez caducadas, se borran en la siguiente limpieza.
 - **Proveedores:** según su documentación, Firebase puede tardar hasta 180 días en eliminar de sus sistemas, incluidas sus copias, los datos de autenticación de una cuenta borrada, y conserva unas semanas las direcciones IP que registra.

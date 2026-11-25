@@ -100,7 +100,36 @@ test('perfil: sexo y preferencias, sí; cambiar el usuario o ponerse «debe camb
   assert.ok(allowed(await ownerSet('users/' + ana.uid, { u: 'Ana_1', sx: 'M', pr: { theme: 'light' }, ca: 1, m: 2, mc: true })), 'GitHub Actions pone mc');
   assert.ok(allowed(await set('users/' + ana.uid, { pr: { theme: 'dark' }, m: Date.now() }, ana.t, { mask: ['pr', 'm'] })), 'con mc puesto, el resto se cambia igual');
   assert.ok(allowed(await set('users/' + ana.uid, { mc: false, m: Date.now() }, ana.t, { mask: ['mc', 'm'] })), 'quitarlo tras cambiar la contraseña');
-  assert.ok(denied(await del('users/' + ana.uid, ana.t)), 'el perfil no se borra desde la app');
+  assert.ok(denied(await del('users/' + ana.uid, bea.t)), 'el perfil de otra cuenta no se borra');
+});
+
+test('perfil: la constancia de lo aceptado (condiciones y consentimiento), con su forma; con el perfil, la lee el admin', async () => {
+  // V1.0.4 (cloud/consent): t, las condiciones de uso; h, el consentimiento para los datos de salud. De cada una, la versión
+  // del texto, cuándo y, en el consentimiento, su estado (1 dado, 0 retirado) y, retirado, cuándo se había dado
+  const cs = c => set('users/' + ana.uid, { cs: c }, ana.t, { mask: ['cs'] });
+  const now = Date.now();
+  assert.ok(allowed(await cs({ t: { v: '1.0', at: now }, h: { v: '1.0', at: now, st: 1 } })), 'aceptar y consentir');
+  assert.ok(allowed(await cs({ t: { v: '1.0', at: now }, h: { v: '1.0', at: now + 5, st: 0, ga: now } })), 'retirar el consentimiento');
+  assert.ok(allowed(await cs({ t: { v: '1.0', at: now } })), 'solo las condiciones');
+  assert.ok(denied(await cs({ t: { v: '1.0', at: now }, x: { v: '1.0', at: now } })), 'otra cosa aceptada');
+  assert.ok(denied(await cs({ t: { v: '1.0', at: now, ip: '1.2.3.4' } })), 'un dato de más en una marca');
+  assert.ok(denied(await cs({ t: { v: 10, at: now } })), 'versión que no es texto');
+  assert.ok(denied(await cs({ t: { v: '', at: now } })), 'versión vacía');
+  assert.ok(denied(await cs({ t: { v: 'x'.repeat(13), at: now } })), 'versión larguísima');
+  assert.ok(denied(await cs({ t: { v: '1.0', at: 'hoy' } })), 'momento que no es un número');
+  assert.ok(denied(await cs({ t: { v: '1.0' } })), 'sin momento');
+  assert.ok(denied(await cs({ h: { v: '1.0', at: now, st: 2 } })), 'estado desconocido');
+  assert.ok(denied(await cs({ h: { v: '1.0', at: now, st: 0, ga: 'ayer' } })), 'cuándo se dio, que no es un número');
+  assert.ok(denied(await cs('aceptado')), 'que no es un mapa');
+  assert.ok(denied(await set('users/' + ana.uid, { cs: { t: { v: '1.0', at: now } } }, bea.t, { mask: ['cs'] })), 'la de otra cuenta');
+  assert.ok(denied(await set('users/' + ana.uid, { cs: { t: { v: '1.0', at: now } } }, adm.t, { mask: ['cs'] })), 'ni el admin la de otra cuenta');
+  assert.ok(allowed(await cs({ t: { v: '1.0', at: now }, h: { v: '1.0', at: now, st: 1 } })));
+  const seen = await get('users/' + ana.uid, adm.t);
+  assert.ok(allowed(seen), 'el admin lee el perfil');
+  assert.equal(seen.j.fields.cs.mapValue.fields.h.mapValue.fields.st.integerValue, '1', 'con lo aceptado');
+  assert.ok(allowed(await set('users/' + ana.uid, { sx: 'F', m: Date.now() }, ana.t, { mask: ['sx', 'm'] })), 'con ella puesta, el resto del perfil se cambia igual');
+  // al crear el perfil no va: la app lo crea primero y la anota después, en una escritura aparte
+  assert.ok(denied(await set('users/' + bea.uid + 'x', { u: 'bea', ca: now, m: now, cs: { t: { v: '1.0', at: now } } }, bea.t, { pre: { exists: false } })), 'en el perfil de otro identificador');
 });
 
 test('partes del estado: cada cuenta las suyas, con la forma de la app', async () => {
@@ -186,6 +215,8 @@ test('fallos y sugerencias: cada cuenta crea los suyos, pendientes y con su usua
   assert.ok(allowed(await set('reports/' + id, d, ana.t, { pre: { exists: false } })));
   const [id2, d2] = report(ana, 'Ana_1', { k: 's', a: '', dx: '' });
   assert.ok(allowed(await set('reports/' + id2, d2, ana.t, { pre: { exists: false } })), 'una sugerencia');
+  const [idp, dp] = report(ana, 'Ana_1', { k: 'p', a: '', dx: '', ca: d2.ca + 1, m: d2.ca + 1 });
+  assert.ok(allowed(await set('reports/' + ana.uid + '-' + dp.ca, dp, ana.t, { pre: { exists: false } })), 'una consulta de privacidad (V1.0.4): ' + idp);
   const [id3, d3] = report(ana, 'bea');
   assert.ok(denied(await set('reports/' + id3, d3, ana.t)), 'con el usuario de otra cuenta');
   const [, d4] = report(ana, 'Ana_1');
@@ -222,8 +253,34 @@ test('fallos y sugerencias: cada uno lee los suyos; el admin, todos, y solo camb
   assert.ok(denied(await set('reports/' + id, { st: 'x', m: Date.now() }, adm.t, { mask: ['st', 'm'] })), 'estado desconocido');
   assert.ok(denied(await set('reports/' + id, { t: 'Otra cosa distinta', m: Date.now() }, adm.t, { mask: ['t', 'm'] })), 'el admin no cambia el texto');
   assert.ok(denied(await set('reports/' + id, { rp: 'x'.repeat(1501), m: Date.now() }, adm.t, { mask: ['rp', 'm'] })), 'respuesta de más de 1500');
-  assert.ok(denied(await del('reports/' + id, bea.t)), 'el usuario no lo borra');
+  assert.ok(denied(await del('reports/' + id, ana.t)), 'otra cuenta no lo borra');
   assert.ok(allowed(await del('reports/' + id, adm.t)), 'el admin, sí');
+});
+
+// los avisos de una cuenta, pedidos como los pide la app al eliminarla (cloud/firestore: queryDocs)
+const reportsOf = (uid, token) => call(DOCS + ':runQuery', { method: 'POST', token, body: { structuredQuery: { from: [{ collectionId: 'reports' }], where: { fieldFilter: { field: { fieldPath: 'uid' }, op: 'EQUAL', value: { stringValue: uid } } }, limit: 500 } } });
+// (una consulta denegada puede llegar como error HTTP o, al ir por partes, como un error dentro de la respuesta)
+const refused = r => denied(r) || Array.isArray(r.j) && r.j.some(x => x && x.error);
+const found = r => (Array.isArray(r.j) ? r.j : []).filter(x => x && x.document).map(x => x.document.name.split('/').pop());
+test('«Eliminar cuenta»: cada cuenta encuentra y borra sus avisos, y solo los suyos', async () => {
+  const [a1, d1] = report(ana, 'Ana_1', { ca: Date.now() + 50, m: Date.now() + 50 });
+  const ida = ana.uid + '-' + d1.ca;
+  assert.ok(allowed(await set('reports/' + ida, d1, ana.t, { pre: { exists: false } })), a1);
+  const [idb, db] = report(bea, 'bea');
+  assert.ok(allowed(await set('reports/' + idb, db, bea.t, { pre: { exists: false } })));
+  const mine = await reportsOf(ana.uid, ana.t);
+  assert.ok(allowed(mine) && !refused(mine), 'pedir los propios: ' + JSON.stringify(mine.j).slice(0, 200));
+  assert.ok(found(mine).includes(ida) && found(mine).every(x => x.startsWith(ana.uid + '-')), 'salen los suyos y ninguno de otra cuenta: ' + found(mine));
+  assert.ok(refused(await reportsOf(bea.uid, ana.t)), 'pedir los de otra cuenta');
+  assert.ok(refused(await call(DOCS + ':runQuery', { method: 'POST', token: ana.t, body: { structuredQuery: { from: [{ collectionId: 'reports' }], limit: 500 } } })), 'pedirlos todos');
+  assert.ok(refused(await reportsOf(ana.uid)), 'sin sesión');
+  const all = await reportsOf(bea.uid, adm.t);
+  assert.ok(allowed(all) && !refused(all) && found(all).includes(idb), 'el admin, los de cualquiera');
+  assert.ok(denied(await del('reports/' + idb, ana.t)), 'no borra el de otra cuenta');
+  for (const id of found(mine))
+    assert.ok(allowed(await del('reports/' + id, ana.t)), 'borra cada uno de los suyos');
+  assert.deepEqual(found(await reportsOf(ana.uid, ana.t)), [], 'y no le queda ninguno');
+  assert.ok(allowed(await get('reports/' + idb, bea.t)), 'el de la otra cuenta sigue');
 });
 
 test('una cuenta que sigue con el dominio anterior entra en lo suyo como antes, y solo en lo suyo', async () => {
@@ -269,4 +326,29 @@ test('un correo que solo se parece al técnico no entra en nada', async () => {
     const [id, d] = report(x, name);
     assert.ok(denied(await set('reports/' + id, d, x.t)), email + ': aviso');
   }
+});
+
+// (la última: borra el perfil de una de las cuentas de las pruebas)
+test('«Eliminar cuenta»: cada cuenta lista y borra sus documentos y, al final, su perfil; nadie los de otra', async () => {
+  const u = 'users/' + ana.uid;
+  assert.ok(allowed(await set(u + '/logs/2026', part('[]'), ana.t)));
+  for (const c of ['data', 'logs', 'hist', 'meals', 'private', 'backup']) {
+    assert.ok(allowed(await get(u + '/' + c, ana.t)), 'lista lo suyo: ' + c);
+    assert.ok(denied(await get(u + '/' + c, bea.t)), 'otra cuenta no lo lista: ' + c);
+    assert.ok(denied(await get(u + '/' + c, adm.t)), 'ni el admin: ' + c);
+  }
+  const names = async c => ((await get(u + '/' + c, ana.t)).j.documents || []).map(d => d.name.split('/documents/')[1]);
+  const mine = (await Promise.all(['data', 'logs', 'hist', 'meals', 'private', 'backup'].map(names))).flat();
+  assert.ok(mine.includes(u + '/data/core') && mine.includes(u + '/data/index') && mine.includes(u + '/logs/2026') && mine.includes(u + '/private/avatar') && mine.includes(u + '/backup/meta'), String(mine));
+  assert.ok(denied(await commit(bea.t, mine.map(p => ({ delete: ROOT + '/' + p })))), 'otra cuenta no los borra');
+  assert.ok(allowed(await commit(ana.t, mine.map(p => ({ delete: ROOT + '/' + p })))), 'todos los suyos, en una sola escritura');
+  for (const c of ['data', 'logs', 'hist', 'meals', 'private', 'backup'])
+    assert.deepEqual(await names(c), [], 'no queda nada en ' + c);
+  assert.ok(denied(await del(u, bea.t)), 'el perfil: otra cuenta, no');
+  assert.ok(denied(await del(u, adm.t)), 'ni el admin, desde la app');
+  assert.ok(denied(await del(u)), 'ni sin sesión');
+  assert.ok(allowed(await del(u, ana.t)), 'la propia, sí');
+  assert.equal((await get(u, ana.t)).status, 404, 'ya no está');
+  assert.ok(allowed(await del(u, ana.t)), 'repetirlo no falla: si la eliminación se quedó a medias, se vuelve a pedir');
+  assert.ok(allowed(await get('users/' + bea.uid, bea.t)), 'el de la otra cuenta sigue');
 });

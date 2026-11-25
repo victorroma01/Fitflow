@@ -71,7 +71,7 @@ const diagnosticsPage = () => {
       <div class="card mt-14">
         <b>Datos que no se pudieron leer</b>
         <div class="muted fs-13 m-4-0-10">
-          Al abrir la app el ${backupDate(bad.t, 1)} tus datos estaban dañados y se apartaron aquí para no perderlos. Descárgalos para intentar recuperarlos.
+          Al abrir la app el ${backupDate(bad.t, 1)} tus datos estaban dañados y se apartaron aquí para no perderlos. Descárgalos para intentar recuperarlos. El archivo puede contener información privada: compártelo solo con quien vaya a ayudarte.
         </div>
         <div class="grid-2">
           <button data-a="diagnosticsDownloadBad">Descargar</button>
