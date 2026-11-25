@@ -187,11 +187,24 @@ def plain(s):
     return re.sub(r'\*\*|__|`', '', s).strip()
 
 
+# las revisiones de la 1.0.3 se numeraron añadiendo una cifra a su tercer número: la 1.0.31 y la 1.0.32 son la 1.0.3.1 y la
+# 1.0.3.2, anteriores a la 1.0.4 (lo mismo en la app: system/updates, isNewerVersion)
+OLD_REVISIONS = {'1.0.31': '1.0.3.1', '1.0.32': '1.0.3.2'}
+
+
+def version_key(v):
+    """Las cifras de una versión, para compararla con otra como lo hace el aviso de versión nueva de la app."""
+    return [int(x) for x in OLD_REVISIONS.get(v, v).split('.')]
+
+
 def changelog():
     """Versiones de CHANGELOG.md, de la más nueva a la más antigua: [{version, date, sections: [{title, items}]}].
-    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. La revisión de una versión lleva en
-    `base` la que revisa: la de sus tres primeras cifras si tiene cuatro (1.1.0.1 revisa la 1.1.0) o la que diga antes de su
-    primer apartado («Revisión de la [1.0.3]…»: las de la 1.0.3, que se numeraron 1.0.31 y 1.0.32)."""
+    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. Antes del primer apartado, las líneas
+    que empiezan por «> » son la cabecera de la versión: la primera, su título, y las demás, su texto. Es un apartado más, el
+    primero y marcado (`lead`): la app lo enseña destacado encima de los otros, y una instalada anterior a la 1.0.4, que no
+    sabe de cabeceras, como un apartado cualquiera. La revisión de una versión lleva en `base` la que revisa: la de sus tres
+    primeras cifras si tiene cuatro (1.1.0.1 revisa la 1.1.0) o la que diga antes de su primer apartado («Revisión de la
+    [1.0.3]…»: las de la 1.0.3, que se numeraron 1.0.31 y 1.0.32)."""
     out, cur, sec, head = [], None, None, False
     for raw in read(CHANGELOG).splitlines():
         l = raw.rstrip()
@@ -211,6 +224,14 @@ def changelog():
             if sec:
                 cur['sections'].append(sec)
             head = False
+        elif head and l.startswith('> '):
+            lead = next((s for s in cur['sections'] if s.get('lead')), None)
+            if lead is None:
+                cur['sections'].insert(0, {'title': plain(l[2:]), 'items': [], 'lead': True})
+            elif lead['items']:
+                lead['items'][-1] += ' ' + plain(l[2:])
+            else:
+                lead['items'].append(plain(l[2:]))
         elif head and re.match(r'^Revisión de la \[(' + VERSION + r')\]', l):
             said = re.match(r'^Revisión de la \[(' + VERSION + r')\]', l).group(1)
             if cur.get('base', said) != said:
@@ -221,7 +242,7 @@ def changelog():
         elif sec is not None and l.strip() and sec['items'] and raw.startswith('  '):
             sec['items'][-1] += ' ' + plain(l)
     for e in out:
-        e['sections'] = [s for s in e['sections'] if s['items']]
+        e['sections'] = [s for s in e['sections'] if s['items'] or s.get('lead')]
     return out
 
 
@@ -247,8 +268,11 @@ def cards(entries):
                 die('CHANGELOG.md: entre la revisión %s y la %s que revisa está la %s, que no es otra revisión suya' % (e['version'], e['base'], x['version']))
         if chain[-1]['version'] != e['base'] or len(chain) < 2:
             die('CHANGELOG.md: la %s dice que revisa la %s, que no está más abajo' % (e['version'], e['base']))
+        # la cabecera de la tarjeta: la de la revisión o, si no tiene, la de la versión que revisa; va delante y sin apellido
+        leads = [s for x in chain for s in x['sections'] if s.get('lead')]
         out.append({'version': e['version'], 'date': e['date'],
-                    'sections': [{'title': '%s de la %s' % (s['title'], x['version']), 'items': s['items']} for x in chain for s in x['sections']]})
+                    'sections': leads[:1] + [{'title': '%s de la %s' % (s['title'], x['version']), 'items': s['items']}
+                                             for x in chain for s in x['sections'] if not s.get('lead')]})
         covered.update(x['version'] for x in chain[1:])
     return out
 
@@ -256,7 +280,7 @@ def cards(entries):
 def release_for(entries, ver):
     if not entries or entries[0]['version'] != ver:
         die('CHANGELOG.md debe empezar por la entrada de la versión %s («## [%s] — AAAA-MM-DD»)' % (ver, ver))
-    if not entries[0]['sections']:
+    if not [s for s in entries[0]['sections'] if not s.get('lead')]:
         die('la entrada %s de CHANGELOG.md no tiene Novedades, Mejoras ni Correcciones que enseñar' % ver)
     return entries[0]
 
@@ -273,11 +297,56 @@ def release_js(rel):
     return 'export const RELEASE = ' + json.dumps(rel, ensure_ascii=False, separators=(',', ':')) + ';'
 
 
+def old_newer(a, b):
+    """¿La versión a es posterior a b para el aviso de versión nueva de las apps instaladas hasta la 1.0.31? Es su comparador,
+    tal cual (system/updates de la 1.0.31): parte el texto por los puntos y compara como números los tres primeros trozos; uno
+    que no es un número cuenta como 0."""
+    def nums(v):
+        out = []
+        for p in str(v or '').split('.'):
+            p = p.strip()  # Number() no mira los espacios de los lados (tampoco los de no separación)
+            out.append(float(p) if re.fullmatch(r'\d+(\.\d+)?', p) else 0.0)
+        return out + [0.0, 0.0, 0.0]
+    x, y = nums(a), nums(b)
+    for i in range(3):
+        if x[i] != y[i]:
+            return x[i] > y[i]
+    return False
+
+
+# la última versión con ese comparador de tres cifras, y el punto que no parte el texto: U+2024 («one dot leader»), que se ve
+# como un punto y el comparador no toma por uno, seguido de U+2060 («word joiner», sin ancho), para que el título no se
+# pueda partir de línea detrás de él (se leería «Versión 1.0.» y, debajo, «4 de nov. 2026»)
+LAST_OLD = '1.0.31'
+DOT = '\u2024\u2060'
+MONTHS = ('ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic')
+
+
+def legacy_version(ver, date):
+    """El campo `version` de version.json: lo que comparan con la suya, y enseñan en el título del aviso («Versión …»), las apps
+    instaladas hasta la 1.0.31. Para ellas, que solo miran tres cifras, la 1.0.4 es anterior a la 1.0.31 (4 < 31) y no
+    avisarían. Mientras la versión no sea posterior a la 1.0.31 también para ese comparador (lo será desde la 1.0.32 o la
+    1.1.0), se escribe de modo que lo sea y se lea igual: «1.0.4 de nov. 2026», con el segundo punto (y los siguientes) de
+    los que no parten el texto y, tras el punto de la abreviatura del mes, el año. Ese comparador ve [1, 0, 2026]: posterior a
+    cualquier 1.0.x. Los espacios de «de nov. 2026» son de no separación: si no cabe en una línea, se parte antes de «de».
+    Las apps desde la 1.0.4 no usan este campo: leen la versión de verdad en `number`. (Las versiones hasta la 1.0.31 se
+    publicaron con su número tal cual, y así se quedan.)"""
+    if old_newer(ver, LAST_OLD) or version_key(ver) <= version_key(LAST_OLD):
+        return ver
+    y, m, _ = date.split('-')
+    head, _, rest = ver.partition('.')
+    out = '%s.%s de\u00a0%s.\u00a0%s' % (head, rest.replace('.', DOT), MONTHS[int(m) - 1], y)
+    if not old_newer(out, LAST_OLD):
+        die('no se ha podido escribir la versión %s para el aviso de las apps instaladas hasta la %s' % (ver, LAST_OLD))
+    return out
+
+
 def version_json(entries):
-    """version.json del paquete: la versión publicada con sus novedades y las de las anteriores (por si alguien salta varias)."""
+    """version.json del paquete: la versión publicada con sus novedades y las de las anteriores (por si alguien salta varias).
+    `number` es la versión; `version`, lo que leen de ella las apps instaladas hasta la 1.0.31 (legacy_version)."""
     top = entries[0]
-    return json.dumps({'version': top['version'], 'date': top['date'], 'sections': top['sections'], 'history': entries[:6]},
-                      ensure_ascii=False, indent=1) + '\n'
+    return json.dumps({'version': legacy_version(top['version'], top['date']), 'number': top['version'], 'date': top['date'],
+                       'sections': top['sections'], 'history': entries[:6]}, ensure_ascii=False, indent=1) + '\n'
 
 
 # ── compilación ────────────────────────────────────────────────────────────────────────────────────────────────────

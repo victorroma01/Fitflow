@@ -92,7 +92,7 @@ def reload(pg, notes):
 def deploy(orig, dest, ver=None, suffix=''):
     """Publica en `dest` el paquete `orig`; con `ver`, como una compilación nueva: el código con esa versión y cada archivo
     js/ con otro nombre (como hace esbuild cuando cambia el contenido), con todas sus referencias."""
-    v0 = json.load(open(os.path.join(orig, 'version.json'), encoding='utf-8'))['version']
+    v0 = json.load(open(os.path.join(orig, 'version.json'), encoding='utf-8'))['number']
     names = {f: (f[:-3] + suffix + '.js' if ver else f) for f in os.listdir(os.path.join(orig, 'js'))}
     def fix(t):
         for a, b in names.items():
@@ -291,7 +291,9 @@ def main(app):
                 check('instalación nueva: no enseña novedades', ev("!document.getElementById('upd')"))
                 vj = os.path.join(site, 'fitflow', 'version.json')
                 vj0 = open(vj, encoding='utf-8').read()
-                check('version.json publicado con la versión de la app', json.loads(vj0)['version'] == ev('APPV'))
+                check('version.json publicado con la versión de la app', json.loads(vj0)['number'] == ev('APPV'))
+                # `version` es lo que leen las apps instaladas hasta la 1.0.31 (tests/aviso.test.mjs): dice la misma versión
+                check('y con lo que leen de ella las apps instaladas hasta la 1.0.31', ev('v => plainVersion(v)', json.loads(vj0)['version']) == ev('APPV'), json.loads(vj0)['version'])
                 # Perfil → Ajustes → Actualizaciones, sin versión nueva
                 ev("S.tab=3;R();A.openSettings()")
                 pg.click('#sh [data-a=updateCheck]')

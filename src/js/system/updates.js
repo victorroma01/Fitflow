@@ -1,6 +1,6 @@
 /* ═══ system/updates ═══
    Actualización de la app: service worker, uso sin conexión, Ajustes → Actualizaciones y aviso de versión nueva con sus novedades.
-   Define: swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
+   Define: swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, OLD_REVISIONS, plainVersion, versionKey, isNewerVersion, fetchVersionInfo, sectionHtml, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
 import { APPV, FFDEP, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -83,12 +83,23 @@ let updateReady = 0;
 let updateCheckedAt = 0;
 /** Versión publicada que se está anunciando (contenido de version.json) o null si no se pudo leer. */
 let updateInfo = null;
+/* las revisiones de la 1.0.3 se numeraron añadiendo una cifra a su tercer número: la 1.0.31 y la 1.0.32 son la 1.0.3.1 y la
+   1.0.3.2, anteriores a la 1.0.4 (build.py, OLD_REVISIONS) */
+const OLD_REVISIONS = { '1.0.31': '1.0.3.1', '1.0.32': '1.0.3.2' };
+/** La versión que dice un texto escrito para las apps instaladas hasta la 1.0.31 («1.0.4 de nov. 2026» → 1.0.4: build.py,
+    legacy_version). Esas apps anotan ese texto como la versión cuyas novedades ya se vieron en el aviso; una versión
+    escrita tal cual se queda como está. */
+export const plainVersion = v => String(v || '').split(/\s/)[0].replace(/\u2024\u2060?/g, '.');
+/* las cifras de una versión, para compararla con otra */
+const versionKey = v => (OLD_REVISIONS[plainVersion(v)] || plainVersion(v)).split('.').map(Number);
 /** ¿La versión a es posterior a b? Compara número a número, tengan los que tengan: 1.10.0 es posterior a 1.9.3, y la
     revisión de una versión, que lleva una cuarta cifra (1.1.0.1), es posterior a ella (1.1.0) y anterior a la siguiente
-    (1.1.1). Hasta la V1.0.31 solo se miraban tres. */
+    (1.1.1). Las revisiones de la 1.0.3 (1.0.31, 1.0.32) cuentan como 1.0.3.1 y 1.0.3.2. Hasta la V1.0.31 solo se miraban
+    tres números, y para una 1.0.31 instalada la 1.0.4 no sería posterior: por eso version.json lleva en `version` un texto
+    que sí lo es para ella (build.py, legacy_version) y, en `number`, la versión de verdad, que es la que se compara aquí. */
 export const isNewerVersion = (a, b) => {
-  const x = String(a || '').split('.').map(Number);
-  const y = String(b || '').split('.').map(Number);
+  const x = versionKey(a);
+  const y = versionKey(b);
   for (let i = 0; i < Math.max(x.length, y.length); i++)
     if ((x[i] || 0) != (y[i] || 0))
       return (x[i] || 0) > (y[i] || 0);
@@ -103,22 +114,33 @@ const fetchVersionInfo = async () => {
     if (!r.ok)
       return null;
     const j = await r.json();
-    return j && typeof j.version == 'string' ? j : null;
+    if (!j || typeof j.version != 'string')
+      return null;
+    /* `version` es lo que leen las apps instaladas hasta la 1.0.31; la versión, desde la 1.0.4, va en `number` */
+    if (typeof j.number == 'string')
+      j.version = j.number;
+    return j;
   }
   catch (e) {
     logError('comprobar versión', e);
     return null;
   }
 };
+/** Un apartado de la nota de una versión: su título y su lista (hasta `max` puntos; sin `max`, todos). La cabecera de la
+    versión (su primer apartado, marcado `lead`: build.py, changelog) va destacada, con su título y su texto, sin lista. */
+const sectionHtml = (s, max) => s.lead ? html`
+  <p class="notes-lead"><b>${s.title}</b>${(s.items || []).map(i => html`<span>${i}</span>`)}</p>
+` : html`
+  <p class="notes-heading">${s.title}</p>
+  <ul>${(max ? (s.items || []).slice(0, max) : s.items || []).map(i => html`<li>${i}</li>`)}</ul>`;
 /** Lista de cambios de una o varias versiones (si se saltaron versiones, se enseñan todas las posteriores a la instalada). */
 const releaseNotesHtml = (info, current) => {
   const all = info && Array.isArray(info.history) && info.history.length ? info.history : (info ? [info] : []);
   const list = current ? all : all.filter(v => isNewerVersion(v.version, APPV));
   const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
-  const notes = shown.map(v => (shown.length > 1 ? html`<p class="update-version">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`
-    <p class="notes-heading">${s.title}</p>
-    <ul>${(s.items || []).slice(0, 8).map(i => html`<li>${i}</li>`)}</ul>
-  `).join('')).join('');
+  const notes = shown.map(v => (shown.length > 1 ? html`
+    <p class="update-version">Versión ${plainVersion(v.version)}</p>
+  ` : '') + (v.sections || []).map(s => sectionHtml(s, 8)).join('')).join('');
   return notes || '<ul><li>Mejoras y correcciones.</li></ul>';
 };
 /** Ajustes → «Ver nota de actualización» (F-28): la nota de la versión instalada, solo la última, con todos sus cambios y,
@@ -126,9 +148,7 @@ const releaseNotesHtml = (info, current) => {
 export const releaseNotePage = () => {
   const r = RELEASE;
   const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-  const body = (r.sections || []).map(s => html`
-    <p class="notes-heading">${s.title}</p>
-    <ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
+  const body = (r.sections || []).map(s => sectionHtml(s, 0)).join('');
   return html`
     <div class="card release-notes">
       <b class="release-version">Versión ${r.version || APPV}</b>
@@ -215,7 +235,8 @@ export const whatsNewDue = () => {
   catch (e) {
     logError('versión de partida', e);
   }
-  return updated && seen != APPV && RELEASE.sections.length > 0;
+  /* una 1.0.31 anota como vistas las novedades con el texto que lee en version.json (plainVersion) */
+  return updated && plainVersion(seen) != APPV && RELEASE.sections.length > 0;
 };
 /** 1 si las novedades esperan a que termine el entreno en curso. */
 let whatsNewPending = 0;

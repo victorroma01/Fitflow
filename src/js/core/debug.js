@@ -32,7 +32,7 @@ import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { spaceCheck, spaceUse } from '../system/space.js';
-import { isNewerVersion, updatesOn } from '../system/updates.js';
+import { isNewerVersion, plainVersion, updatesOn } from '../system/updates.js';
 import { showSummary } from '../extras/summary.js';
 import { medalSvg } from '../extras/medals.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
@@ -146,6 +146,7 @@ const DEBUG_NAMES = {
   iconNoticeApplies: [() => iconNoticeApplies],
   iconNoticeCheck: [() => iconNoticeCheck],
   isNewerVersion: [() => isNewerVersion],
+  plainVersion: [() => plainVersion],
   dayImage: [() => dayImage],
   photoUrl: [() => photoUrl],
   routineImage: [() => routineImage],

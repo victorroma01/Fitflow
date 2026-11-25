@@ -4,7 +4,7 @@
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
-export const APPV = '1.0.32';
+export const APPV = '1.0.4';
 export const FFDEP = 0; /* 1 en el paquete instalable (dist/app): lo fija build.py; 0 en el archivo único */
 /** El primer elemento de la página que encaja con el selector `q`, o null. Para el comprobador de tipos vale por cualquier
     elemento (un <input>, un <video>…): quien lo pide sabe cuál es.
