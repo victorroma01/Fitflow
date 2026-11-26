@@ -10,6 +10,10 @@ En corto: el código sigue limpio, legible y medido, y la app instalable es más
 de funcionamiento**, anterior a esta versión y ya corregido: en un día de descanso no se veían la barra de la semana ni los
 avisos de la semana de descarga y de rotar los ejercicios.
 
+Después, con la revisión fusionada (#76), un **[segundo repaso](#segundo-repaso)**, más funcional: cada pantalla mirada a
+320 y 390 px, en español y en inglés, los nombres largos, más paseos al azar y la memoria al abrir y cerrar lo más pesado.
+Salió un fallo de esta versión, sin publicar, en la tarjeta del día de un móvil pequeño, y cuatro detalles de 320 px.
+
 ## Qué se miró y cómo
 
 1. **Todo `src/js` con TypeScript**, sin tocar el código y con la búsqueda de variables sin usar dentro de las funciones
@@ -87,6 +91,62 @@ avisos de la semana de descarga y de rotar los ejercicios.
 - **En un iPhone y un Android de verdad** (I-01): todo lo de aquí es el navegador de prueba con el tamaño de un móvil.
 - **«Eliminar cuenta» contra el servidor de verdad**: se prueba con el emulador de Firebase (`tests/cloud.py`), que no tiene
   el ajuste de Authentication que la permite ([pendiente](#pendiente-antes-de-publicar)).
+
+## Segundo repaso
+
+Tras fusionar la revisión (#76), en la rama `repaso-1.0.4` ([solicitud #77](https://github.com/victorroma01/Fitflow/pull/77)).
+
+### Qué se miró
+
+1. **Cada pantalla, a ojo**: las 52 de `tests/shots.py` a 320 × 568 (en español y en inglés) y a 390 × 844 con el tema claro,
+   y además el resumen al terminar un entreno, un grupo de la librería, la hoja del ejercicio de nombre más largo, la semana de
+   descarga y la rotación, a 320 y 390 px y en los dos idiomas. Buscando textos cortados, cosas fuera de sitio o una encima de
+   otra.
+2. **Los nombres largos**: los de los días de todos los programas, en los dos idiomas, a 320 px (ocupan dos líneas como mucho),
+   y uno larguísimo, como el de un workout propio.
+3. **Robustez**: paseos al azar nuevos (`tests/walk.py`, semillas 21 a 26, 220 pasos cada una) y abrir y cerrar muchas veces lo
+   más pesado, midiendo nodos, escuchas y memoria tras recoger la basura.
+4. **Código**: las fechas (todas por calendario, también el día del cambio de hora), los números escritos con coma, las
+   escuchas y los temporizadores (se ponen una vez, o se quitan al cerrar), y el inglés (`tools/i18n.js --todo`: nada).
+
+### Lo encontrado
+
+| Id | Prioridad | Qué pasaba | Corrección |
+| --- | --- | --- | --- |
+| R7 | Medium | **A 320 px, los botones de la tarjeta del día quedaban medio fuera** con un nombre de dos líneas, y los hay en los programas («Brazos (bíceps y tríceps)» de Bro Split, «Torso B (hipertrofia)»): 24 px recortados. La tarjeta tiene la forma de su foto y recortaba con `overflow: hidden`, que la hace desplazable y le quita el alto mínimo de lo que lleva dentro. Es de esta versión (la tarjeta más alta, #75), sin publicar. | Recorta con `overflow: clip` (sin él, el navegador se queda en `hidden`): crece lo justo, y a 390 px y más es la misma. El nombre, en dos líneas como mucho, con «…»: uno larguísimo no tapa la foto ni echa los botones. El final de su sombra va en un borde transparente, para que no asome una tercera línea. |
+| R8 | Low | **Ajustes, a 320 px: los valores se cortaban a media letra** («Oscuro · C», «Azu»), en inglés casi enteros. El valor era `inline-flex` y `text-overflow: ellipsis` no hace nada en flex. Ya pasaba en la 1.0.31. | El valor es un bloque: lo que no cabe acaba en «…». La muestra del color de acento, a 4 px de su nombre: con 6, «Azul eléctrico» no cabía a 390 px con Inter por un píxel. |
+| R9 | Low | **Mi nutrición, a 320 × 568: la fila «Objetivo» se leía a través de «Ajustar a mano»**, translúcido en Cristal, con los dos textos uno encima del otro. Ya pasaba en la 1.0.31. | Los dos botones de abajo van sobre el fondo de la página. |
+| R10 | Low | **Recorrido, a 320 × 568: el primer paso tapaba la tarjeta del día.** Con la tarjeta más alta no cabía la explicación ni debajo ni encima, y se ponía encima de lo que explica. | Si la explicación no cabe ni debajo ni encima, se desplaza la página, lo justo para que quepa debajo. |
+| R11 | Low | **El texto de ayuda de un campo se cortaba a media letra** (el buscador de la Librería a 320 px: «…músculo o equi»). | Lo que no cabe en un campo acaba en «…». |
+| O4 | — | **Dos pruebas no veían lo que decían.** La de la forma de la tarjeta del día daba por buenos los botones a menos de 30 px del borde, también fuera (distancia negativa); y la de los valores de Ajustes exigía «Azul eléctrico» entero a 390 px, que depende de la letra del sistema (en GitHub falló en los tres navegadores). | Los botones, dentro (y prueba nueva con nombres de dos líneas y larguísimos a 320, 390 y 768 px); los valores, enteros o con «…». |
+
+### Lo que se queda como está
+
+- **Los decimales**: casi toda la app los escribe con punto (62.5 kg, 190.3 t, 5.2 km) y el Análisis mensual, con coma (63,7 t,
+  −0,5 kg, 5,2 km). Pasar todo a la coma en español es una decisión del propietario: son unas 45 líneas en 17 archivos y sus
+  pruebas. Los campos aceptan las dos.
+- **La fecha de «Registrar peso», a 320 px en Chromium**, se corta un poco: el campo de fecha de Chromium calcula su ancho
+  menor de lo que ocupa con la letra de la app. Darle su ancho no bastó y en Safari ese campo es otro: se mirará en la prueba
+  en Android (I-01).
+- **El menú lateral**: sus opciones largas («Rotar ejercicios») pasan por encima del nombre del día, que se ve detrás. Es su
+  diseño (un degradado de izquierda a derecha) y se lee (`tests/contrast.py`).
+
+### Comprobado
+
+- **Cada corrección con su prueba, que falla con la compilación de antes**: los valores de Ajustes, el fondo de los botones de
+  Mi nutrición, los campos de texto y la tarjeta del día con nombres largos (`tests/features.py`), y el primer paso del
+  recorrido a 320 × 568 (`tests/experience.py`).
+- **Paseos al azar**: las semillas 22 a 26, sin errores. La 21 se cortó por una recarga de la página mientras el ordenador
+  hacía otra prueba; repetida sola, terminó sin errores.
+- **Memoria**: 30 vueltas de abrir y cerrar cada una de las 8 pantallas más pesadas (la hoja con figura, la Librería, el
+  Overview, Registros, el análisis, Ajustes, empezar y descartar un entreno y las pestañas) y 90 de la hoja con figura (con 6
+  ejercicios distintos): los nodos y las escuchas vuelven a lo mismo (1.417 y 68) y la memoria se queda plana (de 6,05 a
+  6,32 MB en 75 vueltas: las miniaturas que se guardan para la sesión).
+- **Rendimiento**, igual que antes (`tests/perf.py`, 5 vueltas, el paquete que se publica): primer pintado 108 y 104 ms,
+  abrir Registros 37 y 35 ms; el resto, dentro del ruido.
+- **Con la tarjeta nueva**: el contraste de cada portada (`tests/covers.py`) y de los 40.248 textos de 32 configuraciones
+  (`tests/contrast.py`), los tamaños de pantalla (`tests/layout.py`) y el recorrido (`tests/experience.py`), correctos.
+- **Batería completa** y GitHub (Chrome, Safari, Firefox y el emulador de Firebase), con la solicitud #77.
 
 ## Pendiente antes de publicar
 

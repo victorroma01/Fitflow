@@ -118,6 +118,11 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   mismo HTML en los días de entreno. Prueba fija en `tests/programs.py`. Y `tests/figures.py` mide el ciclo de Bicicleta,
   Carrera y Comba con el reloj de prueba quieto: con el ordenador cargado, lo que tardaba en dibujarse cada momento contaba
   como tiempo y la prueba podía fallar sin que la figura se parase.
+- Segundo repaso de la V1.0.4 ([informe](docs/tecnica/revision-1.0.4.md#segundo-repaso)): cada pantalla a 320 y 390 px en
+  los dos idiomas, los nombres largos, paseos al azar y la memoria al abrir y cerrar lo más pesado. La tarjeta del día recorta
+  con `overflow: clip` y crece lo justo (a 320 px, un nombre de dos líneas dejaba los botones medio fuera) y su nombre va en
+  dos líneas como mucho; el recorrido desplaza la página si su explicación no cabe ni debajo ni encima de lo que explica. Y
+  dos pruebas que no veían lo que decían: los botones fuera de la tarjeta, y un valor de Ajustes que cabe o no según la letra.
 - `tests/walk.py` (la comparación con la versión anterior): las figuras 3D se comparan por qué figura va en cada sitio, no
   por si ya están dibujadas. Se miraban las figuras de antes del 3D (`svg[data-fig]`), que ya no hay, y la misma compilación
   salía distinta de sí misma: las miniaturas cambian su hueco por su imagen (una dirección `blob:` distinta en cada pasada)
