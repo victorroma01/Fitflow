@@ -1,0 +1,80 @@
+/* ═══ css/75-equipment ═══ «Equipamiento» al final del Overview del día y su página (workout/equipment) */
+/* los iconos son gris claro sobre transparente (los del catálogo y los dibujados): en el tema oscuro, algo apagados; en el
+   claro, en negro, para que se vean sobre el fondo claro */
+:root {
+  --eqf:none;
+  --eqo:.78;
+}
+@media(prefers-color-scheme:light) {
+  :root:not([data-theme="dark"]) {
+    --eqf:brightness(0);
+    --eqo:.64;
+  }
+}
+:root[data-theme="light"] {
+  --eqf:brightness(0);
+  --eqo:.64;
+}
+.equip-ico {
+  display:block;
+  flex:none;
+  width:64px;
+  height:40px;
+  filter:var(--eqf);
+  opacity:var(--eqo);
+}
+/* en el Overview: el título con su «›» y, debajo, los iconos; todo es un botón que abre la lista */
+.equip-sum {
+  margin-top:14px;
+  border-top:1px solid var(--ln);
+}
+.equip-open {
+  display:block;
+  width:100%;
+  padding:14px 0 6px;
+  border:0;
+  background:none;
+  text-align:left;
+}
+.equip-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:17px;
+}
+.equip-go {
+  color:var(--mu);
+  font-size:24px;
+  line-height:1;
+}
+.equip-icons {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 14px;
+  margin-top:12px;
+}
+.equip-icons .equip-ico {
+  width:56px;
+  height:35px;
+}
+/* la página: cada material en su tarjeta, con su icono y su nombre */
+.equip-lead {
+  margin:-8px 0 18px;
+  font-size:15px;
+}
+.equip-list {
+  display:grid;
+  gap:10px;
+  margin:0 0 30px;
+  padding:0;
+  list-style:none;
+}
+.equip-card {
+  display:flex;
+  align-items:center;
+  gap:18px;
+  margin:0;
+  padding:14px 16px;
+  font-size:17px;
+  font-weight:500;
+}

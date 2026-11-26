@@ -13,6 +13,7 @@ import { restOf, restSelect } from './rest.js';
 import { dayMinutes, rangeSelect, rirOf, targetText, tempoOf, unitOf } from './targets.js';
 import { isDeloadWeek } from './deload.js';
 import { coverStyle } from './images.js';
+import { equipmentSummary } from './equipment.js';
 import { exPicture } from '../extras/pictures.js';
 import { html, raw } from '../core/html.js';
 /* la cabecera: «‹ Atrás» y «Editar» (o «Listo» al editar) */
@@ -78,7 +79,8 @@ const overviewBlock = (d, k, n, editing) => {
     <div class="row mt-14"><b class="muted">SERIE ${raw(String.fromCharCode(65 + n))}</b>${kind}</div>
     ${k.x.map(i => overviewExercise(d, i, editing))}`;
 };
-/** El overview del día elegido: su foto y cifras, sus bloques y ejercicios y, al editar, cambiarlos. */
+/** El overview del día elegido: su foto y cifras, sus bloques y ejercicios, el material que piden (workout/equipment) y, al
+    editar, cambiarlos. */
 export function overviewPage() {
   const d = S.plan[S.selectedDay];
   const editing = overviewMode == 2;
@@ -92,6 +94,7 @@ export function overviewPage() {
     ${overviewHero(d, editing)}
     ${raw(isDeloadWeek(S.week) ? deloadNote() : '')}
     ${dayBlocks(d).map((k, n) => overviewBlock(d, k, n, editing))}
+    ${editing ? '' : equipmentSummary(d)}
     ${raw(add)}
     <div class="h-80"></div>
     ${raw(start)}`;

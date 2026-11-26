@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 120" width="192" height="120" fill="none" stroke="#eeeeee" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M40 28H152" stroke-width="5"/>
+<circle cx="40" cy="28" r="5" fill="#eeeeee" stroke="none"/>
+<circle cx="152" cy="28" r="5" fill="#eeeeee" stroke="none"/>
+<mask id="tw" maskUnits="userSpaceOnUse" x="0" y="0" width="192" height="120">
+<rect width="192" height="120" fill="#fff"/>
+<g stroke="#000">
+<path d="M64 74H128M64 81H128" stroke-width="3"/>
+</g>
+</mask>
+<g mask="url(#tw)">
+<path d="M64 31Q64 21 74 21H118Q128 21 128 31V92H64Z" fill="#eeeeee" stroke="none"/>
+</g>
+<path d="M68 92V99M76 92V99M84 92V99M92 92V99M100 92V99M108 92V99M116 92V99M124 92V99" stroke-width="3"/>
+</svg>

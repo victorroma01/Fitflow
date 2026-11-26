@@ -188,7 +188,10 @@ const DATA = {
     /* y los nombres de los ejercicios que ya no están en la librería (eran el mismo que otro): un plan o un entreno guardado
        con uno de ellos lo sigue enseñando con ese nombre */
     const A = data('data/aliases.js', ['EX_RETIRED']);
-    return [...L.EXERCISES.map(e => e.n), ...A.EX_RETIRED.keys(), ...L.EXERCISES.flatMap(e => [e.c, e.g, e.t, e.q]), ...L.GROUPS, ...Object.values(L.MUSCLES), ...Object.values(L.EQUIP)];
+    /* y el material de «Equipamiento» en el Overview (workout/equipment): su nombre */
+    const Q = data('data/equipment.js', ['EQUIPMENT']);
+    return [...L.EXERCISES.map(e => e.n), ...A.EX_RETIRED.keys(), ...L.EXERCISES.flatMap(e => [e.c, e.g, e.t, e.q]), ...L.GROUPS, ...Object.values(L.MUSCLES), ...Object.values(L.EQUIP),
+      ...Object.values(Q.EQUIPMENT).map(x => x[0])];
   },
   foods: () => {
     const F = data('data/foods.js', ['FOOD_GROUPS', 'FOODS_SRC', 'MEAL_NAMES']);

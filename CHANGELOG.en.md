@@ -31,6 +31,8 @@ have no entry: the app shows them in Spanish.
 - Your data, in Privacy: export a copy, write to us about privacy, withdraw consent, delete your data, and “Delete account,”
   which deletes the account and everything in it (also in Settings → Account). An account that goes unused for two years is
   deleted automatically.
+- Equipment: at the end of each day's Overview, the equipment its exercises need, with their icons. Tap it to see the list
+  with the name of each item.
 
 ### Improvements
 - Library reviewed: every exercise's muscles have been checked, and duplicates (the same exercise under another name) are

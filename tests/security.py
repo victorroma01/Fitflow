@@ -1,5 +1,5 @@
 """Prueba de inyección de HTML: rellena nombres, notas, campos numéricos y la foto de perfil con código HTML malicioso y
-recorre las 51 pantallas de tests/shots.py. Falla si alguna pantalla llega a ejecutar ese código (un dato mal escapado).
+recorre las 52 pantallas de tests/shots.py. Falla si alguna pantalla llega a ejecutar ese código (un dato mal escapado).
 Ese recorrido va sin la CSP (bypass_csp), para probar el escapado por sí solo; luego se prueba la CSP, la segunda barrera:
 con ella, ni un atributo on…= ni un <script> añadido se ejecutan, y no salen imágenes ni conexiones a otros sitios.
 Además comprueba que una copia de seguridad o unos datos guardados con una foto de perfil manipulada no la cargan, y
@@ -82,7 +82,7 @@ TAMPER = """([P,numbers])=>{const seen=new Set();
  const s=stateToStored(S);delete s.pf;deep(s);
  (s.plan||[]).forEach(d=>(d.ex||[]).forEach(e=>{e.s=3}));(s.cp||[]).forEach(p=>(p.plan||[]).forEach(d=>(d.ex||[]).forEach(e=>{e.s=3})));
  return JSON.stringify(Object.assign({_sf:{app:'StrataFit',fmt:2,ver:'1.0.3'+P,at:'2026-10-29T12:00:00Z'+P,sum:['x'+P]}},s))}"""
-# además de las 51 pantallas, los avisos y las hojas que enseñan datos guardados
+# además de las 52 pantallas, los avisos y las hojas que enseñan datos guardados
 MORE = {
     'borrar registro': "A.openLogs();A.logDeleteAsk(0)", 'borrar el último registro': "A.openLogs();A.logDeleteAsk(S.logs.length-1)",
     'borrar workout': "A.routineEditorBack();A.routineListDeleteAsk(0)", 'editar workout': "A.routineEditorBack();A.routineEdit(0)",
