@@ -133,7 +133,7 @@ html.glass .setting-row {
   overflow:hidden;
   text-overflow:ellipsis;
 }
-/* la muestra del color de acento, delante de su nombre (a 4 px: con 6, «Azul eléctrico» no cabía por un píxel a 390 px) */
+/* la muestra del color de acento, delante de su nombre (a 4 px: con 6, «Azul eléctrico» no cabía por un píxel a 390 px, con Inter) */
 .setting-dot {
   display:inline-block;
   width:14px;

@@ -208,7 +208,9 @@ def main(path):
         # el valor de cada fila: entero a 390 px y, si no cabe (320 px), acabado en «…» (un bloque: con flex se cortaba a media letra)
         fit = "[...document.querySelectorAll('#ajs .setting-value')].map(v=>[v.textContent.trim(),v.scrollWidth<=v.clientWidth+.5,getComputedStyle(v).display,getComputedStyle(v).textOverflow])"
         vals = ev(fit)
-        check('a 390 px, los valores de Ajustes se leen enteros (también «● Azul eléctrico»)', all(v[1] for v in vals), str([v for v in vals if not v[1]]))
+        # (a 390 px, que «● Azul eléctrico» quepa depende de la letra del sistema: con Inter cabe y con la de GitHub no; se mira
+        # solo que, si no cabe, acabe en «…»)
+        check('a 390 px, los valores de Ajustes, enteros o acabados en «…»', all(v[1] or v[2] == 'block' and v[3] == 'ellipsis' for v in vals), str([v for v in vals if not v[1]]))
         pg.set_viewport_size({'width': 320, 'height': 568})
         run()
         vals = ev(fit)
