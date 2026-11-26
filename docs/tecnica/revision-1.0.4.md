@@ -78,8 +78,8 @@ avisos de la semana de descarga y de rotar los ejercicios.
 
   Pintar cada pestaña sigue entre 0,5 y 7 ms. El motor de las figuras (unos 350 KB) solo se descarga al dibujar una figura.
 - **Datos**: las 50 semillas más de `tests/syncfuzz.py`, correctas.
-- **Batería completa** y GitHub (Chrome, Safari, Firefox y el emulador de Firebase), con la [solicitud de esta
-  revisión](https://github.com/victorroma01/Fitflow/pulls?q=head%3Apulido-1.0.4).
+- **Batería completa** y GitHub (Chrome, Safari, Firefox y el emulador de Firebase), con la
+  [solicitud #76](https://github.com/victorroma01/Fitflow/pull/76).
 
 ## Lo que no se pudo comprobar
 
