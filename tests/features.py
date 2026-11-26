@@ -431,6 +431,24 @@ def main(path):
         ev("A.closeSheet()")
         run(300)
 
+        print('Workout: la tarjeta del día, más alta, con la foto entre el nombre y las cifras (V1.0.4)')
+        ev("sheet();S.tab=0;R()")
+        day = ev("(()=>{for(let i=0;i<7;i++){S.selectedWeekday=i;syncSel();R();if(document.querySelector('#app .day-hero [data-a=startWorkout]'))return i}return -1})()")
+        run(300)
+        check('un día de entreno (el %d) lleva la tarjeta del día' % (day + 1), day >= 0, ev("JSON.stringify([!!W, S.noProgram, S.tab, document.querySelector('#app')?.className])"))
+        HERO = """(() => { const h = document.querySelector('#app .day-hero'), r = h.getBoundingClientRect(), n = h.querySelector('h2').getBoundingClientRect(),
+            s = h.querySelector('.stats').getBoundingClientRect(), b = h.querySelector('[data-a=startWorkout]').getBoundingClientRect();
+            return [r.width, r.height, Math.round(n.top - r.top), Math.round(s.top - n.bottom), Math.round(r.bottom - b.bottom), getComputedStyle(h).backgroundImage]; })()"""
+        for w in (320, 390, 768):
+            pg.set_viewport_size({'width': w, 'height': 844})
+            run(300)
+            cw, chh, top, gap, bottom, bg = ev(HERO)
+            check('a %d px: con la forma de sus fotos (1,26; hasta 320 px de alto), el nombre arriba, las cifras y los botones abajo y, en medio, %d px de foto' % (w, gap),
+                  abs(chh - min(320, cw / 1.26)) <= 1.5 and top < 30 and bottom < 30 and gap >= (20 if w == 320 else 70), str([round(cw), round(chh), top, gap, bottom]))
+        check('la portada solo se oscurece donde hay texto: arriba, bajo el nombre, y en los 148 px de abajo', bg.count('rgba(0, 0, 0') >= 5 and '148px' in bg and 'url(' in bg, bg[:160])
+        pg.set_viewport_size({'width': 390, 'height': 844})
+        run(300)
+
         print('Workout: los atajos en tarjetas de dos en dos, como en la referencia del propietario (V1.0.4)')
         TILES = """[...document.querySelectorAll('#app .hub-grid .hub-tile')].map(t => { const r = t.getBoundingClientRect(), cs = getComputedStyle(t);
             return { a: t.dataset.a, t: t.querySelector('b').textContent, s: t.querySelector('small').textContent, x: Math.round(r.left), y: Math.round(r.top),

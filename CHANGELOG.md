@@ -57,8 +57,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   Un plan o un entreno guardado con uno de ellos lo sigue enseñando, con la figura y los músculos del que queda.
 - Los ejercicios de distancia de Hyrox (trineo, carga de granjero, burpees con salto) llevan sus metros como objetivo.
 - El botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out»).
-- Fondo de la app liso: negro en el tema oscuro y gris muy claro en el claro. En Workout, la librería, el workout
-  personalizado, el temporizador WOD y el cardio van en tarjetas, de dos en dos, con su icono arriba.
+- Fondo de la app liso: negro en el tema oscuro y gris muy claro en el claro. En Workout, la tarjeta del día es más alta y
+  deja ver su foto entre el nombre y las cifras, y la librería, el workout personalizado, el temporizador WOD y el cardio van
+  en tarjetas, de dos en dos, con su icono arriba.
 - Superseries, triseries y circuitos: la etiqueta de cada ejercicio dice solo cuál es y su lugar («SUPERSERIE · 1/2»). Ni
   ella ni la línea del ejercicio repiten ya el descanso («10 s al siguiente», «Descanso de la ronda»): va en cada serie, en
   la columna «Desc.».
@@ -92,6 +93,11 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Integración continua (`pruebas.yml`): los trabajos de Chrome, Safari y Firefox tienen 45 minutos en vez de 30. La
   batería entera tarda unos 20 en Chrome y, según la máquina, de 20 a más de 30 en Safari, que se cortaba a veces al final
   sin haber fallado nada; una prueba colgada se para igual.
+- Workout: la tarjeta del día que se entrena, más alta (`.day-hero`, en `css/79-workout-hub`: con la forma de sus fotos,
+  1,26, y hasta 320 px de alto), con el nombre arriba y las cifras y los botones abajo, como pidió el propietario para que se
+  vea la foto; la portada (`coverStyle(n, d, tall)`) solo se oscurece donde hay texto (los 56 px de arriba y los 148 de
+  abajo), así que en medio se ve la foto. La de un descanso y la del Overview, igual. `tests/covers.py` sigue midiendo el
+  contraste AA sobre las 22 portadas (de hombre y de mujer) y `tests/features.py` comprueba su forma a 320, 390 y 768 px.
 - Workout: los atajos (la librería, el workout personalizado, el temporizador WOD y el cardio) en tarjetas de dos en dos, con
   el diseño de la referencia del propietario (`workout/day`: `hubTile`; `css/79-workout-hub`): lisas, del color de las
   tarjetas del tema (sin el cristal ni el borde de las demás), con su icono relleno arriba (`IC.lib`, `build`, `timer` y

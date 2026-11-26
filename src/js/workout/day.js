@@ -89,7 +89,7 @@ const trainingDayCard = (d, done) => {
       <div><b>${dayMinutes(d)}</b><small>Minutos</small></div>
     </div>`;
   return html`
-    <div class="card hero" data-style="${coverStyle(d.n, d)}">
+    <div class="card hero day-hero" data-style="${coverStyle(d.n, d, 1)}">
       <h2>${d.n}</h2>
       ${stats}
       <div class="grid-2">
@@ -224,13 +224,13 @@ export const dayBlocks = d => {
 const withWeekBar = h => {
   const tr = trainingDays();
   const dn = tr.filter(j => S.doneDays[S.week + '-' + j]).length;
-  return h.replace('</button></div><div class="card hero"', html`
+  return h.replace('</button></div><div class="card hero day-hero"', html`
     </button>
     </div>
     <div class="m-0-2-10">
       <div class="row"><small>Esta semana</small><small><b>${raw(dn)} de ${raw(tr.length)} entrenos</b></small></div>
       <div class="bar h-5"><i class="bg-a2" data-style="width:${tr.length ? dn / tr.length * 100 : 0}%"></i></div>
-    </div><div class="card hero"`);
+    </div><div class="card hero day-hero"`);
 };
 /* Sin programa elegido (una cuenta nueva; I-24): detrás, un día de ejemplo difuminado, que no se puede tocar ni lo leen los
    lectores de pantalla; delante, la tarjeta para elegir uno. Debajo, lo que se puede usar sin programa. */
@@ -240,7 +240,7 @@ const noProgramView = () => {
       ${[0, 1, 2, 3, 4, 5, 6].map(j => html`
         <button class="day${j ? '' : ' on'}" tabindex="-1">DÍA<br>${raw(j == 2 || j == 6 ? '☾' : j + 1)}</button>`)}
     </div>
-    <div class="card hero" data-style="${coverStyle('Pecho')}">
+    <div class="card hero day-hero" data-style="${coverStyle('Pecho', null, 1)}">
       <h2>Pecho</h2>
       <div class="stats">
         <div><b>6</b><small>Ejercicios</small></div>
@@ -271,7 +271,7 @@ export function workoutTab() {
     h += woShortcuts();
     h = resumeBanner() + h;
     h = withWeekBar(h);
-    h = h.replace('<div class="card hero"', () => html`${raw(deloadCard())}${raw(rotationCard())}<div class="card hero"`);
+    h = h.replace('<div class="card hero day-hero"', () => html`${raw(deloadCard())}${raw(rotationCard())}<div class="card hero day-hero"`);
   }
   if (isFreshInstall() && !W)
     h = restoreBanner() + h;

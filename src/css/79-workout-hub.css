@@ -1,4 +1,16 @@
-/* ═══ css/79-workout-hub ═══ Los atajos de Workout (workout/day): tarjetas de dos en dos, como en la referencia del propietario */
+/* ═══ css/79-workout-hub ═══ Workout (workout/day): la tarjeta del día, más alta, y los atajos en tarjetas de dos en dos */
+/* La tarjeta del día que se entrena: con la forma de sus fotos (1,26: la mayoría, 440 × 348), para que se vea la foto entera,
+   y no más de 320 px; el nombre arriba, las cifras y los botones abajo, y en medio la foto, que la portada (coverStyle) solo
+   oscurece donde hay texto. La de un descanso y la del Overview, como siempre. */
+.day-hero {
+  display:flex;
+  flex-direction:column;
+  aspect-ratio:1.26;
+  max-height:320px;
+}
+.day-hero .stats {
+  margin-top:auto;
+}
 /* Lisas, del color de las tarjetas del tema (sin el borde ni el cristal de las demás): el icono arriba, en gris claro y
    relleno, y debajo el nombre y una línea en gris. Las de una fila miden lo mismo; el nombre puede ocupar dos líneas, y
    las letras se achican un poco en un móvil estrecho para que ninguna palabra se corte (el iPhone SE, 320 px). */
