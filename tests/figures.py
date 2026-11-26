@@ -260,11 +260,15 @@ def main(path, shots=None):
             check('hoja de «%s»: y sigue dibujada tras varios gestos' % n, ev(DRAWN) and not ev("/NaN|undefined/.test(" + STAGE + ".innerHTML)"))
             if n in ('Press banca', 'Clean & jerk', 'Natación'):
                 shot('hoja_' + n.split()[0].lower())
-        # un ciclo (pedalear, correr, saltar a la comba) no para en ningún momento
+        # un ciclo (pedalear, correr, saltar a la comba) no para en ningún momento. Se mide con el reloj quieto: tras cada
+        # dibujo la figura espera el doble de lo que le ha costado (ver play en figure3d.js) y, con el reloj en marcha, ese
+        # coste es tiempo de verdad; en un ordenador cargado, un dibujo más largo que un paso daba dos momentos iguales
         for n, cycle in [('Bicicleta', 1400), ('Carrera 1 km', 1260), ('Comba', 1150)]:
             how(n)
             moving()
+            pg.clock.pause_at(ev("Date.now()") / 1000 + 1)
             seen = frames(n, cycle // 24, 30)
+            pg.clock.resume()
             check('hoja de «%s»: no se detiene en ningún momento del ciclo' % n, all(a != b for a, b in zip(seen, seen[1:])), str([i for i, (a, b) in enumerate(zip(seen, seen[1:])) if a == b][:5]))
         # solo se dibuja mientras se ve: con la figura fuera de la vista, no cambia
         how('Sentadilla')

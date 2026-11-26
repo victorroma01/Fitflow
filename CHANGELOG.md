@@ -112,7 +112,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   semillas más de las pruebas al azar de la sincronización), rendimiento (la app que se publica, más rápida que la 1.0.31) y
   funcionamiento. Corregido R6: en un día de descanso faltaban la barra de la semana y los avisos de la descarga y de rotar,
   que Workout metía buscando la tarjeta del día de entreno en el HTML; ahora lo compone pieza a pieza (`workoutTab`), con el
-  mismo HTML en los días de entreno. Prueba fija en `tests/programs.py`.
+  mismo HTML en los días de entreno. Prueba fija en `tests/programs.py`. Y `tests/figures.py` mide el ciclo de Bicicleta,
+  Carrera y Comba con el reloj de prueba quieto: con el ordenador cargado, lo que tardaba en dibujarse cada momento contaba
+  como tiempo y la prueba podía fallar sin que la figura se parase.
 - `tests/walk.py` (la comparación con la versión anterior): las figuras 3D se comparan por qué figura va en cada sitio, no
   por si ya están dibujadas. Se miraban las figuras de antes del 3D (`svg[data-fig]`), que ya no hay, y la misma compilación
   salía distinta de sí misma: las miniaturas cambian su hueco por su imagen (una dirección `blob:` distinta en cada pasada)
