@@ -170,4 +170,4 @@ Al publicar (con «publica»):
    (la constancia de lo aceptado, borrar el propio perfil y los propios avisos), y la etiqueta y la nota de la versión.
 
 Sin fecha y fuera de esta versión: exigir App Check (I-05, ya configurado), la prueba en un Android (I-01), editar las series
-de un entreno guardado, las imágenes nuevas (pospuestas por el propietario) y el modelo 3D propio en GLB.
+de un entreno guardado y el modelo 3D propio en GLB.
