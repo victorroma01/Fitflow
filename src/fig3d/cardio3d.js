@@ -14,47 +14,98 @@
   const { cos, sin, PI, abs, max, min, sqrt, atan2, pow } = Math;
 
   /* ════ correr y andar ════ */
-  /* la zancada de carrera, en el sitio: cada pie apoya una parte de la vuelta (st) yendo hacia atrás bajo la cadera, de
-     z0 + S/2 a z0 - S/2, despega por la punta, sube por detrás (el talón hacia el glúteo) y vuelve adelante con la rodilla
-     arriba hasta caer otra vez con el medio del pie. Entre un apoyo y otro, los dos pies en el aire (la fase de vuelo).
-     slope: la pendiente del suelo (tan), que sube hacia delante; y0: la altura del suelo en z = 0 */
+  /* la zancada de un trote normal, en el sitio (como en una cinta): unas 154 zancadas por minuto, a unos 8 km/h, y cada pie
+     en el suelo dos quintos de la vuelta (st), así que entre un apoyo y otro van los dos en el aire un momento. El pie cae
+     algo por delante de la cadera (zOn), con el medio del pie y la rodilla poco doblada (unos 20°); va hacia atrás con el
+     suelo (S: lo que recorre apoyado) mientras la cadera baja hasta media pisada (la rodilla, a unos 40°) y vuelve a subir;
+     el talón se despega pasada la mitad y el pie sale por la punta por detrás de la cadera, con la pierna casi estirada (el
+     muslo, unos 15° hacia atrás). En el aire, el pie sigue un momento hacia atrás y sube, sin llegar al glúteo (la rodilla, a
+     unos 85°, al pasar bajo la cadera), el muslo lleva la rodilla adelante (unos 35°) y la pierna se estira por delante;
+     antes de caer, el pie vuelve un poco hacia atrás, a la velocidad del suelo, para no frenar. Las alturas del tobillo y su
+     recorrido en el aire salen de los ángulos de cadera y rodilla de un trote (de la pierna de 89 + 84 del modelo); hk escala
+     lo que sube el talón. slope: la pendiente del suelo (tan), que sube hacia delante; y0: la altura del suelo en z = 0 */
+  const RUN_SWING = {
+    /* (en el aire, v de 0 a 1: el recorrido, en partes del de apoyo (0: donde despega; 1: donde cae); la altura del tobillo
+       sobre el suelo, y la inclinación del pie: la punta hacia abajo con el talón arriba, y plano al caer) */
+    f: [[.15, -.12], [.3, -.02], [.45, .24], [.6, .6], [.75, 1], [.9, 1.06]],
+    h: [[.15, 50], [.3, 66], [.45, 64], [.6, 43], [.75, 27], [.9, 22]],
+    p: [[0, 42], [.15, 58], [.3, 66], [.45, 56], [.6, 34], [.75, 12], [.9, -2], [1, 0]]
+  };
+  /* (curva de Hermite que pasa por los puntos K ([v, valor]), con la pendiente de Catmull-Rom dentro y las de los extremos que
+     se den: así el pie sale y llega a la velocidad que lleva) */
+  const hermPts = (v, K, m0, m1) => {
+    let i = 1; while (i < K.length - 1 && K[i][0] < v) i++;
+    const sl = j => j == 0 ? m0 : j == K.length - 1 ? m1 : (K[j + 1][1] - K[j - 1][1]) / (K[j + 1][0] - K[j - 1][0]);
+    const [x0, a] = K[i - 1], [x1, b] = K[i], h = x1 - x0;
+    return FL.herm((v - x0) / h, a, b, sl(i - 1) * h, sl(i) * h);
+  };
   const runGait = (t, o = {}) => {
-    const S = o.S ?? 76, w = o.w ?? 13, toe = o.toe ?? 4, st = o.st ?? .36, hk = o.hk ?? 46, z0 = o.z0 ?? 0, slope = o.slope ?? 0, y0 = o.y0 ?? 0;
-    const feet = {}, knee = {}, ank = {}, on = {};
+    const S = o.S ?? 137, zOn = o.zOn ?? 41, w = o.w ?? 10, toe = o.toe ?? 4, st = o.st ?? .39, hk = o.hk ?? 1, slope = o.slope ?? 0, y0 = o.y0 ?? 0;
+    const P_OFF = 42, feet = {}, knee = {}, ank = {}, on = {};
+    /* (apoyado, v de 0 a 1: el medio del pie, plano; pasada la mitad, el talón se levanta y el pie gira sobre la bola hasta
+       despegar, con la punta P_OFF grados hacia abajo, que es donde empieza RUN_SWING.p) */
+    const planted = (x, v) => { const p = v < .55 ? 0 : P_OFF * ((v - .55) / .45) ** 1.4; return [FL.footPose(x, zOn - S * v, p), p]; };
     for (const [s, ph] of [['L', 0], ['R', .5]]) {
       const u = ((t + ph) % 1 + 1) % 1, x = s == 'L' ? w : -w;
-      let z, lift, p;
-      if (u < st) { const v = u / st; z = z0 + S / 2 - S * v; lift = 0; p = v < .7 ? -3 + 6 * v : 1 + 44 * ((v - .7) / .3) ** 1.5; on[s] = true; }
+      let A, p;
+      if (u < st) {
+        [A, p] = planted(x, u / st); on[s] = true;
+      }
       else {
-        const v = (u - st) / (1 - st);
-        /* (el pie sale hacia atrás a la velocidad del suelo, vuelve por delante y llega frenando hacia atrás, a la misma
-           velocidad: sin cambios bruscos al despegar ni al apoyar) */
-        const m = -S * (1 - st) / st;
-        z = FL.herm(v, z0 - S / 2, z0 + S / 2, m, m);
-        lift = spl(v, [[0, 0], [.25, hk * .85], [.45, hk], [.75, hk * .45], [1, 0]]);
-        p = spl(v, [[0, 45], [.3, 40], [.7, 10], [1, -3]]);
+        /* (en el aire, el pie sale a la velocidad que llevaba apoyado (la del tobillo y la del giro del pie sobre la bola, que
+           salen de su último momento en el suelo) y cae a la del suelo, para no frenar; el tobillo, sin golpe al posarse) */
+        const v = (u - st) / (1 - st), [A0, p0] = planted(x, 1), [Ab, pb] = planted(x, 1 - 1e-3), rate = (1 - st) / st / 1e-3;
+        const dz = zOn - A0[2], m = -S * (1 - st) / st;
+        const z = hermPts(v, [[0, A0[2]], ...RUN_SWING.f.map(([k, f]) => [k, A0[2] + dz * f]), [1, zOn]], (A0[2] - Ab[2]) * rate, m);
+        const H = [[0, A0[1]], ...RUN_SWING.h.map(([k, y]) => [k, LEN.ankle + (y - LEN.ankle) * hk]), [1, LEN.ankle]];
+        p = hermPts(v, RUN_SWING.p, (p0 - pb) * rate, 0);
+        A = [x, hermPts(v, H, (A0[1] - Ab[1]) * rate, -10), z];
         on[s] = false;
       }
-      /* (el tobillo: sobre el suelo, que puede ir en cuesta, y siempre según la inclinación del pie: con el talón levantado, la
-         punta queda apoyada; en el aire, sigue igual, sin saltos al despegar) */
-      const yF = y0 + z * slope, A = FL.footPose(x, z, p);
-      feet[s] = [abs(x), A[2], toe, yF + lift + (A[1] - LEN.ankle), p]; knee[s] = [sin(RAD(toe)), 0, cos(RAD(toe))];
-      ank[s] = [x, yF + lift + A[1], A[2]];
+      /* (el tobillo, sobre el suelo, que puede ir en cuesta) */
+      const yF = y0 + A[2] * slope;
+      feet[s] = [abs(x), A[2], toe, yF + A[1] - LEN.ankle, p]; knee[s] = [sin(RAD(toe)), 0, cos(RAD(toe))];
+      ank[s] = [x, yF + A[1], A[2]];
     }
     return { feet, knee, ank, on };
   };
-  /* los brazos al correr: los codos doblados a 90° y las manos que van y vienen a la altura de la cintura, al revés que las
-     piernas */
-  const runArms = (F, q, t, amp = 1) => {
-    const o = { hands: {}, elbow: {} };
-    /* (cada brazo, al revés que su pierna y a la vez que ella: el izquierdo, atrás cuando el pie izquierdo apoya delante; la
-       mano sube hasta el pecho por delante y baja hasta la cadera por detrás, con el codo doblado) */
-    for (const [s, ph] of [['L', .5], ['R', 0]]) {
-      const a = cos(2 * PI * (t + ph)), S = shoulder(F, s, q);
-      o.hands[s] = add(S, sd(s, [-7 + 7 * max(0, -a), -96 + 22 * a * amp, 14 + 44 * a * amp]));
-      o.elbow[s] = [.25, -.3, -1];
+  /* la altura de la cadera al correr, en cada paso (ph: de 0, cuando cae un pie, a 1, cuando cae el otro): una sola onda
+     suave, lo más bajo a media pisada (base - 7) y lo más alto en medio del vuelo (base); sin estirar del todo las piernas
+     (runCap), que casi nunca aprieta */
+  const runHip = (ph, st, base) => {
+    const lo = .4 * st / .5, fly = (st / .5 + 1) / 2;
+    return base + spl(ph, [[fly - 1, 0], [lo, -7], [fly, 0], [1 + lo, -7]]);
+  };
+  /* (la cadera, nunca más alta de lo que llegan las dos piernas, también la que va en el aire: si solo contara la que apoya,
+     al despegar dejaba de contar de golpe y la cadera daba un saltito. Hasta 171 (la rodilla, a unos 17°), más que el tope
+     general (C.capRoot, 169): al caer y al despegar la pierna de un trote va casi estirada; con un mínimo suave, sin esquinas) */
+  const runCap = (y, ank) => {
+    for (const [A, hx] of [[ank.L, 20], [ank.R, -20]]) {
+      const m = A[1] + sqrt(max(0, 171 ** 2 - A[2] ** 2 - (hx - A[0]) ** 2));
+      y = (y + m - sqrt((y - m) ** 2 + 9)) / 2;
     }
-    return { ...o, fist: false, palm: both(() => [-1, 0, .2]), handDir: both(sd2 => norm(sd(sd2, [-.25, .15, 1]))) };
+    return y;
+  };
+  /* los brazos al correr: el hombro lleva el brazo adelante y atrás, al revés que la pierna de su lado (desde unos 45° atrás,
+     con la mano junto a la cadera, hasta algo por delante del cuerpo), con el codo doblado en ángulo recto: algo más cerrado
+     delante, donde la mano sube hasta la parte baja del pecho, un poco hacia el centro (sin cruzarlo), y algo más abierto
+     detrás. El brazo es el que se mueve, no el codo. Todo en el marco del tronco, que se inclina y gira al revés que la
+     cadera: los brazos van con él. La muñeca, recta, en la línea del antebrazo, y las manos sueltas, a medio cerrar */
+  const runArms = (F, q, t, amp = 1) => {
+    const o = { hands: {}, elbow: {}, handDir: {} }, T = F.thorax, loc = v => add(add(mul(T.x, v[0]), mul(T.y, v[1])), mul(T.z, v[2]));
+    const LU = LEN.upper, LFG = LEN.fore + LEN.grip, ABD = RAD(10);
+    for (const [s, ph] of [['L', .42], ['R', .92]]) {
+      /* (a: 1 con el brazo delante, -1 detrás; el izquierdo llega delante cuando la pierna izquierda despega por detrás) */
+      const a = cos(2 * PI * (t - ph)), fw = max(0, a);
+      const th = RAD(-10 + 28 * a * amp), el = RAD(90 - 15 * a), inw = RAD(6 + 14 * fw), be = th + PI - el;
+      /* (el brazo, algo separado del costado; el antebrazo, girado hacia delante lo que se dobla el codo) */
+      const u = [sin(ABD), -cos(ABD) * cos(th), cos(ABD) * sin(th)], f = [-sin(inw), -cos(inw) * cos(be), cos(inw) * sin(be)];
+      const hand = add(mul(u, LU), mul(f, LFG));
+      o.hands[s] = add(shoulder(F, s, q), loc(sd(s, hand)));
+      o.handDir[s] = loc(sd(s, f));
+      o.elbow[s] = [.35, -.3, -1];
+    }
+    return { ...o, fist: false, palm: both(() => [-1, 0, .2]) };
   };
   /* andando: los brazos sueltos, casi estirados, al revés que las piernas */
   const walkArms = (F, q, t, amp = 1) => {
@@ -69,7 +120,7 @@
     const a = Math.atan(inc), up = [0, cos(a), -sin(a)], fw = [0, sin(a), cos(a)], c = [0, TM_Y / 2 + 4 + (-30) * inc, -30], out = [];
     out.push(...GR.under([GR.obox(cam, add(c, mul(up, -3)), [[1, 0, 0], up], [44, TM_Y / 2 + 1, 104], TM_C), GR.obox(cam, add(c, mul(up, TM_Y / 2 - 1)), [[1, 0, 0], up], [34, 1.2, 100], TM_BELT)], 0));
     /* (los postes salen de delante de la base; arriba, la consola y los pasamanos hacia atrás, a los lados) */
-    const fr = add(c, add(mul(fw, 100), mul(up, TM_Y / 2))), top = [0, fr[1] + 236, fr[2] + 18];
+    const fr = add(c, add(mul(fw, 100), mul(up, TM_Y / 2))), top = [0, fr[1] + 236, fr[2] + 30];
     for (const k of [-1, 1]) {
       out.push(...GR.tube(cam, add(fr, [k * 48, 0, 0]), [k * 52, top[1], top[2]], 5, GR.C.frame, 6));
       /* (los pasamanos, por fuera de por donde van los brazos) */
@@ -82,7 +133,10 @@
     const w = x => has(f, x), walk = w('walk'), tm = w('treadmill'), incline = w('incline'), pack = w('pack'), vest = w('vest');
     /* la pendiente: en la cinta, 7° (12 %); en la calle, una cuesta de 9° */
     const slope = incline ? Math.tan(RAD(tm ? 7 : 9)) : 0, y0 = tm ? TM_Y + 2 : 0;
-    const T = walk ? (pack ? 1500 : 1350) : 900;
+    /* (andando, una vuelta de 1,35 s (con mochila, 1,5 s); al trote, de 0,78 s: unas 154 zancadas por minuto) */
+    const T = walk ? (pack ? 1500 : 1350) : 780;
+    /* (en cuesta: la zancada, algo más corta, el pie cae más bajo la cadera y apoya algo más; el talón sube algo menos) */
+    const RS = incline ? { S: 116, zOn: 34, st: .41, hk: .9 } : { S: 137, zOn: 41, st: .39, hk: 1 };
     const at_ = t => {
       const ph = 2 * PI * t;
       let g, ry;
@@ -94,21 +148,20 @@
         ry = hipOver(g.ank, ROOT_Y + y0 - 1);
       }
       else {
-        g = runGait(t, { S: incline ? 92 : 112, st: incline ? .4 : .36, hk: incline ? 46 : 56, slope, y0 });
-        /* (la cadera: más baja a mitad de cada apoyo, más alta en el vuelo; sin estirar nunca la pierna que apoya) */
-        const top = ROOT_Y + y0 - 8 + 5 * cos(4 * PI * (t - (.36 + (.5 - .36) / 2)));
-        const stance = ['L', 'R'].filter(s => g.on[s]).map(s => [g.ank[s], s == 'L' ? 20 : -20]);
-        ry = stance.length ? C.capRoot([0, top, 0], stance)[1] : top;
+        g = runGait(t, { ...RS, slope, y0 });
+        ry = runCap(runHip(((t % .5) + .5) % .5 / .5, RS.st, ROOT_Y + y0 - 3), g.ank);
       }
       /* (el tronco, algo adelante; más en cuesta y con mochila; gira un poco con cada zancada) */
-      const lean = (walk ? 2 : 7) + (incline ? 6 : 0) + (pack ? 6 : 0);
-      /* (la cadera gira con la pierna que va delante y los hombros, al revés, con el brazo) */
-      const c = cos(ph), q = { tt: t, feet: g.feet, knee: g.knee, root: [1.5 * sin(ph), ry, 0], tilt: lean, spine: walk ? 0 : 2, neck: -lean * .6, shrug: 2, reach: 2, yaw: -(walk ? 3 : 5) * c, twist: (walk ? 7 : 12) * c, roll: 1.5 * sin(ph) };
+      const lean = (walk ? 2 : 6) + (incline ? 6 : 0) + (pack ? 6 : 0);
+      /* (la cadera gira con la pierna que va delante y los hombros, al revés, con el brazo; corriendo, la pelvis va algo hacia
+         el pie que apoya y cae un poco del lado de la pierna en el aire; la cabeza, quieta y mirando al frente) */
+      const c = cos(ph), q = walk ? { tt: t, feet: g.feet, knee: g.knee, root: [1.5 * sin(ph), ry, 0], tilt: lean, spine: 0, neck: -lean * .6, shrug: 2, reach: 2, yaw: -3 * c, twist: 7 * c, roll: 1.5 * sin(ph) }
+        : { tt: t, feet: g.feet, knee: g.knee, root: [2.2 * sin(ph), ry, 0], tilt: lean, spine: 2, neck: -lean * .75, shrug: 1, reach: 2, yaw: -6 * cos(ph + .3), twist: 11 * cos(ph + .3), roll: 2.5 * sin(ph) };
       const { F } = pose({ ...q, hands: ZERO, elbow: {} });
       return { ...q, ...(walk ? walkArms(F, q, t, pack ? .6 : 1) : runArms(F, q, t)) };
     };
     /* (lo que corre el suelo, o la banda de la cinta, en una vuelta: lo que recorre el pie de apoyo) */
-    const V = walk ? (pack ? 92 : 104) / .62 : (incline ? 92 : 112) / (incline ? .4 : .36);
+    const V = walk ? (pack ? 92 : 104) / .62 : RS.S / RS.st;
     const gear = (q, F, cam) => {
       const out = [];
       if (tm) out.push(...treadmill(cam, slope), ...FL.floorRun(cam, q.tt, V, { z0: -30, half: 96, x: 30, y0: TM_Y + 4.4, slope, z: -1e6 + 1, n: max(2, Math.round(V / 48)) }));
@@ -120,7 +173,9 @@
       if (vest) out.push(...weightVest(cam, F));
       return out;
     };
-    return { view: 'front', up: 'a', rest: 'a', cam: [-68, 6], side: [-90, 4], feetOff: true, one: true, at: at_, gear, beat: cycle(T) };
+    /* (la miniatura de la carrera, en la zancada: un pie acaba de despegar por detrás y la otra rodilla va delante, con los
+       brazos al revés; la de andar, la que salga) */
+    return { view: 'front', up: 'a', rest: 'a', cam: [-68, 6], side: [-90, 4], feetOff: true, one: true, at: at_, gear, beat: cycle(T), ...(walk ? {} : { still: .44 }) };
   };
   /* la mochila a la espalda (la de la cargada de mochila, con las hombreras sobre los hombros) */
   const wornPack = (cam, F) => {

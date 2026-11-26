@@ -11,6 +11,7 @@ Escribe en src/img/catalog, por cada grupo que nombra src/js/data/catalog.js:
 - <id>-icono.webp: su icono rojo, sin pérdida, centrado en un lienzo transparente de su ancho y del alto del más alto
   (ICON_H): con una sola altura en el CSS, todos salen a la misma escala, como en la referencia, y cada uno con su ancho. En
   la app hace de máscara: su color es el de la app (library/catalog), no el rojo del archivo.
+Retoques que pidió el propietario (RETOUCH), antes de comprimir: en la de CrossFit se quita la marca «ROGUE» del poste del rack.
 Comprueba que el tamaño de cada ilustración es el que dicen catalogo.json y data/catalog.js. El paquete no hace falta en el
 repositorio (sus tarjetas y referencias, con texto impreso, son solo para comparar).
 Requiere Pillow.
@@ -23,6 +24,23 @@ OUT = os.path.join(ROOT, 'src', 'img', 'catalog')
 DATA = os.path.join(ROOT, 'src', 'js', 'data', 'catalog.js')
 ICON_H = 54        # el alto del lienzo de los iconos: el del más alto (Gemelos)
 QUALITY = 90
+
+
+def sin_marca(im):
+    """CrossFit: quita «ROGUE», escrito a lo largo del poste izquierdo del rack (columnas 56 a 67, filas 1 a 54). Cada fila se
+    cambia por la del mismo poste 55 filas más abajo, que está limpia: los agujeros del poste van cada 11 filas, así que
+    quedan también en su sitio y el poste sigue igual hasta arriba. Las dos primeras y las dos últimas filas se funden con
+    lo que hay, para que no se note el corte."""
+    px = im.load()
+    for y in range(1, 55):
+        w = min(1, y / 3, (55 - y) / 3)
+        for x in range(56, 68):
+            a, b = px[x, y], px[x, y + 55]
+            px[x, y] = tuple(round(a[i] * (1 - w) + b[i] * w) for i in range(4))
+    return im
+
+
+RETOUCH = {'crossfit': sin_marca}
 
 
 def catalog():
@@ -42,6 +60,8 @@ def main(pack):
     size = 0
     for k, (w, h, iw) in want.items():
         art = Image.open(os.path.join(pack, cat[k]['artwork'])).convert('RGBA')
+        if k in RETOUCH:
+            art = RETOUCH[k](art)
         ref = cat[k]['artworkSize']
         if art.size != (w, h) or art.size != (ref['width'], ref['height']):
             sys.exit('%s: la ilustración mide %s; data/catalog.js dice %s y catalogo.json %s' % (k, art.size, (w, h), ref))

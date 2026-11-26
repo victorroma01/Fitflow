@@ -43,7 +43,9 @@ have no entry: the app shows them in Spanish.
   gone. A plan or a saved workout that used one of them still shows it, with the figure and muscles of the one that remains.
 - Hyrox distance exercises (sled, farmer's carry, burpee broad jumps) have their meters as the target.
 - The button that saves the workout is called “Save workout” (it used to be “Log out”).
-- Plain app background: black in the dark theme and very light gray in the light one.
+- Plain app background: black in the dark theme and very light gray in the light one. In Workout, the day card is taller
+  and shows its photo between the name and the numbers, and the exercise library, custom workout, WOD timer, and cardio
+  come in tiles, two per row, with their icon on top.
 - Supersets, tri-sets, and circuits: each exercise's label says only which one it is and its place (“SUPERSET · 1/2”).
   Neither the label nor the exercise's line repeats the rest anymore (“10 s to the next one,” “Round rest”): it is on each
   set, in the “Rest” column.

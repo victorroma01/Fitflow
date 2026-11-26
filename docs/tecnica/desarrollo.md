@@ -131,7 +131,8 @@ un ejercicio están en `src/js/data/aliases.js`.
   `src/js/workout/equipmap.js`. `build.py` los mete en `data/media` (`MEDIA.equip`) y falla si un icono que nombra
   `data/equipment` no está; `tests/equipment.test.mjs` comprueba el material de toda la librería y los archivos.
 - Imágenes de las tarjetas de la librería (`library/catalog`): `src/img/catalog/`, del paquete del rediseño que aprobó el
-  propietario (`StrataFit_Catalogo`). `python3 tools/catalogo.py carpeta-del-paquete` pasa cada ilustración a WebP con pérdida
+  propietario (`StrataFit_Catalogo`). `python3 tools/catalogo.py carpeta-del-paquete` retoca la de CrossFit (le quita la
+  marca «ROGUE» del rack, como pidió el propietario) y pasa cada ilustración a WebP con pérdida
   de calidad 90 (las 14, de 732 KB a unos 120 KB, sin diferencia visible) y cada icono rojo a WebP sin pérdida, en un lienzo de
   54 px de alto, para que en el CSS lleven todos la misma altura y salgan a la escala de la referencia. El icono hace de máscara
   (`mask-image`, en su `data-style`): su color lo pone el CSS, el de la app sobre fondo oscuro (`--acd`, que calcula

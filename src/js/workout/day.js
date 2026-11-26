@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
+   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, hubTile, woShortcuts, inSuperset, dayBlocks, withWeekBar, noProgramView, workoutTab  · acciones/registros: 13
 */
 import { say } from '../core/i18n.js';
 import { typedName } from '../core/util.js';
@@ -8,7 +8,7 @@ import { A, C } from '../core/registry.js';
 import { toast } from '../core/toast.js';
 import { overviewMode, S, saveState, setWeekView, W, weekView } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { linkRow, sheet } from '../core/ui.js';
+import { sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { resumeBanner } from './resume.js';
 import { restSelect } from './rest.js';
@@ -88,7 +88,7 @@ const trainingDayCard = (d, done) => {
       <div><b>${dayMinutes(d)}</b><small>Minutos</small></div>
     </div>`;
   return html`
-    <div class="card hero" data-style="${coverStyle(d.n, d)}">
+    <div class="card hero day-hero" data-style="${coverStyle(d.n, d, 1)}">
       <h2>${d.n}</h2>
       ${stats}
       <div class="grid-2">
@@ -193,15 +193,16 @@ A.linkToPrevious = i => {
   saveState('core');
   R();
 };
+/* los atajos del día (no al editar la semana), en tarjetas de dos en dos, como en la referencia del propietario: el icono
+   arriba, el nombre y una línea */
+const hubTile = (ico, t, s, a) => html`<button class="hub-tile" data-a="${a}">${icon(ico, 24)}<b>${t}</b><small>${s}</small></button>`;
 const woShortcuts = () => html`
-  <button class="card w-full ta-l d-flex gap-14 ai-c" data-a="openLibrary">
-    ${icon('lib', 34)}
-    <span><b class="fs-17">Librería de ejercicios</b><br><small>Explora por grupo muscular</small></span>
-  </button>
-  <button class="card w-full ta-l d-flex gap-14 ai-c" data-a="routineEditorBack">
-    ${icon('prog', 34)}
-    <span><b class="fs-17">Workout personalizado</b><br><small>Bloques sueltos, superseries y triseries</small></span>
-  </button>`;
+  <div class="hub-grid">
+    ${hubTile('lib', 'Librería de ejercicios', 'Explora por grupo muscular', 'openLibrary')}
+    ${hubTile('build', 'Workout personalizado', 'Bloques sueltos, superseries y triseries', 'routineEditorBack')}
+    ${hubTile('timer', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time', 'openWod')}
+    ${hubTile('pulse', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal', 'openCardio')}
+  </div>`;
 export const inSuperset = i => {
   const x = S.plan[S.selectedDay].ex;
   const e = x[i];
@@ -222,15 +223,14 @@ export const dayBlocks = d => {
 const withWeekBar = h => {
   const tr = trainingDays();
   const dn = tr.filter(j => S.doneDays[S.week + '-' + j]).length;
-  return h.replace('</button></div><div class="card hero"', html`
+  return h.replace('</button></div><div class="card hero day-hero"', html`
     </button>
     </div>
     <div class="m-0-2-10">
       <div class="row"><small>Esta semana</small><small><b>${raw(dn)} de ${raw(tr.length)} entrenos</b></small></div>
       <div class="bar h-5"><i class="bg-a2" data-style="width:${tr.length ? dn / tr.length * 100 : 0}%"></i></div>
-    </div><div class="card hero"`);
+    </div><div class="card hero day-hero"`);
 };
-const woExtra = () => linkRow('timer', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time', 'openWod') + linkRow('pulse', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal', 'openCardio');
 /* Sin programa elegido (una cuenta nueva; I-24): detrás, un día de ejemplo difuminado, que no se puede tocar ni lo leen los
    lectores de pantalla; delante, la tarjeta para elegir uno. Debajo, lo que se puede usar sin programa. */
 const noProgramView = () => {
@@ -239,7 +239,7 @@ const noProgramView = () => {
       ${[0, 1, 2, 3, 4, 5, 6].map(j => html`
         <button class="day${j ? '' : ' on'}" tabindex="-1">DÍA<br>${raw(j == 2 || j == 6 ? '☾' : j + 1)}</button>`)}
     </div>
-    <div class="card hero" data-style="${coverStyle('Pecho')}">
+    <div class="card hero day-hero" data-style="${coverStyle('Pecho', null, 1)}">
       <h2>Pecho</h2>
       <div class="stats">
         <div><b>6</b><small>Ejercicios</small></div>
@@ -260,8 +260,7 @@ const noProgramView = () => {
         <button class="primary" data-a="openPrograms">Seleccionar programa</button>
       </div>
     </div>
-    ${raw(woShortcuts())}
-    ${raw(woExtra())}`;
+    ${raw(woShortcuts())}`;
 };
 export function workoutTab() {
   if (S.noProgram && !W && !overviewMode)
@@ -271,13 +270,11 @@ export function workoutTab() {
     h += woShortcuts();
     h = resumeBanner() + h;
     h = withWeekBar(h);
-    h = h.replace('<div class="card hero"', () => html`${raw(deloadCard())}${raw(rotationCard())}<div class="card hero"`);
+    h = h.replace('<div class="card hero day-hero"', () => html`${raw(deloadCard())}${raw(rotationCard())}<div class="card hero day-hero"`);
   }
   if (isFreshInstall() && !W)
     h = restoreBanner() + h;
-  if (weekView || W || overviewMode)
-    return h;
-  return h + woExtra();
+  return h;
 }
 /* — manejadores de esta función (registros A / C / U) — */
 A.selectDay = i => {

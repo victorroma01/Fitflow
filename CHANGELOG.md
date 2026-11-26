@@ -57,7 +57,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   Un plan o un entreno guardado con uno de ellos lo sigue enseñando, con la figura y los músculos del que queda.
 - Los ejercicios de distancia de Hyrox (trineo, carga de granjero, burpees con salto) llevan sus metros como objetivo.
 - El botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out»).
-- Fondo de la app liso: negro en el tema oscuro y gris muy claro en el claro.
+- Fondo de la app liso: negro en el tema oscuro y gris muy claro en el claro. En Workout, la tarjeta del día es más alta y
+  deja ver su foto entre el nombre y las cifras, y la librería, el workout personalizado, el temporizador WOD y el cardio van
+  en tarjetas, de dos en dos, con su icono arriba.
 - Superseries, triseries y circuitos: la etiqueta de cada ejercicio dice solo cuál es y su lugar («SUPERSERIE · 1/2»). Ni
   ella ni la línea del ejercicio repiten ya el descanso («10 s al siguiente», «Descanso de la ronda»): va en cada serie, en
   la columna «Desc.».
@@ -72,6 +74,43 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Inicio de sesión: el logo llena su marco.
 
 ### Interno
+- Figuras 3D: la carrera, rehecha como un trote normal (`src/fig3d/cardio3d.js`: `runGait`, `runHip`, `runCap` y
+  `runArms`), en todo lo que es correr del lote 8 (en la calle, en la cinta, en cuesta y con chaleco; la marcha, igual), con
+  las curvas de cadera y rodilla de un trote: unas 154 zancadas por minuto (una vuelta de 0,78 s; antes, 133) a unos 8 km/h.
+  El pie cae algo por delante de la cadera con la rodilla a unos 20°, la cadera baja en una sola onda suave hasta media
+  pisada (la rodilla, a unos 43°) y el pie despega por la punta por detrás, con la pierna casi estirada (el muslo, 16° atrás);
+  en el aire, la rodilla llega a unos 88° al pasar bajo la cadera (sin el talón al glúteo) y el muslo a unos 37° delante.
+  El pie sale del suelo a la velocidad que llevaba (antes, el giro sobre la bola cambiaba de golpe al despegar) y cae a la del
+  suelo. La cadera se limita con las dos piernas con un tope propio (`runCap`: 171, la rodilla a unos 17°; el general, 169,
+  no dejaba estirarla al caer ni al despegar). Los brazos se mueven desde el hombro, de unos 45° atrás (la mano junto a la
+  cadera) a algo por delante del cuerpo, con el codo en ángulo recto; antes casi no pasaban por delante y se movía el codo.
+  La consola de la cinta, algo más adelante (en la cuesta en cinta, el antebrazo llegaba a ella). La miniatura, en la
+  zancada (`still`). Comprobado con las herramientas de `tools/figuras3d` (sin manos que no llegan, choques, saltos ni
+  material dentro de las piernas) y encuadres rehechos.
+- Librería: en la ilustración de CrossFit ya no se ve la marca «ROGUE» del poste del rack, como pidió el propietario:
+  `tools/catalogo.py` la quita antes de comprimir (cada fila del poste, por la de 55 filas más abajo, limpia, con los
+  agujeros en su sitio).
+- Integración continua (`pruebas.yml`): los trabajos de Chrome, Safari y Firefox tienen 45 minutos en vez de 30. La
+  batería entera tarda unos 20 en Chrome y, según la máquina, de 20 a más de 30 en Safari, que se cortaba a veces al final
+  sin haber fallado nada; una prueba colgada se para igual.
+- Workout: la tarjeta del día que se entrena, más alta (`.day-hero`, en `css/79-workout-hub`: con la forma de sus fotos,
+  1,26, y hasta 320 px de alto), con el nombre arriba y las cifras y los botones abajo, como pidió el propietario para que se
+  vea la foto; los datos, los mismos. La portada (`coverStyle(n, d, tall)`) apenas se oscurece, y el nombre, las cifras y los
+  botones llevan su propia sombra, que mide lo que el texto (un nombre de dos líneas también se lee). La de un descanso y la
+  del Overview, igual. `tests/covers.py` sigue midiendo el contraste AA sobre las 22 portadas (de hombre y de mujer) y
+  `tests/features.py` comprueba su forma a 320, 390 y 768 px.
+- Workout: los atajos (la librería, el workout personalizado, el temporizador WOD y el cardio) en tarjetas de dos en dos, con
+  el diseño de la referencia del propietario (`workout/day`: `hubTile`; `css/79-workout-hub`), algo más compactas: lisas, del
+  color de las tarjetas del tema (sin el cristal ni el borde de las demás), con su icono relleno arriba (`IC.lib`, `build`,
+  `timer` y `pulse`, nuevos), su nombre y su línea de siempre. Las cuatro van en el día y ninguna
+  al editar la semana, como antes; el entreno y el Overview no pasan por esta vista (`core/render`), así que las condiciones
+  que lo miraban sobraban. Pruebas en `tests/features.py` (orden, rejilla, colores, a 320, 390 y 768 px y que cada una abre
+  su página).
+- `tests/walk.py` (la comparación con la versión anterior): las figuras 3D se comparan por qué figura va en cada sitio, no
+  por si ya están dibujadas. Se miraban las figuras de antes del 3D (`svg[data-fig]`), que ya no hay, y la misma compilación
+  salía distinta de sí misma: las miniaturas cambian su hueco por su imagen (una dirección `blob:` distinta en cada pasada)
+  cuando las encuentran, y el motor pone sus degradados en la página cuando llega. Comprobado con la misma compilación dos
+  veces (4 semillas × 150 pasos: ningún paso distinto). Donde dos pasos difieren, enseña las líneas distintas del HTML.
 - Librería: los grupos en tarjetas (`library/catalog`), con el diseño que aprobó el propietario (`StrataFit_Catalogo`): una
   sola tarjeta para todos, desde `data/catalog` (cada grupo de siempre, sin cambiarle el nombre, con el id de sus imágenes),
   y cada una abre su grupo como antes (`libraryGroup`). Las ilustraciones y los iconos del paquete los prepara

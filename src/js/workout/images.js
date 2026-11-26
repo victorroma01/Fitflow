@@ -74,10 +74,12 @@ export const dayImage = (n, d) => {
   return k == 'descanso' && (S.plan || []).some(x => x && CONDITIONING.includes(baseImage(x.n, x))) ? 'descanso2' : k;
 };
 /** El fondo de la tarjeta del día: su portada, oscurecida lo justo para que su texto blanco se lea (AA) sobre cualquiera
-    (tests/covers.py). Con el 13 % de antes arriba, el nombre del día no llegaba sobre la de espalda ni sobre las más claras. */
-export const coverStyle = (n, d) => {
+    (tests/covers.py). Con el 13 % de antes arriba, el nombre del día no llegaba sobre la de espalda ni sobre las más claras.
+    La del día que se entrena (`tall`: workout/day, más alta) apenas se oscurece: lo que va encima lleva su propia sombra, que
+    mide lo que el texto (css/79-workout-hub), y en medio, sin texto, se ve la foto. */
+export const coverStyle = (n, d, tall) => {
   const u = photoUrl(dayImage(n, d));
-  return u ? 'background:linear-gradient(180deg,#0007,#000b),url(' + u + ') center/cover' : '';
+  return u ? 'background:linear-gradient(180deg,' + (tall ? '#0002,#0002' : '#0007,#000b') + '),url(' + u + ') center/cover' : '';
 };
 /** La portada de un workout personalizado: la elegida o, si no eligió ninguna, la de sus ejercicios. */
 export const routineImage = r => {
