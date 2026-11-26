@@ -59,3 +59,5 @@ have no entry: the app shows them in Spanish.
 - Library: with a single exercise of your own, “My exercises” said “1 exercises.”
 - A program's name (Programs and Profile) looks like the rest of the titles.
 - Sign-in: the logo fills its frame.
+- Workout: on a rest day you also see the week bar and, when it's time, the deload week notice (with “Skip”) and the
+  suggestion to rotate exercises.

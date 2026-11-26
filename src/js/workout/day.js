@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, hubTile, woShortcuts, inSuperset, dayBlocks, withWeekBar, noProgramView, workoutTab  · acciones/registros: 13
+   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, hubTile, woShortcuts, inSuperset, dayBlocks, weekBar, noProgramView, workoutTab  · acciones/registros: 13
 */
 import { say } from '../core/i18n.js';
 import { typedName } from '../core/util.js';
@@ -97,16 +97,6 @@ const trainingDayCard = (d, done) => {
       </div>
     </div>`;
 };
-function workoutDayBase() {
-  /* con un entreno en curso no se toca el día: es el de la sesión */
-  if (!W)
-    syncSel();
-  const d = S.plan[S.selectedDay];
-  const done = S.doneDays[S.week + '-' + S.selectedWeekday];
-  if (!d.ex.length)
-    return html`${weekHeader()}${restDayCard(done)}`;
-  return html`${weekHeader()}${weekView ? dayEditCard(d) : trainingDayCard(d, done)}`;
-}
 const TEMPOS = [['2/0/2/0', 'Estándar'], ['3/0/1/0', 'Excéntrico controlado'], ['3/0/3/0', 'Lento y controlado'], ['4/1/1/0', 'Excéntrico lento con pausa'], ['3/1/X/0', 'Pausa abajo y subida explosiva'], ['1/0/X/0', 'Explosivo'], ['2/2/2/0', 'Pausa en la contracción'], ['5/0/1/0', 'Excéntrico muy lento'], ['1/1/1/1', 'Pausa en ambos extremos'], ['Libre', 'Sin tempo fijo']];
 /** Desplegable corto (F-09): enseña solo su nombre («Tempo», «Descanso»), porque el valor ya está en el objetivo de arriba;
     al tocarlo se abre la lista de siempre (el select va encima, transparente). */
@@ -220,16 +210,15 @@ export const dayBlocks = d => {
   });
   return o;
 };
-const withWeekBar = h => {
+/* la barra de la semana, debajo de los días: cuántos de entreno van hechos */
+const weekBar = () => {
   const tr = trainingDays();
   const dn = tr.filter(j => S.doneDays[S.week + '-' + j]).length;
-  return h.replace('</button></div><div class="card hero day-hero"', html`
-    </button>
-    </div>
+  return html`
     <div class="m-0-2-10">
       <div class="row"><small>Esta semana</small><small><b>${raw(dn)} de ${raw(tr.length)} entrenos</b></small></div>
       <div class="bar h-5"><i class="bg-a2" data-style="width:${tr.length ? dn / tr.length * 100 : 0}%"></i></div>
-    </div><div class="card hero day-hero"`);
+    </div>`;
 };
 /* Sin programa elegido (una cuenta nueva; I-24): detrás, un día de ejemplo difuminado, que no se puede tocar ni lo leen los
    lectores de pantalla; delante, la tarjeta para elegir uno. Debajo, lo que se puede usar sin programa. */
@@ -262,19 +251,21 @@ const noProgramView = () => {
     </div>
     ${raw(woShortcuts())}`;
 };
+/* Workout: los días de la semana y la tarjeta del día (al editar la semana, la de editarlo). Fuera de la edición, también el
+   entreno por reanudar, la barra de la semana, la semana de descarga y la propuesta de rotar (en un día de entreno y en uno de
+   descanso) y, debajo, los atajos */
 export function workoutTab() {
   if (S.noProgram && !W && !overviewMode)
     return resumeBanner() + (isFreshInstall() ? restoreBanner() : '') + noProgramView();
-  let h = workoutDayBase();
-  if (!weekView) {
-    h += woShortcuts();
-    h = resumeBanner() + h;
-    h = withWeekBar(h);
-    h = h.replace('<div class="card hero day-hero"', () => html`${raw(deloadCard())}${raw(rotationCard())}<div class="card hero day-hero"`);
-  }
-  if (isFreshInstall() && !W)
-    h = restoreBanner() + h;
-  return h;
+  /* con un entreno en curso no se toca el día: es el de la sesión */
+  if (!W)
+    syncSel();
+  const d = S.plan[S.selectedDay];
+  const done = S.doneDays[S.week + '-' + S.selectedWeekday];
+  const card = !d.ex.length ? restDayCard(done) : weekView ? dayEditCard(d) : trainingDayCard(d, done);
+  const h = weekView ? html`${weekHeader()}${card}`
+    : html`${raw(resumeBanner())}${weekHeader()}${weekBar()}${raw(deloadCard())}${raw(rotationCard())}${card}${woShortcuts()}`;
+  return (isFreshInstall() && !W ? restoreBanner() : '') + h;
 }
 /* — manejadores de esta función (registros A / C / U) — */
 A.selectDay = i => {
