@@ -130,6 +130,13 @@ un ejercicio están en `src/js/data/aliases.js`.
   máscara, no pintadas de oscuro (el tema claro los pone en negro con un filtro). Qué material lleva cada ejercicio lo dice
   `src/js/workout/equipmap.js`. `build.py` los mete en `data/media` (`MEDIA.equip`) y falla si un icono que nombra
   `data/equipment` no está; `tests/equipment.test.mjs` comprueba el material de toda la librería y los archivos.
+- Imágenes de las tarjetas de la librería (`library/catalog`): `src/img/catalog/`, del paquete del rediseño que aprobó el
+  propietario (`StrataFit_Catalogo`). `python3 tools/catalogo.py carpeta-del-paquete` pasa cada ilustración a WebP con pérdida
+  de calidad 90 (las 14, de 732 KB a unos 120 KB, sin diferencia visible) y cada icono rojo a WebP sin pérdida, en un lienzo de
+  54 px de alto, para que en el CSS lleven todos la misma altura y salgan a la escala de la referencia. Los grupos y sus ids
+  están en `src/js/data/catalog.js` (con el tamaño de cada imagen, que comprueban la herramienta y
+  `tests/catalog.test.mjs`); `build.py` las mete en `data/media` (`MEDIA.cat` y `MEDIA.catIcon`). Las tarjetas y las
+  referencias del paquete, con texto impreso, no van a la app: son para comparar.
 
 ## Reglas de calidad
 

@@ -48,6 +48,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   usarse se elimina sola.
 - Equipamiento: al final del Overview de cada día, el material que piden sus ejercicios, con sus iconos. Al tocarlo, la
   lista con el nombre de cada cosa.
+- Librería de ejercicios renovada: los grupos van en tarjetas con su ilustración (el modelo con el músculo principal en rojo
+  y el secundario en naranja; en CrossFit, Hyrox, Funcional y Cardio, su material), su icono y cuántos ejercicios tienen, y
+  debajo, la leyenda de los colores.
 
 ### Mejoras
 - Librería revisada: los músculos de cada ejercicio, comprobados, y fuera los repetidos (el mismo ejercicio con otro nombre).
@@ -64,10 +67,23 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 
 ### Correcciones
 - Gráfica de progreso: al elegir un punto que es récord sale «RÉCORD» junto a la cifra.
+- Librería: con un solo ejercicio propio, «Mis ejercicios» decía «1 ejercicios».
 - El nombre de un programa (Programas y Perfil) va como el resto de títulos.
 - Inicio de sesión: el logo llena su marco.
 
 ### Interno
+- Librería: los grupos en tarjetas (`library/catalog`), con el diseño que aprobó el propietario (`StrataFit_Catalogo`): una
+  sola tarjeta para todos, desde `data/catalog` (cada grupo de siempre, sin cambiarle el nombre, con el id de sus imágenes),
+  y cada una abre su grupo como antes (`libraryGroup`). Las ilustraciones y los iconos del paquete los prepara
+  `tools/catalogo.py`: las ilustraciones, de WebP sin pérdida (732 KB) a WebP de calidad 90 (unos 120 KB, sin diferencia
+  visible); los iconos, sin pérdida, en un lienzo de 54 px de alto. `build.py` las mete en `data/media` (`MEDIA.cat` y
+  `MEDIA.catIcon`). Diferencias con las referencias, a propósito: el número de cada tarjeta es el de la librería (525
+  ejercicios; las referencias suman 551, de antes de juntar los repetidos); en el móvil, dos columnas (tres no caben con los
+  nombres legibles) y Funcional y Cardio anchas, cada una en su fila; desde 520 px, tres, como en el diseño; «Mis
+  ejercicios» (los del usuario) sigue, con la misma tarjeta sin ilustración; las tarjetas son oscuras también en el tema
+  claro. En inglés, los grupos se llaman como en el diseño: «Quadriceps» (antes «Quads») y «Hamstrings & glutes». Fuera la
+  rejilla anterior (`group-grid`) y sus estilos. `tests/catalog.test.mjs`, y las tarjetas en `features.py` (orden, números,
+  etiquetas, imágenes, leyenda, a 320, 390 y 768 px sin palabras partidas) y en `english.py`.
 - «Equipamiento» en el Overview (`workout/equipment`): el material de cada ejercicio lo saca `workout/equipmap` de lo mismo
   con que se dibuja su figura (la familia de movimiento y las palabras de `data/figposes`), con el material de la librería
   para lo que no dicen; un ejercicio propio no pone nada. Los iconos: de los 60 del catálogo del propietario, los 50 que

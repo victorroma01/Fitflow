@@ -358,6 +358,47 @@ def main(path):
         ev("A.overviewBack()")
         run()
 
+        print('Librería: los grupos en tarjetas, con el diseño aprobado (V1.0.4)')
+        ORDER = ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Antebrazos', 'Abdomen', 'Cuádriceps', 'Isquios y glúteos', 'Gemelos', 'CrossFit', 'Hyrox', 'Funcional', 'Cardio']
+        ev("sheet();S.tab=0;R();A.openLibrary()")
+        run(600)
+        cards = ev("""[...document.querySelectorAll('#sh .cat-grid .cat-card')].map(c => ({ g: c.dataset.v, name: c.querySelector('.cat-name').textContent,
+            count: c.querySelector('.cat-count').textContent, label: c.getAttribute('aria-label'), wide: c.classList.contains('cat-wide'),
+            art: (i => i ? [i.getAttribute('alt'), i.complete && i.naturalWidth > 0] : null)(c.querySelector('.cat-art img')),
+            ico: (i => i ? [i.getAttribute('alt'), i.complete && i.naturalWidth > 0] : null)(c.querySelector('img.cat-ico')) }))""")
+        real = ev("%s.map(g => exAll().filter(e => groupOf(e) == g).length)" % json.dumps(ORDER + ['Propio']))
+        check('las 14 tarjetas, en el orden aprobado, y al final «Mis ejercicios» (con uno del usuario)', [c['g'] for c in cards] == ORDER + ['Propio'], str([c['g'] for c in cards]))
+        check('cada una con su número de la librería (no el de las referencias); «1 ejercicio», en singular', [c['count'] for c in cards] == ['%d ejercicio%s' % (n, '' if n == 1 else 's') for n in real] and real[-1] == 1, str([c['count'] for c in cards]))
+        check('su nombre y una etiqueta con el grupo y su número', all(c['name'] == (g if g != 'Propio' else 'Mis ejercicios') and c['label'] == '%s: %s' % (c['name'], c['count']) for c, g in zip(cards, ORDER + ['Propio'])), str([c['label'] for c in cards[:3]]))
+        check('ilustración e icono cargados y decorativos (sin texto: lo dice la etiqueta); «Mis ejercicios», sin ilustración', all(c['art'] == ['', True] and c['ico'] == ['', True] for c in cards[:14]) and cards[14]['art'] is None, str([c['art'] for c in cards if c['art'] != ['', True]]))
+        check('Funcional y Cardio son las anchas', [c['g'] for c in cards if c['wide']] == ['Funcional', 'Cardio'])
+        legend = ev("[...document.querySelectorAll('#sh .cat-legend .cat-key')].map(k => [k.textContent.trim(), getComputedStyle(k.querySelector('.cat-dot')).backgroundColor])")
+        check('debajo, la leyenda: rojo, el músculo principal; naranja, el secundario', legend == [['Músculo principal (mayor trabajo)', 'rgb(245, 29, 36)'], ['Músculo secundario (asistencia)', 'rgb(250, 134, 23)']], str(legend))
+        # a cada ancho: sus columnas, y ningún nombre ni número se parte por dentro de una palabra o se sale de su tarjeta
+        FIT = """(() => { const g = document.querySelector('#sh .cat-grid'), sh = document.querySelector('#sh .sheet');
+          const split = t => { const n = t.firstChild; let at = 0; return t.textContent.split(' ').some(w => { const s = t.textContent.indexOf(w, at); at = s + w.length;
+            const r = document.createRange(); r.setStart(n, s); r.setEnd(n, s + w.length); return r.getClientRects().length > 1; }); };
+          const bad = [...g.querySelectorAll('.cat-card')].flatMap(c => [...c.querySelectorAll('.cat-name,.cat-count')].filter(t => split(t) || t.getBoundingClientRect().right > c.getBoundingClientRect().right - 1).map(t => t.textContent));
+          return [getComputedStyle(g).gridTemplateColumns.split(' ').length, bad, sh.scrollWidth > sh.clientWidth]; })()"""
+        for w, cols in ((320, 2), (390, 2), (768, 6)):
+            pg.set_viewport_size({'width': w, 'height': 844})
+            run(300)
+            got = ev(FIT)
+            check('a %d px: %s, sin palabras partidas ni textos fuera y sin desplazamiento lateral' % (w, 'dos columnas' if cols == 2 else 'tres (seis pistas)'), got == [cols, [], False], str(got))
+        pg.set_viewport_size({'width': 390, 'height': 844})
+        run(300)
+        ev("document.querySelector('#sh .cat-card[data-v=\"Espalda\"]').click()")
+        run(400)
+        check('tocar una tarjeta abre su grupo, como antes', ev("libState.g") == 'Espalda' and ev("document.querySelectorAll('#lr .item-split').length") == real[1], str([ev("libState.g"), ev("document.querySelectorAll('#lr .item-split').length")]))
+        ev("document.querySelector('#sh [data-a=libraryGroup][data-back]').click()")
+        run(400)
+        check('y «‹ Grupos» vuelve a las tarjetas', ev("!!document.querySelector('#sh .cat-grid')") and ev("libState.g") == '')
+        ev("document.querySelector('#sh .cat-card[data-v=\"Propio\"]').click()")
+        run(400)
+        check('«Mis ejercicios» abre los del usuario', ev("libState.g") == 'Propio' and ev("document.querySelectorAll('#lr .item-split').length") == real[-1])
+        ev("A.closeSheet()")
+        run(300)
+
         check('la CSP no ha bloqueado nada de la app', not ev('window.__csp||[]'), str(ev('window.__csp||[]'))[:200])
         check('sin errores de JS', not errs, '; '.join(errs[:3]))
         b.close()

@@ -36,7 +36,7 @@ flowchart LR
   subgraph fuente["src/ · código fuente"]
     JS["js/ · módulos ES<br/>(entrada: main.js)"]
     CSS["css/ · trozos NN-nombre.css"]
-    IMG["img/ · portadas de día,<br/>logo e iconos del material"]
+    IMG["img/ · portadas de día, logo,<br/>material y tarjetas de la librería"]
   end
   CL["CHANGELOG.md<br/>(novedades de cada versión)"]
   B(["build.py + esbuild"])
@@ -132,11 +132,13 @@ el que usan la mayoría de las pruebas.
 │   │   └── account/        inicio de sesión y registro, la cuenta en Ajustes y Administración
 │   ├── css/                trozos NN-nombre.css (el número fija el orden de la cascada)
 │   └── img/                day/ (portadas, order.txt; las de mujer, en mujer/), brand/ (el logo: fuentes y
-│                           lo que genera tools/marca.py) y equipment/ (los iconos del material: tools/equipamiento.py)
+│                           lo que genera tools/marca.py), equipment/ (los iconos del material: tools/equipamiento.py) y
+│                           catalog/ (las tarjetas de los grupos de la librería: tools/catalogo.py)
 ├── static/                 sw.js (plantilla), manifiesto, iconos de la app y de los accesos directos (tools/marca.py)
 ├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py ·
 │                           marca.py (logo e iconos) · figure.js (el dibujo del modelo de perfil) · fondo.py (el fondo del
-│                           inicio de sesión) · portadas.py (las portadas de los días) · equipamiento.py (los iconos del material)
+│                           inicio de sesión) · portadas.py (las portadas de los días) · equipamiento.py (los iconos del material) ·
+│                           catalogo.py (las tarjetas de la librería)
 │   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar,
 │                           pasar las cuentas al dominio nuevo)
 ├── tests/                  pruebas, run.sh y compare.sh

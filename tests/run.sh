@@ -43,6 +43,7 @@ run node --test --test-reporter=dot tests/dominio.test.mjs
 run node --test --test-reporter=dot tests/limpieza.test.mjs
 run node --test --test-reporter=dot tests/legal.test.mjs
 run node --test --test-reporter=dot tests/equipment.test.mjs
+run node --test --test-reporter=dot tests/catalog.test.mjs
 run node --test --test-reporter=dot tests/i18n.test.mjs
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
