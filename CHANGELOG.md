@@ -27,34 +27,26 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 
 ## [1.0.4] — 2026-11-25
 
-> Revisión de la aplicación y modelo 3D
+> Revisión de la aplicación
 >
-> Los ejercicios tienen ahora su figura en 3D, la librería está revisada ejercicio a ejercicio y la app, más rápida y más
-> cuidadosa con tus datos.
+> Los ejercicios tienen ahora su figura en 3D, hay entrenos a la carta, la librería está revisada ejercicio a ejercicio y la
+> app es más rápida y más cuidadosa con tus datos.
 
 ### Novedades
 - Modelo 3D: los 529 ejercicios de la librería tienen su figura en 3D, haciendo el ejercicio entero con su material y los
-  músculos que trabajan en rojo (principales) y naranja (secundarios). Quieta en las listas, el día, el entreno y la ficha;
-  al tocarla, en «Cómo se hace», se mueve con el gesto (con «Reducir animaciones», sus posturas quietas).
-- Entrenos a la carta: una tarjeta nueva en Workout con diez rutinas sueltas (brazos, hombros, pecho, pierna, espalda,
-  empuje, tirón y un calentamiento dinámico) para hacer cuando quieras sin tocar tu programa. Cada una se ve antes de
-  empezar, con sus bloques, sus repeticiones serie a serie (pirámides y AMRAP), su tempo y la postura o el agarre de cada
-  ejercicio.
-- Imágenes nuevas: el inicio de sesión, con un gimnasio visto desde arriba, en gris y a media luz, y las portadas de los
-  días de CrossFit, Hyrox y funcional y de sus descansos; con el perfil de mujer, todas.
+  músculos que trabajan en rojo (principales) y naranja (secundarios). Está quieta en las listas, el día, el entreno y la
+  ficha; al tocarla, en «Cómo se hace», se mueve con el gesto (con «Reducir animaciones», sus posturas quietas).
+- Entrenos a la carta: una tarjeta nueva en Workout con rutinas sueltas para hacer cuando quieras sin tocar tu programa.
 - Idiomas: la app está también en inglés. Se pone sola en el idioma del móvil (inglés o español) y se cambia cuando
   quieras en Ajustes → Idiomas.
-- Aviso legal y Política de privacidad nuevos, también en inglés: se leen sin tener cuenta, desde el inicio de sesión, y en
-  Ajustes. Para crear la cuenta hay que aceptar las condiciones (con 16 años o más) y el tratamiento de los datos de salud,
-  con su consentimiento explicado entero; con una cuenta que ya tenías, la app te lo pide una vez al abrirla.
+- Aviso legal y Política de privacidad nuevos.
 - Tus datos, en Privacidad: exportar una copia, escribirnos sobre privacidad, retirar el consentimiento, borrar los datos y
   «Eliminar cuenta», que borra la cuenta y todo lo suyo (también en Ajustes → Cuenta). Una cuenta que lleve dos años sin
   usarse se elimina sola.
 - Equipamiento: al final del Overview de cada día, el material que piden sus ejercicios, con sus iconos. Al tocarlo, la
   lista con el nombre de cada cosa.
-- Librería de ejercicios renovada: los grupos van en tarjetas con su ilustración (el modelo con el músculo principal en rojo
-  y el secundario en naranja; en CrossFit, Hyrox, Funcional y Cardio, su material), su icono en el color de la app y cuántos
-  ejercicios tienen, y debajo, la leyenda de los colores.
+- Librería de ejercicios renovada.
+- Mejoras y correcciones de rendimiento y seguridad.
 
 ### Mejoras
 - Librería revisada: los músculos de cada ejercicio, comprobados, y fuera los repetidos (el mismo ejercicio con otro nombre).

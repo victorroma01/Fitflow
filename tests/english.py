@@ -272,7 +272,7 @@ def main(path):
 
         fresh("S.tab=3;R();A.openSettings();A.openSettingsPage(0,{dataset:{v:'nota'}})")
         note = ev("document.querySelector('#sh').textContent")
-        check('la nota de la versión, en inglés (CHANGELOG.en.md)', 'App review and 3D model' in note and "What's new" in note and 'Improvements' in note and 'Novedades' not in note and 'Mejoras' not in note, note[:300])
+        check('la nota de la versión, en inglés (CHANGELOG.en.md)', 'App review' in note and 'on-demand workouts' in note and "What's new" in note and 'Improvements' in note and 'Novedades' not in note and 'Mejoras' not in note, note[:300])
 
         # lo que la app guarda como archivo (un CSV, el PDF, el recordatorio del calendario, la imagen de un entreno), con su
         # nombre y su contenido; y lo que escribe en un lienzo
@@ -493,7 +493,7 @@ def main(path):
         ev("S.tab=3;R();A.openSettings();A.openSettingsPage(0,{dataset:{v:'nota'}})")
         pg.wait_for_timeout(300)
         note = ev("document.querySelector('#sh').textContent")
-        check('la nota de la versión, en español', 'Revisión de la aplicación y modelo 3D' in note and 'Novedades' in note and "What's new" not in note, note[:200])
+        check('la nota de la versión, en español', 'Revisión de la aplicación' in note and 'entrenos a la carta' in note and 'Novedades' in note and "What's new" not in note, note[:200])
         check('no se busca nada en el diccionario (ni se carga)', ev("window.__i18nMiss.size") == 0 and ev("tr('Guardar')") == 'Guardar' and ev("say`Ronda ${1} de ${2}`") == 'Ronda 1 de 2')
         ev("window.__ffe('boom')")
         check('la pantalla de error del arranque, en español', ev("document.querySelector('#ffe h2').textContent") == 'StrataFit no ha podido iniciarse')
