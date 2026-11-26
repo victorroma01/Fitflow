@@ -120,6 +120,11 @@ t?: tempo, b?: bloque (superseries y triseries: los ejercicios seguidos con el m
 ronda, y si no tiene, 2:30), tk?: técnica de intensidad (`DS`, `RP`, `SS`, `CL`, `PAR`, `MYO`, `PRE`, `POST`, `PIR`,
 `PIR+DS`, `PIR+PAR`: `data/techniques`), o?: nombre original si se cambió (swap), img?/cu?: portada propia }`. En los programas
 predefinidos, `ta` es la técnica del nivel avanzado; `programs/levels` la aplica y la quita, y no llega a guardarse.
+Un entreno a la carta (`routines/ondemand`), mientras dura, pone sobre el día del plan el de su rutina, que lleva además, en el
+día, `od` (la clave de la rutina: su objetivo va sin RIR) y, en cada ejercicio, `rs` (las repeticiones de cada serie: un número
+o `'AMRAP'`, las máximas posibles; su `rg` va de la menor a la mayor) y `nt?` (la variante de esa posición). `core/repair` los
+comprueba (en el plan, en `planBackup` y en el entreno a medias); al acabar vuelve el día del plan, así que no se quedan en él.
+En el entreno, una serie AMRAP sale con `r: ''` hasta que se apuntan las repeticiones, y sin ellas no se da por hecha.
 
 **Serie del entreno en curso** (`W.x[ejercicio][serie]`): `{ r: reps, w: kg, ok, q?: esfuerzo (RPE, solo con `rpe`), k?: técnica de
 la serie, t?: 1 fila del drop set, 2 bloque del rest-pause, ws?: 1 si el peso es sugerido (del historial o de la serie anterior) y aún

@@ -5,7 +5,7 @@
    personalizado, la que se elija o, si no, la de sus ejercicios (la que más se repite). Los
    descansos de una semana con CrossFit, Hyrox o funcional llevan la suya (descanso2). Con el perfil de mujer, todas son las de
    la modelo (DAY_PHOTOS_F; mientras falte alguna, la que la sustituye: PHOTO_ALIAS_F).
-   Define: GROUP_IMAGE, REST_IMAGES, CONDITIONING, photoUrl, exerciseImage, imageOfExercises, nameImage, unnamedImage, baseImage, dayImage, coverStyle, routineImage, IMAGE_LABELS, IMAGE_LABELS_F, imagePicker  · acciones/registros: 1
+   Define: GROUP_IMAGE, REST_IMAGES, CONDITIONING, photoUrl, groupImage, exerciseImage, imageOfExercises, nameImage, unnamedImage, baseImage, dayImage, coverStyle, routineImage, IMAGE_LABELS, IMAGE_LABELS_F, imagePicker  · acciones/registros: 1
 */
 import { A } from '../core/registry.js';
 import { DAY_PHOTO_RULES, DAY_PHOTOS, DAY_PHOTOS_F, EXERCISE_PHOTO_RULES, PHOTO_ALIAS_F } from '../data/photos.js';
@@ -22,6 +22,8 @@ const REST_IMAGES = ['descanso', 'descanso2'];
 const CONDITIONING = ['skierg', 'trineo', 'wallballs', 'snatch', 'thrusters', 'boxjumps', 'granjero', 'competencia', 'crossfit', 'hyrox', 'funcional'];
 /** La foto de una portada para este perfil: con el de mujer, la de la modelo (o la que la sustituye); si no, la de serie. */
 export const photoUrl = k => (profileSex() == 'F' && (DAY_PHOTOS_F[k] || DAY_PHOTOS_F[PHOTO_ALIAS_F[k]])) || DAY_PHOTOS[k] || '';
+/** La portada de un grupo de ejercicios ('' si no tiene: routines/ondemand pone entonces la de funcional). */
+export const groupImage = g => GROUP_IMAGE[g] || '';
 /* la portada de un ejercicio: la de su grupo o, en CrossFit, Hyrox, funcional y cardio, la suya si la tiene */
 const exerciseImage = n => {
   const g = groupOfName(n);

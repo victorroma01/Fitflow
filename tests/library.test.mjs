@@ -25,8 +25,8 @@ const tokenName = t => t.replace(/^\+?(?:[A-Z]:)?/, '').split('*')[0].trim();
 /** todas las cadenas de un dato, por dentro de sus listas y objetos */
 const strings = v => typeof v == 'string' ? [v] : v && typeof v == 'object' ? Object.values(v).flatMap(strings) : [];
 
-test('la librería: 525 ejercicios, sin nombres repetidos ni vacíos', () => {
-  assert.equal(EXERCISES.length, 525);
+test('la librería: 529 ejercicios, sin nombres repetidos ni vacíos', () => {
+  assert.equal(EXERCISES.length, 529);
   assert.equal(LIB.size, EXERCISES.length, 'nombres repetidos');
   assert.deepEqual(EXERCISES.filter(e => !e.n || e.n != e.n.trim()).map(e => e.n), []);
 });

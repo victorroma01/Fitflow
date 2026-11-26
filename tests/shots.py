@@ -1,4 +1,4 @@
-"""Capturas de 52 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
+"""Capturas de 55 pantallas en 6 configuraciones (tema claro/oscuro, niveles de cristal, tamaños de iPhone) y comparación píxel a píxel.
 
   python3 tests/shots.py snap ARCHIVO.html carpeta a,b,c,d,e,f [mapa.txt]   (genera carpeta/<cfg>_<pantalla>.png)
   Con mapa.txt («registro viejo nuevo», tests/nombres-1.0.2.txt), ARCHIVO es de antes de renombrar las acciones: las pantallas se
@@ -70,6 +70,10 @@ SCR={
  'eliminar_cuenta':"S.tab=3;R();A.openDeleteAccount&&(A.openSettings(),A.openSettingsPage(0,{dataset:{v:'cuenta'}}),A.openDeleteAccount())",
  # el material del día (V1.0.4): la página que abre «Equipamiento» al final del Overview
  'equipamiento':"A.openOverview&&A.openOverview(0);A.openEquipment&&A.openEquipment()",
+ # los entrenos a la carta (V1.0.4): la lista, la vista previa de Chest Crusher y su entreno
+ 'carta':"A.openOnDemand&&A.openOnDemand()",
+ 'carta_vista':"A.openOnDemand&&(A.openOnDemand(),A.onDemandShow(2))",
+ 'carta_entreno':"A.onDemandStart&&A.onDemandStart(2)",
 }
 CFG={ # nombre: (w,h,scheme,gm,gl)
  'a':(390,844,'dark',3,1),'b':(390,844,'light',3,1),'c':(390,844,'dark',0,0),'d':(390,844,'dark',1,1),'e':(320,568,'dark',3,1),'f':(430,932,'light',2,1),

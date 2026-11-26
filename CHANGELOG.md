@@ -33,11 +33,15 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 > cuidadosa con tus datos.
 
 ### Novedades
-- Modelo 3D: los 525 ejercicios de la librería tienen su figura en 3D, haciendo el ejercicio entero con su material y los
+- Modelo 3D: los 529 ejercicios de la librería tienen su figura en 3D, haciendo el ejercicio entero con su material y los
   músculos que trabajan en rojo (principales) y naranja (secundarios). Quieta en las listas, el día, el entreno y la ficha;
   al tocarla, en «Cómo se hace», se mueve con el gesto (con «Reducir animaciones», sus posturas quietas).
-- Inicio de sesión con imagen de fondo: un gimnasio visto desde arriba, en gris y a media luz.
-- Portadas nuevas para los días de CrossFit, Hyrox y funcional y para sus descansos; con el perfil de mujer, todas.
+- Entrenos a la carta: una tarjeta nueva en Workout con diez rutinas sueltas (brazos, hombros, pecho, pierna, espalda,
+  empuje, tirón y un calentamiento dinámico) para hacer cuando quieras sin tocar tu programa. Cada una se ve antes de
+  empezar, con sus bloques, sus repeticiones serie a serie (pirámides y AMRAP), su tempo y la postura o el agarre de cada
+  ejercicio.
+- Imágenes nuevas: el inicio de sesión, con un gimnasio visto desde arriba, en gris y a media luz, y las portadas de los
+  días de CrossFit, Hyrox y funcional y de sus descansos; con el perfil de mujer, todas.
 - Idiomas: la app está también en inglés. Se pone sola en el idioma del móvil (inglés o español) y se cambia cuando
   quieras en Ajustes → Idiomas.
 - Aviso legal y Política de privacidad nuevos, también en inglés: se leen sin tener cuenta, desde el inicio de sesión, y en
@@ -82,6 +86,25 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   con coma, para Excel.
 
 ### Interno
+- Entrenos a la carta: las diez rutinas del propietario en `data/ondemand` (StrataFit_Rutinas_v2, 26-11-2026: 73 posiciones
+  y 269 series, con sus claves estables, `stratafit-routine-01` a `10`) y su lista, su vista previa y su lanzamiento en
+  `routines/ondemand`, sobre el día del plan como un workout personalizado (`planBackup`). En el ejercicio del día, dos datos
+  nuevos: las repeticiones de cada serie (`rs`, un número o `AMRAP`) y la variante de la posición (`nt`); en el día, la clave
+  de su rutina (`od`, que quita el RIR del objetivo). `core/repair` los comprueba. `workout/targets` (`setReps`, `isAmrap`) y
+  `workout/progression` los aplican: cada serie con sus repeticiones y el peso de la última vez, sin sugerencia de progresión
+  cuando no son todas iguales; una AMRAP sale en blanco y `workout/session` no la da por hecha sin repeticiones
+  (`amrapPending`). Un bloque de cuatro es una serie gigante (`blockKind`); un tempo que no está en la lista sale arriba y
+  elegido en su desplegable. La tarjeta lleva su icono en trazo (`IC.dumbbell`), como la referencia del propietario.
+- Cuatro ejercicios nuevos (529 en la librería): Remo alto en máquina (en `tiron3d.js`, el remo en máquina con `high`: las
+  asas arriba y por delante, y la palanca desde un eje delante) y, en la familia Movilidad de Funcional, Zancada con rotación
+  torácica, Rodilla al pecho con alcance y Talón al glúteo con alcance (en `funcional3d.js`, lote 9: `wgs`, `kneeHug` y
+  `heelButt`), con sus músculos, su consejo y su ejecución en español y en inglés, y otros nombres para el buscador (también
+  los de Inchworm y Saltos de gemelo, como los llama su rutina). Comprobados con `tools/figuras3d` (sin manos que no llegan,
+  choques, material dentro de brazos o piernas ni piezas fijas que se mueven); sus encuadres, en `data/figboxes`.
+- Pruebas: `tests/ondemand.test.mjs` (las rutinas tal como vienen: claves, cuentas, pirámides, AMRAP, tempos, posiciones
+  repetidas y que cada ejercicio está en la librería con figura) y `tests/ondemand.py` (la tarjeta, la lista, la vista previa,
+  el entreno con sus series, tempos, variantes, bloques y descansos, las AMRAP, guardar, reanudar y el inglés). Tres pantallas
+  más en `tests/shots.py` (55), que pasan también por las pruebas de seguridad, accesibilidad, tamaños, contraste e inglés.
 - Figuras 3D: la carrera, rehecha como un trote normal (`src/fig3d/cardio3d.js`: `runGait`, `runHip`, `runCap` y
   `runArms`), en todo lo que es correr del lote 8 (en la calle, en la cinta, en cuesta y con chaleco; la marcha, igual), con
   las curvas de cadera y rodilla de un trote: unas 154 zancadas por minuto (una vuelta de 0,78 s; antes, 133) a unos 8 km/h.
@@ -139,7 +162,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   visible); los iconos, sin pérdida, en un lienzo de 54 px de alto. `build.py` las mete en `data/media` (`MEDIA.cat` y
   `MEDIA.catIcon`). El icono y la raya van en el color de la app, como pidió el propietario: el icono hace de máscara
   (`mask-image`) y el color es `--acd`, un tono nuevo de `profile/appearance` (el principal, aclarado solo si hace falta para
-  verse sobre el negro de la tarjeta: 3:1 o más). La leyenda sigue en rojo y naranja, los colores de los músculos. Diferencias con las referencias, a propósito: el número de cada tarjeta es el de la librería (525
+  verse sobre el negro de la tarjeta: 3:1 o más). La leyenda sigue en rojo y naranja, los colores de los músculos. Diferencias con las referencias, a propósito: el número de cada tarjeta es el de la librería (529
   ejercicios; las referencias suman 551, de antes de juntar los repetidos); en el móvil, dos columnas (tres no caben con los
   nombres legibles) y Funcional y Cardio anchas, cada una en su fila; desde 520 px, tres, como en el diseño; «Mis
   ejercicios» (los del usuario) sigue, con la misma tarjeta sin ilustración; las tarjetas son oscuras también en el tema
@@ -153,7 +176,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   lisa, como la pidió el propietario con una captura, y lo que el catálogo no tiene (kettlebell, anillas, TRX, remo
   ergómetro, piscina…). `build.py` los mete en `data/media` (`MEDIA.equip`): archivos del paquete que el service worker
   guarda, o incrustados en el archivo único (pasa de 2,35 a 2,69 MB). En el tema claro van en negro con un filtro.
-  `tests/equipment.test.mjs`: los 525 ejercicios piden material conocido, con su icono.
+  `tests/equipment.test.mjs`: los 529 ejercicios piden material conocido, con su icono.
 - Versión: la que iba a ser la 1.0.32 (revisión de la 1.0.3, sin publicar) pasa a ser la 1.0.4, con su propia tarjeta, por
   decisión del propietario, en vez de la 1.1.0 que pedía la numeración. El aviso de versión nueva (`isNewerVersion`) y
   `build.py` (`version_key`) cuentan la 1.0.31 y la 1.0.32 como 1.0.3.1 y 1.0.3.2. Cada versión puede llevar un titular
@@ -230,7 +253,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   `howto-head`, `hwf` → `howto-maps`, `hwl` → `howto-muscles`, `anb` → `anatomy-box`, `anf` → `anatomy-full`, `anl` →
   `anatomy-legend`) ([clases CSS](docs/tecnica/clases.md)).
 - `build.py`: la entrada del paquete es la de `main.js`. Con más `import()` dinámicos, esbuild ya no la listaba la primera.
-- Pruebas: `tests/fig3d.test.mjs` (el motor tal como va en la app, en los 525 ejercicios y en todo el gesto; encontró que los
+- Pruebas: `tests/fig3d.test.mjs` (el motor tal como va en la app, en los 529 ejercicios y en todo el gesto; encontró que los
   guantes del saco pedían un color de brillo que no tenían) y `tests/figures.py`, rehecha para el 3D (202 comprobaciones).
 - Entreno: el botón que guarda el entreno se llama «Guardar entreno» (antes, «Log out», que suena a cerrar la sesión de la
   cuenta), también en los textos que lo nombran. La etiqueta de un bloque (`blockBadge`, en `workout/day`) ya no lleva «10 s
@@ -381,7 +404,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   diccionario se traduce donde se lee, nunca en un `value`, un `data-…` o una clase. Los textos compuestos se escriben con
   ``say`…` `` en vez de sumando trozos (unas 330 sumas cambiadas), y lo que no pasa por una plantilla, con `tr()` (el reloj
   del WOD, la imagen para compartir, el PDF del análisis, el `.ics` del pesaje, los nombres de archivo). Los consejos y la
-  ejecución de los 525 ejercicios van en `i18n/en-exinfo`, que se carga en lugar de `data/exinfo`.
+  ejecución de los 529 ejercicios van en `i18n/en-exinfo`, que se carga en lugar de `data/exinfo`.
 - Lo que se guarda no depende del idioma: va en español y se traduce al enseñarlo (el título y el resultado de un cardio o
   de un WOD ya no se componen con el idioma de la app). Una cuenta sirve igual en un móvil en español y en otro en inglés.
 - La nota de cada versión en inglés: `CHANGELOG.en.md`, que `build.py` (`english`) mete en `data/release` y en
@@ -392,7 +415,7 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   con texto al cargar un módulo y de un `raw()` de una clase que es una frase. Lo que no se traduce (igual en inglés, o no
   se enseña) está en `tools/i18n-skip.json`.
 - Pruebas del inglés: `tests/i18n.test.mjs` (el motor, sin navegador), `tests/english.py` (qué idioma sale con cada móvil y
-  cada elección, Ajustes → Idiomas, las 107 pantallas y otras doce en inglés sin un texto en español a la vista, el PDF, la
+  cada elección, Ajustes → Idiomas, las 119 pantallas y otras doce en inglés sin un texto en español a la vista, el PDF, la
   imagen y los archivos, y que con los mismos pasos se guarda lo mismo en los dos idiomas), el catálogo en inglés en
   `tests/exinfo.test.mjs`, la nota en inglés en `tests/changelog.py` y el manifiesto y los trozos del diccionario en
   `tests/deploy.py`. Las demás pruebas abren la app con el navegador en español (`tests/browser.py`); los tamaños de

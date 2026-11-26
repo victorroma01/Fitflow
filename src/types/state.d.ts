@@ -29,6 +29,10 @@ interface PlanExercise {
   o?: string;
   /** la unidad y las repeticiones originales, si el ejercicio por el que se cambió las tiene distintas (workout/targets) */
   ou?: { u?: string, rg: number[] };
+  /** en un entreno a la carta (routines/ondemand), las repeticiones de cada serie: un número o 'AMRAP' (las máximas posibles) */
+  rs?: (number | string)[];
+  /** en un entreno a la carta, la variante de esa posición (postura, agarre o banco) */
+  nt?: string;
 }
 /** Un día del plan; sin ejercicios, es de descanso. */
 interface PlanDay {
@@ -37,6 +41,8 @@ interface PlanDay {
   /** 1 si es un workout personalizado (routines/builder), con su portada si la tiene */
   cu?: number;
   img?: string;
+  /** la clave de su rutina, si es un entreno a la carta (routines/ondemand): su objetivo no lleva RIR */
+  od?: string;
 }
 /** Un entreno hecho (S.logs). */
 interface Log {
