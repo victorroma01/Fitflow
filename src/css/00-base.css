@@ -126,6 +126,10 @@ input,select,textarea {
   width:100%;
   min-width:0;
 }
+/* lo que no cabe en un campo (el texto de ayuda de un buscador, en un móvil de 320 px) acaba en «…», no a media letra */
+input {
+  text-overflow:ellipsis;
+}
 /* el texto de ayuda de un campo, con el gris del texto secundario: el de serie del navegador no llega al contraste */
 ::placeholder {
   color:var(--mu);

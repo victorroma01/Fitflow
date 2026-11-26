@@ -75,8 +75,8 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Workout: en un día de descanso salen también la barra de la semana y, si toca, el aviso de la semana de descarga
   (con «Omitir») y la propuesta de rotar los ejercicios.
 - En un móvil pequeño (320 px): los valores de Ajustes que no caben acaban en «…» (antes se cortaban a media letra), en
-  Mi nutrición ya no se lee a través de «Ajustar a mano» lo que pasa por debajo y el primer paso del recorrido no tapa la
-  tarjeta del día.
+  Mi nutrición ya no se lee a través de «Ajustar a mano» lo que pasa por debajo, el primer paso del recorrido no tapa la
+  tarjeta del día y el texto de ayuda de un buscador que no cabe acaba en «…».
 
 ### Interno
 - Figuras 3D: la carrera, rehecha como un trote normal (`src/fig3d/cardio3d.js`: `runGait`, `runHip`, `runCap` y
