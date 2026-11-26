@@ -454,6 +454,14 @@ def main(path):
             clear:p.offsetTop+p.offsetHeight<=tp+1||p.offsetTop>=tp+h-1,
             free:![...document.getElementById('app').children].some(e=>getComputedStyle(e).position=='sticky'&&!e.contains(t)&&(q=>q.bottom>tp+1&&q.top<tp+h-1)(e.getBoundingClientRect()))}})()""")
         check('en un iPhone pequeño (320 × 568), con comidas, el paso de Nutrición ilumina sus botones y se ve entero, sin taparlo el resumen pegado arriba', o['st'] == 'Paso 3 de 5' and o['inside'] and o['seen'] and o['clear'] and o['free'], str(o))
+        # y el primer paso: la tarjeta del día, alta, no deja sitio encima; se sube la página para que la tarjeta quepa debajo
+        ev("A.tourSkip();S.tab=0;R();scrollTo(0,0);A.tourReplay()")
+        run(400)
+        o = ev("""(()=>{const t=document.querySelector('#app .card.hero'),r=t.getBoundingClientRect(),s=document.querySelector('#tour .tour-spot').style,p=document.querySelector('#tour .tour-tip');
+          const l=parseFloat(s.left),tp=parseFloat(s.top),w=parseFloat(s.width),h=parseFloat(s.height);
+          return {st:document.querySelector('#tour .tour-step').textContent,inside:l<=r.left+.5&&tp<=r.top+.5&&l+w>=r.right-.5&&tp+h>=r.bottom-.5,seen:r.top>=0&&r.bottom<=innerHeight,
+            clear:p.offsetTop+p.offsetHeight<=r.top+1||p.offsetTop>=r.bottom-1,inview:p.offsetTop>=0&&p.offsetTop+p.offsetHeight<=innerHeight}})()""")
+        check('en un iPhone pequeño, el primer paso: la tarjeta del día entera e iluminada, y la tarjeta del paso sin taparla', o['st'] == 'Paso 1 de 5' and o['inside'] and o['seen'] and o['clear'] and o['inview'], str(o))
         ev("A.tourSkip();delete S.meals[dayKey(new Date())];saveState()")
         pg.set_viewport_size({'width': 390, 'height': 844})
         run()

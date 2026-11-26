@@ -112,15 +112,17 @@ const tourPlace = () => {
   if (st.alt && el.offsetHeight + 2 * pad + 14 + tp.offsetHeight > innerHeight - 24 - top)
     el = st.alt() || el;
   let r = el.getBoundingClientRect();
-  /* que se vea entero: si queda tapado arriba o abajo, se desplaza la página */
-  if (getComputedStyle(el).position != 'fixed' && (r.top < top || r.bottom > innerHeight - 120)) {
-    scrollBy({ top: r.top - Math.max(top, innerHeight * .16), behavior: 'instant' });
+  const h = tp.offsetHeight;
+  const fitsBelow = () => r.bottom + pad + 14 + h < innerHeight - 24;
+  /* que se vea entero y con la tarjeta al lado: si queda tapado arriba o abajo, o la tarjeta no cabe ni debajo ni encima,
+     se desplaza la página; a un sexto de la altura o, si así no cabe la tarjeta debajo (un móvil pequeño), más arriba */
+  if (getComputedStyle(el).position != 'fixed' && (r.top < top || r.bottom > innerHeight - 120 || !fitsBelow() && r.top - pad - 14 - h < 12)) {
+    scrollBy({ top: r.top - Math.max(top, Math.min(innerHeight * .16, innerHeight - 25 - r.height - pad - 14 - h)), behavior: 'instant' });
     r = el.getBoundingClientRect();
   }
   const rad = (parseFloat(getComputedStyle(el).borderTopLeftRadius) || 16) + pad;
   Object.assign(sp.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + 2 * pad + 'px', height: r.height + 2 * pad + 'px', borderRadius: rad + 'px' });
-  const h = tp.offsetHeight;
-  const below = r.bottom + pad + 14 + h < innerHeight - 24;
+  const below = fitsBelow();
   tp.style.top = (below ? r.bottom + pad + 14 : Math.max(12, r.top - pad - 14 - h)) + 'px';
   tp.classList.toggle('up', !below);
   const tl = tp.getBoundingClientRect().left;

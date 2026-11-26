@@ -61,3 +61,6 @@ have no entry: the app shows them in Spanish.
 - Sign-in: the logo fills its frame.
 - Workout: on a rest day you also see the week bar and, when it's time, the deload week notice (with “Skip”) and the
   suggestion to rotate exercises.
+- On a small phone (320 px): Settings values that don't fit end in “…” (they used to be cut mid-letter), in My
+  nutrition what scrolls underneath no longer shows through “Set manually,” and the first step of the tour no longer
+  covers the day card.
