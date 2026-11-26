@@ -109,7 +109,8 @@ puntos). Las versiones anteriores a la 1.0.4, que no tenían inglés, se enseña
 
 ## Lo propio del inglés
 
-- Fechas y números con `LOCALE` (`Mon, Oct 26`; el punto decimal).
+- Fechas con `LOCALE` (`Mon, Oct 26`). Los números, en los dos idiomas, con punto decimal y sin separador de miles (desde la
+  V1.0.4 también el análisis mensual, `fmtN`, y el espacio de Diagnóstico); los CSV en español, con coma decimal para Excel.
 - El buscador de ejercicios y el de alimentos encuentran también por el nombre en inglés, y la lista de alimentos se ordena por
   el nombre que se ve. Un ejercicio propio no puede llamarse como uno de la librería se llama en inglés.
 - Los CSV, con coma de separador y punto decimal, y sus cabeceras en inglés.

@@ -12,7 +12,7 @@
 */
 import { say, tr, trAs } from '../core/i18n.js';
 import { plural } from '../system/backup.js';
-import { APPV, dayKey, fmtDateShort, LOCALE } from '../core/util.js';
+import { APPV, dayKey, fmtDateShort, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -37,8 +37,8 @@ const KIND_OK = ['baja', 'estable', 'sube', 'estable'];
 let anaYm = '';
 const monthName = ym => tr(MONTHS[+ym.slice(5, 7) - 1]) + ' ' + ym.slice(0, 4);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-/** Número en español: coma decimal y `d` decimales como mucho. */
-const fmtN = (v, d = 0) => (+v || 0).toLocaleString(LOCALE, { maximumFractionDigits: d, minimumFractionDigits: 0 });
+/** Un número como en el resto de la app: punto decimal, sin separador de miles y `d` decimales (0 o 1) como mucho. */
+const fmtN = (v, d = 0) => String(d ? round1(+v || 0) : Math.round(+v || 0));
 /* las cargas, en la unidad elegida en Ajustes (profile/units): un peso, en kg o en lb, y un volumen, en toneladas o en miles
    de libras. El peso corporal va siempre en kg */
 const loadNum = v => usesLb() ? toDisplayWeight(v) : v;

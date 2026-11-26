@@ -4,7 +4,7 @@
    una vez a la semana, para hacer una copia y liberar espacio antes de que deje de guardarse. Diagnóstico enseña el uso.
    Define: LS_LIMIT, SPACE_WARN, SPACE_EVERY, lastSpace, spaceUse, mb, spaceText, spaceTries, spaceCheck
 */
-import { LOCALE } from '../core/util.js';
+import { round1 } from '../core/util.js';
 import { say } from '../core/i18n.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -45,7 +45,8 @@ export const spaceUse = async () => {
   lastSpace = { ls, usage, quota, ratio: Math.max(ls / LS_LIMIT, quota ? usage / quota : 0) };
   return lastSpace;
 };
-const mb = n => (n / 1048576).toLocaleString(LOCALE, { maximumFractionDigits: n < 10485760 ? 1 : 0 }) + ' MB';
+/* (con punto decimal, como el resto de números de la app) */
+const mb = n => (n < 10485760 ? round1(n / 1048576) : Math.round(n / 1048576)) + ' MB';
 /** La medida en una línea, para Diagnóstico. */
 export const spaceText = u => !u ? '' : 'localStorage ' + mb(u.ls * 2) + ' de unos ' + mb(LS_LIMIT * 2) + ' (' + Math.round(u.ls / LS_LIMIT * 100) + ' %)' + (u.quota ? ' · IndexedDB y caché ' + mb(u.usage) + ' de ' + mb(u.quota) + ' (' + Math.round(u.usage / u.quota * 100) + ' %)' : '');
 /* intentos de enseñar el aviso mientras la app está ocupada (cada 30 s) */

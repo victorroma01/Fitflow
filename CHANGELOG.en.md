@@ -63,3 +63,5 @@ have no entry: the app shows them in Spanish.
   suggestion to rotate exercises.
 - On a small phone (320 px): Settings values that don't fit end in “…” (they used to be cut mid-letter), and so does
   a search box hint, and in My nutrition what scrolls underneath no longer shows through “Set manually.”
+- Numbers in the monthly analysis and its PDF, and in Diagnostics, are written like in the rest of the app: decimal point
+  and no thousands separator.

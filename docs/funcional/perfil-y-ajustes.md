@@ -62,8 +62,12 @@ ese idioma. La elección es de cada móvil: no va con la cuenta, y se conserva a
 
 En inglés está todo: las pantallas, los 525 ejercicios con sus consejos y su «Cómo se hace», los alimentos, los programas, los
 logros, la nota de cada versión, los avisos, los CSV (con coma y punto decimal), el PDF del análisis mensual, la imagen para
-compartir un entreno y los accesos directos del icono. Las fechas y los números van como se escriben en inglés. El buscador de
-ejercicios y el de alimentos encuentran por el nombre en inglés y por el español.
+compartir un entreno y los accesos directos del icono. Las fechas van como se escriben en inglés. El buscador de ejercicios y
+el de alimentos encuentran por el nombre en inglés y por el español.
+
+Los números con decimales van con punto en los dos idiomas y en toda la app (62.5 kg, 1.5 veces por semana), también en el
+análisis mensual y su PDF, y sin separador de miles. Se pueden escribir con punto o con coma. Solo los CSV en español llevan
+coma decimal, la que espera Excel en español.
 
 Lo que escribes tú se queda como lo escribiste: los nombres de tus workouts, programas, platos y ejercicios propios, y tus notas.
 Tus datos son los mismos en los dos idiomas: lo guardado con la app en español se ve en inglés al cambiar, y al revés. Se queda

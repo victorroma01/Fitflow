@@ -77,6 +77,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - En un móvil pequeño (320 px): los valores de Ajustes que no caben acaban en «…» (antes se cortaban a media letra),
   igual que el texto de ayuda de un buscador, y en Mi nutrición ya no se lee a través de «Ajustar a mano» lo que pasa por
   debajo.
+- Los números con decimales van con punto en toda la app: el análisis mensual y su PDF, Diagnóstico y cuatro textos (la
+  descripción de Push Pull Leg, un consejo del programa guiado y dos ejercicios) los ponían con coma. Los CSV en español siguen
+  con coma, para Excel.
 
 ### Interno
 - Figuras 3D: la carrera, rehecha como un trote normal (`src/fig3d/cardio3d.js`: `runGait`, `runHip`, `runCap` y

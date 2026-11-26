@@ -264,11 +264,11 @@ activadas en el repositorio.
     dobles); en la de boxeo, un pie y después el otro. ¿Se mueve con soltura?
 29. Con «Reducir animaciones», la comba enseña «Inicio» y «Salto».
 
-**Al publicar la V1.0.32**, la segunda revisión, que además pone el fondo del inicio de sesión, deja liso el fondo de la app,
-trae las fotos nuevas de los días y pasa las cuentas a su [dominio nuevo](backend.md#el-dominio-de-las-cuentas)
+**Al publicar la V1.0.4** (la que iba a ser la 1.0.32: la segunda revisión, que además pone el fondo del inicio de sesión, deja
+liso el fondo de la app, trae las fotos nuevas de los días y pasa las cuentas a su [dominio nuevo](backend.md#el-dominio-de-las-cuentas))
 
-30. Abrir con conexión: sale la tarjeta «Versión 1.0.32», que enseña primero «Mejoras de la 1.0.32» con una sola línea,
-    «Corrección y mejoras de la app», y, al deslizarla, lo de la 1.0.31 y lo de la 1.0.3; «Actualizar»; en Perfil pone V1.0.32.
+30. Abrir con conexión: sale la tarjeta «Versión 1.0.4» con sus novedades; «Actualizar». Pide aceptar las Condiciones de uso y
+    el tratamiento de los datos de salud (las dos casillas); después, en Perfil → Ajustes, «Actualizaciones» pone V1.0.4.
 31. Empezar un entreno y bajar hasta el final: el botón blanco pone «Guardar entreno» (antes, «Log out») y cabe entero junto a
     «Salir y descartar». Al pulsarlo pregunta «¿Guardar el entreno?»; «Cancelar» vuelve al entreno.
 32. Antes de pasar las cuentas, con la V1.0.32 ya puesta: Ajustes → Cuenta → «Sincronizar ahora» dice «Todo al día».
@@ -286,3 +286,17 @@ trae las fotos nuevas de los días y pasa las cuentas a su [dominio nuevo](backe
     Bro Split (el día de brazos, el tríceps en polea) y en los descansos (por la calle). Volver a Hombre deja las de antes.
 38. En un día de descanso, los nombres de la barra de pestañas (Nutrición, Dashboard, Perfil) se leen igual de bien que en un
     día de entreno. (En el Safari de las pruebas de GitHub se midieron más tenues ese día; en Chromium, no.)
+
+**Y lo nuevo de la V1.0.4**
+
+39. Workout: la tarjeta del día, más alta, con la foto entre el nombre y los botones, y los cuatro atajos en tarjetas de dos en
+    dos; en un día de descanso, también la barra «Esta semana».
+40. Figuras 3D: cada ejercicio con su figura en la librería y en el entreno; en «Cómo se hace» se mueve (Carrera 1 km, un
+    trote) y, con «Reducir animaciones», posturas quietas.
+41. Librería en tarjetas, con su imagen; un grupo abre su lista y «‹ Grupos» vuelve. Al final de un Overview, «Equipamiento».
+42. Ajustes → Idiomas → English: toda la app en inglés; volver a Español.
+43. Un peso con decimales escrito en un entreno (62,5 o 62.5, según el teclado) se guarda y se ve 62.5; el análisis mensual,
+    también con punto.
+44. «Eliminar cuenta» con una cuenta de prueba: desaparece de Authentication → Users (si no, falta permitirlo en Firebase,
+    Authentication → Settings → User actions).
+45. Antes del día 3 del mes, en GitHub, «Limpieza de cuentas» con `simulacro`: los recuentos cuadran con la consola.

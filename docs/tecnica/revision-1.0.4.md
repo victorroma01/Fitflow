@@ -122,9 +122,9 @@ Tras fusionar la revisión (#76), en la rama `repaso-1.0.4` ([solicitud #77](htt
 
 ### Lo que se queda como está
 
-- **Los decimales**: casi toda la app los escribe con punto (62.5 kg, 190.3 t, 5.2 km) y el Análisis mensual, con coma (63,7 t,
-  −0,5 kg, 5,2 km). Pasar todo a la coma en español es una decisión del propietario: son unas 45 líneas en 17 archivos y sus
-  pruebas. Los campos aceptan las dos.
+- **Los decimales** se quedaron para el propietario, que eligió el punto (26-11-2026): ya van con punto en toda la app,
+  también el análisis mensual y su PDF (`fmtN`), Diagnóstico y cuatro textos que los ponían con coma. Los CSV en español
+  siguen con coma decimal, la que espera Excel en español.
 - **La fecha de «Registrar peso», a 320 px en Chromium**, se corta un poco: el campo de fecha de Chromium calcula su ancho
   menor de lo que ocupa con la letra de la app. Darle su ancho no bastó y en Safari ese campo es otro: se mirará en la prueba
   en Android (I-01).
@@ -157,12 +157,16 @@ Del propietario, en las consolas (no se puede hacer desde el código):
 2. **Después de publicar, en GitHub → Actions → «Limpieza de cuentas»**: un `simulacro` a mano antes de su primera pasada de
    verdad, para mirar los recuentos ([Limpieza de cuentas](backend.md#limpieza-de-cuentas)). Solo se puede lanzar desde `main`.
 3. **GitHub → Settings → General → «Automatically delete head branches»**, para que las ramas fusionadas se borren solas.
-4. **La lista de comprobación en el iPhone** con la versión publicada ([pruebas](pruebas.md)).
+4. **La lista de comprobación en el iPhone** con la versión publicada ([pruebas](pruebas.md), del 30 al 45).
+5. **Después de publicar, en GitHub → Actions → «Pasar las cuentas al dominio nuevo»**: `simulacro` y, si dice que las
+   sesiones se conservan, `aplicar`; después, «Comprobar Firebase» ([cómo](backend.md#pasar-las-cuentas)). Faltaba en esta lista.
+
+El propietario tiene estos pasos, detallados y en el orden de hacerlos, en un documento aparte.
 
 Al publicar (con «publica»):
 
-5. La fecha de los textos legales (`LEGAL`, en `cloud/consent`), que es la del día de publicación.
-6. Fusionar `desarrollo-1.0.32` en `main`, comprobar que GitHub publica la app y despliega las reglas nuevas de Firestore
+6. La fecha de los textos legales (`LEGAL`, en `cloud/consent`), que es la del día de publicación.
+7. Fusionar `desarrollo-1.0.32` en `main`, comprobar que GitHub publica la app y despliega las reglas nuevas de Firestore
    (la constancia de lo aceptado, borrar el propio perfil y los propios avisos), y la etiqueta y la nota de la versión.
 
 Sin fecha y fuera de esta versión: exigir App Check (I-05, ya configurado), la prueba en un Android (I-01), editar las series
