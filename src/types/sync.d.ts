@@ -55,10 +55,26 @@ interface Account {
   it: string;
   rt: string;
   exp: number;
-  /** 1 si la sesión ya no vale y hay que volver a entrar */
+  /** 1 si la sesión ya no vale y hay que volver a entrar; 2 si es porque la cuenta ya no existe */
   x?: number;
   /** 1 o 2 si hay que cambiar una contraseña temporal */
   mc?: number;
+  /** constancia de la aceptación de las condiciones y del consentimiento (cloud/consent) y 1 si aún no ha subido a la nube */
+  cs?: Consent;
+  csu?: number;
+}
+/** Una marca de la constancia: versión del texto, cuándo y, en el consentimiento, su estado (1 dado, 0 retirado; retirado,
+    `ga` es cuándo se había dado). */
+interface ConsentMark {
+  v: string;
+  at: number;
+  st?: number;
+  ga?: number;
+}
+/** Lo que la cuenta ha aceptado: t, las condiciones de uso; h, el consentimiento para tratar los datos de salud. */
+interface Consent {
+  t?: ConsentMark;
+  h?: ConsentMark;
 }
 /** El adaptador al que core/store avisa de lo que se guarda (cloud/sync). */
 interface RemoteAdapter {

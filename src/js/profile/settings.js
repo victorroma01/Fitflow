@@ -3,7 +3,7 @@
    Información y, aparte y en rojo, «Cerrar sesión»);
    cada fila abre su página, con «←» de vuelta a Ajustes. Mientras una está abierta, cada R() la vuelve a pintar con core/morph
    (settingsSync), así los botones que cambian un ajuste (tema, color, unidades…) se ven al momento.
-   Define: settingsSub, settingsRow, ago, PRIVACY_TEXT, privacyText, RECAPTCHA_TEXT, LEGAL_TEXT, LANGUAGES, languageName, languageCard, SETTINGS_PAGES, settingsSection, accountRows, appearanceRows, workoutRows, dataRows, appRows, advancedRows, infoRows, settingsMain, settingsPage, settingsSync  · acciones/registros: 4
+   Define: settingsSub, settingsRow, ago, LANGUAGES, languageName, languageCard, SETTINGS_PAGES, settingsSection, accountRows, appearanceRows, workoutRows, dataRows, appRows, advancedRows, infoRows, settingsMain, settingsPage, settingsSync  · acciones/registros: 4
 */
 import { say } from '../core/i18n.js';
 import { $, APPV, LANG, langChoice, phoneLang } from '../core/util.js';
@@ -24,7 +24,6 @@ import { badgeCard } from '../system/phone.js';
 import { offlineNote, releaseNotePage } from '../system/updates.js';
 import { iconNoticeApplies, iconNoticeBody } from '../system/iconnotice.js';
 import { acctName } from '../cloud/session.js';
-import { appCheckOn } from '../cloud/appcheck.js';
 import { accountPage, passwordPage, syncShort } from '../account/account.js';
 import { rpeOn, rpeSettings } from '../workout/rpe.js';
 import { html, raw } from '../core/html.js';
@@ -41,13 +40,6 @@ const ago = t => {
   const d = Math.floor((Date.now() - t) / 864e5);
   return d <= 0 ? 'Hoy' : d == 1 ? 'Ayer' : say `Hace ${d} días`;
 };
-const PRIVACY_TEXT = ['Tu cuenta es un nombre de usuario y una contraseña. No se guarda ningún dato personal: ni nombre, ni correo, ni teléfono.', 'Tus entrenos, comidas, medidas y ajustes se guardan en este móvil y en tu cuenta en la nube, en Firebase (Google), para no perderlos y usarlos en varios móviles. Los datos de la app están en sus servidores de Madrid; el usuario y la contraseña (cifrada) los guarda Firebase Authentication. Solo tu cuenta puede leer tus datos.', 'El administrador de la app ve de cada cuenta el usuario, el sexo y las preferencias de la app (aspecto, unidades, sonido y si ya viste el recorrido); nunca tus entrenos, tus comidas, tus medidas ni tu foto.', 'Tu cuenta guarda también el sistema del último móvil con el que abriste la app (iPhone, Android u otro). Es solo a efectos estadísticos: el administrador ve cuántas cuentas usan cada uno.', 'La foto de perfil solo se sube si das tu consentimiento, y solo la ves tú. Puedes quitarla cuando quieras desde Perfil.', 'Al buscar o escanear un alimento, solo se envía a Open Food Facts el texto que escribes o el número del código de barras. La imagen de la cámara no sale del móvil.', 'El informe de Diagnóstico y las copias de seguridad en archivo solo salen del móvil si los envías tú.', 'Sin publicidad, sin cookies de seguimiento y sin analítica. La app se descarga desde GitHub Pages, que, como cualquier servidor, registra datos técnicos de la conexión (por ejemplo, la dirección IP).', '«Borrar todos los datos» los elimina de este móvil y de tu cuenta. «Cerrar sesión» los borra solo de este móvil.'];
-/** Los párrafos de Privacidad (Ajustes y el inicio de sesión); con App Check activado (cloud/appcheck), también reCAPTCHA. */
-export const privacyText = () => appCheckOn() ? PRIVACY_TEXT.concat(RECAPTCHA_TEXT) : PRIVACY_TEXT;
-/** Privacidad, con App Check activado: para qué se usa reCAPTCHA (el inicio de sesión solo dice que se usa: account/login). Desde
-    el 2 de abril de 2026 Google trata esos datos por encargo de la app y pide no nombrar ya sus condiciones. */
-const RECAPTCHA_TEXT = 'Para que solo esta app pueda usar el servidor, al entrar y al sincronizar se usa reCAPTCHA Enterprise de Google, invisible: comprueba con datos técnicos del navegador que no es un programa.';
-const LEGAL_TEXT = ['© 2026 V. M. Rodriguez Mazuelas. Todos los derechos reservados.', 'Uso personal y gratuito durante la fase de pruebas, tal como se ofrece en su dirección oficial. Durante la fase de pruebas existe el riesgo de pérdida total o parcial de datos. No se permite copiar, modificar, redistribuir ni explotar comercialmente el código, los textos, los diseños ni las imágenes sin autorización.', 'Los consejos de entrenamiento y nutrición son orientativos y no sustituyen el consejo de un profesional sanitario. Si tienes algún problema de salud, consulta con tu médico antes de empezar un programa de ejercicio o una dieta.', 'Los datos de los alimentos que se buscan en internet proceden de Open Food Facts (licencia ODbL).'];
 /* Idiomas: el del móvil (sin elegir), español o inglés. Cada idioma va con su propio nombre, para que lo encuentre quien no
    entiende el otro */
 const LANGUAGES = [['', 'Automático'], ['es', 'Español'], ['en', 'English']];
@@ -81,8 +73,6 @@ const SETTINGS_PAGES = {
     ${badgeCard()}`],
   cuenta: () => ['Cuenta', accountPage()],
   clave: () => ['Cambiar contraseña', passwordPage()],
-  privacidad: () => ['Privacidad', html`<div class="setting-text">${privacyText().map(p => html`<p>${p}</p>`)}</div>`],
-  legal: () => ['Aviso legal', html`<div class="setting-text">${LEGAL_TEXT.map(p => html`<p>${p}</p>`)}</div>`],
   nota: () => ['Nota de actualización', releaseNotePage()],
   icono: () => ['El icono nuevo', iconNoticeBody(0)],
   avanzado: () => ['Ajustes avanzados', rpeSettings()]
@@ -113,7 +103,8 @@ const appRows = () => {
   return [settingsRow('upd', 'Actualizaciones', 'V' + APPV, 'updateCheck', { act: 1 }), settingsRow('news', 'Ver nota de actualización', '', 'openSettingsPage', { v: 'nota' }), iconNoticeApplies() ? settingsRow('home', 'El icono nuevo', 'Cómo cambiarlo', 'openSettingsPage', { v: 'icono' }) : '', settingsRow('tour', 'Ver el recorrido', '', 'tourReplay', { act: 1 }), settingsRow('pulse', 'Diagnóstico', errors ? errors + (errors == 1 ? ' error' : ' errores') : '', 'openDiagnostics'), settingsRow('bug', 'Informar de un fallo', '', 'openReport')];
 };
 const advancedRows = () => [settingsRow('gear', 'Esfuerzo (RPE)', rpeOn() ? 'Activado' : 'Desactivado', 'openSettingsPage', { v: 'avanzado' })];
-const infoRows = () => [settingsRow('shd', 'Privacidad', '', 'openSettingsPage', { v: 'privacidad' }), settingsRow('doc', 'Aviso legal', '', 'openSettingsPage', { v: 'legal' })];
+/* Información: las dos páginas legales (profile/legal), que son las mismas que se abren sin sesión */
+const infoRows = () => [settingsRow('shd', 'Privacidad', '', 'openLegal', { v: 'privacy' }), settingsRow('doc', 'Aviso legal', '', 'openLegal', { v: 'terms' })];
 /* la página principal de Ajustes, por secciones, y al final «Cerrar sesión» */
 function settingsMain() {
   return html`

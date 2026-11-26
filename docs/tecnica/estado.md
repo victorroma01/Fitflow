@@ -34,10 +34,11 @@ historial por año, las comidas por mes, las preferencias en el perfil y la foto
 | `fficon` (`icon`) | 1 cuando ya se dio por visto el aviso del icono nuevo en el iPhone (`system/iconnotice`, F-48). |
 | `ffinst` (`inst`) | Versión con la que empezó la app en este dispositivo (V1.0.1); si ya tenía otra, esa, y `0` si era anterior a la 1.19.0. Sirve para saber si el icono de la pantalla de inicio es el de antes del logo nuevo. |
 | `fflang` (`lang`) | El idioma elegido en Ajustes → Idiomas para este dispositivo: `es` o `en`. Si falta, manda el idioma del móvil ([Idiomas](idiomas.md)). No se sincroniza y se conserva al cerrar sesión. |
-| `ffacct` (`acct`) | Sesión de la cuenta: `{ uid, u: usuario, it: token de sesión, rt: token de renovación, exp, x: 1 si caducó, mc: 1 o 2 si hay que cambiar una contraseña temporal }` (`cloud/session`). No se sincroniza. |
+| `ffacct` (`acct`) | Sesión de la cuenta: `{ uid, u: usuario, it: token de sesión, rt: token de renovación, exp, x: 1 si caducó o 2 si la cuenta ya no existe, mc: 1 o 2 si hay que cambiar una contraseña temporal, cs: lo aceptado (condiciones y consentimiento, como en el perfil), csu: 1 si falta subirlo }` (`cloud/session`, `cloud/consent`; [Condiciones y consentimiento](backend.md#condiciones-y-consentimiento)). No se sincroniza. |
 | `ffown` (`own`) | uid de la cuenta cuyos datos hay en el móvil. Si entra otra, se borran antes de leer el estado. |
 | `ffsync` (`sync`) | Sincronización (`cloud/sync`): `{ dev: id del dispositivo, base: { parte: { r: versión, h: huellas de cada elemento } }, lt: último cambio local por tipo, pt: de las preferencias, fresh: 1 tras entrar, last: última sincronización }`. |
 | `fflgn` (`lgn`) | Intentos fallidos de entrar `{ n, t }`, para la espera creciente (`account/login`). |
+| `ffgone` (`gone`) | 1 justo después de eliminar la cuenta en este dispositivo: al abrirse la app, ya sin sesión, lo dice una vez y lo borra (`account/privacy`). |
 | `ffspace` (`space`) | Cuándo se avisó por última vez de que queda poco espacio (`system/space`, I-04): como mucho, una vez a la semana. No se sincroniza. |
 | `ffrev` (`rev`) | Marca de lo último guardado: cambia con cada guardado, y por ella una apertura de la app sabe si otra ha guardado después ([la app abierta dos veces](#la-app-abierta-dos-veces)). Empieza por el identificador de la apertura que la deja. No es un dato: no se sincroniza ni entra en las copias. |
 
@@ -145,7 +146,7 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `ach` (`achievements`) | `{ id: valor }` | Logros conseguidos (ver `ACHIEVEMENTS`). |
 | `stz` (`stagnationDismissed`) | `{ ejercicio: fecha (ms) }` | Avisos de estancamiento descartados. |
 | `wr` (`weighReminder`) | `{ n, u: 'd' \| 'w' \| 'm', t, sh?, sn?, c? }` | Recordatorio de pesaje (`dashboard/reminder`): cada `n` días, semanas o meses, desde el último pesaje o desde `t` (cuándo se activó, ms) si es posterior; `sh` último día en que se avisó, `sn` pospuesto hasta ese día, `c` id del evento de calendario. Sin él, no hay recordatorio. |
-| `rp` (`reports`) | `[{ id, k, a, t, ca, s, st?, rp?, ra?, sn?, dx? }]` | Fallos y sugerencias enviados desde la cuenta (`system/report`), los más nuevos primero (30 como mucho): id `uid-ms`, tipo (`f` / `s`), dónde, texto, cuándo, `s` 1 si ya llegó a la nube, estado, respuesta y cuándo, `sn` 1 si la respuesta ya se vio y `dx` los datos técnicos hasta enviarlo. |
+| `rp` (`reports`) | `[{ id, k, a, t, ca, s, st?, rp?, ra?, sn?, dx? }]` | Fallos y sugerencias enviados desde la cuenta (`system/report`), los más nuevos primero (30 como mucho): id `uid-ms`, tipo (`f` fallo / `s` sugerencia / `p` privacidad y datos, desde la V1.0.4), dónde, texto, cuándo, `s` 1 si ya llegó a la nube, estado, respuesta y cuándo, `sn` 1 si la respuesta ya se vio y `dx` los datos técnicos hasta enviarlo. |
 
 ### Programas y ejercicios propios
 

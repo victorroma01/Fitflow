@@ -277,26 +277,27 @@ def main(app):
                     # lo que pide la página pasa por el service worker: el código sale de la caché sin volver a pedirlo al servidor y un
                     # icono (o el documento, o una foto), de la caché pero revalidado (I-09)
                     del REQS[:]
-                    eager = sorted(f for f in code if not re.match(r'js/(wod|csv|foods-online|exinfo|analysis|pdf|en-[a-z]+)-', f))[0]
+                    eager = sorted(f for f in code if not re.match(r'js/(wod|csv|foods-online|exinfo|analysis|pdf|legal|en-[a-z]+)-', f))[0]
                     ev("Promise.all([fetch('%s'),fetch('icon-192.png')]).then(()=>1)" % eager)
                     pg.wait_for_timeout(800)
                     check('el código sale de la caché sin pedirlo otra vez; un icono se revalida (I-09)', ('/fitflow/' + eager) not in REQS and '/fitflow/icon-192.png' in REQS, str(REQS[:12]))
                 else:
                     skipped('service worker y precarga')
                 # comprimido: líneas muy largas, de media más de 500 caracteres (los saltos que quedan son los de dentro de los textos;
-                # un archivo de menos de 5 KB no cuenta, ni el catálogo de ejercicios, que es texto, una línea por ejercicio)
+                # un archivo de menos de 5 KB no cuenta, ni lo que es texto: el catálogo de ejercicios, una línea por ejercicio, y los
+                # textos legales, un párrafo por línea)
                 check('el código va aparte y comprimido', bool(code) and ev("!!document.querySelector('script[type=module][src^=\"js/\"]')") and
-                      all(len(s) < 5000 or len(s) / (s.count('\n') + 1) > 500 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not re.match(r'js/(en-)?exinfo-', f))))
-                # lo poco usado (WOD, CSV, escáner, el catálogo de consejos y ejecución, el análisis mensual y el PDF) va aparte y no se
-                # descarga al arrancar
-                lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo|analysis|pdf)-', f)]
+                      all(len(s) < 5000 or len(s) / (s.count('\n') + 1) > 500 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not re.match(r'js/(en-)?(exinfo|legal)-', f))))
+                # lo poco usado (WOD, CSV, escáner, el catálogo de consejos y ejecución, el análisis mensual, el PDF y, desde la V1.0.4,
+                # los textos legales) va aparte y no se descarga al arrancar
+                lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo|analysis|pdf|legal)-', f)]
                 loaded = ev("performance.getEntriesByType('resource').map(e=>e.name.split('/').pop())")
-                check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 6 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
-                # el inglés (el diccionario, en cinco trozos, y los consejos): en español no se descarga; en inglés, el diccionario
-                # al arrancar y los consejos, como en español, al abrir una ficha
-                english = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'en-(ui|more|library|foods|programs|exinfo)-', f)]
-                check('el inglés va aparte y, en español, no se carga', len(english) == 6 and not any(f in loaded for f in english), str(english))
-                check('en inglés se carga el diccionario al arrancar, y los consejos no', sorted(f for f in english if f in loaded_en) == sorted(f for f in english if not f.startswith('en-exinfo-')), str(loaded_en))
+                check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 7 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
+                # el inglés (el diccionario, en cinco trozos, los consejos y los textos legales): en español no se descarga; en inglés,
+                # el diccionario al arrancar y los consejos y los textos legales, como en español, al abrirlos
+                english = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'en-(ui|more|library|foods|programs|exinfo|legal)-', f)]
+                check('el inglés va aparte y, en español, no se carga', len(english) == 7 and not any(f in loaded for f in english), str(english))
+                check('en inglés se carga el diccionario al arrancar, y los consejos y los textos legales no', sorted(f for f in english if f in loaded_en) == sorted(f for f in english if not re.match(r'en-(exinfo|legal)-', f)), str(loaded_en))
                 assets = ev("[...new Set([...document.documentElement.outerHTML.matchAll(/(?:src=\"|url\\()((?:img)\\/[^\"')]+)/g)].map(m=>m[1]))]")
                 # sin conexión
                 if SW:

@@ -1,5 +1,6 @@
 /* ═══ core/render ═══
-   Render principal R() y cambio de pestaña. Sin sesión, R() pinta el inicio de sesión (account/login).
+   Render principal R() y cambio de pestaña. Sin sesión, o sin la aceptación de las condiciones (cloud/consent), R() pinta el
+   inicio de sesión (account/login).
    Define: lastTab, lastScreen, PAINT_KEEP, paintTimes, paintProbe, probePaint, paintSummary, R, paintPending, paintSoon  · acciones/registros: 1
 */
 import { $ } from './util.js';
@@ -21,6 +22,7 @@ import { lookSync } from '../profile/appearance.js';
 import { updatePopupSync } from '../system/updates.js';
 import { settingsSync } from '../profile/settings.js';
 import { account } from '../cloud/session.js';
+import { consentPending } from '../cloud/consent.js';
 import { loginSync } from '../account/login.js';
 import { tabbarSync } from './tabbar.js';
 let lastTab = -1;
@@ -53,8 +55,9 @@ export const paintSummary = () => {
   return 'media de ' + Math.round(avg) + ' ms y máximo de ' + Math.round(Math.max(...paintTimes)) + ' ms en las últimas ' + paintTimes.length + ' pantallas';
 };
 export function R() {
-  /* sin sesión (o con una contraseña temporal por cambiar), solo el inicio de sesión: account/login */
-  if (!account || account.mc) {
+  /* sin sesión (o con una contraseña temporal por cambiar, o sin la aceptación de las condiciones y el consentimiento), solo el
+     inicio de sesión: account/login */
+  if (!account || account.mc || consentPending()) {
     lastScreen = 'login';
     loginSync();
     return;

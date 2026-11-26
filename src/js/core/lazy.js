@@ -1,12 +1,12 @@
 /* ═══ core/lazy ═══
-   Carga diferida: lo poco usado (temporizador WOD, exportar a CSV, escáner y búsqueda en Open Food Facts, análisis mensual
-   y PDF) y lo que pesa (los consejos de los ejercicios y el motor de sus figuras 3D) va en archivos aparte que se descargan
+   Carga diferida: lo poco usado (temporizador WOD, exportar a CSV, escáner y búsqueda en Open Food Facts, análisis mensual,
+   PDF y los textos legales) y lo que pesa (los consejos de los ejercicios y el motor de sus figuras 3D) va en archivos aparte que se descargan
    la primera vez que hacen falta (el service worker los guarda para usarlos sin conexión).
    Hasta entonces, los botones que lo abren tienen aquí un manejador provisional: carga el módulo, que registra los de
    verdad, y repite la acción. En el archivo único todo va dentro y carga al instante. Si la descarga tarda, se dice
    «Cargando…»; si falla, se avisa y la siguiente vez se vuelve a pedir (lazyLoad).
    También el inglés (i18n/en-*.js): solo se descarga con la app en inglés, antes del primer pintado (loadEnglish).
-   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, importedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, figureTools, setFigureTools, loadFigures, loadEnglish
+   Define: SLOW_LOAD, loadedModules, failedUrls, failedUrl, importedUrl, lazyLoad, lazyAction, pdfMaker, setPdfMaker, loadPdf, loadExInfo, loadLegal, figureTools, setFigureTools, loadFigures, loadEnglish
 */
 import { LANG } from './util.js';
 import { logError } from './errors.js';
@@ -82,6 +82,9 @@ export const loadPdf = () => lazyLoad('pdf', () => import('../system/pdf.js')).t
 /** Catálogo de consejos y ejecución de los ejercicios (data/exinfo, unos 200 KB; con la app en inglés, el suyo, i18n/en-exinfo):
     se descarga la primera vez que hace falta. */
 export const loadExInfo = () => LANG == 'en' ? lazyLoad('en-exinfo', () => import('../i18n/en-exinfo.js')) : lazyLoad('exinfo', () => import('../data/exinfo.js'));
+/** Los textos legales (data/legal: el Aviso legal y la Política de privacidad; con la app en inglés, su traducción,
+    i18n/en-legal): se descargan la primera vez que se abre uno de los dos. */
+export const loadLegal = () => LANG == 'en' ? lazyLoad('en-legal', () => import('../i18n/en-legal.js')) : lazyLoad('legal', () => import('../data/legal.js'));
 /* lo que dibuja las figuras 3D: extras/figure3d lo deja aquí al cargarse */
 let figureTools = null;
 /** extras/figure3d se apunta aquí al cargarse, con lo que dibuja la miniatura de un ejercicio (thumb) y lo que pone en marcha

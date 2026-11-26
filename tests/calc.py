@@ -124,7 +124,7 @@ def main(path):
         print('Objetivos de kcal y macros')
         bad = []
         for _ in range(300):
-            bio = {'sex': rnd.choice('MF'), 'age': str(rnd.randint(14, 99)), 'h': str(rnd.randint(120, 230)), 'w': str(round(rnd.uniform(30, 300), 1)), 'act': str(rnd.randint(0, 4))}
+            bio = {'sex': rnd.choice('MF'), 'age': str(rnd.randint(16, 99)), 'h': str(rnd.randint(120, 230)), 'w': str(round(rnd.uniform(30, 300), 1)), 'act': str(rnd.randint(0, 4))}
             dt = rnd.randint(0, 5)
             got = ev("([b,dt])=>{S.biometrics=b;S.nutritionGoals={k:1942,c:50,p:20,f:30,n:3,dt};applyDiet(1);return [S.nutritionGoals,tdee()]}", [bio, dt])
             g, t = got[0], got[1]

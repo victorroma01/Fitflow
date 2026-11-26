@@ -1,7 +1,9 @@
 /* ═══ system/report ═══
    Fallos y sugerencias (F-27). «Informar de un fallo» (Ajustes, o «Nuevo» en Perfil → Fallos y sugerencias) envía un aviso de
-   uno de dos tipos, fallo o sugerencia de mejora, a Firestore (reports/{uid}-{ms}), con datos técnicos si se deja marcada la
-   casilla (versión, navegador y últimos errores; nada personal) y que se pueden ver antes de enviar.
+   uno de tres tipos, fallo, sugerencia de mejora o «Privacidad y datos» (una duda o una solicitud sobre los datos personales:
+   es el contacto de privacidad que nombran los textos legales, y Privacidad lo abre ya con ese tipo), a Firestore
+   (reports/{uid}-{ms}), con datos técnicos si se deja marcada la casilla (versión, navegador y últimos errores; nada personal)
+   y que se pueden ver antes de enviar.
    El admin los ve en Perfil → Administración (account/reports), con su estado (pendiente, vista o arreglada), y los contesta.
    Cada usuario ve los suyos en Perfil → Fallos y sugerencias, con su estado (pendiente, vista o contestada) y la respuesta.
    Sin conexión, el aviso se guarda en el móvil y se envía solo tras la siguiente sincronización (cloud/sync: afterSync); su id
@@ -9,7 +11,7 @@
    Estado: S.reports = [{ id, k: 'f' | 's', a: área del fallo, t: texto, dx: datos técnicos (hasta enviarlo), ca: cuándo, s: 1 si
    ya se envió, st: 'p' | 'v' | 'a', rp: respuesta, ra: cuándo se contestó, sn: 1 si la respuesta ya se vio }], los más nuevos
    primero (los 30 últimos).
-   Define: REPORT_KINDS, REPORT_AREAS, REPORT_MAX, REPORT_KEEP, REFRESH_EVERY, reportKind, reportArea, reportBack, refreshedAt, reportTech, reportKindChips, reportAreaChips, reportTextField, reportTechField, reportPage, reportStatus, reportDoc, sendReport, flushReports, refreshReports, reportsUnseen, reportsLine, reportListPage, reportListSync  · acciones/registros: 7
+   Define: REPORT_KINDS, REPORT_AREAS, REPORT_MAX, REPORT_KEEP, REFRESH_EVERY, reportKind, reportArea, reportBack, refreshedAt, reportTech, reportKindChips, reportAreaChips, reportTextField, reportTechField, reportPage, reportStatus, reportDoc, sendReport, flushReports, refreshReports, reportsUnseen, reportsLine, reportListPage, reportListSync  · acciones/registros: 8
 */
 import { say } from '../core/i18n.js';
 import { $, APPV, dayKey, fmtDateShort } from '../core/util.js';
@@ -24,8 +26,8 @@ import { batchGet, commitWrites, setWrite } from '../cloud/firestore.js';
 import { afterSync } from '../cloud/hooks.js';
 import { diagnosticsText } from './diagnostics.js';
 import { html, raw } from '../core/html.js';
-/** Los dos tipos de aviso: [código, nombre]. */
-export const REPORT_KINDS = [['f', 'Fallo'], ['s', 'Sugerencia de mejora']];
+/** Los tipos de aviso: [código, nombre]. */
+export const REPORT_KINDS = [['f', 'Fallo'], ['s', 'Sugerencia de mejora'], ['p', 'Privacidad y datos']];
 /** Dónde está el fallo (opcional; las reglas admiten hasta 60 caracteres). */
 const REPORT_AREAS = ['No arranca o se cierra', 'Se han perdido datos', 'Algo se ve mal', 'Un botón no hace nada', 'Un cálculo no cuadra', 'Entreno o temporizador', 'Nutrición o alimentos', 'Otro'];
 export const REPORT_MAX = 1500;
@@ -68,15 +70,15 @@ const reportAreaChips = () => reportKind == 'f' ? html`
   </div>` : '';
 /* el texto, con su contador */
 const reportTextField = () => html`
-  <label for="rpx">${reportKind == 's' ? 'Tu idea' : 'Qué ha pasado'}</label>
+  <label for="rpx">${reportKind == 's' ? 'Tu idea' : reportKind == 'p' ? 'Tu consulta' : 'Qué ha pasado'}</label>
   <textarea id="rpx" rows="6" maxlength="${REPORT_MAX}"
-      placeholder="${reportKind == 's' ? 'Qué mejorarías y para qué te serviría' : 'Qué estabas haciendo, qué esperabas y qué ocurrió'}"
+      placeholder="${reportKind == 's' ? 'Qué mejorarías y para qué te serviría' : reportKind == 'p' ? 'Tu duda o lo que necesitas hacer con tus datos' : 'Qué estabas haciendo, qué esperabas y qué ocurrió'}"
       data-u="reportText"></textarea>
   <small id="rpn" class="muted d-block ta-r mt-4">0 / ${REPORT_MAX}</small>`;
 /* adjuntar los datos técnicos (en un fallo, marcado), con lo que se adjunta a la vista */
 const reportTechField = () => html`
   <label class="setting-check">
-    <input type="checkbox" id="rpd"${reportKind == 's' ? '' : ' checked'}> Adjuntar datos técnicos (versión, navegador y últimos errores; nada personal)
+    <input type="checkbox" id="rpd"${reportKind == 'f' || !reportKind ? ' checked' : ''}> Adjuntar datos técnicos (versión, navegador y últimos errores; nada personal)
   </label>
   <details class="card mt-6"><summary>Ver los datos técnicos</summary><pre class="report-tech">${reportTech()}</pre></details>`;
 /* «Informar de un fallo» */
@@ -84,7 +86,7 @@ const reportPage = () => html`
   <div id="rpp">
     ${pgHead('Informar de un fallo', reportBack)}
     <p class="muted m-n6-0-14">
-      Cuéntanos qué ha fallado o qué mejorarías. Te contestamos aquí: verás el estado y la respuesta en Perfil → Fallos y sugerencias.
+      Cuéntanos qué ha fallado, qué mejorarías o qué necesitas sobre tus datos. Te contestamos aquí: verás el estado y la respuesta en Perfil → Fallos y sugerencias.
     </p>
     ${reportKindChips()}
     ${reportAreaChips()}
@@ -231,9 +233,19 @@ A.openReport = () => {
   fullPage(reportPage());
 };
 A.reportNew = () => A.openReport();
+/* el contacto de privacidad (Privacidad y los textos legales): el formulario, ya con el tipo «Privacidad y datos» */
+A.openPrivacyContact = () => {
+  if (!account) {
+    toast('Entra en tu cuenta para escribirnos');
+    return;
+  }
+  A.openReport();
+  reportKind = 'p';
+  sheet(reportPage());
+};
 A.reportChooseKind = (i, b) => {
   const t = ($('#rpx') || {}).value || '';
-  reportKind = b.dataset.v == 's' ? 's' : 'f';
+  reportKind = b.dataset.v == 's' || b.dataset.v == 'p' ? b.dataset.v : 'f';
   sheet(reportPage());
   const x = $('#rpx');
   if (x) {
@@ -258,7 +270,7 @@ A.reportSend = async () => {
   const x = $('#rpx');
   const t = String((x || {}).value || '').trim().slice(0, REPORT_MAX);
   if (!reportKind) {
-    toast('Elige si es un fallo o una sugerencia');
+    toast('Elige el tipo de aviso');
     return;
   }
   if (t.length < 10) {

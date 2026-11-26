@@ -5,13 +5,18 @@
    Tras cinco intentos fallidos, una espera que se dobla en cada fallo (de 5 s a 5 min), además del bloqueo de Firebase.
    Al entrar: si los datos del móvil son de otra cuenta se borran, se bajan los de la cuenta (cloud/sync) y la app se abre
    de nuevo con ellos.
-   Define: loginState, waitLeft, noteFail, BAD_LOGIN, clearFails, loginBusy, loginError, waitTimer, loginField, loginModeTabs, signUpExtra, loginBackdrop, RECAPTCHA_NOTE, loginView, passwordView, loginSync, enterAccount, finishLogin, reloginBusy  · acciones/registros: 7
+   Para crear la cuenta hay que marcar dos casillas, que salen sin marcar: aceptar las condiciones de uso (con 16 años o más) y
+   consentir el tratamiento de los datos de salud (consentChecks); lo aceptado se anota con la cuenta (cloud/consent). Una cuenta
+   que no lo tiene (las anteriores a la V1.0.4, o tras retirar el consentimiento) ve, en lugar de la app, la pantalla que lo pide
+   (consentView): hasta que acepte, la app no baja, sube ni enseña sus datos, y desde ahí puede exportarlos, borrarlos, eliminar
+   la cuenta o cerrar la sesión. El Aviso legal y la Política de privacidad (profile/legal) se abren desde aquí, sin sesión.
+   Define: loginState, firstPending, gateChecked, waitLeft, noteFail, BAD_LOGIN, clearFails, loginBusy, loginError, waitTimer, loginField, loginModeTabs, signUpExtra, consentChecks, consentProblem, loginBackdrop, RECAPTCHA_NOTE, loginView, consentView, gateRefresh, passwordView, loginSync, enterAccount, finishLogin, reloginBusy  · acciones/registros: 8
 */
 import { say, tr } from '../core/i18n.js';
 import { $, APPV } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
-import { A } from '../core/registry.js';
+import { A, C } from '../core/registry.js';
 import { applyTheme, flushState, markNewAccount, resetState } from '../core/state.js';
 import { reloadApp } from '../core/persist.js';
 import { repairState } from '../core/repair.js';
@@ -19,18 +24,22 @@ import { icon } from '../core/icons.js';
 import { brandLogo } from '../core/brand.js';
 import { LOGIN_PHOTO } from '../data/photos.js';
 import { morph } from '../core/morph.js';
-import { pgHead, sheet } from '../core/ui.js';
+import { sheet } from '../core/ui.js';
 import { toast } from '../core/toast.js';
-import { privacyText } from '../profile/settings.js';
 import { appCheckOn } from '../cloud/appcheck.js';
 import { account, acctSave, wipeAccountData } from '../cloud/session.js';
 import { authMessage, changePassword, passProblem, signIn, signUp, userProblem } from '../cloud/auth.js';
 import { commitWrites, getDoc, setWrite } from '../cloud/firestore.js';
-import { firstSync, syncNow } from '../cloud/sync.js';
+import { firstSync, forgetSynced, syncNow } from '../cloud/sync.js';
+import { consentGiven, consentGone, consentPending, syncConsent } from '../cloud/consent.js';
 import { html, raw } from '../core/html.js';
 /* m: 'in' entrar | 'up' crear cuenta; busy: texto del botón mientras se espera al servidor; err: el último error; eye: 1 si
-   la contraseña se ve */
-let loginState = { m: 'in', busy: '', err: '', eye: 0 };
+   la contraseña se ve; c1 y c2: 1 con la casilla de las condiciones o la del consentimiento marcada */
+let loginState = { m: 'in', busy: '', err: '', eye: 0, c1: 0, c2: 0 };
+/* 1 si la pantalla de la aceptación sale justo después de entrar, con los datos de la cuenta aún por bajar */
+let firstPending = 0;
+/* 1 cuando ya se ha mirado, en esta apertura, si la cuenta aceptó en otro dispositivo */
+let gateChecked = 0;
 /** Milisegundos que faltan para poder volver a intentarlo (0 si se puede ya). */
 const waitLeft = () => {
   try {
@@ -109,6 +118,33 @@ const signUpExtra = () => html`
   <p class="muted login-hint">
     Usuario de 3 a 20 caracteres: letras sin tilde, números, punto, guion y guion bajo. Contraseña de 8 caracteres o más.
   </p>`;
+/** Las dos casillas, sin marcar, de crear la cuenta y de la pantalla de la aceptación: las condiciones de uso (con la edad) y el
+    consentimiento expreso para los datos de salud, cada una con su texto entero a un toque (el Aviso legal y el consentimiento
+    informado, data/legal). La casilla y ese texto son los de la versión vigente del consentimiento (cloud/consent,
+    LEGAL.health): si cambian, cambia su versión. */
+const consentChecks = () => html`
+  <div class="consent-checks">
+    <label class="setting-check consent-check">
+      <input type="checkbox" id="lgc1" data-c="loginConsent" data-i="1"${raw(loginState.c1 ? ' checked' : '')}>
+      <span>
+        Tengo 16 años o más y acepto las <button type="button" class="legal-link" data-a="openLegal" data-v="terms">Condiciones de uso</button>
+        .
+      </span>
+    </label>
+    <label class="setting-check consent-check">
+      <input type="checkbox" id="lgc2" data-c="loginConsent" data-i="2"${raw(loginState.c2 ? ' checked' : '')}>
+      <span>
+        Acepto el tratamiento de mis datos de salud por StrataFit según el <button type="button" class="legal-link" data-a="openLegal"
+            data-v="consent">Consentimiento informado</button>
+        .
+      </span>
+    </label>
+    <p class="muted consent-note">
+      Consulta nuestra <button type="button" class="legal-link" data-a="openLegal" data-v="privacy">Política de privacidad</button> para conocer cómo tratamos tus datos y cómo puedes ejercer tus derechos.
+    </p>
+  </div>`;
+/* qué casilla falta ('' si están las dos) */
+const consentProblem = () => !loginState.c1 ? 'Para seguir, marca que tienes 16 años o más y que aceptas las condiciones de uso.' : !loginState.c2 ? 'Para seguir, marca la casilla del consentimiento para tratar tus datos de salud.' : '';
 /** El fondo del inicio de sesión (F-33): la foto de un gimnasio visto desde arriba, ya en gris y desenfocada (data/photos);
   la oscurece css/94-account. Es un adorno: sin texto alternativo. */
 const loginBackdrop = () => LOGIN_PHOTO ? html`<img class="login-photo" src="${LOGIN_PHOTO}" alt="" aria-hidden="true">` : '';
@@ -119,6 +155,8 @@ const RECAPTCHA_NOTE = 'Protegido por reCAPTCHA.';
 const loginView = () => {
   if (account && account.mc)
     return passwordView();
+  if (consentPending())
+    return consentView();
   const up = loginState.m == 'up';
   const wait = waitLeft();
   const label = loginState.busy || (wait ? say `Espera ${Math.ceil(wait / 1e3)} s` : up ? 'Crear cuenta' : 'Entrar');
@@ -126,7 +164,7 @@ const loginView = () => {
     ${loginModeTabs(up)}
     ${raw(loginField('lgu', 'Usuario', { ac: 'username', go: 'loginSubmit' }))}
     ${raw(loginField('lgp', 'Contraseña', { pw: 1, ac: up ? 'new-password' : 'current-password', go: 'loginSubmit' }))}
-    ${up ? signUpExtra() : ''}
+    ${up ? html`${signUpExtra()}${consentChecks()}` : ''}
     <p id="lge" class="form-error" role="alert">${loginState.err}</p>
     <button class="primary login-submit" data-a="loginSubmit"${raw(loginState.busy || wait ? ' disabled' : '')}>${label}</button>`;
   return html`
@@ -137,9 +175,64 @@ const loginView = () => {
       <div class="card login-card">${form}</div>
       ${up ? '' : html`<p class="muted login-note">¿Has olvidado la contraseña? Pídele al administrador una temporal.</p>`}
       ${appCheckOn() ? html`<p class="muted login-note fs-12">${RECAPTCHA_NOTE}</p>` : ''}
-      <button class="login-link" data-a="loginPrivacy">Privacidad</button>
+      <div class="login-links">
+        <button class="login-link" data-a="openLegal" data-v="privacy">Privacidad</button>
+        <button class="login-link" data-a="openLegal" data-v="terms">Aviso legal</button>
+      </div>
       <div class="login-version">V${APPV}</div>
     </div>`;
+};
+/** La pantalla de la aceptación, en lugar de la app, para una cuenta que no tiene aceptadas las condiciones vigentes o no ha dado
+    (o ha retirado) el consentimiento: las dos casillas y, para quien no quiera aceptar, lo que puede hacer con sus datos. */
+const consentView = () => {
+  const gone = consentGone();
+  return html`
+    <div id="lgw" class="login-page">
+      ${loginBackdrop()}
+      <div class="login-brand">${brandLogo('login-logo', 1)}</div>
+      <div class="card login-card">
+        <h2 class="login-title">Condiciones y privacidad</h2>
+        <p class="muted m-0-0-6">
+          ${gone ? 'Has retirado tu consentimiento y tus registros se han borrado. Para volver a usar StrataFit con esta cuenta tienes que darlo de nuevo.' : 'Para seguir usando StrataFit con tu cuenta, acepta las condiciones y danos tu consentimiento para tratar los datos de salud que guardas. Hasta entonces, la app no usa ni sincroniza tus datos.'}
+        </p>
+        <p class="muted fs-13 m-0-0-6">Cuenta: <b>${account.u}</b></p>
+        ${consentChecks()}
+        <p id="lge" class="form-error" role="alert">${loginState.err}</p>
+        <button class="primary login-submit" data-a="consentAccept"${raw(loginState.busy ? ' disabled' : '')}>
+          ${loginState.busy || 'Aceptar y continuar'}
+        </button>
+      </div>
+      <p class="muted login-note">Si prefieres no aceptar:</p>
+      <div class="login-links">
+        ${gone ? '' : html`
+          <button class="login-link" data-a="gateExport">Exportar una copia</button>
+          <button class="login-link" data-a="resetAllAsk">Borrar todos los datos</button>`}
+        <button class="login-link" data-a="openDeleteAccount">Eliminar cuenta</button>
+        <button class="login-link" data-a="signOut">Cerrar sesión</button>
+      </div>
+      <div class="login-links">
+        <button class="login-link" data-a="openLegal" data-v="privacy">Privacidad</button>
+        <button class="login-link" data-a="openLegal" data-v="terms">Aviso legal</button>
+      </div>
+      <div class="login-version">V${APPV}</div>
+    </div>`;
+};
+/* con la pantalla de la aceptación a la vista: si la cuenta ya aceptó en otro dispositivo, se entra sin pedirlo otra vez (y lo
+   aceptado aquí sin conexión, o lo retirado, sube al perfil). Una vez por apertura */
+const gateRefresh = async () => {
+  if (gateChecked || !account || account.x)
+    return;
+  gateChecked = 1;
+  const a = account;
+  try {
+    const d = await getDoc('users/' + a.uid);
+    if (account && account.uid == a.uid && await syncConsent('users/' + a.uid, d ? d.data.cs : null, !!d) && $('#lgc1'))
+      reloadApp();
+  }
+  catch (e) {
+    if (e.code != 'NETWORK' && e.code != 'SESSION')
+      logError('aceptación: leer el perfil', e);
+  }
 };
 /** Cambio obligatorio de una contraseña temporal (account.mc: 1 al entrar, 2 al volver a entrar con la sesión caducada). */
 const passwordView = () => html`
@@ -180,6 +273,8 @@ export const loginSync = () => {
   else
     app.innerHTML = loginView();
   $('nav').style.display = 'none';
+  if (consentPending() && !account.mc && !firstPending)
+    gateRefresh();
   clearInterval(waitTimer);
   if (waitLeft() && !loginState.busy)
     waitTimer = setInterval(() => {
@@ -198,15 +293,20 @@ const enterAccount = async (s, fresh) => {
     Store.set(Store.K.own, s.uid);
   }
   acctSave(s);
+  /* lo que hay ahora en el dispositivo no es de la cuenta: hasta que baje lo suyo, en un conflicto gana la nube. Se apunta ya,
+     no al empezar la primera sincronización: antes puede salir la pantalla de la aceptación, y cerrarse la app en ella */
+  forgetSynced();
   /* recién creada: sin programa y con la bienvenida por ver (se suben con la primera sincronización) */
   if (fresh)
     markNewAccount();
   if (!fresh)
     try {
       const d = await getDoc('users/' + s.uid);
+      /* lo que la cuenta ya tiene aceptado (en este o en otro dispositivo) */
+      await syncConsent('users/' + s.uid, d ? d.data.cs : null, !!d);
       if (d && d.data.mc === true) {
         acctSave({ ...account, mc: 1 });
-        loginState = { m: 'in', busy: '', err: '', eye: 0 };
+        loginState = { m: 'in', busy: '', err: '', eye: 0, c1: 0, c2: 0 };
         loginSync();
         return;
       }
@@ -214,6 +314,13 @@ const enterAccount = async (s, fresh) => {
     catch (e) {
       logError('entrar: leer el perfil', e);
     }
+  /* sin la aceptación y el consentimiento no se baja nada: antes, la pantalla que los pide */
+  if (consentPending()) {
+    firstPending = 1;
+    loginState = { m: 'in', busy: '', err: '', eye: 0, c1: 0, c2: 0 };
+    loginSync();
+    return;
+  }
   await finishLogin();
 };
 /* baja los datos de la cuenta y abre la app de nuevo con ellos (si no se pudo, la sincronización lo reintenta después) */
@@ -230,8 +337,31 @@ const finishLogin = async () => {
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.loginMode = (i, b) => {
-  loginState = { m: b.dataset.v == 'up' ? 'up' : 'in', busy: '', err: '', eye: loginState.eye };
+  loginState = { m: b.dataset.v == 'up' ? 'up' : 'in', busy: '', err: '', eye: loginState.eye, c1: loginState.c1, c2: loginState.c2 };
   loginSync();
+};
+/* una de las dos casillas (data-i: 1 las condiciones, 2 el consentimiento) */
+C.loginConsent = (e, i) => {
+  loginState[i == 2 ? 'c2' : 'c1'] = e.checked ? 1 : 0;
+};
+/* la pantalla de la aceptación: con las dos casillas marcadas se anota (cloud/consent) y se entra. Recién entrado, bajando
+   los datos de la cuenta; si la app ya los tenía (una cuenta de antes de la V1.0.4), abriéndola de nuevo */
+A.consentAccept = async () => {
+  if (loginState.busy || !account)
+    return;
+  const pr = consentProblem();
+  if (pr) {
+    loginError(pr);
+    return;
+  }
+  acctSave({ ...account, cs: consentGiven(), csu: 1 });
+  if (firstPending) {
+    firstPending = 0;
+    await finishLogin();
+    return;
+  }
+  loginBusy('Abriendo…');
+  reloadApp();
 };
 A.loginToggleEye = () => {
   loginState.eye = loginState.eye ? 0 : 1;
@@ -244,7 +374,7 @@ A.loginSubmit = async () => {
   const u = v('lgu').trim();
   const p = v('lgp');
   const up = loginState.m == 'up';
-  const pr = userProblem(u) || passProblem(p) || (up && p !== v('lgp2') ? 'Las dos contraseñas no coinciden.' : '');
+  const pr = userProblem(u) || passProblem(p) || (up && p !== v('lgp2') ? 'Las dos contraseñas no coinciden.' : '') || (up ? consentProblem() : '');
   if (pr) {
     loginError(pr);
     return;
@@ -265,7 +395,8 @@ A.loginSubmit = async () => {
     return;
   }
   clearFails();
-  await enterAccount(s, up);
+  /* la cuenta nueva nace con lo que se acaba de aceptar; sube a su perfil con la primera sincronización */
+  await enterAccount(up ? { ...s, cs: consentGiven(), csu: 1 } : s, up);
 };
 A.loginCreatePassword = async () => {
   if (loginState.busy)
@@ -292,13 +423,9 @@ A.loginCreatePassword = async () => {
     await finishLogin();
     return;
   }
-  loginState = { m: 'in', busy: '', err: '', eye: 0 };
+  loginState = { m: 'in', busy: '', err: '', eye: 0, c1: 0, c2: 0 };
   reloadApp();
 };
-A.loginPrivacy = () => sheet(html`
-  ${pgHead('Privacidad')}
-  <div class="setting-text">${privacyText().map(p => html`<p>${p}</p>`)}</div>
-  <div class="h-30"></div>`);
 /* sesión caducada (contraseña restablecida, otro dispositivo la cambió…): volver a entrar sin perder lo del móvil */
 A.reloginShow = () => sheet(html`
   <h3>Vuelve a entrar</h3>

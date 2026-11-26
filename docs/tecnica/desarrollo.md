@@ -172,8 +172,11 @@ como un archivo sin formatear, igual que una [plantilla HTML](#plantillas-html) 
 2. Escribe su entrada en `CHANGELOG.md`: Novedades, Mejoras y Correcciones en frases cortas para el usuario; Interno para desarrollo.
    Y la misma, en inglés, en `CHANGELOG.en.md` (*What's new*, *Improvements*, *Fixes*): es lo que enseña la app en inglés
    ([Idiomas](idiomas.md#la-nota-de-cada-versión)). La compilación se detiene si falta una de las dos o si no dicen lo mismo.
-3. `npm run format` y `bash tests/run.sh`.
-4. Abre una solicitud de fusión y, cuando las pruebas estén en verde, fusiónala. Al llegar a `main`, GitHub Actions vuelve a probar en
+3. Si la versión cambia el Aviso legal o la Política de privacidad (`data/legal` y, en inglés, `i18n/en-legal`), pon en `LEGAL`
+   (`cloud/consent`) su versión y su fecha, que es la del día en que se publica, y decide si las cuentas tienen que aceptarlo
+   otra vez ([Condiciones y consentimiento](backend.md#condiciones-y-consentimiento)).
+4. `npm run format` y `bash tests/run.sh`.
+5. Abre una solicitud de fusión y, cuando las pruebas estén en verde, fusiónala. Al llegar a `main`, GitHub Actions vuelve a probar en
    Chrome y Safari, crea la etiqueta `vX.Y.Z` con sus notas y publica la app; la app instalada enseña el aviso con las novedades.
 
 **Una revisión** arregla una versión ya publicada sin ser otra versión. Se publica igual, con una diferencia: su número es el

@@ -1,4 +1,4 @@
-"""Tamaños de pantalla (auditoría de la V1.0.3, fases 6 y 7): las 47 pantallas de tests/shots.py, del iPhone SE (320 px de
+"""Tamaños de pantalla (auditoría de la V1.0.3, fases 6 y 7): las 51 pantallas de tests/shots.py, del iPhone SE (320 px de
 ancho) a un portátil (1280 px), sin desbordes, sin nada que se salga por un lado y sin textos cortados.
 
 En cada tamaño y cada pantalla, en la ventana que esté encima (la hoja, el aviso, el menú o la pestaña):

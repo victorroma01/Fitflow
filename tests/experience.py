@@ -565,6 +565,22 @@ def main(path):
             pg.goto(url + '?a=' + a)
             run(1500)
             check('?a=%s abre %s y deja limpia la dirección' % (a, {'peso': 'Evolución del peso', 'comida': 'Nutrición', 'entreno': 'Workout', 'otra': 'la app (no existe: se ignora)'}[a]), ev('S.tab') == tb and ev('weightView') == wv and ev('location.search') == '', '%s %s %s' % (ev('S.tab'), ev('weightView'), ev('location.search')))
+        # los textos legales tienen también su dirección (V1.0.4), para enlazarlos: con sesión se abren sobre la app
+        for a, text in [('privacidad', 'Política de privacidad de StrataFit'), ('aviso-legal', 'Aviso legal y condiciones de uso'), ('privacy', 'Política de privacidad de StrataFit'), ('terms', 'Aviso legal y condiciones de uso'),
+                        ('consentimiento', 'Consentimiento informado para el tratamiento de datos de salud')]:
+            pg.goto(url + '?a=' + a)
+            run(1500)
+            # el texto se carga al abrirlo: se pregunta desde aquí hasta que está (la CSP no deja evaluar texto dentro de la página)
+            for _ in range(100):
+                if ev("!!document.querySelector('#lgl .page-title')"):
+                    break
+                pg.wait_for_timeout(100)
+                run(100)
+            got = ev("({ t: document.querySelector('#lgl .page-title').textContent, q: location.search, data: !!document.querySelector('#lgl [data-a=openDeleteAccount]'), back: document.querySelector('#lgl [aria-label=Volver]').dataset.a, app: !!document.querySelector('#app nav, nav') })")
+            check('?a=%s abre %s sobre la app y deja limpia la dirección' % (a, text), got['t'] == text and got['q'] == '' and got['data'] == (text.startswith('Política')) and got['app'], str(got))
+        ev("document.querySelector('#lgl [aria-label=Volver]').click()")
+        run()
+        check('y «←» la cierra y deja la app', ev("!document.getElementById('lgl') && !!document.getElementById('app').firstChild"))
         ev("S.tab=0;R();A.startWorkout()")
         run()
         pg.goto(url + '?a=peso')
@@ -634,10 +650,10 @@ def main(path):
             run(400)
             check('deslizar el dedo de izquierda a derecha vuelve a Ajustes', title() == 'Ajustes',
                   str(ev("(p => [document.querySelector('#ajs .page-title').textContent, p.scrollWidth + '/' + p.clientWidth, innerWidth, document.documentElement.scrollWidth, (backTarget() || {}).k, (e => e ? e.tagName + '.' + e.className : '')(document.elementFromPoint(%d, %d))])(document.querySelector('#sh > .sheet:not(.sheet-under)'))" % (tx, ty))))
-            ev("A.openSettingsPage(0,{dataset:{v:'privacidad'}})")
+            ev("A.openLegal(0,{dataset:{v:'privacy'}})")
             run()
             pg.wait_for_timeout(450)
-            tx, ty = at('#ajs .setting-text p')
+            tx, ty = at('#lgl .legal-meta')
             touch('touchStart', tx, ty)
             for i in range(1, 11):
                 run(16)
@@ -645,7 +661,7 @@ def main(path):
             touch('touchEnd')
             pg.wait_for_timeout(300)
             run(400)
-            check('deslizar hacia arriba desplaza la página con normalidad y no vuelve', title() == 'Privacidad' and ev("document.querySelector('#sh .sheet').scrollTop") > 50, str(ev("document.querySelector('#sh .sheet').scrollTop")))
+            check('deslizar hacia arriba desplaza la página con normalidad y no vuelve', ev("(e=>e?e.textContent:'')(document.querySelector('#lgl .page-title'))") == 'Política de privacidad de StrataFit' and ev("document.querySelector('#sh .sheet').scrollTop") > 50, str(ev("document.querySelector('#sh .sheet').scrollTop")))
             ev("A.closeSheet()")
             run()
         else:

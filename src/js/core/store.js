@@ -29,11 +29,13 @@ import { logError } from './errors.js';
    space → cuándo se avisó por última vez de que queda poco espacio (system/space; no se sincroniza)
    rev  → marca de lo último guardado: cada apertura de la app la cambia al guardar, y así otra pestaña o ventana sabe que lo
           suyo ya no es lo último (core/persist; no se sincroniza)
+   gone → 1 justo después de eliminar la cuenta en este dispositivo: al abrirse de nuevo, la app lo dice una vez
+          (account/privacy; no se sincroniza)
    lang → idioma elegido en Ajustes para este móvil, 'es' o 'en'; si falta, manda el del móvil. Lo lee core/util al cargar,
           antes que nada (LANG_KEY), y no se sincroniza ni se borra al cerrar sesión: es del dispositivo
    Las copias automáticas viven en IndexedDB (base "ffsnap"; ver system/snapshots). */
 export const Store = {
-  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn', space: 'ffspace', rev: 'ffrev', lang: LANG_KEY },
+  K: { app: 'ff', wip: 'ffw', pre: 'ffpre', rs: 'ffrs', err: 'fferr', bad: 'ffbad', ver: 'ffver', seen: 'ffseen', inst: 'ffinst', icon: 'fficon', acct: 'ffacct', own: 'ffown', sync: 'ffsync', lgn: 'fflgn', space: 'ffspace', rev: 'ffrev', gone: 'ffgone', lang: LANG_KEY },
   /** @type {RemoteAdapter | null} */
   remote: null,
   /* get/set/del NO capturan errores, igual que localStorage: cada llamador decide qué hacer si falla (sin espacio, modo privado…).

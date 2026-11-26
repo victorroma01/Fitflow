@@ -31,7 +31,7 @@ const backupAge = () => {
   return say `Último archivo: ${d <= 0 ? 'hoy' : d == 1 ? 'ayer' : say `hace ${d} días`}.`;
 };
 /** Nombre del archivo de copia (T-14): siempre el mismo, así cada copia sustituye a la anterior en el teléfono. */
-const BACKUP_FILE = 'StrataFit-copia.json';
+export const BACKUP_FILE = 'StrataFit-copia.json';
 const BACKUP_FORMAT = 2;
 export const countOf = x => Array.isArray(x) ? x.length : (x && typeof x == 'object' ? Object.keys(x).length : 0);
 export const plural = (n, a, b) => say `${n} ${n == 1 ? a : b}`;
@@ -305,6 +305,9 @@ const backupFileCard = () => html`
         <input type="file" accept=".json,application/json,text/plain" hidden data-c="backupImportFile">
       </label>
     </div>
+    <p class="muted fs-12 m-10-0-0">
+      Este archivo puede contener información privada. Revisa su contenido y compártelo únicamente con personas o servicios de confianza.
+    </p>
   </div>`;
 /* lo que entra en una copia, contado con los datos de ahora (con las claves guardadas, como en la copia) */
 const backupContents = () => html`
