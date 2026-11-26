@@ -72,6 +72,8 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Librería: con un solo ejercicio propio, «Mis ejercicios» decía «1 ejercicios».
 - El nombre de un programa (Programas y Perfil) va como el resto de títulos.
 - Inicio de sesión: el logo llena su marco.
+- Workout: en un día de descanso salen también la barra de la semana y, si toca, el aviso de la semana de descarga
+  (con «Omitir») y la propuesta de rotar los ejercicios.
 
 ### Interno
 - Figuras 3D: la carrera, rehecha como un trote normal (`src/fig3d/cardio3d.js`: `runGait`, `runHip`, `runCap` y
@@ -106,6 +108,13 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   al editar la semana, como antes; el entreno y el Overview no pasan por esta vista (`core/render`), así que las condiciones
   que lo miraban sobraban. Pruebas en `tests/features.py` (orden, rejilla, colores, a 320, 390 y 768 px y que cada una abre
   su página).
+- Revisión de la V1.0.4 antes de publicarla ([informe](docs/tecnica/revision-1.0.4.md)): código, seguridad, datos (50
+  semillas más de las pruebas al azar de la sincronización), rendimiento (la app que se publica, más rápida que la 1.0.31) y
+  funcionamiento. Corregido R6: en un día de descanso faltaban la barra de la semana y los avisos de la descarga y de rotar,
+  que Workout metía buscando la tarjeta del día de entreno en el HTML; ahora lo compone pieza a pieza (`workoutTab`), con el
+  mismo HTML en los días de entreno. Prueba fija en `tests/programs.py`. Y `tests/figures.py` mide el ciclo de Bicicleta,
+  Carrera y Comba con el reloj de prueba quieto: con el ordenador cargado, lo que tardaba en dibujarse cada momento contaba
+  como tiempo y la prueba podía fallar sin que la figura se parase.
 - `tests/walk.py` (la comparación con la versión anterior): las figuras 3D se comparan por qué figura va en cada sitio, no
   por si ya están dibujadas. Se miraban las figuras de antes del 3D (`svg[data-fig]`), que ya no hay, y la misma compilación
   salía distinta de sí misma: las miniaturas cambian su hueco por su imagen (una dirección `blob:` distinta en cada pasada)

@@ -135,6 +135,13 @@ def main(path):
         ev("A.deloadSeen();R()")
         run(1200)
         check('y no vuelve a salir', not ev("!!document.querySelector('#sh .deload-intro')"))
+        # en un día de descanso, lo mismo que en uno de entreno: la barra de la semana y la tarjeta de la descarga (hasta la
+        # V1.0.4 no salían: se colgaban de la tarjeta del día de entreno)
+        rest = ev("(()=>{for(let i=0;i<7;i++){S.selectedWeekday=i;syncSel();R();if(document.querySelector('#app .card.hero [data-a=completeRestDay]'))return i}return -1})()")
+        check('en un día de descanso de esa semana, también la barra de la semana y la tarjeta con «Omitir»', rest >= 0 and 'Esta semana' in txt('#app')
+              and ev("!!document.querySelector('#app .deload-box.deload-box-slim [data-a=deloadSkipAsk]')"), str(rest))
+        ev("S.selectedWeekday=0;syncSel();R()")
+        run(300)
         ev("A.startWorkout()")
         run(600)
         check('en el entreno: franja naranja con lo que cambia', 'peso al 65 %' in txt('.dlstrip'))

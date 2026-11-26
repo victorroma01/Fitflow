@@ -17,6 +17,7 @@ ver la [documentación funcional](../funcional/README.md).
 | [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en la V1.0.2 frente a la V1.0.1 (T-26). |
 | [Auditoría de la V1.0.3](auditoria-1.0.3.md) | Auditoría técnica completa de la V1.0.2: diagnóstico por áreas, lo corregido en la V1.0.3, lo pendiente y las recomendaciones. |
 | [Revisión de la V1.0.32](revision-1.0.32.md) | Repaso de la V1.0.32 antes de publicarla: qué se miró, los dos casos de pérdida de datos encontrados y corregidos, lo comprobado y lo que queda por decidir. |
+| [Revisión de la V1.0.4](revision-1.0.4.md) | Repaso de la V1.0.4 antes de publicarla: código, seguridad, datos, rendimiento y funcionamiento; el fallo encontrado y corregido (en un día de descanso faltaban la barra y los avisos de la semana) y lo pendiente antes de publicar. |
 | [Informe de issues](issues.md) | Lo encontrado en la revisión final (M8, T-22): lo corregido y lo que queda abierto, con su prioridad, el orden recomendado y su coste en puntos función. |
 | [Figuras de ejercicio](figuras.md) | El modelo anatómico haciendo cada uno de los 525 ejercicios, en lugar de fotos: cómo está hecho, cómo se escribe una postura, cómo se añade un ejercicio, lo que pesa y cómo se prueba. |
 | [Idiomas](idiomas.md) | El inglés: cómo decide la app en qué idioma sale, cómo se traduce al pintar con el español de clave, cómo se añade una frase, la nota de cada versión en inglés y qué se comprueba. |
