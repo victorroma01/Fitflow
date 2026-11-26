@@ -436,16 +436,18 @@ def main(path):
         day = ev("(()=>{for(let i=0;i<7;i++){S.selectedWeekday=i;syncSel();R();if(document.querySelector('#app .day-hero [data-a=startWorkout]'))return i}return -1})()")
         run(300)
         check('un día de entreno (el %d) lleva la tarjeta del día' % (day + 1), day >= 0, ev("JSON.stringify([!!W, S.noProgram, S.tab, document.querySelector('#app')?.className])"))
-        HERO = """(() => { const h = document.querySelector('#app .day-hero'), r = h.getBoundingClientRect(), n = h.querySelector('h2').getBoundingClientRect(),
-            s = h.querySelector('.stats').getBoundingClientRect(), b = h.querySelector('[data-a=startWorkout]').getBoundingClientRect();
-            return [r.width, r.height, Math.round(n.top - r.top), Math.round(s.top - n.bottom), Math.round(r.bottom - b.bottom), getComputedStyle(h).backgroundImage]; })()"""
+        # (lo que ocupa el texto: el nombre y las cifras llevan su sombra en su relleno, que no cuenta)
+        HERO = """(() => { const h = document.querySelector('#app .day-hero'), r = h.getBoundingClientRect(), t = h.querySelector('h2'), n = t.getBoundingClientRect(),
+            st = h.querySelector('.stats'), s = st.getBoundingClientRect(), b = h.querySelector('[data-a=startWorkout]').getBoundingClientRect(), px = (e, k) => parseFloat(getComputedStyle(e)[k]);
+            return [r.width, r.height, Math.round(n.top + px(t, 'paddingTop') - r.top), Math.round(s.top + px(st, 'paddingTop') - (n.bottom - px(t, 'paddingBottom'))), Math.round(r.bottom - b.bottom),
+              getComputedStyle(h).backgroundImage, [t, st, h.querySelector('.grid-2')].map(e => getComputedStyle(e).backgroundImage), getComputedStyle(h).overflow]; })()"""
         for w in (320, 390, 768):
             pg.set_viewport_size({'width': w, 'height': 844})
             run(300)
-            cw, chh, top, gap, bottom, bg = ev(HERO)
+            cw, chh, top, gap, bottom, bg, shades, ov = ev(HERO)
             check('a %d px: con la forma de sus fotos (1,26; hasta 320 px de alto), el nombre arriba, las cifras y los botones abajo y, en medio, %d px de foto' % (w, gap),
                   abs(chh - min(320, cw / 1.26)) <= 1.5 and top < 30 and bottom < 30 and gap >= (20 if w == 320 else 70), str([round(cw), round(chh), top, gap, bottom]))
-        check('la portada solo se oscurece donde hay texto: arriba, bajo el nombre, y en los 148 px de abajo', bg.count('rgba(0, 0, 0') >= 5 and '148px' in bg and 'url(' in bg, bg[:160])
+        check('la foto, apenas oscurecida, y el nombre, las cifras y los botones con su propia sombra, recortada en las esquinas', bg.count('rgba(0, 0, 0, 0.13') == 2 and 'url(' in bg and all('gradient' in x for x in shades) and ov == 'hidden', str([bg[:90]] + shades + [ov]))
         pg.set_viewport_size({'width': 390, 'height': 844})
         run(300)
 
@@ -457,20 +459,19 @@ def main(path):
         ev("sheet();S.tab=0;R()")
         run(300)
         tiles = ev(TILES)
-        n_ex = ev("exAll().length")
-        want = [['openLibrary', 'Librería de ejercicios', 'Explora %d ejercicios' % n_ex], ['routineEditorBack', 'Workout personalizado', 'Bloques, superseries y triseries'],
-                ['openWod', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time'], ['openCardio', 'Registrar cardio', 'Carrera, bici, remo y más']]
-        check('en el día, las cuatro: librería, workout personalizado, temporizador WOD y cardio, con su nombre y su línea (los ejercicios, los que hay)', [[t['a'], t['t'], t['s']] for t in tiles] == want, str([[t['a'], t['t'], t['s']] for t in tiles]))
+        want = [['openLibrary', 'Librería de ejercicios', 'Explora por grupo muscular'], ['routineEditorBack', 'Workout personalizado', 'Bloques sueltos, superseries y triseries'],
+                ['openWod', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time'], ['openCardio', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal']]
+        check('en el día, las cuatro: librería, workout personalizado, temporizador WOD y cardio, con su nombre y su línea de siempre', [[t['a'], t['t'], t['s']] for t in tiles] == want, str([[t['a'], t['t'], t['s']] for t in tiles]))
         check('de dos en dos: las de cada fila, a la misma altura y del mismo tamaño; las de cada columna, alineadas', len(tiles) == 4 and tiles[0]['y'] == tiles[1]['y'] < tiles[2]['y'] == tiles[3]['y'] and tiles[0]['x'] == tiles[2]['x'] < tiles[1]['x'] == tiles[3]['x'] and len({(t['w'], t['h']) for t in tiles[:2]}) == 1 and len({(t['w'], t['h']) for t in tiles[2:]}) == 1, str([(t['x'], t['y'], t['w'], t['h']) for t in tiles]))
         # (el color de las tarjetas del tema, --cd, como lo da el navegador)
         card = ev("(() => { const d = document.createElement('i'); d.style.color = 'var(--cd)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
-        check('lisas, del color de las tarjetas del tema (también con Cristal), sin borde y con las esquinas redondeadas (algo más con Cristal)', all(t['bg'] == card and t['border'] == '0px' and t['radius'] in ('16px', '17px') for t in tiles), str([card] + [(t['bg'], t['border'], t['radius']) for t in tiles]))
+        check('lisas, del color de las tarjetas del tema (también con Cristal), sin borde y con las esquinas redondeadas (algo más con Cristal)', all(t['bg'] == card and t['border'] == '0px' and t['radius'] in ('14px', '17px') for t in tiles), str([card] + [(t['bg'], t['border'], t['radius']) for t in tiles]))
         # (el gris del icono es el color del texto al 80 %: «color(srgb r g b / a)» en Chrome y Firefox, «rgba(…)» en Safari)
         def soft(c):
             v = [float(x) for x in re.findall(r'[\d.]+', c)]
             return (v[:3] if c.startswith(('rgb', 'rgba')) else [x * 255 for x in v[:3]]) + v[3:4]
         ico, text = (soft(tiles[0]['ico'][1]) if tiles and tiles[0]['ico'] else []), soft(ev("getComputedStyle(document.querySelector('#app .hub-tile b')).color"))
-        check('el icono arriba, de 28 px, del color del texto al 80 % (gris)', all(t['ico'] and t['ico'][0] == 28 and t['ico'][1] == tiles[0]['ico'][1] for t in tiles) and len(ico) == 4 and all(abs(a - b) < 1.5 for a, b in zip(ico, text[:3])) and abs(ico[3] - .8) < .01, str([t['ico'] for t in tiles[:1]] + [text]))
+        check('el icono arriba, de 24 px, del color del texto al 80 % (gris)', all(t['ico'] and t['ico'][0] == 24 and t['ico'][1] == tiles[0]['ico'][1] for t in tiles) and len(ico) == 4 and all(abs(a - b) < 1.5 for a, b in zip(ico, text[:3])) and abs(ico[3] - .8) < .01, str([t['ico'] for t in tiles[:1]] + [text]))
         check('el latido del corazón del cardio es un hueco: un trazo del color de la tarjeta', ev("getComputedStyle(document.querySelector('#app .hub-tile[data-a=openCardio] .ic-cut')).stroke") == card)
         FIT = """(() => { const g = document.querySelector('#app .hub-grid');
           const split = t => { const n = t.firstChild; let at = 0; return t.textContent.split(' ').some(w => { const s = t.textContent.indexOf(w, at); at = s + w.length;

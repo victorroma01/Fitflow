@@ -75,13 +75,11 @@ export const dayImage = (n, d) => {
 };
 /** El fondo de la tarjeta del día: su portada, oscurecida lo justo para que su texto blanco se lea (AA) sobre cualquiera
     (tests/covers.py). Con el 13 % de antes arriba, el nombre del día no llegaba sobre la de espalda ni sobre las más claras.
-    La del día que se entrena (`tall`: workout/day, más alta) se oscurece igual, pero solo donde hay texto: arriba, bajo el
-    nombre (56 px), y abajo, bajo las cifras y los botones (los 148 px de abajo); en medio, sin texto, se ve la foto. Si la
-    tarjeta no da para ese hueco, las paradas se juntan y queda oscura entera, como las demás. */
+    La del día que se entrena (`tall`: workout/day, más alta) apenas se oscurece: lo que va encima lleva su propia sombra, que
+    mide lo que el texto (css/79-workout-hub), y en medio, sin texto, se ve la foto. */
 export const coverStyle = (n, d, tall) => {
   const u = photoUrl(dayImage(n, d));
-  const shade = tall ? 'linear-gradient(180deg,#0008,#0007 56px,#0002 84px,#0002 calc(100% - 176px),#0009 calc(100% - 148px),#000c)' : 'linear-gradient(180deg,#0007,#000b)';
-  return u ? 'background:' + shade + ',url(' + u + ') center/cover' : '';
+  return u ? 'background:linear-gradient(180deg,' + (tall ? '#0002,#0002' : '#0007,#000b') + '),url(' + u + ') center/cover' : '';
 };
 /** La portada de un workout personalizado: la elegida o, si no eligió ninguna, la de sus ejercicios. */
 export const routineImage = r => {

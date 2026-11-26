@@ -21,7 +21,6 @@ import { levelPill, programName } from '../programs/levels.js';
 import { rotationCard } from '../programs/rotation.js';
 import { isFreshInstall, restoreBanner } from '../system/backup.js';
 import { html, raw } from '../core/html.js';
-import { EXERCISES } from '../data/library.js';
 const planEx = (i) => S.plan[S.selectedDay].ex[i];
 /** El botón de una serie menos (by = -1) o una más (by = 1) de un ejercicio del plan (al editar la semana y en Overview). */
 export const planSetButton = (e, i, by) => html`
@@ -196,13 +195,13 @@ A.linkToPrevious = i => {
 };
 /* los atajos del día (no al editar la semana), en tarjetas de dos en dos, como en la referencia del propietario: el icono
    arriba, el nombre y una línea */
-const hubTile = (ico, t, s, a) => html`<button class="hub-tile" data-a="${a}">${icon(ico, 28)}<b>${t}</b><small>${s}</small></button>`;
+const hubTile = (ico, t, s, a) => html`<button class="hub-tile" data-a="${a}">${icon(ico, 24)}<b>${t}</b><small>${s}</small></button>`;
 const woShortcuts = () => html`
   <div class="hub-grid">
-    ${hubTile('lib', 'Librería de ejercicios', say `Explora ${EXERCISES.length + S.customExercises.length} ejercicios`, 'openLibrary')}
-    ${hubTile('build', 'Workout personalizado', 'Bloques, superseries y triseries', 'routineEditorBack')}
+    ${hubTile('lib', 'Librería de ejercicios', 'Explora por grupo muscular', 'openLibrary')}
+    ${hubTile('build', 'Workout personalizado', 'Bloques sueltos, superseries y triseries', 'routineEditorBack')}
     ${hubTile('timer', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time', 'openWod')}
-    ${hubTile('pulse', 'Registrar cardio', 'Carrera, bici, remo y más', 'openCardio')}
+    ${hubTile('pulse', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal', 'openCardio')}
   </div>`;
 export const inSuperset = i => {
   const x = S.plan[S.selectedDay].ex;

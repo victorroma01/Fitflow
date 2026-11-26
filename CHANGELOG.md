@@ -95,13 +95,14 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   sin haber fallado nada; una prueba colgada se para igual.
 - Workout: la tarjeta del día que se entrena, más alta (`.day-hero`, en `css/79-workout-hub`: con la forma de sus fotos,
   1,26, y hasta 320 px de alto), con el nombre arriba y las cifras y los botones abajo, como pidió el propietario para que se
-  vea la foto; la portada (`coverStyle(n, d, tall)`) solo se oscurece donde hay texto (los 56 px de arriba y los 148 de
-  abajo), así que en medio se ve la foto. La de un descanso y la del Overview, igual. `tests/covers.py` sigue midiendo el
-  contraste AA sobre las 22 portadas (de hombre y de mujer) y `tests/features.py` comprueba su forma a 320, 390 y 768 px.
+  vea la foto; los datos, los mismos. La portada (`coverStyle(n, d, tall)`) apenas se oscurece, y el nombre, las cifras y los
+  botones llevan su propia sombra, que mide lo que el texto (un nombre de dos líneas también se lee). La de un descanso y la
+  del Overview, igual. `tests/covers.py` sigue midiendo el contraste AA sobre las 22 portadas (de hombre y de mujer) y
+  `tests/features.py` comprueba su forma a 320, 390 y 768 px.
 - Workout: los atajos (la librería, el workout personalizado, el temporizador WOD y el cardio) en tarjetas de dos en dos, con
-  el diseño de la referencia del propietario (`workout/day`: `hubTile`; `css/79-workout-hub`): lisas, del color de las
-  tarjetas del tema (sin el cristal ni el borde de las demás), con su icono relleno arriba (`IC.lib`, `build`, `timer` y
-  `pulse`, nuevos), el nombre y una línea corta (la librería dice cuántos ejercicios hay). Las cuatro van en el día y ninguna
+  el diseño de la referencia del propietario (`workout/day`: `hubTile`; `css/79-workout-hub`), algo más compactas: lisas, del
+  color de las tarjetas del tema (sin el cristal ni el borde de las demás), con su icono relleno arriba (`IC.lib`, `build`,
+  `timer` y `pulse`, nuevos), su nombre y su línea de siempre. Las cuatro van en el día y ninguna
   al editar la semana, como antes; el entreno y el Overview no pasan por esta vista (`core/render`), así que las condiciones
   que lo miraban sobraban. Pruebas en `tests/features.py` (orden, rejilla, colores, a 320, 390 y 768 px y que cada una abre
   su página).
