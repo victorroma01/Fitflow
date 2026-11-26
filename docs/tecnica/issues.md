@@ -344,13 +344,13 @@ entrar» (baja, 3). El resto, 0 PF: no cambian ninguna función.
 
 ## Pospuesto por decisión del propietario
 
-No son fallos: son requisitos que el propietario ha dejado para más adelante, hasta que diga de generar las imágenes.
+No son fallos: son requisitos que el propietario dejó para más adelante, hasta que dijera de generar las imágenes. Con la
+V1.0.4 no queda ninguno: F-16 lo resuelven las figuras 3D, y F-17 y T-17 (la imagen de cada ejercicio según el sexo, ideas de
+la 1.0.0) los borró el propietario el 26-11-2026.
 
 | Requisito | Qué falta | PF | Horas |
 | --- | --- | --- | --- |
-| F-16 · Una sola imagen por ejercicio | Quitar la foto anatómica y dejar la del modelo, con una de respaldo si falta. | 15 | 6 + imágenes |
-| F-17 y T-17 · Modelo masculino y femenino | La imagen según el sexo (F-05). Junto con F-16, toca las mismas funciones. | 0 más | 2 + imágenes |
+| ~~F-16 · Una sola imagen por ejercicio~~ | Hecho en la V1.0.4 con las figuras 3D: cada ejercicio lleva una sola figura, la del atleta, en la librería, el entreno y «Cómo se hace», y ninguno lleva foto. | 0 | — |
 | ~~F-33 y T-18 · Fondo del login~~ | Hecho en la V1.0.32, con una foto del propietario: el gimnasio desde arriba, en gris y desenfocado, detrás del inicio de sesión (`tools/fondo.py`, `tests/login.py`). | 0 | 1 + imagen |
-| ~~Portadas de los días por sexo y de CrossFit / Hyrox~~ | Hecho en la V1.0.32, con imágenes del propietario: las de una modelo con el perfil de mujer (F-05), las de los días de CrossFit, Hyrox y funcional y un descanso propio para esos programas (`tools/portadas.py`, `workout/images`, `tests/covers.py`). Las imágenes de los ejercicios (F-16, F-17) siguen pospuestas. | 0 | 3 + imágenes |
+| ~~Portadas de los días por sexo y de CrossFit / Hyrox~~ | Hecho en la V1.0.32, con imágenes del propietario: las de una modelo con el perfil de mujer (F-05), las de los días de CrossFit, Hyrox y funcional y un descanso propio para esos programas (`tools/portadas.py`, `workout/images`, `tests/covers.py`). Las imágenes de los ejercicios son sus figuras 3D (F-16). | 0 | 3 + imágenes |
 
-F-16: EQ cambiada «Ficha del ejercicio» (media, 4) + EQ cambiada «Librería» (media, 4) + EO cambiada «Entreno en curso» (alta, 7).

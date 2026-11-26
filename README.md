@@ -34,7 +34,7 @@ publica solo con la confirmación del propietario. Los requisitos de cada versi�
 | Milestone | Contenido |
 | --- | --- |
 | M0 a M6 · V1.0.0 | Análisis, base técnica, cuentas y Firebase, programas, pantalla de entrenamiento, seguimiento y experiencia. Publicado y cerrado. |
-| M7 · Imágenes | En parte: con la V1.0.32 llegan, con imágenes del propietario, el fondo del inicio de sesión (F-33, T-18), las fotos de los días de CrossFit y Hyrox y, con el perfil de mujer, las de una modelo. Las de los ejercicios (F-16, F-17) siguen pospuestas. |
+| M7 · Imágenes | Hecho: con la V1.0.4 llegan, con imágenes del propietario, el fondo del inicio de sesión (F-33, T-18), las fotos de los días de CrossFit y Hyrox y, con el perfil de mujer, las de una modelo. Cada ejercicio lleva su figura 3D (F-16); la imagen según el sexo (F-17), una idea de la 1.0.0, la descartó el propietario. |
 | M8 · Cierre | Publicación de la V1.0.0 ([informe de issues](docs/tecnica/issues.md)); queda la prueba en un Android de verdad. |
 | **V1.0.1 · Correcciones y mejoras** | Lo encontrado al probar la V1.0.0 en el iPhone y las mejoras pedidas: bienvenida y datos de una cuenta nueva, empezar sin programa, logo nuevo, paso al día siguiente, RPE opcional, Nutri-Score, «Mis alimentos», recuento de iPhone y Android. Publicado. |
 | **V1.0.2 · Código y técnica** | Código más claro (nombres que se entienden y vistas partidas), datos en IndexedDB con sitio para años de uso y guardado más rápido, aviso de espacio, sin estilos en línea, App Check preparado, VoiceOver, service worker más robusto y aviso del icono nuevo en el iPhone. Publicado; App Check (I-05), pendiente de activarlo en la consola. |

@@ -74,6 +74,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Inicio de sesión: el logo llena su marco.
 - Workout: en un día de descanso salen también la barra de la semana y, si toca, el aviso de la semana de descarga
   (con «Omitir») y la propuesta de rotar los ejercicios.
+- En un móvil pequeño (320 px): los valores de Ajustes que no caben acaban en «…» (antes se cortaban a media letra),
+  igual que el texto de ayuda de un buscador, y en Mi nutrición ya no se lee a través de «Ajustar a mano» lo que pasa por
+  debajo.
+- Los números con decimales van con punto en toda la app: el análisis mensual y su PDF, Diagnóstico y cuatro textos (la
+  descripción de Push Pull Leg, un consejo del programa guiado y dos ejercicios) los ponían con coma. Los CSV en español siguen
+  con coma, para Excel.
 
 ### Interno
 - Figuras 3D: la carrera, rehecha como un trote normal (`src/fig3d/cardio3d.js`: `runGait`, `runHip`, `runCap` y
@@ -115,6 +121,12 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   mismo HTML en los días de entreno. Prueba fija en `tests/programs.py`. Y `tests/figures.py` mide el ciclo de Bicicleta,
   Carrera y Comba con el reloj de prueba quieto: con el ordenador cargado, lo que tardaba en dibujarse cada momento contaba
   como tiempo y la prueba podía fallar sin que la figura se parase.
+- Segundo repaso de la V1.0.4 ([informe](docs/tecnica/revision-1.0.4.md#segundo-repaso)): cada pantalla a 320 y 390 px en
+  los dos idiomas, los nombres largos, paseos al azar y la memoria al abrir y cerrar lo más pesado. La forma de la foto es el
+  alto mínimo de la tarjeta del día (`min-height`, no `aspect-ratio`): crece lo justo (a 320 px, un nombre de dos líneas
+  dejaba los botones medio fuera) y, desde 440 px, ocupa el ancho de la página; su nombre va en dos líneas como mucho. El
+  recorrido desplaza la página si su explicación no cabe ni debajo ni encima de lo que explica. Y dos pruebas que no veían lo
+  que decían: los botones fuera de la tarjeta, y un valor de Ajustes que cabe o no según la letra.
 - `tests/walk.py` (la comparación con la versión anterior): las figuras 3D se comparan por qué figura va en cada sitio, no
   por si ya están dibujadas. Se miraban las figuras de antes del 3D (`svg[data-fig]`), que ya no hay, y la misma compilación
   salía distinta de sí misma: las miniaturas cambian su hueco por su imagen (una dirección `blob:` distinta en cada pasada)

@@ -24,7 +24,9 @@
 - **Semana**: arriba se cambia de semana (‹ ›). Los 7 días de la semana salen como botones; los de descanso llevan una luna.
 - **Tarjeta del día**: el día elegido, con su número de ejercicios, series y minutos. **Overview** enseña los ejercicios y permite
   editarlos; **Empezar** abre el entreno. Desde la V1.0.4 es más alta, con la forma de su foto: el nombre arriba, las cifras y
-  los botones abajo (cada uno con su sombra, para leerse sobre cualquier foto) y, en medio, la foto.
+  los botones abajo (cada uno con su sombra, para leerse sobre cualquier foto) y, en medio, la foto. El nombre ocupa dos líneas
+  como mucho (uno más largo, el de un workout propio, acaba en «…»); si en un móvil pequeño no cabe todo, la tarjeta crece lo
+  justo para que los botones queden dentro.
   - **Equipamiento**: al final del Overview, el material que piden los ejercicios del día, con sus iconos y cuántos son
     («Equipamiento (4)»): sin repetir y en el orden en que sale. **Peso corporal** solo sale si no hace falta nada más, y un
     ejercicio creado por ti no añade nada (la app no sabe con qué lo haces). Al tocarlo se abre la lista, con el icono y el

@@ -121,10 +121,10 @@ html.glass .setting-row {
   font-size:16.5px;
   white-space:nowrap;
 }
+/* el valor, en bloque para que lo que no cabe acabe en «…» (en un móvil de 320 px, o en inglés): con flex, el texto se
+   cortaba a media letra */
 .setting-value {
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
+  display:block;
   flex:0 1 auto;
   min-width:0;
   font-size:14px;
@@ -133,10 +133,13 @@ html.glass .setting-row {
   overflow:hidden;
   text-overflow:ellipsis;
 }
+/* la muestra del color de acento, delante de su nombre (a 4 px: con 6, «Azul eléctrico» no cabía por un píxel a 390 px, con Inter) */
 .setting-dot {
-  flex:none;
+  display:inline-block;
   width:14px;
   height:14px;
+  margin-right:4px;
+  vertical-align:-2px;
   border-radius:50%;
 }
 .setting-check {

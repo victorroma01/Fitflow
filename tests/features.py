@@ -129,6 +129,8 @@ def main(path):
         check('«Recalcular con mis datos» calcula las kcal con el gasto diario', abs(k_plan - ev("Math.round(tdee().td)")) <= 1, '%s / %s' % (k_plan, ev("tdee().td")))
         check('la página dice «Según tu plan»', 'Según tu plan' in ev("document.querySelector('.goals-mode').innerText"))
         check('el anillo tiene un arco por macro', ev("document.querySelectorAll('.goals-ring circle').length") == 3)
+        bg = ev("getComputedStyle(document.querySelector('.goals-actions')).backgroundColor")
+        check('los botones de abajo van sobre el fondo de la página: lo que pasa por debajo no se lee a través de «Ajustar a mano»', bg.startswith('rgb(') or bg.startswith('rgba(') and bg.rstrip(')').split(',')[-1].strip() in ('1', '1.0'), bg)
         ev("A.openManualGoals()")
         run()
         ev("document.getElementById('mnk').value='2500';document.getElementById('mnc0').value='40';document.getElementById('mnp0').value='30';document.getElementById('mnf0').value='20';U.manualGoalsPreview()")
@@ -203,6 +205,23 @@ def main(path):
         rows = ev("[...document.querySelectorAll('#ajs .setting-row')].map(b=>b.dataset.a+(b.dataset.v?':'+b.dataset.v:''))")
         want = ['openSettingsPage:cuenta', 'accountSyncNow', 'openSettingsPage:tema', 'openSettingsPage:acento', 'openSettingsPage:inicio', 'openSettingsPage:idioma', 'openSettingsPage:unidades', 'openSettingsPage:sonido', 'openBackup', 'resetAllAsk', 'updateCheck', 'openSettingsPage:nota', 'tourReplay', 'openDiagnostics', 'openReport', 'openSettingsPage:avanzado', 'openLegal:privacy', 'openLegal:terms', 'signOut']
         check('Ajustes tiene todas sus filas', rows == want, str(rows))
+        # el valor de cada fila: entero a 390 px y, si no cabe (320 px), acabado en «…» (un bloque: con flex se cortaba a media letra)
+        fit = "[...document.querySelectorAll('#ajs .setting-value')].map(v=>[v.textContent.trim(),v.scrollWidth<=v.clientWidth+.5,getComputedStyle(v).display,getComputedStyle(v).textOverflow])"
+        vals = ev(fit)
+        # (a 390 px, que «● Azul eléctrico» quepa depende de la letra del sistema: con Inter cabe y con la de GitHub no; se mira
+        # solo que, si no cabe, acabe en «…»)
+        check('a 390 px, los valores de Ajustes, enteros o acabados en «…»', all(v[1] or v[2] == 'block' and v[3] == 'ellipsis' for v in vals), str([v for v in vals if not v[1]]))
+        pg.set_viewport_size({'width': 320, 'height': 568})
+        run()
+        vals = ev(fit)
+        check('a 320 px, el valor que no cabe acaba en «…»', any(not v[1] for v in vals) and all(v[1] or v[2] == 'block' and v[3] == 'ellipsis' for v in vals), str(vals))
+        ev("A.openLibrary()")
+        run()
+        check('y en los campos de texto, lo que no cabe también acaba en «…» (el buscador de la Librería, a 320 px)', ev("getComputedStyle(document.querySelector('#sh input[type=search],#sh input')).textOverflow") == 'ellipsis')
+        ev("A.closeSheet();A.openSettings()")
+        run()
+        pg.set_viewport_size({'width': 390, 'height': 844})
+        run()
         check('con secciones', ev("[...document.querySelectorAll('#ajs .section-label')].map(e=>e.innerText.trim().toLowerCase())") == ['cuenta', 'apariencia', 'entreno', 'datos', 'app', 'ajustes avanzados', 'información'])
         check('«Cerrar sesión», en rojo y con su icono, al final', ev("(()=>{const b=document.querySelector('#ajs .setting-signout [data-a=signOut]');return !!b&&!!b.querySelector('.setting-label.red')&&!!b.querySelector('.setting-icon.red svg')})()"))
         ev("A.openSettingsPage(0,{dataset:{v:'tema'}})")
@@ -439,15 +458,33 @@ def main(path):
         # (lo que ocupa el texto: el nombre y las cifras llevan su sombra en su relleno, que no cuenta)
         HERO = """(() => { const h = document.querySelector('#app .day-hero'), r = h.getBoundingClientRect(), t = h.querySelector('h2'), n = t.getBoundingClientRect(),
             st = h.querySelector('.stats'), s = st.getBoundingClientRect(), b = h.querySelector('[data-a=startWorkout]').getBoundingClientRect(), px = (e, k) => parseFloat(getComputedStyle(e)[k]);
-            return [r.width, r.height, Math.round(n.top + px(t, 'paddingTop') - r.top), Math.round(s.top + px(st, 'paddingTop') - (n.bottom - px(t, 'paddingBottom'))), Math.round(r.bottom - b.bottom),
+            return [r.width, r.height, Math.round(n.top + px(t, 'paddingTop') - r.top), Math.round(s.top + px(st, 'paddingTop') - (n.bottom - px(t, 'paddingBottom') - px(t, 'borderBottomWidth'))), Math.round(r.bottom - b.bottom),
               getComputedStyle(h).backgroundImage, [t, st, h.querySelector('.grid-2')].map(e => getComputedStyle(e).backgroundImage), getComputedStyle(h).overflow]; })()"""
         for w in (320, 390, 768):
             pg.set_viewport_size({'width': w, 'height': 844})
             run(300)
             cw, chh, top, gap, bottom, bg, shades, ov = ev(HERO)
-            check('a %d px: con la forma de sus fotos (1,26; hasta 320 px de alto), el nombre arriba, las cifras y los botones abajo y, en medio, %d px de foto' % (w, gap),
-                  abs(chh - min(320, cw / 1.26)) <= 1.5 and top < 30 and bottom < 30 and gap >= (20 if w == 320 else 70), str([round(cw), round(chh), top, gap, bottom]))
-        check('la foto, apenas oscurecida, y el nombre, las cifras y los botones con su propia sombra, recortada en las esquinas', bg.count('rgba(0, 0, 0, 0.13') == 2 and 'url(' in bg and all('gradient' in x for x in shades) and ov == 'hidden', str([bg[:90]] + shades + [ov]))
+            # (a 320 px, «Empezar día 2» ocupa dos líneas y la tarjeta crece lo justo para que quepan los botones; antes quedaban
+            # medio fuera, y bottom, negativo, no lo veía)
+            aspect = min(320, cw / 1.26)
+            check('a %d px: con la forma de sus fotos (1,26; hasta 320 px de alto), el nombre arriba, las cifras y los botones abajo, dentro, y, en medio, %d px de foto' % (w, gap),
+                  (abs(chh - aspect) <= 1.5 or w == 320 and aspect - 1.5 <= chh <= aspect + 30) and top < 30 and 0 <= bottom < 30 and gap >= (20 if w == 320 else 70), str([round(cw), round(chh), top, gap, bottom]))
+        check('la foto, apenas oscurecida, y el nombre, las cifras y los botones con su propia sombra, recortada en las esquinas', bg.count('rgba(0, 0, 0, 0.13') == 2 and 'url(' in bg and all('gradient' in x for x in shades) and ov in ('hidden', 'clip'), str([bg[:90]] + shades + [ov]))
+        # un nombre de dos líneas (los hay en los programas, como «Brazos (bíceps y tríceps)» de Bro Split) y uno larguísimo (el
+        # de un workout propio): los botones, siempre dentro de la tarjeta; el nombre, en dos líneas como mucho (con «…»); a 320 px
+        # la tarjeta crece lo justo, y a partir de ahí mantiene la forma de sus fotos
+        n0 = ev("S.plan[S.selectedDay].n")
+        LONG = """(() => { const h = document.querySelector('#app .day-hero'), r = h.getBoundingClientRect(), t = h.querySelector('h2'), b = h.querySelector('.grid-2').getBoundingClientRect();
+            return [b.top >= r.top && b.bottom <= r.bottom + .5, (t.clientHeight - parseFloat(getComputedStyle(t).paddingTop)) / parseFloat(getComputedStyle(t).lineHeight), r.width, r.height]; })()"""
+        for name in ('Brazos (bíceps y tríceps)', 'Torso completo: pecho, espalda, hombros y brazos con superseries'):
+            ev("S.plan[S.selectedDay].n=%r;R()" % name)
+            for w in (320, 390, 768):
+                pg.set_viewport_size({'width': w, 'height': 844})
+                run(300)
+                inside, lines, cw, chh = ev(LONG)
+                check('a %d px, «%s…»: los botones dentro de la tarjeta y el nombre en %d línea(s) como mucho' % (w, name[:22], 2), inside and lines <= 2.05 and chh <= 320.5 and (w == 320 or abs(chh - min(320, cw / 1.26)) <= 1.5),
+                      str([inside, round(lines, 2), round(cw), round(chh)]))
+        ev("S.plan[S.selectedDay].n=%r;R()" % n0)
         pg.set_viewport_size({'width': 390, 'height': 844})
         run(300)
 
