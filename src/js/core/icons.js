@@ -32,7 +32,7 @@ IC.globe = '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.
 IC.home = '<path d="M4 10.5L12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/>';
 IC.tour = '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>';
 IC.x = '<path d="M6 6l12 12M18 6L6 18"/>';
-/* los atajos de Entrenar (workout/day), rellenos, como en la referencia del propietario: la librería (un archivador), el workout
+/* los atajos de Workout (workout/day), rellenos, como en la referencia del propietario: la librería (un archivador), el workout
    personalizado (cuatro piezas, una de ellas «+»), el temporizador WOD (un cronómetro) y el cardio (un corazón con su latido,
    que es un trazo del color de la tarjeta: .ic-cut, en css/79-workout-hub) */
 IC.lib = '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M7 2.4h10a1 1 0 0 1 0 2H7a1 1 0 0 1 0-2zM5 5.7h14a1.1 1.1 0 0 1 0 2.2H5a1.1 1.1 0 0 1 0-2.2zM6 9.3h12a3 3 0 0 1 3 3v6.2a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-6.2a3 3 0 0 1 3-3zM9.7 13.6a.95.95 0 0 0 0 1.9h4.6a.95.95 0 0 0 0-1.9z"/>';

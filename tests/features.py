@@ -431,7 +431,7 @@ def main(path):
         ev("A.closeSheet()")
         run(300)
 
-        print('Entrenar: los atajos en tarjetas de dos en dos, como en la referencia del propietario (V1.0.4)')
+        print('Workout: los atajos en tarjetas de dos en dos, como en la referencia del propietario (V1.0.4)')
         TILES = """[...document.querySelectorAll('#app .hub-grid .hub-tile')].map(t => { const r = t.getBoundingClientRect(), cs = getComputedStyle(t);
             return { a: t.dataset.a, t: t.querySelector('b').textContent, s: t.querySelector('small').textContent, x: Math.round(r.left), y: Math.round(r.top),
               w: Math.round(r.width), h: Math.round(r.height), bg: cs.backgroundColor, border: cs.borderTopWidth, radius: cs.borderTopLeftRadius,
