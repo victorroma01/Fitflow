@@ -316,6 +316,13 @@ def main(app):
                         log.append('acceso directo sin conexión: error interno de WebKit al abrir la dirección')
                     pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
                     check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
+                    # los iconos del material al final del Overview (V1.0.4): archivos del paquete (img/equipment) que se guardan al
+                    # instalar, así que sin conexión salen de la caché aunque no se hayan visto antes
+                    ev("(()=>{for(let j=0;j<7;j++)if(S.plan[planIndex(j)].ex.length){A.selectDay(j);break}})();A.openOverview(0)")
+                    pg.wait_for_timeout(800)
+                    eq = ev("[...document.querySelectorAll('#app .equip-ico')].map(i=>[i.getAttribute('src'),i.complete&&i.naturalWidth>0])")
+                    check('sin conexión, los iconos del material del Overview salen de la caché', bool(eq) and all(s.startswith('img/equipment/') and ok for s, ok in eq), str(eq[:4]))
+                    ev("A.overviewBack()")
                     ev('A.openWod()')
                     pg.wait_for_timeout(300)
                     check('sin conexión también abre lo que se carga al usarlo (WOD)', ev(WOD_OPEN))

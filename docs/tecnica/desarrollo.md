@@ -122,6 +122,14 @@ el archivo único van incrustadas.
 Los ejercicios no llevan foto: su imagen es una [figura](figuras.md), que es código. Los otros nombres con los que se busca
 un ejercicio están en `src/js/data/aliases.js`.
 
+- Iconos del material («Equipamiento» en el Overview: `workout/equipment`): `src/img/equipment/`. Los del catálogo del
+  propietario (`StrataFit_Equipamiento`: `catalogo.json` y sus PNG de 192 × 120) los pasa a WebP sin pérdida
+  `python3 tools/equipamiento.py carpeta-del-paquete`, solo los que nombra `src/js/data/equipment.js`; el paquete no va en el
+  repositorio. El material que el catálogo no tiene va dibujado en SVG en la misma carpeta (192 × 120, gris claro `#eeeeee`,
+  las hendiduras con una máscara, no pintadas de oscuro: el tema claro los pone en negro con un filtro). Qué material lleva
+  cada ejercicio lo dice `src/js/workout/equipmap.js`. `build.py` los mete en `data/media` (`MEDIA.equip`) y falla si un icono
+  que nombra `data/equipment` no está; `tests/equipment.test.mjs` comprueba el material de toda la librería y los archivos.
+
 ## Reglas de calidad
 
 `tools/check.js` analiza todos los módulos como un solo programa y falla si encuentra cualquiera de estas cosas:

@@ -24,6 +24,10 @@
 - **Semana**: arriba se cambia de semana (‹ ›). Los 7 días de la semana salen como botones; los de descanso llevan una luna.
 - **Tarjeta del día**: el día elegido, con su número de ejercicios, series y minutos. **Overview** enseña los ejercicios y permite
   editarlos; **Empezar** abre el entreno.
+  - **Equipamiento**: al final del Overview, el material que piden los ejercicios del día, con sus iconos y cuántos son
+    («Equipamiento (4)»): sin repetir y en el orden en que sale. **Peso corporal** solo sale si no hace falta nada más, y un
+    ejercicio creado por ti no añade nada (la app no sabe con qué lo haces). Al tocarlo se abre la lista, con el icono y el
+    nombre de cada cosa («Material necesario para esta sesión»). Al editar el día no sale.
 - **La foto de cada día** va según el día: pecho, espalda, hombros, piernas, brazos… En los días de CrossFit, Hyrox y funcional,
   la de su ejercicio principal (SkiErg y remo, trineo, wall balls, arrancada, thrusters, box jumps y burpees, carga de granjero),
   y la simulación de Hyrox, la de una competición. Los días de descanso de esos programas (Hyrox / CrossFit, Híbrido) llevan una

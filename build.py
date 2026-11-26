@@ -121,6 +121,15 @@ def list_lines(p):
 
 BRAND_LOGOS = ('claro', 'oscuro')
 LOGIN_PHOTO = 'img/login/fondo.webp'
+EQUIPMENT_MODULE = os.path.join(SRC, 'js', 'data', 'equipment.js')
+
+
+def equipment_icons():
+    """Los iconos que nombra data/equipment.js (el segundo texto de cada material: «'id': ['Nombre', 'icono']»)."""
+    names = re.findall(r"'[\w-]+': \['[^']+', '([\w-]+)'\]", read(EQUIPMENT_MODULE))
+    if not names:
+        die('no encuentro los iconos del equipamiento en ' + os.path.relpath(EQUIPMENT_MODULE, ROOT))
+    return sorted(set(names))
 
 
 def cover_file(folder, k):
@@ -132,8 +141,9 @@ def cover_file(folder, k):
 
 
 def media():
-    """Lee src/img: las portadas de día (order.txt; las de mujer, en src/img/day/mujer, las que haya), el logo y el fondo del
-    inicio de sesión. Devuelve la lista de fotos y los enlaces de cada portada (clave → img/…)."""
+    """Lee src/img: las portadas de día (order.txt; las de mujer, en src/img/day/mujer, las que haya), el logo, el fondo del
+    inicio de sesión y los iconos del equipamiento. Devuelve la lista de imágenes y los enlaces de cada portada y de cada
+    icono (clave → img/…)."""
     files, day, day_f = [], {}, {}
     base = os.path.join(IMG, 'day')
     for k in list_lines(os.path.join(base, 'order.txt')):
@@ -157,19 +167,30 @@ def media():
     if not os.path.isfile(p):
         die('falta el fondo del inicio de sesión %s (python3 tools/fondo.py foto.jpg)' % p)
     files.append((LOGIN_PHOTO, p))
+    # los iconos del equipamiento (workout/equipment): los del catálogo en WebP (tools/equipamiento.py) y los dibujados en SVG
+    equip, folder = {}, os.path.join(IMG, 'equipment')
+    for k in equipment_icons():
+        found = [k + ext for ext in ('.webp', '.svg') if os.path.isfile(os.path.join(folder, k + ext))]
+        if len(found) != 1:
+            die('el icono de equipamiento %s tiene que estar una vez en src/img/equipment (.webp o .svg): %s' % (k, found or 'no está'))
+        equip[k] = 'img/equipment/' + found[0]
+        files.append((equip[k], os.path.join(folder, found[0])))
     used = {p for _, p in files}
+    for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+        if os.path.join(folder, f) not in used:
+            print('  aviso: src/img/equipment/%s no lo nombra data/equipment.js y no se usa' % f)
     for folder in (base, os.path.join(base, 'mujer')):
         for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
             if f.endswith(('.jpg', '.webp')) and os.path.join(folder, f) not in used:
                 print('  aviso: %s no está en su lista y no se usa' % os.path.relpath(os.path.join(folder, f), ROOT))
-    return {'files': files, 'day': day, 'dayF': day_f}
+    return {'files': files, 'day': day, 'dayF': day_f, 'equip': equip}
 
 
 def media_js(m, inline):
     def url(rel, p):
         if not inline:
             return rel
-        mime = 'image/jpeg' if p.endswith('.jpg') else 'image/webp'
+        mime = 'image/jpeg' if p.endswith('.jpg') else 'image/svg+xml' if p.endswith('.svg') else 'image/webp'
         with open(p, 'rb') as f:
             return 'data:%s;base64,%s' % (mime, base64.b64encode(f.read()).decode('ascii'))
     src = dict(m['files'])
@@ -178,6 +199,7 @@ def media_js(m, inline):
         'dayF': {k: url(rel, src[rel]) for k, rel in m['dayF'].items()},
         'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
         'login': url(LOGIN_PHOTO, src[LOGIN_PHOTO]),
+        'equip': {k: url(rel, src[rel]) for k, rel in m['equip'].items()},
     }
     return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 

@@ -46,6 +46,8 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Tus datos, en Privacidad: exportar una copia, escribirnos sobre privacidad, retirar el consentimiento, borrar los datos y
   «Eliminar cuenta», que borra la cuenta y todo lo suyo (también en Ajustes → Cuenta). Una cuenta que lleve dos años sin
   usarse se elimina sola.
+- Equipamiento: al final del Overview de cada día, el material que piden sus ejercicios, con sus iconos. Al tocarlo, la
+  lista con el nombre de cada cosa.
 
 ### Mejoras
 - Librería revisada: los músculos de cada ejercicio, comprobados, y fuera los repetidos (el mismo ejercicio con otro nombre).
@@ -66,6 +68,13 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Inicio de sesión: el logo llena su marco.
 
 ### Interno
+- «Equipamiento» en el Overview (`workout/equipment`): el material de cada ejercicio lo saca `workout/equipmap` de lo mismo
+  con que se dibuja su figura (la familia de movimiento y las palabras de `data/figposes`), con el material de la librería
+  para lo que no dicen; un ejercicio propio no pone nada. Los iconos: de los 60 del catálogo del propietario, los 51 que
+  hacen falta, en WebP sin pérdida (`tools/equipamiento.py`, 227 KB), y 30 dibujados en SVG con su estilo para lo que no tiene
+  (kettlebell, anillas, TRX, remo ergómetro, piscina…). `build.py` los mete en `data/media` (`MEDIA.equip`): archivos del
+  paquete que el service worker guarda, o incrustados en el archivo único (pasa de 2,35 a 2,70 MB). En el tema claro van en
+  negro con un filtro. `tests/equipment.test.mjs`: los 525 ejercicios piden material conocido, con su icono.
 - Versión: la que iba a ser la 1.0.32 (revisión de la 1.0.3, sin publicar) pasa a ser la 1.0.4, con su propia tarjeta, por
   decisión del propietario, en vez de la 1.1.0 que pedía la numeración. El aviso de versión nueva (`isNewerVersion`) y
   `build.py` (`version_key`) cuentan la 1.0.31 y la 1.0.32 como 1.0.3.1 y 1.0.3.2. Cada versión puede llevar un titular
