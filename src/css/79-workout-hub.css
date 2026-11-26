@@ -5,18 +5,31 @@
    línea): la del nombre, desde arriba de la tarjeta hasta su última línea, y se funde en 26 px; la de abajo, desde 26 px
    antes de las cifras hasta el borde. Oscurecen lo de antes (#0007 a #000c), para que el texto se lea (AA) sobre cualquier
    portada (tests/covers.py). Las sombras llegan a los bordes con márgenes negativos (sin mover nada: los de la tarjeta, 22 y
-   16 px) y la tarjeta las recorta en sus esquinas. La de un descanso y la del Overview, como siempre. */
+   16 px) y la tarjeta las recorta en sus esquinas. La de un descanso y la del Overview, como siempre.
+   Si lo de encima no cabe en esa forma (a 320 px, un nombre de dos líneas), la tarjeta crece lo justo: recorta con clip,
+   que no la hace desplazable y deja que su alto mínimo sea lo que mide lo de dentro; con hidden, los botones quedaban medio
+   fuera. (Un navegador sin clip se queda en hidden.) */
 .day-hero {
   display:flex;
   flex-direction:column;
   aspect-ratio:1.26;
   max-height:320px;
   overflow:hidden;
+  overflow:clip;
 }
+/* el nombre, en dos líneas como mucho (los de los programas caben en dos, también a 320 px): uno largo, el de un workout
+   propio, haría crecer la tarjeta y taparía la foto. El final de su sombra va en un borde transparente y no en el relleno,
+   que es donde se recorta lo que sobra: así no asoma una tercera línea */
 .day-hero h2 {
+  flex:none;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
   margin:-22px -16px -20px;
-  padding:22px 16px 26px;
-  background:linear-gradient(180deg,#0008,#0007 calc(100% - 26px),#0000);
+  padding:22px 16px 0;
+  border-bottom:26px solid transparent;
+  background:linear-gradient(180deg,#0008,#0007 calc(100% - 26px),#0000) border-box;
 }
 .day-hero .stats {
   margin:auto -16px 0;

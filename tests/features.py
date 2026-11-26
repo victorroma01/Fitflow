@@ -456,15 +456,33 @@ def main(path):
         # (lo que ocupa el texto: el nombre y las cifras llevan su sombra en su relleno, que no cuenta)
         HERO = """(() => { const h = document.querySelector('#app .day-hero'), r = h.getBoundingClientRect(), t = h.querySelector('h2'), n = t.getBoundingClientRect(),
             st = h.querySelector('.stats'), s = st.getBoundingClientRect(), b = h.querySelector('[data-a=startWorkout]').getBoundingClientRect(), px = (e, k) => parseFloat(getComputedStyle(e)[k]);
-            return [r.width, r.height, Math.round(n.top + px(t, 'paddingTop') - r.top), Math.round(s.top + px(st, 'paddingTop') - (n.bottom - px(t, 'paddingBottom'))), Math.round(r.bottom - b.bottom),
+            return [r.width, r.height, Math.round(n.top + px(t, 'paddingTop') - r.top), Math.round(s.top + px(st, 'paddingTop') - (n.bottom - px(t, 'paddingBottom') - px(t, 'borderBottomWidth'))), Math.round(r.bottom - b.bottom),
               getComputedStyle(h).backgroundImage, [t, st, h.querySelector('.grid-2')].map(e => getComputedStyle(e).backgroundImage), getComputedStyle(h).overflow]; })()"""
         for w in (320, 390, 768):
             pg.set_viewport_size({'width': w, 'height': 844})
             run(300)
             cw, chh, top, gap, bottom, bg, shades, ov = ev(HERO)
-            check('a %d px: con la forma de sus fotos (1,26; hasta 320 px de alto), el nombre arriba, las cifras y los botones abajo y, en medio, %d px de foto' % (w, gap),
-                  abs(chh - min(320, cw / 1.26)) <= 1.5 and top < 30 and bottom < 30 and gap >= (20 if w == 320 else 70), str([round(cw), round(chh), top, gap, bottom]))
-        check('la foto, apenas oscurecida, y el nombre, las cifras y los botones con su propia sombra, recortada en las esquinas', bg.count('rgba(0, 0, 0, 0.13') == 2 and 'url(' in bg and all('gradient' in x for x in shades) and ov == 'hidden', str([bg[:90]] + shades + [ov]))
+            # (a 320 px, «Empezar día 2» ocupa dos líneas y la tarjeta crece lo justo para que quepan los botones; antes quedaban
+            # medio fuera, y bottom, negativo, no lo veía)
+            aspect = min(320, cw / 1.26)
+            check('a %d px: con la forma de sus fotos (1,26; hasta 320 px de alto), el nombre arriba, las cifras y los botones abajo, dentro, y, en medio, %d px de foto' % (w, gap),
+                  (abs(chh - aspect) <= 1.5 or w == 320 and aspect - 1.5 <= chh <= aspect + 30) and top < 30 and 0 <= bottom < 30 and gap >= (20 if w == 320 else 70), str([round(cw), round(chh), top, gap, bottom]))
+        check('la foto, apenas oscurecida, y el nombre, las cifras y los botones con su propia sombra, recortada en las esquinas', bg.count('rgba(0, 0, 0, 0.13') == 2 and 'url(' in bg and all('gradient' in x for x in shades) and ov in ('hidden', 'clip'), str([bg[:90]] + shades + [ov]))
+        # un nombre de dos líneas (los hay en los programas, como «Brazos (bíceps y tríceps)» de Bro Split) y uno larguísimo (el
+        # de un workout propio): los botones, siempre dentro de la tarjeta; el nombre, en dos líneas como mucho (con «…»); a 320 px
+        # la tarjeta crece lo justo, y a partir de ahí mantiene la forma de sus fotos
+        n0 = ev("S.plan[S.selectedDay].n")
+        LONG = """(() => { const h = document.querySelector('#app .day-hero'), r = h.getBoundingClientRect(), t = h.querySelector('h2'), b = h.querySelector('.grid-2').getBoundingClientRect();
+            return [b.top >= r.top && b.bottom <= r.bottom + .5, (t.clientHeight - parseFloat(getComputedStyle(t).paddingTop)) / parseFloat(getComputedStyle(t).lineHeight), r.width, r.height]; })()"""
+        for name in ('Brazos (bíceps y tríceps)', 'Torso completo: pecho, espalda, hombros y brazos con superseries'):
+            ev("S.plan[S.selectedDay].n=%r;R()" % name)
+            for w in (320, 390, 768):
+                pg.set_viewport_size({'width': w, 'height': 844})
+                run(300)
+                inside, lines, cw, chh = ev(LONG)
+                check('a %d px, «%s…»: los botones dentro de la tarjeta y el nombre en %d línea(s) como mucho' % (w, name[:22], 2), inside and lines <= 2.05 and chh <= 320.5 and (w == 320 or abs(chh - min(320, cw / 1.26)) <= 1.5),
+                      str([inside, round(lines, 2), round(cw), round(chh)]))
+        ev("S.plan[S.selectedDay].n=%r;R()" % n0)
         pg.set_viewport_size({'width': 390, 'height': 844})
         run(300)
 
