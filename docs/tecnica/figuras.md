@@ -170,8 +170,11 @@ con alcance (`kneeHug`) y el talón al glúteo con alcance (`heelButt`). Los tre
 pierna que trabaja (la izquierda) por su tobillo o, en el talón al glúteo, por los ángulos de la cadera y la rodilla, para que
 el pie suba y baje girando alrededor de la rodilla con el muslo vertical; y la que apoya, de puntillas cuando toca, con la
 cadera encima. En la zancada, el tronco se inclina lo justo (se calcula) para que la mano derecha llegue al suelo por dentro
-del pie de delante, con la rodilla de delante abierta hacia fuera, por donde baja el tronco. Pendiente del visto bueno del
-propietario.
+del pie de delante, con la rodilla de delante abierta hacia fuera, por donde baja el tronco. Los brazos que suben lo hacen
+girando desde el hombro, estirados (`armSweep`, `slerp`), y cada una dice su miniatura (`still`) y sus posturas quietas
+(`stills`, que `tools/figboxes.js` respeta): el momento clave de cada gesto. Las familias nuevas van en la cabecera de su
+archivo («Define:»): de ella sale qué archivos carga la página de revisión (sin ellas, la primera página del lote se paraba
+en la segunda figura). Pendiente del visto bueno del propietario.
 
 ## Lo que queda fuera
 

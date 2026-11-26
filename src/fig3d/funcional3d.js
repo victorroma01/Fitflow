@@ -4,12 +4,13 @@
    la mochila, saco por encima del hombro, pinza con discos), trineo (empuje, arrastre hacia atrás y tirón con cuerda),
    burpees (y devil press, sprawl, por encima de la barra, del cajón y con salto adelante), wall balls, balón medicinal (slam
    y lanzamientos), box jump y saltos laterales, muscle-ups (anillas y barra), trepa de cuerda, pino y flexiones en pino,
-   gateos (oso y cangrejo), inchworm, press Svend, battle ropes y volteo de neumático.
+   gateos (oso y cangrejo), inchworm, press Svend, battle ropes y volteo de neumático. Y del lote 9 (V1.0.4), la movilidad del
+   calentamiento de los entrenos a la carta: la zancada con rotación torácica, la rodilla al pecho y el talón al glúteo.
    Las mismas reglas que el resto: lo que se apoya toca el suelo o el material con el grosor del dibujo, sin hundirse ni
    flotar; lo que no se mueve no se mueve, y nada atraviesa el cuerpo ni el material. Usa lo de brazos3d.js (F3.blib) y lo de
    core3d.js (F3.clib).
    Define: Fig3D.FAMILIES.oly, .kbell, .carry, .sled, .burpee, .wallBall, .medBall, .boxJump, .sideJump, .muscleUp,
-   .ropeClimb, .handstand, .crawl, .inchworm, .svend, .ropes, .tire */
+   .ropeClimb, .handstand, .crawl, .inchworm, .svend, .ropes, .tire, .wgs, .kneeHug, .heelButt */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib, B = F3.blib, C = F3.clib;
   const { add, sub, mul, dot, cross, len, norm, perp, mix, ease, clamp, at, RAD, LEN, barbell } = L;
@@ -1795,9 +1796,17 @@
   /* (el pie que apoya, como lo pide la postura: hacia fuera w, adelante z, con la punta girada toe y el talón arriba p) */
   const planted = (w, z, toe, p) => footUp(w, z, toe, p);
   /* (las manos colgando junto al cuerpo, como de pie) */
-  const hangArms = (F, q) => ({ hands: both(s => add(shoulder(F, s, q), sd(s, [14, -139, 6]))), elbow: both(() => [.2, 0, -1]), handDir: both(() => [0, -1, 0]), palm: both(() => [-1, 0, 0]) });
-  /* (un brazo arriba, estirado hacia el techo, con la palma hacia dentro) */
-  const armUp = (F, q, s, fw = 10, out = 10) => add(shoulder(F, s, q), sd(s, [out, sqrt(max(0, 144 ** 2 - out * out - fw * fw)), fw]));
+  const hangArms = (F, q) => ({ hands: both(s => add(shoulder(F, s, q), mul(norm(sd(s, [.1, -1, .04])), 141))), elbow: both(() => [.2, 0, -1]), handDir: both(() => [0, -1, 0]), palm: both(() => [-1, 0, 0]) });
+  /* (de una dirección a otra por el arco más corto entre las dos: el brazo gira desde el hombro, sin acortarse) */
+  const slerp = (a, b, u) => { a = norm(a); b = norm(b); const c = clamp(dot(a, b), -1, 1), th = Math.acos(c); if (th < 1e-4) return b; const k = sin(th); return norm(add(mul(a, sin((1 - u) * th) / k), mul(b, sin(u * th) / k))); };
+  /* el brazo s, estirado, de colgar junto al cuerpo (u = 0) a arriba (u = 1) por delante, en un arco desde el hombro: la mano, la
+     dirección de los dedos (en la línea del brazo) y la pista del codo. Antes la mano iba en línea recta de la cadera a lo alto y
+     el brazo se doblaba por el camino */
+  const armSweep = (F, q, s, u, fw = .07, out = .07) => {
+    const S = shoulder(F, s, q), d0 = norm(sd(s, [.1, -1, .04])), d1 = norm(sd(s, [out, 1, fw])), mid = norm(sd(s, [.22, 0, 1]));
+    const d = u < .5 ? slerp(d0, mid, u * 2) : slerp(mid, d1, u * 2 - 1);
+    return { H: add(S, mul(d, 141)), dir: d, hint: norm(mix([.2, 0, -1], [.6, .2, -.6], u)) };
+  };
 
   /* la rodilla al pecho con alcance: de pie, la rodilla izquierda sube y las dos manos la abrazan por debajo, contra el pecho,
      mientras el pie derecho se pone de puntillas; se suelta, el pie baja junto al otro y los dos brazos suben estirados por
@@ -1828,15 +1837,18 @@
       const kn = J.L.knee, an = J.L.ankle, sh = norm(sub(an, kn)), fr = norm(sub([0, 0, 1], mul(sh, dot([0, 0, 1], sh))));
       const grab = add(add(kn, mul(sh, 30)), mul(fr, 20));
       const hug = { L: add(grab, [13, 2, 0]), R: add(grab, [-15, -2, 3]) };
-      const top = both(s => armUp(F, q0, s));
-      const w = k.hug, u = k.up;
-      const hands = both(s => w > 0 ? mix(down.hands[s], hug[s], w) : u > 0 ? mix(down.hands[s], top[s], u) : down.hands[s]);
-      const elbow = both(() => w > 0 ? norm(mix([.2, 0, -1], [.7, -.5, .4], w)) : norm(mix([.2, 0, -1], [.6, .2, -.6], u)));
-      const palm = both(() => w > 0 ? norm(mix([-1, 0, 0], [-.2, .3, -1], w)) : [-1, 0, 0]);
-      const handDir = both(() => w > 0 ? norm(mix([0, -1, 0], [-.1, -.6, .8], w)) : norm(mix([0, -1, 0], [0, 1, .05], u)));
+      /* (los brazos: de colgar a arriba por su arco (up) y, encima, el abrazo (hug); al soltar la rodilla ya empiezan a subir,
+         y las dos cosas se mezclan sin cambiar de regla a mitad: antes, al acabar de soltarla, las manos saltaban un tercio
+         del camino hacia arriba) */
+      const w = k.hug, sw = both(s => armSweep(F, q0, s, k.up));
+      const hands = both(s => mix(sw[s].H, hug[s], w));
+      const elbow = both(s => norm(mix(sw[s].hint, [.7, -.5, .4], w)));
+      const palm = both(() => norm(mix([-1, 0, 0], [-.2, .3, -1], w)));
+      const handDir = both(s => norm(mix(sw[s].dir, [-.1, -.6, .8], w)));
       return { ...q0, hands, elbow, palm, handDir, fist: false };
     };
-    return { view: 'front', up: 'a', rest: 'a', cam: [55, 8], side: [90, 4], feetOff: true, one: true, at: t => reachClamp(at_(t)), beat: cycle(4600) };
+    /* (la miniatura, en el abrazo: es lo que dice el nombre; quieta, de pie, el abrazo y los brazos arriba) */
+    return { view: 'front', up: 'a', rest: 'a', cam: [55, 8], side: [90, 4], feetOff: true, one: true, still: .35, stills: [0, .35, .77], at: t => reachClamp(at_(t)), beat: cycle(4600) };
   };
 
   /* el talón al glúteo con alcance: de pie, el talón izquierdo sube por detrás hasta el glúteo y la mano izquierda coge el pie
@@ -1868,11 +1880,12 @@
       const down = hangArms(F, q0);
       /* la mano izquierda coge el empeine, por detrás, junto al tobillo; la derecha, arriba */
       const an = J.L.ankle, grip = add(an, [6, -6, -10]);
-      const hands = { L: mix(down.hands.L, grip, k.hold), R: mix(down.hands.R, armUp(F, q0, 'R', 8, 12), k.up) };
-      const elbow = { L: norm(mix([.2, 0, -1], [.35, -.2, 1], k.hold)), R: norm(mix([.2, 0, -1], [.6, .2, -.6], k.up)) };
-      return { ...q0, hands, elbow, palm: { L: norm(mix([-1, 0, 0], [-.3, 0, 1], k.hold)), R: [-1, 0, 0] }, handDir: { L: norm(mix([0, -1, 0], [0, -.7, -.7], k.hold)), R: norm(mix([0, -1, 0], [0, 1, .05], k.up)) }, fist: { L: k.hold > .5, R: false } };
+      const up = armSweep(F, q0, 'R', k.up, .04, .1);
+      const hands = { L: mix(down.hands.L, grip, k.hold), R: up.H };
+      const elbow = { L: norm(mix([.2, 0, -1], [.35, -.2, 1], k.hold)), R: up.hint };
+      return { ...q0, hands, elbow, palm: { L: norm(mix([-1, 0, 0], [-.3, 0, 1], k.hold)), R: [-1, 0, 0] }, handDir: { L: norm(mix([0, -1, 0], [0, -.7, -.7], k.hold)), R: up.dir }, fist: { L: k.hold > .5, R: false } };
     };
-    return { view: 'front', up: 'a', rest: 'a', cam: [75, 8], side: [150, 4], feetOff: true, one: true, at: t => reachClamp(at_(t)), beat: cycle(4200) };
+    return { view: 'front', up: 'a', rest: 'a', cam: [75, 8], side: [150, 4], feetOff: true, one: true, still: .48, stills: [0, .48], at: t => reachClamp(at_(t)), beat: cycle(4200) };
   };
 
   /* la zancada con rotación torácica (world's greatest stretch): de pie, un paso largo al frente con la pierna izquierda hasta
@@ -1910,15 +1923,19 @@
       const k = tr(t), q0 = base(k, k.lean), { F, J } = pose({ ...q0, hands: ZERO, elbow: {} });
       const down = hangArms(F, q0);
       /* la mano derecha, del costado al suelo (plana, con los dedos al frente); la izquierda, a la rodilla y, al girar, arriba */
-      const knee = add(J.L.knee, [17, 13, 2]), top = add(shoulder(F, 'L', q0), [6, 142, -4]);
-      const hR = mix(down.hands.R, WGS_HAND, k.hand), hL0 = mix(down.hands.L, knee, k.kl), hL = mix(hL0, top, k.up);
+      /* (el brazo izquierdo sube girando desde el hombro, estirándose: de la rodilla al techo por el arco más corto. Antes la
+         mano iba en línea recta y el brazo se doblaba por el camino) */
+      const knee = add(J.L.knee, [17, 13, 2]), SL = shoulder(F, 'L', q0);
+      const hR = mix(down.hands.R, WGS_HAND, k.hand), hL0 = mix(down.hands.L, knee, k.kl), v0 = sub(hL0, SL);
+      const dL = slerp(v0, [.06, 1, -.08], k.up), hL = add(SL, mul(dL, mix(len(v0), 141, k.up)));
       const hands = { L: hL, R: hR };
       const elbow = { L: norm(mix(mix([.2, 0, -1], [.95, .3, -.15], k.kl), [.6, .2, -.6], k.up)), R: norm(mix([.2, 0, -1], [.4, .1, -1], k.hand)) };
-      const handDir = { L: norm(mix(mix([0, -1, 0], [0, -.6, .8], k.kl), [0, 1, .05], k.up)), R: norm(mix([0, -1, 0], WGS_HDF, k.hand)) };
+      const handDir = { L: norm(mix(mix([0, -1, 0], [0, -.6, .8], k.kl), dL, k.up)), R: norm(mix([0, -1, 0], WGS_HDF, k.hand)) };
       const palm = { L: norm(mix(mix([-1, 0, 0], [0, -1, 0], k.kl), [0, 0, 1], k.up)), R: norm(mix([-1, 0, 0], [0, -1, 0], k.hand)) };
       return { ...q0, hands, elbow, handDir, palm, fist: false };
     };
-    return { view: 'front', up: 'a', rest: 'a', cam: [115, 12], side: [-60, 6], feetOff: true, one: true, at: t => reachClamp(at_(t)), beat: cycle(6400) };
+    /* (la miniatura, con el brazo arriba: la rotación; quieta, de pie, la mano en el suelo y la rotación) */
+    return { view: 'front', up: 'a', rest: 'a', cam: [115, 12], side: [-60, 6], feetOff: true, one: true, still: .53, stills: [0, .3, .53], at: t => reachClamp(at_(t)), beat: cycle(6400) };
   };
 
   const stub = () => null;

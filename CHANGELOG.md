@@ -99,8 +99,10 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   asas arriba y por delante, y la palanca desde un eje delante) y, en la familia Movilidad de Funcional, Zancada con rotación
   torácica, Rodilla al pecho con alcance y Talón al glúteo con alcance (en `funcional3d.js`, lote 9: `wgs`, `kneeHug` y
   `heelButt`), con sus músculos, su consejo y su ejecución en español y en inglés, y otros nombres para el buscador (también
-  los de Inchworm y Saltos de gemelo, como los llama su rutina). Comprobados con `tools/figuras3d` (sin manos que no llegan,
-  choques, material dentro de brazos o piernas ni piezas fijas que se mueven); sus encuadres, en `data/figboxes`.
+  los de Inchworm y Saltos de gemelo, como los llama su rutina). Los brazos que suben giran desde el hombro (`armSweep`), y
+  cada figura dice su miniatura y sus posturas quietas (`still`, `stills`: `tools/figboxes.js` las respeta). Comprobados con
+  `tools/figuras3d` (sin manos que no llegan, choques, material dentro de brazos o piernas, piezas fijas que se mueven ni
+  saltos); sus encuadres, en `data/figboxes`.
 - Pruebas: `tests/ondemand.test.mjs` (las rutinas tal como vienen: claves, cuentas, pirámides, AMRAP, tempos, posiciones
   repetidas y que cada ejercicio está en la librería con figura) y `tests/ondemand.py` (la tarjeta, la lista, la vista previa,
   el entreno con sus series, tempos, variantes, bloques y descansos, las AMRAP, guardar, reanudar y el inglés). Tres pantallas

@@ -11,7 +11,7 @@
    con su propio reloj (un ciclo, uno que alterna los lados, una secuencia) se miran 24 posturas y se toman las más distintas
    entre sí, hasta tres y por orden: el principio, la más lejos de él (la de la miniatura: el otro paso al correr, el brazo
    arriba en un curl alterno, la barra arriba en un clean & jerk) y, si la hay, otra bien lejos de las dos; si casi no se
-   mueve (una plancha), una sola. La familia puede decir el momento de su miniatura (still).
+   mueve (una plancha), una sola. La familia puede decir el momento de su miniatura (still) y los de la figura quieta (stills).
    El archivo lleva la huella de lo que decide cómo se ve una figura (el motor, los datos de los ejercicios, el mapa muscular,
    lo que la dibuja en la app y esta herramienta): si algo de eso cambia, deja de estar al día. La misma huella va aparte, en
    src/js/data/figstamp.js, que la app lleva desde el arranque: con ella sabe si las miniaturas que guardó siguen valiendo.
@@ -84,6 +84,8 @@ const momentsOf = (F3, ex) => {
     }
   }
   if (ex.still != null) out.thumb = ex.still;
+  /* (y las de la figura quieta, si las dice: las que mejor cuentan un gesto por fases) */
+  if (ex.stills) out.stills = ex.stills.slice();
   return out;
 };
 /* un recuadro [x, y, ancho, alto] con sus cuatro lados hacia fuera, en enteros */

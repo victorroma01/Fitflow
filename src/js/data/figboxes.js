@@ -4,7 +4,7 @@
    dibujar cada figura trece veces para saber lo que ocupa. De cada ejercicio: el recuadro [x, y, ancho, alto] del gesto
    entero, el momento de la miniatura y su recuadro, el recuadro de las posturas quietas y los momentos de esas posturas. Va
    con el motor, en lo que se descarga al usarlo (core/lazy).
-   Huella de lo calculado: 84f1fd031b9db6fe91aa
+   Huella de lo calculado: ce56d8bc30c500e4b6a3
    Define: FIG_BOXES
 */
 export const FIG_BOXES = {
@@ -470,9 +470,9 @@ export const FIG_BOXES = {
   "Bird dog": [-191, -150, 478, 179, 0.208, -191, -144, 478, 173, -191, -150, 478, 179, 0, 0.208, 0.708],
   "Hollow rock": [-283, -247, 503, 316, 0.25, -243, -247, 463, 316, -283, -247, 503, 316, 0, 0.25, 0.75],
   "Inchworm": [-407, -404, 464, 411, 0.5, -334, -161, 391, 168, -407, -404, 464, 411, 0, 0.167, 0.5],
-  "Zancada con rotación torácica": [-283, -379, 340, 397, 0.292, -276, -183, 281, 194, -276, -379, 333, 397, 0, 0.292, 0.875],
-  "Rodilla al pecho con alcance": [-116, -492, 216, 508, 0.708, -94, -492, 153, 506, -116, -492, 180, 508, 0, 0.292, 0.708],
-  "Talón al glúteo con alcance": [-75, -495, 186, 509, 0.375, -60, -495, 150, 507, -75, -495, 165, 509, 0, 0.375],
+  "Zancada con rotación torácica": [-283, -379, 340, 397, 0.53, -283, -313, 288, 324, -283, -379, 340, 397, 0, 0.3, 0.53],
+  "Rodilla al pecho con alcance": [-175, -489, 239, 505, 0.35, -116, -394, 147, 410, -116, -489, 180, 505, 0, 0.35, 0.77],
+  "Talón al glúteo con alcance": [-174, -493, 285, 507, 0.48, -60, -493, 150, 505, -75, -493, 165, 507, 0, 0.48],
   "Crab walk": [-200, -178, 366, 206, 0.625, -187, -178, 346, 206, -194, -178, 360, 206, 0, 0.625, 0.792],
   "Sprawl": [-317, -391, 456, 406, 0.375, -329, -162, 390, 172, -329, -391, 409, 406, 0, 0.25, 0.375],
   "Battle ropes": [-59, -359, 494, 393, 0.292, -59, -359, 494, 393, -59, -359, 494, 393, 0, 0.292, 0.75],
