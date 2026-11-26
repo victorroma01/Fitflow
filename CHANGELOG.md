@@ -86,6 +86,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Librería: en la ilustración de CrossFit ya no se ve la marca «ROGUE» del poste del rack, como pidió el propietario:
   `tools/catalogo.py` la quita antes de comprimir (cada fila del poste, por la de 55 filas más abajo, limpia, con los
   agujeros en su sitio).
+- Integración continua (`pruebas.yml`): los trabajos de Chrome, Safari y Firefox tienen 45 minutos en vez de 30. La
+  batería entera tarda unos 20 en Chrome y, según la máquina, de 20 a más de 30 en Safari, que se cortaba a veces al final
+  sin haber fallado nada; una prueba colgada se para igual.
 - Librería: los grupos en tarjetas (`library/catalog`), con el diseño que aprobó el propietario (`StrataFit_Catalogo`): una
   sola tarjeta para todos, desde `data/catalog` (cada grupo de siempre, sin cambiarle el nombre, con el id de sus imágenes),
   y cada una abre su grupo como antes (`libraryGroup`). Las ilustraciones y los iconos del paquete los prepara
