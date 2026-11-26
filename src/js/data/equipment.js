@@ -8,7 +8,8 @@
      la máquina asistida).
    - Los del material que el catálogo no tiene (kettlebell, anillas, TRX, remo ergómetro…), dibujados en vectorial (.svg) con
      su mismo estilo: trazo gris claro, sin color, en el mismo recuadro. «machine» es una máquina cualquiera: la llevan las
-     máquinas que no tienen icono propio.
+     máquinas que no tienen icono propio. La mancuerna también va dibujada: la que pidió el propietario con una captura (dos
+     mancuernas a 45°, lisas, sin la textura de la del catálogo).
    Qué material lleva cada ejercicio lo dice workout/equipmap. En inglés, los nombres están en i18n/en-library.
    Define: EQUIPMENT
 */
