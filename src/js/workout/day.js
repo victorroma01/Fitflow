@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, woShortcuts, inSuperset, dayBlocks, withWeekBar, woExtra, noProgramView, workoutTab  · acciones/registros: 13
+   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, workoutDayBase, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, hubTile, woShortcuts, inSuperset, dayBlocks, withWeekBar, noProgramView, workoutTab  · acciones/registros: 13
 */
 import { say } from '../core/i18n.js';
 import { typedName } from '../core/util.js';
@@ -8,7 +8,7 @@ import { A, C } from '../core/registry.js';
 import { toast } from '../core/toast.js';
 import { overviewMode, S, saveState, setWeekView, W, weekView } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { linkRow, sheet } from '../core/ui.js';
+import { sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { resumeBanner } from './resume.js';
 import { restSelect } from './rest.js';
@@ -21,6 +21,7 @@ import { levelPill, programName } from '../programs/levels.js';
 import { rotationCard } from '../programs/rotation.js';
 import { isFreshInstall, restoreBanner } from '../system/backup.js';
 import { html, raw } from '../core/html.js';
+import { EXERCISES } from '../data/library.js';
 const planEx = (i) => S.plan[S.selectedDay].ex[i];
 /** El botón de una serie menos (by = -1) o una más (by = 1) de un ejercicio del plan (al editar la semana y en Overview). */
 export const planSetButton = (e, i, by) => html`
@@ -193,15 +194,16 @@ A.linkToPrevious = i => {
   saveState('core');
   R();
 };
+/* los atajos del día (no al editar la semana), en tarjetas de dos en dos, como en la referencia del propietario: el icono
+   arriba, el nombre y una línea */
+const hubTile = (ico, t, s, a) => html`<button class="hub-tile" data-a="${a}">${icon(ico, 28)}<b>${t}</b><small>${s}</small></button>`;
 const woShortcuts = () => html`
-  <button class="card w-full ta-l d-flex gap-14 ai-c" data-a="openLibrary">
-    ${icon('lib', 34)}
-    <span><b class="fs-17">Librería de ejercicios</b><br><small>Explora por grupo muscular</small></span>
-  </button>
-  <button class="card w-full ta-l d-flex gap-14 ai-c" data-a="routineEditorBack">
-    ${icon('prog', 34)}
-    <span><b class="fs-17">Workout personalizado</b><br><small>Bloques sueltos, superseries y triseries</small></span>
-  </button>`;
+  <div class="hub-grid">
+    ${hubTile('lib', 'Librería de ejercicios', say `Explora ${EXERCISES.length + S.customExercises.length} ejercicios`, 'openLibrary')}
+    ${hubTile('build', 'Workout personalizado', 'Bloques, superseries y triseries', 'routineEditorBack')}
+    ${hubTile('timer', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time', 'openWod')}
+    ${hubTile('pulse', 'Registrar cardio', 'Carrera, bici, remo y más', 'openCardio')}
+  </div>`;
 export const inSuperset = i => {
   const x = S.plan[S.selectedDay].ex;
   const e = x[i];
@@ -230,7 +232,6 @@ const withWeekBar = h => {
       <div class="bar h-5"><i class="bg-a2" data-style="width:${tr.length ? dn / tr.length * 100 : 0}%"></i></div>
     </div><div class="card hero"`);
 };
-const woExtra = () => linkRow('timer', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time', 'openWod') + linkRow('pulse', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal', 'openCardio');
 /* Sin programa elegido (una cuenta nueva; I-24): detrás, un día de ejemplo difuminado, que no se puede tocar ni lo leen los
    lectores de pantalla; delante, la tarjeta para elegir uno. Debajo, lo que se puede usar sin programa. */
 const noProgramView = () => {
@@ -260,8 +261,7 @@ const noProgramView = () => {
         <button class="primary" data-a="openPrograms">Seleccionar programa</button>
       </div>
     </div>
-    ${raw(woShortcuts())}
-    ${raw(woExtra())}`;
+    ${raw(woShortcuts())}`;
 };
 export function workoutTab() {
   if (S.noProgram && !W && !overviewMode)
@@ -275,9 +275,7 @@ export function workoutTab() {
   }
   if (isFreshInstall() && !W)
     h = restoreBanner() + h;
-  if (weekView || W || overviewMode)
-    return h;
-  return h + woExtra();
+  return h;
 }
 /* — manejadores de esta función (registros A / C / U) — */
 A.selectDay = i => {

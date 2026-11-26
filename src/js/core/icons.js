@@ -4,7 +4,7 @@
 */
 import { groupAnatomy } from '../extras/anatomy.js';
 import { html, raw } from './html.js';
-const IC = { workout: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>', nutri: '<path d="M7 3v8M5 3v5a2 2 0 004 0V3M7 11v10M17 3c-2 2-3 5-3 8h3v10"/>', dash: '<path d="M5 20V10M12 20V4M19 20v-7"/>', user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>', lib: '<path d="M4 5h16v4H4zM4 11h16v4H4zM4 17h16v3H4z"/>', prog: '<path d="M8 6h12M8 12h12M8 18h12M4 6h1M4 12h1M4 18h1"/>', cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>', log: '<path d="M6 3h12v18H6zM9 8h6M9 12h6M9 16h4"/>', reset: '<path d="M4 12a8 8 0 108-8M4 4v5h5"/>', camera: '<path d="M4 8h4l2-3h4l2 3h4v11H4z"/><circle cx="12" cy="13" r="3.5"/>', CrossFit: '<circle cx="12" cy="14" r="6"/><path d="M8 9a4 4 0 018 0"/>', Hyrox: '<path d="M3 17h18M6 17V9h8v8M14 12h5"/>', Funcional: '<path d="M12 3v18M3 12h18M7 7l10 10M17 7L7 17"/>', Cardio: '<path d="M3 12h4l2-5 4 10 2-5h6"/>', Propio: '<path d="M12 5v14M5 12h14"/>' };
+const IC = { workout: '<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>', nutri: '<path d="M7 3v8M5 3v5a2 2 0 004 0V3M7 11v10M17 3c-2 2-3 5-3 8h3v10"/>', dash: '<path d="M5 20V10M12 20V4M19 20v-7"/>', user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>', prog: '<path d="M8 6h12M8 12h12M8 18h12M4 6h1M4 12h1M4 18h1"/>', cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>', log: '<path d="M6 3h12v18H6zM9 8h6M9 12h6M9 16h4"/>', reset: '<path d="M4 12a8 8 0 108-8M4 4v5h5"/>', camera: '<path d="M4 8h4l2-3h4l2 3h4v11H4z"/><circle cx="12" cy="13" r="3.5"/>', CrossFit: '<circle cx="12" cy="14" r="6"/><path d="M8 9a4 4 0 018 0"/>', Hyrox: '<path d="M3 17h18M6 17V9h8v8M14 12h5"/>', Funcional: '<path d="M12 3v18M3 12h18M7 7l10 10M17 7L7 17"/>', Cardio: '<path d="M3 12h4l2-5 4 10 2-5h6"/>', Propio: '<path d="M12 5v14M5 12h14"/>' };
 export const icon = (n, s) => html`
   <svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
       stroke-linejoin="round">${raw(IC[n])}</svg>`;
@@ -32,8 +32,13 @@ IC.globe = '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.
 IC.home = '<path d="M4 10.5L12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/>';
 IC.tour = '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>';
 IC.x = '<path d="M6 6l12 12M18 6L6 18"/>';
-IC.timer = '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>';
-IC.pulse = '<path d="M3 12h4l2-6 4 12 2-6h6"/>';
+/* los atajos de Entrenar (workout/day), rellenos, como en la referencia del propietario: la librería (un archivador), el workout
+   personalizado (cuatro piezas, una de ellas «+»), el temporizador WOD (un cronómetro) y el cardio (un corazón con su latido,
+   que es un trazo del color de la tarjeta: .ic-cut, en css/79-workout-hub) */
+IC.lib = '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M7 2.4h10a1 1 0 0 1 0 2H7a1 1 0 0 1 0-2zM5 5.7h14a1.1 1.1 0 0 1 0 2.2H5a1.1 1.1 0 0 1 0-2.2zM6 9.3h12a3 3 0 0 1 3 3v6.2a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-6.2a3 3 0 0 1 3-3zM9.7 13.6a.95.95 0 0 0 0 1.9h4.6a.95.95 0 0 0 0-1.9z"/>';
+IC.build = '<path fill="currentColor" stroke="none" d="M5 3h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM15 3h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM5 13h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2zM16 14.2a1 1 0 0 1 2 0V16h1.8a1 1 0 0 1 0 2H18v1.8a1 1 0 0 1-2 0V18h-1.8a1 1 0 0 1 0-2H16z"/>';
+IC.timer = '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M10 1.6h4a1 1 0 0 1 0 2h-4a1 1 0 0 1 0-2zM12 4.9a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2zM11 9.7a1 1 0 0 1 2 0v3.9a1 1 0 0 1-2 0z"/>';
+IC.pulse = '<path fill="currentColor" stroke="none" d="M12 20.8s-7.6-4.5-9.4-9.2C1.3 8.2 3.2 4.3 7 4.3c2.1 0 3.7 1.1 5 3 1.3-1.9 2.9-3 5-3 3.8 0 5.7 3.9 4.4 7.3-1.8 4.7-9.4 9.2-9.4 9.2z"/><path class="ic-cut" stroke-width="1.7" d="M1.5 12.2h5.1l1.7-3.1 2.9 5.8 2.1-4 1.3 1.3h7.9"/>';
 IC.ruler = '<path d="M3 17L17 3l4 4L7 21zM8 12l2 2M11 9l2 2M14 6l2 2"/>';
 IC.trf = '<path d="M8 4h8v5a4 4 0 01-8 0zM8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3M12 13v4M8 21h8M10 17h4"/>';
 IC.dwn = '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>';

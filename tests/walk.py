@@ -35,10 +35,19 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
  else e.value=txt;
  e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}"""
 SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
- /* las figuras grandes se mueven (extras/figure) y su contenido se carga aparte: la postura en la que se las pilla depende de
-    si llegó antes o después de avanzar el reloj, y dos pasadas de la misma compilación daban HTML distinto. Se compara qué
-    figura es (data-fig), no su fotograma; cómo se dibujan lo prueban tests/figures.py y las capturas */
- b.querySelectorAll('svg[data-fig]').forEach(x=>{x.innerHTML=''});
+ /* las figuras 3D se dibujan cuando llega el motor, que se descarga aparte (core/lazy), y cuando hay un rato: lo que se pilla de
+    ellas depende de lo que tarden, y dos pasadas de la misma compilación daban HTML distinto. Se compara qué figura va en cada
+    sitio, no si ya está ni en qué fotograma; cómo se dibujan lo prueban tests/figures.py y las capturas.
+    - la grande que se mueve (svg[data-f3], extras/figure3d) y la quieta (data-f3s): su nombre, sin el dibujo ni lo que se le
+      pone al arrancar (data-on, el encuadre y la clase «on»)
+    - cada miniatura (extras/pictures): su hueco (svg[data-pic]) se cambia por la imagen en cuanto se encuentra o se dibuja, y la
+      imagen lleva una dirección blob: distinta en cada pasada. Queda que hay una, y de qué tamaño
+    - los degradados de las figuras van en la página desde que llega el motor (un svg de 0 × 0 al principio): fuera, con los de
+      los músculos (extras/anatomy), que no cambian */
+ b.querySelectorAll('svg[data-f3]').forEach(x=>{x.innerHTML='';x.removeAttribute('data-on');x.removeAttribute('viewBox');x.classList.remove('on');if(!x.classList.length)x.removeAttribute('class')});
+ b.querySelectorAll('[data-f3s]').forEach(x=>{x.innerHTML='';x.removeAttribute('data-on')});
+ b.querySelectorAll('svg[data-pic],img[src^="blob:"]').forEach(x=>{const t=document.createElement('i');t.setAttribute('data-thumb',x.getAttribute('width')||'');x.replaceWith(t)});
+ b.querySelectorAll(':scope>svg[width="0"][height="0"]').forEach(x=>x.remove());
  if(ren){for(const [at,r] of [['data-a','A'],['data-enter','A'],['data-c','C'],['data-u','U']])b.querySelectorAll('['+at+']').forEach(e=>{const v=e.getAttribute(at);if(ren[r][v])e.setAttribute(at,ren[r][v])});
   b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])});
   /* las clases CSS renombradas (registro K): cada nombre por el nuevo, sin tocar los espacios */
@@ -51,7 +60,9 @@ SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('s
   const can=v=>Array.isArray(v)?'['+v.map(can).join(',')+']':v&&typeof v=='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+can(v[k])).join(',')+'}':JSON.stringify(v);
   ls=(c?can(c):'')+'|'+(g('ffw')||'')}catch(e){ls='ERR '+e}
  const f=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x>>>0};
- return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps}}"""
+ /* y el HTML para enseñar la diferencia donde la haya (d), con cada imagen incrustada (data:) cambiada por su tipo y su huella */
+ const d=h.replace(/data:([\\w\\/+.-]*)[^"')\\s]*/g,(m,t)=>'data:'+t+'#'+f(m).toString(36));
+ return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps,d}}"""
 WORDS=['a','Prueba','12','Pollo','Press','x y','0','99','Arroz','Mi plan']
 def load_map(path,ref):
     """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado), 'K' (clases CSS)} de un mapa «registro viejo nuevo».
@@ -75,7 +86,9 @@ def old_classes(js,back):
     cls=lambda s:re.sub(r'\.(-?[A-Za-z_][\w-]*)',lambda m:'.'+back.get(m.group(1),m.group(1)),s)
     js=re.sub(r'''((?:querySelector(?:All)?|closest|matches)\((['"]))(.*?)(\2)''',lambda m:m.group(1)+cls(m.group(3))+m.group(4),js)
     return re.sub(r'''(classList\.\w+\(['"])([\w-]+)''',lambda m:m.group(1)+back.get(m.group(2),m.group(2)),js)
-def trace(file,seed,steps,ren=None):
+def trace(file,seed,steps,ren=None,keep=False):
+    """keep: con el HTML de cada paso (d), para enseñar la diferencia (run); sin él, solo sus huellas"""
+    sig=lambda:(lambda s:s if keep else {k:v for k,v in s.items() if k!='d'})(pg.evaluate(SIG,ren))
     reg={'a':'A','c':'C','u':'U'}
     fwd=lambda k,v:ren[reg[k]].get(v,v) if ren else v                           # nombre de esta compilación → nuevo
     back=lambda k,v:{n:o for o,n in ren[reg[k]].items()}.get(v,v) if ren else v  # nuevo → el de esta compilación
@@ -103,7 +116,7 @@ def trace(file,seed,steps,ren=None):
         pg.clock.run_for(500)
         if scen==1:
             go=back('a','startWorkout');pg.evaluate("A.%s&&A.%s()"%(go,go));pg.clock.run_for(300)
-        res['steps'].append(['init',pg.evaluate(SIG,ren)])
+        res['steps'].append(['init',sig()])
         for st in range(steps):
             cs=[[x[0],fwd(x[0],x[1])]+x[2:] for x in pg.evaluate(CAND)]
             if ren:  # los botones de las ventanas y del menú llevan en data-v la acción que lanzan
@@ -135,9 +148,9 @@ def trace(file,seed,steps,ren=None):
                 if not pg.evaluate("(()=>{const e=document.querySelector('#snapl');return !!e&&/Cargando/.test(e.textContent)})()"):break
                 pg.wait_for_timeout(25)
             try:
-                sg=pg.evaluate(SIG,ren)
+                sg=sig()
             except Exception as e:
-                res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=pg.evaluate(SIG,ren)
+                res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=sig()
             miss=pg.evaluate("(window.__ffHintCheck||[]).splice(0)")
             if miss:
                 res['errs'].append('PISTA paso %d %s: %s'%(st,act[1] if len(act)>1 else act,';'.join(miss)))
@@ -154,6 +167,18 @@ def compare(a,b):
     if len(a['steps'])!=len(b['steps']):return ('LEN',len(a['steps']),len(b['steps']))
     if a['errs']!=b['errs']:return ('ERRS',a['errs'][:3],b['errs'][:3])
     return ('OK',n)
+def difference(x,y,most=14):
+    """lo que cambia en el paso en que divergen: las líneas distintas del HTML (una etiqueta por línea; las imágenes incrustadas,
+    por su tipo y su huella), o que lo distinto son los datos guardados o los pitidos"""
+    out=[]
+    if x.get('d') is not None and x.get('d')!=y.get('d'):
+        import difflib
+        cut=lambda s:s.replace('><','>\n<').split('\n')
+        lines=[l for l in difflib.unified_diff(cut(x['d']),cut(y['d']),'referencia','nueva',lineterm='',n=0) if not l.startswith(('---','+++','@@'))]
+        out+=['    '+l[:170] for l in lines[:most]]+(['    … y %d líneas más'%(len(lines)-most)] if len(lines)>most else [])
+    if x['l']!=y['l']:out.append('    los datos guardados son distintos')
+    if x['b']!=y['b']:out.append('    los pitidos: %s y %s'%(x['b'],y['b']))
+    return '\n'.join(out)
 if __name__=='__main__':
     cmd=sys.argv[1]
     if cmd=='trace':
@@ -166,7 +191,8 @@ if __name__=='__main__':
         ren=load_map(sys.argv[6],fa) if len(sys.argv)>6 else None
         bad=0
         for s in sd:
-            a=trace(fa,int(s),ns,ren);b=trace(fb,int(s),ns)
+            a=trace(fa,int(s),ns,ren,keep=True);b=trace(fb,int(s),ns,keep=True)
             r=compare(a,b);print('seed',s,r if r[0]!='OK' else r,'errsA',len(a['errs']),'errsB',len(b['errs']))
+            if r[0]=='DIVERGE':print(difference(a['steps'][r[1]][1],b['steps'][r[1]][1]))
             if r[0]!='OK':bad+=1
         sys.exit(1 if bad else 0)

@@ -14,22 +14,22 @@
   const { cos, sin, PI, abs, max, min, sqrt, atan2, pow } = Math;
 
   /* ════ correr y andar ════ */
-  /* la zancada de carrera, en el sitio (como en una cinta), con las medidas de un trote de verdad: unas 160 zancadas por minuto
-     y cada pie en el suelo algo menos de dos quintos de la vuelta (st), así que entre un apoyo y otro van los dos en el aire.
-     El pie cae algo por delante de la cadera (zOn), con el medio del pie y la rodilla apenas doblada; va hacia atrás con el
+  /* la zancada de un trote normal, en el sitio (como en una cinta): unas 154 zancadas por minuto, a unos 8 km/h, y cada pie
+     en el suelo dos quintos de la vuelta (st), así que entre un apoyo y otro van los dos en el aire un momento. El pie cae
+     algo por delante de la cadera (zOn), con el medio del pie y la rodilla poco doblada (unos 20°); va hacia atrás con el
      suelo (S: lo que recorre apoyado) mientras la cadera baja hasta media pisada (la rodilla, a unos 40°) y vuelve a subir;
-     el talón se despega pasada la mitad y el pie sale por la punta muy por detrás, con la pierna casi estirada. En el aire, el
-     pie sigue un momento hacia atrás y sube por detrás hacia el glúteo (la rodilla, a unos 95°: el talón, a la altura de la
-     otra rodilla), el muslo tira hacia delante con la rodilla arriba y la pierna se estira por delante; antes de caer, el pie
-     vuelve un poco hacia atrás, a la velocidad del suelo, para no frenar. Las alturas del tobillo y su recorrido en el aire
-     salen de los ángulos de cadera y rodilla de una carrera suave (de la pierna de 89 + 84 del modelo); hk escala lo que sube
-     el talón. slope: la pendiente del suelo (tan), que sube hacia delante; y0: la altura del suelo en z = 0 */
+     el talón se despega pasada la mitad y el pie sale por la punta por detrás de la cadera, con la pierna casi estirada (el
+     muslo, unos 15° hacia atrás). En el aire, el pie sigue un momento hacia atrás y sube, sin llegar al glúteo (la rodilla, a
+     unos 85°, al pasar bajo la cadera), el muslo lleva la rodilla adelante (unos 35°) y la pierna se estira por delante;
+     antes de caer, el pie vuelve un poco hacia atrás, a la velocidad del suelo, para no frenar. Las alturas del tobillo y su
+     recorrido en el aire salen de los ángulos de cadera y rodilla de un trote (de la pierna de 89 + 84 del modelo); hk escala
+     lo que sube el talón. slope: la pendiente del suelo (tan), que sube hacia delante; y0: la altura del suelo en z = 0 */
   const RUN_SWING = {
     /* (en el aire, v de 0 a 1: el recorrido, en partes del de apoyo (0: donde despega; 1: donde cae); la altura del tobillo
        sobre el suelo, y la inclinación del pie: la punta hacia abajo con el talón arriba, y plano al caer) */
-    f: [[.15, -.17], [.3, -.065], [.45, .2], [.6, .555], [.75, 1.02], [.9, 1.09]],
-    h: [[.15, 62], [.3, 92], [.45, 86], [.6, 55], [.75, 33], [.9, 23.5]],
-    p: [[0, 42], [.15, 66], [.3, 82], [.45, 74], [.6, 46], [.75, 16], [.9, -2], [1, 0]]
+    f: [[.15, -.12], [.3, -.02], [.45, .24], [.6, .6], [.75, 1], [.9, 1.06]],
+    h: [[.15, 50], [.3, 66], [.45, 64], [.6, 43], [.75, 27], [.9, 22]],
+    p: [[0, 42], [.15, 58], [.3, 66], [.45, 56], [.6, 34], [.75, 12], [.9, -2], [1, 0]]
   };
   /* (curva de Hermite que pasa por los puntos K ([v, valor]), con la pendiente de Catmull-Rom dentro y las de los extremos que
      se den: así el pie sale y llega a la velocidad que lleva) */
@@ -40,23 +40,26 @@
     return FL.herm((v - x0) / h, a, b, sl(i - 1) * h, sl(i) * h);
   };
   const runGait = (t, o = {}) => {
-    const S = o.S ?? 120, zOn = o.zOn ?? 32, w = o.w ?? 10, toe = o.toe ?? 4, st = o.st ?? .38, hk = o.hk ?? 1, slope = o.slope ?? 0, y0 = o.y0 ?? 0;
+    const S = o.S ?? 137, zOn = o.zOn ?? 41, w = o.w ?? 10, toe = o.toe ?? 4, st = o.st ?? .39, hk = o.hk ?? 1, slope = o.slope ?? 0, y0 = o.y0 ?? 0;
     const P_OFF = 42, feet = {}, knee = {}, ank = {}, on = {};
+    /* (apoyado, v de 0 a 1: el medio del pie, plano; pasada la mitad, el talón se levanta y el pie gira sobre la bola hasta
+       despegar, con la punta P_OFF grados hacia abajo, que es donde empieza RUN_SWING.p) */
+    const planted = (x, v) => { const p = v < .55 ? 0 : P_OFF * ((v - .55) / .45) ** 1.4; return [FL.footPose(x, zOn - S * v, p), p]; };
     for (const [s, ph] of [['L', 0], ['R', .5]]) {
       const u = ((t + ph) % 1 + 1) % 1, x = s == 'L' ? w : -w;
       let A, p;
       if (u < st) {
-        /* (apoyado: el medio del pie, plano; pasada la mitad, el talón se levanta y el pie gira sobre la bola hasta despegar) */
-        const v = u / st;
-        p = v < .55 ? 0 : P_OFF * ((v - .55) / .45) ** 1.4;
-        A = FL.footPose(x, zOn - S * v, p); on[s] = true;
+        [A, p] = planted(x, u / st); on[s] = true;
       }
       else {
-        const v = (u - st) / (1 - st), A0 = FL.footPose(x, zOn - S, P_OFF), dz = zOn - A0[2], m = -S * (1 - st) / st;
-        const z = hermPts(v, [[0, A0[2]], ...RUN_SWING.f.map(([k, f]) => [k, A0[2] + dz * f]), [1, zOn]], m, m);
+        /* (en el aire, el pie sale a la velocidad que llevaba apoyado (la del tobillo y la del giro del pie sobre la bola, que
+           salen de su último momento en el suelo) y cae a la del suelo, para no frenar; el tobillo, sin golpe al posarse) */
+        const v = (u - st) / (1 - st), [A0, p0] = planted(x, 1), [Ab, pb] = planted(x, 1 - 1e-3), rate = (1 - st) / st / 1e-3;
+        const dz = zOn - A0[2], m = -S * (1 - st) / st;
+        const z = hermPts(v, [[0, A0[2]], ...RUN_SWING.f.map(([k, f]) => [k, A0[2] + dz * f]), [1, zOn]], (A0[2] - Ab[2]) * rate, m);
         const H = [[0, A0[1]], ...RUN_SWING.h.map(([k, y]) => [k, LEN.ankle + (y - LEN.ankle) * hk]), [1, LEN.ankle]];
-        p = spl(v, RUN_SWING.p);
-        A = [x, hermPts(v, H, (H[1][1] - H[0][1]) / H[1][0], (H[H.length - 1][1] - H[H.length - 2][1]) / (1 - H[H.length - 2][0])), z];
+        p = hermPts(v, RUN_SWING.p, (p0 - pb) * rate, 0);
+        A = [x, hermPts(v, H, (A0[1] - Ab[1]) * rate, -10), z];
         on[s] = false;
       }
       /* (el tobillo, sobre el suelo, que puede ir en cuesta) */
@@ -66,24 +69,35 @@
     }
     return { feet, knee, ank, on };
   };
-  /* la altura de la cadera al correr, en cada paso (ph: de 0, cuando cae un pie, a 1, cuando cae el otro): baja desde que cae
-     hasta media pisada, sube hasta que despega y algo más en el vuelo, y baja otra vez hasta caer. Sin estirar nunca del todo
-     la pierna que apoya (capRoot) */
+  /* la altura de la cadera al correr, en cada paso (ph: de 0, cuando cae un pie, a 1, cuando cae el otro): una sola onda
+     suave, lo más bajo a media pisada (base - 7) y lo más alto en medio del vuelo (base); sin estirar del todo las piernas
+     (runCap), que casi nunca aprieta */
   const runHip = (ph, st, base) => {
-    const lo = .4 * st / .5, off = st / .5, fly = (off + 1) / 2;
-    return base + spl(ph, [[fly - 1, 5], [0, 2], [lo, -4], [off, 1.5], [fly, 5], [1, 2], [1 + lo, -4]]);
+    const lo = .4 * st / .5, fly = (st / .5 + 1) / 2;
+    return base + spl(ph, [[fly - 1, 0], [lo, -7], [fly, 0], [1 + lo, -7]]);
   };
-  /* los brazos al correr: el hombro lleva el brazo adelante y atrás, al revés que la pierna de su lado, con el codo doblado:
-     más cerrado delante, donde la mano sube hasta la altura del pecho y algo hacia el centro (sin cruzarlo), y más abierto
-     detrás, donde la mano baja junto a la cadera. Todo en el marco del tronco, que se inclina y gira al revés que la cadera:
-     los brazos van con él. La muñeca, recta, en la línea del antebrazo, y las manos sueltas, a medio cerrar */
+  /* (la cadera, nunca más alta de lo que llegan las dos piernas, también la que va en el aire: si solo contara la que apoya,
+     al despegar dejaba de contar de golpe y la cadera daba un saltito. Hasta 171 (la rodilla, a unos 17°), más que el tope
+     general (C.capRoot, 169): al caer y al despegar la pierna de un trote va casi estirada; con un mínimo suave, sin esquinas) */
+  const runCap = (y, ank) => {
+    for (const [A, hx] of [[ank.L, 20], [ank.R, -20]]) {
+      const m = A[1] + sqrt(max(0, 171 ** 2 - A[2] ** 2 - (hx - A[0]) ** 2));
+      y = (y + m - sqrt((y - m) ** 2 + 9)) / 2;
+    }
+    return y;
+  };
+  /* los brazos al correr: el hombro lleva el brazo adelante y atrás, al revés que la pierna de su lado (desde unos 45° atrás,
+     con la mano junto a la cadera, hasta algo por delante del cuerpo), con el codo doblado en ángulo recto: algo más cerrado
+     delante, donde la mano sube hasta la parte baja del pecho, un poco hacia el centro (sin cruzarlo), y algo más abierto
+     detrás. El brazo es el que se mueve, no el codo. Todo en el marco del tronco, que se inclina y gira al revés que la
+     cadera: los brazos van con él. La muñeca, recta, en la línea del antebrazo, y las manos sueltas, a medio cerrar */
   const runArms = (F, q, t, amp = 1) => {
     const o = { hands: {}, elbow: {}, handDir: {} }, T = F.thorax, loc = v => add(add(mul(T.x, v[0]), mul(T.y, v[1])), mul(T.z, v[2]));
     const LU = LEN.upper, LFG = LEN.fore + LEN.grip, ABD = RAD(10);
     for (const [s, ph] of [['L', .42], ['R', .92]]) {
       /* (a: 1 con el brazo delante, -1 detrás; el izquierdo llega delante cuando la pierna izquierda despega por detrás) */
       const a = cos(2 * PI * (t - ph)), fw = max(0, a);
-      const th = RAD(-11 + 19 * a * amp), el = RAD(81 - 23 * a), inw = RAD(6 + 22 * fw), be = th + PI - el;
+      const th = RAD(-10 + 28 * a * amp), el = RAD(90 - 15 * a), inw = RAD(6 + 14 * fw), be = th + PI - el;
       /* (el brazo, algo separado del costado; el antebrazo, girado hacia delante lo que se dobla el codo) */
       const u = [sin(ABD), -cos(ABD) * cos(th), cos(ABD) * sin(th)], f = [-sin(inw), -cos(inw) * cos(be), cos(inw) * sin(be)];
       const hand = add(mul(u, LU), mul(f, LFG));
@@ -106,7 +120,7 @@
     const a = Math.atan(inc), up = [0, cos(a), -sin(a)], fw = [0, sin(a), cos(a)], c = [0, TM_Y / 2 + 4 + (-30) * inc, -30], out = [];
     out.push(...GR.under([GR.obox(cam, add(c, mul(up, -3)), [[1, 0, 0], up], [44, TM_Y / 2 + 1, 104], TM_C), GR.obox(cam, add(c, mul(up, TM_Y / 2 - 1)), [[1, 0, 0], up], [34, 1.2, 100], TM_BELT)], 0));
     /* (los postes salen de delante de la base; arriba, la consola y los pasamanos hacia atrás, a los lados) */
-    const fr = add(c, add(mul(fw, 100), mul(up, TM_Y / 2))), top = [0, fr[1] + 236, fr[2] + 18];
+    const fr = add(c, add(mul(fw, 100), mul(up, TM_Y / 2))), top = [0, fr[1] + 236, fr[2] + 30];
     for (const k of [-1, 1]) {
       out.push(...GR.tube(cam, add(fr, [k * 48, 0, 0]), [k * 52, top[1], top[2]], 5, GR.C.frame, 6));
       /* (los pasamanos, por fuera de por donde van los brazos) */
@@ -119,10 +133,10 @@
     const w = x => has(f, x), walk = w('walk'), tm = w('treadmill'), incline = w('incline'), pack = w('pack'), vest = w('vest');
     /* la pendiente: en la cinta, 7° (12 %); en la calle, una cuesta de 9° */
     const slope = incline ? Math.tan(RAD(tm ? 7 : 9)) : 0, y0 = tm ? TM_Y + 2 : 0;
-    /* (andando, una vuelta de 1,35 s (con mochila, 1,5 s); corriendo, de 0,74 s: unas 162 zancadas por minuto) */
-    const T = walk ? (pack ? 1500 : 1350) : 740;
-    /* (corriendo en cuesta: la zancada, algo más corta, y el pie cae más bajo la cadera; el talón sube algo menos) */
-    const RS = incline ? { S: 100, zOn: 26, st: .4, hk: .92 } : { S: 120, zOn: 32, st: .38, hk: 1 };
+    /* (andando, una vuelta de 1,35 s (con mochila, 1,5 s); al trote, de 0,78 s: unas 154 zancadas por minuto) */
+    const T = walk ? (pack ? 1500 : 1350) : 780;
+    /* (en cuesta: la zancada, algo más corta, el pie cae más bajo la cadera y apoya algo más; el talón sube algo menos) */
+    const RS = incline ? { S: 116, zOn: 34, st: .41, hk: .9 } : { S: 137, zOn: 41, st: .39, hk: 1 };
     const at_ = t => {
       const ph = 2 * PI * t;
       let g, ry;
@@ -135,12 +149,7 @@
       }
       else {
         g = runGait(t, { ...RS, slope, y0 });
-        /* (la cadera: la de cada paso (runHip), más baja a media pisada y más alta en el vuelo; sin estirar nunca del todo la
-           pierna que apoya) */
-        const top = runHip(((t % .5) + .5) % .5 / .5, RS.st, ROOT_Y + y0 - 4);
-        /* (con las dos piernas, también la que va en el aire: si solo contara la que apoya, al despegar dejaba de contar de
-           golpe y la cadera daba un saltito) */
-        ry = C.capRoot([0, top, 0], [[g.ank.L, 20], [g.ank.R, -20]])[1];
+        ry = runCap(runHip(((t % .5) + .5) % .5 / .5, RS.st, ROOT_Y + y0 - 3), g.ank);
       }
       /* (el tronco, algo adelante; más en cuesta y con mochila; gira un poco con cada zancada) */
       const lean = (walk ? 2 : 6) + (incline ? 6 : 0) + (pack ? 6 : 0);
@@ -164,7 +173,9 @@
       if (vest) out.push(...weightVest(cam, F));
       return out;
     };
-    return { view: 'front', up: 'a', rest: 'a', cam: [-68, 6], side: [-90, 4], feetOff: true, one: true, at: at_, gear, beat: cycle(T) };
+    /* (la miniatura de la carrera, en la zancada: un pie acaba de despegar por detrás y la otra rodilla va delante, con los
+       brazos al revés; la de andar, la que salga) */
+    return { view: 'front', up: 'a', rest: 'a', cam: [-68, 6], side: [-90, 4], feetOff: true, one: true, at: at_, gear, beat: cycle(T), ...(walk ? {} : { still: .44 }) };
   };
   /* la mochila a la espalda (la de la cargada de mochila, con las hombreras sobre los hombros) */
   const wornPack = (cam, F) => {

@@ -22,13 +22,16 @@ por lotes de ejercicios antes de entrar en la app (ver [Revisión](#revisión)).
   turca) pasa por sus posturas; una postura que se mantiene (una plancha, colgarse de la barra) respira.
 - Lo que **se desplaza** (correr, empujar el trineo, gatear, los acarreos) lo hace en el sitio, como en una cinta: el suelo
   corre bajo los pies, y en la cinta, su banda.
-- La **carrera** es la de un trote de verdad: unas 160 zancadas por minuto; el pie cae algo por delante de la cadera, con el
-  medio del pie y la rodilla apenas doblada; la cadera baja hasta media pisada y sube en el vuelo, con los dos pies en el
-  aire entre un apoyo y otro; el pie despega por la punta muy por detrás, con la pierna casi estirada, y en el aire el talón
-  sube hacia el glúteo, la rodilla tira hacia delante y la pierna se estira antes de caer. Los brazos van al revés que las
-  piernas, con el codo más cerrado delante (la mano, a la altura del pecho y algo hacia el centro) que detrás (junto a la
-  cadera). Las alturas y el recorrido del pie salen de los ángulos de cadera y rodilla de una carrera suave
-  (`src/fig3d/cardio3d.js`, `runGait`).
+- La **carrera** es la de un trote normal: unas 154 zancadas por minuto (una vuelta de 0,78 s), a unos 8 km/h. El pie cae algo
+  por delante de la cadera, con el medio del pie y la rodilla poco doblada (unos 20°); la cadera baja en una onda suave
+  hasta media pisada (la rodilla, a unos 43°) y sube hasta el vuelo, con los dos pies en el aire un momento entre un apoyo y
+  otro; el pie despega por la punta por detrás de la cadera, con la pierna casi estirada, y sale del suelo a la velocidad que
+  llevaba. En el aire, la rodilla se dobla hasta unos 88° al pasar bajo la cadera (sin llevar el talón al glúteo), el muslo
+  lleva la rodilla adelante (unos 37°) y la pierna se estira antes de caer, volviendo un poco hacia atrás a la velocidad del
+  suelo. Los brazos van al revés que las piernas y se mueven desde el hombro, de unos 45° atrás (la mano junto a la cadera)
+  a algo por delante del cuerpo (la mano, a la altura de la parte baja del pecho), con el codo en ángulo recto. Las alturas
+  y el recorrido del pie salen de las curvas de cadera y rodilla de un trote (`src/fig3d/cardio3d.js`, `runGait`); la
+  miniatura es un momento de la zancada (`still`).
 - Con **«Reducir animaciones»** (Ajustes) o si el móvil pide menos movimiento, la figura no se mueve: salen sus posturas una
   junto a otra. En un gesto de ida y vuelta, «Inicio» y «Final»; en uno con su propio reloj, sus posturas más distintas,
   hasta tres y por orden (los dos pasos de la carrera, el burpee de pie, en el suelo y en el salto), o una sola si casi no se

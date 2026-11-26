@@ -28,6 +28,9 @@
     («Equipamiento (4)»): sin repetir y en el orden en que sale. **Peso corporal** solo sale si no hace falta nada más, y un
     ejercicio creado por ti no añade nada (la app no sabe con qué lo haces). Al tocarlo se abre la lista, con el icono y el
     nombre de cada cosa («Material necesario para esta sesión»). Al editar el día no sale.
+- **Debajo del día**, cuatro tarjetas de dos en dos (desde la V1.0.4, como en la referencia del propietario): **Librería de
+  ejercicios** (con cuántos hay), **Workout personalizado**, **Temporizador WOD** y **Registrar cardio**, cada una con su
+  icono arriba y una línea. Al editar la semana no salen.
 - **La foto de cada día** va según el día: pecho, espalda, hombros, piernas, brazos… En los días de CrossFit, Hyrox y funcional,
   la de su ejercicio principal (SkiErg y remo, trineo, wall balls, arrancada, thrusters, box jumps y burpees, carga de granjero),
   y la simulación de Hyrox, la de una competición. Los días de descanso de esos programas (Hyrox / CrossFit, Híbrido) llevan una
