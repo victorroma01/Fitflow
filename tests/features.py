@@ -370,6 +370,22 @@ def main(path):
         check('las 14 tarjetas, en el orden aprobado, y al final «Mis ejercicios» (con uno del usuario)', [c['g'] for c in cards] == ORDER + ['Propio'], str([c['g'] for c in cards]))
         check('cada una con su número de la librería (no el de las referencias); «1 ejercicio», en singular', [c['count'] for c in cards] == ['%d ejercicio%s' % (n, '' if n == 1 else 's') for n in real] and real[-1] == 1, str([c['count'] for c in cards]))
         check('su nombre y una etiqueta con el grupo y su número', all(c['name'] == (g if g != 'Propio' else 'Mis ejercicios') and c['label'] == '%s: %s' % (c['name'], c['count']) for c, g in zip(cards, ORDER + ['Propio'])), str([c['label'] for c in cards[:3]]))
+        lazy = ev("[...document.querySelectorAll('#sh .cat-art img')].map(i => i.getAttribute('loading'))")
+        check('las ilustraciones de las cuatro primeras cargan al abrir; las de más abajo, al acercarse (loading=lazy)', lazy == [None] * 4 + ['lazy'] * 10, str(lazy))
+        # (en Safari, una ilustración «lazy» no carga hasta que se acerca a la pantalla: se baja la página poco a poco, como al
+        # pasar el dedo, hasta abajo, y se vuelve arriba)
+        ARTS = "[...document.querySelectorAll('#sh .cat-grid .cat-card')].map(c => (i => i ? [i.getAttribute('alt'), i.complete && i.naturalWidth > 0] : null)(c.querySelector('.cat-art img')))"
+        for y in range(0, ev("document.querySelector('#sh .sheet').scrollHeight") + 400, 300):
+            ev("y => { document.querySelector('#sh .sheet').scrollTop = y; }", y)
+            run(150)
+            pg.wait_for_timeout(120)
+        for _ in range(25):   # (cargar y decodificar va en tiempo real, no con el reloj de la prueba)
+            if all(a in (['', True], None) for a in ev(ARTS)):
+                break
+            pg.wait_for_timeout(200)
+        ev("(s => { s.scrollTop = 0; })(document.querySelector('#sh .sheet'))")
+        run(300)
+        cards = [dict(c, art=a) for c, a in zip(cards, ev(ARTS))]
         check('ilustración e icono cargados y decorativos (sin texto: lo dice la etiqueta); «Mis ejercicios», sin ilustración', all(c['art'] == ['', True] and c['ico'] == ['', True] for c in cards[:14]) and cards[14]['art'] is None, str([c['art'] for c in cards if c['art'] != ['', True]]))
         check('Funcional y Cardio son las anchas', [c['g'] for c in cards if c['wide']] == ['Funcional', 'Cardio'])
         legend = ev("[...document.querySelectorAll('#sh .cat-legend .cat-key')].map(k => [k.textContent.trim(), getComputedStyle(k.querySelector('.cat-dot')).backgroundColor])")
