@@ -133,7 +133,9 @@ un ejercicio están en `src/js/data/aliases.js`.
 - Imágenes de las tarjetas de la librería (`library/catalog`): `src/img/catalog/`, del paquete del rediseño que aprobó el
   propietario (`StrataFit_Catalogo`). `python3 tools/catalogo.py carpeta-del-paquete` pasa cada ilustración a WebP con pérdida
   de calidad 90 (las 14, de 732 KB a unos 120 KB, sin diferencia visible) y cada icono rojo a WebP sin pérdida, en un lienzo de
-  54 px de alto, para que en el CSS lleven todos la misma altura y salgan a la escala de la referencia. Los grupos y sus ids
+  54 px de alto, para que en el CSS lleven todos la misma altura y salgan a la escala de la referencia. El icono hace de máscara
+  (`mask-image`, en su `data-style`): su color lo pone el CSS, el de la app sobre fondo oscuro (`--acd`, que calcula
+  `profile/appearance` con el resto de tonos del color elegido), igual que el de la raya. Los grupos y sus ids
   están en `src/js/data/catalog.js` (con el tamaño de cada imagen, que comprueban la herramienta y
   `tests/catalog.test.mjs`); `build.py` las mete en `data/media` (`MEDIA.cat` y `MEDIA.catIcon`). Las tarjetas y las
   referencias del paquete, con texto impreso, no van a la app: son para comparar.

@@ -34,8 +34,8 @@ have no entry: the app shows them in Spanish.
 - Equipment: at the end of each day's Overview, the equipment its exercises need, with their icons. Tap it to see the list
   with the name of each item.
 - Redesigned exercise library: the groups come in cards with their illustration (the model with the primary muscle in red
-  and the secondary in orange; for CrossFit, Hyrox, Functional, and Cardio, their equipment), their icon, and how many
-  exercises they have, with the color legend below. Quads are now called Quadriceps, and hamstrings and glutes, Hamstrings &
+  and the secondary in orange; for CrossFit, Hyrox, Functional, and Cardio, their equipment), their icon in the app's color,
+  and how many exercises they have, with the color legend below. Quads are now called Quadriceps, and hamstrings and glutes, Hamstrings &
   glutes.
 
 ### Improvements

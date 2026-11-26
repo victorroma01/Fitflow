@@ -330,7 +330,9 @@ def main(app):
                     ev("(s => { s.scrollTop = s.scrollHeight; })(document.querySelector('#sh .sheet'))")
                     pg.wait_for_timeout(900)
                     cat = ev("[...document.querySelectorAll('#sh .cat-card img')].map(i=>[i.getAttribute('src'),i.complete&&i.naturalWidth>0])")
-                    check('sin conexión, las 28 imágenes de las tarjetas de la librería salen de la caché', len(cat) == 28 and all(s.startswith('img/catalog/') and ok for s, ok in cat), str([x for x in cat if not x[1]][:4] or len(cat)))
+                    # los iconos son la máscara de su color (data-style): están en la caché
+                    ico = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const e of document.querySelectorAll('#sh .cat-ico-mask')){const u=(e.getAttribute('data-style').match(/mask-image:url\\(([^)]+)\\)/)||[])[1]||'';out.push([u,!!(await c.match(u,{ignoreSearch:true}))])}return out})()")
+                    check('sin conexión, las 14 ilustraciones y los 14 iconos de las tarjetas de la librería salen de la caché', len(cat) == 14 and len(ico) == 14 and all(s.startswith('img/catalog/') and ok for s, ok in cat + ico), str([x for x in cat + ico if not x[1]][:4] or [len(cat), len(ico)]))
                     ev("A.closeSheet()")
                     ev('A.openWod()')
                     pg.wait_for_timeout(300)

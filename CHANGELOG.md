@@ -49,8 +49,8 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Equipamiento: al final del Overview de cada día, el material que piden sus ejercicios, con sus iconos. Al tocarlo, la
   lista con el nombre de cada cosa.
 - Librería de ejercicios renovada: los grupos van en tarjetas con su ilustración (el modelo con el músculo principal en rojo
-  y el secundario en naranja; en CrossFit, Hyrox, Funcional y Cardio, su material), su icono y cuántos ejercicios tienen, y
-  debajo, la leyenda de los colores.
+  y el secundario en naranja; en CrossFit, Hyrox, Funcional y Cardio, su material), su icono en el color de la app y cuántos
+  ejercicios tienen, y debajo, la leyenda de los colores.
 
 ### Mejoras
 - Librería revisada: los músculos de cada ejercicio, comprobados, y fuera los repetidos (el mismo ejercicio con otro nombre).
@@ -77,7 +77,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   y cada una abre su grupo como antes (`libraryGroup`). Las ilustraciones y los iconos del paquete los prepara
   `tools/catalogo.py`: las ilustraciones, de WebP sin pérdida (732 KB) a WebP de calidad 90 (unos 120 KB, sin diferencia
   visible); los iconos, sin pérdida, en un lienzo de 54 px de alto. `build.py` las mete en `data/media` (`MEDIA.cat` y
-  `MEDIA.catIcon`). Diferencias con las referencias, a propósito: el número de cada tarjeta es el de la librería (525
+  `MEDIA.catIcon`). El icono y la raya van en el color de la app, como pidió el propietario: el icono hace de máscara
+  (`mask-image`) y el color es `--acd`, un tono nuevo de `profile/appearance` (el principal, aclarado solo si hace falta para
+  verse sobre el negro de la tarjeta: 3:1 o más). La leyenda sigue en rojo y naranja, los colores de los músculos. Diferencias con las referencias, a propósito: el número de cada tarjeta es el de la librería (525
   ejercicios; las referencias suman 551, de antes de juntar los repetidos); en el móvil, dos columnas (tres no caben con los
   nombres legibles) y Funcional y Cardio anchas, cada una en su fila; desde 520 px, tres, como en el diseño; «Mis
   ejercicios» (los del usuario) sigue, con la misma tarjeta sin ilustración; las tarjetas son oscuras también en el tema

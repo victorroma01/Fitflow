@@ -9,7 +9,8 @@ Escribe en src/img/catalog, por cada grupo que nombra src/js/data/catalog.js:
   14): así pesan seis veces menos (unos 120 KB) y no se nota (unos 40 dB sobre los píxeles que se ven; las esquinas
   transparentes, iguales). Son recortes de una composición, no fotos originales: no se agrandan.
 - <id>-icono.webp: su icono rojo, sin pérdida, centrado en un lienzo transparente de su ancho y del alto del más alto
-  (ICON_H): con una sola altura en el CSS, todos salen a la misma escala, como en la referencia, y cada uno con su ancho.
+  (ICON_H): con una sola altura en el CSS, todos salen a la misma escala, como en la referencia, y cada uno con su ancho. En
+  la app hace de máscara: su color es el de la app (library/catalog), no el rojo del archivo.
 Comprueba que el tamaño de cada ilustración es el que dicen catalogo.json y data/catalog.js. El paquete no hace falta en el
 repositorio (sus tarjetas y referencias, con texto impreso, son solo para comparar).
 Requiere Pillow.
