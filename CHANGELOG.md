@@ -72,6 +72,20 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
 - Inicio de sesión: el logo llena su marco.
 
 ### Interno
+- Figuras 3D: la carrera, rehecha para que sea la de un trote de verdad (`src/fig3d/cardio3d.js`: `runGait`, `runHip` y
+  `runArms`), en todo lo que es correr del lote 8 (en la calle, en la cinta, en cuesta y con chaleco; la marcha, igual). Unas
+  162 zancadas por minuto (antes 133); el pie cae algo por delante de la cadera con la rodilla apenas doblada, la cadera baja
+  hasta media pisada (la rodilla, a unos 40°) y sube en el vuelo, y el pie despega por la punta muy por detrás con la pierna
+  casi estirada; en el aire, el talón sube hacia el glúteo (la rodilla, a unos 105°), el muslo tira hacia delante y la
+  pierna se estira antes de caer, volviendo un poco hacia atrás a la velocidad del suelo. El recorrido del pie en el aire
+  sale de los ángulos de cadera y rodilla de una carrera suave. Antes iba agachada, con las rodillas siempre dobladas y el pie
+  subiendo en medio, como marcando el paso. Los brazos, en el marco del tronco, con el codo más cerrado delante (la mano, a la
+  altura del pecho y algo hacia el centro) que detrás (junto a la cadera); antes, el antebrazo iba horizontal hacia delante.
+  La cadera se limita con las dos piernas (al despegar daba un saltito). Comprobado con las herramientas de
+  `tools/figuras3d` (sin manos que no llegan, choques, saltos ni material dentro de las piernas) y encuadres rehechos.
+- Librería: en la ilustración de CrossFit ya no se ve la marca «ROGUE» del poste del rack, como pidió el propietario:
+  `tools/catalogo.py` la quita antes de comprimir (cada fila del poste, por la de 55 filas más abajo, limpia, con los
+  agujeros en su sitio).
 - Librería: los grupos en tarjetas (`library/catalog`), con el diseño que aprobó el propietario (`StrataFit_Catalogo`): una
   sola tarjeta para todos, desde `data/catalog` (cada grupo de siempre, sin cambiarle el nombre, con el id de sus imágenes),
   y cada una abre su grupo como antes (`libraryGroup`). Las ilustraciones y los iconos del paquete los prepara

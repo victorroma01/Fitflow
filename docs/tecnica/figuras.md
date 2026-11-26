@@ -22,6 +22,13 @@ por lotes de ejercicios antes de entrar en la app (ver [Revisión](#revisión)).
   turca) pasa por sus posturas; una postura que se mantiene (una plancha, colgarse de la barra) respira.
 - Lo que **se desplaza** (correr, empujar el trineo, gatear, los acarreos) lo hace en el sitio, como en una cinta: el suelo
   corre bajo los pies, y en la cinta, su banda.
+- La **carrera** es la de un trote de verdad: unas 160 zancadas por minuto; el pie cae algo por delante de la cadera, con el
+  medio del pie y la rodilla apenas doblada; la cadera baja hasta media pisada y sube en el vuelo, con los dos pies en el
+  aire entre un apoyo y otro; el pie despega por la punta muy por detrás, con la pierna casi estirada, y en el aire el talón
+  sube hacia el glúteo, la rodilla tira hacia delante y la pierna se estira antes de caer. Los brazos van al revés que las
+  piernas, con el codo más cerrado delante (la mano, a la altura del pecho y algo hacia el centro) que detrás (junto a la
+  cadera). Las alturas y el recorrido del pie salen de los ángulos de cadera y rodilla de una carrera suave
+  (`src/fig3d/cardio3d.js`, `runGait`).
 - Con **«Reducir animaciones»** (Ajustes) o si el móvil pide menos movimiento, la figura no se mueve: salen sus posturas una
   junto a otra. En un gesto de ida y vuelta, «Inicio» y «Final»; en uno con su propio reloj, sus posturas más distintas,
   hasta tres y por orden (los dos pasos de la carrera, el burpee de pie, en el suelo y en el salto), o una sola si casi no se
