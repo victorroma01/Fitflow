@@ -156,6 +156,15 @@ la caminata inclinada y la cinta inclinada): queda uno, que se encuentra tambié
 un entreno guardado con el nombre que se quitó lo sigue enseñando, con la figura, los músculos y la ficha del que queda. La ficha de cada ejercicio trae su **consejo** y, al tocar su imagen, **cómo se hace**. Desde la ficha se añade
 al día con «+ Al día».
 
+**Los grupos**, al abrir la librería, van en tarjetas (desde la V1.0.4, con el diseño aprobado por el propietario): las 14 en
+su orden (Pecho, Espalda, Hombros, Bíceps, Tríceps, Antebrazos, Abdomen, Cuádriceps, Isquios y glúteos, Gemelos, CrossFit,
+Hyrox, Funcional y Cardio), cada una con su ilustración (en las musculares, el modelo con el músculo principal en rojo y el
+secundario en naranja; en las demás, su material), su icono, su nombre y cuántos ejercicios tiene. El icono y la raya que lo
+separa del nombre van en el color de la app (Perfil → Ajustes → Color de acento), aclarado si hace falta para que se vean sobre la
+tarjeta. Debajo, la leyenda de los dos colores de los músculos, y antes, si has creado alguno, **Mis ejercicios**. En el móvil van en dos columnas, con Funcional y Cardio
+anchas; en una pantalla más ancha (una tableta, el móvil en horizontal), en tres, como en el diseño. Las tarjetas son oscuras
+también en el tema claro.
+
 **Ejercicios propios**: se crean al añadir un ejercicio al día («Crear ejercicio nuevo»); si ya hay uno con ese nombre (sin mirar
 mayúsculas ni tildes), se añade ese en vez de duplicarlo. En su ficha de la librería se pueden **renombrar** (su historial, sus
 récords, sus notas y los días y workouts en los que está pasan al nombre nuevo) y **eliminar** (solo el ejercicio, conservando su

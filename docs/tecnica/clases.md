@@ -106,7 +106,7 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `gl` | `glass` | El tema Cristal está activo (va en `<html>`). |
 | `g2` | `grid-2` | Rejilla de dos columnas. |
 | `g3` | `grid-3` | Rejilla de tres columnas. |
-| `gg` | `group-grid` | Rejilla de los grupos musculares de la librería. |
+| `gg` | `group-grid` | Rejilla de los grupos musculares de la librería. Desde la V1.0.4 ya no existe: la sustituyen las tarjetas de `library/catalog` (`cat-grid`), y su línea del mapa va comentada. |
 | `gr` | `groups` | La rejilla de filtros, cuando es la de grupos musculares. |
 | `hq` | `help-btn` | Botón «?» que abre una ayuda. |
 | `hv` | `hover` | La pestaña que queda bajo el dedo al arrastrar por la barra. |

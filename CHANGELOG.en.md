@@ -33,6 +33,10 @@ have no entry: the app shows them in Spanish.
   deleted automatically.
 - Equipment: at the end of each day's Overview, the equipment its exercises need, with their icons. Tap it to see the list
   with the name of each item.
+- Redesigned exercise library: the groups come in cards with their illustration (the model with the primary muscle in red
+  and the secondary in orange; for CrossFit, Hyrox, Functional, and Cardio, their equipment), their icon in the app's color,
+  and how many exercises they have, with the color legend below. Quads are now called Quadriceps, and hamstrings and glutes, Hamstrings &
+  glutes.
 
 ### Improvements
 - Library reviewed: every exercise's muscles have been checked, and duplicates (the same exercise under another name) are
@@ -50,5 +54,6 @@ have no entry: the app shows them in Spanish.
 
 ### Fixes
 - Progress chart: when you pick a point that is a record, “PR” appears next to the figure.
+- Library: with a single exercise of your own, “My exercises” said “1 exercises.”
 - A program's name (Programs and Profile) looks like the rest of the titles.
 - Sign-in: the logo fills its frame.

@@ -155,7 +155,7 @@ def main(path):
         check('en un grupo de la librería se ve el grupo', ev("document.querySelector('#sh .sheet').textContent.includes('‹ Grupos')"))
         ev("backTarget().go()")
         run(400)
-        check('«atrás» vuelve a los grupos (antes cerraba la librería)', ev("!!document.querySelector('#sh .sheet .group-grid') && !document.querySelector('#sh .sheet').textContent.includes('‹ Grupos')"))
+        check('«atrás» vuelve a los grupos (antes cerraba la librería)', ev("!!document.querySelector('#sh .sheet .cat-grid') && !document.querySelector('#sh .sheet').textContent.includes('‹ Grupos')"))
         ev("backTarget().go()")
         run(400)
         check('y otro «atrás» cierra la librería', ev("!document.querySelector('#sh .sheet')"))

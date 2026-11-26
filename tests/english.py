@@ -359,6 +359,13 @@ def main(path):
         ev("A.openEquipment()")
         pg.wait_for_timeout(500)
         look('y su página', lambda t: 'Equipment needed for this session' in t and 'Bench press rack' in t)
+        # las tarjetas de los grupos de la librería (V1.0.4): los nombres aprobados, su número en singular o plural y la leyenda
+        fresh("A.openLibrary()")
+        pg.wait_for_timeout(500)
+        cat = ev("[...document.querySelectorAll('#sh .cat-card')].map(c => [c.querySelector('.cat-name').textContent, c.querySelector('.cat-count').textContent, c.getAttribute('aria-label')])")
+        check('la librería en inglés: los nombres aprobados de sus 14 tarjetas, y «My exercises»', [x[0] for x in cat] == ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Forearms', 'Abs', 'Quadriceps', 'Hamstrings & glutes', 'Calves', 'CrossFit', 'Hyrox', 'Functional', 'Cardio', 'My exercises'], str([x[0] for x in cat]))
+        check('con su número en inglés («1 exercise», en singular) y su etiqueta', bool(cat) and all(re.match(r'^\d+ exercises?$', x[1]) for x in cat) and cat[-1][1] == '1 exercise' and all(x[2] == x[0] + ': ' + x[1] for x in cat), str(cat[-2:]))
+        look('y su leyenda', lambda t: 'Primary muscle (main work)' in t and 'Secondary muscle (assistance)' in t)
         # (en una página con el reloj en marcha: la bienvenida espera un momento desde que arranca la app)
         c.close()
         c, pg = context('en-US')

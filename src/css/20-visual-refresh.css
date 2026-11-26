@@ -124,9 +124,6 @@ summary::after {
 details[open]>summary::after {
   transform:rotate(90deg);
 }
-.group-grid button {
-  border-radius:18px;
-}
 .wide-btn {
   border-radius:16px;
 }
@@ -134,6 +131,7 @@ details[open]>summary::after {
 :root {
   --a1:#4da3ff;
   --a2:#1565ff;
+  --acd:#1565ff;
   --a3:#0b3a9c;
   --ft:#fff;
 }

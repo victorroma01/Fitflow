@@ -122,6 +122,15 @@ def list_lines(p):
 BRAND_LOGOS = ('claro', 'oscuro')
 LOGIN_PHOTO = 'img/login/fondo.webp'
 EQUIPMENT_MODULE = os.path.join(SRC, 'js', 'data', 'equipment.js')
+CATALOG_MODULE = os.path.join(SRC, 'js', 'data', 'catalog.js')
+
+
+def catalog_ids():
+    """Los ids de las imágenes de las tarjetas de la librería que nombra data/catalog.js («'Pecho': ['chest', 339, 192]»)."""
+    ids = re.findall(r"'[^']+': \['([\w-]+)', \d+, \d+", read(CATALOG_MODULE))
+    if not ids:
+        die('no encuentro los grupos de las tarjetas de la librería en ' + os.path.relpath(CATALOG_MODULE, ROOT))
+    return ids
 
 
 def equipment_icons():
@@ -142,8 +151,8 @@ def cover_file(folder, k):
 
 def media():
     """Lee src/img: las portadas de día (order.txt; las de mujer, en src/img/day/mujer, las que haya), el logo, el fondo del
-    inicio de sesión y los iconos del equipamiento. Devuelve la lista de imágenes y los enlaces de cada portada y de cada
-    icono (clave → img/…)."""
+    inicio de sesión, los iconos del equipamiento y las imágenes de las tarjetas de la librería. Devuelve la lista de imágenes
+    y los enlaces de cada portada, de cada icono y de cada tarjeta (clave → img/…)."""
     files, day, day_f = [], {}, {}
     base = os.path.join(IMG, 'day')
     for k in list_lines(os.path.join(base, 'order.txt')):
@@ -175,15 +184,25 @@ def media():
             die('el icono de equipamiento %s tiene que estar una vez en src/img/equipment (.webp o .svg): %s' % (k, found or 'no está'))
         equip[k] = 'img/equipment/' + found[0]
         files.append((equip[k], os.path.join(folder, found[0])))
+    # las tarjetas de los grupos de la librería (library/catalog): la ilustración y el icono de cada uno (tools/catalogo.py)
+    cat, cat_icon, cfolder = {}, {}, os.path.join(IMG, 'catalog')
+    for k in catalog_ids():
+        for out, name in ((cat, k + '.webp'), (cat_icon, k + '-icono.webp')):
+            p = os.path.join(cfolder, name)
+            if not os.path.isfile(p):
+                die('falta la imagen de la tarjeta %s (python3 tools/catalogo.py paquete)' % os.path.relpath(p, ROOT))
+            out[k] = 'img/catalog/' + name
+            files.append((out[k], p))
     used = {p for _, p in files}
-    for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
-        if os.path.join(folder, f) not in used:
-            print('  aviso: src/img/equipment/%s no lo nombra data/equipment.js y no se usa' % f)
+    for folder, why in ((folder, 'data/equipment.js'), (cfolder, 'data/catalog.js')):
+        for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            if os.path.join(folder, f) not in used:
+                print('  aviso: %s no lo nombra %s y no se usa' % (os.path.relpath(os.path.join(folder, f), ROOT), why))
     for folder in (base, os.path.join(base, 'mujer')):
         for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
             if f.endswith(('.jpg', '.webp')) and os.path.join(folder, f) not in used:
                 print('  aviso: %s no está en su lista y no se usa' % os.path.relpath(os.path.join(folder, f), ROOT))
-    return {'files': files, 'day': day, 'dayF': day_f, 'equip': equip}
+    return {'files': files, 'day': day, 'dayF': day_f, 'equip': equip, 'cat': cat, 'catIcon': cat_icon}
 
 
 def media_js(m, inline):
@@ -200,6 +219,8 @@ def media_js(m, inline):
         'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
         'login': url(LOGIN_PHOTO, src[LOGIN_PHOTO]),
         'equip': {k: url(rel, src[rel]) for k, rel in m['equip'].items()},
+        'cat': {k: url(rel, src[rel]) for k, rel in m['cat'].items()},
+        'catIcon': {k: url(rel, src[rel]) for k, rel in m['catIcon'].items()},
     }
     return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 

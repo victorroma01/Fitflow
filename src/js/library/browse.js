@@ -4,7 +4,7 @@
 */
 import { $, roundInt } from '../core/util.js';
 import { A, U } from '../core/registry.js';
-import { groupLabel, groupOf, GROUPS } from '../data/library.js';
+import { groupLabel, groupOf } from '../data/library.js';
 import { groupIcon } from '../core/icons.js';
 import { fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText, liveName } from './model.js';
@@ -15,6 +15,7 @@ import { bestOf } from '../workout/finish.js';
 import { toDisplayWeight, weightUnit } from '../profile/units.js';
 import { exAnatomyFull } from '../extras/anatomy.js';
 import { exHasFigure, exPicture } from '../extras/pictures.js';
+import { catalogGrid } from './catalog.js';
 import { html, raw } from '../core/html.js';
 export let libState = { g: '', q: '' };
 export function libBody() {
@@ -22,17 +23,9 @@ export function libBody() {
   const q = (libState.q || '').toLowerCase().trim();
   const g = libState.g;
   const eq = libState.eq || [];
+  /* sin búsqueda ni grupo: los grupos, en tarjetas (library/catalog) */
   if (!q && !g)
-    return html`
-      <p class="muted m-10-0-4">${al.length} ejercicios · toca un grupo muscular</p>
-      <div class="group-grid">
-        ${GROUPS.map(x => [x, al.filter(o => groupOf(o.e) == x).length]).filter(a => a[1]).map(a => html`
-          <button data-a="libraryGroup" data-v="${a[0]}">
-            ${groupIcon(a[0], 88)}
-            <b>${raw(groupLabel(a[0]))}</b>
-            <small>${raw(a[1])} ejercicios</small>
-          </button>`)}
-      </div>`;
+    return html`<p class="muted m-10-0-4">${al.length} ejercicios · toca un grupo muscular</p>${catalogGrid(al)}`;
   const base = al.filter(o => q ? exSearchText(o.e).includes(q) : groupOf(o.e) == g);
   const l = base.filter(o => equipMatch(eq, o.e)).sort((a, b) => q ? exCompare(a.e, b.e) : exOrder(a.e) - exOrder(b.e)).slice(0, q ? 80 : 500);
   let h = '';
