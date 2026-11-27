@@ -256,22 +256,29 @@ const repairSettings = () => {
     delete S.notif;
     if (S.lastBackupDate != null && !(+S.lastBackupDate > 0))
       delete S.lastBackupDate;
-    Object.keys(S.exerciseHistory).forEach(n => {
+    /* es lo que más tarda al arrancar (todas las series de todos los ejercicios): las técnicas, buscadas en un Set hecho una
+       vez, y cada valor se reescribe solo si no es ya un número válido, que es lo normal */
+    const techs = new Set(Object.keys(TECHNIQUES));
+    for (const n of Object.keys(S.exerciseHistory)) {
       const h = S.exerciseHistory[n];
       if (!Array.isArray(h)) {
         delete S.exerciseHistory[n];
-        return;
+        continue;
       }
-      S.exerciseHistory[n] = h.filter(x => x && isDay(x.d) && Array.isArray(x.s) && x.s.every(y => Array.isArray(y)));
+      const ok = S.exerciseHistory[n] = h.filter(x => x && isDay(x.d) && Array.isArray(x.s) && x.s.every(y => Array.isArray(y)));
       /* de cada serie, repeticiones, peso, RPE y fila extra como números (se enseñan tal cual) y la técnica (quinto valor),
          solo si es una conocida */
-      S.exerciseHistory[n].forEach(x => x.s.forEach(y => {
-        for (let i = 0; i < Math.min(4, y.length); i++)
-          y[i] = +y[i] > 0 ? +y[i] : 0;
-        if (y.length > 4 && !Object.keys(TECHNIQUES).includes(y[4]))
-          y.length = 4;
-      }));
-    });
+      for (const x of ok)
+        for (const y of x.s) {
+          for (let i = 0, m = Math.min(4, y.length); i < m; i++) {
+            const v = y[i];
+            if (typeof v != 'number' || !(v > 0))
+              y[i] = +v > 0 ? +v : 0;
+          }
+          if (y.length > 4 && !techs.has(y[4]))
+            y.length = 4;
+        }
+    }
   }
   catch (e) {
     logError('reparar ajustes', e);

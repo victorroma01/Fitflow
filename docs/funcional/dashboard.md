@@ -11,7 +11,8 @@ El progreso de un vistazo.
 - **Nutrición · 7 días**: la media de kcal y de proteína de los días anotados entre los siete anteriores a hoy y cuántos quedaron
   en objetivo. Al tocarla se va a Nutrición.
 - **Calendario y registro**: los entrenos de cada mes y el detalle de cada sesión; Registros va del día más reciente al más
-  antiguo (un cardio apuntado con la fecha de otro día queda en su sitio). Al **borrar un registro** se borran también sus
+  antiguo (un cardio apuntado con la fecha de otro día queda en su sitio) y se pinta por tandas de 60: al llegar al final
+  aparecen los siguientes, y también con «Ver más registros». Al **borrar un registro** se borran también sus
   series del historial de cada ejercicio, y los récords, las gráficas y la progresión se recalculan (en un entreno de antes de
   la V1.0.3, si ese día hay otro, sus series se quedan: no se sabe de cuál son).
 - **Peso corporal**: los registros de peso en una gráfica y el IMC, con su **historial**: al tocar un pesaje se borra (y el peso

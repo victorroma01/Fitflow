@@ -11,6 +11,7 @@ import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
 import { instanceStale, partSizes, partsLost, savesBroken, savesDone, stateRecovered } from './persist.js';
 import { mealsPart } from './parts.js';
+import { repairState } from './repair.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
 import { EXERCISES, groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
@@ -155,6 +156,7 @@ const DEBUG_NAMES = {
   photoUrl: [() => photoUrl],
   routineImage: [() => routineImage],
   MEDIA: [() => MEDIA],
+  repairState: [() => repairState],
 };
 for (const k in DEBUG_NAMES)
   Object.defineProperty(window, k, { get: DEBUG_NAMES[k][0], set: DEBUG_NAMES[k][1], configurable: true });

@@ -1,6 +1,6 @@
 /* ═══ dashboard/history ═══
    Registro de entrenos y calendario.
-   Define: MONTH_YEAR, WEEKDAY_DAY, calendarPage, logsPage, logSeries, dropSeries, logIndex, logText, logRight  · acciones/registros: 5
+   Define: MONTH_YEAR, WEEKDAY_DAY, calendarPage, LOGS_STEP, logsShown, logsList, logRows, logsPage, watchLogsEnd, logSeries, dropSeries, logIndex, logText, logRight  · acciones/registros: 6
 */
 import { say } from '../core/i18n.js';
 import { $, DAY_LETTERS, dayKey, fmtDate, fmtDateShort, round1, roundInt, X } from '../core/util.js';
@@ -33,6 +33,31 @@ export function calendarPage() {
     </div>
     <div class="calendar mt-8">${DAY_LETTERS.split('').map(x => html`<small>${raw(x)}</small>`)}${raw(c)}</div>`;
 }
+/* Registros pinta los entrenos por tandas: LOGS_STEP al abrirla y otros tantos al llegar al final (o al tocar «Ver más
+   registros»), para que abrirla no tarde más cuantos más entrenos haya. logsShown: los que están pintados (al borrar uno, la
+   página se vuelve a pintar hasta ahí, sin perder el sitio); logsList: el orden de la página, para pintar la tanda siguiente. */
+const LOGS_STEP = 60;
+let logsShown = LOGS_STEP;
+let logsList = [];
+/* las filas de los entrenos de L de la posición a a la b, con el mes encima del primero de cada mes */
+const logRows = (L, a, b) => {
+  let h = '';
+  let last = a ? fmtDateShort(L[a - 1].l.d, MONTH_YEAR) : '';
+  for (let k = a; k < b; k++) {
+    const o = L[k];
+    const m = fmtDateShort(o.l.d, MONTH_YEAR);
+    if (m != last) {
+      last = m;
+      h += html`<div class="section-label">${m}</div>`;
+    }
+    h += html`
+      <div class="item item-split cur-pointer" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0">
+        <span><b>${o.l.n}</b><br><small>${fmtDateShort(o.l.d, WEEKDAY_DAY)}${raw(logText(o.l))}</small></span>
+        <b>${raw(logRight(o.l))}</b>
+      </div>`;
+  }
+  return h;
+};
 const logsPage = () => {
   /* del día más reciente al más antiguo y, dentro de un día, el último que se guardó primero: un cardio se puede apuntar con
      la fecha de otro día, y no por guardarse el último es el más reciente */
@@ -46,24 +71,68 @@ const logsPage = () => {
       <div class="card m-0 ta-c p-12-6"><b class="fs-22">${raw(volumeText(tv, 1))}</b><br><small>Volumen</small></div>
       <div class="card m-0 ta-c p-12-6"><b class="fs-22">${round1(tm / 60)} h</b><br><small>Tiempo</small></div>
     </div>`;
-  let last = '';
+  logsList = L;
   if (!L.length)
     return html`${raw(h)}<p class="muted mt-18">Aún no hay entrenos guardados. Se registran al pulsar «Guardar entreno».</p>`;
-  L.forEach(o => {
-    const m = fmtDateShort(o.l.d, MONTH_YEAR);
-    if (m != last) {
-      last = m;
-      h += html`<div class="section-label">${m}</div>`;
-    }
-    h += html`
-      <div class="item item-split cur-pointer" data-a="logDeleteAsk" data-i="${o.i}" role="button" tabindex="0">
-        <span><b>${o.l.n}</b><br><small>${fmtDateShort(o.l.d, WEEKDAY_DAY)}${raw(logText(o.l))}</small></span>
-        <b>${raw(logRight(o.l))}</b>
-      </div>`;
-  });
+  const n = Math.min(L.length, Math.max(LOGS_STEP, logsShown));
+  logsShown = n;
+  h += logRows(L, 0, n);
+  if (n < L.length)
+    h += html`<button class="w-full mt-8" data-a="logsMore" id="logs-more">Ver más registros</button>`;
   return html`${raw(h)}<p class="muted fs-12 mt-14">Toca un registro para borrarlo.</p>`;
 };
-A.openLogs = () => fullPage(logsPage());
+/* al acercarse al final de lo pintado (600 px antes), la tanda siguiente sola; sin IntersectionObserver, con el botón */
+const watchLogsEnd = () => {
+  const b = $('#logs-more');
+  if (!b || typeof IntersectionObserver != 'function')
+    return;
+  const io = new IntersectionObserver(es => {
+    if (!b.isConnected)
+      return io.disconnect();
+    if (!es[es.length - 1].isIntersecting)
+      return;
+    A.logsMore();
+    /* si el botón sigue a la vista (una tanda corta), volver a mirarlo da otro aviso; si ya no está, se acabó */
+    io.unobserve(b);
+    if (b.isConnected)
+      io.observe(b);
+    else
+      io.disconnect();
+  }, { root: b.closest('.sheet'), rootMargin: '0px 0px 600px 0px' });
+  io.observe(b);
+};
+A.openLogs = () => {
+  logsShown = LOGS_STEP;
+  fullPage(logsPage());
+  watchLogsEnd();
+};
+/* la tanda siguiente de Registros, antes del botón; si los entrenos han cambiado mientras (una sincronización), la página
+   entera otra vez, hasta donde se había llegado y una tanda más */
+A.logsMore = () => {
+  const b = $('#logs-more');
+  if (!b)
+    return;
+  const L = logsList;
+  const a = logsShown;
+  const to = Math.min(L.length, a + LOGS_STEP);
+  if (L.length != S.logs.length || L.some(o => S.logs[o.i] !== o.l)) {
+    logsShown = to;
+    sheet(logsPage());
+    watchLogsEnd();
+    return;
+  }
+  const focused = document.activeElement == b;
+  b.insertAdjacentHTML('beforebegin', logRows(L, a, to));
+  logsShown = to;
+  if (to < L.length)
+    return;
+  b.remove();
+  if (focused) {
+    const row = document.querySelectorAll('#sh [data-a=logDeleteAsk]')[a];
+    if (row instanceof HTMLElement)
+      row.focus();
+  }
+};
 /** Las series que guardó el entreno `l` en el historial de ejercicios: [[ejercicio, entrada], …]. Las de la V1.0.3 en adelante
     llevan la marca de su entreno (t); las de antes son las de ese día, si ese día no hay otro entreno sin marca (con dos, no se
     puede saber de cuál son: null). El cardio y los WOD no tienen series. */
@@ -125,6 +194,7 @@ A.logDelete = () => {
   }
   logIndex = -1;
   sheet(logsPage());
+  watchLogsEnd();
   R();
 };
 A.openCalendar = () => fullPage(html`

@@ -295,8 +295,16 @@ def main(path):
         check('y al borrarlo, el peso actual y el del perfil pasan a ser los del anterior', 'Actual: %s kg' % num(by_date[-2]['w']) in text() and ev("S.biometrics.w") == by_date[-2]['w'] and ev("S.weightLog.length") == len(weights) - 1,
               text()[text().find('Actual'):][:60])
         ev("(w => { S.weightLog.push(w); S.biometrics.w = w.w; saveState(); A.weightBack(); })(%s)" % json.dumps(by_date[-1]))
+        def every_log():
+            # Registros se pinta por tandas de 60: para mirar todas las filas, se toca «Ver más registros» hasta que no queda
+            for _ in range(50):
+                if not ev("!!document.querySelector('#logs-more')"):
+                    return
+                ev("document.querySelector('#logs-more').click()")
+                run()
         ev("A.openLogs()")
         run()
+        every_log()
         got = ev("[...document.querySelectorAll('#sh .card b.fs-22')].map(b => b.textContent)")
         want = [str(len(logs)), round1(volume / 1000) + ' t', round1(sum(l['m'] for l in logs) / 60) + ' h']
         check('registros: entrenos, volumen y tiempo totales', got == want, '%s ≠ %s' % (got, want))
@@ -305,11 +313,32 @@ def main(path):
         n_logs = ev("S.logs.length")
         ev("S.logs.push({d: dayKey(new Date(Date.now() - 62 * 864e5)), n: 'Cardio · Carrera', v: 0, s: 0, m: 30, q: 0, k: 'c', x: '5 km', c: {t: 'run', km: 5, sec: 1800}}); A.openLogs()")
         run()
+        every_log()
         days = ev("[...document.querySelectorAll('#sh [data-a=logDeleteAsk]')].map(r => S.logs[+r.dataset.i].d)")
         months = ev("[...document.querySelectorAll('#sh .section-label')].map(h => h.textContent)")
         check('registros: del día más reciente al más antiguo, aunque uno se apunte con fecha de otro día', days == sorted(days, reverse=True) and len(days) == n_logs + 1, str(days[:4]))
         check('y cada mes sale una sola vez', len(months) == len(set(months)) and len(months) > 0, str(months))
         ev("S.logs.pop(); saveState(); A.openLogs()")
+        run()
+        # con muchos entrenos, Registros se pinta por tandas de 60: al llegar al final o al tocar «Ver más registros», la siguiente
+        ev("""(() => { window.__logs = S.logs.slice(); const d0 = Date.now();
+              for (let i = 0; i < 150; i++) S.logs.push({d: dayKey(new Date(d0 - (400 + i) * 864e5)), n: 'Antiguo ' + i, v: 1000, s: 10, m: 40, q: 5});
+              A.openLogs(); })()""")
+        run()
+        rows = "document.querySelectorAll('#sh [data-a=logDeleteAsk]').length"
+        total = ev("S.logs.length")
+        check('registros con muchos entrenos: al abrir, los 60 primeros y «Ver más registros»', ev(rows) == 60 and ev("!!document.querySelector('#logs-more')") and 'Toca un registro para borrarlo.' in text('#sh'), str(ev(rows)))
+        ev("document.querySelector('#sh .sheet').scrollTop = 1e6")
+        pg.wait_for_timeout(500)
+        check('al llegar al final, la tanda siguiente sola', ev(rows) == 120, str(ev(rows)))
+        for _ in range(10):
+            if not ev("!!document.querySelector('#logs-more')"):
+                break
+            ev("document.querySelector('#logs-more').click()")
+            run()
+        months = ev("[...document.querySelectorAll('#sh .section-label')].map(h => h.textContent)")
+        check('y con el botón, todos, sin botón al final y cada mes una sola vez aunque siga en otra tanda', ev(rows) == total and len(months) == len(set(months)), '%s de %s' % (ev(rows), total))
+        ev("S.logs = window.__logs; saveState(); A.openLogs()")
         run()
 
         print('Nutrición de los 7 días anteriores')

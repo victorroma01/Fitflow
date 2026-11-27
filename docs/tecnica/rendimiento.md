@@ -130,6 +130,22 @@ CPU de Chromium (que lo hace todo algo más lento), casi todo el arranque es del
 colocar la página y pintarla); de la app, unos 25 ms: leer de IndexedDB las partes del estado (unos 9), comprobar los datos
 (`core/repair`, unos 6) y el primer pintado (`R()`, unos 8).
 
+Después de esa medida, a petición del propietario, dos cambios más (el mismo día, con los mismos datos; mediana de 9 a 15
+veces):
+
+| Medida | Antes | Después |
+| --- | ---: | ---: |
+| Abrir Registros (700 entrenos): el código | 32,4 ms | 4,3 ms |
+| Abrir Registros: hasta que se ve pintada | unos 70 ms | unos 15 ms |
+| Comprobar los datos al abrir (`core/repair`) | 2,8 ms | 1,5 ms |
+
+Registros se pinta por tandas de 60 (al llegar al final, o con «Ver más registros», la siguiente): abrirla ya no depende de
+cuántos entrenos hay, y con todas las tandas el HTML es el mismo que antes, carácter a carácter. La comprobación de los datos
+no se salta, aunque nada haya cambiado: casi todo su tiempo era el historial de cada ejercicio (todas sus series), donde ahora
+cada valor solo se reescribe si no es ya un número válido y las técnicas se buscan en un `Set` hecho una vez. Con lo poco que
+tarda, saltarla ahorraría un milisegundo y dejaría sin revisar unos datos que pudo cambiar otra versión de la app.
+`tests/perf.py` la mide ahora suelta («comprobar los datos»).
+
 ## Qué se hizo
 
 - **Mirar qué hay que subir (V1.0.32)**: `cloud/sync` recuerda, de cada elemento (un entreno, un día de comidas, el historial

@@ -428,6 +428,10 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   ya no intenta la copia antigua, que sin él no copia nada.
 - `tests/perf.py` mide también el paquete que se publica (`dist/app/index.html`), y la documentación queda al día: las reglas
   14 y 15, las herramientas nuevas, lo medido en la V1.0.4 y `tools/figuras3d/README.md`, que aún hablaba de un prototipo.
+- Registros se pinta por tandas de 60: al llegar al final, o con «Ver más registros», la tanda siguiente; al borrar uno,
+  se vuelve a pintar hasta donde se había llegado. Con 700 entrenos, abrirla pasa de unos 32 ms a 4 (y de 70 a 15 hasta
+  verse), y con todas las tandas el HTML es el mismo que antes. La comprobación de los datos al abrir (`core/repair`) tarda
+  la mitad: en el historial de cada ejercicio, cada valor solo se reescribe si no es ya un número válido.
 
 ## [1.0.31] — 2026-11-16
 
