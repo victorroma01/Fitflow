@@ -13,7 +13,7 @@
      mantiene, como una plancha).
    El momento de cada figura quieta y lo que ocupa cada una vienen ya calculados (tools/figboxes.js): aquí no se dibuja nada
    para medirlo. El motor hace cada ejercicio con sus músculos de la librería, como en las páginas de revisión.
-   Define: F3, figs, exOf, fit, boxText, uid, STAGE, raster, LIGHTEN, defsById, defsFor, thumb, SLOW_FRAME, EARLY, WARM_UP, SAMPLE, frameCosts, plain, middle, frameCost, play, STILL_LABELS, stills, stages
+   Define: F3, figs, exOf, fit, boxText, uid, STAGE, SHARPEN, sharpen, raster, LIGHTEN, defsById, defsFor, thumb, SLOW_FRAME, EARLY, WARM_UP, SAMPLE, frameCosts, plain, middle, frameCost, play, STILL_LABELS, stills, stages
 */
 import { say } from '../core/i18n.js';
 import { AN_H, AN_PA, AN_R, AN_S } from '../data/anatomy.js';
@@ -59,8 +59,52 @@ const boxText = b => b.map(v => Math.round(v * 10) / 10).join(' ');
 let uid = 0;
 /* la proporción de la figura grande (ancho entre alto), la de su sitio en la hoja (css/96-exercise-figures) */
 const STAGE = 4 / 3;
-/** Un dibujo (un <svg> completo, con sus degradados) como imagen de px×px: WebP (o PNG), o, si el navegador no deja leer el
-    lienzo, el propio dibujo. keep: si vale la pena guardarla (la del lienzo; el dibujo pesa demasiado).
+/* cuánto se marcan los bordes de la miniatura (sharpen): lo que se le suma de su diferencia con ella misma suavizada */
+const SHARPEN = 1;
+/** Marca los bordes de la imagen del lienzo (máscara de enfoque): cada píxel se aleja de la media de los de su alrededor
+    (núcleo 1-2-1, en horizontal y en vertical). Reducida a su tamaño en la pantalla (la misma miniatura vale para 48, 64 y
+    72 px), la figura salía blanda; así se ve definida, sin halos. Se hace con el color multiplicado por su opacidad: en el
+    borde de la figura, el fondo transparente no la oscurece ni la aclara.
+    @param {CanvasRenderingContext2D} x
+    @param {number} px */
+const sharpen = (x, px) => {
+  const img = x.getImageData(0, 0, px, px);
+  const d = img.data;
+  const n = px * px;
+  const p = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) {
+    const a = d[i * 4 + 3] / 255;
+    p[i * 4] = d[i * 4] * a;
+    p[i * 4 + 1] = d[i * 4 + 1] * a;
+    p[i * 4 + 2] = d[i * 4 + 2] * a;
+    p[i * 4 + 3] = d[i * 4 + 3];
+  }
+  /* la imagen suavizada: 1-2-1 por filas y luego por columnas (en el borde, el píxel de fuera es el del borde) */
+  const blur = (src, step, len, line) => {
+    const out = new Float32Array(src.length);
+    for (let i = 0; i < n; i++) {
+      const at = Math.floor(i / line) % len;
+      const a = at > 0 ? i - step : i;
+      const b = at < len - 1 ? i + step : i;
+      for (let k = 0; k < 4; k++)
+        out[i * 4 + k] = (src[a * 4 + k] + 2 * src[i * 4 + k] + src[b * 4 + k]) / 4;
+    }
+    return out;
+  };
+  const soft = blur(blur(p, 1, px, 1), px, px, px);
+  for (let i = 0; i < n; i++) {
+    const a = Math.min(255, Math.max(0, p[i * 4 + 3] + SHARPEN * (p[i * 4 + 3] - soft[i * 4 + 3])));
+    d[i * 4 + 3] = a;
+    for (let k = 0; k < 3; k++) {
+      const v = Math.max(0, p[i * 4 + k] + SHARPEN * (p[i * 4 + k] - soft[i * 4 + k]));
+      d[i * 4 + k] = a ? Math.min(255, v * 255 / a) : 0;
+    }
+  }
+  x.putImageData(img, 0, 0);
+};
+/** Un dibujo (un <svg> completo, con sus degradados) como imagen de px×px, con los bordes marcados (sharpen): WebP (o PNG),
+    o, si el navegador no deja leer el lienzo, el propio dibujo. keep: si vale la pena guardarla (la del lienzo; el dibujo
+    pesa demasiado).
     @returns {Promise<{ blob: Blob, keep: boolean }>} */
 const raster = (svg, px) => new Promise((res, rej) => {
   const drawing = new Blob([svg], { type: 'image/svg+xml' });
@@ -71,9 +115,11 @@ const raster = (svg, px) => new Promise((res, rej) => {
       const c = document.createElement('canvas');
       c.width = px;
       c.height = px;
-      c.getContext('2d').drawImage(img, 0, 0, px, px);
+      const x = /** @type {CanvasRenderingContext2D} */ (c.getContext('2d', { willReadFrequently: true }));
+      x.drawImage(img, 0, 0, px, px);
       URL.revokeObjectURL(url);
-      c.toBlob(b => res(b ? { blob: b, keep: true } : { blob: drawing, keep: false }), 'image/webp', .85);
+      sharpen(x, px);
+      c.toBlob(b => res(b ? { blob: b, keep: true } : { blob: drawing, keep: false }), 'image/webp', .92);
     }
     catch (e) {
       URL.revokeObjectURL(url);

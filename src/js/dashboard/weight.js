@@ -6,7 +6,7 @@ import { $, dayKey, fmtDateShort, roundInt, typedNum } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { S, saveState, setWeightView } from '../core/state.js';
-import { R } from '../core/render.js';
+import { closePage, openPage, R } from '../core/render.js';
 import { confirmDialog } from '../core/ui.js';
 import { applyDiet } from '../nutrition/diet.js';
 import { reminderCard } from './reminder.js';
@@ -110,14 +110,9 @@ export function weightPage() {
     ${weightChart(log, S.weightRange || 0)}
     ${log.length ? html`${weightSummary(log)}${weightHistory(log)}` : ''}`;
 }
-A.openWeight = () => {
-  setWeightView(1);
-  R();
-};
-A.weightBack = () => {
-  setWeightView(0);
-  R();
-};
+/* se abre arriba del todo y, al volver, Dashboard queda donde estaba (core/render: openPage, closePage) */
+A.openWeight = () => openPage(() => setWeightView(1));
+A.weightBack = () => closePage(() => setWeightView(0));
 A.weightRange = i => {
   S.weightRange = i;
   saveState('core');

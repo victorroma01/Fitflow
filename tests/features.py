@@ -425,6 +425,13 @@ def main(path):
         check('Funcional y Cardio son las anchas', [c['g'] for c in cards if c['wide']] == ['Funcional', 'Cardio'])
         legend = ev("[...document.querySelectorAll('#sh .cat-legend .cat-key')].map(k => [k.textContent.trim(), getComputedStyle(k.querySelector('.cat-dot')).backgroundColor])")
         check('debajo, la leyenda: rojo, el músculo principal; naranja, el secundario', legend == [['Músculo principal (mayor trabajo)', 'rgb(245, 29, 36)'], ['Músculo secundario (asistencia)', 'rgb(250, 134, 23)']], str(legend))
+        # en el móvil, una línea por color: las dos rayas de color, una encima de la otra, y sus textos, alineados (antes, cada
+        # línea iba centrada por su cuenta y, al ser de distinto largo, ni las rayas ni los textos coincidían)
+        LEGEND_X = """(() => { const l = document.querySelector('#sh .cat-legend').getBoundingClientRect();
+          const k = [...document.querySelectorAll('#sh .cat-legend .cat-key')].map(e => [e.querySelector('.cat-dot').getBoundingClientRect(), e.getBoundingClientRect()]);
+          return [Math.round(k[0][0].left - k[1][0].left), Math.round(k[0][1].top - k[1][1].top) != 0, Math.round((k[0][1].left - l.left) - (l.right - Math.max(k[0][1].right, k[1][1].right)))]; })()"""
+        got = ev(LEGEND_X)
+        check('en el móvil, las dos líneas de la leyenda alineadas por la izquierda (las rayas de color y los textos) y, juntas, centradas', got[0] == 0 and got[1] and abs(got[2]) <= 1, str(got))
         # a cada ancho: sus columnas, y ningún nombre ni número se parte por dentro de una palabra o se sale de su tarjeta
         FIT = """(() => { const g = document.querySelector('#sh .cat-grid'), sh = document.querySelector('#sh .sheet');
           const split = t => { const n = t.firstChild; let at = 0; return t.textContent.split(' ').some(w => { const s = t.textContent.indexOf(w, at); at = s + w.length;

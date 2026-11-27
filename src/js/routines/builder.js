@@ -8,7 +8,7 @@ import { A, C, U } from '../core/registry.js';
 import { groupLabel } from '../data/library.js';
 import { S, saveState } from '../core/state.js';
 import { icon } from '../core/icons.js';
-import { backRow, dialog, sheet } from '../core/ui.js';
+import { backRow, dialog, sheet, stepBelow } from '../core/ui.js';
 import { exAll, exCellHtml, exCompare, exSearchText, groupOfName } from '../library/model.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen, filterRow, groupChips, groupDropdown, groupMatch } from '../library/filters.js';
 import { REST_OPTIONS, restDefault } from '../workout/rest.js';
@@ -217,6 +217,9 @@ A.routineEdit = i => {
   routineState.i = i;
   sheet(routineEditor());
 };
+/* deslizar para volver (core/swipe) pone debajo lo que pintan «‹ Rutinas» (la lista) y «‹ Cancelar» (el editor) */
+stepBelow.routineEditorBack = () => routineListPage();
+stepBelow.routineEdit = () => routineEditor();
 A.routineEditorBack = () => {
   if (routineSnapshot == null || !S.routines[routineEditIndex]) {
     routineSnapshot = null;

@@ -6,7 +6,7 @@ import { fmtMinSec } from '../core/util.js';
 import { A } from '../core/registry.js';
 import { overviewMode, S, saveState, setOverviewMode } from '../core/state.js';
 import { dialog } from '../core/ui.js';
-import { R } from '../core/render.js';
+import { closePage, openPage, R } from '../core/render.js';
 import { overviewSnapshot, setOverviewSnapshot } from '../routines/builder.js';
 import { blockKind, dayBlocks, dayStats, inSuperset, linkPrev, planSetButton } from './day.js';
 import { restOf, restSelect } from './rest.js';
@@ -88,11 +88,8 @@ export function overviewPage() {
     <div class="h-80"></div>
     ${raw(start)}`;
 }
-A.openOverview = () => {
-  setOverviewMode(1);
-  R();
-  scrollTo(0, 0);
-};
+/* se abre arriba del todo y, al volver, Workout queda donde estaba (core/render: openPage, closePage) */
+A.openOverview = () => openPage(() => setOverviewMode(1));
 const toggleOverviewEdit = () => {
   setOverviewMode(overviewMode == 2 ? 1 : 2);
   R();
@@ -125,8 +122,6 @@ A.overviewDiscard = () => {
 A.overviewBack = () => {
   if (overviewMode == 2)
     A.overviewEdit();
-  else {
-    setOverviewMode(0);
-    R();
-  }
+  else
+    closePage(() => setOverviewMode(0));
 };

@@ -40,6 +40,13 @@ archivo elegido en un campo de archivo, `URL.createObjectURL`) no está en la fr
 - **Sin conexión**: la app lee y escribe siempre en el dispositivo y sincroniza cuando hay red (`cloud/sync`).
 - **Zonas seguras** (la isla, la barra de inicio): `viewport-fit=cover` en `src/index.html` y `env(safe-area-inset-*)` en
   `src/css`.
+- **El borde de arriba en el iPhone** (desde iOS 26): sobre la app instalada, el sistema dibuja bajo la barra de estado un
+  difuminado que entra unos 40 pt en la página, y dejaba borrosos por arriba los títulos, el nivel y los botones de arriba aunque
+  no hubiera nada debajo. WebKit no lo pone, y alarga el color, si en ese borde hay una caja fija de lado a lado, de más de 10 px de
+  alto, que se puede tocar y de color liso, sin desenfoque. En el iPhone y el iPad, `core/ui` pone esa banda (`#edge`, del color
+  del fondo, de la barra de estado más 12 px) y la clase `ios` en `<html>`; `css/77-experience` dice dónde va (por encima de las
+  páginas, por debajo de las ventanas que suben desde abajo) y baja lo poco que quedaba debajo (la cabecera del entreno y la
+  tarjeta fija de Nutrición). Dentro de una app nativa no hace falta: la vista web no lleva ese difuminado.
 - **Cuentas**: Firebase por su API REST, sin su SDK, que funciona igual desde una app. Se puede borrar la cuenta desde la propia
   app («Eliminar cuenta», en Privacidad y en Ajustes → Cuenta), que es lo que piden las tiendas.
 - **Textos legales** con dirección pública: la app acabada en `?a=privacidad`, `?a=aviso-legal` o `?a=consentimiento` (y en

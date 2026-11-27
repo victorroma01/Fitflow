@@ -6,10 +6,11 @@
    Cada hoja o página se anuncia como una ventana (role="dialog", aria-modal y su título) y, al abrirla o al pasar a otra página,
    el foco va a ella (sin abrir el teclado); al cerrarla vuelve a lo que la abrió (I-06), para que con VoiceOver o con teclado no
    se siga por la pantalla de detrás. Igual el aviso (#dg) y el menú (#mn), que se abren y cierran también desde otros módulos.
-   Define: sheetBarFix, pageTrail, pageKey, backLink, touched, touchedAt, recentTouch, TYPING, openerNow, focusBack, openers, sheetDialog, swapPage, showPageBelow, sheet, appBusy, confirmDialog, dialogButtons, dialog, watchLayer, closeLayer, onSheetClose, sheetToTop, fullPage, backRow, pgHead, segmented, linkRow  · acciones/registros: 6
+   Define: sheetBarFix, pageTrail, pageKey, backLink, touched, touchedAt, recentTouch, TYPING, openerNow, focusBack, openers, sheetDialog, swapPage, stepBelow, showPageBelow, sheet, appBusy, confirmDialog, dialogButtons, dialog, watchLayer, closeLayer, onSheetClose, sheetToTop, fullPage, backRow, pgHead, segmented, linkRow  · acciones/registros: 6
 */
 import { applyStyles } from './dynstyle.js';
 import { $ } from './util.js';
+import { deviceOS } from './platform.js';
 import { logError } from './errors.js';
 import { A } from './registry.js';
 import { W } from './state.js';
@@ -121,23 +122,38 @@ const swapPage = (p, h) => {
     pageTrail.push(from);
   return false;
 };
-/** Mientras una subpágina se desliza con el dedo: pone debajo la página a la que se vuelve, tal como se dejó, y devuelve la
-    función que la quita. null si lo abierto no es una subpágina (debajo se ve la pestaña). */
+/** El paso de antes de una página que tiene un paso atrás dentro (data-back: «‹ Grupos» en la librería, «‹ Rutinas» y
+    «‹ Cancelar» al crear un workout): por la acción de ese botón, lo que pinta la página al volver. Lo apunta cada módulo; lo
+    usa deslizar para volver (showPageBelow). */
+export const stepBelow = {};
+/** Mientras una página se desliza con el dedo: pone debajo la página a la que se vuelve y devuelve la función que la quita.
+    Si tiene un paso atrás dentro (data-back), su paso de antes (stepBelow), arriba del todo, como queda al volver; si es una
+    subpágina, la de antes, tal como se dejó. null si no es ninguna de las dos (debajo se ve la pestaña). */
 export const showPageBelow = () => {
   const s = $('#sh');
   const p = s.querySelector('.sheet');
+  if (!p || s.className != 'full')
+    return null;
+  const step = p.querySelector('[data-back]');
+  const paint = step && stepBelow[step.dataset.a];
   const top = pageTrail[pageTrail.length - 1];
-  if (!top || !p || s.className != 'full' || !backLink(p))
+  if (!paint && (step || !top || !backLink(p)))
     return null;
   const u = document.createElement('div');
   u.className = 'sheet sheet-under';
   u.inert = true;
   u.setAttribute('aria-hidden', 'true');
-  u.append(top.nodes);
+  if (paint) {
+    u.innerHTML = paint(step);
+    applyStyles(u);
+  }
+  else
+    u.append(top.nodes);
   s.append(u);
-  u.scrollTop = top.y;
+  u.scrollTop = paint ? 0 : top.y;
   return () => {
-    top.nodes.append(...u.childNodes);
+    if (!paint)
+      top.nodes.append(...u.childNodes);
     u.remove();
   };
 };
@@ -176,6 +192,12 @@ export const appBusy = () => !!(W || document.visibilityState == 'hidden' || $('
 export const confirmDialog = (t, p, a, l) => dialog(t, p, [['Cancelar', 'doNothing', ''], [l, a, 'primary']]);
 /* (#tt, los avisos breves: una región que los lectores de pantalla leen al cambiar, sin quitar el foco de donde está) */
 document.body.insertAdjacentHTML('beforeend', '<div id="mn"></div><div id="dg"></div><div id="tt" role="status" aria-live="polite"></div>');
+/* en el iPhone y el iPad, la banda del borde de arriba (#edge), que evita el difuminado que el sistema pone bajo la barra de
+   estado, y la clase «ios» de <html>, con la que lo de arriba de cada pantalla empieza por debajo de ella (css/77-experience) */
+if (deviceOS() == 'ios') {
+  document.documentElement.classList.add('ios');
+  document.body.insertAdjacentHTML('beforeend', '<div id="edge" aria-hidden="true"></div>');
+}
 /** Los botones de una ventana de aviso, en una fila con tantas columnas como botones. `b`: [[texto, acción, clase]…]; al tocar
     uno, la ventana se cierra y se hace su acción (A.dialogAnswer). */
 export const dialogButtons = b => html`

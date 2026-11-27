@@ -6,7 +6,7 @@ import { $, roundInt } from '../core/util.js';
 import { A, U } from '../core/registry.js';
 import { groupLabel, groupOf } from '../data/library.js';
 import { groupIcon } from '../core/icons.js';
-import { fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
+import { fullPage, pgHead, sheet, sheetToTop, stepBelow } from '../core/ui.js';
 import { exAll, exCompare, exMuscles, exOrder, exRowHtml, exSearchText, liveName } from './model.js';
 import { equipDropdown, equipIn, equipMatch, filterOpen } from './filters.js';
 import { exTip, withExInfo } from './howto.js';
@@ -57,6 +57,17 @@ A.openLibrary = () => {
 A.libraryBack = () => {
   sheet(libPage());
   sheetToTop();
+};
+/* deslizar para volver desde un grupo (core/swipe): debajo, los grupos, como los pinta «‹ Grupos» */
+stepBelow.libraryGroup = () => {
+  const now = libState;
+  libState = { g: '', q: '', eq: [] };
+  try {
+    return libPage();
+  }
+  finally {
+    libState = now;
+  }
 };
 A.libraryGroup = (i, b) => {
   libState.g = b.dataset.v;

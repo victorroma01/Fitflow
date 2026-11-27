@@ -230,3 +230,30 @@ Ahora el dedo toca el sitio de la figura y no el dibujo (`pointer-events: none`)
 detrás (`overscroll-behavior: contain`), arrastrar en el fondo oscuro no mueve nada (`touch-action: none`) y deslizar hacia
 abajo cierra las ventanas que suben desde abajo (`core/swipe`). La tarjeta de la revisión se titula «Corrección de errores» y
 enseña sus dos correcciones encima de las novedades de la 1.0.4.
+
+La 1.0.4.1 se publicó el mismo día, a las 21:04. Con ella, las 6 cuentas pasaron al dominio nuevo (20:03), «Comprobar Firebase»
+las dio todas con el de ahora y el simulacro de la limpieza, nada que limpiar.
+
+### Después, sin cambiar de versión
+
+Lo que vio el propietario en su iPhone con la 1.0.4.1 se arregló y se publicó sin otra versión ni aviso, a petición suya: la app
+sigue diciendo 1.0.4.1 y su nota no cambia (lo apunta **Interno** en `CHANGELOG.md`). Llega sola: el service worker ve que el
+documento ha cambiado, `version.json` dice la misma versión, así que no sale el aviso (`system/updates`), y la app abre con lo
+nuevo la siguiente vez.
+
+- **Deslizar para volver enseñaba un hueco en negro** debajo de Overview (y de Evolución del peso): son pantallas que van en
+  lugar de la pestaña, y al moverlas no había nada debajo. Ahora `core/swipe` pone debajo la pestaña a la que se vuelve
+  (`core/render`, `screenBelow`), con su barra de pestañas y en el punto en que se dejó, y la pantalla que se mueve lleva su
+  fondo, su botón de abajo y una sombra; en Chrome de Android, que agrandaba el área de lo fijo al salirse la página por un lado,
+  la página ya no ensancha la pantalla (`overflow-x: clip`). Overview y Evolución del peso se abren arriba del todo y, al volver,
+  la pestaña queda donde estaba (`openPage`, `closePage`). Y en un paso con su «‹ …» dentro (un grupo de la librería, el editor
+  de un workout), debajo se ve el paso al que se vuelve (`core/ui`, `stepBelow`), no la pestaña.
+- **El título y los botones de arriba, borrosos por arriba**: es el difuminado que iOS 26 pone bajo la barra de estado de una app
+  instalada. Una banda fija del color del fondo en ese borde (`#edge`, solo en el iPhone y el iPad) hace que el sistema alargue
+  ese color en vez de difuminar ([detalle](movil.md#lo-que-ya-está)).
+- **La leyenda de los colores de la librería**: cada línea iba centrada por su cuenta y las rayas de color no coincidían. Ahora
+  van alineadas por la izquierda, centradas juntas.
+- **Los iconos de Isquios y glúteos y de Pecho**, cortados por un lado desde el paquete del rediseño: se completan reflejando su
+  lado bueno (`tools/catalogo.py`, `ICON_MIRROR`; la mancuerna pasa de 53 a 60 px de ancho).
+- **Las miniaturas de los ejercicios, más definidas**: se marcan sus bordes al dibujarlas (`extras/figure3d`, `sharpen`) y,
+  como cambia cómo se dibujan, las guardadas en el móvil se dibujan otra vez (`THUMB_LOOK`).

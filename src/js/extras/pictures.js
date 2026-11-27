@@ -12,7 +12,7 @@
      actualizar), de una en una y solo mientras no se toca la pantalla ni se mueve la figura grande.
    - Figura grande de la hoja «Cómo se hace» (exMotion): aquí se pone su sitio, de proporción fija para que nada salte al
      llegar el dibujo, y extras/figure3d la dibuja y la mueve en cuanto aparece en la hoja.
-   Define: RETRY, RETRY_MAX, figuresAt, retryAt, retryWait, retryTimer, engineResting, figures, thumbSize, thumbPx, figDb, STAMP_KEY, storeAt, storeReady, ready, failed, thumbImg, thumbHole, holesOf, fillHole, fillName, toLook, looked, looking, lookUp, soonLine, laterLine, lined, ahead, AT_ONCE, drawing, CALM, movedAt, calmTimer, isCalm, breathe, keep, drawThumb, pump, lineUp, want, warmUp, exHasFigure, exPicture, LATER_MARGIN, laterWatchers, laterWatched, nearView, watchLater, exPictureLater, exMotion, askedStages, stagesIn, wake
+   Define: RETRY, RETRY_MAX, figuresAt, retryAt, retryWait, retryTimer, engineResting, figures, thumbSize, thumbPx, figDb, STAMP_KEY, THUMB_LOOK, stampNow, storeAt, storeReady, ready, failed, thumbImg, thumbHole, holesOf, fillHole, fillName, toLook, looked, looking, lookUp, soonLine, laterLine, lined, ahead, AT_ONCE, drawing, CALM, movedAt, calmTimer, isCalm, breathe, keep, drawThumb, pump, lineUp, want, warmUp, exHasFigure, exPicture, LATER_MARGIN, laterWatchers, laterWatched, nearView, watchLater, exPictureLater, exMotion, askedStages, stagesIn, wake
 */
 import { hasIdb, idbStore } from '../core/idb.js';
 import { logError } from '../core/errors.js';
@@ -58,11 +58,15 @@ const thumbPx = () => thumbSize || (thumbSize = Math.round(72 * Math.min(3, Math
    (data/figstamp) y el tamaño con que se dibujaron */
 const figDb = idbStore('fffig', { mini: null });
 const STAMP_KEY = '\0de';
+/* cómo se dibujan (extras/figure3d): si cambia, lo guardado se dibuja otra vez. 2: con los bordes marcados (V1.0.4.1) */
+const THUMB_LOOK = 2;
+/* lo que dice la fila STAMP_KEY de lo guardado: la huella de las figuras, el tamaño y cómo se dibujaron */
+const stampNow = () => FIG_STAMP + ' ' + thumbPx() + ' ' + THUMB_LOOK;
 /* la primera vez que hace falta: si lo guardado es de otras figuras (o de otro tamaño), se vacía. Da si lo guardado
    se puede usar (no, sin IndexedDB o si falla: las miniaturas se quedan solo en la memoria) */
 let storeAt = null;
 const storeReady = () => storeAt || (storeAt = !hasIdb() ? Promise.resolve(false) : figDb('mini', 'readonly', st => st.get(STAMP_KEY))
-  .then(v => v === FIG_STAMP + ' ' + thumbPx() || figDb('mini', 'readwrite', st => [st.clear(), st.put(FIG_STAMP + ' ' + thumbPx(), STAMP_KEY)]).then(() => true))
+  .then(v => v === stampNow() || figDb('mini', 'readwrite', st => [st.clear(), st.put(stampNow(), STAMP_KEY)]).then(() => true))
   .catch(e => {
   logError('miniaturas guardadas', e);
   return false;
