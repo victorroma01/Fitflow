@@ -25,6 +25,17 @@ revisión y, debajo, los de la versión que revisa (y los de sus revisiones ante
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.4.1] — 2026-11-27
+
+### Correcciones
+- Condiciones y privacidad: el texto que pide aceptar es más claro e impersonal.
+
+### Interno
+- Pasar las cuentas al dominio nuevo: la cuenta de prueba del ensayo entra por la API pública como desde un navegador (diciendo
+  venir solo del origen de la app y, si la clave no lo admite, de su dirección entera: `tools/admin/web.mjs`), y si no puede,
+  el resumen da el código y el motivo de Google. En el primer simulacro tras publicar la 1.0.4 no pudo (PERMISSION_DENIED) y
+  no se supo si las sesiones abiertas se conservarían.
+
 ## [1.0.4] — 2026-11-27
 
 > Revisión de la aplicación

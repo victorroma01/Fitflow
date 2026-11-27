@@ -9,6 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { allAccounts, MODES, moveAccounts, OLD_TECH_DOMAIN, rehearse, rulesAccept, sortAccounts, TECH_DOMAIN } from '../tools/admin/cuentas.mjs';
+import { restCall, webSession } from '../tools/admin/web.mjs';
 
 const read = f => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 const RULES = read('firestore.rules');
@@ -277,6 +278,58 @@ test('si no se puede entrar por la API pública para probarlo, queda sin comprob
   assert.equal(r.moved, 0);
   assert.ok(f.users.every(u => u.email.endsWith(OLD)));
   assert.match(String(row(r, 'Pasadas ahora')), /^0: no se ha pasado ninguna \(no se ha podido comprobar que las sesiones se conserven\)/);
+});
+
+test('si la clave web no admite la petición de entrar, el resumen dice el motivo que da Google (sin el mensaje)', async () => {
+  const f = fake(five());
+  f.io.signIn = async () => {
+    throw Object.assign(fbError('PERMISSION_DENIED'), { reason: 'API_KEY_HTTP_REFERRER_BLOCKED' });
+  };
+  const dry = await run(f, 'simulacro');
+  assert.ok(dry.ok);
+  assert.match(String(row(dry, KEPT)), /^Sin comprobar \(PERMISSION_DENIED · API_KEY_HTTP_REFERRER_BLOCKED\)/);
+  assert.ok(!JSON.stringify(dry).includes('mensaje de Firebase'), 'el mensaje de Firebase no sale');
+});
+
+/* la API pública de mentira: solo admite la petición que dice venir de `allowed`; a las demás, lo que responde Google */
+const keyFetch = (allowed, seen) => async (url, o) => {
+  const what = url.includes('signInWithPassword') ? 'entrar' : url.includes('securetoken') ? 'renovar' : url;
+  seen.push(what + ' ' + o.headers.Referer);
+  const ok = o.headers.Referer == allowed && o.headers.Origin == 'https://victorroma01.github.io';
+  const body = ok ? (what == 'entrar' ? { refreshToken: 'rt', idToken: 'it' } : { id_token: 'it2' })
+    : { error: { code: 403, message: 'Requests from referer ' + o.headers.Referer + ' are blocked.', status: 'PERMISSION_DENIED',
+      details: [{ '@type': 'type.googleapis.com/google.rpc.ErrorInfo', reason: 'API_KEY_HTTP_REFERRER_BLOCKED' }] } };
+  return { ok, status: ok ? 200 : 403, json: async () => body };
+};
+const APP = 'https://victorroma01.github.io/Fitflow/';
+
+test('entrar por la API pública dice venir de la app como un navegador: solo el origen y, si no vale, la dirección entera', async () => {
+  for (const [allowed, tries] of [['https://victorroma01.github.io/', 1], [APP, 2]]) {
+    const seen = [];
+    const w = webSession({ host: 'https://', key: 'clave', appUrl: APP, call: restCall(keyFetch(allowed, seen)) });
+    const s = await w.signIn('prueba@ejemplo', 'contraseña');
+    assert.equal(s.refreshToken, 'rt');
+    assert.equal(seen.length, tries, seen.join(' | '));
+    assert.equal(seen[0], 'entrar https://victorroma01.github.io/', 'primero, como el navegador: solo el origen');
+    await w.refresh('rt');
+    assert.equal(seen[seen.length - 1], 'renovar ' + allowed, 'renueva diciendo venir de la misma dirección con la que entró');
+  }
+});
+
+test('si la clave no admite ninguna de las dos, el error lleva el código y el motivo de Google, y no se prueba nada más', async () => {
+  const seen = [];
+  const w = webSession({ host: 'https://', key: 'clave', appUrl: APP, call: restCall(keyFetch('https://otra.example/', seen)) });
+  await assert.rejects(w.signIn('prueba@ejemplo', 'contraseña'), e => e.code == 'PERMISSION_DENIED' && e.reason == 'API_KEY_HTTP_REFERRER_BLOCKED' && !String(e.message).includes('referer'));
+  assert.equal(seen.length, 2);
+  /* otro error (una contraseña mal) no se repite con la otra dirección */
+  const seen2 = [];
+  const wrong = async (url, o) => {
+    seen2.push(o.headers.Referer);
+    return { ok: false, status: 400, json: async () => ({ error: { code: 400, message: 'INVALID_LOGIN_CREDENTIALS', status: 'INVALID_ARGUMENT' } }) };
+  };
+  const w2 = webSession({ host: 'https://', key: 'clave', appUrl: APP, call: restCall(wrong) });
+  await assert.rejects(w2.signIn('prueba@ejemplo', 'mal'), e => e.code == 'INVALID_LOGIN_CREDENTIALS' && e.reason == '');
+  assert.equal(seen2.length, 1);
 });
 
 test('se puede lanzar otra vez: las ya pasadas no se tocan', async () => {

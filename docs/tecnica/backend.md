@@ -313,7 +313,7 @@ que podría notarse es el paso de las cuentas, y está hecho para que no se note
 | La app (`cloud/auth`, `cloud/config`) | Registra con el dominio de ahora. Al entrar prueba el de ahora y, si no hay tal cuenta, el anterior: una cuenta que aún no se ha pasado entra igual, con su usuario y su contraseña. |
 | Las reglas (`firestore.rules`) | Admiten los dos (`techUser`, `ownName`), y ninguno que solo se les parezca. |
 | `tools/admin` | «Restablecer contraseña» y «Asignar rol» buscan la cuenta con los dos (`findUser`). «Comprobar Firebase» dice cuántas hay con cada uno. |
-| «Pasar las cuentas al dominio nuevo» (`tools/admin/dominio.mjs`, `cuentas.mjs`) | Cambia el correo de cada cuenta que sigue con el anterior, conservando sus sesiones abiertas. Antes comprueba que las reglas publicadas ya admiten el de ahora y ensaya con una cuenta de prueba: si algo de eso falla, no toca ninguna. |
+| «Pasar las cuentas al dominio nuevo» (`tools/admin/dominio.mjs`, `cuentas.mjs`, `web.mjs`) | Cambia el correo de cada cuenta que sigue con el anterior, conservando sus sesiones abiertas. Antes comprueba que las reglas publicadas ya admiten el de ahora y ensaya con una cuenta de prueba, que entra y renueva su sesión por la API pública como la app (`web.mjs`: diciendo venir de la app publicada, como un navegador: solo el origen y, si la clave no lo admite, la dirección entera): si algo de eso falla, no toca ninguna, y el resumen dice el código y el motivo que da Google. |
 
 ### Las sesiones abiertas
 

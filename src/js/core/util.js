@@ -5,7 +5,7 @@
 */
 window.__ffs = 1;
 /** Versión de la app (se muestra en Perfil y va en las copias de seguridad y en el registro de errores). */
-export const APPV = '1.0.4';
+export const APPV = '1.0.4.1';
 export const FFDEP = 0; /* 1 en el paquete instalable (dist/app): lo fija build.py; 0 en el archivo único */
 /** La clave (localStorage) del idioma elegido en Ajustes para este móvil: 'es' o 'en'. Si falta, manda el idioma del móvil. */
 export const LANG_KEY = 'fflang';

@@ -5,7 +5,7 @@ instaladas hasta la 1.0.31, las notas en inglés (CHANGELOG.en.md), lo que no se
 
   python3 tests/changelog.py
 """
-import io, os, sys, json, contextlib
+import io, os, re, sys, json, contextlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..'))
@@ -269,7 +269,11 @@ def main():
     # las notas en inglés de la versión: obligatorias (build.py se detiene sin ellas), con los mismos apartados y puntos
     en = build.cards(build.english(build.changelog()))[0].get('en') or []
     shape = lambda sections, name: [('cabecera' if s.get('lead') else name(s['title']), len(s['items'])) for s in sections]
-    check('la versión tiene su nota en inglés (CHANGELOG.en.md), que dice lo mismo: los mismos apartados, con los mismos puntos', bool(en) and shape(en, lambda x: build.EN_SECTIONS[x]) == shape(cards[0]['sections'], lambda x: x), str(shape(en, lambda x: x)))
+    # en una revisión, cada apartado lleva el número de su versión: «Fixes in 1.0.4.1» es «Correcciones de la 1.0.4.1»
+    def es_title(t):
+        m = re.match(r'^(.*?)(?: in (%s))?$' % build.VERSION, t)
+        return build.EN_SECTIONS.get(m.group(1), t) + (' de la ' + m.group(2) if m.group(2) else '')
+    check('la versión tiene su nota en inglés (CHANGELOG.en.md), que dice lo mismo: los mismos apartados, con los mismos puntos', bool(en) and shape(en, es_title) == shape(cards[0]['sections'], lambda x: x), str(shape(en, lambda x: x)))
     check('y está en inglés: ni «» ni letras del español', bool(en) and not any(c in json.dumps(en, ensure_ascii=False) for c in '«»áéíóúñ¿¡'), json.dumps(en, ensure_ascii=False)[:200])
     lead = [s for s in cards[0]['sections'] if s.get('lead')]
     if lead:
@@ -278,7 +282,8 @@ def main():
     check('cada apartado cabe entero en el aviso (ocho cambios)', all(len(x['items']) <= 8 for x in cards[0]['sections']), str([len(x['items']) for x in cards[0]['sections']]))
     base = entries[0].get('base')
     if base:
-        t = titles(cards[0])
+        # sin la cabecera, que es la de la versión que revisa y va encima de todo (la revisión no lleva la suya)
+        t = [x['title'] for x in cards[0]['sections'] if not x.get('lead')]
         own = [x['title'] + ' de la ' + ver for x in entries[0]['sections']]
         check('%s es una revisión de la %s: su tarjeta enseña primero lo suyo y después lo de esa versión, que ya no sale aparte' % (ver, base), t[:len(own)] == own and t[-1].endswith(' de la ' + base) and base not in versions, str(t) + ' ' + str(versions[:4]))
         earlier = [e['version'] for e in entries[1:] if e.get('base') == base]

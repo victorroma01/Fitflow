@@ -1384,7 +1384,7 @@ addEnglish({
   "Cuenta:": "Account:",
   "Si prefieres no aceptar:": "If you'd rather not accept:",
   "Has retirado tu consentimiento y tus registros se han borrado. Para volver a usar StrataFit con esta cuenta tienes que darlo de nuevo.": "You have withdrawn your consent and your records have been deleted. To use StrataFit with this account again, you need to give it again.",
-  "Para seguir usando StrataFit con tu cuenta, acepta las condiciones y danos tu consentimiento para tratar los datos de salud que guardas. Hasta entonces, la app no usa ni sincroniza tus datos.": "To keep using StrataFit with your account, accept the terms and give us your consent to process the health data you keep. Until then, the app doesn't use or sync your data.",
+  "Para seguir usando StrataFit con tu cuenta, acepta las condiciones y da tu consentimiento para tratar los datos de salud. Hasta entonces, la app no usa ni sincroniza tus datos.": "To keep using StrataFit with your account, accept the terms and give your consent to process health data. Until then, the app doesn't use or sync your data.",
   "Aceptar y continuar": "Accept and continue",
   "Elige una contraseña nueva": "Choose a new password",
   "Has entrado con una contraseña temporal. Para seguir, elige una nueva que solo sepas tú.": "You signed in with a temporary password. To continue, choose a new one that only you know.",
