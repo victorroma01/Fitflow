@@ -14,7 +14,8 @@ ver la [documentación funcional](../funcional/README.md).
 | [Servidor: Firebase](backend.md) | El servidor: cuentas, roles, documentos de Firestore, sincronización sin conexión, reglas de seguridad y administración desde GitHub. |
 | [Desarrollo](desarrollo.md) | Requisitos, comandos, cómo añadir una función, reglas de calidad y cómo se publica una versión. |
 | [Pruebas](pruebas.md) | Qué comprueba cada prueba, en qué navegadores y cuándo se pasan. |
-| [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en la V1.0.2 frente a la V1.0.1 (T-26). |
+| [Rendimiento](rendimiento.md) | Cómo se mide (arranque, guardar y pintar con muchos datos) y lo medido en cada versión desde la V1.0.2 (T-26). |
+| [Llevarla a iOS y Android](movil.md) | La frontera con el sistema (qué módulo hace cada cosa que cambia dentro de una app nativa), lo que ya está y los pasos para meterla en una app de iOS y de Android. |
 | [Auditoría de la V1.0.3](auditoria-1.0.3.md) | Auditoría técnica completa de la V1.0.2: diagnóstico por áreas, lo corregido en la V1.0.3, lo pendiente y las recomendaciones. |
 | [Revisión de la V1.0.32](revision-1.0.32.md) | Repaso de la V1.0.32 antes de publicarla: qué se miró, los dos casos de pérdida de datos encontrados y corregidos, lo comprobado y lo que queda por decidir. |
 | [Revisión de la V1.0.4](revision-1.0.4.md) | Repaso de la V1.0.4 antes de publicarla: código, seguridad, datos, rendimiento y funcionamiento; el fallo encontrado y corregido (en un día de descanso faltaban la barra y los avisos de la semana) y lo pendiente antes de publicar. |
@@ -87,8 +88,12 @@ el que usan la mayoría de las pruebas.
   `core/repair`, reanudar un entreno, primer render y empezar a sincronizar) vive en `core/boot`, en orden. El resto de módulos solo define y registra sus manejadores y escuchas
   (eventos, gestos de `core/tabbar` y `core/swipe`, historial de `core/back`), salvo `cloud/session`, que antes de leer el estado
   borra los datos de otra cuenta.
-- **Sin código muerto**: `tools/check.js` falla si algo declarado, exportado, registrado o dibujado no se usa, incluido el CSS
-  ([reglas](desarrollo.md#reglas-de-calidad)).
+- **Sin código muerto**: `tools/check.js` falla si algo declarado, exportado, registrado o dibujado no se usa, incluidos el CSS
+  y el motor de las figuras 3D ([reglas](desarrollo.md#reglas-de-calidad)).
+- **La frontera con el sistema**: lo que dentro de una app nativa (iOS, Android) se hace de otra forma (guardar en el
+  dispositivo, compartir y copiar, avisos y globo, el service worker, la pantalla encendida, la vibración, «atrás», la cámara,
+  App Check, qué dispositivo es) va en un solo módulo por cosa, y `tools/check.js` falla si lo usa otro
+  ([Llevarla a iOS y Android](movil.md)).
 - **Tipos comprobados**: `tools/types.js` falla si un módulo usa una clave del estado que no existe, le da un valor de otro
   tipo o llama a una función con lo que no es; en el guardado y la sincronización, además, todo lleva su tipo
   ([cómo](tipos.md)).
@@ -136,12 +141,16 @@ el que usan la mayoría de las pruebas.
 │                           lo que genera tools/marca.py), equipment/ (los iconos del material: tools/equipamiento.py) y
 │                           catalog/ (las tarjetas de los grupos de la librería: tools/catalogo.py)
 ├── static/                 sw.js (plantilla), manifiesto, iconos de la app y de los accesos directos (tools/marca.py)
-├── tools/                  check.js · format.js · format_css.js · modindex.js · modules.js · same.js · rename.js · pages.py ·
-│                           marca.py (logo e iconos) · figure.js (el dibujo del modelo de perfil) · fondo.py (el fondo del
-│                           inicio de sesión) · portadas.py (las portadas de los días) · equipamiento.py (los iconos del material) ·
-│                           catalogo.py (las tarjetas de la librería)
+├── tools/                  comprobaciones: check.js (reglas, con globals.json), types.js (tipos), classes.js (clases CSS),
+│                           i18n.js (el inglés, con i18n-skip.json), same.js (un cambio de formato no cambia el programa);
+│                           format.js y format_css.js (formato) y modindex.js (cabeceras y mapa de módulos); para compilar,
+│                           templates.js (plantillas HTML) y modules.js (el orden de los módulos); figboxes.js (encuadres de
+│                           las figuras 3D); imágenes: marca.py (logo e iconos), fondo.py (el fondo del inicio de sesión),
+│                           portadas.py (las portadas de los días), equipamiento.py (los iconos del material) y catalogo.py
+│                           (las tarjetas de la librería); rename.js (renombrar globales) y pages.py (GitHub Pages)
+│   ├── figuras3d/          las pruebas y la página de revisión de las figuras 3D por lotes, y huella.js (README)
 │   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar,
-│                           pasar las cuentas al dominio nuevo)
+│                           pasar las cuentas al dominio nuevo, limpieza de cuentas sin usar y reglas)
 ├── tests/                  pruebas, run.sh y compare.sh
 ├── docs/
 │   ├── funcional/          qué hace la app, pantalla a pantalla

@@ -148,6 +148,41 @@ Tras fusionar la revisión (#76), en la rama `repaso-1.0.4` ([solicitud #77](htt
   (`tests/contrast.py`), los tamaños de pantalla (`tests/layout.py`) y el recorrido (`tests/experience.py`), correctos.
 - **Batería completa** y GitHub (Chrome, Safari, Firefox y el emulador de Firebase), con la solicitud #77.
 
+## Optimización y limpieza
+
+El 27 de noviembre, a petición del propietario y en la rama `optimizacion-1.0.4`: quitar lo que no se usa, revisar el código
+y las herramientas, dejar la base lista para llevar la app a iOS y Android y tenerlo documentado.
+
+**Lo que no se usaba.** En `src/js` no había nada: `tools/check.js` y `tools/types.js` ya hacen fallar la compilación con
+cualquier declaración, importación, acción, icono o clase CSS sin usar. Tampoco sobraba ningún dato (consejos, ejecuciones,
+nombres en inglés, otros nombres o figuras de ejercicios que no están en la librería), ninguna imagen ni ningún archivo de las
+pruebas, de `static/` o de la documentación. Sí en el motor de las figuras (`src/fig3d`), que no pasaba por esas reglas: 90
+declaraciones que nunca se leían (nombres desestructurados de más, variables y funciones que quedaron de los ajustes de los
+lotes) y tres sumas que no hacían nada (`+ x * 0`). Se quitaron, y la huella de todo lo que dibuja el motor (los 529
+ejercicios en 16 momentos y con dos cámaras, el dibujo completo y el ligero, y las posturas) es la misma antes y después; los
+encuadres ya calculados también (solo cambia su huella). La regla 14 de `tools/check.js` lo vigila desde ahora y
+`tools/figuras3d/huella.js` sirve para demostrarlo en el próximo cambio así.
+
+**Código repetido.** Buscado con un programa (funciones con el mismo cuerpo y trozos de 60 piezas iguales en dos sitios): las
+cifras de la portada de un día (ejercicios, series y minutos) estaban tres veces (el día, Overview y la vista previa de un
+entreno a la carta) y el relleno y el borde de rectángulos y círculos, dos en el PDF. Ahora, una (`dayStats`, `daySets` y
+`fillStroke`). Lo que se parece en `cloud/backup` son dos frases distintas para quien la lee, y se quedan.
+
+**La base para iOS y Android.** Lo que dentro de una app nativa se hace de otra forma (guardar en el dispositivo, compartir y
+copiar, avisos y globo, el service worker, la pantalla encendida, la vibración, «atrás», la cámara, App Check y qué
+dispositivo es) ya estaba casi todo en su módulo. Faltaba «Compartir» en dos sitios y el portapapeles en uno (ahora en
+`system/files`), IndexedDB en cuatro (ahora con `core/idb`), el almacenamiento persistente en `core/boot` (ahora en
+`system/space`) y la conexión y el navegador en otros dos (ahora en `core/platform`). La regla 15 de `tools/check.js` no deja
+usarlos fuera de su módulo, y [Llevarla a iOS y Android](movil.md) cuenta qué cambia en cada uno y los pasos.
+
+**Herramientas.** `tests/perf.py` mide también el paquete que se publica (con su service worker), que es lo que abre quien
+usa la app, y no solo el archivo único: [medido](rendimiento.md#medido-en-la-v104) después de la limpieza, igual o algo mejor
+que la 1.0.31 en todo. `tests/run.sh` dice lo que tarda cada prueba y la batería entera.
+
+**Lo que se queda como está.** Hacer que se descarguen al usarlos el mapa muscular (`data/anatomy`, 29 KB) o las posturas
+(`data/figposes`, 21 KB), que van al arrancar: los usan cosas que se pintan sin esperar (los iconos de los grupos musculares,
+el material de Overview) y habría que esperarlos; el ahorro, de unos milisegundos, no compensa ese riesgo en esta versión.
+
 ## Pendiente antes de publicar
 
 Del propietario, en las consolas (no se puede hacer desde el código):
@@ -157,7 +192,7 @@ Del propietario, en las consolas (no se puede hacer desde el código):
 2. **Después de publicar, en GitHub → Actions → «Limpieza de cuentas»**: un `simulacro` a mano antes de su primera pasada de
    verdad, para mirar los recuentos ([Limpieza de cuentas](backend.md#limpieza-de-cuentas)). Solo se puede lanzar desde `main`.
 3. **GitHub → Settings → General → «Automatically delete head branches»**, para que las ramas fusionadas se borren solas.
-4. **La lista de comprobación en el iPhone** con la versión publicada ([pruebas](pruebas.md), del 30 al 45).
+4. **La lista de comprobación en el iPhone** con la versión publicada ([pruebas](pruebas.md), del 30 al 46).
 5. **Después de publicar, en GitHub → Actions → «Pasar las cuentas al dominio nuevo»**: `simulacro` y, si dice que las
    sesiones se conservan, `aplicar`; después, «Comprobar Firebase» ([cómo](backend.md#pasar-las-cuentas)). Faltaba en esta lista.
 

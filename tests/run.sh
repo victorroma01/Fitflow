@@ -7,11 +7,15 @@ fallos=0
 # Cada prueba tiene un tiempo máximo (SF_LIMIT, en segundos; la más larga, la del contraste, tarda unos 4 minutos en GitHub):
 # una que se quede colgada se para y falla con su nombre, en vez de agotar el tiempo de todo el trabajo sin decir cuál era.
 limite=${SF_LIMIT:-900}
+# Al final de cada prueba, lo que ha tardado (en segundos), para saber cuáles alargan la batería.
+inicio_bateria=$SECONDS
 run() {
   echo; echo "── $*"
+  local desde=$SECONDS
   local out; out=$(timeout -k 20 "$limite" "$@" 2>&1); local code=$?
   if [ $code -eq 124 ] || [ $code -eq 137 ]; then out="$out"$'\n'"FALLA: no ha terminado en $limite s y se ha parado"; fi
   echo "$out"
+  echo "   ($((SECONDS - desde)) s)"
   if [ $code -ne 0 ]; then
     fallos=$((fallos + 1))
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
@@ -81,4 +85,5 @@ run python3 tests/login.py dist/stratafit.html
 run python3 tests/covers.py dist/stratafit.html
 run python3 tests/deploy.py dist/app
 echo
+echo "La batería entera: $(( (SECONDS - inicio_bateria) / 60 )) min $(( (SECONDS - inicio_bateria) % 60 )) s"
 if [ $fallos -eq 0 ]; then echo "Todas las pruebas correctas"; else echo "$fallos pruebas fallan"; exit 1; fi
