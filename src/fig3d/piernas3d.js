@@ -6,15 +6,14 @@
    Define: Fig3D.FAMILIES.hinge, .lunge, .thrust, .legPress, .hack, .legExt, .legCurl */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib;
-  const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, barbell, cross } = L;
-  const { has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, dbAxis, bodyCaps, taut, visTag, THIGH_F, SHIN_F, THIGH_W, SHIN_W, prof1, legFront, legFrontX, loadFront } = M;
+  const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar } = L;
+  const { has, pose, torso, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, bodyCaps, taut, visTag, THIGH_F, SHIN_F, THIGH_W, prof1, legFront, legFrontX, loadFront } = M;
   const { cos, sin, PI, abs, max, min, sqrt, atan2 } = Math;
   const STEEL = ['#b9bed0', '#0a0b10'];
 
   /* el tronco inclinado lean grados con la espalda recta (toda la inclinación sale de la cadera) */
   const trunk = lean => ({ tilt: lean + 3, spine: -3 });
   /* el centro de los dos hombros */
-  const shC = (F, q) => mix(shoulder(F, 'L', q), shoulder(F, 'R', q), .5);
   /* la altura de la mano con el brazo estirado (145) desde el hombro S, dx hacia dentro y en la vertical de z */
   const armY = (S, dx, z) => S[1] - sqrt(max(0, 145 ** 2 - dx * dx - (S[2] - z) ** 2));
   /* una tabla de 41 momentos, calculada la primera vez que hace falta, y su valor en t (interpolado) */
@@ -43,7 +42,7 @@
          cadera, a la altura que deja los brazos estirados hasta ella; y el tronco, lo inclinado que pone el peso sobre el medio
          del pie */
       const zb = midFoot(pose({ root: [0, 190, 0], tilt: 0, spine: 0, feet, knee: both(() => [0, 0, 1]), hands: ZERO, elbow: {} }).F, sumo ? 20 : 17)[2];
-      const floorY = 49 + plat * 0, hBar = rack ? 118 : floorY;
+      const floorY = 49, hBar = rack ? 118 : floorY;
       /* (la última pierna, guardada: para cada muslo se prueban varios troncos con las mismas piernas) */
       let lk0 = NaN, lk1 = NaN, lv = null;
       const legs = (ps, pt) => ps === lk0 && pt === lk1 ? lv : (lk0 = ps, lk1 = pt, lv = legRoot(fw, 0, toe, ps, pt));
@@ -288,7 +287,6 @@
       }
       return { L: [16, zF, 4, step], R: backToes(d) };
     };
-    const ankleOf = (q, s) => pose({ ...q, hands: ZERO, elbow: {} }).J[s].ankle;
     /* la cadera: tan alta como dejan las dos piernas casi estiradas (arriba) y, abajo, con la rodilla de atrás a un palmo del
        suelo (en la búlgara, el muslo de delante casi horizontal); y adelante o atrás lo justo para el equilibrio: el peso,
        sobre un punto entre el apoyo de atrás y el medio del pie de delante, más cerca de este */

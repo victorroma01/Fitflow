@@ -8,6 +8,7 @@
 */
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
+import { idbDrop } from '../core/idb.js';
 import { dropSavedState } from '../core/persist.js';
 /** { uid, u: usuario, it: token de sesión, rt: token de renovación, exp: caducidad del token (ms), x: 1 si la sesión ya no
   vale y hay que volver a entrar (2 si es porque la cuenta ya no existe), cs: constancia de la aceptación de las condiciones y del consentimiento (cloud/consent) } o
@@ -72,7 +73,7 @@ export const wipeAccountData = () => {
       logError('borrar datos de la cuenta (' + k + ')', e);
     }
   try {
-    indexedDB.deleteDatabase('ffsnap');
+    idbDrop('ffsnap');
   }
   catch (e) {
     logError('borrar copias automáticas', e);

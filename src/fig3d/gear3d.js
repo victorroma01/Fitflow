@@ -5,7 +5,7 @@
    Define: Fig3D.gear */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib;
-  const { add, sub, mul, dot, cross, len, norm, mix, bar, plate, kept, hull, smoothR, f1, pathOf } = L;
+  const { add, sub, mul, dot, cross, len, norm, mix, bar, hull, smoothR, f1, pathOf } = L;
   const { cos, sin, PI, abs, max, min, round, sqrt, ceil } = Math;
   /* los colores: el armazón, oscuro y con el canto algo más claro; los acolchados, un poco más claros; el acero, como la barra */
   /* las bandas elásticas, siempre en cian: así se distinguen de un vistazo de cables, cintas y barras */

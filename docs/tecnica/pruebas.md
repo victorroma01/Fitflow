@@ -3,7 +3,8 @@
 `bash tests/run.sh` compila y pasa, en este orden, el formato, el mapa de módulos, las reglas de `tools/check.js`, los tipos
 (`tools/types.js`) y todas las pruebas. Cualquier fallo hace que falle entero. Cada prueba tiene un tiempo máximo (15 minutos; `SF_LIMIT`, en segundos, lo
 cambia): una que se quede colgada se para y falla con su nombre, en vez de agotar el tiempo del trabajo de GitHub sin decir
-cuál era (pasó una vez con `tests/contrast.py`, sin que se haya podido repetir). Las pruebas abren la app en un navegador de verdad con Playwright: Chrome (Chromium)
+cuál era (pasó una vez con `tests/contrast.py`, sin que se haya podido repetir). Tras cada prueba dice lo que ha tardado y, al
+final, la batería entera (en este ordenador, de dos núcleos, una media hora). Las pruebas abren la app en un navegador de verdad con Playwright: Chrome (Chromium)
 por defecto o, con `SF_BROWSER=webkit`, el motor de Safari (con `SF_BROWSER=firefox`, el de Firefox), sirviendo la app por HTTP
 como GitHub Pages (`tests/browser.py`). Con `SF_FONT="DejaVu Sans"` toda la app usa esa letra: el ancho de los textos cambia de
 un sistema a otro (la de los ordenadores de GitHub es de las más anchas) y nada debe depender de él; sirve para repetir aquí lo
@@ -20,7 +21,7 @@ antes de pintar y las guarda sin esperar (I-04), `page.goto` y `page.reload` esp
 | `tools/modindex.js --check` | Que el [mapa de módulos](modulos.md) está al día. |
 | `tools/i18n.js --check` | El inglés ([Idiomas](idiomas.md)): que cada frase que la app va a buscar está en el diccionario (o apuntada como que no se traduce) y no sobra ninguna; que ninguna traducción pierde un valor, un número o una etiqueta; y que nada se escribe en la página sin pasar por el diccionario (un `textContent` sin `tr()`, una plantilla con texto al cargar un módulo, un `raw()` de una clase que es una frase). |
 | `tools/figboxes.js --check` | Que los encuadres de las [figuras de ejercicio](figuras.md) ya calculados (`data/figboxes`) y su huella (`data/figstamp`) están al día con el motor, los ejercicios y lo que las dibuja. |
-| `tools/check.js` | Sintaxis, importaciones, orden de carga, identificadores sin declarar, duplicados, acciones sin manejador, botones sin nombre, código muerto y CSS sin usar ([reglas](desarrollo.md#reglas-de-calidad)). |
+| `tools/check.js` | Sintaxis, importaciones, orden de carga, identificadores sin declarar, duplicados, acciones sin manejador, botones sin nombre, código muerto (también en el motor 3D), CSS sin usar, estilos en línea y la frontera con el sistema ([reglas](desarrollo.md#reglas-de-calidad)). |
 | `tools/types.js` | Los tipos de todos los módulos, con el comprobador de TypeScript ([Tipos comprobados](tipos.md)): claves de `S` y campos de los datos que existen y con su tipo, funciones llamadas con lo que piden y, en el guardado y la sincronización (nivel estricto), todo con su tipo y nada que pueda ser `null` sin mirarlo. |
 | `tests/changelog.py` | Cómo lee `build.py` el [historial de cambios](../../CHANGELOG.md) y compone la tarjeta de cada versión, sin navegador: los apartados que ve el usuario, las revisiones (la 1.1.0.1, con su cuarta cifra, enseña lo que arregla y, debajo, lo de la 1.1.0, que ya no sale aparte; las de la 1.0.3, que lo dicen en su entrada), lo que detiene la compilación y el historial de verdad. |
 | `tests/aviso.test.mjs` | El aviso de versión nueva en un móvil con la 1.0.31, sin navegador: el comparador de versiones de aquella app, copiado tal cual, tiene que ver como más nueva la versión que `build.py` escribe en `version.json` (`legacy_version`) para la 1.0.4 y las siguientes hasta la 1.0.30, con cualquier fecha; y como no más nuevas, las anteriores. |

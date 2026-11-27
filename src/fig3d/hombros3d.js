@@ -170,7 +170,7 @@
   /* ════ pájaros (deltoides posterior) ════ */
   const rearFly = f => {
     const w = x => has(f, x), machine = w('machine'), crossC = w('cross'), benchB = w('bench'), band = w('band'), yRaise = w('y');
-    let body, P, cam = [-66, 16], world = false, gearX = () => [];
+    let body, P, cam = [-66, 16], world = false;
     if (machine || crossC || band) {
       /* de cara a la máquina (sentado, el pecho contra el respaldo), a las poleas o con la banda: los brazos al frente, a la
          altura de los hombros, se abren hasta los lados */

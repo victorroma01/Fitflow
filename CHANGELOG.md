@@ -415,6 +415,19 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   pantalla y las zonas táctiles (`tests/layout.py`, `tests/a11y.py`) se pasan además en inglés (`SF_LOCALE=en-US`), porque
   los textos miden otra cosa: así salió que «Skip», más corto que «Saltar», dejaba su zona táctil en 38 px. Pintar tarda lo
   mismo en los dos idiomas (medido con la CPU cuatro veces más lenta: las mismas siete pantallas, sin diferencia).
+- Optimización y limpieza (27-11-2026, [cómo se hizo](docs/tecnica/revision-1.0.4.md#optimización-y-limpieza)): el
+  motor 3D sin código muerto (fuera 90 declaraciones que nunca se leían y tres sumas que no hacían nada), con la huella de
+  todo lo que dibuja igual antes y después (`tools/figuras3d/huella.js`, nueva); `tools/check.js` lo vigila (regla 14).
+- La frontera con el sistema, base para llevar la app a iOS y Android: lo que dentro de una app nativa se hace de otra forma
+  va en un solo módulo por cosa: «Compartir» y copiar en `system/files` (`shareFiles`, `shareText`, `canShareText`), IndexedDB
+  en `core/idb` (`hasIdb`, `idbDrop`), el almacenamiento persistente en `system/space` (`keepStorage`) y la conexión y el
+  navegador en `core/platform` (`isOffline`, `userAgent`). `tools/check.js` lo vigila (regla 15) y
+  [Llevarla a iOS y Android](docs/tecnica/movil.md) cuenta qué cambia en cada módulo y los pasos.
+- Lo repetido, en un solo sitio: las cifras de la portada de un día (`dayStats` y `daySets`, para el día, Overview y la vista
+  previa de un entreno a la carta) y el relleno y el borde del PDF (`fillStroke`). `copyText` sin el campo que enseña el texto
+  ya no intenta la copia antigua, que sin él no copia nada.
+- `tests/perf.py` mide también el paquete que se publica (`dist/app/index.html`), y la documentación queda al día: las reglas
+  14 y 15, las herramientas nuevas, lo medido en la V1.0.4 y `tools/figuras3d/README.md`, que aún hablaba de un prototipo.
 
 ## [1.0.31] — 2026-11-16
 

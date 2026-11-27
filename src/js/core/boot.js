@@ -41,7 +41,8 @@ import { signedIn } from '../cloud/session.js';
 import { consentPending } from '../cloud/consent.js';
 import { deletedNotice } from '../account/privacy.js';
 import { startSync, stopSync } from '../cloud/sync.js';
-import { spaceCheck } from '../system/space.js';
+import { keepStorage, spaceCheck } from '../system/space.js';
+import { idbDrop } from './idb.js';
 /* los datos de este móvil no se pudieron leer (core/persist: partsLost): nada se guarda ni se sincroniza hasta que se lean */
 /* cómo recuperar los datos, en los avisos de datos dañados */
 const RESTORE_HINT = 'Si tienes una copia de seguridad o una copia automática, restáurala desde Perfil → Ajustes → Copia de seguridad.';
@@ -241,8 +242,8 @@ const afterFirstPaint = () => {
     setTimeout(iconNoticeCheck, 3000);
   }
   /* pide al navegador que no borre los datos de la app instalada cuando falte espacio (sin efecto si no lo admite) */
-  if (isStandalone() && navigator.storage && navigator.storage.persist)
-    navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(e => logError('almacenamiento persistente', e));
+  if (isStandalone())
+    keepStorage();
   /* aviso de espacio (I-04): si lo guardado se acerca al límite del navegador, cuando la app esté libre */
   setTimeout(spaceCheck, 6000);
 };
@@ -259,7 +260,7 @@ const start = () => {
   restoreNotice();
   /* las fotos de progreso de la serie de prueba ya no existen (sin datos personales: F-35) */
   try {
-    indexedDB.deleteDatabase('ffph');
+    idbDrop('ffph');
   }
   catch (e) {
     logError('arranque: borrar fotos de progreso', e);

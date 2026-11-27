@@ -45,6 +45,8 @@ const pdfDoc = (title = 'StrataFit') => {
     cur.push(s);
   };
   const Y = y => num(PAGE_H - y);
+  /* pinta el trazado p (un rectángulo, un círculo): relleno (o.fill), borde (o.stroke, de grosor o.lw) o los dos */
+  const fillStroke = (p, o) => op((o.fill ? rgb(o.fill) + ' rg ' : '') + (o.stroke ? rgb(o.stroke) + ' RG ' + num(o.lw || 1) + ' w ' : '') + p + ' ' + (o.fill && o.stroke ? 'B' : o.fill ? 'f' : 'S'));
   const doc = {
     W: PAGE_W,
     H: PAGE_H,
@@ -107,7 +109,7 @@ const pdfDoc = (title = 'StrataFit') => {
       }
       else
         p = num(x) + ' ' + Y(y + h) + ' ' + num(w) + ' ' + num(h) + ' re';
-      op((o.fill ? rgb(o.fill) + ' rg ' : '') + (o.stroke ? rgb(o.stroke) + ' RG ' + num(o.lw || 1) + ' w ' : '') + p + ' ' + (o.fill && o.stroke ? 'B' : o.fill ? 'f' : 'S'));
+      fillStroke(p, o);
     },
     /** Línea. o: { color, lw, dash }. */
     line(x1, y1, x2, y2, o = {}) {
@@ -123,7 +125,7 @@ const pdfDoc = (title = 'StrataFit') => {
     circle(cx, cy, r, o = {}) {
       const k = r * .5523;
       const p = [num(cx + r) + ' ' + Y(cy) + ' m', num(cx + r) + ' ' + Y(cy - k) + ' ' + num(cx + k) + ' ' + Y(cy - r) + ' ' + num(cx) + ' ' + Y(cy - r) + ' c', num(cx - k) + ' ' + Y(cy - r) + ' ' + num(cx - r) + ' ' + Y(cy - k) + ' ' + num(cx - r) + ' ' + Y(cy) + ' c', num(cx - r) + ' ' + Y(cy + k) + ' ' + num(cx - k) + ' ' + Y(cy + r) + ' ' + num(cx) + ' ' + Y(cy + r) + ' c', num(cx + k) + ' ' + Y(cy + r) + ' ' + num(cx + r) + ' ' + Y(cy + k) + ' ' + num(cx + r) + ' ' + Y(cy) + ' c'].join(' ');
-      op((o.fill ? rgb(o.fill) + ' rg ' : '') + (o.stroke ? rgb(o.stroke) + ' RG ' + num(o.lw || 1) + ' w ' : '') + p + ' ' + (o.fill && o.stroke ? 'B' : o.fill ? 'f' : 'S'));
+      fillStroke(p, o);
     },
     /** Número de páginas hasta ahora. */
     count: () => pages.length,

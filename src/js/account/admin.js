@@ -15,6 +15,7 @@ import { toast } from '../core/toast.js';
 import { confirmDialog, fullPage, linkRow, pgHead, sheet } from '../core/ui.js';
 import { deleteDoc, listDocs } from '../cloud/firestore.js';
 import { html, raw } from '../core/html.js';
+import { copyText } from '../system/files.js';
 /* st: 'load' | 'ok' | 'err'; inbox: contraseñas temporales vigentes; users: cuentas; show: id de la contraseña visible */
 let adminState = { st: 'load', inbox: [], users: [], err: '', show: '', del: '', rp: -1 };
 const adminDate = t => +t > 0 ? new Date(+t).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -114,11 +115,9 @@ A.adminCopyPassword = async (i, b) => {
   const d = adminState.inbox.find(x => x.id == b.dataset.v);
   if (!d)
     return;
-  try {
-    await navigator.clipboard.writeText(String(d.data.p || ''));
+  if (await copyText(String(d.data.p || '')))
     toast('Contraseña copiada');
-  }
-  catch (e) {
+  else {
     adminState.show = d.id;
     sheet(adminView());
     toast('No se pudo copiar: cópiala a mano');

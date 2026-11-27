@@ -7,9 +7,9 @@
    Define: Fig3D.FAMILIES.curl, .trxCurl, .pushdown, .skull, .overheadExt, .kickback, .tricepsMachine, .dip, .benchDip, .wristCurl */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib;
-  const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, cross } = L;
+  const { add, sub, mul, dot, len, norm, mix, clamp, at, RAD, LEN, bar, cross } = L;
   const { has, pose, ZERO, UP, sd, both, shoulder, span, comOf, solve, legFront, onThigh, ezBar, ezCd, dbAxis } = M;
-  const { cos, sin, PI, abs, max, min, sqrt, round } = Math;
+  const { cos, sin, PI, abs, max, sqrt, round } = Math;
   const LU = LEN.upper, LF = LEN.fore + LEN.grip;
   const ROOT_Y = LEN.ankle + LEN.shin + LEN.thigh - 4;
   const mj = x => x * x * x * (10 + x * (6 * x - 15));
@@ -164,7 +164,6 @@
     /* P: los ángulos del brazo en cada momento (fl, ab y e del brazo; con world, respecto al mundo) */
     /* (abajo, el brazo algo abierto: las mancuernas cuelgan por fuera de los muslos, sin rozarlos) */
     let P = p => ({ fl: mix(5, 15, p ** 1.5), ab: mix(10, 4, span(p, 0, .5)), e: mix(6, 132, p) });
-    let opt = s => ({});
     let extra = () => [];
     if (seated) { body = SEAT; P = p => ({ fl: mix(4, 15, p ** 1.5), ab: mix(14, 5, span(p, .15, .75)), e: mix(6, 132, p) }); }
     else if (incline) {
@@ -340,7 +339,7 @@
       /* el borde de arriba, donde el centro del atril queda ya por delante del pecho (el pecho se apoya en él) */
       let d0 = 16;
       for (; d0 < 50; d0 += 1) { const c = add(add(A0.S, mul(u, d0)), mul(nb, 15)); if (c[2] >= frontAt(F0, J0, c[1]) + 4) break; }
-      const top = add(add(A0.S, mul(u, d0)), mul(nb, 15)), bot = add(add(A0.E, mul(u, 12)), mul(nb, 15)), cen = mix(top, bot, .5);
+      const top = add(add(A0.S, mul(u, d0)), mul(nb, 15)), bot = add(add(A0.E, mul(u, 12)), mul(nb, 15));
       const kneeZ = max(J0.L.knee[2], J0.R.knee[2]);
       const padA = [0, top[1], top[2]], padB = [0, bot[1], bot[2]], nrm = mul(nb, -1);
       const seat = at(F0.pelvis, [0, -22, 0]);
@@ -789,7 +788,7 @@
     if (behind) {
       /* de pie, la barra detrás de los glúteos con las palmas hacia atrás y los brazos estirados: solo se doblan las muñecas, hacia
          atrás y arriba */
-      const body = STAND, { F: F0, J: J0 } = pose({ ...body, hands: ZERO, elbow: {} });
+      const body = STAND, { F: F0 } = pose({ ...body, hands: ZERO, elbow: {} });
       const backAt = y => { const v = 205 - (y - F0.pelvis.o[1]), p = prof(L.TRUNK3, clamp(v, 56, 228)); return F0.pelvis.o[2] + p[3] - p[2]; };
       let fl = 0;
       for (; fl > -30; fl -= .5) { const a = armAt(F0, body, 'L', fl, 6, 2, { hx: 30 }); if (a.H[2] <= backAt(a.H[1]) - 9) break; }
@@ -804,7 +803,6 @@
     /* sentado en el extremo del banco, inclinado, con los antebrazos apoyados en los muslos y las muñecas pasadas de las
        rodillas: la mano baja (la muñeca estirada) y sube (doblada); con agarre prono, al revés: sube estirando la muñeca */
     const solo = db, base = { root: [0, 118, 0], spine: 4, neck: -14, reach: 6, feet: both(() => [22, 84, 6]), knee: both(() => [.1, .6, .8]) };
-    const J00 = pose({ ...base, tilt: 0, hands: ZERO, elbow: {} });
     const thighOf = (J, F, s) => { const d = norm(sub(J[s].knee, J[s].hip)), up = F['thigh' + s].z; return { d, up }; };
     const wristOf = (J, F, s) => { const { d, up } = thighOf(J, F, s); return add(add(J[s].knee, mul(d, 22)), mul(up, 17)); };
     const elbowOf = (J, F, s) => { const Wr = wristOf(J, F, s), { d, up } = thighOf(J, F, s), E0 = sub(Wr, mul(d, LEN.fore)), dh = len(sub(E0, J[s].hip)); return add(E0, mul(up, M.prof1(M.THIGH_F, dh) - 11 + 4)); };

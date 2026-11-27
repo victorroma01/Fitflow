@@ -1,27 +1,36 @@
-# Figuras 3D (prototipo)
+# Figuras 3D: herramientas de revisión
 
-La figura de ejercicio nueva: el mismo dibujo de músculos de la app, puesto sobre un cuerpo en 3D y vista de tres cuartos.
-Está en pruebas y **no está conectada a la app**: se integrará cuando estén revisados todos los lotes de ejercicios.
+Las figuras de ejercicio: el mismo dibujo de músculos de la app, puesto sobre un cuerpo en 3D que hace el ejercicio entero con
+su material. Desde la V1.0.4 están en la app: los 529 ejercicios de la librería tienen la suya
+([cómo están hechas](../../docs/tecnica/figuras.md)). Se hicieron por lotes, cada uno con sus pruebas y su página de revisión
+para el visto bueno del propietario; esta carpeta tiene esas herramientas, que sirven igual para un ejercicio nuevo o para
+cambiar el motor.
 
 ## Archivos
 
-El motor y las familias están en `src/fig3d/` (de ahí los toma también la app al compilar); aquí, lo que sirve para
-revisarlos.
+El motor y las familias están en `src/fig3d/` (de ahí los toma la app al compilar):
 
 - `fig3d.js`: el motor. Construye el cuerpo (tronco, brazos, piernas, cabeza y manos), le envuelve los músculos del mapa
   de la app y lo pinta en SVG desde la cámara que se le dé.
 - `gear3d.js`: el material (bancos, Smith, máquinas, poleas, mancuernas, kettlebell, bandas, saco…).
-- `sonda.js`: solo para `choques.py`. Envuelve las piezas del material para que cada una apunte su forma en 3D al dibujarse;
-  así la prueba de choques mira exactamente lo que se pinta.
 - `mov3d.js`, `tiron3d.js`, `piernas3d.js`, `brazos3d.js`, `hombros3d.js`, `core3d.js`, `funcional3d.js` y `cardio3d.js`: las familias de
   movimiento (las del lote 1, las de tirón del lote 2, las de pierna del lote 3, las de brazos del lote 4, las de pecho y
-  hombro del lote 5, las de core y lo que quedaba de pierna del lote 6, las de CrossFit, Hyrox y funcional del lote 7 y las de
-  cardio del lote 8). Cada una recibe las variantes de un ejercicio y da su postura en cada momento
-  del gesto. Las posturas salen de reglas físicas: los pies no se mueven del suelo, las rodillas van hacia las puntas de
-  los pies y el tronco se inclina lo justo para que el peso quede sobre el medio del pie (con barra, la barra; en la
+  hombro del lote 5, las de core y lo que quedaba de pierna del lote 6, las de CrossFit, Hyrox y funcional del lote 7, las de
+  cardio del lote 8 y las de movilidad de pie del lote 9). Cada una recibe las variantes de un ejercicio y da su postura en
+  cada momento del gesto. Las posturas salen de reglas físicas: los pies no se mueven del suelo, las rodillas van hacia las
+  puntas de los pies y el tronco se inclina lo justo para que el peso quede sobre el medio del pie (con barra, la barra; en la
   Smith, para que la barra siga sus guías). En el banco, la barra toca el pecho con los antebrazos casi verticales.
+
+Aquí, lo que sirve para revisarlos:
+
 - `datos.mjs`: saca de la app lo que hace falta (el mapa de músculos, las regiones de cada músculo, y la familia,
   variantes y músculos de cada ejercicio del lote) y lo deja en `salida/`.
+- `sonda.js`: solo para `choques.py`. Envuelve las piezas del material para que cada una apunte su forma en 3D al dibujarse;
+  así la prueba de choques mira exactamente lo que se pinta.
+- Las pruebas (`verifica.py`, `choques.py`, `saltos.py`, `grosor.py` y `fijos.py`), las medidas (`numeros.py`), el banco de
+  pruebas (`banco.py`), la hoja de momentos (`hoja.py`) y la página de revisión (`pagina.py`, con sus textos en `textos.py`).
+- `huella.js`: la huella de todo lo que dibuja el motor (cada ejercicio, en 16 momentos y con dos cámaras), para demostrar que
+  un cambio que no debe cambiar ninguna figura (quitar código muerto, ordenar, renombrar) no la cambia.
 
 ## Uso
 
@@ -38,6 +47,8 @@ python3 fijos.py                   # piezas que no deben moverse (guías de la S
 python3 numeros.py "Sentadilla"    # inclinación del tronco, ángulos, barra sobre el medio del pie…
 python3 hoja.py hoja.png "Sentadilla|Press banca"   # una hoja con cada ejercicio en varios momentos y de lado
 python3 pagina.py                  # la página de revisión del lote (sus textos, en textos.py): salida/pagina/index.html
+node huella.js antes.json          # la huella de todo lo que dibuja el motor (unos dos minutos)
+node huella.js despues.json --compara antes.json   # tras el cambio: qué figuras cambian (falla si alguna)
 ```
 
 ## Lotes

@@ -102,6 +102,34 @@ los 551 ejercicios en cada letra. Lo que se pinta es lo mismo carácter a carác
 pantallas antes y después. El arranque no ha cambiado: casi todo es esperar a IndexedDB y lo que hace el navegador (leer el
 código, los estilos y colocar la página), no el código de la app.
 
+## Medido en la V1.0.4
+
+Medido el 27 de noviembre de 2026 con los mismos datos, después de la [optimización](revision-1.0.4.md#optimización-y-limpieza):
+mediana de 5 vueltas, alternando la V1.0.31 publicada y la V1.0.4. Desde esta versión se mide **el paquete que se publica**
+(`dist/app/index.html`, con su service worker), que es lo que abre quien usa la app; el archivo único lleva ahora incrustados
+el motor de las figuras 3D, el inglés y las 150 fotos (pesa 2,9 MB) y tarda más en pintar la primera vez (167 ms frente a 139
+en una medida de 3 vueltas), pero solo lo usan las pruebas. En el paquete, lo que se carga al arrancar es algo menos que en la
+V1.0.31 (540 KB de código frente a 562); el motor 3D (unos 350 KB) y el inglés se descargan la primera vez que hacen falta.
+
+| Medida | V1.0.31 | V1.0.4 | Diferencia |
+| --- | ---: | ---: | --- |
+| Primer pintado | 101 ms | 88 ms | Algo menos |
+| Guardar, mirándolo todo | 7,2 ms | 7,1 ms | Igual |
+| Guardar, diciendo qué cambió | 0,5 ms | 0,5 ms | Igual |
+| Ver qué hay que subir | 19,2 ms | 9,8 ms | La mitad (desde la V1.0.32) |
+| Pintar Workout | 0,5 ms | 0,5 ms | Igual |
+| Pintar Nutrición | 1,0 ms | 1,0 ms | Igual |
+| Pintar Dashboard | 4,5 ms | 4,9 ms | Igual (menos de medio milisegundo) |
+| Pintar Perfil | 1,0 ms | 1,1 ms | Igual |
+| Buscar en la Librería (cada letra) | 3,7 ms | 2,1 ms | Un 43 % menos (desde la V1.0.32) |
+| Abrir Registros (700 entrenos) | 34,2 ms | 33,6 ms | Igual |
+
+El primer pintado varía mucho de una medida a otra: en otra de 3 vueltas, con el ordenador más ocupado, salió al revés (114 y
+127 ms). Por debajo de unos 15 ms, la diferencia entre dos medidas es mayor que la que hay entre versiones. Con el perfil de
+CPU de Chromium (que lo hace todo algo más lento), casi todo el arranque es del navegador (leer el código y los estilos,
+colocar la página y pintarla); de la app, unos 25 ms: leer de IndexedDB las partes del estado (unos 9), comprobar los datos
+(`core/repair`, unos 6) y el primer pintado (`R()`, unos 8).
+
 ## Qué se hizo
 
 - **Mirar qué hay que subir (V1.0.32)**: `cloud/sync` recuerda, de cada elemento (un entreno, un día de comidas, el historial

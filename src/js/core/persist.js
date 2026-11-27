@@ -30,7 +30,7 @@
 */
 import { newId } from './util.js';
 import { Store } from './store.js';
-import { idbStore } from './idb.js';
+import { hasIdb, idbStore } from './idb.js';
 import { partKey, readPart, splitState, STATE_PARTS } from './parts.js';
 import { stateFromStored, stateName, stateToStored } from './schema.js';
 import { logError } from './errors.js';
@@ -376,7 +376,7 @@ const readIdbParts = async (s, strict, salvage) => {
    intentar al abrir otra vez la app */
 /** @param {Record<string, any>} s */
 const moveToIdb = async (s) => {
-  if (!window.indexedDB || saveLocked)
+  if (!hasIdb() || saveLocked)
     return;
   const core = Store.K.app;
   const old = [...savedText.keys()].filter(k => k != core);

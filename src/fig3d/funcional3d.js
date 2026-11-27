@@ -13,12 +13,12 @@
    .ropeClimb, .handstand, .crawl, .inchworm, .svend, .ropes, .tire, .wgs, .kneeHug, .heelButt */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib, B = F3.blib, C = F3.clib;
-  const { add, sub, mul, dot, cross, len, norm, perp, mix, ease, clamp, at, RAD, LEN, barbell } = L;
-  const { has, pose, torso, ZERO, UP, sd, both, shoulder, span, comOf, midFoot, solve, legFront, prof1, SHIN_F } = M;
-  const { ROOT_Y, LU, LF, mj, hintL, keys } = B;
+  const { add, sub, mul, dot, cross, len, norm, perp, mix, ease, clamp, at, RAD, LEN } = L;
+  const { has, pose, torso, ZERO, UP, sd, both, shoulder, solve, prof1, SHIN_F } = M;
+  const { ROOT_Y, LU, LF, mj, keys } = B;
   /* (más despacio que en la realidad, para que se vean bien: todos los tiempos del lote, por SLOW) */
   const SLOW = 1.4, cycle = T => B.cycle(T * SLOW);
-  const { cos, sin, PI, abs, max, min, sqrt, atan2, asin } = Math;
+  const { cos, sin, PI, abs, max, min, sqrt, atan2 } = Math;
   const DEG = 180 / PI;
 
   /* ── el ritmo ── */
@@ -166,9 +166,9 @@
   /* ════ halterofilia ════ */
   const oly = f => {
     const w = x => has(f, x);
-    const db = w('db'), one = w('one'), snatch = w('snatch'), thruster = w('thruster'), cj = w('cj'), pull = w('pull');
+    const db = w('db'), snatch = w('snatch'), thruster = w('thruster'), cj = w('cj'), pull = w('pull');
     const jerkOnly = w('jerk'), hang = w('hang'), power = w('power'), muscle = w('muscle');
-    const cleanLift = w('clean') || cj, splitJ = w('split') || cj, pressJ = w('press'), pushJ = w('push');
+    const splitJ = w('split') || cj, pushJ = w('push');
     if (db) return olyDb(f);
     /* el agarre: el de la cargada, justo por fuera de las piernas; el de la arrancada, muy abierto. Los pies: al ancho de la
        cadera para tirar y algo más abiertos (y más girados) para recibir */
@@ -323,7 +323,6 @@
     const EL = { rack: [.45, -1, .5], over: [.4, 0, -1], hang: [.2, 0, -1] };
     const RACK_A = [.7, 0, 1];
     const pose2 = (st, which) => withHands(st, (F, q) => ({ hands: both(s2 => which == 'rack' ? rackH(F, s2) : which == 'over' ? overH(F, q, s2) : which == 'knee' ? kneeH(F, q, s2) : hangH(F, q, s2)), elbow: both(() => EL[which == 'knee' ? 'hang' : which]) }));
-    const DB = both(() => [0, 0, 1]);
     let K, start;
     if (w('snatch')) {
       /* (a una mano, la derecha; la izquierda, suelta junto al cuerpo. La mancuerna, en el suelo entre los pies) */
@@ -424,7 +423,7 @@
   const kbTgu = () => {
     const FR = [-24, 92], LH = [70, -14];
     /* la pierna izquierda estirada en el suelo (el talón apoyado, la punta arriba), abierta ang grados */
-    const legFloor = (q, ang, hy = 9) => { const P = torso(q).pelvis, H = at(P, [20, 0, 0]), A = [H[0] + 171 * sin(RAD(ang)), hy + LEN.ankle * 0, H[2] + 171 * cos(RAD(ang))], d = norm(sub(A, H)); return C.legAt(H, d, d, 'L', [0, 1, 0], 0); };
+    const legFloor = (q, ang, hy = 9) => { const P = torso(q).pelvis, H = at(P, [20, 0, 0]), A = [H[0] + 171 * sin(RAD(ang)), hy, H[2] + 171 * cos(RAD(ang))], d = norm(sub(A, H)); return C.legAt(H, d, d, 'L', [0, 1, 0], 0); };
     /* la rodilla izquierda en el suelo en K, la espinilla hacia atrás por el suelo (el empeine apoyado) */
     const legKneel = (q, K, back) => { const P = torso(q).pelvis, H = at(P, [20, 0, 0]); return C.legAt(H, sub(K, H), back, 'L', [0, 0, 1], 70); };
     const rFoot = (q) => ({ R: [abs(FR[0]), FR[1], 6, 0, 0] });
@@ -707,13 +706,13 @@
   /* el saco (de unos 60 cm por 27): su medio largo y su radio; dónde va abrazado (en el marco del tórax) y al hombro */
   const BAG_L = 56, BAG_R = 27, BAG_HUG = [0, 42, 58], BAG_SH = [-38, 112, 2];
   const carry = f => {
-    const w = x => has(f, x), walk = w('walk'), db = w('db'), kb = w('kb'), bag = w('bag'), pinch = w('pinch'), rack = w('rack'), hug = w('hug'), onSh = w('shoulder');
+    const w = x => has(f, x), walk = w('walk'), db = w('db'), kb = w('kb'), pinch = w('pinch'), rack = w('rack'), hug = w('hug'), onSh = w('shoulder');
     if (w('clean')) return bagLift(f);
     /* andando: pasos algo más cortos con carga (y más con el saco abrazado o al hombro), el tronco recto y algo adelantado */
     const S = hug || onSh ? 92 : rack ? 100 : 104, T = hug || onSh ? 1300 : 1150;
     const at_ = t => {
       const g = walk ? gait(t, { S, w: 21, toe: 6, lift: 11 }) : null;
-      const top = ROOT_Y + 1 - (pinch ? 0 : 0);
+      const top = ROOT_Y + 1;
       /* parado (el granjero quieto o la pinza): de pie, los pies al ancho de la cadera; respira */
       const br = walk ? 0 : sin(2 * PI * t);
       const base = walk ? { feet: g.feet, knee: g.knee } : { feet: both(() => [22, 0, 8]), knee: both(() => [.12, 0, 1]) };
@@ -1203,7 +1202,7 @@
       /* por encima de la barra, de lado: la barra en el suelo, a lo largo, junto a la figura; tras el burpee, salta de lado por
          encima de ella con las rodillas recogidas y cae al otro lado; la siguiente, de vuelta */
       const X0 = 86, rep = (dx, side) => {
-        const sq = C.shift(bpSquat(ZF), [dx, 0, 0]), air = C.shift(bpAir(ZF, 46), [0, 0, 0]), land = C.shift(bpLand(ZF), [-dx, 0, 0]);
+        const air = C.shift(bpAir(ZF, 46), [0, 0, 0]), land = C.shift(bpLand(ZF), [-dx, 0, 0]);
         air.knee = both(() => [0, .3, 1]); air.feet = both(sd2 => { const f0 = [...air.feet[sd2]]; return f0; });
         return [...bpDownUp().map(k => [C.shift(k[0], [dx, 0, 0]), ...k.slice(1)]), [C.shift(bpRise(ZF), [dx * .7, 0, 0]), 150, .35], [{ ...air, knee: both(() => [0, .25, 1]) }, 300, .8, 24], [land, 240, .55, 24], [C.shift(bpStand(ZF), [-dx, 0, 0]), 220, .4]];
       };
@@ -1716,10 +1715,10 @@
       return { ...q, barDir: { L: mul(acrossFist(J, 'L', [0, 1, 0]), -1), R: acrossFist(J, 'R', [0, 1, 0]) } };
     };
     const gear = (q, F, cam) => ['L', 'R'].flatMap((s2, i) => {
-      const h = q.hands[s2], A = [sd(s2, [10, 0, 0])[0], 6, ANC], N = 16, pts = [], ph = 2 * PI * ((Date.now ? 0 : 0) + 0);
+      const h = q.hands[s2], A = [sd(s2, [10, 0, 0])[0], 6, ANC], N = 16, pts = [];
       const t0 = Math.atan2(h[1] - H0(s2)[1], (h[2] - H0(s2)[2]) / .23);
       for (let k = 0; k <= N; k++) {
-        const u = k / N, base = mix(h, A, u), sag = -min(h[1] - 6, 0) * 0;
+        const u = k / N, base = mix(h, A, u);
         /* (la onda: sale de la mano y se apaga hacia el anclaje; la cuerda baja hacia el suelo y se apoya en él al final) */
         const amp = 26 * (1 - u) ** 1.2, y = max(4, base[1] - (h[1] - 6) * u * (2 - u) * .55 + amp * sin(t0 - 2 * PI * u * 2.2) * (u > 0 ? 1 : 0));
         pts.push([base[0], u == 0 ? h[1] : y, base[2]]);
@@ -1832,7 +1831,6 @@
       const rise = toesUp(lifted ? k.pR : min(k.pR, k.pL));
       const q0 = { root: [k.rx, ROOT_Y + rise, 2], tilt: k.lean, spine: 6 * k.hug, neck: -4 * k.hug, roll: 0, shrug: 0, reach: 2 * k.hug, feet: { L: fL, R: fR }, knee: { L: norm([.05, .75 * min(1, (k.ay - LEN.ankle) / 60), 1]), R: [.1, 0, 1] } };
       const { F, J } = pose({ ...q0, hands: ZERO, elbow: {} });
-      const down = hangArms(F, q0);
       /* el abrazo: las manos, una al lado de la otra, por delante de la espinilla, justo bajo la rodilla */
       const kn = J.L.knee, an = J.L.ankle, sh = norm(sub(an, kn)), fr = norm(sub([0, 0, 1], mul(sh, dot([0, 0, 1], sh))));
       const grab = add(add(kn, mul(sh, 30)), mul(fr, 20));
@@ -1938,7 +1936,6 @@
     return { view: 'front', up: 'a', rest: 'a', cam: [115, 12], side: [-60, 6], feetOff: true, one: true, still: .53, stills: [0, .3, .53], at: t => reachClamp(at_(t)), beat: cycle(6400) };
   };
 
-  const stub = () => null;
   Object.assign(F3.FAMILIES, { oly, kbell, carry, sled, burpee, wallBall, medBall, boxJump, sideJump, muscleUp, ropeClimb, handstand, crawl, inchworm, svend, ropes, tire, kneeHug, heelButt, wgs });
   F3.flib = { floorRun, herm, spl, sequence, footUp, legRootA, legsAt, qOf, legs, BASE, gait, hipOver, footPose, keyAnim, qmix, reachClamp, withHands, bySh, legsFree, acrossFist, armArc, elArc, packGear, PACK, PU, HDF, ROPE_C, WALL_C, stepZ };
 })(window);

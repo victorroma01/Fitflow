@@ -2,7 +2,7 @@
    Aviso de espacio (I-04): cuánto ocupa lo que la app guarda en el móvil frente a lo que el navegador le deja (localStorage,
    unos 5 MB; IndexedDB y lo demás, según navigator.storage.estimate) y, si lo más lleno pasa del 80 %, un aviso, como mucho
    una vez a la semana, para hacer una copia y liberar espacio antes de que deje de guardarse. Diagnóstico enseña el uso.
-   Define: LS_LIMIT, SPACE_WARN, SPACE_EVERY, lastSpace, spaceUse, mb, spaceText, spaceTries, spaceCheck
+   Define: LS_LIMIT, SPACE_WARN, SPACE_EVERY, lastSpace, spaceUse, mb, spaceText, spaceTries, keepStorage, spaceCheck
 */
 import { round1 } from '../core/util.js';
 import { say } from '../core/i18n.js';
@@ -52,6 +52,11 @@ export const spaceText = u => !u ? '' : 'localStorage ' + mb(u.ls * 2) + ' de un
 /* intentos de enseñar el aviso mientras la app está ocupada (cada 30 s) */
 let spaceTries = 0;
 /** Al arrancar (core/boot): mide y, si queda poco espacio y hace una semana que no se avisa, avisa cuando la app esté libre. */
+/** En la app instalada, pide al navegador que no borre lo guardado aunque le falte espacio (almacenamiento persistente). */
+export const keepStorage = () => {
+  if (navigator.storage && navigator.storage.persist)
+    navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(e => logError('almacenamiento persistente', e));
+};
 export const spaceCheck = async () => {
   try {
     if (Date.now() - (+Store.get(Store.K.space) || 0) < SPACE_EVERY)

@@ -29,6 +29,8 @@ python -m playwright install chromium webkit
 | `node tools/rename.js mapa.txt` | Renombra globales (líneas «viejo nuevo») entendiendo ámbitos. |
 | `node tools/classes.js --check` | Comprueba que toda clase CSS que usan el código y las pruebas existe en `src/css`. Con un mapa (`node tools/classes.js mapa.txt`, líneas «K viejo nuevo»), renombra clases en los estilos, el código, las pruebas y la documentación: [Clases CSS](clases.md). |
 | `node tools/same.js --dirs antes/ despues/` | Demuestra que un cambio de formato no altera el programa. Con `--html`, las plantillas HTML cuentan sin sus saltos de línea. |
+| `node tools/figuras3d/huella.js antes.json` y, tras el cambio, `… despues.json --compara antes.json` | Demuestra que un cambio en el motor de las [figuras](figuras.md) que no debe cambiar ninguna (quitar código muerto, ordenar) no la cambia: la huella de todo lo que dibuja. |
+| `python3 tests/perf.py vieja/dist/app/index.html dist/app/index.html` | Compara el [rendimiento](rendimiento.md) de dos compilaciones con muchos datos: el paquete que se publica o el archivo único. |
 | `python3 tools/pages.py copiar` | Copia `dist/app/` a la raíz (solo si GitHub Pages volviera a publicar desde la rama). |
 
 ## Añadir una función
@@ -161,8 +163,14 @@ un ejercicio están en `src/js/data/aliases.js`.
 13. **Estilos en línea** (`style="…"` o un `<style>` más): la política de seguridad no los deja (I-14). Lo fijo va en clases de
     `css/99-utilities` (una por declaración: `mt-12`, `w-full`, `c-at`…) o en una clase propia; lo que depende de un dato (el
     ancho de una barra, la foto de un día), en `data-style`, que aplica `core/dynstyle` con el CSSOM.
+14. **El motor 3D sin nada sin usar**: `src/fig3d` son scripts clásicos que no pasan por las reglas de arriba; TypeScript
+    (`noUnusedLocals`, sin mirar los tipos) dice lo que se declara y nunca se lee: variables, funciones y nombres de lo que se
+    desestructura.
+15. **La frontera con el sistema**: lo que dentro de una app nativa se hace de otra forma solo lo usa su módulo
+    (`localStorage` en `core/store`, IndexedDB en `core/idb`, «Compartir» y el portapapeles en `system/files`…; la tabla
+    entera, en [Llevarla a iOS y Android](movil.md)).
 
-Las reglas 11 y 12 hacen que el código muerto se quite en cada versión, no solo en una limpieza. Una clase CSS o una acción que se
+Las reglas 11, 12 y 14 hacen que el código muerto se quite en cada versión, no solo en una limpieza. Una clase CSS o una acción que se
 construye a trozos (`'an' + i`) no se ve como usada: se escriben enteras.
 
 Aparte, `tools/types.js` comprueba los tipos de todos los módulos con el comprobador de TypeScript: una clave de `S` que no

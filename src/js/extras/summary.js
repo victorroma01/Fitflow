@@ -16,7 +16,7 @@ import { weekStats } from '../dashboard/home.js';
 import { toDisplayWeight, volumeText, weightUnit } from '../profile/units.js';
 import { checkAchievements } from './achievements.js';
 import { html, raw } from '../core/html.js';
-import { saveBlob } from '../system/files.js';
+import { saveBlob, shareFiles } from '../system/files.js';
 const pctChange = (a, b) => {
   if (!(b > 0))
     return null;
@@ -262,17 +262,8 @@ A.summaryShare = async () => {
         lastSummary.blob = b;
     }
     const name = 'stratafit-' + trAs('archivo', 'entreno') + '.png';
-    const f = new File([b], name, { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [f] })) {
-      try {
-        await navigator.share({ files: [f], title: tr('Mi entreno') });
-        return;
-      }
-      catch (e) {
-        if (e && e.name == 'AbortError')
-          return;
-      }
-    }
+    if (await shareFiles([new File([b], name, { type: 'image/png' })], tr('Mi entreno')))
+      return;
     saveBlob(b, name);
     toast('Imagen guardada');
   }

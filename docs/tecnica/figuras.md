@@ -155,6 +155,11 @@ densidad 3; «lento» es con la CPU cuatro veces más despacio.
   mueve y sigue dibujada tras varios gestos; los ciclos no se paran; fuera de la vista no se dibuja); a 320 y 768 px; con
   «Reducir animaciones», las posturas quietas; los colores pintados de verdad; el entreno; sin errores ni choques con la
   política de seguridad.
+- `tools/check.js` (regla 14): nada declarado y nunca leído en `src/fig3d` (variables, funciones, nombres de lo que se
+  desestructura). En la V1.0.4 se quitaron así 90 declaraciones que quedaban de los ajustes de los lotes.
+- `tools/figuras3d/huella.js`: no es de la batería, sino para un cambio en el motor que no debe cambiar ninguna figura (como
+  ese): la huella de todo lo que dibuja, antes y después, tiene que ser la misma. Con la limpieza de la V1.0.4 lo fue
+  (`670e617c42d0af5a`).
 
 ## Revisión
 
