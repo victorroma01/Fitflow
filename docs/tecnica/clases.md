@@ -140,7 +140,7 @@ El mapa está en [`tests/clases-1.0.32.txt`](../../tests/clases-1.0.32.txt).
 | `nw` | `unread` | Respuesta que aún no se ha leído. |
 | `vh` | `visually-hidden` | Texto que solo leen los lectores de pantalla. |
 | `wk` | `week-nav` | Fila para pasar de una semana a otra. |
-| `mb` | `wide-btn` | Botón a lo ancho, con icono y texto (un programa, una opción de una hoja). |
+| `mb` | `wide-btn` | Botón a lo ancho, con icono y texto (un programa, una opción de una hoja). Desde la 1.0.4.1 ya no está: los programas van en tarjetas con su foto (`pg-card`). |
 
 ### Segundo lote: las piezas comunes, el entreno, la librería, los programas y la descarga
 

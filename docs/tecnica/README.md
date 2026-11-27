@@ -146,7 +146,8 @@ el que usan la mayoría de las pruebas.
 │                           format.js y format_css.js (formato) y modindex.js (cabeceras y mapa de módulos); para compilar,
 │                           templates.js (plantillas HTML) y modules.js (el orden de los módulos); figboxes.js (encuadres de
 │                           las figuras 3D); imágenes: marca.py (logo e iconos), fondo.py (el fondo del inicio de sesión),
-│                           portadas.py (las portadas de los días), equipamiento.py (los iconos del material) y catalogo.py
+│                           portadas.py y variantes.py (las portadas de los días y sus otras fotos), equipamiento.py (los
+│                           iconos del material) y catalogo.py
 │                           (las tarjetas de la librería); rename.js (renombrar globales) y pages.py (GitHub Pages)
 │   ├── figuras3d/          las pruebas y la página de revisión de las figuras 3D por lotes, y huella.js (README)
 │   └── admin/              scripts de administración de Firebase para GitHub Actions (contraseña temporal, rol, comprobar,

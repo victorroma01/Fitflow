@@ -69,9 +69,10 @@ const dayEditCard = d => html`
   </div>
   <button data-a="openPicker" class="w-full">+ Añadir ejercicio</button>
   <button class="primary w-full mt-8" data-a="toggleWeekView">Listo</button>`;
-/* un día sin ejercicios: descanso, con su botón para completarlo (`done`: ya está completado) */
-const restDayCard = done => html`
-  <div class="card hero ta-c p-50-14" data-style="${coverStyle('Descanso')}">
+/* un día sin ejercicios (`d`): descanso, con su botón para completarlo (`done`: ya está completado). Su portada, la de ese
+   descanso: en una semana con varios, cada uno lleva una foto (workout/images) */
+const restDayCard = (done, d) => html`
+  <div class="card hero ta-c p-50-14" data-style="${coverStyle('Descanso', d)}">
     <div class="fs-44">☾</div>
     <h2>Día de descanso</h2>
     <p class="muted">Hoy toca recuperar.</p>
@@ -268,7 +269,7 @@ export function workoutTab() {
     syncSel();
   const d = S.plan[S.selectedDay];
   const done = S.doneDays[S.week + '-' + S.selectedWeekday];
-  const card = !d.ex.length ? restDayCard(done) : weekView ? dayEditCard(d) : trainingDayCard(d, done);
+  const card = !d.ex.length ? restDayCard(done, d) : weekView ? dayEditCard(d) : trainingDayCard(d, done);
   const h = weekView ? html`${weekHeader()}${card}`
     : html`${raw(resumeBanner())}${weekHeader()}${weekBar()}${raw(deloadCard())}${raw(rotationCard())}${card}${woShortcuts()}`;
   return (isFreshInstall() && !W ? restoreBanner() : '') + h;

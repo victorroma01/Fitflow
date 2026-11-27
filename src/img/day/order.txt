@@ -1,6 +1,6 @@
 # Portadas de los días: src/img/day/<clave>.webp o .jpg y, para los perfiles de mujer, src/img/day/mujer/<clave> (las que haya;
-# tools/portadas.py). En este orden salen en el selector de los workouts personalizados, sin los descansos. Qué día lleva
-# cada una: data/photos.
+# tools/portadas.py). Sus otras fotos, <clave>-2.webp, <clave>-3.webp… (tools/variantes.py). En este orden salen en el
+# selector de los workouts personalizados, sin los descansos. Qué día lleva cada una: data/photos y workout/images.
 pecho
 espalda
 hombros

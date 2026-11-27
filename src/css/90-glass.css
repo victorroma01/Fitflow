@@ -269,7 +269,7 @@ html.glass[data-gm="3"][data-theme="light"] {
   background:color-mix(in srgb,var(--tx) 8%,transparent);
   border-color:var(--gb);
 }
-html.glass .card:not(.hero),html.glass .create-option,html.glass .wide-btn,html.glass .tag,html.glass .filter-btn,html.glass .create-routine {
+html.glass .card:not(.hero),html.glass .create-option,html.glass .tag,html.glass .filter-btn,html.glass .create-routine {
   background:var(--gsh);
   border-color:var(--gb);
   box-shadow:var(--gs),var(--grim);

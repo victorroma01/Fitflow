@@ -42,8 +42,10 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   Evolución del peso, debajo se ve la pestaña a la que se vuelve, en el punto en que se dejó (antes, un hueco en negro), y desde
   un grupo de la librería, los grupos; en el iPhone, una banda del color del fondo arriba evita el difuminado del sistema que
   dejaba borrosos los títulos y los botones de arriba; la leyenda de los colores de la librería, alineada; las tarjetas de la
-  librería, sin el icono pequeño ni la raya: solo el nombre del grupo y su número, sobre su ilustración; y las miniaturas de los
-  ejercicios, más definidas
+  librería, sin el icono pequeño ni la raya: solo el nombre del grupo y su número, sobre su ilustración; las miniaturas de los
+  ejercicios, más definidas; en las tarjetas de los días, 29 fotos más del propietario (hechas con IA): cada semana el día
+  lleva otra y dos días con la misma portada en una semana no la repiten; y en Programas, cada programa con su foto, como en
+  Entrenos a la carta
   ([detalle](docs/tecnica/revision-1.0.4.md#después-sin-cambiar-de-versión)).
 - Pasar las cuentas al dominio nuevo: la cuenta de prueba del ensayo entra por la API pública como desde un navegador (diciendo
   venir solo del origen de la app y, si la clave no lo admite, de su dirección entera: `tools/admin/web.mjs`), y si no puede,

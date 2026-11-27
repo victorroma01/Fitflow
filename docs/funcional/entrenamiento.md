@@ -12,6 +12,12 @@
   - Hombre: Bro Split, Push Pull Leg, Torso / Pierna y Full Body.
   - Mujer: Glúteo y pierna (tren inferior tres veces por semana) y Full Body.
   - Si aún no lo has indicado, Programas te lo pregunta.
+- **En Programas**, cada programa va en una tarjeta con su foto, como en Entrenos a la carta: la de su día más suyo (pecho en
+  Bro Split, un remo en Push Pull Leg, el torso en Torso / Pierna, la sentadilla en Full Body, el hip thrust en Glúteo y pierna,
+  la carrera en Híbrido y el trineo en Hyrox / CrossFit) y, en uno propio, la de su primer día de entreno (en otra foto que la
+  del de serie, si hay más de una). Encima, su nombre con
+  su nivel, los días por semana y sus ejercicios; el que estás haciendo dice **Plan actual**. Con el perfil de mujer, las de la
+  modelo.
 - **Ciclos que no se cortan**: el Push Pull Leg es un ciclo de 10 días (Push, Pull, descanso, Legs, descanso, primero con los
   días A y luego con los B) y el Full Body, uno de 6 (entreno y descanso alternos con las sesiones A, B y C). La semana se sigue
   viendo con sus 7 días, pero cada semana empieza donde acabó la anterior; por eso salen 3 o 4 entrenos unas semanas y 4 o 5
@@ -39,9 +45,17 @@
   y la simulación de Hyrox, la de una competición. Los días de descanso de esos programas (Hyrox / CrossFit, Híbrido) llevan una
   foto propia, sentado en un cajón del gimnasio. Un día cuyo nombre no dice nada (los de Full Body) lleva la de su primer
   ejercicio, que suele ser el principal, sin repetir la de otro día así de la semana. Las de carrera llevan un dibujo, igual
-  para todos.
+  para todos (y, otras semanas, una foto: ver abajo).
   - Con el perfil de **mujer** (Perfil → Datos biométricos → Sexo), todas son de una modelo, con los mismos ejercicios. La de
     la competición, mientras no haya una suya, es la del trineo.
+  - **Para que no salgan siempre las mismas** (desde la 1.0.4.1, con 29 imágenes más del propietario, hechas con IA), varias
+    portadas tienen más de una foto. Con el perfil de hombre: pecho (3), espalda (5), torso, hombros, brazos y trineo (2 cada
+    una), carrera (4: el dibujo, dos carreras por la calle y un paseo) y descanso (4: el de siempre y tres con un café en casa).
+    Con el de mujer: espalda (3), piernas (4), glúteo (3), hombros (2), carrera (3: el dibujo y dos en la cinta) y descanso (4:
+    el de siempre, dos con un café y un desayuno en casa). Cada semana el día lleva la siguiente, y dos días con la misma
+    portada en una semana (Push A y Push B, Pull A y Pull B, los descansos) llevan fotos distintas. Durante la semana no cambia,
+    y el Overview lleva la misma. En **Entrenos a la carta**, dos rutinas con la misma portada (las de brazos) llevan fotos
+    distintas, y cada una siempre la suya.
 - **Al completar un día** (guardando su entreno, o con **Completar descanso** en un día de descanso), queda elegido el siguiente
   día sin completar; tras el último de la semana, el primero de la semana siguiente. Un día de descanso no se salta: la app se
   queda en él hasta que lo marques como completado.
