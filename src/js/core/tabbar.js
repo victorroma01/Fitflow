@@ -7,7 +7,7 @@
    arrastra, la burbuja sigue al dedo sin transición y en su propia capa; al cogerla se acerca al dedo en TAB_GRAB_MS en vez de
    saltar; y al soltarla, o al tocar una pestaña, sale hacia la pestaña nueva antes de que esta se pinte (core/render, A.selectTab),
    así que su deslizamiento no espera a la pantalla nueva.
-   Define: TABS, HOLD, TAB_GRAB_MS, tabDrag, tabDragEnd, tabButtons, tabGeo, tabGeometry, placeBubble, tabbarSync, buildTabbar, dragStart, dragMove, dragGlide, dragStop, tabNav, tabbarResized, START_TABS, startOf, startTabName, startTabCard, applyStartTab  · acciones/registros: 1
+   Define: TABS, HOLD, TAB_GRAB_MS, tabDrag, tabDragEnd, tabButtons, tabGeo, tabGeometry, placeBubble, tabbarSync, tabbarHtml, buildTabbar, tabbarCopy, dragStart, dragMove, dragGlide, dragStop, tabNav, tabbarResized, START_TABS, startOf, startTabName, startTabCard, applyStartTab  · acciones/registros: 1
 */
 import { $ } from './util.js';
 import { A } from './registry.js';
@@ -69,13 +69,23 @@ export const tabbarSync = () => {
   if (!n.classList.contains('bubble-on'))
     requestAnimationFrame(() => n.classList.add('bubble-on'));
 };
+/* lo de dentro de la barra: los cuatro botones y, detrás (y la última, para que los botones sigan siendo del 1 al 4), la burbuja */
+const tabbarHtml = () => html`
+  ${TABS.map((t, i) => html`
+    <button data-a="selectTab" data-i="${i}"><span class="d-block lh-0 pb-4">${icon(t[0], 28)}</span>${raw(t[1])}</button>`)}
+  <i class="nav-bubble" aria-hidden="true"></i>`;
 /** Pinta la barra (al arrancar). */
 export const buildTabbar = () => {
-  /* la burbuja va detrás de los botones (y la última, para que los botones sigan siendo del 1 al 4) */
-  $('nav').innerHTML = html`
-    ${TABS.map((t, i) => html`
-      <button data-a="selectTab" data-i="${i}"><span class="d-block lh-0 pb-4">${icon(t[0], 28)}</span>${raw(t[1])}</button>`)}
-    <i class="nav-bubble" aria-hidden="true"></i>`;
+  $('nav').innerHTML = tabbarHtml();
+};
+/** Una barra aparte, quieta, con la pestaña abierta marcada por su botón (sin la burbuja): la que se ve debajo de Overview
+    mientras se desliza para volver a Workout (core/swipe). Hecha de nuevo, no copiada de la de la página, que en Overview
+    está oculta y sin medidas. */
+export const tabbarCopy = () => {
+  const n = document.createElement('nav');
+  n.innerHTML = tabbarHtml();
+  n.querySelectorAll('button').forEach((e, i) => e.classList.toggle('on', i == S.tab));
+  return n;
 };
 /* la burbuja se despega de su pestaña y va hacia el dedo (en la posición x de la pantalla) */
 const dragStart = x => {
