@@ -327,7 +327,9 @@ def main(path):
         run()
         rows = "document.querySelectorAll('#sh [data-a=logDeleteAsk]').length"
         total = ev("S.logs.length")
-        check('registros con muchos entrenos: al abrir, los 60 primeros y «Ver más registros»', ev(rows) == 60 and ev("!!document.querySelector('#logs-more')") and 'Toca un registro para borrarlo.' in text('#sh'), str(ev(rows)))
+        check('registros con muchos entrenos: al abrir, los 60 primeros', ev(rows) == 60, str(ev(rows)))
+        # en el documento y no en el texto que se ve (innerText): en Firefox, mientras la página entra, puede no contarse
+        check('con «Ver más registros» y el aviso del final', ev("!!document.querySelector('#logs-more') && [...document.querySelectorAll('#sh p')].some(p => p.textContent == 'Toca un registro para borrarlo.')"))
         ev("document.querySelector('#sh .sheet').scrollTop = 1e6")
         pg.wait_for_timeout(500)
         check('al llegar al final, la tanda siguiente sola', ev(rows) == 120, str(ev(rows)))

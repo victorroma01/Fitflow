@@ -401,7 +401,7 @@ def main(path):
         look('con su aviso si falta algo')
         ev("A.openLegal(0,{dataset:{v:'privacy'}})")
         pg.wait_for_timeout(300)
-        look('y la privacidad', lambda t: 'StrataFit privacy policy' in t and 'the Spanish version prevails' in t and 'Last updated: November 25, 2026' in t)
+        look('y la privacidad', lambda t: 'StrataFit privacy policy' in t and 'the Spanish version prevails' in t and 'Last updated: November 27, 2026' in t)
         ev("A.openLegal(0,{dataset:{v:'terms'}})")
         pg.wait_for_timeout(300)
         look('y el aviso legal', lambda t: 'Legal notice and terms of use' in t and 'the Spanish version prevails' in t)

@@ -25,7 +25,7 @@ revisión y, debajo, los de la versión que revisa (y los de sus revisiones ante
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
-## [1.0.4] — 2026-11-25
+## [1.0.4] — 2026-11-27
 
 > Revisión de la aplicación
 >

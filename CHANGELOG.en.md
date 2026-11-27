@@ -9,7 +9,7 @@ the same sections in the same order (**What's new**, **Improvements**, **Fixes**
 If it doesn't, or if the current version has no entry here, the build stops. Versions before 1.0.4, which had no English,
 have no entry: the app shows them in Spanish.
 
-## [1.0.4] — 2026-11-25
+## [1.0.4] — 2026-11-27
 
 > App review
 >
