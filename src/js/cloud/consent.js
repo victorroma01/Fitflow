@@ -17,9 +17,9 @@ import { commitWrites, setWrite } from './firestore.js';
     terms: Aviso legal y condiciones de uso; privacy: Política de privacidad; health: el consentimiento informado para tratar
     los datos de salud (la segunda casilla y su texto entero, data/legal: consent). */
 export const LEGAL = {
-  terms: { v: '1.0', date: '2026-11-25', valid: ['1.0'] },
-  privacy: { v: '1.0', date: '2026-11-25' },
-  health: { v: '1.0', date: '2026-11-25', valid: ['1.0'] }
+  terms: { v: '1.0', date: '2026-11-27', valid: ['1.0'] },
+  privacy: { v: '1.0', date: '2026-11-27' },
+  health: { v: '1.0', date: '2026-11-27', valid: ['1.0'] }
 };
 /** ¿Va la versión `v` después de la `ref`? Por números: «1.10» va después de «1.9».
     @param {string} v
