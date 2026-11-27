@@ -220,3 +220,7 @@ cuenta de prueba no pudo entrar por la API pública desde GitHub. Como un navega
 (`https://victorroma01.github.io/`) y la tarea decía la dirección entera; ahora (`tools/admin/web.mjs`) dice primero el origen
 y, si la clave no lo admite, la dirección entera, y si aun así no puede, el resumen da el motivo de Google. Las cuentas no se
 pasan hasta saber que nadie tendrá que volver a entrar.
+
+Ese arreglo va con la **1.0.4.1**, la primera revisión de la 1.0.4, que además deja más claro e impersonal el texto de
+«Condiciones y privacidad», a petición del propietario: «acepta las condiciones y da tu consentimiento para tratar los datos de
+salud». El aviso de versión nueva enseña su corrección encima de las novedades de la 1.0.4.

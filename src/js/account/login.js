@@ -193,7 +193,7 @@ const consentView = () => {
       <div class="card login-card">
         <h2 class="login-title">Condiciones y privacidad</h2>
         <p class="muted m-0-0-6">
-          ${gone ? 'Has retirado tu consentimiento y tus registros se han borrado. Para volver a usar StrataFit con esta cuenta tienes que darlo de nuevo.' : 'Para seguir usando StrataFit con tu cuenta, acepta las condiciones y danos tu consentimiento para tratar los datos de salud que guardas. Hasta entonces, la app no usa ni sincroniza tus datos.'}
+          ${gone ? 'Has retirado tu consentimiento y tus registros se han borrado. Para volver a usar StrataFit con esta cuenta tienes que darlo de nuevo.' : 'Para seguir usando StrataFit con tu cuenta, acepta las condiciones y da tu consentimiento para tratar los datos de salud. Hasta entonces, la app no usa ni sincroniza tus datos.'}
         </p>
         <p class="muted fs-13 m-0-0-6">Cuenta: <b>${account.u}</b></p>
         ${consentChecks()}
