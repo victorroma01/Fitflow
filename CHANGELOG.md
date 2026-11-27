@@ -61,7 +61,6 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   la columna «Desc.».
 - Entreno: fuera el botón «+ Drop set» de debajo de las series. El drop set se sigue eligiendo como técnica del ejercicio.
 - «Borrar todos los datos» borra también el sexo del perfil y las copias automáticas del móvil: lo borrado no se recupera.
-- Mejoras técnicas y correcciones de errores. Optimización del sistema y funcionalidades.
 
 ### Correcciones
 - Gráfica de progreso: al elegir un punto que es récord sale «RÉCORD» junto a la cifra.

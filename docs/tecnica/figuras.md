@@ -174,7 +174,7 @@ del pie de delante, con la rodilla de delante abierta hacia fuera, por donde baj
 girando desde el hombro, estirados (`armSweep`, `slerp`), y cada una dice su miniatura (`still`) y sus posturas quietas
 (`stills`, que `tools/figboxes.js` respeta): el momento clave de cada gesto. Las familias nuevas van en la cabecera de su
 archivo («Define:»): de ella sale qué archivos carga la página de revisión (sin ellas, la primera página del lote se paraba
-en la segunda figura). Pendiente del visto bueno del propietario.
+en la segunda figura). Revisado, con el visto bueno del propietario.
 
 ## Lo que queda fuera
 

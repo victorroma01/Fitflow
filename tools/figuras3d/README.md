@@ -60,4 +60,4 @@ python3 pagina.py                  # la página de revisión del lote (sus texto
    unders» con la comba y la cinta inclinada con la caminata inclinada). Revisado.
 9. Lo que trajeron los entrenos a la carta (V1.0.4): el remo alto en máquina (con los remos: `row machine high`) y tres de
    movilidad de pie, la zancada con rotación torácica, la rodilla al pecho con alcance y el talón al glúteo con alcance
-   (`wgs`, `kneeHug` y `heelButt`, en `funcional3d.js`): 4 ejercicios. Pendiente de revisión.
+   (`wgs`, `kneeHug` y `heelButt`, en `funcional3d.js`): 4 ejercicios. Revisado.

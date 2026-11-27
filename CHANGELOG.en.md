@@ -47,7 +47,6 @@ have no entry: the app shows them in Spanish.
 - Workout: the “+ Drop set” button below the sets is gone. You still choose a drop set as the exercise's technique.
 - “Delete all data” also deletes the sex in your profile and the automatic backups on the phone: what is deleted can't be
   recovered.
-- Technical improvements and bug fixes. System and feature optimization.
 
 ### Fixes
 - Progress chart: when you pick a point that is a record, “PR” appears next to the figure.
