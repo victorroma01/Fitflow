@@ -184,15 +184,14 @@ def media():
             die('el icono de equipamiento %s tiene que estar una vez en src/img/equipment (.webp o .svg): %s' % (k, found or 'no está'))
         equip[k] = 'img/equipment/' + found[0]
         files.append((equip[k], os.path.join(folder, found[0])))
-    # las tarjetas de los grupos de la librería (library/catalog): la ilustración y el icono de cada uno (tools/catalogo.py)
-    cat, cat_icon, cfolder = {}, {}, os.path.join(IMG, 'catalog')
+    # las tarjetas de los grupos de la librería (library/catalog): la ilustración de cada uno (tools/catalogo.py)
+    cat, cfolder = {}, os.path.join(IMG, 'catalog')
     for k in catalog_ids():
-        for out, name in ((cat, k + '.webp'), (cat_icon, k + '-icono.webp')):
-            p = os.path.join(cfolder, name)
-            if not os.path.isfile(p):
-                die('falta la imagen de la tarjeta %s (python3 tools/catalogo.py paquete)' % os.path.relpath(p, ROOT))
-            out[k] = 'img/catalog/' + name
-            files.append((out[k], p))
+        p = os.path.join(cfolder, k + '.webp')
+        if not os.path.isfile(p):
+            die('falta la ilustración de la tarjeta %s (python3 tools/catalogo.py paquete)' % os.path.relpath(p, ROOT))
+        cat[k] = 'img/catalog/' + k + '.webp'
+        files.append((cat[k], p))
     used = {p for _, p in files}
     for folder, why in ((folder, 'data/equipment.js'), (cfolder, 'data/catalog.js')):
         for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
@@ -202,7 +201,7 @@ def media():
         for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
             if f.endswith(('.jpg', '.webp')) and os.path.join(folder, f) not in used:
                 print('  aviso: %s no está en su lista y no se usa' % os.path.relpath(os.path.join(folder, f), ROOT))
-    return {'files': files, 'day': day, 'dayF': day_f, 'equip': equip, 'cat': cat, 'catIcon': cat_icon}
+    return {'files': files, 'day': day, 'dayF': day_f, 'equip': equip, 'cat': cat}
 
 
 def media_js(m, inline):
@@ -220,7 +219,6 @@ def media_js(m, inline):
         'login': url(LOGIN_PHOTO, src[LOGIN_PHOTO]),
         'equip': {k: url(rel, src[rel]) for k, rel in m['equip'].items()},
         'cat': {k: url(rel, src[rel]) for k, rel in m['cat'].items()},
-        'catIcon': {k: url(rel, src[rel]) for k, rel in m['catIcon'].items()},
     }
     return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 
