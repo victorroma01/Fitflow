@@ -178,7 +178,10 @@ def main(path, shots=None):
             pg.fill('#sh input', q)
             pg.clock.run_for(500)
             check('lista: «%s» lleva su figura' % n, settle(IS_PICTURE + "(" + ROW % n + ")"))
-        size = ev("(i => [i.naturalWidth, Math.round(i.getBoundingClientRect().width), Math.round(i.getBoundingClientRect().height)])((" + ROW % 'Burpees' + ").querySelector('.exercise-thumb img'))")
+        THUMB = "(" + ROW % 'Burpees' + ").querySelector('.exercise-thumb img')"
+        # la imagen ya está puesta, pero en Safari puede no haberse leído todavía (naturalWidth 0): se espera a que lo esté
+        settle("(i => !!i && i.complete && i.naturalWidth > 0)(" + THUMB + ")")
+        size = ev("(i => [i.naturalWidth, Math.round(i.getBoundingClientRect().width), Math.round(i.getBoundingClientRect().height)])(" + THUMB + ")")
         check('lista: la imagen ocupa su recuadro de 48 px y tiene la resolución de la pantalla (72 × 2)', size == [144, 48, 48], str(size))
         pg.fill('#sh input', 'mi ejercicio')
         pg.clock.run_for(500)
