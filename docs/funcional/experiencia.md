@@ -70,8 +70,16 @@ La pestaña abierta lleva detrás una burbuja del color de acento, que se desliz
 En las páginas de dentro (las que se abren desde una pestaña y sus subpáginas, como las de Ajustes, y las ventanas que suben desde
 abajo), en el menú lateral, en Overview y en Evolución del peso, deslizar el dedo de izquierda a derecha hace lo mismo que la flecha
 «←» o «Cerrar». La página sigue al dedo: si la sueltas pasada más o menos la cuarta parte de la pantalla, o con un gesto rápido,
-vuelve; si no, se queda donde estaba. Debajo de una subpágina (la de un ajuste, por ejemplo) se ve la página a la que vuelves, tal
-como la dejaste.
+vuelve; si no, se queda donde estaba. Mientras, debajo se ve siempre la pantalla a la que vuelves, nunca un hueco en negro:
+
+- debajo de una página que se abre desde una pestaña (Ajustes, la librería, Programas…), esa pestaña;
+- debajo de una subpágina (la de un ajuste, por ejemplo), la página de antes, tal como la dejaste;
+- debajo de un paso con su «‹ …» dentro (un grupo de la librería, con «‹ Grupos»; el editor de un workout, con «‹ Rutinas»), el
+  paso al que vuelve;
+- debajo de Overview y de Evolución del peso, que van en lugar de su pestaña, Workout (con la barra de pestañas) o Dashboard.
+
+Overview y Evolución del peso se abren arriba del todo y, al volver (con el gesto o con «‹ Atrás»), la pestaña queda en el punto
+en que la dejaste.
 
 En iPhone, el gesto «atrás» del propio sistema (deslizar desde el borde izquierdo) no hace nada en la app: lo hace el de la app, que
 desliza la página. Así no sale una pantalla en negro antes de volver.

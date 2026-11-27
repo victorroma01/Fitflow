@@ -190,6 +190,39 @@ nav.tour-live {
 #sh .backdrop {
   touch-action:none;
 }
+/* el borde de arriba en el iPhone y el iPad (core/ui pone #edge y la clase «ios»). Desde iOS 26, el sistema dibuja sobre la app
+   instalada, bajo la barra de estado, un difuminado que entra unos 40 pt en la página: el título, el nivel y los botones de
+   arriba de cada pestaña se veían borrosos por arriba aunque no hubiera nada debajo, como si la app no encajara en el móvil.
+   WebKit no lo pone, y alarga el color de la caja, si lo que hay en ese borde es una caja fija de lado a lado, de más de 10 px
+   de alto, que se puede tocar y con un fondo de color liso, sin desenfoque. Esta banda, del color del fondo, cubre la barra de
+   estado (si la página llega por debajo de ella) y 12 px más, donde no hay nada: lo de arriba de cada pantalla empieza más
+   abajo (el margen de #app y de las páginas, y la cabecera del entreno y la tarjeta fija de Nutrición, ajustadas aquí abajo).
+   Va encima de la pestaña y debajo de las ventanas que suben desde abajo, que la oscurecen con su fondo como al resto; sobre
+   una página (#sh.full), encima de ella, porque el cristal de la página (con desenfoque) haría que el sistema volviera a
+   difuminar. En el inicio de sesión no va: su foto llega hasta arriba */
+#edge {
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:calc(env(safe-area-inset-top,0px) + 12px);
+  z-index:7;
+  background:var(--bg);
+}
+#sh.full~#edge {
+  z-index:10;
+}
+body:has(#lgw)>#edge {
+  display:none;
+}
+/* la cabecera fija del entreno: arriba del todo, su contenido queda donde estaba; pegada arriba al bajar, empieza bajo la banda */
+html.ios .session-head {
+  margin-top:calc(-12px - env(safe-area-inset-top,0px));
+  padding-top:calc(12px + env(safe-area-inset-top,0px));
+}
+html.ios .pos-sticky.top-6 {
+  top:calc(env(safe-area-inset-top,0px) + 18px)!important;
+}
 /* recorrido (system/tour) */
 #tour {
   position:fixed;

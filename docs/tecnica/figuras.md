@@ -9,7 +9,7 @@ por lotes de ejercicios antes de entrar en la app (ver [Revisión](#revisión)).
 - **En pequeño** (el entreno, el día, la ficha, las listas de la librería y de las rutinas): la figura quieta en el momento
   del gesto que mejor lo identifica, con los músculos que trabajan en rojo (principales) y naranja (secundarios), y el
   material. A ese tamaño los tonos oscuros del cuerpo van aclarados: oscuro sobre el fondo oscuro de la miniatura apenas se
-  distinguía.
+  distinguía. Y los bordes, marcados (desde la 1.0.4.1): reducida a su sitio en la pantalla, la figura salía blanda.
 - **Al tocar la imagen**, la hoja «Cómo se hace»: arriba, la figura en grande, que se mueve con el gesto entero; debajo, a la
   izquierda, los músculos en pequeño (de frente y de espaldas) y, a su lado, el nombre del ejercicio y los músculos con su
   nombre; y después, el texto. El sitio de la figura tiene proporción fija (4:3): la figura llega cuando está dibujada y nada
@@ -89,12 +89,15 @@ verdad, círculos, elipses, el desplazamiento de los discos) y deja fuera lo que
   ordenador y cuatro veces más en un móvil, justo mientras la hoja entra.
 - **Una miniatura se dibuja una vez.** `extras/figure3d` dibuja la figura quieta sin el rayado (a ese tamaño no se
   distingue), con los tonos oscuros aclarados (un filtro gamma) y solo con los degradados que usa, y la pasa a imagen en un
-  lienzo: WebP de 72 px por la densidad de la pantalla (hasta 216 px), unos 6–10 KB. La imagen se guarda en la memoria y en el
-  móvil (IndexedDB, base `fffig`: por cada ejercicio, el tipo de la imagen y sus bytes; y una fila con la huella de las
-  figuras, `data/figstamp`, y el tamaño): la siguiente vez se enseña al momento, sin el motor. Son dibujos de la librería,
-  iguales para cualquiera, no datos de nadie. Solo se vacían y se rehacen cuando una versión cambia las figuras (otra
-  huella): una actualización que no las toca no hace dibujar otra vez las 529. Donde el navegador no deja leer el lienzo, la
-  imagen es el propio dibujo y no se guarda.
+  lienzo: WebP de 72 px por la densidad de la pantalla (hasta 216 px), unos 6–10 KB. Antes de pasarla, le marca los bordes
+  (`sharpen`, una máscara de enfoque: cada píxel se aleja de la media de los de alrededor, con un núcleo 1-2-1, y con el color
+  multiplicado por la opacidad para que el fondo transparente no deje halos): la misma imagen sirve para 48, 64 y 72 px, y
+  reducida salía blanda. La imagen se guarda en la memoria y en el móvil (IndexedDB, base `fffig`: por cada ejercicio, el tipo
+  de la imagen y sus bytes; y una fila con la huella de las figuras, `data/figstamp`, y el tamaño): la siguiente vez se enseña
+  al momento, sin el motor. Son dibujos de la librería, iguales para cualquiera, no datos de nadie. Solo se vacían y se rehacen
+  cuando una versión cambia las figuras o cómo se dibujan (otra huella: la lleva también `extras/figure3d`, así que marcar los
+  bordes hizo dibujar otra vez las de la 1.0.4): una actualización que no toca nada de eso no hace dibujar otra vez las 529.
+  Donde el navegador no deja leer el lienzo, la imagen es el propio dibujo y no se guarda.
 - **Solo se lee lo que se pide.** Las miniaturas que pide una pantalla se buscan juntas en lo guardado, en una sola lectura;
   abrir la app no trae todas las guardadas.
 - **El momento de la miniatura**: en un gesto de ida y vuelta, la postura final (un curl arriba, una sentadilla abajo); en

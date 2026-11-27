@@ -11,7 +11,7 @@
 */
 /** grupo → [id de sus imágenes, ancho y alto de su ilustración, ancho de su icono (de 54 de alto), 1 si es de las anchas] */
 export const CATALOG = {
-  'Pecho': ['chest', 339, 192, 53],
+  'Pecho': ['chest', 339, 192, 60],
   'Espalda': ['back', 337, 191, 56],
   'Hombros': ['shoulders', 338, 192, 53],
   'Bíceps': ['biceps', 339, 164, 54],

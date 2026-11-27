@@ -333,14 +333,55 @@ def main(path):
         ev("__pe('pointerup',__g,%f,%f)" % (x0 + 120, y0))
         run(300)
         check('y se cierra', ev("document.getElementById('mn').innerHTML") == '')
-        ev("S.tab=0;R();A.openOverview()")
+        # Overview va en lugar de Workout: mientras se desliza, debajo se ve Workout (antes, un hueco en negro), con su barra de
+        # pestañas y en el punto en que se dejó; el botón de abajo va con la página, que no ensancha la pantalla
+        ev("S.tab=0;R()")
+        run()
+        y_tab = ev("(window.scrollTo({top: 120, behavior: 'instant'}), scrollY)")
+        ev("A.openOverview()")
+        run()
+        check('Overview se abre arriba del todo', ev('scrollY') == 0 and y_tab > 0, str([ev('scrollY'), y_tab]))
+        x0, y0 = gesture('#app .hero h2', 120, 0, end=None)
+        under = ev("""(() => { const u = document.querySelector('.screen-under'), b = document.querySelector('#app .sticky-btn');
+          const n = u && u.querySelector('nav');
+          return u && [!!u.querySelector('[data-a=openOverview]'), !!n && getComputedStyle(n).display == 'flex' && n.querySelectorAll('button').length == 4 && (n.querySelector('button.on') || {}).dataset?.i == '0', u.inert, getComputedStyle(u).zIndex,
+            u.querySelector('.screen-under-page').style.transform, b ? b.style.transform : 'sin botón', innerWidth,
+            document.documentElement.classList.contains('sliding-page'), getComputedStyle(document.getElementById('app')).backgroundColor]; })()""")
+        check('mientras Overview se desliza, debajo se ve Workout donde se dejó, con su barra de pestañas (no un hueco en negro), y la página lleva su fondo y su botón',
+              under == [True, True, True, '-1', 'translateY(-%dpx)' % y_tab, 'translateX(120px)', 390, True, 'rgb(0, 0, 0)'], str(under))
+        ev("__pe('pointerup',__g,%f,%f)" % (x0 + 120, y0))
+        run(300)
+        check('Overview vuelve al Workout, en el punto en que se dejó, y la capa de debajo se quita',
+              not ev("!!document.querySelector('#app [data-a=overviewBack]')") and ev("!!document.querySelector('#app [data-a=openOverview]')") and ev('scrollY') == y_tab
+              and not ev("!!document.querySelector('.screen-under')") and not ev("document.documentElement.classList.contains('sliding-page')"), str(ev('scrollY')))
+        ev("A.openOverview()")
         run()
         gesture('#app .hero h2', 220, 0)
         check('Overview vuelve al Workout', not ev("!!document.querySelector('#app [data-a=overviewBack]')") and ev("!!document.querySelector('#app [data-a=openOverview]')") and ev("document.querySelector('#app').style.left") == '')
         ev("S.tab=2;R();A.openWeight()")
         run()
+        x0, y0 = gesture('#app .page-head h1', 120, 0, end=None)
+        check('mientras Evolución del peso se desliza, debajo se ve Dashboard (y su barra de pestañas sigue quieta)',
+              ev("(u => !!u && !!u.querySelector('[data-a=openWeight]') && !u.querySelector('nav'))(document.querySelector('.screen-under'))"))
+        ev("__pe('pointercancel',__g,%f,%f)" % (x0 + 120, y0))
+        run(300)
+        check('si el gesto se cancela, la página vuelve a su sitio y la capa de debajo se quita', ev('weightView') == 1 and not ev("!!document.querySelector('.screen-under')")
+              and ev("document.querySelector('#app').style.left") == '')
         gesture('#app .page-head h1', 220, 0)
         check('Evolución del peso vuelve al Dashboard', ev('weightView') == 0 and ev('S.tab') == 2)
+        # un grupo de la librería tiene su paso atrás dentro («‹ Grupos»): debajo, los grupos, no la pestaña
+        ev("A.openLibrary();A.libraryGroup(0,{dataset:{v:'Pecho'}})")
+        run()
+        x0, y0 = gesture('#sh .page-title', 120, 0, end=None)
+        check('mientras un grupo de la librería se desliza, debajo se ven los grupos, a los que vuelve',
+              ev("(u => !!u && !!u.querySelector('.cat-grid') && u.scrollTop == 0)(document.querySelector('#sh .sheet-under'))"))
+        ev("__pe('pointerup',__g,%f,%f)" % (x0 + 120, y0))
+        run(300)
+        check('y al soltar, la librería enseña los grupos', ev("libState.g") == '' and ev("!!document.querySelector('#sh .sheet:not(.sheet-under) .cat-grid')")
+              and not ev("!!document.querySelector('#sh .sheet-under')"))
+        ev("A.closeSheet()")
+        run()
+        check('fuera del iPhone no hay banda arriba (es para el difuminado del sistema del iPhone)', not ev("!!document.getElementById('edge')") and not ev("document.documentElement.classList.contains('ios')"))
         ev("S.tab=0;R();A.startWorkout()")
         run()
         gesture('#app', 220, 0)
@@ -795,6 +836,26 @@ def main(path):
         e3("A.closeSheet();S.tab=0;R();A.startWorkout()")
         r3()
         check('durante el entreno tampoco hay entrada de más: el gesto del iPhone ya no funde la pantalla a negro', e3('!!W') and e3('history.length') == n0 and not e3("!!(history.state&&history.state.sf)"))
+        e3("W=null;localStorage.removeItem('ffw');R()")
+        # el borde de arriba (iOS 26): el sistema difumina bajo la barra de estado, y entra en la página, salvo si en ese borde
+        # hay una caja fija de lado a lado, de más de 10 px, que se puede tocar y de color liso, sin desenfoque
+        BAND = """(() => { const e = document.elementFromPoint(innerWidth / 2, 4), cs = getComputedStyle(e), r = e.getBoundingClientRect();
+          return [e.id, cs.position, cs.backgroundColor, cs.backdropFilter == 'none' || !cs.backdropFilter, r.width == innerWidth, r.height > 10, cs.pointerEvents]; })()"""
+        e3("S.tab=3;R()")
+        r3()
+        check('en el iPhone, arriba del todo hay una banda fija, de lado a lado, del color del fondo y sin desenfoque: el sistema no difumina el título',
+              e3(BAND) == ['edge', 'fixed', 'rgb(0, 0, 0)', True, True, True, 'auto'], str(e3(BAND)))
+        check('y no tapa nada: lo de arriba de la pestaña empieza por debajo', e3("document.querySelector('#app').firstElementChild.getBoundingClientRect().top >= document.getElementById('edge').getBoundingClientRect().bottom"))
+        e3("A.openSettings()")
+        r3()
+        check('sobre una página (Ajustes), la banda va por encima de su cristal', e3(BAND)[0] == 'edge' and e3("getComputedStyle(document.getElementById('edge')).zIndex") == '10')
+        e3("A.closeSheet();S.tab=0;R();A.startWorkout()")
+        r3()
+        HEAD = "(h => Math.round(h.firstElementChild.getBoundingClientRect().top - document.getElementById('edge').getBoundingClientRect().bottom))(document.querySelector('.session-head'))"
+        at_top = e3(HEAD)
+        e3("window.scrollTo({top: 400, behavior: 'instant'})")
+        r3()
+        check('en el entreno, la cabecera fija empieza bajo la banda, arriba del todo y al bajar', at_top >= 0 and e3(HEAD) >= 0 and e3(BAND)[0] == 'edge', str([at_top, e3(HEAD)]))
         e3("W=null;localStorage.removeItem('ffw');R()")
 
         # ───────────────────────────── sonido tras el silencio ─────────────────────────────

@@ -120,11 +120,14 @@
     border-color:rgba(255,255,255,.62);
   }
 }
-/* la leyenda de los colores del modelo, debajo; en el móvil, una línea por color; desde 520 px, los dos en una, con la raya
+/* la leyenda de los colores del modelo, debajo; en el móvil, una línea por color, centradas juntas y alineadas por la
+   izquierda: las dos rayas de color, una encima de la otra, y sus textos, a la vez; desde 520 px, los dos en una, con la raya
    en medio (en rejilla: si un texto no cabe, se parte dentro de su columna y la raya sigue entre los dos) */
 .cat-legend {
   display:grid;
-  justify-items:center;
+  grid-template-columns:minmax(0,max-content);
+  justify-content:center;
+  justify-items:start;
   align-items:center;
   gap:8px 14px;
   margin:12px 0 26px;

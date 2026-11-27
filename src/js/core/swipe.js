@@ -6,19 +6,24 @@
    ventanas de aviso, en el recorrido o en el temporizador de WOD. No empieza en un campo de texto ni en una fila que se desplaza
    de lado (por ejemplo, la de los filtros).
    Mientras algo sigue al dedo, <html> lleva la clase «sliding»: lo que se mueve va sin desenfoque de fondo ni transparencia
-   (en iPhone, mover una capa con desenfoque la deja en negro a ratos; I-20). Si es una subpágina, debajo se ve la página a la
-   que se vuelve (showPageBelow) y no la pestaña.
+   (en iPhone, mover una capa con desenfoque la deja en negro a ratos; I-20). Debajo se ve siempre la pantalla a la que se
+   vuelve, nunca un hueco en negro: la pestaña, bajo una página que se abrió desde ella; la página de antes, bajo una subpágina
+   o un paso con «‹ …» dentro (core/ui, showPageBelow); y bajo Overview y Evolución del peso, que van en lugar de la pestaña, la
+   pestaña pintada en una capa de debajo, en el punto en que se dejó (showScreenBelow). La página que se mueve lleva su fondo y
+   una sombra en el borde.
    Deslizar hacia abajo cierra una ventana que sube desde abajo (no las páginas: #sh.full), como en el iPhone, también durante un
    entreno: si está arriba del todo y el dedo baja más que de lado, la ventana lo sigue, y se cierra si se suelta pasada la cuarta
    parte de su altura o con un gesto rápido. Mientras, lo de detrás no se mueve. Va con eventos táctiles, escuchados en #sh y no
    en todo el documento: para que la ventana no rebote ni arrastre la página de detrás, ese movimiento se cancela, y eso solo se
    puede en un touchmove que no sea pasivo. Si la ventana tiene un paso atrás dentro (data-back), no se cierra así.
-   Define: SWIPE_KINDS, SWIPE_SKIP, swipe, swipeEnd, scrollsSideways, swipeMove, swipeReset, swipeStop, drop, dropTarget, scrolledInside, dropMove, dropStop, sheetHost
-   scrolledInside, dropMove, dropStop
+   Define: SWIPE_KINDS, SWIPE_SKIP, swipe, swipeEnd, scrollsSideways, showScreenBelow, swipeMove, swipeReset, swipeStop, drop, dropTarget, scrolledInside, dropMove, dropStop, sheetHost
 */
 import { $ } from './util.js';
 import { backTarget } from './back.js';
 import { showPageBelow } from './ui.js';
+import { screenBelow } from './render.js';
+import { applyStyles } from './dynstyle.js';
+import { tabbarCopy } from './tabbar.js';
 /** Lo que se cierra deslizando (tipos de backTarget). */
 const SWIPE_KINDS = ['hoja', 'menu', 'página'];
 /* donde no empieza el gesto: campos, la barra de pestañas (tiene el suyo: core/tabbar) y lo marcado con data-noswipe */
@@ -34,6 +39,29 @@ const scrollsSideways = (el, top) => {
     if (e.scrollWidth > e.clientWidth + 2 && /auto|scroll/.test(getComputedStyle(e).overflowX))
       return true;
   return false;
+};
+/* debajo de Overview o de Evolución del peso, mientras se deslizan: la pantalla a la que se vuelve, como se verá al volver
+   (core/render, screenBelow), en una capa fija por debajo de la página que no se puede tocar (css/40-sheets-motion). Va al
+   final de la página, para que lo que se busca por su id siga encontrando lo de arriba. Devuelve lo que la quita, o null */
+const showScreenBelow = () => {
+  const b = screenBelow();
+  if (!b)
+    return null;
+  const u = document.createElement('div');
+  u.className = 'screen-under';
+  u.inert = true;
+  u.setAttribute('aria-hidden', 'true');
+  const page = document.createElement('div');
+  page.className = 'screen-under-page';
+  page.innerHTML = b.h;
+  applyStyles(page);
+  page.style.transform = 'translateY(' + -b.y + 'px)';
+  u.append(page);
+  /* Overview no lleva la barra de pestañas y Workout sí: la suya, quieta, en la capa de debajo (core/tabbar) */
+  if (b.nav)
+    u.append(tabbarCopy());
+  document.body.append(u);
+  return () => u.remove();
 };
 /* la página (y lo que va con ella) a dx píxeles de su sitio; el fondo oscuro se aclara a la vez */
 const swipeMove = (s, dx) => {
@@ -55,7 +83,7 @@ const swipeReset = s => {
     s.bk.style.opacity = '';
   if (s.below)
     s.below();
-  document.documentElement.classList.remove('sliding');
+  document.documentElement.classList.remove('sliding', 'sliding-page');
 };
 /* al soltar: vuelve si ha pasado la cuarta parte (o el gesto es rápido); si no, la página regresa a su sitio */
 const swipeStop = go => {
@@ -129,8 +157,14 @@ document.addEventListener('pointermove', e => {
     }
     else if (s.t.k == 'menu')
       s.bk = $('#mn .menu-backdrop');
-    else
+    else {
+      /* una página en lugar de la pestaña (Overview, Evolución del peso): se mueve la pantalla entera, con su fondo, y su
+         botón fijo de abajo con ella; debajo, la pestaña a la que se vuelve */
       s.t.el.style.position = 'relative';
+      document.documentElement.classList.add('sliding-page');
+      s.also = [...document.querySelectorAll('#app .sticky-btn')];
+      s.below = showScreenBelow();
+    }
     [s.t.el, ...s.also].forEach(x => {
       x.style.transition = 'none';
       if (s.t.k != 'página')

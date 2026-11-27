@@ -1,13 +1,13 @@
 /* ═══ core/render ═══
    Render principal R() y cambio de pestaña. Sin sesión, o sin la aceptación de las condiciones (cloud/consent), R() pinta el
    inicio de sesión (account/login).
-   Define: lastTab, lastScreen, PAINT_KEEP, paintTimes, paintProbe, probePaint, paintSummary, R, paintPending, paintSoon  · acciones/registros: 1
+   Define: lastTab, lastScreen, PAINT_KEEP, paintTimes, paintProbe, probePaint, paintSummary, R, fromY, jumpTo, openPage, closePage, screenBelow, paintPending, paintSoon  · acciones/registros: 1
 */
 import { $ } from './util.js';
 import { morph } from './morph.js';
 import { applyStyles } from './dynstyle.js';
 import { A } from './registry.js';
-import { overviewMode, S, setWeekView, W, weightView } from './state.js';
+import { overviewMode, S, setOverviewMode, setWeekView, W, weightView } from './state.js';
 import { workoutTab } from '../workout/day.js';
 import { sessionView } from '../workout/session.js';
 import { resumeSync, saveSession } from '../workout/resume.js';
@@ -87,6 +87,51 @@ export function R() {
   /* si hay una página de Ajustes abierta, que refleje el cambio (tema, color, unidades…) */
   settingsSync();
 }
+/* Las páginas que van en lugar de la pestaña: Overview (en Workout) y Evolución del peso (en Dashboard). Se abren arriba del
+   todo y, al volver, la pestaña queda donde estaba: fromY es su desplazamiento al abrirlas */
+let fromY = 0;
+/* desplaza la página a y al momento: sin el desplazamiento suave de la página (css/20-visual-refresh), que al volver se vería
+   correr la pestaña hasta su sitio */
+const jumpTo = y => {
+  const r = document.documentElement;
+  r.style.scrollBehavior = 'auto';
+  /* leerlo aplica el cambio ya: si no, el navegador desplazaría con lo de antes */
+  getComputedStyle(r).scrollBehavior;
+  scrollTo(0, y);
+  r.style.scrollBehavior = '';
+};
+/** Abre una de esas páginas: `set` la pone (su modo en core/state). */
+export const openPage = set => {
+  fromY = scrollY;
+  set();
+  R();
+  jumpTo(0);
+};
+/** Vuelve de esa página a su pestaña, al sitio donde estaba: `set` la quita. */
+export const closePage = set => {
+  set();
+  R();
+  jumpTo(fromY);
+};
+/** Lo que queda debajo mientras una de esas páginas se desliza con el dedo para volver (core/swipe): la pantalla a la que
+    se vuelve tal como se verá, { h: su HTML, y: su desplazamiento, nav: si lleva la barra de pestañas, que en Overview no
+    está }, o null. Desde Overview, Workout; desde Overview editando, el mismo Overview sin editar (volver sale de la edición);
+    desde Evolución del peso, Dashboard (con su barra, que ya se ve). */
+export const screenBelow = () => {
+  if (W)
+    return null;
+  if (overviewMode) {
+    const m = overviewMode;
+    setOverviewMode(m == 2 ? 1 : 0);
+    try {
+      return m == 2 ? { h: overviewPage(), y: scrollY, nav: false } : { h: workoutTab(), y: fromY, nav: true };
+    }
+    finally {
+      setOverviewMode(m);
+    }
+  }
+  return weightView && S.tab == 2 ? { h: dashboardTab(), y: fromY, nav: false } : null;
+};
 /* R() en cuanto se haya pintado el fotograma en curso (varias peticiones seguidas, un solo R) */
 let paintPending = 0;
 const paintSoon = () => {
