@@ -11,8 +11,14 @@ have no entry: the app shows them in Spanish.
 
 ## [1.0.4.1] — 2026-11-27
 
+> Bug fixes
+>
+> Fixes for what came up while using 1.0.4.
+
 ### Fixes
 - Terms and privacy: the text that asks you to accept is clearer and more neutral.
+- Windows that slide up from the bottom, like “How to do it” during a workout, close when you swipe down, and what is behind
+  them no longer moves.
 
 ## [1.0.4] — 2026-11-27
 

@@ -223,4 +223,10 @@ pasan hasta saber que nadie tendrá que volver a entrar.
 
 Ese arreglo va con la **1.0.4.1**, la primera revisión de la 1.0.4, que además deja más claro e impersonal el texto de
 «Condiciones y privacidad», a petición del propietario: «acepta las condiciones y da tu consentimiento para tratar los datos de
-salud». El aviso de versión nueva enseña su corrección encima de las novedades de la 1.0.4.
+salud». Y otro arreglo que vio el propietario en su iPhone: durante un entreno, al deslizar hacia abajo «Cómo se hace» para
+quitarla, se movía el entreno de detrás. La figura grande se dibuja de nuevo en cada fotograma; si el dedo empezaba sobre ella,
+el navegador dejaba de contar sus movimientos a la ventana y los convertía en desplazamiento, que pasaba a la página de detrás.
+Ahora el dedo toca el sitio de la figura y no el dibujo (`pointer-events: none`), la ventana no pasa el desplazamiento a lo de
+detrás (`overscroll-behavior: contain`), arrastrar en el fondo oscuro no mueve nada (`touch-action: none`) y deslizar hacia
+abajo cierra las ventanas que suben desde abajo (`core/swipe`). La tarjeta de la revisión se titula «Corrección de errores» y
+enseña sus dos correcciones encima de las novedades de la 1.0.4.

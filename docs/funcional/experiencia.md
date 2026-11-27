@@ -80,6 +80,14 @@ No hace nada en las pestañas principales, durante el entreno, en las ventanas d
 WOD. Tampoco empieza encima de un campo para escribir ni de una fila que se desplaza de lado. Deslizar hacia arriba o abajo sigue
 siendo desplazar la página.
 
+## Deslizar hacia abajo para cerrar
+
+Las ventanas que suben desde abajo (como «Cómo se hace», también durante un entreno) se cierran deslizando el dedo hacia abajo,
+como en el iPhone: si la ventana está arriba del todo, sigue al dedo, y se cierra si la sueltas pasada más o menos la cuarta parte
+de su altura o con un gesto rápido; si no, vuelve a su sitio. Si la ventana se ha desplazado, bajar el dedo la vuelve a subir.
+Las que tienen un paso atrás dentro (como «‹ Rutinas») no se cierran así. Lo que hay detrás de una ventana no se mueve con el dedo:
+ni al arrastrar en el fondo oscuro ni al llegar arriba o abajo del todo dentro de la ventana (desde la 1.0.4.1).
+
 ## Botón y gesto «atrás» (Android)
 
 El botón o el gesto atrás del sistema cierra lo que haya abierto, de arriba abajo: una ventana de aviso (sin hacer nada), el menú,

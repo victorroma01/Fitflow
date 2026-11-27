@@ -19,6 +19,12 @@
   opacity:0;
   transition:opacity .3s;
 }
+/* el dedo toca el sitio de la figura, no el dibujo: el dibujo se cambia entero en cada fotograma y, si el dedo empieza sobre
+   una pieza que ya no está, el navegador deja de contar sus movimientos a la ventana (no se podría cerrar deslizando hacia
+   abajo: core/swipe) y los convierte en desplazamiento */
+.figure-stage>* {
+  pointer-events:none;
+}
 .figure-stage svg.on,.figure-stage.on svg {
   opacity:1;
 }
