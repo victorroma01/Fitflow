@@ -210,3 +210,13 @@ Al publicar (con «publica»):
 
 Sin fecha y fuera de esta versión: exigir App Check (I-05, ya configurado), la prueba en un Android (I-01), editar las series
 de un entreno guardado y el modelo 3D propio en GLB.
+
+## Publicada
+
+El 27 de noviembre de 2026, a las 17:58: las pruebas de GitHub en verde, la etiqueta v1.0.4 con su nota, las reglas de
+Firestore desplegadas y la web publicada. Después, el simulacro de «Pasar las cuentas al dominio nuevo» dio las reglas y el
+ensayo correctos y 6 cuentas por pasar, pero «Las sesiones abiertas se conservan: Sin comprobar (PERMISSION_DENIED)»: la
+cuenta de prueba no pudo entrar por la API pública desde GitHub. Como un navegador, la app dice venir solo del origen
+(`https://victorroma01.github.io/`) y la tarea decía la dirección entera; ahora (`tools/admin/web.mjs`) dice primero el origen
+y, si la clave no lo admite, la dirección entera, y si aun así no puede, el resumen da el motivo de Google. Las cuentas no se
+pasan hasta saber que nadie tendrá que volver a entrar.

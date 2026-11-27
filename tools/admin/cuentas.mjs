@@ -16,7 +16,8 @@ export const MODES = ['simulacro', 'aplicar', 'aplicar-todo'];
 const localOf = email => String(email || '').toLowerCase().split('@')[0];
 const domainOf = email => String(email || '').toLowerCase().split('@')[1] || '';
 /* de un error, solo su código: el mensaje de Authentication puede repetir el correo */
-const why = e => e && typeof e.code == 'string' && e.code ? e.code : e && e.name || 'error';
+/* por qué ha fallado algo: el código de Firebase y, si Google lo da, su motivo (API_KEY_HTTP_REFERRER_BLOCKED…); nunca el mensaje */
+const why = e => (e && typeof e.code == 'string' && e.code ? e.code : e && e.name || 'error') + (e && typeof e.reason == 'string' && e.reason ? ' · ' + e.reason : '');
 const seconds = t => Math.floor(Date.parse(t || '') / 1000) || 0;
 /** Desde cuándo valen las sesiones de una cuenta (segundos): lo que dice Firebase (tokensValidAfterTime) o, si no lo dice,
     desde que se creó. */
