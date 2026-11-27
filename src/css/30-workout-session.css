@@ -57,6 +57,15 @@
   align-self:center;
   margin-top:0;
 }
+/* la variante de un ejercicio de un entreno a la carta («En banco inclinado»), bajo su nombre y en el color de acento: es
+   parte de lo que hay que hacer, no un dato más (también en la vista previa: routines/ondemand) */
+.ex-variant {
+  margin:1px 0 2px;
+  font-size:13px;
+  font-weight:600;
+  line-height:1.3;
+  color:var(--at);
+}
 .series-label {
   font-size:13px;
   font-weight:800;

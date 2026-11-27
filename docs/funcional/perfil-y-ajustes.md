@@ -60,7 +60,7 @@ móvil está en inglés y, si no, en español (con varios idiomas en el móvil, 
 En **Ajustes → Idiomas** se elige **Automático** (el del móvil), **Español** o **English**; al cambiarlo, la app se recarga en
 ese idioma. La elección es de cada móvil: no va con la cuenta, y se conserva al cerrar sesión.
 
-En inglés está todo: las pantallas, los 525 ejercicios con sus consejos y su «Cómo se hace», los alimentos, los programas, los
+En inglés está todo: las pantallas, los 529 ejercicios con sus consejos y su «Cómo se hace», los alimentos, los programas, los
 logros, la nota de cada versión, los avisos, los CSV (con coma y punto decimal), el PDF del análisis mensual, la imagen para
 compartir un entreno y los accesos directos del icono. Las fechas van como se escriben en inglés. El buscador de ejercicios y
 el de alimentos encuentran por el nombre en inglés y por el español.

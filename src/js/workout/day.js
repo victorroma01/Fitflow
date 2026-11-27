@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, hubTile, woShortcuts, inSuperset, dayBlocks, weekBar, noProgramView, workoutTab  · acciones/registros: 13
+   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, hubTile, woShortcuts, blockKind, inSuperset, dayBlocks, weekBar, noProgramView, workoutTab  · acciones/registros: 13
 */
 import { say } from '../core/i18n.js';
 import { typedName } from '../core/util.js';
@@ -101,11 +101,13 @@ const TEMPOS = [['2/0/2/0', 'Estándar'], ['3/0/1/0', 'Excéntrico controlado'],
 /** Desplegable corto (F-09): enseña solo su nombre («Tempo», «Descanso»), porque el valor ya está en el objetivo de arriba;
     al tocarlo se abre la lista de siempre (el select va encima, transparente). */
 const shortSelect = (l, sel) => html`<label class="chip-select"><span>${l}</span>${icon('chev', 14)}${raw(sel)}</label>`;
-/* el desplegable con el tempo de un ejercicio del día */
+/* el desplegable con el tempo de un ejercicio del día. Uno que no está en la lista (el de una rutina de los entrenos a la
+   carta, «4/0/1/0»), arriba y elegido: si no, se veía elegido el primero, que no es el suyo */
 const tempoSelect = (e, i) => {
   const t = tempoOf(e) || '2/0/2/0';
   return html`
     <select data-c="setPlanTempo" data-i="${i}" aria-label="${say `Tempo, ${e.n}`}">
+      ${TEMPOS.some(m => m[0] == t) ? '' : html`<option value="${t}" selected>${raw(t)}</option>`}
       ${TEMPOS.map(m => html`<option value="${m[0]}"${m[0] == t ? ' selected' : ''}>${raw(m[0])} · ${raw(m[1])}</option>`)}
     </select>`;
 };
@@ -147,7 +149,7 @@ export const blockBadge = (a, i) => {
   const m = x.length;
   const k = x.indexOf(i) + 1;
   return m < 2 ? '' : html`
-    <small class="c-wnx fw-700">${m > 3 ? 'CIRCUITO' : m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}</small><br>`;
+    <small class="c-wnx fw-700">${m > 4 ? 'CIRCUITO' : m > 3 ? 'SERIE GIGANTE' : m > 2 ? 'TRISERIE' : 'SUPERSERIE'} · ${raw(k)}/${raw(m)}</small><br>`;
 };
 /** «Unir al anterior» y «Separar» (en la semana y en el Overview). Une el ejercicio `i` de la lista `a` al bloque del
     anterior, con los que vayan unidos a él detrás, o, si ya va unido al anterior, parte el bloque por ahí. Un bloque que
@@ -184,7 +186,7 @@ A.linkToPrevious = i => {
   R();
 };
 /* los atajos del día (no al editar la semana), en tarjetas de dos en dos, como en la referencia del propietario: el icono
-   arriba, el nombre y una línea */
+   arriba, el nombre y una línea. La última, los entrenos a la carta (routines/ondemand) */
 const hubTile = (ico, t, s, a) => html`<button class="hub-tile" data-a="${a}">${icon(ico, 24)}<b>${t}</b><small>${s}</small></button>`;
 const woShortcuts = () => html`
   <div class="hub-grid">
@@ -192,7 +194,10 @@ const woShortcuts = () => html`
     ${hubTile('build', 'Workout personalizado', 'Bloques sueltos, superseries y triseries', 'routineEditorBack')}
     ${hubTile('timer', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time', 'openWod')}
     ${hubTile('pulse', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal', 'openCardio')}
+    ${hubTile('dumbbell', 'Entrenos a la carta', 'Elige tu sesión y empieza a entrenar', 'openOnDemand')}
   </div>`;
+/** Cómo se llama un bloque de `m` ejercicios seguidos: superserie (2), triserie (3), serie gigante (4) o circuito (más). */
+export const blockKind = m => m == 2 ? 'Superserie' : m == 3 ? 'Triserie' : m == 4 ? 'Serie gigante' : 'Circuito';
 export const inSuperset = i => {
   const x = S.plan[S.selectedDay].ex;
   const e = x[i];

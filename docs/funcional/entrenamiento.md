@@ -183,6 +183,30 @@ Bloques sueltos, superseries y triseries que puedes montar a tu gusto y usar des
 se deja sin crear no se queda en la lista, y «atrás» en el editor pregunta antes si se descartan los cambios. Cada uno lleva una
 foto: la que elijas en su editor entre todas las de los días (las de tu perfil) o, si no eliges ninguna, la de sus ejercicios.
 
+## Entrenos a la carta
+
+La última tarjeta de Workout («Entrenos a la carta: Elige tu sesión y empieza a entrenar»; en inglés, «On-Demand Workouts»)
+abre diez rutinas sueltas, de un día, para hacer cuando quieras sin tocar el programa: Armageddon, Shoulder Shredder, Chest
+Crusher, Leg Destroyer, Arm Assault, Pull Essentials, Arm Overload, Push Essentials, Back Builder y un calentamiento dinámico
+(Dynamic Warm-Up). Se llaman igual en los dos idiomas.
+
+- **La lista**: cada rutina con su portada (la de su primer grupo muscular; el calentamiento, la de funcional), su nivel si lo
+  tiene, sus grupos y sus ejercicios, series y minutos aproximados (los de la app, con sus descansos).
+- **Antes de empezar**: sus bloques en orden (A, B…), cada uno suelto o en superserie (2), triserie (3) o serie gigante (4), y
+  de cada ejercicio, las series, las repeticiones de cada una («12/10/8/6 reps» en una pirámide; «AMRAP», las máximas
+  posibles), el tempo si la rutina lo da y la variante de esa posición (la postura, el agarre o el banco: «Agarre prono», «En
+  banco inclinado»). La variante no cambia el ejercicio en el resto de la app: es lo que pide la rutina en ese punto. Una
+  rutina puede repetir un ejercicio en dos posiciones seguidas (el Pec deck de Chest Crusher, el remo posterior de Shoulder
+  Shredder): cada una va con sus series y su tempo.
+- **El entreno**: «Empezar entreno» pone la rutina sobre el día del plan mientras dura, como un workout personalizado; al
+  guardarlo o descartarlo vuelve el día del plan tal cual, y no lo da por hecho. Se guarda en Registros con el nombre de la
+  rutina. Cada serie sale con sus repeticiones y con el peso de la última vez; el objetivo va serie a serie y sin RIR (la
+  rutina no lo da). Una serie **AMRAP** sale en blanco: no se da por hecha (ni con su ✓ ni con «Siguiente serie») hasta que se
+  apuntan las repeticiones que han salido. El tempo de la rutina sale elegido en su desplegable; donde la rutina no lo da,
+  «Libre». Los descansos son los de la app: 10 s entre los ejercicios de un bloque y el de la ronda al acabarlo. En una semana
+  de descarga, como cualquier entreno: menos peso y 2 repeticiones menos (una AMRAP sigue siendo AMRAP).
+- **Back Builder** viene de una captura que puede no estar completa: acaba en el Face pull (7 series), y su tempo no se veía.
+
 ## Temporizador WOD y cardio
 
 - **WOD**: AMRAP, EMOM, Tabata y For time, con sus rondas, tiempos de trabajo y descansos. La cuenta va en el centro de un reloj

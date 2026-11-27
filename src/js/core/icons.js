@@ -39,6 +39,9 @@ IC.lib = '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M7 2.4h
 IC.build = '<path fill="currentColor" stroke="none" d="M5 3h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM15 3h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM5 13h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2zM16 14.2a1 1 0 0 1 2 0V16h1.8a1 1 0 0 1 0 2H18v1.8a1 1 0 0 1-2 0V18h-1.8a1 1 0 0 1 0-2H16z"/>';
 IC.timer = '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M10 1.6h4a1 1 0 0 1 0 2h-4a1 1 0 0 1 0-2zM12 4.9a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2zM11 9.7a1 1 0 0 1 2 0v3.9a1 1 0 0 1-2 0z"/>';
 IC.pulse = '<path fill="currentColor" stroke="none" d="M12 20.8s-7.6-4.5-9.4-9.2C1.3 8.2 3.2 4.3 7 4.3c2.1 0 3.7 1.1 5 3 1.3-1.9 2.9-3 5-3 3.8 0 5.7 3.9 4.4 7.3-1.8 4.7-9.4 9.2-9.4 9.2z"/><path class="ic-cut" stroke-width="1.7" d="M1.5 12.2h5.1l1.7-3.1 2.9 5.8 2.1-4 1.3 1.3h7.9"/>';
+/* y los entrenos a la carta (routines/ondemand): una mancuerna de lado, en trazo, como en su referencia (dos discos a cada
+   lado, el de dentro más alto, y la barra) */
+IC.dumbbell = '<rect x="1.6" y="8.6" width="3" height="6.8" rx="1.3"/><rect x="4.6" y="5.8" width="3.6" height="12.4" rx="1.6"/><path d="M8.2 12h7.6"/><rect x="15.8" y="5.8" width="3.6" height="12.4" rx="1.6"/><rect x="19.4" y="8.6" width="3" height="6.8" rx="1.3"/>';
 IC.ruler = '<path d="M3 17L17 3l4 4L7 21zM8 12l2 2M11 9l2 2M14 6l2 2"/>';
 IC.trf = '<path d="M8 4h8v5a4 4 0 01-8 0zM8 6H4v2a3 3 0 003 3M16 6h4v2a3 3 0 01-3 3M12 13v4M8 21h8M10 17h4"/>';
 IC.dwn = '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>';

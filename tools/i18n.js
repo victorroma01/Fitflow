@@ -203,7 +203,10 @@ const DATA = {
     const T = data('data/techniques.js', ['TECHNIQUES']);
     const G = data('data/templates.js', ['GUIDE_OPTIONS', 'STYLE_INFO', 'GOAL_INFO', 'GUIDE_DAY_NAMES', 'GUIDE_TEMPLATES']);
     const days = L.PROGRAMS.flatMap((p, i) => L.parseProgram(i));
-    return [...L.PROGRAM_NAMES, ...days.map(d => d.n), ...days.flatMap(d => d.ex.map(e => e.n)), ...L.PROGRAM_NOTES,
+    /* y los entrenos a la carta: el nombre de cada rutina, su subtítulo, su descripción y la variante de cada posición */
+    const O = data('data/ondemand.js', ['ONDEMAND']);
+    return [...O.ONDEMAND.flatMap(r => [r.n, r.t, r.d, ...r.bl.flat().map(x => x[3])]).filter(Boolean),
+      ...L.PROGRAM_NAMES, ...days.map(d => d.n), ...days.flatMap(d => d.ex.map(e => e.n)), ...L.PROGRAM_NOTES,
       ...strings([V.LEVEL_NAMES, V.LEVEL_SUMMARY, V.LEVEL_DETAILS, V.LEVEL_PROGRAM_NOTES]), ...Object.values(V.LEVEL_NAMES).map(n => n.toLowerCase()),
       ...Object.values(V.LEVEL_EXTRA_DAYS).flatMap(d => [d.split(':')[0], ...d.slice(d.indexOf(':') + 1).split(',').map(tokenName)]),
       ...strings(Object.values(T.TECHNIQUES)).filter(Boolean),

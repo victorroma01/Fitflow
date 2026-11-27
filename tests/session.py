@@ -203,7 +203,7 @@ def main(path):
               [s[0] for s in seq] == [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1]] and [s[1] for s in seq[1:]] == [10, 10, 75, 10], str(seq))
         ev("W=null;R()")
         # «Unir al anterior» y «Separar» (workout/day: linkPrev): el bloque se parte por donde se separa y, al unir, el
-        # ejercicio se lleva a su pareja; cuatro seguidos son un circuito
+        # ejercicio se lleva a su pareja; cuatro seguidos son una serie gigante (V1.0.4; antes, un circuito: ahora, cinco o más)
         blocks = lambda: ev("(a=>{const o=[];a.forEach(e=>{const l=o[o.length-1];if(l&&e.b!=null&&l.b==e.b)l.n++;else o.push({b:e.b,n:1})});return o.map(k=>k.n).join('')})(S.plan[S.selectedDay].ex)")
         use(5)
         b0 = blocks()
@@ -212,8 +212,12 @@ def main(path):
         ev("A.linkToPrevious(1);A.linkToPrevious(2)")
         b2 = blocks()
         go()
-        check('unir y separar superseries: se parte donde se separa y se une con su pareja (cuatro: circuito)',
-              (b0, b1, b2) == ('2221', '11221', '421') and 'CIRCUITO · 1/4' in txt('#ex0 small'), str((b0, b1, b2)) + ' ' + txt('#ex0 small'))
+        check('unir y separar superseries: se parte donde se separa y se une con su pareja (cuatro: serie gigante)',
+              (b0, b1, b2) == ('2221', '11221', '421') and 'SERIE GIGANTE · 1/4' in txt('#ex0 small'), str((b0, b1, b2)) + ' ' + txt('#ex0 small'))
+        ev("W=null;R()")
+        ev("A.linkToPrevious(4)")
+        go()
+        check('y más de cuatro (al unir la superserie de detrás, seis), un circuito', blocks() == '61' and 'CIRCUITO · 1/6' in txt('#ex0 small'), blocks() + ' ' + txt('#ex0 small'))
         ev("W=null;R()")
 
         print('Barra inferior (F-15)')

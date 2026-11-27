@@ -1,6 +1,6 @@
 # Figuras de ejercicio
 
-El modelo anatómico en 3D haciendo cada uno de los 525 ejercicios de la librería, visto en tres cuartos. Llegó con la
+El modelo anatómico en 3D haciendo cada uno de los 529 ejercicios de la librería, visto en tres cuartos. Llegó con la
 V1.0.4 y sustituye a las figuras de perfil de la V1.0.3 (un modelo plano, articulado, que ya no existe). Se hizo y se revisó
 por lotes de ejercicios antes de entrar en la app (ver [Revisión](#revisión)).
 
@@ -93,7 +93,7 @@ verdad, círculos, elipses, el desplazamiento de los discos) y deja fuera lo que
   móvil (IndexedDB, base `fffig`: por cada ejercicio, el tipo de la imagen y sus bytes; y una fila con la huella de las
   figuras, `data/figstamp`, y el tamaño): la siguiente vez se enseña al momento, sin el motor. Son dibujos de la librería,
   iguales para cualquiera, no datos de nadie. Solo se vacían y se rehacen cuando una versión cambia las figuras (otra
-  huella): una actualización que no las toca no hace dibujar otra vez las 525. Donde el navegador no deja leer el lienzo, la
+  huella): una actualización que no las toca no hace dibujar otra vez las 529. Donde el navegador no deja leer el lienzo, la
   imagen es el propio dibujo y no se guarda.
 - **Solo se lee lo que se pide.** Las miniaturas que pide una pantalla se buscan juntas en lo guardado, en una sola lectura;
   abrir la app no trae todas las guardadas.
@@ -147,9 +147,9 @@ densidad 3; «lento» es con la CPU cuatro veces más despacio.
 ## Pruebas
 
 - `tests/fig3d.test.mjs` (sin navegador): el motor tal como va en la app (compuesto como lo hace `build.py`, en modo
-  estricto) hace los 525 ejercicios; cada uno se dibuja en nueve momentos del gesto sin números rotos, lo que ocupa es el de
+  estricto) hace los 529 ejercicios; cada uno se dibuja en nueve momentos del gesto sin números rotos, lo que ocupa es el de
   una figura, lo que usa cada dibujo lo define él o el motor (una miniatura es un dibujo suelto) y su reloj va de 0 a 1.
-- `tests/figures.py` (en navegador): las 525 miniaturas, como imagen de su tamaño; las listas (la figura en cada fila, los
+- `tests/figures.py` (en navegador): las 529 miniaturas, como imagen de su tamaño; las listas (la figura en cada fila, los
   huecos del mismo tamaño que se llenan todos con la lista abierta, al momento al volver a abrirla y, tras recargar, de lo
   guardado y sin el motor; lo guardado con otra huella se tira y se dibuja otra vez); la ficha; la hoja de un ejercicio de cada clase (figura arriba en 4:3, músculos y texto, que se
   mueve y sigue dibujada tras varios gestos; los ciclos no se paran; fuera de la vista no se dibuja); a 320 y 768 px; con
@@ -162,6 +162,19 @@ El motor y las familias se hicieron por lotes de ejercicios, cada uno con su pá
 README): la figura de cada ejercicio en tres cuartos y de lado, con su nota. Antes de cada página pasan las pruebas de esa
 carpeta: manos que no llegan y pies fuera del suelo, material contra el cuerpo y miembros que se cruzan, el grosor del
 dibujo, las piezas que no deben moverse y los saltos de un fotograma a otro.
+
+El lote 9 (V1.0.4) son los cuatro ejercicios que trajeron los [entrenos a la carta](../funcional/entrenamiento.md#entrenos-a-la-carta):
+el remo alto en máquina (el remo en máquina de `tiron3d.js` con `high`: las asas arriba y por delante y la palanca desde un eje
+delante, abajo) y, en `funcional3d.js`, tres de movilidad de pie: la zancada con rotación torácica (`wgs`), la rodilla al pecho
+con alcance (`kneeHug`) y el talón al glúteo con alcance (`heelButt`). Los tres van por momentos clave (`C.keyed`), con la
+pierna que trabaja (la izquierda) por su tobillo o, en el talón al glúteo, por los ángulos de la cadera y la rodilla, para que
+el pie suba y baje girando alrededor de la rodilla con el muslo vertical; y la que apoya, de puntillas cuando toca, con la
+cadera encima. En la zancada, el tronco se inclina lo justo (se calcula) para que la mano derecha llegue al suelo por dentro
+del pie de delante, con la rodilla de delante abierta hacia fuera, por donde baja el tronco. Los brazos que suben lo hacen
+girando desde el hombro, estirados (`armSweep`, `slerp`), y cada una dice su miniatura (`still`) y sus posturas quietas
+(`stills`, que `tools/figboxes.js` respeta): el momento clave de cada gesto. Las familias nuevas van en la cabecera de su
+archivo («Define:»): de ella sale qué archivos carga la página de revisión (sin ellas, la primera página del lote se paraba
+en la segunda figura). Pendiente del visto bueno del propietario.
 
 ## Lo que queda fuera
 

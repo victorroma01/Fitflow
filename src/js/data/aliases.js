@@ -39,6 +39,13 @@ export const EX_ALIASES = {
   Escaladora: 'Escalera de gimnasio Máquina de escaleras',
   Comba: 'Single unders Saltar a la comba Saltar la cuerda',
   'Caminata inclinada': 'Cinta inclinada Caminar en cinta Incline treadmill',
+  /* (los de los entrenos a la carta, V1.0.4: como los llama su rutina) */
+  Inchworm: 'Caminata del gusano',
+  'Saltos de gemelo': 'Saltos reactivos de tobillo Achilles hops',
+  'Remo alto en máquina': 'Remo alto Hammer Strength High row',
+  'Zancada con rotación torácica': "World's greatest stretch",
+  'Rodilla al pecho con alcance': 'Rodilla al pecho con extensión de brazo y flexión plantar Knee hug and reach',
+  'Talón al glúteo con alcance': 'Talón al glúteo con extensión de brazo y flexión plantar Heel to butt and reach',
 };
 /** nombre de un ejercicio que ya no está en la librería (era el mismo que otro) → el que queda. Lo que se guardó con el nombre
     viejo (el historial, las notas, un plan propio) lo conserva y muestra el que queda: sus músculos, su ficha y su figura

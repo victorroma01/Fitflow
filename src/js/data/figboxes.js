@@ -4,7 +4,7 @@
    dibujar cada figura trece veces para saber lo que ocupa. De cada ejercicio: el recuadro [x, y, ancho, alto] del gesto
    entero, el momento de la miniatura y su recuadro, el recuadro de las posturas quietas y los momentos de esas posturas. Va
    con el motor, en lo que se descarga al usarlo (core/lazy).
-   Huella de lo calculado: baabfc129c27fd2e0519
+   Huella de lo calculado: ce56d8bc30c500e4b6a3
    Define: FIG_BOXES
 */
 export const FIG_BOXES = {
@@ -194,6 +194,7 @@ export const FIG_BOXES = {
   "Remo con banda": [-63, -222, 285, 224, 1, -63, -218, 285, 220, -63, -222, 285, 224, 0, 1],
   "Remo en polea alta": [-60, -506, 325, 514, 1, -60, -506, 325, 514, -60, -506, 325, 514, 0, 1],
   "Remo en máquina convergente": [-97, -390, 267, 398, 1, -97, -390, 245, 398, -97, -390, 267, 398, 0, 1],
+  "Remo alto en máquina": [-74, -377, 352, 385, 1, -74, -318, 352, 326, -74, -377, 352, 385, 0, 1],
   "Dominadas": [-113, -527, 227, 535, 1, -113, -527, 227, 531, -113, -527, 227, 535, 0, 1],
   "Dominadas supinas": [-113, -529, 226, 537, 1, -113, -529, 226, 535, -113, -529, 226, 537, 0, 1],
   "Dominadas lastradas": [-113, -534, 226, 543, 1, -113, -534, 226, 539, -113, -534, 226, 543, 0, 1],
@@ -469,6 +470,9 @@ export const FIG_BOXES = {
   "Bird dog": [-191, -150, 478, 179, 0.208, -191, -144, 478, 173, -191, -150, 478, 179, 0, 0.208, 0.708],
   "Hollow rock": [-283, -247, 503, 316, 0.25, -243, -247, 463, 316, -283, -247, 503, 316, 0, 0.25, 0.75],
   "Inchworm": [-407, -404, 464, 411, 0.5, -334, -161, 391, 168, -407, -404, 464, 411, 0, 0.167, 0.5],
+  "Zancada con rotación torácica": [-283, -379, 340, 397, 0.53, -283, -313, 288, 324, -283, -379, 340, 397, 0, 0.3, 0.53],
+  "Rodilla al pecho con alcance": [-175, -489, 239, 505, 0.35, -116, -394, 147, 410, -116, -489, 180, 505, 0, 0.35, 0.77],
+  "Talón al glúteo con alcance": [-174, -493, 285, 507, 0.48, -60, -493, 150, 505, -75, -493, 165, 507, 0, 0.48],
   "Crab walk": [-200, -178, 366, 206, 0.625, -187, -178, 346, 206, -194, -178, 360, 206, 0, 0.625, 0.792],
   "Sprawl": [-317, -391, 456, 406, 0.375, -329, -162, 390, 172, -329, -391, 409, 406, 0, 0.25, 0.375],
   "Battle ropes": [-59, -359, 494, 393, 0.292, -59, -359, 494, 393, -59, -359, 494, 393, 0, 0.292, 0.75],

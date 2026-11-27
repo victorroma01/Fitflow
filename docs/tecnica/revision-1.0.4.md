@@ -58,7 +58,7 @@ Salió un fallo de esta versión, sin publicar, en la tarjeta del día de un mó
   lo que se publica (eso es el paquete, que las descarga aparte y pinta en 119 ms); sirve para las pruebas y para abrir la app
   sin servidor. Sacar las imágenes del código complicaría la compilación para algo que nadie usa a diario.
 - **Las funciones largas del motor de las figuras**: partirlas no las haría más claras (son las posturas de cada familia, una
-  detrás de otra) y obligaría a volver a verificar los 525 ejercicios.
+  detrás de otra) y obligaría a volver a verificar los 529 ejercicios.
 - **El perfil de la nube lo puede borrar su dueño** (para «Eliminar cuenta»). Una cuenta con una contraseña temporal podría
   borrarlo y crearlo de nuevo para no tener que cambiarla: solo se perjudica a sí misma (el administrador conoce esa
   contraseña) y hace falta hacerlo a mano contra el servidor. No compensa complicar las reglas.

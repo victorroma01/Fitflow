@@ -36,6 +36,7 @@ run node --test --test-reporter=dot tests/classes.test.mjs
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
 run node --test --test-reporter=dot tests/library.test.mjs
+run node --test --test-reporter=dot tests/ondemand.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs
 run node --test --test-reporter=dot tests/parts.test.mjs
 run node --test --test-reporter=dot tests/fig3d.test.mjs
@@ -58,6 +59,7 @@ run python3 tests/foods.py dist/stratafit.html
 run python3 tests/programs.py dist/stratafit.html
 run python3 tests/session.py dist/stratafit.html
 run python3 tests/training.py dist/stratafit.html
+run python3 tests/ondemand.py dist/stratafit.html
 run python3 tests/followup.py dist/stratafit.html
 run python3 tests/experience.py dist/stratafit.html
 run python3 tests/ux.py dist/stratafit.html

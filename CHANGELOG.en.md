@@ -11,32 +11,27 @@ have no entry: the app shows them in Spanish.
 
 ## [1.0.4] — 2026-11-25
 
-> App review and 3D model
+> App review
 >
-> Exercises now have their own 3D figure, the library has been reviewed exercise by exercise, and the app is faster and
-> more careful with your data.
+> Exercises now have their own 3D figure, there are on-demand workouts, the library has been reviewed exercise by exercise,
+> and the app is faster and more careful with your data.
 
 ### What's new
-- 3D model: all 525 exercises in the library have a 3D figure that performs the whole exercise with its equipment, with
+- 3D model: all 529 exercises in the library have a 3D figure that performs the whole exercise with its equipment, with
   the working muscles in red (primary) and orange (secondary). It stays still in lists, the day, the workout, and the
   exercise page; tap it and, in “How to do it,” it moves through the exercise (with “Reduce animations,” you get its still
   positions).
-- Sign-in screen with a background image: a gym seen from above, in gray and in low light.
-- New covers for CrossFit, Hyrox, and functional days and for their rest days; with the female profile, all of them.
+- On-Demand Workouts: a new card in Workout with standalone routines to do whenever you like without touching your program.
 - Languages: the app is now in English too. It follows your phone's language (English or Spanish), and you can change it
   anytime in Settings → Languages.
-- New Legal notice and Privacy policy, also in English: you can read them without an account, from the sign-in screen, and
-  in Settings. To create an account you need to accept the terms (being 16 or older) and the processing of your health data,
-  with the full consent explained; with an account you already had, the app asks once when you open it.
+- New Legal notice and Privacy policy.
 - Your data, in Privacy: export a copy, write to us about privacy, withdraw consent, delete your data, and “Delete account,”
   which deletes the account and everything in it (also in Settings → Account). An account that goes unused for two years is
   deleted automatically.
 - Equipment: at the end of each day's Overview, the equipment its exercises need, with their icons. Tap it to see the list
   with the name of each item.
-- Redesigned exercise library: the groups come in cards with their illustration (the model with the primary muscle in red
-  and the secondary in orange; for CrossFit, Hyrox, Functional, and Cardio, their equipment), their icon in the app's color,
-  and how many exercises they have, with the color legend below. Quads are now called Quadriceps, and hamstrings and glutes, Hamstrings &
-  glutes.
+- Redesigned exercise library.
+- Performance and security improvements and fixes.
 
 ### Improvements
 - Library reviewed: every exercise's muscles have been checked, and duplicates (the same exercise under another name) are

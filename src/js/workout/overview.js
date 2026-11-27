@@ -8,7 +8,7 @@ import { overviewMode, S, saveState, setOverviewMode } from '../core/state.js';
 import { dialog } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { overviewSnapshot, setOverviewSnapshot } from '../routines/builder.js';
-import { dayBlocks, inSuperset, linkPrev, planSetButton } from './day.js';
+import { blockKind, dayBlocks, inSuperset, linkPrev, planSetButton } from './day.js';
 import { restOf, restSelect } from './rest.js';
 import { dayMinutes, rangeSelect, rirOf, targetText, tempoOf, unitOf } from './targets.js';
 import { isDeloadWeek } from './deload.js';
@@ -73,8 +73,7 @@ const overviewExercise = (d, i, editing) => {
 };
 /* un bloque del día (serie A, B…), con su tipo si junta varios ejercicios, y sus ejercicios */
 const overviewBlock = (d, k, n, editing) => {
-  const kind = k.x.length > 1 ? html`
-    <b class="c-wnx">${k.x.length == 2 ? 'Superserie' : k.x.length == 3 ? 'Triserie' : 'Circuito'}</b>` : '';
+  const kind = k.x.length > 1 ? html`<b class="c-wnx">${blockKind(k.x.length)}</b>` : '';
   return html`
     <div class="row mt-14"><b class="muted">SERIE ${raw(String.fromCharCode(65 + n))}</b>${kind}</div>
     ${k.x.map(i => overviewExercise(d, i, editing))}`;

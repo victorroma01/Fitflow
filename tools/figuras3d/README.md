@@ -28,7 +28,7 @@ revisarlos.
 Con Node 22 y Python con Playwright (lo mismo que las pruebas), desde esta carpeta:
 
 ```
-node datos.mjs 3                   # los datos de un lote (1: squat,press,overhead; 2: pulldown,row,pullup; 3: las de pierna; 4: las de brazos; 5: pecho y hombro; 6: core y el resto de pierna; 7: CrossFit, Hyrox y funcional; 8: cardio)
+node datos.mjs 3                   # los datos de un lote (1: squat,press,overhead; 2: pulldown,row,pullup; 3: las de pierna; 4: las de brazos; 5: pecho y hombro; 6: core y el resto de pierna; 7: CrossFit, Hyrox y funcional; 8: cardio; 9: el remo alto y la movilidad)
 python3 banco.py                   # el banco de pruebas: salida/banco.html
 python3 verifica.py                # manos que no llegan, pies fuera del suelo, codos o rodillas imposibles, asimetrías
 python3 choques.py [-v]            # el material (todo lo que se dibuja) contra el cuerpo, brazos y piernas que se cruzan o atraviesan el tronco; -v da el punto
@@ -58,3 +58,6 @@ python3 pagina.py                  # la página de revisión del lote (sus texto
 8. Cardio: carrera y marcha (en la calle, en la cinta, en cuesta, con chaleco y con mochila), bicicletas (estática, de aire y
    de carretera), remo, SkiErg, comba, elíptica, escaladora, natación y saco de boxeo: 50 ejercicios (tras juntar los «single
    unders» con la comba y la cinta inclinada con la caminata inclinada). Revisado.
+9. Lo que trajeron los entrenos a la carta (V1.0.4): el remo alto en máquina (con los remos: `row machine high`) y tres de
+   movilidad de pie, la zancada con rotación torácica, la rodilla al pecho con alcance y el talón al glúteo con alcance
+   (`wgs`, `kneeHug` y `heelButt`, en `funcional3d.js`): 4 ejercicios. Pendiente de revisión.

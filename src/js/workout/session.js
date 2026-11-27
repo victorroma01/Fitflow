@@ -1,6 +1,6 @@
 /* ═══ workout/session ═══
    Sesión activa: series, siguiente, pausa, esfuerzo (RPE), descanso y flechas.
-   Define: foldPassed, sessionHeader, setRow, restRunning, doneBefore, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 17
+   Define: foldPassed, sessionHeader, setRow, restRunning, doneBefore, exerciseHead, exerciseTools2, exerciseSection, sessionFooter, sessionView, scrollToCurrent, nextSet, restEnded, amrapPending, setToggle, setName, setNo, foldButton, foldSummary, anLiveOn, exThumb, restPill, rpeRow, avgEffort, nextUpBar, blockArrowLive, setLabelButton, blockHeader  · acciones/registros: 17
 */
 import { listAnd, say, tr } from '../core/i18n.js';
 import { $, clampNum, fmtDuration, fmtMinSec, round1, roundInt, typedNum } from '../core/util.js';
@@ -12,7 +12,7 @@ import { dialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { restorePlanBackup } from '../routines/builder.js';
 import { blockBadge, dayBlocks, exToolsHtml } from './day.js';
-import { targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from './targets.js';
+import { isAmrap, targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from './targets.js';
 import { lastTimeLine, prefillSets, setText, suggestAfter } from './progression.js';
 import { usesBarbell } from './plates.js';
 import { deloadStrip, isDeloadWeek } from './deload.js';
@@ -65,7 +65,8 @@ const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
       <span>${raw(setNo(W.sets[exIndex], setIndex))}</span>
       ${raw(setLabelButton(set))}
       <input type="number" inputmode="decimal" data-c="setReps" data-i="${exIndex}" data-j="${setIndex}"
-          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')} aria-label="${say `${unitName(exercise)}, ${name}`}">
+          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')}${raw(isAmrap(exercise, setIndex) ? ' placeholder="AMRAP"' : '')}
+          aria-label="${say `${unitName(exercise)}, ${name}`}">
       ${raw(!usesWeight(exercise) ? '<span class="muted ta-c">–</span>' : weightInput)}
       <span class="fs-13">${raw(rest ? fmtMinSec(rest) : '–')}</span>
       <button class="check ${set.ok ? 'on' : ''}" data-a="toggleSetDone" data-i="${exIndex}" data-j="${setIndex}"
@@ -89,12 +90,14 @@ const doneBefore = exIndex => {
   return names.length ? html`
     <div class="muted fs-12">Las series ya hechas se guardan en ${listAnd(names.map(n => say `«${n}»`))}</div>` : '';
 };
-/* la cabecera de un ejercicio: foto o figura, nombre, objetivo, la última vez y, si se cambió con Swap, desde cuál */
+/* la cabecera de un ejercicio: foto o figura, nombre, la variante de su rutina (entrenos a la carta; no la del que lo cambió
+   con Swap), objetivo, la última vez y, si se cambió con Swap, desde cuál */
 const exerciseHead = (exercise, exIndex) => html`
   <div class="exercise-head">
     ${exThumb(exercise.n, exIndex)}
     <div class="minw-0">
       <b class="fs-18">${exercise.n}</b>
+      ${exercise.nt && !exercise.o ? html`<div class="ex-variant">${exercise.nt}</div>` : ''}
       ${targetLine(exercise, exIndex)}
       ${lastTimeLine(exercise, exIndex)}
       ${exercise.o ? html`
@@ -278,6 +281,23 @@ A.discardWorkout = () => {
   restorePlanBackup();
   R();
 };
+/* una serie AMRAP (entrenos a la carta) no tiene un número que dar por bueno: no se marca hecha hasta que se apuntan las
+   repeticiones que han salido (las escritas en su casilla, aunque aún no se haya salido de ella) */
+const amrapPending = (i, j) => {
+  const e = S.plan[S.selectedDay].ex[i];
+  const s = W.sets[i] && W.sets[i][j];
+  if (!e || !s || s.ok || s.t || !isAmrap(e, j) || +s.r > 0)
+    return false;
+  const f = /** @type {HTMLInputElement} */ ($(`[data-c="setReps"][data-i="${i}"][data-j="${j}"]`));
+  const v = f ? clampNum(typedNum(f.value), 0, 1e5, 0) : 0;
+  if (v > 0) {
+    s.r = v;
+    return false;
+  }
+  toast('Apunta las repeticiones que has hecho');
+  f && f.focus();
+  return true;
+};
 const setToggle = (i, b) => {
   const s = W.sets[i][+b.dataset.j];
   s.ok = !s.ok;
@@ -340,6 +360,8 @@ A.scrollToRest = () => {
     r.scrollIntoView({ block: 'center', behavior: 'smooth' });
 };
 A.toggleSetDone = (i, b) => {
+  if (amrapPending(i, +b.dataset.j))
+    return;
   W.lastBeep = 0;
   setToggle(i, b);
   const e = S.plan[S.selectedDay].ex[i];
@@ -368,6 +390,11 @@ A.toggleSetDone = (i, b) => {
   }
 };
 A.goToNextSet = () => {
+  const c = currentSet();
+  if (c && amrapPending(c[0], c[1])) {
+    scrollToCurrent();
+    return;
+  }
   W.lastBeep = 0;
   nextSet();
   /* sin descanso automático, se pasa enseguida a la serie que toca */

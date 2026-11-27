@@ -1,6 +1,6 @@
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
+   Define: repClass, unitOf, targetRange, UNIT_HEADS, AMRAP, setReps, isAmrap, repsText, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
 */
 import { say, tr } from '../core/i18n.js';
 import { fmtMinSec } from '../core/util.js';
@@ -34,7 +34,25 @@ export const targetRange = e => {
   return t == 8 ? [6, 10] : t == 12 ? [10, 15] : [8, 12];
 };
 const UNIT_HEADS = { m: 'Dist.', s: 'Seg', min: 'Min', cal: 'Cal', km: 'Km' };
+/** Una serie sin número fijo de repeticiones: las máximas posibles (entrenos a la carta). Se escribe igual en inglés. */
+export const AMRAP = 'AMRAP';
+/** Las repeticiones de cada una de las series de un ejercicio que las trae de su rutina (rs: entrenos a la carta,
+    routines/ondemand), una por serie: un número o AMRAP. null si no las trae, si va en tiempo o distancia o si son todas el
+    mismo número: entonces manda su rango (rg), como en cualquier otro ejercicio. */
+export const setReps = e => {
+  if (!Array.isArray(e.rs) || !e.rs.length || unitOf(e))
+    return null;
+  const a = Array.from({ length: Math.max(1, e.s) }, (_, j) => e.rs[Math.min(j, e.rs.length - 1)]);
+  return a.every(x => x === a[0]) && a[0] != AMRAP ? null : a;
+};
+/** ¿Es AMRAP la serie `j` del ejercicio `e`? (las que se añaden de más, como la última) */
+export const isAmrap = (e, j) => !unitOf(e) && Array.isArray(e.rs) && e.rs.length > 0 && e.rs[Math.min(j, e.rs.length - 1)] == AMRAP;
+/* «12/10/8/6 reps»; si todas son AMRAP, «AMRAP» */
+const repsText = p => p.every(x => x == AMRAP) ? AMRAP : p.join('/') + ' reps';
 export const targetText = e => {
+  const p = setReps(e);
+  if (p)
+    return repsText(p);
   const U = unitOf(e);
   const r = targetRange(e);
   return (r[0] == r[1] ? r[0] : r[0] + '-' + r[1]) + (U ? ' ' + U : ' reps');
@@ -101,7 +119,9 @@ export const dayMinutes = d => {
   d.ex.forEach((e, i) => {
     const U = unitOf(e);
     const r = targetRange(e);
-    const v = (r[0] + r[1]) / 2;
+    /* con repeticiones distintas en cada serie, su media; una AMRAP, como las de su rango */
+    const p = setReps(e);
+    const v = p ? p.reduce((s, x) => s + (x == AMRAP ? (r[0] + r[1]) / 2 : +x), 0) / p.length : (r[0] + r[1]) / 2;
     const w = U ? (U == 'm' ? (v <= 100 ? 45 : v / 3) : U == 's' ? v : U == 'min' ? v * 60 : v * 3) : v * 3 + 12;
     t += e.s * (w + restAt(d, i));
   });
@@ -162,9 +182,13 @@ export const targetLine = (e, i) => {
     p.push(say `Descanso ${fmtMinSec(restAt(S.plan[S.selectedDay], i))}`);
   if (!U)
     p.push(say `Tempo ${tempoOf(e)}`);
-  /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */
+  /* en la semana de descarga, 2 repeticiones menos (una AMRAP sigue siendo AMRAP), sin técnica y lejos del fallo */
   const [a, b] = targetRange(e).map(x => Math.max(1, x - 2));
-  const ob = U ? planLine(e) : dl ? html`${thenDot(say `${e.s} × ${a == b ? a : a + '-' + b} reps`)}${together('RIR 3-4')}` : html`
+  const ps = setReps(e);
+  const low = ps ? e.s + ' × ' + repsText(ps.map(x => x == AMRAP ? x : Math.max(1, +x - 2))) : say `${e.s} × ${a == b ? a : a + '-' + b} reps`;
+  /* un entreno a la carta no lleva RIR: su rutina no lo da, y una serie AMRAP llega al fallo */
+  const od = !!S.plan[S.selectedDay].od;
+  const ob = U ? planLine(e) : od ? (dl ? low : planLine(e)) : dl ? html`${thenDot(low)}${together('RIR 3-4')}` : html`
     ${thenDot(planLine(e))}
     ${together('RIR ' + rirOf(e))}`;
   return html`
@@ -190,6 +214,8 @@ C.setRepRange = (e, i) => {
   if (r.length < 2)
     r.push(r[0]);
   x.rg = r;
+  /* el rango elegido manda sobre las repeticiones de cada serie que traía de su rutina */
+  delete x.rs;
   saveState();
   R();
 };

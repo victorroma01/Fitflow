@@ -14,9 +14,11 @@ const LOTES = { 1: 'squat,press,overhead', 2: 'pulldown,row,pullup', 3: 'hinge,l
   5: 'pushup,pressOut,rearFly,lateral,cross,shrug,frontRaise,fly,upright,facePull,straightArm,pullover',
   6: 'crunch,plank,hyper,legRaise,twist,wheelRoll,sidePlank,chop,deadBug,pallof,birdDog,vacuum,calf,tib,hipOpen,kick,stepUp,sissy,pistol,bandWalk,sideLunge',
   7: 'oly,kbell,carry,sled,burpee,wallBall,medBall,boxJump,sideJump,muscleUp,ropeClimb,handstand,crawl,inchworm,svend,ropes,tire',
-  8: 'run,bike,rower,skiErg,jumpRope,elliptical,stairs,swim,boxing' };
+  8: 'run,bike,rower,skiErg,jumpRope,elliptical,stairs,swim,boxing', 9: 'row,wgs,kneeHug,heelButt' };
 const arg = process.argv[2] || '1';
 const FAMILIES = (LOTES[arg] || arg).split(',');
+/* (en un lote que añade ejercicios a familias de otro lote, solo los suyos) */
+const ONLY = { 9: ['Remo alto en máquina', 'Zancada con rotación torácica', 'Rodilla al pecho con alcance', 'Talón al glúteo con alcance'] };
 mkdirSync('salida', { recursive: true });
 writeFileSync('salida/mapa.json', JSON.stringify({ R: AN_R, S: AN_S, H: AN_H, PA: AN_PA }));
 const src = readFileSync('../../src/js/extras/anatomy.js', 'utf8');
@@ -26,7 +28,7 @@ writeFileSync('salida/regiones.txt', m[1]);
 const by = new Map(EXERCISES.map(e => [e.n, e]));
 const lote = [];
 for (const [n, w] of Object.entries(FIG_POSES)) {
-  if (!FAMILIES.includes(w.split(' ')[0])) continue;
+  if (!FAMILIES.includes(w.split(' ')[0]) || ONLY[arg] && !ONLY[arg].includes(n)) continue;
   const e = by.get(n);
   if (!e) throw new Error('no está en la librería: ' + n);
   lote.push({ n, w, p: e.p || [], s: e.s || [], g: groupOf(e) });

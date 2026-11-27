@@ -497,9 +497,11 @@ def main(path):
         run(300)
         tiles = ev(TILES)
         want = [['openLibrary', 'Librería de ejercicios', 'Explora por grupo muscular'], ['routineEditorBack', 'Workout personalizado', 'Bloques sueltos, superseries y triseries'],
-                ['openWod', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time'], ['openCardio', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal']]
-        check('en el día, las cuatro: librería, workout personalizado, temporizador WOD y cardio, con su nombre y su línea de siempre', [[t['a'], t['t'], t['s']] for t in tiles] == want, str([[t['a'], t['t'], t['s']] for t in tiles]))
-        check('de dos en dos: las de cada fila, a la misma altura y del mismo tamaño; las de cada columna, alineadas', len(tiles) == 4 and tiles[0]['y'] == tiles[1]['y'] < tiles[2]['y'] == tiles[3]['y'] and tiles[0]['x'] == tiles[2]['x'] < tiles[1]['x'] == tiles[3]['x'] and len({(t['w'], t['h']) for t in tiles[:2]}) == 1 and len({(t['w'], t['h']) for t in tiles[2:]}) == 1, str([(t['x'], t['y'], t['w'], t['h']) for t in tiles]))
+                ['openWod', 'Temporizador WOD', 'AMRAP, EMOM, Tabata y For time'], ['openCardio', 'Registrar cardio', 'Carrera, bici, remo… con ritmo y resumen semanal'],
+                ['openOnDemand', 'Entrenos a la carta', 'Elige tu sesión y empieza a entrenar']]
+        check('en el día, las cinco: librería, workout personalizado, temporizador WOD, cardio y, la última, entrenos a la carta, con su nombre y su línea', [[t['a'], t['t'], t['s']] for t in tiles] == want, str([[t['a'], t['t'], t['s']] for t in tiles]))
+        # (la quinta, sola en su fila, en la primera columna y del mismo ancho)
+        check('de dos en dos: las de cada fila, a la misma altura y del mismo tamaño; las de cada columna, alineadas', len(tiles) == 5 and tiles[0]['y'] == tiles[1]['y'] < tiles[2]['y'] == tiles[3]['y'] < tiles[4]['y'] and tiles[0]['x'] == tiles[2]['x'] == tiles[4]['x'] < tiles[1]['x'] == tiles[3]['x'] and len({(t['w'], t['h']) for t in tiles[:2]}) == 1 and len({(t['w'], t['h']) for t in tiles[2:4]}) == 1 and tiles[4]['w'] == tiles[0]['w'], str([(t['x'], t['y'], t['w'], t['h']) for t in tiles]))
         # (el color de las tarjetas del tema, --cd, como lo da el navegador)
         card = ev("(() => { const d = document.createElement('i'); d.style.color = 'var(--cd)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
         check('lisas, del color de las tarjetas del tema (también con Cristal), sin borde y con las esquinas redondeadas (algo más con Cristal)', all(t['bg'] == card and t['border'] == '0px' and t['radius'] in ('14px', '17px') for t in tiles), str([card] + [(t['bg'], t['border'], t['radius']) for t in tiles]))
@@ -523,7 +525,8 @@ def main(path):
         pg.set_viewport_size({'width': 390, 'height': 844})
         run(300)
         for a, page in (('openLibrary', "!!document.querySelector('#sh .cat-grid')"), ('routineEditorBack', "/Workouts personalizados/.test(document.querySelector('#sh').innerText)"),
-                        ('openWod', "/Temporizador WOD/.test(document.querySelector('#sh').innerText)"), ('openCardio', "/Registrar cardio/.test(document.querySelector('#sh').innerText)")):
+                        ('openWod', "/Temporizador WOD/.test(document.querySelector('#sh').innerText)"), ('openCardio', "/Registrar cardio/.test(document.querySelector('#sh').innerText)"),
+                        ('openOnDemand', "/Entrenos a la carta/.test(document.querySelector('#sh').innerText) && document.querySelectorAll('#sh .od-card').length == 10")):
             ev("a => document.querySelector('#app .hub-tile[data-a=' + a + ']').click()", a)
             run(400)
             check('«%s» abre su página' % dict((x[0], x[1]) for x in want)[a], ev(page))
@@ -534,7 +537,7 @@ def main(path):
         check('al editar la semana no están, como antes', ev("!document.querySelector('#app .hub-grid')"))
         ev("A.toggleWeekView()")
         run(300)
-        check('y al volver, sí', len(ev(TILES)) == 4)
+        check('y al volver, sí', len(ev(TILES)) == 5)
 
         check('la CSP no ha bloqueado nada de la app', not ev('window.__csp||[]'), str(ev('window.__csp||[]'))[:200])
         check('sin errores de JS', not errs, '; '.join(errs[:3]))

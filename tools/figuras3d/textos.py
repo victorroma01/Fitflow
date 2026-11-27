@@ -772,3 +772,31 @@ LOTES[8] = dict(title='Figuras 3D · lote 8', notes=NOTES8, fams=FAMS8,
 <li><b>Lo que es una aproximación.</b> La carrera y la marcha van en el sitio (en la cinta, la banda corre bajo los pies), las ruedas de la bici de carretera giran sin avanzar, y el agua es una superficie translúcida a ras de la espalda (lo que queda debajo se ve a través de ella).</li>
 </ul>
 </section>''')
+
+NOTES9 = {
+    'Remo alto en máquina': 'Sentado, con el pecho contra el apoyo: las asas empiezan arriba y por delante, con los brazos estirados a unos 45°, y bajan hacia los lados del pecho con los codos hacia abajo y atrás. Cada asa va en su palanca, que gira sobre un eje de la columna de delante.',
+    'Zancada con rotación torácica': 'De pie, un paso largo al frente con la pierna izquierda hasta la zancada (el pie de atrás, de puntillas, y su rodilla cerca del suelo, sin tocarlo). El tronco baja hasta poner la mano derecha en el suelo por dentro del pie de delante, con la izquierda en la rodilla; gira hacia la izquierda y el brazo izquierdo sube estirado hacia el techo, con la mirada detrás. Vuelta atrás y de pie.',
+    'Rodilla al pecho con alcance': 'De pie, la rodilla izquierda sube hasta el pecho y las dos manos la abrazan por debajo, mientras el pie derecho se pone de puntillas. Se suelta, el pie baja junto al otro y los dos brazos suben estirados por encima de la cabeza, de puntillas sobre los dos pies.',
+    'Talón al glúteo con alcance': 'De pie, el talón izquierdo sube por detrás hasta el glúteo y la mano izquierda coge el empeine, con el muslo vertical y la rodilla hacia el suelo; a la vez, el brazo derecho sube hacia el techo y el pie derecho se pone de puntillas. Se suelta y vuelve a estar de pie.',
+}
+FAMS9 = [('row', 'Remo alto en máquina', 'Back Builder (B): el remo Hammer Strength desde arriba. Con los remos del lote 2, con su propia trayectoria.'),
+         ('wgs', 'Zancada con rotación torácica', "Dynamic Warm-Up (B): la «world's greatest stretch»."),
+         ('kneeHug', 'Rodilla al pecho con alcance', 'Dynamic Warm-Up (C): «knee hug and reach», con la flexión plantar.'),
+         ('heelButt', 'Talón al glúteo con alcance', 'Dynamic Warm-Up (D): «heel to butt and reach», con la flexión plantar.')]
+LOTES[9] = dict(title='Figuras 3D · lote 9', notes=NOTES9, fams=FAMS9,
+    head='''<p class="pr">StrataFit · figuras de ejercicio · lote 9 de la revisión</p>
+<h1>Los ejercicios nuevos de los entrenos a la carta, en 3D</h1>
+<p class="lede">Los <b>4 ejercicios</b> que no estaban en la librería y piden las rutinas que mandaste: el <b>remo alto en máquina</b> de Back Builder y tres de movilidad de pie del <b>calentamiento dinámico</b>. Cada uno con su figura, haciendo el gesto entero, y los músculos que trabajan en rojo (principales) y naranja (secundarios).</p>
+<p class="lede">Los tres de movilidad van con la pierna izquierda (en el entreno, se repiten con la otra) y en el orden de la rutina. Toca cada figura para verla de lado.</p>
+''',
+    found='''<section class="found">
+<h2>Lo que he visto al revisarlo</h2>
+<ul>
+<li><b>Tras tu revisión.</b> En la primera versión de esta página solo se veía la primera figura, y quieta: la página no cargaba el archivo de las tres de movilidad y se paraba al llegar a la segunda (en la app sí estaban). Ya se ven y se mueven las cuatro. Además, los brazos que suben (al techo, en la rodilla al pecho, el talón al glúteo y la rotación de la zancada) lo hacen ahora girando desde el hombro, estirados y por delante, en vez de ir la mano en línea recta; al soltar la rodilla, los brazos empiezan a subir sin un salto; y la miniatura de cada una es su momento clave (el abrazo, el talón cogido, el brazo arriba), también con «Reducir animaciones».</li>
+<li><b>Revisado a fondo.</b> Las 4 figuras pasan todas las pruebas: manos que llegan (la del suelo, en la zancada, toca el suelo), pies donde deben, articulaciones posibles, sin choques, sin material ni manos dentro de brazos o piernas y sin saltos de un fotograma a otro.</li>
+<li><b>La zancada.</b> Es una zancada larga y baja: para que la mano llegue al suelo, el tronco se inclina casi en horizontal, y la rodilla de delante se abre hacia fuera para dejarle sitio, como al hacerla de verdad. La rodilla de atrás no toca el suelo.</li>
+<li><b>El talón al glúteo.</b> La pierna sube y baja girando alrededor de la rodilla, con el muslo vertical; la rodilla no se dobla del todo (el talón queda a un palmo del glúteo), como pasa con el muslo y la pantorrilla de verdad.</li>
+<li><b>Los músculos.</b> En los de movilidad, los que estiran y los que trabajan: en la zancada, los flexores de cadera, el glúteo y los oblicuos; en la rodilla al pecho, el glúteo y el gemelo (de puntillas); en el talón al glúteo, el cuádriceps y el gemelo. El remo alto, los de los otros remos.</li>
+<li><b>Lo que es una aproximación.</b> La máquina del remo alto es la de los remos en máquina con las asas arriba; no es un modelo concreto.</li>
+</ul>
+</section>''')

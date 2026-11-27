@@ -319,17 +319,20 @@
       /* la polea (o la máquina): baja, a la altura de los pies; alta, por delante y arriba; en la máquina, el asa delante */
       const pul = high ? [0, 400, 230] : mach ? null : [0, 64, 196];
       const reachTo = (F, s, q, tgt, k = 140) => { const S = shoulder(F, s, q); return add(S, mul(norm(sub(tgt, S)), k)); };
-      const end = s => mach ? T(F1, s, [44, 46, 6]) : high ? T(F1, s, [22, 74, 44]) : T(F1, s, one ? [32, 26, 26] : [16, 26, 48]);
-      const start = s => { const q = bodyAt(0); if (mach) return add(shoulder(F0, s, q), sd(s, [-4 + (conv ? 14 : 0), -12, 138])); return reachTo(F0, s, q, add(pul, sd(s, [one ? 0 : 9, 0, 0])), scap ? 143 : 140); };
+      /* (el remo alto en máquina: las asas empiezan arriba y por delante, con los brazos estirados a unos 45°, y bajan hacia
+         los lados del pecho, con los codos hacia abajo y atrás) */
+      const highM = mach && high;
+      const end = s => highM ? T(F1, s, [40, 58, 26]) : mach ? T(F1, s, [44, 46, 6]) : high ? T(F1, s, [22, 74, 44]) : T(F1, s, one ? [32, 26, 26] : [16, 26, 48]);
+      const start = s => { const q = bodyAt(0); if (highM) return reachTo(F0, s, q, add(shoulder(F0, s, q), sd(s, [6, 100, 100])), 139); if (mach) return add(shoulder(F0, s, q), sd(s, [-4 + (conv ? 14 : 0), -12, 138])); return reachTo(F0, s, q, add(pul, sd(s, [one ? 0 : 9, 0, 0])), scap ? 143 : 140); };
       const neutral = !w('bar');
       const barDir = neutral ? [0, 1, 0] : [1, 0, 0];
       /* en la máquina, cada asa va en una palanca que cuelga de un eje alto, por delante: la mano va por su arco (antes, en línea
          recta, y la palanca, una varilla que se alargaba hasta fuera del dibujo) */
-      const PV = {}, pivot = s => PV[s] || (PV[s] = pivotFor(start(s), end(s), [0, 1, .5], 150));
+      const PV = {}, pivot = s => PV[s] || (PV[s] = pivotFor(start(s), end(s), highM ? [0, 1, 1] : [0, 1, .5], highM ? 210 : 150));
       arms = t => {
         const q = bodyAt(t);
         const H = s => mach ? leverAt(pivot(s), start(s), end(s), t) : scap ? (() => { const { F } = pose({ ...q, hands: ZERO, elbow: {} }); return reachTo(F, s, q, add(pul, sd(s, [9, 0, 0])), 143); })() : mix(start(s), end(s), t);
-        const el = mach || one ? [.35, .2, -1] : high ? [.65, -.55, -.6] : [.55, .05, -1];
+        const el = highM ? [.5, -.6, -.65] : mach || one ? [.35, .2, -1] : high ? [.65, -.55, -.6] : [.55, .05, -1];
         /* (en neutro, las asas de través al cable, con el pulgar hacia arriba: con la polea alta, inclinadas; antes, siempre en
            vertical, y desde arriba el puño las cruzaba torcido) */
         const bd = neutral && high ? (() => { const m = one ? H('R') : mix(H('L'), H('R'), .5), c = norm(sub(pul, m)); return norm(cross(c, [1, 0, 0])); })() : barDir;
