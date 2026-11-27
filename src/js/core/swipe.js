@@ -23,6 +23,7 @@ import { backTarget } from './back.js';
 import { showPageBelow } from './ui.js';
 import { screenBelow } from './render.js';
 import { applyStyles } from './dynstyle.js';
+import { S } from './state.js';
 /** Lo que se cierra deslizando (tipos de backTarget). */
 const SWIPE_KINDS = ['hoja', 'menu', 'página'];
 /* donde no empieza el gesto: campos, la barra de pestañas (tiene el suyo: core/tabbar) y lo marcado con data-noswipe */
@@ -56,10 +57,13 @@ const showScreenBelow = () => {
   applyStyles(page);
   page.style.transform = 'translateY(' + -b.y + 'px)';
   u.append(page);
-  /* Overview no lleva la barra de pestañas y Workout sí: la suya, quieta, en la capa de debajo */
+  /* Overview no lleva la barra de pestañas y Workout sí: una copia de la suya, quieta, en la capa de debajo, con la pestaña
+     marcada (la del botón, sin la burbuja, que en la barra oculta no tiene sitio) */
   if (b.nav) {
     const n = /** @type {HTMLElement} */ ($('nav').cloneNode(true));
     n.style.display = 'flex';
+    n.classList.remove('bubble-on', 'drag', 'tour-live');
+    n.querySelectorAll('button').forEach((e, i) => e.classList.toggle('on', i == S.tab));
     u.append(n);
   }
   document.body.append(u);

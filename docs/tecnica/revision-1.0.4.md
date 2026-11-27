@@ -256,4 +256,5 @@ nuevo la siguiente vez.
 - **Los iconos de Isquios y glúteos y de Pecho**, cortados por un lado desde el paquete del rediseño: se completan reflejando su
   lado bueno (`tools/catalogo.py`, `ICON_MIRROR`; la mancuerna pasa de 53 a 60 px de ancho).
 - **Las miniaturas de los ejercicios, más definidas**: se marcan sus bordes al dibujarlas (`extras/figure3d`, `sharpen`) y,
-  como cambia cómo se dibujan, las guardadas en el móvil se dibujan otra vez (`THUMB_LOOK`).
+  como la huella de las figuras (`data/figstamp`) lleva también lo que las dibuja, las guardadas en el móvil se dibujan otra
+  vez.

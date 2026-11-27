@@ -343,7 +343,8 @@ def main(path):
         check('Overview se abre arriba del todo', ev('scrollY') == 0 and y_tab > 0, str([ev('scrollY'), y_tab]))
         x0, y0 = gesture('#app .hero h2', 120, 0, end=None)
         under = ev("""(() => { const u = document.querySelector('.screen-under'), b = document.querySelector('#app .sticky-btn');
-          return u && [!!u.querySelector('[data-a=openOverview]'), !!u.querySelector('nav button.on'), u.inert, getComputedStyle(u).zIndex,
+          const n = u && u.querySelector('nav');
+          return u && [!!u.querySelector('[data-a=openOverview]'), !!n && getComputedStyle(n).display == 'flex' && n.querySelectorAll('button').length == 4 && (n.querySelector('button.on') || {}).dataset?.i == '0', u.inert, getComputedStyle(u).zIndex,
             u.querySelector('.screen-under-page').style.transform, b ? b.style.transform : 'sin botón', innerWidth,
             document.documentElement.classList.contains('sliding-page'), getComputedStyle(document.getElementById('app')).backgroundColor]; })()""")
         check('mientras Overview se desliza, debajo se ve Workout donde se dejó, con su barra de pestañas (no un hueco en negro), y la página lleva su fondo y su botón',

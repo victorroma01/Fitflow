@@ -93,12 +93,11 @@ verdad, círculos, elipses, el desplazamiento de los discos) y deja fuera lo que
   (`sharpen`, una máscara de enfoque: cada píxel se aleja de la media de los de alrededor, con un núcleo 1-2-1, y con el color
   multiplicado por la opacidad para que el fondo transparente no deje halos): la misma imagen sirve para 48, 64 y 72 px, y
   reducida salía blanda. La imagen se guarda en la memoria y en el móvil (IndexedDB, base `fffig`: por cada ejercicio, el tipo
-  de la imagen y sus bytes; y una fila con la huella de las figuras, `data/figstamp`, el tamaño y cómo se dibujan,
-  `THUMB_LOOK` en `extras/pictures`): la siguiente vez se enseña al momento, sin el motor. Son dibujos de la librería, iguales
-  para cualquiera, no datos de nadie. Solo se vacían y se rehacen cuando una versión cambia las figuras (otra huella) o cómo se
-  dibujan (otro `THUMB_LOOK`: el 2, con los bordes marcados, hizo dibujar otra vez las de la 1.0.4): una actualización que no
-  toca ninguna de las dos cosas no hace dibujar otra vez las 529. Donde el navegador no deja leer el lienzo, la imagen es el
-  propio dibujo y no se guarda.
+  de la imagen y sus bytes; y una fila con la huella de las figuras, `data/figstamp`, y el tamaño): la siguiente vez se enseña
+  al momento, sin el motor. Son dibujos de la librería, iguales para cualquiera, no datos de nadie. Solo se vacían y se rehacen
+  cuando una versión cambia las figuras o cómo se dibujan (otra huella: la lleva también `extras/figure3d`, así que marcar los
+  bordes hizo dibujar otra vez las de la 1.0.4): una actualización que no toca nada de eso no hace dibujar otra vez las 529.
+  Donde el navegador no deja leer el lienzo, la imagen es el propio dibujo y no se guarda.
 - **Solo se lee lo que se pide.** Las miniaturas que pide una pantalla se buscan juntas en lo guardado, en una sola lectura;
   abrir la app no trae todas las guardadas.
 - **El momento de la miniatura**: en un gesto de ida y vuelta, la postura final (un curl arriba, una sentadilla abajo); en

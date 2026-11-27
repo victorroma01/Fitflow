@@ -23,8 +23,6 @@ def rd(n):
 INIT = rd('init.js')
 # la huella de las figuras (data/figstamp) y la versión de la app, como están en el código
 FIG_STAMP = re.search(r"^export const FIG_STAMP = '(\w+)';$", rd('../src/js/data/figstamp.js'), re.M).group(1)
-# cómo se dibujan las miniaturas (extras/pictures, THUMB_LOOK): va en lo guardado, detrás de la huella y del tamaño
-THUMB_LOOK = re.search(r"^const THUMB_LOOK = (\d+);$", rd('../src/js/extras/pictures.js'), re.M).group(1)
 APPV = re.search(r"^export const APPV = '([\d.]+)';$", rd('../src/js/core/util.js'), re.M).group(1)
 fails = []
 # uno de cada clase de gesto: de ida y vuelta con barra, con mancuernas, en máquina y en polea; de frente y de espaldas; una
@@ -208,7 +206,7 @@ def main(path, shots=None):
         saved = ev("""new Promise(r => { const q = indexedDB.open('fffig'); q.onsuccess = () => { const st = q.result.transaction('mini').objectStore('mini'), k = st.getAllKeys(), v = st.getAll();
           v.onsuccess = () => { const rows = v.result.filter(x => x && x.d), stamp = v.result.find(x => typeof x == 'string');
             r([rows.length, rows.every(x => /^image\\/(webp|png)$/.test(x.t) && x.d instanceof ArrayBuffer && x.d.byteLength > 1000), stamp, k.result.includes('Dominadas')]); q.result.close(); }; }; q.onerror = () => r([0, false]); })""")
-        check('las miniaturas dibujadas quedan guardadas en el móvil, con la huella de las figuras, su tamaño y cómo se dibujan', saved[0] >= 60 and saved[1] and saved[2] == FIG_STAMP + ' 144 ' + THUMB_LOOK and saved[3], str(saved))
+        check('las miniaturas dibujadas quedan guardadas en el móvil, con la huella de las figuras y su tamaño', saved[0] >= 60 and saved[1] and saved[2] == FIG_STAMP + ' 144' and saved[3], str(saved))
         pg.reload()
         pg.clock.run_for(800)
         ev(open_group)
@@ -226,7 +224,7 @@ def main(path, shots=None):
         pg.clock.run_for(200)
         again = ev("""new Promise(r => { const q = indexedDB.open('fffig'); q.onsuccess = () => { const st = q.result.transaction('mini').objectStore('mini'), k = st.getAllKeys(), v = st.get('\\0de');
           v.onsuccess = () => { r([k.result.length, v.result]); q.result.close(); }; }; })""")
-        check('lo guardado de otras figuras (otra huella) se tira', again[0] < saved[0] and again[1] == FIG_STAMP + ' 144 ' + THUMB_LOOK, str(again))
+        check('lo guardado de otras figuras (otra huella) se tira', again[0] < saved[0] and again[1] == FIG_STAMP + ' 144', str(again))
         check('y se dibujan otra vez, con el motor', settle(HOLES + " == 0", 400) and ev("!!document.getElementById('g3Ne0')") and ev(ROWS + ".every(r => " + IS_PICTURE + "(r))"), 'huecos: %d' % ev(HOLES))
         check('la huella de las figuras no lleva la versión de la app', APPV not in FIG_STAMP and re.fullmatch(r'[0-9a-f]{20}', FIG_STAMP) is not None, FIG_STAMP)
         ev("A.closeSheet()")
