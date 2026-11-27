@@ -179,6 +179,10 @@ usarlos fuera de su módulo, y [Llevarla a iOS y Android](movil.md) cuenta qué 
 usa la app, y no solo el archivo único: [medido](rendimiento.md#medido-en-la-v104) después de la limpieza, igual o algo mejor
 que la 1.0.31 en todo. `tests/run.sh` dice lo que tarda cada prueba y la batería entera.
 
+**Después, Registros y la comprobación de los datos.** A petición del propietario, Registros se pinta por tandas de 60 (con
+700 entrenos, abrirla pasa de unos 32 ms a 4, y de unos 70 a 15 hasta verse pintada) y la comprobación de los datos al abrir
+tarda la mitad (de 2,8 ms a 1,5), sin dejar de hacerse entera cada vez ([lo medido](rendimiento.md#medido-en-la-v104)).
+
 **Lo que se queda como está.** Hacer que se descarguen al usarlos el mapa muscular (`data/anatomy`, 29 KB) o las posturas
 (`data/figposes`, 21 KB), que van al arrancar: los usan cosas que se pintan sin esperar (los iconos de los grupos musculares,
 el material de Overview) y habría que esperarlos; el ahorro, de unos milisegundos, no compensa ese riesgo en esta versión.

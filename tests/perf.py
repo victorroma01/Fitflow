@@ -1,7 +1,8 @@
 """Medidas de rendimiento (T-26) con muchos datos: unos 700 entrenos, el historial de 150 ejercicios y tres años de comidas
 (más de 1 MB). Mide el arranque hasta el primer pintado, lo que tarda un guardado (mirándolo todo y diciendo solo el núcleo:
 I-10), lo que calcula la sincronización antes de hablar con Firebase, lo que tarda en pintarse cada pestaña, cada letra del
-buscador de la Librería y lo que tarda en abrirse Registros (la página más larga: una fila por entreno). No es una prueba
+buscador de la Librería, lo que tarda en abrirse Registros (la página más larga: una fila por entreno) y lo que se comprueba de
+los datos al abrir (core/repair). No es una prueba
 que pase o falle: sirve para comparar dos compilaciones en el mismo ordenador (docs/tecnica/rendimiento.md). Una compilación
 anterior a la V1.0.2, con las claves cortas en S (hist, wt…), recibe los mismos datos con sus nombres (core/schema).
 
@@ -83,10 +84,14 @@ def measure(path):
         out['buscar en la Librería (ms)'] = round(pg.evaluate(TIMED % (15, "const i=document.querySelector('#sh input');window.__q=(window.__q||0)+1;"
                                                                       "i.value=['press','sentadilla','remo','curl','pecho'][window.__q%5];i.dispatchEvent(new Event('input',{bubbles:true}))")), 1)
         pg.evaluate('sheet()')
-        # la página más larga de la app: Registros, con una fila por entreno (desde la V1.0.2, que es cuando se llama así)
+        # la página más larga de la app: Registros, con una fila por entreno (desde la V1.0.2, que es cuando se llama así; desde
+        # la V1.0.4 se pinta por tandas de 60)
         if pg.evaluate("typeof A.openLogs=='function'"):
             out['abrir Registros (ms)'] = round(pg.evaluate(TIMED_AFTER % (9, 'sheet()', 'A.openLogs()')), 1)
             pg.evaluate('sheet()')
+        # lo que se comprueba de los datos al abrir la app (core/repair; desde la V1.0.4 se puede medir suelto)
+        if pg.evaluate("typeof repairState=='function'"):
+            out['comprobar los datos (ms)'] = round(pg.evaluate(TIMED % (15, 'repairState()')), 1)
         b.close()
     return out
 
