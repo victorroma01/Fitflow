@@ -253,8 +253,12 @@ nuevo la siguiente vez.
   ese color en vez de difuminar ([detalle](movil.md#lo-que-ya-está)).
 - **La leyenda de los colores de la librería**: cada línea iba centrada por su cuenta y las rayas de color no coincidían. Ahora
   van alineadas por la izquierda, centradas juntas.
-- **Los iconos de Isquios y glúteos y de Pecho**, cortados por un lado desde el paquete del rediseño: se completan reflejando su
-  lado bueno (`tools/catalogo.py`, `ICON_MIRROR`; la mancuerna pasa de 53 a 60 px de ancho).
+- **Los iconos de Isquios y glúteos y de Pecho**, cortados por un lado desde el paquete del rediseño, se completaron reflejando
+  su lado bueno. Al verlo, el propietario pidió quitar el icono pequeño de todas las tarjetas: cada una dice solo el nombre del
+  grupo y su número, sobre su ilustración (el modelo con el músculo resaltado). Con el icono se van la raya inclinada que lo
+  separaba del nombre, el «+» de «Mis ejercicios», los 14 iconos de `src/img/catalog`, su ancho en `data/catalog`,
+  `MEDIA.catIcon`, el tono `--acd` de `profile/appearance` (solo lo usaban el icono y la raya) y lo que la herramienta
+  `tools/catalogo.py` hacía con ellos.
 - **Las miniaturas de los ejercicios, más definidas**: se marcan sus bordes al dibujarlas (`extras/figure3d`, `sharpen`) y,
   como la huella de las figuras (`data/figstamp`) lleva también lo que las dibuja, las guardadas en el móvil se dibujan otra
   vez.

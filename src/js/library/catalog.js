@@ -1,32 +1,26 @@
 /* ═══ library/catalog ═══
    Los grupos de la librería de ejercicios en tarjetas, con el diseño que aprobó el propietario (StrataFit_Catalogo): la
    ilustración del grupo (el modelo anatómico con el músculo principal en rojo y el secundario en naranja; en CrossFit, Hyrox,
-   Funcional y Cardio, su material), su icono, la raya inclinada y, en mayúsculas, su nombre y su número de ejercicios;
-   debajo, la leyenda de los colores. El icono y la raya van en el color de la app (Ajustes → Color de acento, --acd: el de acento,
-   aclarado si hace falta para verse sobre el negro de la tarjeta): el icono del paquete, rojo, hace de máscara y el color lo
-   pone el CSS. La leyenda sigue en rojo y naranja: son los colores de los músculos de las ilustraciones. Una sola tarjeta para todos, desde los datos (data/catalog); cada una abre
-   su grupo como antes (libraryGroup, library/browse). «Mis ejercicios», los creados por el usuario, va al final con la misma
-   tarjeta, sin ilustración. El número es el de la librería, y el nombre, el de la app en su idioma (las mayúsculas las pone
-   el CSS). Las imágenes son decorativas: la etiqueta del botón dice el grupo y su número.
+   Funcional y Cardio, su material) y, en mayúsculas, su nombre y su número de ejercicios; debajo, la leyenda de los colores,
+   en rojo y naranja, los de los músculos de las ilustraciones. Sin icono ni raya junto al nombre: los quitó el propietario
+   (V1.0.4.1). Una sola tarjeta para todos, desde los datos (data/catalog); cada una abre su grupo como antes (libraryGroup,
+   library/browse). «Mis ejercicios», los creados por el usuario, va al final con la misma tarjeta, sin ilustración. El número
+   es el de la librería, y el nombre, el de la app en su idioma (las mayúsculas las pone el CSS). La ilustración es
+   decorativa: la etiqueta del botón dice el grupo y su número.
    Define: catText, catCard, catOwnCard, catLegend, catalogGrid
 */
 import { groupLabel, groupOf, GROUPS } from '../data/library.js';
 import { CATALOG } from '../data/catalog.js';
 import { MEDIA } from '../data/media.js';
-import { icon } from '../core/icons.js';
 import { say } from '../core/i18n.js';
 import { plural } from '../system/backup.js';
 import { html, raw } from '../core/html.js';
-/* el texto de una tarjeta: el icono, la raya y, uno encima de otro, el nombre del grupo y su número */
-const catText = (ico, g, count) => html`
-  <span class="cat-text">
-    ${ico}
-    <span class="cat-sep" aria-hidden="true"></span>
-    <span class="cat-label"><b class="cat-name">${groupLabel(g)}</b><span class="cat-count">${count}</span></span>
-  </span>`;
+/* el texto de una tarjeta: uno encima de otro, el nombre del grupo y su número */
+const catText = (g, count) => html`
+  <span class="cat-text"><b class="cat-name">${groupLabel(g)}</b><span class="cat-count">${count}</span></span>`;
 /* la tarjeta de un grupo: `k`, su lugar (las de más abajo cargan su ilustración al acercarse a la pantalla) */
 const catCard = (g, n, k) => {
-  const [id, w, h, iw, wide] = CATALOG[g];
+  const [id, w, h, wide] = CATALOG[g];
   const count = plural(n, 'ejercicio', 'ejercicios');
   return html`
     <button class="cat-card${wide ? ' cat-wide' : ''}" data-a="libraryGroup" data-v="${g}" aria-label="${say `${groupLabel(g)}: ${count}`}">
@@ -34,17 +28,15 @@ const catCard = (g, n, k) => {
         <img src="${MEDIA.cat[id]}" alt="" width="${w}" height="${h}" decoding="async"${raw(k > 3 ? ' loading="lazy"' : '')}
             draggable="false">
       </span>
-      ${catText(html`
-        <span class="cat-ico cat-ico-mask" aria-hidden="true"
-            data-style="aspect-ratio:${iw}/54;-webkit-mask-image:url(${MEDIA.catIcon[id]});mask-image:url(${MEDIA.catIcon[id]})"></span>`, g, count)}
+      ${catText(g, count)}
     </button>`;
 };
-/* «Mis ejercicios»: la misma tarjeta, sin ilustración y con el «+» de la app como icono */
+/* «Mis ejercicios»: la misma tarjeta, sin ilustración */
 const catOwnCard = n => {
   const count = plural(n, 'ejercicio', 'ejercicios');
   return html`
     <button class="cat-card cat-own" data-a="libraryGroup" data-v="Propio" aria-label="${say `${groupLabel('Propio')}: ${count}`}">
-      ${catText(html`<span class="cat-ico cat-ico-own" aria-hidden="true">${icon('Propio', 22)}</span>`, 'Propio', count)}
+      ${catText('Propio', count)}
     </button>`;
 };
 /* la leyenda de los colores del modelo: no filtra nada */

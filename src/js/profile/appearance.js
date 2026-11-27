@@ -1,7 +1,7 @@
 /* ═══ profile/appearance ═══
    Apariencia (F-31): tema, color de acento (los de serie o uno elegido a mano, con sus tonos y el color del texto calculados para
    que se lea bien), estilo Cristal y reducir animaciones. lookSync deja en <html> las clases del estilo en cada R().
-   Define: ACCENTS, DEFAULT_ACCENT, HEX, hexRgb, rgbHex, rgbHsl, hslRgb, luminance, toneBetween, GLOW_MAX_DARK, GLOW_MIN_LIGHT, DARK_TONE_MAX, ON_DARK_MIN, customAccentLast, customAccent, accentNow, setAccentVars, accentApplied, applyAccent, accentPreview, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, motionCard, lookSync, ACCENT_SETTLE_MS, accentPick, accentFrame, accentTimer, previewAccent, commitAccent, pickAccent  · acciones/registros: 7
+   Define: ACCENTS, DEFAULT_ACCENT, HEX, hexRgb, rgbHex, rgbHsl, hslRgb, luminance, toneBetween, GLOW_MAX_DARK, GLOW_MIN_LIGHT, DARK_TONE_MAX, customAccentLast, customAccent, accentNow, setAccentVars, accentApplied, applyAccent, accentPreview, accentSwatches, themeSegment, glassMode, GLASS_LEVELS, GLASS_INFO, glassCard, motionCard, lookSync, ACCENT_SETTLE_MS, accentPick, accentFrame, accentTimer, previewAccent, commitAccent, pickAccent  · acciones/registros: 7
 */
 import { $ } from '../core/util.js';
 import { logError } from '../core/errors.js';
@@ -59,9 +59,6 @@ const GLOW_MAX_DARK = .13;
 const GLOW_MIN_LIGHT = .165;
 /* el tono oscuro de un color propio, como mucho así de claro: encima va texto blanco (la cabecera del día) */
 const DARK_TONE_MAX = .06;
-/* el color sobre lo que es oscuro en los dos temas (el icono y la raya de las tarjetas de la librería, library/catalog): el
-   tono principal, aclarado solo lo justo para que se vea sobre el negro (3:1 o más, lo que pide un icono) */
-const ON_DARK_MIN = .13;
 /* el último color propio calculado: [#rrggbb, sus tonos]. Se pide en cada pintado (Ajustes, análisis…) y casi siempre es el mismo */
 /** @type {[string, string[]]} */
 let customAccentLast = ['', null];
@@ -101,7 +98,6 @@ const setAccentVars = (el, a) => {
   const to = hexRgb(a[4] == '#fff' ? a[3] : a[1]);
   el.style.setProperty('--age', rgbHex(hexRgb(a[2]).map((v, i) => v * .8 + to[i] * .2)));
   el.style.setProperty('--gd2', toneBetween(a[2], 0, GLOW_MAX_DARK));
-  el.style.setProperty('--acd', toneBetween(a[2], ON_DARK_MIN, 1));
   el.style.setProperty('--gl2', toneBetween(a[2], GLOW_MIN_LIGHT, 1));
 };
 /* los tonos que tiene puestos la app: cambiarlos obliga a pintarla entera, así que solo se tocan si son otros */

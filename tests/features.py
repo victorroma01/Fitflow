@@ -384,7 +384,7 @@ def main(path):
         cards = ev("""[...document.querySelectorAll('#sh .cat-grid .cat-card')].map(c => ({ g: c.dataset.v, name: c.querySelector('.cat-name').textContent,
             count: c.querySelector('.cat-count').textContent, label: c.getAttribute('aria-label'), wide: c.classList.contains('cat-wide'),
             art: (i => i ? [i.getAttribute('alt'), i.complete && i.naturalWidth > 0] : null)(c.querySelector('.cat-art img')),
-            ico: (i => i ? [i.getAttribute('aria-hidden'), (cs => (cs.webkitMaskImage || cs.maskImage || '').startsWith('url('))(getComputedStyle(i)), i.getBoundingClientRect().width > 10] : null)(c.querySelector('.cat-ico-mask')) }))""")
+            text: [...c.querySelector('.cat-text').children].map(e => e.className), extra: c.querySelectorAll('.cat-text svg, .cat-text i, .cat-text [aria-hidden], [data-style*=mask]').length }))""")
         real = ev("%s.map(g => exAll().filter(e => groupOf(e) == g).length)" % json.dumps(ORDER + ['Propio']))
         check('las 14 tarjetas, en el orden aprobado, y al final «Mis ejercicios» (con uno del usuario)', [c['g'] for c in cards] == ORDER + ['Propio'], str([c['g'] for c in cards]))
         check('cada una con su número de la librería (no el de las referencias); «1 ejercicio», en singular', [c['count'] for c in cards] == ['%d ejercicio%s' % (n, '' if n == 1 else 's') for n in real] and real[-1] == 1, str([c['count'] for c in cards]))
@@ -405,23 +405,9 @@ def main(path):
         ev("(s => { s.scrollTop = 0; })(document.querySelector('#sh .sheet'))")
         run(300)
         cards = [dict(c, art=a) for c, a in zip(cards, ev(ARTS))]
-        check('ilustración e icono cargados y decorativos (sin texto: lo dice la etiqueta); «Mis ejercicios», sin ilustración', all(c['art'] == ['', True] and c['ico'] == ['true', True, True] for c in cards[:14]) and cards[14]['art'] is None and cards[14]['ico'] is None, str([[c['art'], c['ico']] for c in cards if c['art'] != ['', True] or c['ico'] != ['true', True, True]]))
-        # el icono y la raya, en el color de la app; la leyenda, en los colores de los músculos de las ilustraciones
-        TONES = "['.cat-sep', '.cat-ico-mask', '.cat-dot-p'].map(s => getComputedStyle(document.querySelector('#sh ' + s)).backgroundColor).concat(getComputedStyle(document.querySelector('#sh .cat-ico-own')).color)"
-        rgb = lambda t: [int(v) for v in re.findall(r'\d+', t)[:3]]
-        lum = lambda c: sum(k * ((v / 255) / 12.92 if v / 255 <= .03928 else ((v / 255 + .055) / 1.055) ** 2.4) for k, v in zip((.2126, .7152, .0722), c))
-        on_card = lambda t: (lum(rgb(t)) + .05) / (lum([10, 10, 11]) + .05)
-        was = ev("S.accent")
-        ev("A.accentChoose(5)")
-        run(300)
-        got = ev(TONES)
-        check('el icono, la raya y el «+» van en el color de la app (Rojo: #d62839); la leyenda sigue en rojo', got == ['rgb(214, 40, 57)', 'rgb(214, 40, 57)', 'rgb(245, 29, 36)', 'rgb(214, 40, 57)'], str(got))
-        ev("A.accentChoose(2)")
-        run(300)
-        got = ev(TONES)
-        check('un color oscuro (Azul oscuro, #2443b0) se aclara lo justo para verse sobre el negro de la tarjeta (3:1 o más)', got[0] == got[1] == got[3] != 'rgb(36, 67, 176)' and 3 <= on_card(got[0]) < 4, '%s %.2f' % (got, on_card(got[0])))
-        ev("A.accentChoose(%d)" % was)
-        run(300)
+        check('ilustración cargada y decorativa (sin texto: lo dice la etiqueta); «Mis ejercicios», sin ilustración', all(c['art'] == ['', True] for c in cards[:14]) and cards[14]['art'] is None, str([c['art'] for c in cards]))
+        # sin icono ni raya junto al nombre (los quitó el propietario, V1.0.4.1): solo el nombre y, debajo, su número
+        check('cada tarjeta dice solo el nombre del grupo y su número, sin icono ni raya', all(c['text'] == ['cat-name', 'cat-count'] and c['extra'] == 0 for c in cards), str([(c['g'], c['text'], c['extra']) for c in cards if c['text'] != ['cat-name', 'cat-count'] or c['extra']]))
         check('Funcional y Cardio son las anchas', [c['g'] for c in cards if c['wide']] == ['Funcional', 'Cardio'])
         legend = ev("[...document.querySelectorAll('#sh .cat-legend .cat-key')].map(k => [k.textContent.trim(), getComputedStyle(k.querySelector('.cat-dot')).backgroundColor])")
         check('debajo, la leyenda: rojo, el músculo principal; naranja, el secundario', legend == [['Músculo principal (mayor trabajo)', 'rgb(245, 29, 36)'], ['Músculo secundario (asistencia)', 'rgb(250, 134, 23)']], str(legend))
