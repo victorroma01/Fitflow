@@ -1,6 +1,7 @@
 /* ═══ system/files ═══
-   Descarga, copia y codificación de archivos.
-   Define: isStandalone, saveBlob, downloadFile, readTextFile, copyText, toBase64, fromBase64, cleanText  · acciones/registros: 1
+   Descarga, copia, «Compartir» y codificación de archivos. Es lo que habla con el sistema para sacar algo de la app (guardar un
+   archivo, compartirlo, copiarlo): en una app nativa, lo que cambia por sus complementos (docs/tecnica/movil.md).
+   Define: isStandalone, saveBlob, shareFiles, canShareText, shareText, downloadFile, readTextFile, copyText, toBase64, fromBase64, cleanText  · acciones/registros: 1
 */
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -25,21 +26,46 @@ export const saveBlob = (blob, name) => {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(u), 4000);
 };
+/** «Compartir» del sistema con archivos (una imagen, una copia): 'shared' si se compartieron, 'declined' si la persona lo
+    canceló y '' si aquí no se pueden compartir (entonces se guardan de otra forma). `title`, si se da, va con ellos. */
+export const shareFiles = async (files, title = '') => {
+  if (!navigator.canShare || !navigator.canShare({ files }))
+    return '';
+  try {
+    await navigator.share(title ? { files, title } : { files });
+    return 'shared';
+  }
+  catch (e) {
+    return e && e.name == 'AbortError' ? 'declined' : '';
+  }
+};
+/** Si hay «Compartir» del sistema para un texto (el botón dice entonces «Compartir»; si no, «Copiar»). */
+export const canShareText = () => !!navigator.share;
+/** «Compartir» del sistema con un texto: lo mismo que shareFiles. */
+export const shareText = async (title, text) => {
+  if (!canShareText())
+    return '';
+  try {
+    await navigator.share({ title, text });
+    return 'shared';
+  }
+  catch (e) {
+    return e && e.name == 'AbortError' ? 'declined' : '';
+  }
+};
 /** Guarda un archivo en el móvil: en la app instalada, con «Compartir» (en el iPhone, «Guardar en Archivos»); si no, como
     descarga. `type`: su tipo (JSON si no se dice). Devuelve 'saved', 'declined' o 'fail'. */
 export const downloadFile = async (name, data, type = 'application/json') => {
-  if (isStandalone() && navigator.canShare && typeof File != 'undefined') {
+  if (isStandalone() && typeof File != 'undefined') {
+    let shared = '';
     try {
-      const f = new File([data], name, { type });
-      if (navigator.canShare({ files: [f] })) {
-        await navigator.share({ files: [f] });
-        return 'saved';
-      }
+      shared = await shareFiles([new File([data], name, { type })]);
     }
     catch (e) {
-      if (e && e.name == 'AbortError')
-        return 'declined';
+      /* sin File con contenido: se descarga */
     }
+    if (shared)
+      return shared == 'shared' ? 'saved' : 'declined';
   }
   try {
     saveBlob(new Blob([data], { type }), name);
@@ -65,6 +91,8 @@ export const readTextFile = (input, then, max = Infinity, tooBig = '') => {
   }
   input.value = '';
 };
+/** Copia un texto al portapapeles. Sin permiso para el portapapeles, si se da el campo que lo enseña (`el`), lo selecciona y
+    lo copia de la forma antigua. Devuelve si se copió. */
 export const copyText = async (t, el) => {
   try {
     await navigator.clipboard.writeText(t);
@@ -73,12 +101,12 @@ export const copyText = async (t, el) => {
   catch (e) {
     /* sin permiso para el portapapeles: se prueba el método alternativo */
   }
+  if (!el)
+    return false;
   try {
-    if (el) {
-      el.focus();
-      el.select();
-      el.setSelectionRange && el.setSelectionRange(0, t.length + 1);
-    }
+    el.focus();
+    el.select();
+    el.setSelectionRange && el.setSelectionRange(0, t.length + 1);
     return document.execCommand && document.execCommand('copy');
   }
   catch (e) {

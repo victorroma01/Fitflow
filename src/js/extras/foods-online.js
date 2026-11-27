@@ -1,7 +1,8 @@
 /* ═══ extras/foods-online ═══
    Alimentos en línea (Open Food Facts) y escáner de códigos.
-   Define: onlineFoods, onlineQuery, onlineBusy, OFF_ERRORS, offErrorText, isOffline, pause, offFetch, offName, offProduct, OFF_FIELDS, SEARCH_SIZE, SEARCH_KEEP_MS, searchCache, luceneSafe, searchNewUrl, searchOldUrl, searchResult, searchOnline, searchNote, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanTry, scanMsg, stopScan, startScan, scanLoop, offBarcode, lookupBarcode  · acciones/registros: 5
+   Define: onlineFoods, onlineQuery, onlineBusy, OFF_ERRORS, offErrorText, pause, offFetch, offName, offProduct, OFF_FIELDS, SEARCH_SIZE, SEARCH_KEEP_MS, searchCache, luceneSafe, searchNewUrl, searchOldUrl, searchResult, searchOnline, searchNote, EAN_L, EAN_G, EAN_R, EAN_PARITY, EAN_LEFT, EAN_RIGHT, eanDigit, eanFromRuns, eanFromRow, eanFromFrame, scanState, scanTry, scanMsg, stopScan, startScan, scanLoop, offBarcode, lookupBarcode  · acciones/registros: 5
 */
+import { isOffline } from '../core/platform.js';
 import { say, tr } from '../core/i18n.js';
 import { $, LANG } from '../core/util.js';
 import { toast } from '../core/toast.js';
@@ -25,7 +26,6 @@ const OFF_ERRORS = {
   net: 'No se ha podido consultar Open Food Facts. Comprueba la conexión e inténtalo de nuevo.',
 };
 const offErrorText = e => OFF_ERRORS[e] || OFF_ERRORS.net;
-const isOffline = () => typeof navigator != 'undefined' && navigator.onLine === false;
 const pause = ms => new Promise(ok => setTimeout(ok, ms));
 /* Pide a Open Food Facts la dirección url y devuelve su JSON ({ _nf: 1 } si no existe: 404). Si falla, lanza uno de OFF_ERRORS. */
 async function offFetch(url, ms) {

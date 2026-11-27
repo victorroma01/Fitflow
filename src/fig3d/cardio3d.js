@@ -7,11 +7,11 @@
    Define: Fig3D.FAMILIES.run, .bike, .rower, .skiErg, .jumpRope, .elliptical, .stairs, .swim, .boxing */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib, B = F3.blib, C = F3.clib, FL = F3.flib;
-  const { add, sub, mul, dot, cross, len, norm, perp, mix, ease, clamp, at, RAD, LEN } = L;
-  const { has, pose, torso, ZERO, UP, sd, both, shoulder } = M;
-  const { ROOT_Y, LU, LF, mj, keys, cycle } = B;
-  const { spl, legs, qOf, gait, hipOver, keyAnim, qmix, reachClamp, withHands, bySh, legsFree, acrossFist, BASE } = FL;
-  const { cos, sin, PI, abs, max, min, sqrt, atan2, pow } = Math;
+  const { add, sub, mul, dot, cross, norm, mix, ease, clamp, at, RAD, LEN } = L;
+  const { has, pose, ZERO, UP, sd, both, shoulder } = M;
+  const { ROOT_Y, cycle } = B;
+  const { spl, legs, qOf, gait, hipOver, acrossFist, BASE } = FL;
+  const { cos, sin, PI, abs, max, sqrt, pow } = Math;
 
   /* ════ correr y andar ════ */
   /* la zancada de un trote normal, en el sitio (como en una cinta): unas 154 zancadas por minuto, a unos 8 km/h, y cada pie
@@ -609,7 +609,7 @@
       const q = { ...qOf(st), yaw: -30 + 14 * c, roll: 0, tt: t };
       const { J } = pose({ ...q, hands: ZERO, elbow: {} });
       /* la guardia: los puños delante de la cara; el golpe: el guante llega a la cara del saco, a la altura del hombro */
-      const head = mix(J.L.sh, J.R.sh, .5), dz = bagSwing(t);
+      const dz = bagSwing(t);
       const guard = { L: add(J.L.sh, [-22, 38, 36]), R: add(J.R.sh, [16, 42, 42]) };
       const tgt = s => [BAG[0] + (s == 'L' ? 8 : -8), J[s].sh[1] + 4, BAG[2] + dz - BAG_R2 - 13];
       const glove = { L: mix(guard.L, tgt('L'), j), R: mix(guard.R, tgt('R'), c) };
@@ -619,6 +619,5 @@
     return { view: 'front', up: 'a', rest: 'a', cam: [-56, 8], side: [-90, 4], one: true, at: atT, gear: (q, F, cam) => bagGear(cam, q), beat: cycle(3600) };
   };
 
-  const stub = () => null;
   Object.assign(F3.FAMILIES, { run, bike, rower, skiErg, jumpRope, elliptical, stairs, swim, boxing });
 })(window);

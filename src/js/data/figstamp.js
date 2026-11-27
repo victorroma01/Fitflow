@@ -4,4 +4,4 @@
    miniaturas que dibuja (extras/pictures) y, mientras sea la misma, no las vuelve a dibujar aunque se actualice.
    Define: FIG_STAMP
 */
-export const FIG_STAMP = 'ce56d8bc30c500e4b6a3';
+export const FIG_STAMP = 'cacc0791ee74469e9533';

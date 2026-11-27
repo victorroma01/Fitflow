@@ -13,7 +13,7 @@ import { S } from '../core/state.js';
 import { pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { addOwnProgram, progDraft, restDay } from './create.js';
 import { programName } from './levels.js';
-import { cleanText, copyText, downloadFile, fromBase64, readTextFile, toBase64 } from '../system/files.js';
+import { canShareText, cleanText, copyText, downloadFile, fromBase64, readTextFile, shareText, toBase64 } from '../system/files.js';
 import { html } from '../core/html.js';
 /** Plan válido a partir de lo importado: una semana de 7 días o un ciclo de hasta 14 (workout/week), con lo que se conoce. */
 const cleanPlan = pl => {
@@ -81,7 +81,7 @@ const sharePage = () => {
     </p>
     <textarea id="shc" aria-label="Código del programa" rows="6" readonly>${code}</textarea>
     <div class="grid-2 mt-10">
-      <button class="primary" data-a="shareCopyCode">${navigator.share ? 'Compartir' : 'Copiar código'}</button>
+      <button class="primary" data-a="shareCopyCode">${canShareText() ? 'Compartir' : 'Copiar código'}</button>
       <button data-a="shareDownload">Guardar archivo</button>
     </div>`;
 };
@@ -117,16 +117,8 @@ A.shareCopyCode = async () => {
   if (!el || !shareState)
     return;
   const code = el.value;
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: tr('Programa StrataFit'), text: code });
-      return;
-    }
-    catch (e) {
-      if (e && e.name == 'AbortError')
-        return;
-    }
-  }
+  if (await shareText(tr('Programa StrataFit'), code))
+    return;
   toast(await copyText(code, el) ? 'Código copiado' : 'Selecciona el texto y cópialo');
 };
 A.shareDownload = async () => {

@@ -7,8 +7,8 @@
    Define: Fig3D.FAMILIES.pulldown, .row, .pullup */
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear, M = F3.mlib;
-  const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, plate, barbell, cross } = L;
-  const { has, pose, torso, pivotFor, leverAt, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, bands, visTag, onThigh, legFront } = M;
+  const { add, sub, mul, dot, len, norm, mix, ease, clamp, at, RAD, LEN, bar, barbell, cross } = L;
+  const { has, pose, torso, pivotFor, leverAt, ZERO, UP, sd, both, T, shoulder, span, comOf, midFoot, solve, solveNear, legRoot, bb, pair, visTag, onThigh, legFront } = M;
   const { cos, sin, PI, abs, max, min, sqrt, atan2, exp } = Math;
   const STEEL = ['#b9bed0', '#0a0b10'];
   /* el centro de los hombros */
@@ -21,7 +21,6 @@
   /* ════ jalones ════ */
   const pulldown = f => {
     const wide = has(f, 'wide'), one = has(f, 'one'), machine = has(f, 'machine'), rope_ = has(f, 'rope'), kneel = has(f, 'kneel');
-    const name = f.join(' ');
     /* el agarre: ancho, normal, supino (al ancho de los hombros, palmas hacia uno), neutro (asas paralelas), estrecho (el
        triángulo: las manos casi juntas) o la cuerda */
     const kind = rope_ ? 'rope' : wide ? 'wide' : f.includes('supine') ? 'supine' : f.includes('neutral') ? 'neutral' : f.includes('close') ? 'close' : one || machine ? 'neutral' : 'normal';
@@ -133,7 +132,6 @@
      espalda guarda su curva natural (un poco arqueada, nunca redondeada) */
   const trunk = lean => ({ tilt: lean + 3, spine: -3 });
   /* la raíz (la cadera) para que el centro de los hombros quede donde se pide, con el tronco dado */
-  const rootFor = (base, S) => { const q = { ...base, hands: ZERO, elbow: {} }, { F } = pose(q); return add(base.root, sub(S, shC(F, base))); };
   /* la mano s colgando, con el brazo estirado bajo el hombro (y algo hacia fuera, out) */
   const hangFrom = (F, s, q, out = 6) => add(shoulder(F, s, q), sd(s, [out, -145, 0]));
   /* los trozos de una pieza recta de a a b (cable, barra), ordenados con el cuerpo por lo que de verdad se ve */
@@ -176,7 +174,7 @@
           return q;
         };
         body = mk(solve(pt => { const q = mk(pt); return hangFrom(F_(q), 'R', q, 2)[1] - 48; }, -10, 88));
-        const F0 = F_(body), J0 = pose({ ...body, hands: ZERO, elbow: {} }).J;
+        const F0 = F_(body);
         const h0 = hangFrom(F0, 'R', body, 2), h1 = T(F0, 'R', [34, 22, 4]), piv = [h0[0] - 400, 6, h0[2] + 6], R = len(sub(h0, piv));
         /* la mano sube girando alrededor del eje de la barra (la barra no cambia de largo) */
         const hR = t => add(piv, mul(norm(sub(mix(h0, h1, t), piv)), R));
@@ -378,7 +376,7 @@
     /* ── invertido bajo una barra, y en anillas o TRX: el cuerpo recto de los talones a los hombros, que sube hasta las manos ── */
     else if (w('inverted') || w('rings')) {
       const rings = w('rings'), trx = w('trx');
-      const yb = rings ? 0 : 190, L1 = LEN.thigh + LEN.shin - .6, L2 = 128;
+      const yb = rings ? 0 : 190, L1 = LEN.thigh + LEN.shin - .6;
       /* el ángulo del cuerpo con el suelo: abajo, los brazos estirados; arriba, el pecho en la barra (o en las manos) */
       let ph = t => RAD(rings ? mix(32, 52, t) : mix(9, 31, t));
       const ankle = [0, LEN.ankle, 150];
@@ -435,7 +433,7 @@
   };
   /* una anilla (vista de canto o de frente según la cámara), en la mano s */
   const ringAt = (cam, h, s) => {
-    const c = add(h, [0, 6, 0]), P = cam.P(c), u = cam.P(add(c, [0, 1, 0])), r = 11;
+    const c = add(h, [0, 6, 0]), P = cam.P(c), r = 11;
     return { z: P[2] + .5, hand: s, svg: `<ellipse cx="${(P[0]).toFixed(1)}" cy="${(P[1] - 2).toFixed(1)}" rx="${(r * .55).toFixed(1)}" ry="${r}" fill="none" stroke="#0a0b10" stroke-width="5"/><ellipse cx="${(P[0]).toFixed(1)}" cy="${(P[1] - 2).toFixed(1)}" rx="${(r * .55).toFixed(1)}" ry="${r}" fill="none" stroke="#c9b98f" stroke-width="3"/>` };
   };
 
@@ -480,7 +478,7 @@
       /* arriba: la barbilla (o el pecho) a la altura de la barra; con el agarre abierto, los hombros no pueden acercarse a las
          manos más de lo que las separan a lo ancho */
       const top = max(c2b ? 36 : supine ? 46 : 50, sqrt((g - 47) ** 2 + 30 ** 2) + 6);
-      const lean = mix(0, c2b ? -24 : supine ? -10 : -16, t), legsOn = strict && !w('pullup') ? 0 : 1;
+      const lean = mix(0, c2b ? -24 : supine ? -10 : -16, t);
       return { d: mix(146, top, t), lean, shrug: mix(10, -4, t), a: machine ? 6 : band ? 12 : strict ? 6 : 14, b: machine ? 92 : band ? 70 : strict ? 8 : 62, pf: machine ? 10 : 35 };
     };
     /* el cuerpo de cada momento: los hombros a la distancia de las manos que toca y el centro de masas bajo la barra (que está

@@ -19,7 +19,7 @@ import { ONDEMAND } from '../data/ondemand.js';
 import { levelTag } from '../programs/levels.js';
 import { coverStyle, groupImage } from '../workout/images.js';
 import { AMRAP, dayMinutes, targetText, tempoOf } from '../workout/targets.js';
-import { blockKind, dayBlocks } from '../workout/day.js';
+import { blockKind, dayBlocks, daySets, dayStats } from '../workout/day.js';
 import { exPicture } from '../extras/pictures.js';
 /* el día que se entrena con la rutina `r` de data/ondemand (como uno del plan) */
 const onDemandDay = r => {
@@ -45,14 +45,13 @@ const odCover = r => groupImage(r.g[0]) || 'funcional';
 /* una rutina en la lista: su portada, su nivel (si lo tiene), su nombre, su subtítulo, sus grupos y sus cifras */
 const odCard = (r, i) => {
   const d = onDemandDay(r);
-  const sets = d.ex.reduce((s, e) => s + e.s, 0);
   return html`
     <div class="card hero od-card" data-a="onDemandShow" data-i="${i}" role="button" tabindex="0" data-style="${coverStyle(d.n, d)}">
       ${r.lv ? html`<span class="od-level">${levelTag(r.lv)}</span>` : ''}
       <b>${r.n}</b>
       ${r.t ? html`<small>${r.t}</small>` : ''}
       <small>${r.g.join(' · ')}</small>
-      <small>${raw(d.ex.length)} ejercicios · ${raw(sets)} series · ${raw(dayMinutes(d))} min</small>
+      <small>${raw(d.ex.length)} ejercicios · ${raw(daySets(d))} series · ${raw(dayMinutes(d))} min</small>
     </div>`;
 };
 const odListPage = () => html`
@@ -85,17 +84,10 @@ const odBlock = (d, k, n) => html`
 const odPreviewPage = i => {
   const r = ONDEMAND[i];
   const d = onDemandDay(r);
-  const sets = d.ex.reduce((s, e) => s + e.s, 0);
   return html`
     ${pgHead(r.n, 'openOnDemand')}
     ${r.t ? html`<p class="muted m-n6-0-10">${r.t}</p>` : ''}
-    <div class="card hero od-hero" data-style="${coverStyle(d.n, d)}">
-      <div class="stats">
-        <div><b>${d.ex.length}</b><small>Ejercicios</small></div>
-        <div><b>${raw(sets)}</b><small>Series</small></div>
-        <div><b>${dayMinutes(d)}</b><small>Minutos</small></div>
-      </div>
-    </div>
+    <div class="card hero od-hero" data-style="${coverStyle(d.n, d)}">${dayStats(d)}</div>
     <div class="od-meta">${r.lv ? levelTag(r.lv) : ''}<span>${r.g.join(' · ')}</span></div>
     ${r.d ? html`<p class="muted fs-14">${r.d}</p>` : ''}
     ${dayBlocks(d).map((k, n) => odBlock(d, k, n))}

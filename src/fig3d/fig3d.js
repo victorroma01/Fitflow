@@ -51,7 +51,6 @@
   const SK = { sh: [53, 80], el: [39, 151], wr: [30, 212], hip: [80, 205], kn: [78, 294], an: [78, 378] }; // lado izquierdo de la imagen
   const LEN = { upper: 72.4, fore: 61.7, grip: 15, thigh: 89, shin: 84, ankle: 20 };
   const TRUNK_W = [[40, 13], [56, 22], [66, 42], [80, 47], [95, 45], [115, 43], [135, 38.5], [158, 36.5], [180, 38], [195, 41], [212, 41], [228, 34]];
-  const TRUNK_D = [[40, 12], [56, 15], [66, 21], [80, 24], [95, 27], [115, 27], [135, 24], [158, 21.5], [180, 22], [195, 25], [212, 26], [228, 21]];
   /* r: el medio ancho del miembro en el mapa a cada distancia de la articulación; c: dónde cae su centro respecto al hueso. El
      brazo del mapa no está centrado en la línea del hombro al codo (queda casi todo hacia fuera): medido sobre el contorno del
      mapa, para que su borde de dentro y el de fuera caigan en los costados del brazo en 3D. Antes se medía desde el hueso y
@@ -104,11 +103,11 @@
   const pieces = d => {
     const out = [];
     const tok = d.match(/[MCZ]|-?\d*\.?\d+/g);
-    let i = 0, cur = null, p0 = null;
+    let i = 0, cur = null;
     const num = () => +tok[i++];
     while (i < tok.length) {
       const c = tok[i++];
-      if (c == 'M') { cur = [[num(), num()]]; p0 = cur[0]; out.push(cur); }
+      if (c == 'M') { cur = [[num(), num()]]; out.push(cur); }
       else if (c == 'C') {
         const a = cur[cur.length - 1], b = [num(), num()], e = [num(), num()], f = [num(), num()];
         for (let k = 1; k <= 3; k++) { const t = k / 3, u = 1 - t; cur.push([u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * e[0] + t * t * t * f[0], u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * e[1] + t * t * t * f[1]]); }
@@ -480,7 +479,6 @@
     for (let i = 1; i <= n; i++) { const c = h[i % n], m = mid(i); d += 'Q' + f1(c[0]) + ' ' + f1(c[1]) + ' ' + f1(m[0]) + ' ' + f1(m[1]); }
     return d + 'Z';
   };
-  const line = pts => 'M' + pts.map(p => f1(p[0]) + ' ' + f1(p[1])).join('L') + 'Z';
   /* lo mismo que smooth, con coordenadas relativas y redondeadas a la décima: el dibujo de cada fotograma ocupa bastante
      menos y el navegador lo lee antes */
   const smoothR = h => {

@@ -10,7 +10,7 @@
 (function (G) {
   const F3 = G.Fig3D, L = F3.lib, GR = F3.gear;
   const { add, sub, mul, dot, cross, len, norm, mix, ease, clamp, at, RAD, LEN, barbell, bar, plate } = L;
-  const { cos, sin, PI, abs, max, min, sqrt, atan2, acos } = Math;
+  const { cos, sin, PI, abs, max, min, sqrt, acos } = Math;
   const has = (f, w) => f.includes(w);
   const pose = F3.pose, torso = F3.torso;
   const ZERO = { L: [0, 0, 0], R: [0, 0, 0] };
@@ -135,7 +135,7 @@
   const squat = f => {
     /* los pies (medio ancho del tobillo, adelante, apertura de la punta), la espinilla y el muslo arriba y abajo */
     const V = { w: 40, za: 0, toe: 20, ps: [3, 33], pt: [93.5, -8], view: 'front', up: 'a', lean: [2, 45], top: 10 };
-    let arms, gear = () => [], track = null, fixed = null, note = '';
+    let arms, gear = () => [], track = null, fixed = null;
     const backBar = F => { const c = at(F.thorax, [0, 90, -26]); return { barC: c, grip: 80, hands: { L: add(c, [80, 0, 0]), R: add(c, [-80, 0, 0]) }, elbow: both(() => [.25, -1, -.45]), shrug: 3, load: [[c, 1]] }; };
     const hanging = (F, s, out = 12) => add(shoulder(F, s), sd(s, [out, -143, 3]));
     if (has(f, 'front')) {
@@ -478,7 +478,7 @@
     /* el banco, hecho a la medida del cuerpo: el respaldo pegado a la espalda y el asiento bajo la pelvis */
     const benchGear = cam => {
       if (floor) return GR.under([GR.obox(cam, [0, 1.5, body.root[2] - 70], [[1, 0, 0], UP], [40, 1.5, 125], GR.C.pad)]);
-      const back = F0.thorax, n = back.z, u = back.y;
+      const back = F0.thorax, n = back.z;
       const b0 = at(back, [0, -42, -25]), b1 = at(back, [0, 150, -25]);
       const items = [GR.padAB(cam, add(b0, mul(n, -7)), add(b1, mul(n, -7)), n, 30, 7)];
       if (!ang) {
@@ -607,7 +607,7 @@
 
   /* ════ press de hombro ════ */
   const overhead = f => {
-    const seated = has(f, 'seated') || has(f, 'machine'), db = has(f, 'db'), one = has(f, 'one') || has(f, 'kb') || has(f, 'cable') || (has(f, 'landmine') && !has(f, 'two'));
+    const seated = has(f, 'seated') || has(f, 'machine'), one = has(f, 'one') || has(f, 'kb') || has(f, 'cable') || (has(f, 'landmine') && !has(f, 'two'));
     const machine = has(f, 'machine'), smith = has(f, 'smith'), barb = has(f, 'bar') || smith, arnold = has(f, 'arnold'), neutral = has(f, 'neutral');
     const kb = has(f, 'kb'), cable = has(f, 'cable'), band = has(f, 'band'), landmine = has(f, 'landmine'), two = landmine && has(f, 'two');
     /* sentado: en un banco con respaldo casi vertical; de pie: las rodillas apenas dobladas */
@@ -624,7 +624,7 @@
     };
     /* las mancuernas: abajo, a la altura de las orejas por fuera de los hombros, con el antebrazo vertical; arriba, sobre los
        hombros con los brazos estirados */
-    const LOW = [82, 95, 10], HIGH = [40, 222, 4];
+    const HIGH = [40, 222, 4];
     /* el codo sube por un arco desde algo por debajo del hombro (hacia fuera y fwd grados hacia delante) con el antebrazo
        vertical; al final, el brazo se estira y la mano se mete un poco, sobre el hombro */
     const arcAt = (th, fwd) => { const u = [cos(RAD(fwd)), 0, sin(RAD(fwd))], E = [47 + LEN.upper * cos(th) * u[0], 80 + LEN.upper * sin(th), -2 + LEN.upper * cos(th) * u[2]]; return { E, H: [E[0], E[1] + LEN.fore + LEN.grip, E[2]] }; };

@@ -4,6 +4,7 @@
    móvil salvo que se copie.
    Define: storageUse, badData, diagnosticsText, diagBack, diagnosticsPage  · acciones/registros: 6
 */
+import { userAgent } from '../core/platform.js';
 import { $, APPV, dayKey, FFDEP } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
@@ -50,7 +51,7 @@ const badData = () => {
 export const diagnosticsText = () => {
   const errs = errorLog().slice().reverse();
   const bad = badData();
-  return ['StrataFit ' + APPV + (FFDEP ? ' · app instalable' : ' · archivo único'), 'Fecha: ' + new Date().toISOString(), 'Navegador: ' + navigator.userAgent, 'Abierta como app: ' + (isStandalone() ? 'sí' : 'no'), offlineText(), 'Almacenamiento: ' + storageUse().filter(x => x[1]).map(x => x[0] + ' ' + Math.ceil(x[1] / 1024) + ' KB').join(', '), 'Espacio usado: ' + (spaceText(lastSpace) || 'midiendo…'), 'Sincronización: ' + syncLine(), 'Tiempo de pintado: ' + (paintSummary() || 'aún sin medidas'), 'Entrenos registrados: ' + S.logs.length, bad ? 'Datos dañados apartados el ' + new Date(bad.t).toISOString().slice(0, 10) + ' (' + Math.ceil(bad.raw.length / 1024) + ' KB)' : 'Sin datos dañados', 'Errores registrados: ' + errs.length].concat(errs.map(e => '· ' + new Date(e.t).toISOString().slice(0, 16).replace('T', ' ') + ' · ' + e.w + ' · ' + e.m + (e.v ? ' · v' + e.v : ''))).join('\n');
+  return ['StrataFit ' + APPV + (FFDEP ? ' · app instalable' : ' · archivo único'), 'Fecha: ' + new Date().toISOString(), 'Navegador: ' + userAgent(), 'Abierta como app: ' + (isStandalone() ? 'sí' : 'no'), offlineText(), 'Almacenamiento: ' + storageUse().filter(x => x[1]).map(x => x[0] + ' ' + Math.ceil(x[1] / 1024) + ' KB').join(', '), 'Espacio usado: ' + (spaceText(lastSpace) || 'midiendo…'), 'Sincronización: ' + syncLine(), 'Tiempo de pintado: ' + (paintSummary() || 'aún sin medidas'), 'Entrenos registrados: ' + S.logs.length, bad ? 'Datos dañados apartados el ' + new Date(bad.t).toISOString().slice(0, 10) + ' (' + Math.ceil(bad.raw.length / 1024) + ' KB)' : 'Sin datos dañados', 'Errores registrados: ' + errs.length].concat(errs.map(e => '· ' + new Date(e.t).toISOString().slice(0, 16).replace('T', ' ') + ' · ' + e.w + ' · ' + e.m + (e.v ? ' · v' + e.v : ''))).join('\n');
 };
 /* «←» de Diagnóstico: a Ajustes si se abrió desde allí */
 let diagBack = 'closeSheet';

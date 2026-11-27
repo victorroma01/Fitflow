@@ -14,7 +14,7 @@
      llegar el dibujo, y extras/figure3d la dibuja y la mueve en cuanto aparece en la hoja.
    Define: RETRY, RETRY_MAX, figuresAt, retryAt, retryWait, retryTimer, engineResting, figures, thumbSize, thumbPx, figDb, STAMP_KEY, storeAt, storeReady, ready, failed, thumbImg, thumbHole, holesOf, fillHole, fillName, toLook, looked, looking, lookUp, soonLine, laterLine, lined, ahead, AT_ONCE, drawing, CALM, movedAt, calmTimer, isCalm, breathe, keep, drawThumb, pump, lineUp, want, warmUp, exHasFigure, exPicture, LATER_MARGIN, laterWatchers, laterWatched, nearView, watchLater, exPictureLater, exMotion, askedStages, stagesIn, wake
 */
-import { idbStore } from '../core/idb.js';
+import { hasIdb, idbStore } from '../core/idb.js';
 import { logError } from '../core/errors.js';
 import { loadFigures } from '../core/lazy.js';
 import { html } from '../core/html.js';
@@ -61,7 +61,7 @@ const STAMP_KEY = '\0de';
 /* la primera vez que hace falta: si lo guardado es de otras figuras (o de otro tamaño), se vacía. Da si lo guardado
    se puede usar (no, sin IndexedDB o si falla: las miniaturas se quedan solo en la memoria) */
 let storeAt = null;
-const storeReady = () => storeAt || (storeAt = !window.indexedDB ? Promise.resolve(false) : figDb('mini', 'readonly', st => st.get(STAMP_KEY))
+const storeReady = () => storeAt || (storeAt = !hasIdb() ? Promise.resolve(false) : figDb('mini', 'readonly', st => st.get(STAMP_KEY))
   .then(v => v === FIG_STAMP + ' ' + thumbPx() || figDb('mini', 'readwrite', st => [st.clear(), st.put(FIG_STAMP + ' ' + thumbPx(), STAMP_KEY)]).then(() => true))
   .catch(e => {
   logError('miniaturas guardadas', e);

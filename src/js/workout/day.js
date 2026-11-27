@@ -1,6 +1,6 @@
 /* ═══ workout/day ═══
    Pestaña Workout: vista del día, tempos, superseries y atajos.
-   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, trainingDayCard, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, hubTile, woShortcuts, blockKind, inSuperset, dayBlocks, weekBar, noProgramView, workoutTab  · acciones/registros: 13
+   Define: planEx, planSetButton, weekdayButton, weekHeader, dayEditRow, dayEditCard, restDayCard, daySets, dayStats, trainingDayCard, TEMPOS, shortSelect, tempoSelect, exToolsHtml, blockBadge, linkPrev, hubTile, woShortcuts, blockKind, inSuperset, dayBlocks, weekBar, noProgramView, workoutTab  · acciones/registros: 13
 */
 import { say } from '../core/i18n.js';
 import { typedName } from '../core/util.js';
@@ -78,25 +78,26 @@ const restDayCard = done => html`
     <button class="primary" data-a="completeRestDay">${done ? 'Descanso completado ✓' : 'Completar descanso'}</button>
   </div>
   <button data-a="openPicker" class="w-full">+ Convertir en día de entreno</button>`;
+/** Las series de un día: las de todos sus ejercicios. */
+export const daySets = d => d.ex.reduce((s, e) => s + e.s, 0);
+/** Las cifras de un día en su portada (la del día, la de Overview y la de la vista previa de un entreno a la carta): sus
+    ejercicios, sus series y sus minutos. */
+export const dayStats = d => html`
+  <div class="stats">
+    <div><b>${d.ex.length}</b><small>Ejercicios</small></div>
+    <div><b>${raw(daySets(d))}</b><small>Series</small></div>
+    <div><b>${dayMinutes(d)}</b><small>Minutos</small></div>
+  </div>`;
 /* un día de entreno: su portada, con los ejercicios, las series y los minutos, Overview y «Empezar» (o «Repetir», si ya está hecho) */
-const trainingDayCard = (d, done) => {
-  const sets = d.ex.reduce((s, e) => s + e.s, 0);
-  const stats = html`
-    <div class="stats">
-      <div><b>${d.ex.length}</b><small>Ejercicios</small></div>
-      <div><b>${raw(sets)}</b><small>Series</small></div>
-      <div><b>${dayMinutes(d)}</b><small>Minutos</small></div>
-    </div>`;
-  return html`
-    <div class="card hero day-hero" data-style="${coverStyle(d.n, d, 1)}">
-      <h2>${d.n}</h2>
-      ${stats}
-      <div class="grid-2">
-        <button data-a="openOverview">Overview</button>
-        <button class="primary" data-a="startWorkout">${done ? 'Repetir' : 'Empezar'} día ${raw(S.selectedWeekday + 1)}</button>
-      </div>
-    </div>`;
-};
+const trainingDayCard = (d, done) => html`
+  <div class="card hero day-hero" data-style="${coverStyle(d.n, d, 1)}">
+    <h2>${d.n}</h2>
+    ${dayStats(d)}
+    <div class="grid-2">
+      <button data-a="openOverview">Overview</button>
+      <button class="primary" data-a="startWorkout">${done ? 'Repetir' : 'Empezar'} día ${raw(S.selectedWeekday + 1)}</button>
+    </div>
+  </div>`;
 const TEMPOS = [['2/0/2/0', 'Estándar'], ['3/0/1/0', 'Excéntrico controlado'], ['3/0/3/0', 'Lento y controlado'], ['4/1/1/0', 'Excéntrico lento con pausa'], ['3/1/X/0', 'Pausa abajo y subida explosiva'], ['1/0/X/0', 'Explosivo'], ['2/2/2/0', 'Pausa en la contracción'], ['5/0/1/0', 'Excéntrico muy lento'], ['1/1/1/1', 'Pausa en ambos extremos'], ['Libre', 'Sin tempo fijo']];
 /** Desplegable corto (F-09): enseña solo su nombre («Tempo», «Descanso»), porque el valor ya está en el objetivo de arriba;
     al tocarlo se abre la lista de siempre (el select va encima, transparente). */

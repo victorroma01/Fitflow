@@ -8,9 +8,9 @@ import { overviewMode, S, saveState, setOverviewMode } from '../core/state.js';
 import { dialog } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { overviewSnapshot, setOverviewSnapshot } from '../routines/builder.js';
-import { blockKind, dayBlocks, inSuperset, linkPrev, planSetButton } from './day.js';
+import { blockKind, dayBlocks, dayStats, inSuperset, linkPrev, planSetButton } from './day.js';
 import { restOf, restSelect } from './rest.js';
-import { dayMinutes, rangeSelect, rirOf, targetText, tempoOf, unitOf } from './targets.js';
+import { rangeSelect, rirOf, targetText, tempoOf, unitOf } from './targets.js';
 import { isDeloadWeek } from './deload.js';
 import { coverStyle } from './images.js';
 import { equipmentSummary } from './equipment.js';
@@ -24,18 +24,8 @@ const overviewHead = editing => html`
   </div>`;
 /* la foto del día con su nombre (al editar, un campo) y sus cifras: ejercicios, series y minutos */
 const overviewHero = (d, editing) => {
-  const sets = d.ex.reduce((s, e) => s + e.s, 0);
   const name = editing ? html`<input value="${d.n}" maxlength="60" data-c="setDayName" aria-label="Nombre del día" class="m-6-0">` : html`<h2>${d.n}</h2>`;
-  return html`
-    <div class="card hero" data-style="${coverStyle(d.n, d)}">
-      <small>Overview</small>
-      ${name}
-      <div class="stats">
-        <div><b>${d.ex.length}</b><small>Ejercicios</small></div>
-        <div><b>${raw(sets)}</b><small>Series</small></div>
-        <div><b>${dayMinutes(d)}</b><small>Minutos</small></div>
-      </div>
-    </div>`;
+  return html`<div class="card hero" data-style="${coverStyle(d.n, d)}"><small>Overview</small>${name}${dayStats(d)}</div>`;
 };
 /* en una semana de descarga, qué cambia al empezar */
 const deloadNote = () => html`

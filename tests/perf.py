@@ -6,6 +6,7 @@ que pase o falle: sirve para comparar dos compilaciones en el mismo ordenador (d
 anterior a la V1.0.2, con las claves cortas en S (hist, wt…), recibe los mismos datos con sus nombres (core/schema).
 
   python3 tests/perf.py dist/stratafit.html [otra.html …]       (PERF_ROUNDS=5 para más vueltas)
+  python3 tests/perf.py vieja/dist/app/index.html dist/app/index.html   (el paquete que se publica, con su service worker)
 Requiere:  pip install playwright  &&  playwright install chromium
 """
 import os, re, sys, json, statistics
@@ -101,4 +102,6 @@ if __name__ == '__main__':
             runs[f].append(measure(f))
     for f in files:
         out = {k: statistics.median(r[k] for r in runs[f]) for k in runs[f][0]}
-        print(os.path.basename(f), json.dumps(out, ensure_ascii=False))
+        # el nombre del archivo; si dos se llaman igual (dos paquetes: index.html), su ruta
+        same = [os.path.basename(x) for x in files].count(os.path.basename(f)) > 1
+        print(f if same else os.path.basename(f), json.dumps(out, ensure_ascii=False))
