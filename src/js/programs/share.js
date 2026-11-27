@@ -2,6 +2,7 @@
    Compartir e importar programas mediante código.
    Define: cleanPlan, programCode, parseImport, ensureExercises, shareState, sharePage, importProgram  · acciones/registros: 7
 */
+import { tr, trAs } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -12,7 +13,7 @@ import { S } from '../core/state.js';
 import { pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { addOwnProgram, progDraft, restDay } from './create.js';
 import { programName } from './levels.js';
-import { cleanText, copyText, downloadFile, fromBase64, readTextFile, toBase64 } from '../system/files.js';
+import { canShareText, cleanText, copyText, downloadFile, fromBase64, readTextFile, shareText, toBase64 } from '../system/files.js';
 import { html } from '../core/html.js';
 /** Plan válido a partir de lo importado: una semana de 7 días o un ciclo de hasta 14 (workout/week), con lo que se conoce. */
 const cleanPlan = pl => {
@@ -73,7 +74,16 @@ const ensureExercises = pl => {
 let shareState = null;
 const sharePage = () => {
   const code = programCode(shareState.n, shareState.plan);
-  return html`${pgHead('Compartir programa', shareState.back || 'openPrograms')}<p class="mu m-n6-0-10">«${shareState.n}». Envía este código por mensaje o correo; quien lo reciba lo pega en Programas, Importar.</p><textarea id="shc" aria-label="Código del programa" rows="6" readonly>${code}</textarea><div class="g2 mt-10"><button class="pr" data-a="shareCopyCode">${navigator.share ? 'Compartir' : 'Copiar código'}</button><button data-a="shareDownload">Guardar archivo</button></div>`;
+  return html`
+    ${pgHead('Compartir programa', shareState.back || 'openPrograms')}
+    <p class="muted m-n6-0-10">
+      «${shareState.n}». Envía este código por mensaje o correo; quien lo reciba lo pega en Programas, Importar.
+    </p>
+    <textarea id="shc" aria-label="Código del programa" rows="6" readonly>${code}</textarea>
+    <div class="grid-2 mt-10">
+      <button class="primary" data-a="shareCopyCode">${canShareText() ? 'Compartir' : 'Copiar código'}</button>
+      <button data-a="shareDownload">Guardar archivo</button>
+    </div>`;
 };
 A.ownProgramShare = () => {
   const p = S.ownPrograms[progDraft.k];
@@ -107,26 +117,29 @@ A.shareCopyCode = async () => {
   if (!el || !shareState)
     return;
   const code = el.value;
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: 'Programa StrataFit', text: code });
-      return;
-    }
-    catch (e) {
-      if (e && e.name == 'AbortError')
-        return;
-    }
-  }
+  if (await shareText(tr('Programa StrataFit'), code))
+    return;
   toast(await copyText(code, el) ? 'Código copiado' : 'Selecciona el texto y cópialo');
 };
 A.shareDownload = async () => {
   if (!shareState)
     return;
-  const r = await downloadFile('programa-' + String(shareState.n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) + '.json', JSON.stringify({ ff: 'FFP1', n: shareState.n, plan: cleanPlan(shareState.plan) }));
+  const r = await downloadFile(trAs('archivo', 'programa') + '-' + String(shareState.n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) + '.json', JSON.stringify({ ff: 'FFP1', n: shareState.n, plan: cleanPlan(shareState.plan) }));
   toast(r == 'saved' ? 'Archivo guardado' : r == 'declined' ? 'No se guardó el archivo' : 'No se pudo guardar el archivo');
 };
 A.openImport = () => {
-  sheet(html`${pgHead('Importar programa', 'openPrograms')}<p class="mu m-n6-0-10">Pega el código que te han enviado o elige un archivo .json.</p><textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea><p id="ipe" class="mu c-ctx d-none m-8-0-0"></p><div class="g2 mt-10"><label class="btnl">Elegir archivo<input type="file" accept=".json,application/json,text/plain" hidden data-c="importFile"></label><button class="pr" data-a="importCode">Importar</button></div>`);
+  sheet(html`
+    ${pgHead('Importar programa', 'openPrograms')}
+    <p class="muted m-n6-0-10">Pega el código que te han enviado o elige un archivo .json.</p>
+    <textarea id="ipc" aria-label="Código del programa que quieres importar" rows="5" placeholder="FFP1:…"></textarea>
+    <p id="ipe" class="muted c-ctx d-none m-8-0-0"></p>
+    <div class="grid-2 mt-10">
+      <label class="file-btn">
+        Elegir archivo
+        <input type="file" accept=".json,application/json,text/plain" hidden data-c="importFile">
+      </label>
+      <button class="primary" data-a="importCode">Importar</button>
+    </div>`);
   sheetToTop();
 };
 const importProgram = t => {
@@ -140,7 +153,7 @@ const importProgram = t => {
   catch (x) {
     const e = $('#ipe');
     if (e) {
-      e.textContent = 'El código o el archivo no es válido.';
+      e.textContent = tr('El código o el archivo no es válido.');
       e.style.display = 'block';
     }
   }

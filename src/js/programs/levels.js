@@ -2,6 +2,7 @@
    Niveles de programa (aplicar, variantes, selector).
    Define: isLevel, round5, levelTech, levelDay, levelPlan, planSignature, currentCustomProgram, programName, levelsActive, levelGenerate, planEdited, weekStarted, levelDot, levelMenuOpen, setLevelMenuOpen, previewLevel, setPreviewLevel, pendingLevel, levelPill, applyLevel, levelSegment, levelTag, programRow  · acciones/registros: 5
 */
+import { say } from '../core/i18n.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { parseProgram, PROGRAM_NAMES } from '../data/library.js';
@@ -148,7 +149,7 @@ const planEdited = () => {
   }
 };
 const weekStarted = () => Object.keys(S.doneDays || {}).some(k => k.indexOf(S.week + '-') == 0 && S.doneDays[k]);
-export const levelDot = v => html`<i class="lvd ${LEVEL_CLASS[v]}"></i>`;
+export const levelDot = v => html`<i class="level-dot ${LEVEL_CLASS[v]}"></i>`;
 let levelMenuOpen = false;
 /** Cambia `levelMenuOpen` desde otros módulos (un módulo no puede asignar una variable importada). */
 export const setLevelMenuOpen = v => {
@@ -164,7 +165,25 @@ export const levelPill = () => {
   if (!levelsActive())
     return '';
   const v = isLevel(S.level) ? S.level : 'int';
-  return html`<div class="lvw ${LEVEL_CLASS[v]}"><button class="lvp" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}" aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">${levelDot(v)}<span>${raw(LEVEL_NAMES[v])}</span><span class="lvc">▾</span></button>${levelMenuOpen ? html`<div class="lvb" data-a="levelMenuClose"></div><div class="lvm" role="menu">${LEVEL_KEYS.map(k => html`<button class="lvi ${LEVEL_CLASS[k]}${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem">${levelDot(k)}<span><b>${raw(LEVEL_NAMES[k])}</b><small class="mu">${raw(LEVEL_SUMMARY[k])}</small></span>${raw(k == v ? '<em>✓</em>' : '')}</button>`)}</div>` : ''}</div>`;
+  return html`
+    <div class="level-wrap ${LEVEL_CLASS[v]}">
+      <button class="level-pill" data-a="levelMenuToggle" aria-haspopup="menu" aria-expanded="${levelMenuOpen ? 'true' : 'false'}"
+          aria-label="Nivel del programa: ${LEVEL_NAMES[v]}">
+        ${levelDot(v)}
+        <span>${raw(LEVEL_NAMES[v])}</span>
+        <span class="level-caret">▾</span>
+      </button>
+      ${levelMenuOpen ? html`
+        <div class="level-backdrop" data-a="levelMenuClose"></div>
+        <div class="level-menu" role="menu">
+          ${LEVEL_KEYS.map(k => html`
+            <button class="level-option ${LEVEL_CLASS[k]}${k == v ? ' on' : ''}" data-a="levelChoose" data-v="${k}" role="menuitem">
+              ${levelDot(k)}
+              <span><b>${raw(LEVEL_NAMES[k])}</b><small class="muted">${raw(LEVEL_SUMMARY[k])}</small></span>
+              ${raw(k == v ? '<em>✓</em>' : '')}
+            </button>`)}
+        </div>` : ''}
+    </div>`;
 };
 A.levelMenuToggle = () => {
   levelMenuOpen = !levelMenuOpen;
@@ -204,7 +223,7 @@ const applyLevel = v => {
     saveState();
     sheet();
     R();
-    toast('Nivel ' + LEVEL_NAMES[v].toLowerCase() + ': programa reorganizado');
+    toast(say `Nivel ${LEVEL_NAMES[v].toLowerCase()}: programa reorganizado`);
   }
   catch (e) {
     toast('No se pudo cambiar el nivel');
@@ -229,7 +248,7 @@ A.levelChoose = (i, b) => {
   const zr = !!pendingResume;
   if (ed || dn || zr) {
     R();
-    confirmDialog('Cambiar a nivel ' + LEVEL_NAMES[v].toLowerCase(), 'Se reorganizarán los días del programa para el nivel ' + LEVEL_NAMES[v].toLowerCase() + '.' + (ed ? ' Perderás los cambios que hayas hecho a mano en los días.' : '') + (dn ? ' Se reiniciará el progreso de esta semana.' : '') + (zr ? ' Se descartará el entreno pausado.' : ''), 'levelConfirm', 'Cambiar');
+    confirmDialog(say `Cambiar a nivel ${LEVEL_NAMES[v].toLowerCase()}`, say `Se reorganizarán los días del programa para el nivel ${LEVEL_NAMES[v].toLowerCase()}.${ed ? ' Perderás los cambios que hayas hecho a mano en los días.' : ''}${dn ? ' Se reiniciará el progreso de esta semana.' : ''}${zr ? ' Se descartará el entreno pausado.' : ''}`, 'levelConfirm', 'Cambiar');
   }
   else
     applyLevel(v);
@@ -238,12 +257,20 @@ A.levelConfirm = () => {
   if (isLevel(pendingLevel))
     applyLevel(pendingLevel);
 };
-export const levelSegment = () => html`<div class="lvs">${LEVEL_KEYS.map(k => html`<button class="${LEVEL_CLASS[k]}${k == previewLevel ? ' on' : ''}" data-a="previewChooseLevel" data-v="${k}">${levelDot(k)}<span>${raw(LEVEL_NAMES[k])}</span></button>`)}</div><p class="mu lvn">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
+export const levelSegment = () => html`
+  <div class="level-tabs">
+    ${LEVEL_KEYS.map(k => html`
+      <button class="${LEVEL_CLASS[k]}${k == previewLevel ? ' on' : ''}" data-a="previewChooseLevel" data-v="${k}">
+        ${levelDot(k)}
+        <span>${raw(LEVEL_NAMES[k])}</span>
+      </button>`)}
+  </div>
+  <p class="muted level-note">${raw(LEVEL_DETAILS[previewLevel])}</p>`;
 A.previewChooseLevel = (i, b) => {
   const v = b && b.dataset ? b.dataset.v : '';
   if (isLevel(v))
     previewLevel = v;
   A.openProgramPreview(previewProgram);
 };
-export const levelTag = v => html`<span class="lvt">${levelDot(v)}${raw(LEVEL_NAMES[v])}</span>`;
-export const programRow = (n, tag) => html`<span class="pgr"><b class="fs-17">${n}</b>${raw(tag)}</span>`;
+export const levelTag = v => html`<span class="level-tag">${levelDot(v)}${raw(LEVEL_NAMES[v])}</span>`;
+export const programRow = (n, tag) => html`<span class="program-row"><b class="fs-17">${n}</b>${raw(tag)}</span>`;

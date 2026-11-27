@@ -2,6 +2,7 @@
    Registro de cardio.
    Define: CARDIO_TYPES, cardioState, cardioLabel, cardioPace, paceLabel, cardioTypeChips, cardioInputs, cardioPaceBox, cardioSheet, readCardio, cardioLogs, cardioCard  · acciones/registros: 4
 */
+import { say } from '../core/i18n.js';
 import { clampInt, clampNum, dayKey, fmtClock, round1 } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, U } from '../core/registry.js';
@@ -18,24 +19,50 @@ export function cardioPace(t, km, sec) {
   if (!(km > 0 && sec > 0))
     return '';
   if (t == 'bike' || t == 'ell' || t == 'oth')
-    return round1(km / (sec / 3600)) + ' km/h';
+    return say `${round1(km / (sec / 3600))} km/h`;
   if (t == 'row')
     return fmtClock(sec / (km * 2)) + ' /500 m';
   if (t == 'swim')
     return fmtClock(sec / (km * 10)) + ' /100 m';
-  return fmtClock(sec / km) + ' /km';
+  return say `${fmtClock(sec / km)} /km`;
 }
 const paceLabel = t => t == 'bike' || t == 'ell' || t == 'oth' ? 'Velocidad media' : 'Ritmo';
 /* el tipo de cardio, como chips */
-const cardioTypeChips = t => html`<div>${CARDIO_TYPES.map(x => html`<button class="chip ${t == x[0] ? 'on' : ''}" data-a="cardioType" data-v="${x[0]}">${raw(x[1])}</button>`)}</div>`;
+const cardioTypeChips = t => html`
+  <div>
+    ${CARDIO_TYPES.map(x => html`<button class="chip ${t == x[0] ? 'on' : ''}" data-a="cardioType" data-v="${x[0]}">${raw(x[1])}</button>`)}
+  </div>`;
 /* la distancia (opcional) y el tiempo, en minutos y segundos: al escribir, se calcula el ritmo */
-const cardioInputs = () => html`<div class="g2"><div><label for="f2cdk">Distancia (km, opcional)</label><input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cardioPaceUpdate"></div><div><label>Tiempo (min y s)</label><div class="g2 gap-6"><input id="f2cdm" aria-label="Minutos" type="number" inputmode="numeric" min="0" max="999" placeholder="min" data-u="cardioPaceUpdate"><input id="f2cds" aria-label="Segundos" type="number" inputmode="numeric" min="0" max="59" placeholder="s" data-u="cardioPaceUpdate"></div></div></div>`;
+const cardioInputs = () => html`
+  <div class="grid-2">
+    <div>
+      <label for="f2cdk">Distancia (km, opcional)</label>
+      <input id="f2cdk" type="number" inputmode="decimal" step="0.01" min="0" max="1000" placeholder="0" data-u="cardioPaceUpdate">
+    </div>
+    <div>
+      <label>Tiempo (min y s)</label>
+      <div class="grid-2 gap-6">
+        <input id="f2cdm" aria-label="Minutos" type="number" inputmode="numeric" min="0" max="999" placeholder="min"
+            data-u="cardioPaceUpdate">
+        <input id="f2cds" aria-label="Segundos" type="number" inputmode="numeric" min="0" max="59" placeholder="s"
+            data-u="cardioPaceUpdate">
+      </div>
+    </div>
+  </div>`;
 /* el ritmo (o la velocidad media), que rellena cardioPaceUpdate */
-const cardioPaceBox = t => html`<div class="cd m-12-0-0 ta-c"><small id="f2cdl" class="mu">${paceLabel(t)}</small><br><b id="f2cdr" class="fs-22">—</b></div>`;
+const cardioPaceBox = t => html`
+  <div class="card m-12-0-0 ta-c"><small id="f2cdl" class="muted">${paceLabel(t)}</small><br><b id="f2cdr" class="fs-22">—</b></div>`;
 function cardioSheet() {
   const t = cardioState.t;
   const td = dayKey(new Date);
-  return html`<h3>Registrar cardio</h3>${cardioTypeChips(t)}<label for="f2cdd">Fecha</label><input id="f2cdd" type="date" value="${td}" max="${td}">${cardioInputs()}${cardioPaceBox(t)}<button class="pr w-full mt-12" data-a="cardioSave">Guardar</button>`;
+  return html`
+    <h3>Registrar cardio</h3>
+    ${cardioTypeChips(t)}
+    <label for="f2cdd">Fecha</label>
+    <input id="f2cdd" type="date" value="${td}" max="${td}">
+    ${cardioInputs()}
+    ${cardioPaceBox(t)}
+    <button class="primary w-full mt-12" data-a="cardioSave">Guardar</button>`;
 }
 function readCardio() {
   const g = id => document.getElementById(id);
@@ -104,7 +131,22 @@ export function cardioCard() {
     const cur = W4[3];
     const mx = Math.max(1, ...W4.map(w => w.km || w.sec / 600));
     const tot = kmTotal(L.map(l => l.c.km));
-    return html`<div class="cd"><div class="row"><b>Cardio</b><small>${tot} km en total</small></div><div class="f2cs"><div><b>${cur.km}</b><small>km esta semana</small></div><div><b>${raw(fmtClock(cur.sec))}</b><small>tiempo</small></div><div><b>${raw(cur.n)}</b><small>${cur.n == 1 ? 'sesión' : 'sesiones'}</small></div></div><div class="f2bars">${W4.map(w => html`<div><i data-style="height:${Math.max(4, Math.round((w.km || w.sec / 600) / mx * 56))}px"></i><small>${raw(w.k ? '−' + w.k + ' sem' : 'Ahora')}</small></div>`)}</div></div>`;
+    return html`
+      <div class="card">
+        <div class="row"><b>Cardio</b><small>${tot} km en total</small></div>
+        <div class="cardio-stats">
+          <div><b>${cur.km}</b><small>km esta semana</small></div>
+          <div><b>${raw(fmtClock(cur.sec))}</b><small>tiempo</small></div>
+          <div><b>${raw(cur.n)}</b><small>${cur.n == 1 ? 'sesión' : 'sesiones'}</small></div>
+        </div>
+        <div class="f2bars">
+          ${W4.map(w => html`
+            <div>
+              <i data-style="height:${Math.max(4, Math.round((w.km || w.sec / 600) / mx * 56))}px"></i>
+              <small>${raw(w.k ? say `−${w.k} sem` : 'Ahora')}</small>
+            </div>`)}
+        </div>
+      </div>`;
   }
   catch (e) {
     return '';

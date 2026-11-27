@@ -10,7 +10,8 @@
    Estado: S.cloudBackup = { at, lg, md }: la última copia en la nube (cuándo, entrenos y días de comidas), para todos los móviles.
    Define: CHUNK, MAX_CHUNKS, BACKUP_EVERY, cloudBusy, autoTried, pendingOld, backupPath, toB64, fromB64, canZip, zip, unzip, dataCounts, shrinks, writeCloudBackup, readCloudBackup, autoBackup, cloudBackupCard, wipeCloudBackup, saveNow  · acciones/registros: 3
 */
-import { $, APPV } from '../core/util.js';
+import { say, tr } from '../core/i18n.js';
+import { $, APPV, LOCALE } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -68,6 +69,7 @@ const writeCloudBackup = async (old) => {
   const on = old && old.data ? Math.min(MAX_CHUNKS, +old.data.n || 0) : MAX_CHUNKS;
   const c = dataCounts();
   const meta = { at: Date.now(), v: APPV, n: parts.length, z, sz: body.length, h: hashOf(body), lg: c.lg, md: c.md };
+  /** @type {any[]} */
   const writes = parts.map((p, i) => setWrite(backupPath('c' + i), { j: p, i }));
   for (let i = parts.length; i < on; i++)
     writes.push(delWrite(backupPath('c' + i)));
@@ -110,8 +112,10 @@ const autoBackup = async () => {
     const c = dataCounts();
     /* el aviso no tapa otra ventana: si hay una abierta, espera a la próxima vez que se abra la app */
     if (old && shrinks(old.data, c)) {
-      if (!$('#dg .dgb') && !$('#sh .sp'))
-        dialog('Tu copia en la nube tiene más datos', html`La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. No la hemos sustituido por si es la buena: en Copia de seguridad puedes restaurarla o guardar la de ahora.`, [['Ahora no', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'pr']]);
+      if (!$('#dg .dialog-backdrop') && !$('#sh .sheet'))
+        dialog('Tu copia en la nube tiene más datos', html`
+          La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. No la hemos sustituido por si es la buena: en Copia de seguridad puedes restaurarla o guardar la de ahora.
+        `, [['Ahora no', 'doNothing', ''], ['Copia de seguridad', 'openBackup', 'primary']]);
     }
     else
       await writeCloudBackup(old);
@@ -128,8 +132,21 @@ afterSync.push(autoBackup);
 /** Apartado «Copia en la nube» de Copia de seguridad (system/backup). */
 export const cloudBackupCard = () => {
   const c = S.cloudBackup;
-  const line = c && +c.at > 0 ? html`Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas` : 'Aún no hay ninguna copia en la nube.';
-  return html`<div class="cd cbk" id="cbk"><b>Copia en la nube</b><p class="mu">Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.</p><p class="cbl" id="cbl">${raw(line)}</p><div class="g2"><button class="pr" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button><button data-a="cloudBackupRestore"${cloudBusy ? ' disabled' : ''}>Restaurar</button></div></div>`;
+  const line = c && +c.at > 0 ? html`
+    Última copia: <b>${backupDate(c.at, 1)}</b>, ${new Date(+c.at).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })} · ${plural(+c.lg || 0, 'entreno', 'entrenos')} y ${plural(+c.md || 0, 'día', 'días')} de comidas
+  ` : 'Aún no hay ninguna copia en la nube.';
+  return html`
+    <div class="card backup-card" id="cbk">
+      <b>Copia en la nube</b>
+      <p class="muted">
+        Una sola copia en tu cuenta: cada copia nueva sustituye a la anterior. Se hace sola una vez por semana y no cambia aunque luego borres algo, así puedes volver a ella.
+      </p>
+      <p class="backup-line" id="cbl">${raw(line)}</p>
+      <div class="grid-2">
+        <button class="primary" data-a="cloudBackupSave"${cloudBusy ? ' disabled' : ''}>Guardar ahora</button>
+        <button data-a="cloudBackupRestore"${cloudBusy ? ' disabled' : ''}>Restaurar</button>
+      </div>
+    </div>`;
 };
 /** «Borrar todos los datos» (profile/home): también la copia de la nube. */
 export const wipeCloudBackup = async () => {
@@ -144,13 +161,13 @@ const saveNow = async (old) => {
   cloudBusy = 1;
   const l = $('#cbl');
   if (l)
-    l.textContent = 'Guardando…';
+    l.textContent = tr('Guardando…');
   try {
     await writeCloudBackup(old);
     toast('Copia guardada en la nube');
   }
   catch (e) {
-    toast(e.code == 'NETWORK' ? 'Sin conexión: guarda la copia cuando vuelvas a tener internet' : e.code == 'TOO_BIG' ? 'La copia es demasiado grande para la nube: guárdala en un archivo' : 'No se ha podido guardar la copia (' + (e.code || 'error') + ')');
+    toast(e.code == 'NETWORK' ? 'Sin conexión: guarda la copia cuando vuelvas a tener internet' : e.code == 'TOO_BIG' ? 'La copia es demasiado grande para la nube: guárdala en un archivo' : say `No se ha podido guardar la copia (${e.code || 'error'})`);
   }
   finally {
     cloudBusy = 0;
@@ -170,14 +187,16 @@ A.cloudBackupSave = async () => {
   }
   catch (e) {
     cloudBusy = 0;
-    toast(e.code == 'NETWORK' ? 'Sin conexión: guarda la copia cuando vuelvas a tener internet' : 'No se ha podido leer la copia de la nube (' + (e.code || 'error') + ')');
+    toast(e.code == 'NETWORK' ? 'Sin conexión: guarda la copia cuando vuelvas a tener internet' : say `No se ha podido leer la copia de la nube (${e.code || 'error'})`);
     return;
   }
   cloudBusy = 0;
   const c = dataCounts();
   if (old && shrinks(old.data, c)) {
     pendingOld = old;
-    confirmDialog('¿Sustituir la copia de la nube?', html`La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. Solo hay una copia: la de ahora sustituirá a esa.`, 'cloudBackupSaveConfirmed', 'Sustituir');
+    confirmDialog('¿Sustituir la copia de la nube?', html`
+      La copia del ${backupDate(old.data.at, 1)} tiene ${plural(+old.data.lg || 0, 'entreno', 'entrenos')} y ${plural(+old.data.md || 0, 'día', 'días')} de comidas; este móvil, ${c.lg} y ${c.md}. Solo hay una copia: la de ahora sustituirá a esa.
+    `, 'cloudBackupSaveConfirmed', 'Sustituir');
     return;
   }
   saveNow(old);
@@ -195,7 +214,7 @@ A.cloudBackupRestore = async () => {
       toast('Aún no hay ninguna copia en la nube');
   }
   catch (e) {
-    toast(e.code == 'NETWORK' ? 'Sin conexión: para restaurar la copia de la nube hace falta internet' : e.code == 'DAMAGED' ? 'La copia de la nube está incompleta: no se puede restaurar' : 'No se ha podido bajar la copia (' + (e.code || 'error') + ')');
+    toast(e.code == 'NETWORK' ? 'Sin conexión: para restaurar la copia de la nube hace falta internet' : e.code == 'DAMAGED' ? 'La copia de la nube está incompleta: no se puede restaurar' : say `No se ha podido bajar la copia (${e.code || 'error'})`);
   }
   finally {
     cloudBusy = 0;

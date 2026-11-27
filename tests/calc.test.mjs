@@ -208,9 +208,16 @@ test('unitFromName y measuredInReps: en qué se mide un ejercicio por su nombre'
   assert.deepEqual(C.unitFromName('Plancha con arrastre de peso'), { u: 's', rg: [40, 40] });
   assert.equal(C.unitFromName('Press banca'), null);
   assert.equal(C.unitFromName('Remo con barra'), null); // «Remo continuo» sí, «Remo con barra» no
+  // las pruebas de Hyrox que no llevan la distancia en el nombre: la de la prueba (los otros trineos y acarreos, como antes)
+  assert.deepEqual(C.unitFromName('Sled push'), { u: 'm', rg: [50, 50] });
+  assert.deepEqual(C.unitFromName('Sled pull'), { u: 'm', rg: [50, 50] });
+  assert.deepEqual(C.unitFromName('Farmers carry'), { u: 'm', rg: [200, 200] });
+  assert.deepEqual(C.unitFromName('Burpee broad jump'), { u: 'm', rg: [80, 80] });
+  for (const n of ['Sled push pesado', 'Farmers carry con kettlebell', 'Wall balls', 'constructor', 'toString'])
+    assert.equal(C.unitFromName(n), null, n);
   for (const n of ['Press banca', 'Sentadilla', 'Curl martillo', 'Mi ejercicio'])
     assert.equal(C.measuredInReps(n), true, n);
-  for (const n of ['Sled push 50 m', 'Farmers carry 200 m', 'Farmers hold', 'Plancha', 'Cinta'])
+  for (const n of ['Sled push 50 m', 'Farmers carry 200 m', 'Sled push', 'Farmers carry', 'Farmers hold', 'Plancha', 'Cinta'])
     assert.equal(C.measuredInReps(n), false, n);
 });
 

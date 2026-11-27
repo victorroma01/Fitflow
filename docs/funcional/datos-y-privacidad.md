@@ -1,15 +1,37 @@
 # Datos y privacidad
 
+La app trae su **Política de privacidad** y su **Aviso legal** (Ajustes → Información, y en el inicio de sesión, sin tener
+cuenta), en español y en inglés; si no dicen lo mismo, vale el español. Esta página cuenta cómo funciona; los textos que valen
+son esos.
+
+## Condiciones y consentimiento
+
+Desde la V1.0.4:
+
+- **Para crear una cuenta** hay que marcar dos casillas, que salen sin marcar: «Tengo 16 años o más y acepto las Condiciones de
+  uso» y «Acepto el tratamiento de mis datos de salud por StrataFit según el Consentimiento informado». Sin las dos no se crea.
+  Cada casilla enlaza su texto entero: el Aviso legal y el **consentimiento informado**, que explica qué datos de salud son
+  (entrenos, comidas, medidas, peso…), para qué se usan, quién los ve, qué pasa si no lo das y cómo retirarlo.
+- **Con una cuenta que ya tenías**, la app te lo pide una vez, al abrirla: hasta aceptarlo no enseña tus datos ni sincroniza. Si
+  prefieres no aceptar, desde esa pantalla puedes exportar una copia, borrar tus datos, eliminar la cuenta o cerrar la sesión.
+- **Qué queda anotado**: qué aceptaste, qué versión del texto y cuándo. Nada más. Lo ves en Privacidad → Tus datos.
+- **Retirar el consentimiento** (Privacidad → Tus datos): la app deja de tratar tus datos de salud y, como no funciona sin
+  ellos, los borra del móvil y de tu cuenta; en tus otros móviles se borran en cuanto abren la app con conexión. Tu usuario
+  se queda; si vuelves a darlo, empiezas de cero.
+- Si un texto cambia de forma que haya que aceptarlo otra vez, la app lo pedirá al abrirla.
+
 ## Qué se guarda y dónde
 
-- **Tu cuenta es un usuario y una contraseña.** No se guarda ningún dato personal: ni nombre, ni correo, ni teléfono. Las fotos de
+- **Tu cuenta es un usuario y una contraseña.** No se pide nada que te identifique: ni nombre, ni correo, ni teléfono. Las fotos de
   progreso de la serie de prueba desaparecieron con la V1.0.0.
 - **En el móvil y en tu cuenta.** Entrenos, comidas, medidas, programas y ajustes se guardan en el móvil (la app abre al instante y
   funciona sin conexión) y, cuando hay internet, en tu cuenta en la nube: Firebase, de Google. Los datos de la app están en sus
   servidores de Madrid; el usuario y la contraseña (cifrada) los guarda Firebase Authentication.
 - **Solo tu cuenta los lee.** Las reglas del servidor no dejan que otra cuenta lea ni escriba los tuyos.
-- **El administrador** ve de cada cuenta el usuario, el sexo, la fecha de alta y las preferencias de la app (aspecto, unidades, sonido
-  y si ya viste el recorrido); nunca tus entrenos, tus comidas, tus medidas, tu foto ni tu copia de seguridad.
+- **El administrador** ve de cada cuenta el usuario, el sexo, la fecha de alta, las preferencias de la app (aspecto, unidades, sonido
+  y si ya viste el recorrido) y lo que has aceptado, con su fecha; nunca tus entrenos, tus comidas, tus medidas, tu foto ni tu
+  copia de seguridad. Tampoco tu contraseña; la única que ve, durante 24 horas, es la temporal que él mismo crea si olvidas la
+  tuya, y hay que cambiarla al entrar.
 - **El sistema del móvil**: desde la V1.0.1, tu cuenta guarda también el del último móvil con el que abriste la app (iPhone, Android
   u otro), solo a efectos estadísticos: el administrador ve cuántas cuentas usan cada uno. Sí ve los fallos y
   sugerencias que le envías: tu usuario, el texto y, si los adjuntas, los datos técnicos.
@@ -33,9 +55,10 @@ técnicos de la conexión (por ejemplo, la dirección IP).
 
 - **Solo su propio código**: una política de seguridad impide que la página ejecute código que no sea el de la app y que se conecte a
   otro sitio que no sean ella misma, Firebase y Open Food Facts. Desde la V1.0.2, tampoco usa estilos escritos dentro de la página.
-- **Solo la app usa el servidor** (App Check, preparado en la V1.0.2 y apagado hasta que el administrador lo active): un programa no
-  puede crear cuentas ni gastar la cuota de Firebase. Cuando está activo, al entrar y al sincronizar se usa reCAPTCHA Enterprise de
-  Google, invisible (sin preguntas), y el inicio de sesión y Ajustes → Privacidad lo dicen.
+- **Solo la app usa el servidor** (App Check, preparado en la V1.0.2 y puesto en marcha con la V1.0.3): al entrar y al
+  sincronizar se usa reCAPTCHA Enterprise de Google, invisible (sin preguntas), y el inicio de sesión y Ajustes → Privacidad lo
+  dicen. El servidor aún no lo exige: cuando el administrador compruebe que las peticiones llegan verificadas y lo active, un
+  programa ya no podrá crear cuentas ni gastar la cuota de Firebase.
 - **Contraseñas**: 8 caracteres o más; tras cinco fallos seguidos hay que esperar antes de volver a probar, y Firebase bloquea un rato
   los intentos repetidos. Una contraseña temporal (la que da el administrador si olvidas la tuya) hay que cambiarla al entrar.
 - **Copias automáticas**: cada día se guarda una copia en el móvil (las 7 últimas), útil para deshacer un error propio.
@@ -48,10 +71,30 @@ técnicos de la conexión (por ejemplo, la dirección IP).
   del móvil no se pueden leer, la app no guarda ni sincroniza nada hasta poder leerlos y ofrece «Reintentar» y «Bajar de mi
   cuenta».
 
+## Tus datos, en Privacidad
+
+Con la sesión abierta, la pantalla de Privacidad termina con **Tus datos**: qué aceptaste y cuándo, y cinco filas.
+
+- **Exportar una copia**: lleva a Copia de seguridad, donde se guarda el archivo con todo lo tuyo.
+- **Contactar sobre privacidad**: un aviso al responsable, dentro de la app, con el tipo «Privacidad y datos» (para ejercer tus
+  derechos o preguntar). La respuesta llega a Perfil → Fallos y sugerencias.
+- **Retirar el consentimiento**, **Borrar todos los datos** y **Eliminar cuenta**: abajo.
+
 ## Borrar
 
-- **Cerrar sesión** borra los datos de la cuenta de este móvil; siguen en tu cuenta.
-- **Borrar todos los datos** (Ajustes) los borra del móvil y de tu cuenta, también la copia de seguridad de la nube; tu usuario se
-  queda. Los fallos y sugerencias enviados se quedan con el administrador.
+Son cuatro cosas distintas:
+
+| | Qué borra | Qué queda |
+| --- | --- | --- |
+| **Cerrar sesión** | Los datos de la cuenta en este móvil | Todo en tu cuenta: vuelve al entrar |
+| **Borrar todos los datos** (Ajustes) | Programas, entrenos, comidas, medidas y peso, del móvil y de la cuenta; la foto, el sexo del perfil, la copia de seguridad de la nube y las copias automáticas del móvil | Tu usuario, las preferencias de la app, lo que aceptaste y los avisos que enviaste |
+| **Retirar el consentimiento** (Privacidad) | Lo mismo | Tu usuario, sin datos: la app no guarda nada hasta que lo vuelvas a dar |
+| **Eliminar cuenta** (Ajustes → Cuenta, o Privacidad) | Todo: lo anterior, tu usuario, lo que aceptaste y los avisos que enviaste | Nada. Los archivos que hayas exportado siguen donde los guardaste |
+
+Las tres últimas necesitan conexión y no se pueden deshacer. **Eliminar cuenta** pide tu contraseña y una confirmación; si tienes
+la sesión abierta en otro móvil, ese dirá que la cuenta ya no existe y, al cerrar la sesión, borrará lo que le quedaba.
+
+**Una cuenta que lleva dos años sin usarse se elimina sola**, con todos sus datos. Basta abrir la app con conexión para que
+cuente como usada.
 
 El detalle técnico está en [Servidor: Firebase](../tecnica/backend.md).

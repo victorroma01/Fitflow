@@ -8,6 +8,7 @@
    S.rotationWeek: semana de la última rotación (o del inicio del plan) · S.rotationPostponed: semana en que se dijo «Ahora no».
    Define: ROTATE_EVERY, HOME_EQUIP, cycleOf, equipOf, rotatedName, rotationChanges, rotationDue, rotationCard, rotationSheet  · acciones/registros: 3
 */
+import { say } from '../core/i18n.js';
 import { toast } from '../core/toast.js';
 import { A } from '../core/registry.js';
 import { EXERCISES } from '../data/library.js';
@@ -61,15 +62,38 @@ const rotationDue = () => {
   return !W && S.week - from >= (ROTATE_EVERY[S.level] || 5) && S.rotationPostponed != S.week && !isDeloadWeek(S.week) && rotationChanges().length > 0;
 };
 /** Tarjeta de Workout que propone la rotación cuando toca. */
-export const rotationCard = () => rotationDue() ? html`<div class="cd rtc"><b>Toca rotar los ejercicios</b><div class="mu">Llevas ${raw(S.week - (S.rotationWeek > 0 && S.rotationWeek <= S.week ? S.rotationWeek : 1))} semanas con los mismos accesorios. Cambiarlos por otra variante del mismo movimiento sigue estimulando el músculo; los básicos se quedan para que veas tu progreso.</div><div class="g2"><button data-a="rotationNotNow">Ahora no</button><button class="pr" data-a="rotationShow">Ver cambios</button></div></div>` : '';
+export const rotationCard = () => rotationDue() ? html`
+  <div class="card rotation-card">
+    <b>Toca rotar los ejercicios</b>
+    <div class="muted">
+      Llevas ${raw(S.week - (S.rotationWeek > 0 && S.rotationWeek <= S.week ? S.rotationWeek : 1))} semanas con los mismos accesorios. Cambiarlos por otra variante del mismo movimiento sigue estimulando el músculo; los básicos se quedan para que veas tu progreso.
+    </div>
+    <div class="grid-2">
+      <button data-a="rotationNotNow">Ahora no</button>
+      <button class="primary" data-a="rotationShow">Ver cambios</button>
+    </div>
+  </div>` : '';
 /** Hoja con lo que cambia al rotar y el botón para hacerlo. */
 const rotationSheet = () => {
   const ch = rotationChanges();
   if (!ch.length)
-    return html`<h3>Rotar ejercicios</h3><p class="mu">Este plan no tiene ejercicios con otra variante para rotar.</p>`;
+    return html`<h3>Rotar ejercicios</h3><p class="muted">Este plan no tiene ejercicios con otra variante para rotar.</p>`;
   const by = {};
   ch.forEach(c => (by[c.d] = by[c.d] || []).push(c));
-  return html`<h3>Rotar ejercicios</h3><p class="mu m-0-0-10">${raw(ch.length)} ${ch.length == 1 ? 'accesorio cambia' : 'accesorios cambian'} por otra variante del mismo movimiento, con las mismas series, repeticiones y descanso.</p>${Object.keys(by).map(d => html`<div class="cd rtd"><b>${S.plan[d].n}</b>${by[d].map(c => html`<div class="mu">${S.plan[d].ex[c.i].n} → <b>${c.n}</b></div>`)}</div>`)}<div class="g2 mt-12"><button data-a="rotationNotNow">Ahora no</button><button class="pr" data-a="rotationApply">Rotar</button></div>`;
+  return html`
+    <h3>Rotar ejercicios</h3>
+    <p class="muted m-0-0-10">
+      ${raw(ch.length)} ${ch.length == 1 ? 'accesorio cambia' : 'accesorios cambian'} por otra variante del mismo movimiento, con las mismas series, repeticiones y descanso.
+    </p>
+    ${Object.keys(by).map(d => html`
+      <div class="card rotation-day">
+        <b>${S.plan[d].n}</b>
+        ${by[d].map(c => html`<div class="muted">${S.plan[d].ex[c.i].n} → <b>${c.n}</b></div>`)}
+      </div>`)}
+    <div class="grid-2 mt-12">
+      <button data-a="rotationNotNow">Ahora no</button>
+      <button class="primary" data-a="rotationApply">Rotar</button>
+    </div>`;
 };
 /* — manejadores de esta función (registros A / C / U) — */
 A.rotationShow = () => sheet(rotationSheet());
@@ -97,5 +121,5 @@ A.rotationApply = () => {
   saveState();
   sheet();
   R();
-  toast(ch.length ? 'Ejercicios rotados: ' + ch.length + (ch.length == 1 ? ' cambio' : ' cambios') : 'No hay nada que rotar');
+  toast(ch.length ? say `Ejercicios rotados: ${ch.length}${ch.length == 1 ? ' cambio' : ' cambios'}` : 'No hay nada que rotar');
 };

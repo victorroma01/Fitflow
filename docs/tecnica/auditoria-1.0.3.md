@@ -119,7 +119,7 @@ L2 solo se pudo ver en el WebKit de GitHub, y X6 se dedujo del código (la regla
 | X6 | Baja | El aviso del icono nuevo (iPhone) podía abrirse encima del temporizador de un WOD en marcha. | Lo que sale solo (el recorrido, el aviso del icono y el de espacio) espera con una misma regla a que no haya nada delante (`appBusy`). |
 | R1 | Baja | Con 700 entrenos, Registros tardaba 115 ms en abrirse en el ordenador de desarrollo (en un iPhone, del orden de medio segundo): cada fecha creaba su formato (`toLocaleDateString`), dos por entreno. El Dashboard calculaba en cada pintado el lunes de la semana de cada entreno. | Los formatos de fecha se reutilizan (`fmtDate`) y el lunes de cada día se recuerda (`mondayKey`): Registros, 35 ms; el Dashboard, un 30 % menos (de 6,1 a 4,3 ms). El HTML que sale es idéntico. |
 | L1 | Media | En la app instalada, si fallaba la descarga de una parte que se carga al usarla (WOD, CSV, análisis, PDF, escáner), Chrome recordaba el fallo mientras durase la página: no se podía volver a intentar sin cerrar la app. Y mientras se descargaba no se decía nada. | Se reintenta con otra dirección (`core/lazy`: `lazyLoad`), y dice «Cargando…» si tarda más de medio segundo. |
-| L2 | Baja | En WebKit (el motor de Safari), el texto de la opción elegida de un desplegable cuenta como contenido que se sale si es más ancho que el desplegable. El desplegable corto del entreno (Tempo) mide 97 px y lleva encima, transparente, un `select` con textos como «2/2/2/0 · Pausa en la contracción»: en las pruebas con WebKit, la página del entreno medía 446 px de ancho en móviles de 320 a 430 y se podía desplazar de lado. Visto solo en el WebKit de Linux que usan las pruebas; en un iPhone no se ha podido mirar (y nadie lo ha notado). | El desplegable corto recorta a lo ancho lo que se sale de él (`.psel`, `overflow-x: clip`). Mismo HTML y mismas capturas. La prueba dice ahora qué elemento ensancha la página aunque no tenga caja propia. |
+| L2 | Baja | En WebKit (el motor de Safari), el texto de la opción elegida de un desplegable cuenta como contenido que se sale si es más ancho que el desplegable. El desplegable corto del entreno (Tempo) mide 97 px y lleva encima, transparente, un `select` con textos como «2/2/2/0 · Pausa en la contracción»: en las pruebas con WebKit, la página del entreno medía 446 px de ancho en móviles de 320 a 430 y se podía desplazar de lado. Visto solo en el WebKit de Linux que usan las pruebas; en un iPhone no se ha podido mirar (y nadie lo ha notado). | El desplegable corto recorta a lo ancho lo que se sale de él (`.chip-select`, `overflow-x: clip`). Mismo HTML y mismas capturas. La prueba dice ahora qué elemento ensancha la página aunque no tenga caja propia. |
 
 ### Comprobado y correcto
 
@@ -190,7 +190,10 @@ L2 solo se pudo ver en el WebKit de GitHub, y X6 se dedujo del código (la regla
 
 La V1.0.3 se publicó el 16-11-2026, con todas hechas y la confirmación del propietario, que la probó ese día en su iPhone
 ([resultado](pruebas.md#la-v103-en-el-iphone-del-propietario)). Esa prueba encontró un fallo que las automáticas no veían (sin
-conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la V1.0.31, publicada también ese día.
+conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco figuras por pulir, que son su primera revisión, la
+V1.0.31, publicada también ese día y comprobada en el mismo iPhone. La segunda, la V1.0.32, cierra el pendiente 7 (el nombre
+del botón que guarda el entreno), pasa las cuentas al [dominio del proyecto](backend.md#el-dominio-de-las-cuentas) y pone el
+fondo del inicio de sesión (F-33), que estaba pospuesto.
 
 | Fase | Estado | Hecho | Falta |
 | --- | --- | --- | --- |
@@ -213,11 +216,12 @@ conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco
 | 4 | App Check (I-05): configurado el 16-11-2026 (la clave de reCAPTCHA Enterprise y la app web, registrada en Firebase) y **sin exigir**. Falta, con la versión ya en los móviles, comprobar en la consola que las peticiones salen verificadas y entonces exigirlo. | Es un paso del propietario en la consola de Firebase ([cómo](backend.md#activar-app-check)); exigirlo antes de tiempo dejaría fuera a quien aún no tenga la versión nueva. |
 | 5 | Prueba en un Android de verdad (I-01) y con VoiceOver en un iPhone. | No hay dispositivos en este entorno. |
 | 6 | Editar una serie de un entreno ya guardado (hoy se borra el entreno entero con sus series). | Función nueva: cambia el historial, los récords y la sincronización; mejor en una versión propia. |
-| 7 | «Log out», el botón que guarda el entreno, puede confundirse con cerrar la sesión de la cuenta. | Es un cambio de nombre visible en la pantalla principal del entreno: decisión del propietario. |
+| 7 | ~~«Log out», el botón que guarda el entreno, puede confundirse con cerrar la sesión de la cuenta.~~ | Hecho en la V1.0.32, por decisión del propietario: se llama «Guardar entreno», en el botón y en los textos que lo nombran. |
 | 8 | ~~Alertas de Dependabot.~~ | Activadas por el propietario el 16-11-2026. Avisan por correo de fallos de seguridad conocidos en las herramientas de compilar y probar; la app publicada no lleva librerías de terceros. |
 | 9 | Las filas de la lista de alimentos miden 35 px de alto: cumplen el mínimo de accesibilidad (24 px), no los 44 px que recomienda Apple. | Subirlas a 44 px deja ver menos alimentos por pantalla (de unos 14 a 11): es un cambio de diseño, decisión del propietario. |
 | 10 | Quedan 24 líneas de más de 800 caracteres en las vistas. | Son texto de la app o dibujos SVG en una sola línea: partirlas no las hace más claras. |
 | 11 | `tests/deploy.py`: de tarde en tarde, una recarga con service worker no termina en Chromium (I-13); la prueba vuelve a abrir la dirección y lo anota. | Sin reproducir a voluntad: salió una vez en esta auditoría, en un guion aparte. No se ha visto en la app de verdad. |
+| 12 | Quitar de las reglas de Firestore y de la app el dominio anterior del correo técnico de las cuentas (`stratafit.app`). | Hasta que todas las cuentas estén pasadas al de ahora ([cómo](backend.md#el-dominio-de-las-cuentas)), las que queden entran con él. |
 
 ## Limitaciones técnicas
 
@@ -244,9 +248,26 @@ conexión, con App Check, la app no arrancaba), corregido el mismo día, y cinco
 1. Estadísticas avanzadas sobre `core/calc`: volumen por grupo muscular y por semana, y progresión de cada ejercicio.
 2. Planificación semanal de comidas a partir de las plantillas y de la semana.
 3. Exigir App Check (ya configurado) antes de abrir la app a más gente, cuando la consola enseñe las peticiones verificadas.
-4. Editar las series de un entreno guardado (pendiente 6) y decidir el nombre de «Log out» (pendiente 7).
+4. Editar las series de un entreno guardado (pendiente 6).
 5. Repetir la lista de comprobación en un iPhone y un Android de verdad en cada versión, y una pasada con VoiceOver.
 6. Probar cada versión actualizando desde la anterior publicada, no solo desde sí misma: `tests/deploy.py` ya lo hace desde el
    service worker de la V1.0.2 (`tests/sw-anterior.js`); cuando el service worker vuelva a cambiar, añadir el de la V1.0.3.
 7. Mantener el trabajo de Firefox aunque nadie use la app con él: un tercer motor encuentra lo que depende de casualidades de
    los otros dos (SW1 llevaba dos versiones publicado).
+
+## Repaso de la V1.0.32
+
+Antes de añadir las portadas nuevas, a petición del propietario: el código y su comprobación estática (`tools/check.js`), lo que
+quedaba de parches sobre lo ya definido, la portada de cada día de los siete programas, el contraste del texto sobre cada
+portada, el rendimiento contra la V1.0.31 publicada y la batería entera, en local y en GitHub Actions.
+
+| Qué se miró | Qué salió | Qué se hizo |
+| --- | --- | --- |
+| La portada de cada día de los programas | Los tres días de Full Body y dos de Glúteo y pierna («Glúteo (fuerza)», «Glúteo e isquios») no llevaban ninguna: su nombre no encajaba con ninguna regla. Son los dos programas que la app recomienda a las mujeres. | Los de glúteo, la de isquios y glúteos; un día cuyo nombre no dice nada, la de su primer ejercicio (`workout/images`). |
+| El texto de la tarjeta del día sobre cada portada (hasta ahora solo se medía la de pecho, la de los datos de prueba) | Sobre la de espalda, el nombre del día se quedaba en 1,77:1 (pide 3:1); sobre las nuevas más claras, entre 2,4 y 2,8:1. | La tarjeta se oscurece más arriba (del 13 % al 47 %): pasan las 22 portadas, de hombre y de mujer (`tests/covers.py`). |
+| Parches sobre lo ya definido | Tres: las reglas de las portadas (se les añadían después reglas repetidas), sus nombres y sus grupos (se completaban después) y los programas añadidos en versiones posteriores (Híbrido, Full Body, Glúteo y pierna). | En su sitio y con el mismo contenido: los programas, comparados antes y después. |
+| Marcas olvidadas y temporizadores | Ninguna marca (TODO, FIXME, `console.log`); cada `setInterval` tiene su `clearInterval`. | — |
+| Dos días de una semana con la misma portada (lo vio el propietario: el Full Body A y el C empiezan los dos por pierna) | Un día cuyo nombre no dice nada llevaba siempre la de su primer ejercicio. | La del primero que no lleve ya otro día así de la semana; los días se reparten por orden alfabético, así que cada uno lleva siempre la misma. |
+| En qué se va el tiempo, con el perfil de CPU de Chromium y años de datos | Mirar qué hay que subir (en cada sincronización) se iba casi todo en recalcular la huella de cada elemento, aunque no hubiera cambiado. Buscar un ejercicio por su nombre juntaba la biblioteca con los propios y la recorría entera, en doce sitios, una vez por fila en las listas y las figuras. El buscador de la Librería volvía a quitar las tildes de los 551 ejercicios en cada letra. | La huella se recuerda con el texto del elemento (la mitad de tiempo); un índice por nombre (`exByName`); el texto de búsqueda de la biblioteca, una vez. El HTML de 106 pantallas, igual antes y después (`tests/samehtml.py`). |
+| Rendimiento | Lo demás, igual que la V1.0.31 ([Rendimiento](rendimiento.md#medido-en-la-v1032)). | — |
+| Las fotos | Las nuevas, en WebP, pesan unos 10 KB cada una. Las de antes, en JPEG, apenas bajan pasadas a WebP (176 KB → 158 KB) y perderían calidad al volver a comprimirse. | Las nuevas, en WebP; las de antes, como estaban. |

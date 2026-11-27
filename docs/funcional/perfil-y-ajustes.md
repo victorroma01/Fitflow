@@ -23,13 +23,13 @@ Página propia, ordenada por secciones. Cada fila abre su página, con «←» p
 
 | Sección | Filas |
 | --- | --- |
-| Cuenta | **Cuenta** (usuario, tipo de cuenta, sincronización y Cambiar contraseña) y **Sincronización** (su estado; al tocarla, sincroniza). |
-| Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico; reducir animaciones), **Color de acento** y **Al abrir la app** ([abajo](#apariencia)). |
+| Cuenta | **Cuenta** (usuario, tipo de cuenta, sincronización, Cambiar contraseña y [Eliminar cuenta](cuenta.md#eliminar-cuenta)) y **Sincronización** (su estado; al tocarla, sincroniza). |
+| Apariencia | **Tema y estilo** (claro, oscuro o automático; estilo Cristal o Clásico; reducir animaciones), **Color de acento**, **Al abrir la app** ([abajo](#apariencia)) e **Idiomas** ([abajo](#idiomas)). |
 | Entreno | **Unidades de carga** (kg o lb: cambia los pesos, los discos, el volumen y los récords, también en el análisis mensual y su PDF; el peso corporal sigue en kg) y **Sonido y avisos** (sonidos del descanso, vibración y, en iPhone, el [globo en el icono](experiencia.md#globo-en-el-icono-iphone)). |
 | Datos | **Copia de seguridad** y **Borrar todos los datos**. |
 | App | **Actualizaciones** (comprueba si hay versión nueva), **Ver nota de actualización** (los cambios de la versión instalada; debajo, un «Cerrar» pequeño, gris y subrayado, la cierra), **El icono nuevo** (solo en un iPhone que aún tiene el icono de antes del logo nuevo: [cómo cambiarlo](experiencia.md#logo-e-icono)), **Ver el recorrido** (el de la [primera vez](experiencia.md#recorrido-de-la-primera-vez)), **Diagnóstico** (versión, dispositivo, lo que ocupa cada dato y dónde está, el espacio usado, errores registrados y el **tiempo de pintado**: lo que tarda en verse cada pantalla, para comparar, por ejemplo, un color de serie con uno propio) e **Informar de un fallo**. |
 | Ajustes avanzados | **Esfuerzo (RPE)**: registrar lo dura que ha sido cada serie, del 6 al 10. Viene desactivado; al activarlo, una ventana explica con dibujos la escala, cómo se marca y para qué lo usa la app (la semana de descarga y el análisis mensual). **¿Qué es el RPE?** la vuelve a enseñar. Desactivarlo no borra lo ya anotado. |
-| Información | **Privacidad** y **Aviso legal** (copyright, licencia, aviso de salud y origen de los datos de Open Food Facts). Desde la V1.0.1, el aviso legal dice que el uso es gratuito durante la fase de pruebas y que en ella existe el riesgo de pérdida total o parcial de datos. |
+| Información | **Privacidad** y **Aviso legal** ([abajo](#privacidad-y-aviso-legal)). |
 
 Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesión)).
 
@@ -45,15 +45,57 @@ Al final, aparte y en rojo, **Cerrar sesión** ([Cuenta](cuenta.md#cerrar-sesió
 - **Tema y estilo**: tema claro, oscuro o automático (el del móvil); estilo Cristal (con tres intensidades) o Clásico; y **Reducir
   animaciones**, para que las páginas y ventanas aparezcan sin deslizarse (si el móvil tiene «Reducir movimiento», la app ya lo hace).
   Con cualquier combinación de tema, estilo y color, todo texto tiene el contraste que pide la norma de accesibilidad (WCAG AA):
-  con Cristal, el texto gris es algo más claro en el tema oscuro y más oscuro en el claro, para leerse sobre el vidrio.
+  con Cristal, el texto gris es algo más claro en el tema oscuro y más oscuro en el claro, para leerse sobre el vidrio. El fondo
+  es liso con cualquier estilo y color: negro en el tema oscuro y gris muy claro en el claro (hasta la V1.0.32, con Cristal
+  llevaba detrás un brillo del color de acento).
 - **Al abrir la app**: la pestaña con la que se abre StrataFit: la última que usaste (lo de siempre) o una fija (Workout, Nutrición,
   Dashboard o Perfil).
 
 El tema, el color, el estilo, las animaciones y la pestaña al abrir van con tu cuenta: salen igual en tus otros móviles.
 
-**Borrar todos los datos** borra tus programas, entrenos, comidas, medidas y peso del móvil y de tu cuenta, y la copia de seguridad
-de la nube (tu usuario se queda).
-Necesita conexión: sin ella no borra nada, porque la siguiente sincronización los volvería a traer de la cuenta.
+### Idiomas
+
+StrataFit está en **español** y en **inglés** (desde la V1.0.4). Sin elegir nada sale en el idioma del móvil: en inglés si el
+móvil está en inglés y, si no, en español (con varios idiomas en el móvil, manda el primero de ellos que sea español o inglés).
+En **Ajustes → Idiomas** se elige **Automático** (el del móvil), **Español** o **English**; al cambiarlo, la app se recarga en
+ese idioma. La elección es de cada móvil: no va con la cuenta, y se conserva al cerrar sesión.
+
+En inglés está todo: las pantallas, los 529 ejercicios con sus consejos y su «Cómo se hace», los alimentos, los programas, los
+logros, la nota de cada versión, los avisos, los CSV (con coma y punto decimal), el PDF del análisis mensual, la imagen para
+compartir un entreno y los accesos directos del icono. Las fechas van como se escriben en inglés. El buscador de ejercicios y
+el de alimentos encuentran por el nombre en inglés y por el español.
+
+Los números con decimales van con punto en los dos idiomas y en toda la app (62.5 kg, 1.5 veces por semana), también en el
+análisis mensual y su PDF, y sin separador de miles. Se pueden escribir con punto o con coma. Solo los CSV en español llevan
+coma decimal, la que espera Excel en español.
+
+Lo que escribes tú se queda como lo escribiste: los nombres de tus workouts, programas, platos y ejercicios propios, y tus notas.
+Tus datos son los mismos en los dos idiomas: lo guardado con la app en español se ve en inglés al cambiar, y al revés. Se queda
+en español el **informe de Diagnóstico** (y los datos técnicos que acompañan a un fallo que envías), que es para quien arregla
+la app.
+
+**Borrar todos los datos** borra tus programas, entrenos, comidas, medidas y peso del móvil y de tu cuenta, con tu foto, el sexo
+del perfil, la copia de seguridad de la nube y las copias automáticas del móvil (tu usuario y las preferencias de la app se
+quedan). Necesita conexión: sin ella no borra nada, porque la siguiente sincronización los volvería a traer de la cuenta. No es
+lo mismo que retirar el consentimiento ni que eliminar la cuenta: [las diferencias](datos-y-privacidad.md#borrar).
+
+### Privacidad y aviso legal
+
+Los dos textos, nuevos en la V1.0.4, se leen en Ajustes → Información y, sin tener cuenta, desde el inicio de sesión. Cada uno
+dice su fecha y su versión, y se cruzan con enlaces. En inglés llevan un aviso arriba: son una traducción y, si no dicen lo
+mismo, vale el español. Cada uno tiene además su dirección, para enlazarlo desde fuera: la de la app con `?a=privacidad` o
+`?a=aviso-legal` al final (se abren con sesión o sin ella). Hay un tercero, el **consentimiento informado** para los datos de
+salud: se abre desde la segunda casilla de crear la cuenta, desde la Política de privacidad, desde **Leer el consentimiento**
+en Tus datos y con `?a=consentimiento`.
+
+- **Privacidad** empieza con un resumen en seis tarjetas (los datos imprescindibles, la protección, dónde se guardan, sin
+  publicidad, el escáner y tu control) y **Leer la política completa** baja al texto entero, con su índice: cada apartado se abre desde él y **Volver
+  arriba** vuelve. Con la sesión abierta termina con **Tus datos**: qué aceptaste y cuándo, y Exportar una copia, Contactar
+  sobre privacidad, Retirar el consentimiento, Borrar todos los datos y Eliminar cuenta
+  ([Datos y privacidad](datos-y-privacidad.md#tus-datos-en-privacidad)).
+- **Aviso legal**: quién hace la app, las condiciones de uso (16 años o más; gratis y sin pagos durante la fase de pruebas, con
+  el riesgo de pérdida de datos que tiene), el aviso de salud, la propiedad intelectual y la licencia, y el origen de los datos
+  de alimentos (Open Food Facts).
 
 ### Copia de seguridad
 
@@ -70,8 +112,9 @@ momento, que no cambia aunque luego borres algo, para volver a ella.
 
 ### Informar de un fallo
 
-Eliges si es un **fallo** o una **sugerencia de mejora**; en un fallo, si quieres, dónde ha sido («No arranca o se cierra», «Un
-cálculo no cuadra»…). Lo explicas con tus palabras (de 10 a 1500 caracteres) y decides si adjuntar los datos técnicos (versión,
+Eliges si es un **fallo**, una **sugerencia de mejora** o, desde la V1.0.4, **privacidad y datos** (para preguntar por tus datos
+o ejercer tus derechos; también se llega con «Contactar sobre privacidad», desde Privacidad); en un fallo, si quieres, dónde ha
+sido («No arranca o se cierra», «Un cálculo no cuadra»…). Lo explicas con tus palabras (de 10 a 1500 caracteres) y decides si adjuntar los datos técnicos (versión,
 navegador y últimos errores; nada personal), que puedes ver antes de enviar. **Enviar** lo manda al administrador dentro de la app;
 sin conexión se guarda en el móvil y se envía solo al volver la red.
 

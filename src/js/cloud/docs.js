@@ -18,21 +18,26 @@ export const PREF_KEYS = ['theme', 'acc', 'acx', 'gm', 'gl', 'gk', 'rm', 'un', '
   apartado durante un workout, fecha de la última copia en archivo, aviso descartado, globo del icono: system/phone), lo que va
   en su propio documento y las preferencias. */
 const LOCAL_ONLY = new Set(['tab', 'sel', 'sl', 'rg', 'pbk', 'bkd', 'nbk', 'bdg', 'pf', 'logs', 'hist', 'meals', ...PREF_KEYS]);
+/** @param {any} d */
 const yearOf = d => typeof d == 'string' && /^\d{4}-/.test(d) ? d.slice(0, 4) : 'otros';
+/** @param {string} d */
 const monthOf = d => /^\d{4}-\d\d-\d\d$/.test(d) ? d.slice(0, 7) : 'otros';
-/** Ruta en Firestore de cada documento: 'core', 'avatar', 'logs:2026', 'hist:2026', 'meals:2026-11'. */
+/** Ruta en Firestore de cada documento: 'core', 'avatar', 'logs:2026', 'hist:2026', 'meals:2026-11'.
+    @param {string} id */
 export const docPath = id => {
   const [k, x] = id.split(':');
-  const u = 'users/' + account.uid;
+  const u = 'users/' + /** @type {Account} */ (account).uid;
   return k == 'core' ? u + '/data/core' : k == 'avatar' ? u + '/private/avatar' : u + '/' + k + '/' + x;
 };
-export const indexPath = () => 'users/' + account.uid + '/data/index';
-export const profilePath = () => 'users/' + account.uid;
+/* (las rutas solo se piden con la sesión abierta) */
+export const indexPath = () => 'users/' + /** @type {Account} */ (account).uid + '/data/index';
+export const profilePath = () => 'users/' + /** @type {Account} */ (account).uid;
 /** Preferencias y sexo de este móvil, como van en el perfil. */
 export const prefsLocal = () => {
+  /** @type {Record<string, any>} */
   const o = {};
   for (const k of PREF_KEYS) {
-    const v = S[stateName(k)];
+    const v = /** @type {StateByKey} */ (S)[stateName(k)];
     if (v !== undefined && v !== null)
       o[k] = v;
   }
@@ -42,6 +47,7 @@ export const prefsLocal = () => {
 /** Lo que va en data/core: S con las claves guardadas, sin lo de LOCAL_ONLY. */
 const coreOf = () => {
   const s = stateToStored(S);
+  /** @type {Record<string, any>} */
   const o = {};
   for (const k of Object.keys(s))
     if (!LOCAL_ONLY.has(k) && s[k] !== undefined)
@@ -51,8 +57,9 @@ const coreOf = () => {
 /** Contenido local de cada documento: { id: valor }. */
 export const localDocs = () => {
   logIds();
+  /** @type {Record<string, any>} */
   const out = { core: coreOf() };
-  if (S.profile && +S.profile.pc > 0 && S.profile.img)
+  if (S.profile && +( /** @type {number} */(S.profile.pc)) > 0 && S.profile.img)
     out.avatar = { img: S.profile.img, pc: S.profile.pc };
   for (const l of S.logs || []) {
     const id = 'logs:' + yearOf(l.d);
@@ -71,22 +78,27 @@ export const localDocs = () => {
   }
   return out;
 };
-/** ¿Tiene el contenido que llega de la nube la forma de su tipo? (lo demás lo deja válido core/repair) */
+/** ¿Tiene el contenido que llega de la nube la forma de su tipo? (lo demás lo deja válido core/repair)
+    @param {string} id
+    @param {any} v */
 export const okType = (id, v) => {
   const k = id.split(':')[0];
+  /** @param {any} x */
   const O = x => x && typeof x == 'object' && !Array.isArray(x);
   return k == 'logs' ? Array.isArray(v) && v.every(l => O(l) && typeof l.id == 'string') : k == 'hist' ? O(v) && Object.values(v).every(Array.isArray) : k == 'meals' ? O(v) && Object.values(v).every(O) : O(v);
 };
-/** Pone en S el resultado de la fusión de un documento. */
+/** Pone en S el resultado de la fusión de un documento.
+    @param {string} id
+    @param {any} v */
 export const applyDoc = (id, v) => {
   const [k, x] = id.split(':');
   if (k == 'core') {
     for (const key of Object.keys(stateToStored(S)))
       if (!LOCAL_ONLY.has(key) && !(key in v))
-        delete S[stateName(key)];
+        delete /** @type {StateByKey} */ (S)[stateName(key)];
     for (const key of Object.keys(v))
       if (!LOCAL_ONLY.has(key))
-        S[stateName(key)] = v[key];
+        /** @type {StateByKey} */ (S)[stateName(key)] = v[key];
   }
   else if (k == 'avatar') {
     if (typeof v.img == 'string' && v.img) {
@@ -118,13 +130,14 @@ export const applyDoc = (id, v) => {
     Object.assign(S.meals, v);
   }
 };
-/** Pone en S las preferencias y el sexo que llegan del perfil (lo que no venga, se quita). */
+/** Pone en S las preferencias y el sexo que llegan del perfil (lo que no venga, se quita).
+    @param {Record<string, any>} p */
 export const applyPrefs = p => {
   for (const k of PREF_KEYS)
     if (k in p)
-      S[stateName(k)] = p[k];
+      /** @type {StateByKey} */ (S)[stateName(k)] = p[k];
     else
-      delete S[stateName(k)];
+      delete /** @type {StateByKey} */ (S)[stateName(k)];
   if (p.sx == 'M' || p.sx == 'F')
     S.biometrics.sex = p.sx;
 };

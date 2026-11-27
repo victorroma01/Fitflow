@@ -2,10 +2,11 @@
    Sugerencias de progresión y autorrelleno de series.
    Define: EXTRA_ROW, setText, stepUp, deloadOf, prefillSets, suggestAfter, progressionOf, differsFromSuggested, suggestionBox, lastTimeLine  · acciones/registros: 1
 */
+import { say } from '../core/i18n.js';
 import { A } from '../core/registry.js';
 import { S, W } from '../core/state.js';
 import { R } from '../core/render.js';
-import { lastHistory, pyramidReps, targetRange, unitOf, weightStep } from './targets.js';
+import { AMRAP, lastHistory, pyramidReps, setReps, targetRange, unitOf, weightStep } from './targets.js';
 import { dropWeight } from './technique.js';
 import { isDeloadWeek } from './deload.js';
 import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
@@ -36,6 +37,9 @@ export function prefillSets(e, a) {
   const main = a.filter(q => !q.t);
   const t = dl ? '' : (e.tk || '').split('+')[0];
   const pyr = t == 'PIR' && !U ? pyramidReps([lo, hi], main.length) : null;
+  /* las repeticiones de cada serie que trae su rutina (entrenos a la carta): las de su serie, y una AMRAP en blanco, para
+     apuntar las que salgan; cada serie, con el peso que llevó la última vez */
+  const per = setReps(e);
   /* pirámide: si la última vez salieron todas las repeticiones de cada serie, sube el peso de cada una */
   const up = !!pyr && hs.length >= pyr.length && pyr.every((r, k) => hs[k][0] >= r && hs[k][1] > 0);
   main.forEach((q, j) => {
@@ -46,6 +50,12 @@ export function prefillSets(e, a) {
     let w = q.w;
     if (U) {
       r = hi;
+      if (l && l[1] > 0)
+        w = l[1];
+    }
+    else if (per) {
+      const x = per[Math.min(j, per.length - 1)];
+      r = x == AMRAP ? '' : +x;
       if (l && l[1] > 0)
         w = l[1];
     }
@@ -65,8 +75,8 @@ export function prefillSets(e, a) {
     if (t == 'MYO' && j > 0)
       r = 4;
     if (dl) {
-      if (!U)
-        r = Math.max(1, r - 2);
+      if (!U && r !== '')
+        r = Math.max(1, +r - 2);
       if (+w > 0)
         w = deloadOf(+w);
     }
@@ -116,7 +126,9 @@ export const suggestAfter = (e, a, j) => {
     tiempo o distancia. */
 function progressionOf(e) {
   const h = lastHistory(e);
-  if (!h || !h.s.length || unitOf(e))
+  /* con repeticiones distintas en cada serie (o AMRAP), no hay un rango con el que comparar: cada serie sale con su peso de
+     la última vez */
+  if (!h || !h.s.length || unitOf(e) || setReps(e))
     return null;
   return progressionRule(h.s, targetRange(e), { step: weightStep(e), lb: usesLb(), deload: W ? !!W.deload : isDeloadWeek(S.week) });
 }
@@ -130,35 +142,47 @@ const suggestionBox = (e, i, P) => {
   if (!W || !W.sets[i])
     return '';
   const u = weightUnit();
-  const ap = P && differsFromSuggested(e, W.sets[i]) ? html`<button class="chip" data-a="applySuggestion" data-i="${i}">Aplicar</button>` : '';
+  const ap = P && differsFromSuggested(e, W.sets[i]) ? html`
+    <button class="chip" data-a="applySuggestion" data-i="${i}">Aplicar</button>` : '';
   /* semana de descarga: lo de esta semana y, entre paréntesis, lo normal (con pesos distintos entre series, en general) */
   if (W.deload) {
     if (!P || unitOf(e))
-      return html`<div class="sgb dlsg"><span><b>Descarga</b> · peso al 65 % y 2 repeticiones menos en cada serie</span></div>`;
+      return html`
+        <div class="suggestion suggestion-deload"><span><b>Descarga</b> · peso al 65 % y 2 repeticiones menos en cada serie</span></div>`;
     if (!P.even)
-      return html`<div class="sgb dlsg"><span><b>Descarga</b> · peso al 65 % y 2 repeticiones menos en cada serie</span>${ap}</div>`;
+      return html`
+        <div class="suggestion suggestion-deload">
+          <span><b>Descarga</b> · peso al 65 % y 2 repeticiones menos en cada serie</span>
+          ${ap}
+        </div>`;
     const r = P.up || P.dn ? P.lo : Math.min(P.hi, (P.r || P.lo - 1) + 1);
-    return html`<div class="sgb dlsg"><span><b>Descarga</b> · ${raw(toDisplayWeight(deloadOf(P.nw)) + ' ' + u + ' × ' + Math.max(1, r - 2))} en cada serie (normal: ${raw(toDisplayWeight(P.nw) + ' ' + u + ' × ' + r)})</span>${ap}</div>`;
+    return html`
+      <div class="suggestion suggestion-deload">
+        <span>
+          <b>Descarga</b> · ${raw(toDisplayWeight(deloadOf(P.nw)) + ' ' + u + ' × ' + Math.max(1, r - 2))} en cada serie (normal: ${raw(toDisplayWeight(P.nw) + ' ' + u + ' × ' + r)})
+        </span>
+        ${ap}
+      </div>`;
   }
   if (!P)
     return '';
   const wv = toDisplayWeight(P.w);
   const nv = toDisplayWeight(P.nw);
-  const rpe = 'RPE ' + (Math.round(P.ra * 10) / 10) + ' la última vez';
+  const rpe = say `RPE ${Math.round(P.ra * 10) / 10} la última vez`;
   let t;
   /* con el mismo peso en todas las series, el peso que toca; con pesos distintos, lo que cambia en cada una */
   if (P.up)
-    t = (P.even ? 'sube a ' + nv + ' ' + u : 'sube ' + (usesLb() ? (weightStep(e) == 5 ? 10 : 5) : weightStep(e)) + ' ' + u + ' en cada serie') + ' (hiciste ' + P.hi + ' reps en todas)';
+    t = say `${P.even ? say `sube a ${nv} ${u}` : say `sube ${usesLb() ? (weightStep(e) == 5 ? 10 : 5) : weightStep(e)} ${u} en cada serie`} (hiciste ${P.hi} reps en todas)`;
   else if (P.dn)
-    t = (P.even ? 'baja a ' + nv + ' ' + u : 'baja un 8 % en cada serie') + ' (no llegaste a ' + P.lo + ' reps)';
+    t = say `${P.even ? say `baja a ${nv} ${u}` : 'baja un 8 % en cada serie'} (no llegaste a ${P.lo} reps)`;
   else if (P.why == 'rpe')
-    t = P.even ? 'mantén ' + wv + ' ' + u + ' (' + rpe + ')' : 'mantén el peso de cada serie (' + rpe + ')';
+    t = P.even ? say `mantén ${wv} ${u} (${rpe})` : say `mantén el peso de cada serie (${rpe})`;
   else
-    t = (P.even ? 'mantén ' + wv + ' ' + u : 'mantén el peso de cada serie') + ' y busca 1 rep más hasta ' + P.hi;
+    t = say `${P.even ? say `mantén ${wv} ${u}` : 'mantén el peso de cada serie'} y busca 1 rep más hasta ${P.hi}`;
   /* pirámide: cada serie lleva su peso (sube en cada una) */
   if (/^PIR/.test(e.tk || ''))
-    t = 'pirámide: sube el peso en cada serie' + (W.sets[i].some(s => !s.t && +s.w > 0) ? '' : ' (empieza con uno que te permita 12 repeticiones)');
-  return html`<div class="sgb"><span><b>Sugerido</b> · ${raw(t)}</span>${/^PIR/.test(e.tk || '') ? '' : ap}</div>`;
+    t = say `pirámide: sube el peso en cada serie${W.sets[i].some(s => !s.t && +s.w > 0) ? '' : ' (empieza con uno que te permita 12 repeticiones)'}`;
+  return html`<div class="suggestion"><span><b>Sugerido</b> · ${raw(t)}</span>${/^PIR/.test(e.tk || '') ? '' : ap}</div>`;
 };
 A.applySuggestion = i => {
   const e = S.plan[S.selectedDay].ex[i];
@@ -173,5 +197,9 @@ export const lastTimeLine = (e, i) => {
     return '';
   const U = unitOf(e);
   const P = progressionOf(e);
-  return html`<div class="mu fs-12">Última vez: ${raw(h.s.map(x => U ? x[0] + ' ' + U : x[0] + '×' + (x[1] ? toDisplayWeight(x[1]) : '–') + (EXTRA_ROW[x[3]] || '')).join(' · '))}</div>${suggestionBox(e, i, P)}`;
+  return html`
+    <div class="muted fs-12">
+      Última vez: ${raw(h.s.map(x => U ? x[0] + ' ' + U : x[0] + '×' + (x[1] ? toDisplayWeight(x[1]) : '–') + (EXTRA_ROW[x[3]] || '')).join(' · '))}
+    </div>
+    ${suggestionBox(e, i, P)}`;
 };

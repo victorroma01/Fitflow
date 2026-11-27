@@ -10,6 +10,7 @@
 import { APP_CHECK, FIREBASE } from './config.js';
 import { fetchJson } from './net.js';
 import { logError } from '../core/errors.js';
+import { isOffline } from '../core/platform.js';
 const EXCHANGE_URL = 'https://content-firebaseappcheck.googleapis.com/v1/projects/';
 /** ¿Está configurado App Check? */
 export const appCheckOn = () => !!(APP_CHECK.siteKey && APP_CHECK.appId);
@@ -62,7 +63,7 @@ const freshToken = async () => {
    conexión, que no es un fallo, y sin repetir el mismo en cada petición */
 const tokenFailed = e => {
   const m = String(e && e.message || e);
-  if (navigator.onLine === false || e && e.code == 'NETWORK' || m == lastFailure)
+  if (isOffline() || e && e.code == 'NETWORK' || m == lastFailure)
     return;
   lastFailure = m;
   logError('App Check', e);

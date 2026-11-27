@@ -131,18 +131,18 @@ def reload_by(pg, js, limit=10000):
 
 # lo que enseña el Dashboard, sacado de la página
 DASH = """(() => {
-  const card = t => [...document.querySelectorAll('#app .cd')].find(c => c.querySelector('b') && c.querySelector('b').textContent == t);
-  const rows = c => c ? [...c.querySelectorAll('.it')].map(r => [r.querySelector('span').firstChild.textContent, r.querySelector('.ta-r b').textContent, r.querySelector('.ta-r small').textContent, r.querySelector('span small').textContent]) : [];
+  const card = t => [...document.querySelectorAll('#app .card')].find(c => c.querySelector('b') && c.querySelector('b').textContent == t);
+  const rows = c => c ? [...c.querySelectorAll('.item')].map(r => [r.querySelector('span').firstChild.textContent, r.querySelector('.ta-r b').textContent, r.querySelector('.ta-r small').textContent, r.querySelector('span small').textContent]) : [];
   const stats = {};
-  document.querySelectorAll('#app .g2 .cd').forEach(c => { if (c.querySelector('b.fs-26')) stats[c.querySelector('small').textContent] = c.querySelector('b').textContent; });
-  const wk = document.querySelector('.wkc');
-  const cardio = [...document.querySelectorAll('#app .cd')].find(c => c.querySelector('.f2cs'));
+  document.querySelectorAll('#app .grid-2 .card').forEach(c => { if (c.querySelector('b.fs-26')) stats[c.querySelector('small').textContent] = c.querySelector('b').textContent; });
+  const wk = document.querySelector('.week-card');
+  const cardio = [...document.querySelectorAll('#app .card')].find(c => c.querySelector('.cardio-stats'));
   return { stats, bars: [...card('Volumen por sesión').querySelectorAll('.bg-ac')].map(b => parseFloat(b.style.height)),
-    cal: [...document.querySelectorAll('.cal i.on')].map(i => +i.textContent), calAll: [...document.querySelectorAll('.cal i')].filter(i => i.textContent).length,
-    month: document.querySelector('.cal').previousElementSibling.querySelector('b').textContent,
-    week: wk.querySelector('.row small').textContent, dots: [...wk.querySelectorAll('.wkd span')].map(s => s.classList.contains('on') ? 1 : 0), streak: [...wk.querySelectorAll('.wks b')].map(b => +b.textContent),
+    cal: [...document.querySelectorAll('.calendar i.on')].map(i => +i.textContent), calAll: [...document.querySelectorAll('.calendar i')].filter(i => i.textContent).length,
+    month: document.querySelector('.calendar').previousElementSibling.querySelector('b').textContent,
+    week: wk.querySelector('.row small').textContent, dots: [...wk.querySelectorAll('.week-dots span')].map(s => s.classList.contains('on') ? 1 : 0), streak: [...wk.querySelectorAll('.week-stats b')].map(b => +b.textContent),
     records: rows(card('Récords personales')), timeline: rows(card('Línea de récords')),
-    cardio: cardio ? { total: cardio.querySelector('.row small').textContent, now: [...cardio.querySelectorAll('.f2cs b')].map(b => b.textContent) } : null };
+    cardio: cardio ? { total: cardio.querySelector('.row small').textContent, now: [...cardio.querySelectorAll('.cardio-stats b')].map(b => b.textContent) } : null };
 })()"""
 
 
@@ -253,11 +253,24 @@ def main(path):
             run()
             pts = [v for v in series[m] if v > 0][-30:]
             fmt = (lambda v: '%d kg' % jsround(v)) if m == 'v' else (lambda v: round1(v) + ' kg')
-            got = ev("({ now: document.querySelector('#pgc .pgt2 b').textContent, what: document.querySelector('#pgc .pgt2 small').textContent, n: document.querySelectorAll('#pgc circle[data-a=progressPeriod]').length, sum: document.querySelector('#pgc .pgsum').textContent })")
+            got = ev("({ now: document.querySelector('#pgc .progress-total b').textContent, what: document.querySelector('#pgc .progress-total small').textContent, n: document.querySelectorAll('#pgc circle[data-a=progressPeriod]').length, sum: document.querySelector('#pgc .progress-summary').textContent })")
             change = (pts[-1] - pts[0]) / pts[0] * 100
             line = 'De %s a %s · %s%s %%' % (fmt(pts[0]), fmt(pts[-1]), '+' if change >= 0 else '', num(jsround(change * 10) / 10))
             check('progreso de Press banca, %s: un punto por sesión, el último valor y el cambio' % label.lower(),
                   got['n'] == len(pts) and got['now'] == fmt(pts[-1]) and got['what'].startswith(label) and got['sum'].startswith(line), '%s ≠ %d puntos, %s, %s' % (got, len(pts), fmt(pts[-1]), line))
+            # un punto es récord si supera a todos los anteriores de la gráfica; el volumen no tiene récords
+            rec, best = [], 0
+            for v in pts:
+                rec.append(m != 'v' and best > 0 and v > best + 1e-6)
+                best = max(best, v)
+            # de cada punto, al elegirlo: si sale la etiqueta, si va en la línea de la cifra y a su derecha, y si el punto va relleno
+            marks = ev("""n => { const out = []; for (let i = 0; i < n; i++) { A.progressPeriod(i);
+                  const t = document.querySelector('#pgc .progress-total'), b = t.querySelector('b').getBoundingClientRect(), e = t.querySelector('.record-tag'), r = e && e.getBoundingClientRect();
+                  out.push([!!e && e.textContent == 'RÉCORD', !e || (r.left >= b.right - 1 && r.top >= b.top - 2 && r.bottom <= b.bottom + 2),
+                    document.querySelectorAll('#pgc circle[stroke-width="2"]')[i].getAttribute('fill') == 'var(--a2)']); }
+                  A.progressPeriod(n - 1); return out; }""", len(pts))
+            check('progreso de Press banca, %s: al elegir un punto que es récord sale «RÉCORD» junto a la cifra, y solo en esos' % label.lower(),
+                  [x[0] for x in marks] == rec and all(x[1] for x in marks) and [x[2] for x in marks] == rec and (m == 'v' or any(rec)), '%s ≠ %s' % (marks, rec))
 
         print('Cardio, peso y registros')
         cardio = [l for l in logs if l.get('k') == 'c']
@@ -282,9 +295,17 @@ def main(path):
         check('y al borrarlo, el peso actual y el del perfil pasan a ser los del anterior', 'Actual: %s kg' % num(by_date[-2]['w']) in text() and ev("S.biometrics.w") == by_date[-2]['w'] and ev("S.weightLog.length") == len(weights) - 1,
               text()[text().find('Actual'):][:60])
         ev("(w => { S.weightLog.push(w); S.biometrics.w = w.w; saveState(); A.weightBack(); })(%s)" % json.dumps(by_date[-1]))
+        def every_log():
+            # Registros se pinta por tandas de 60: para mirar todas las filas, se toca «Ver más registros» hasta que no queda
+            for _ in range(50):
+                if not ev("!!document.querySelector('#logs-more')"):
+                    return
+                ev("document.querySelector('#logs-more').click()")
+                run()
         ev("A.openLogs()")
         run()
-        got = ev("[...document.querySelectorAll('#sh .cd b.fs-22')].map(b => b.textContent)")
+        every_log()
+        got = ev("[...document.querySelectorAll('#sh .card b.fs-22')].map(b => b.textContent)")
         want = [str(len(logs)), round1(volume / 1000) + ' t', round1(sum(l['m'] for l in logs) / 60) + ' h']
         check('registros: entrenos, volumen y tiempo totales', got == want, '%s ≠ %s' % (got, want))
         check('y una fila por registro', ev("document.querySelectorAll('#sh [data-a=logDeleteAsk]').length") == len(logs))
@@ -292,11 +313,34 @@ def main(path):
         n_logs = ev("S.logs.length")
         ev("S.logs.push({d: dayKey(new Date(Date.now() - 62 * 864e5)), n: 'Cardio · Carrera', v: 0, s: 0, m: 30, q: 0, k: 'c', x: '5 km', c: {t: 'run', km: 5, sec: 1800}}); A.openLogs()")
         run()
+        every_log()
         days = ev("[...document.querySelectorAll('#sh [data-a=logDeleteAsk]')].map(r => S.logs[+r.dataset.i].d)")
-        months = ev("[...document.querySelectorAll('#sh .ph')].map(h => h.textContent)")
+        months = ev("[...document.querySelectorAll('#sh .section-label')].map(h => h.textContent)")
         check('registros: del día más reciente al más antiguo, aunque uno se apunte con fecha de otro día', days == sorted(days, reverse=True) and len(days) == n_logs + 1, str(days[:4]))
         check('y cada mes sale una sola vez', len(months) == len(set(months)) and len(months) > 0, str(months))
         ev("S.logs.pop(); saveState(); A.openLogs()")
+        run()
+        # con muchos entrenos, Registros se pinta por tandas de 60: al llegar al final o al tocar «Ver más registros», la siguiente
+        ev("""(() => { window.__logs = S.logs.slice(); const d0 = Date.now();
+              for (let i = 0; i < 150; i++) S.logs.push({d: dayKey(new Date(d0 - (400 + i) * 864e5)), n: 'Antiguo ' + i, v: 1000, s: 10, m: 40, q: 5});
+              A.openLogs(); })()""")
+        run()
+        rows = "document.querySelectorAll('#sh [data-a=logDeleteAsk]').length"
+        total = ev("S.logs.length")
+        check('registros con muchos entrenos: al abrir, los 60 primeros', ev(rows) == 60, str(ev(rows)))
+        # en el documento y no en el texto que se ve (innerText): en Firefox, mientras la página entra, puede no contarse
+        check('con «Ver más registros» y el aviso del final', ev("!!document.querySelector('#logs-more') && [...document.querySelectorAll('#sh p')].some(p => p.textContent == 'Toca un registro para borrarlo.')"))
+        ev("document.querySelector('#sh .sheet').scrollTop = 1e6")
+        pg.wait_for_timeout(500)
+        check('al llegar al final, la tanda siguiente sola', ev(rows) == 120, str(ev(rows)))
+        for _ in range(10):
+            if not ev("!!document.querySelector('#logs-more')"):
+                break
+            ev("document.querySelector('#logs-more').click()")
+            run()
+        months = ev("[...document.querySelectorAll('#sh .section-label')].map(h => h.textContent)")
+        check('y con el botón, todos, sin botón al final y cada mes una sola vez aunque siga en otra tanda', ev(rows) == total and len(months) == len(set(months)), '%s de %s' % (ev(rows), total))
+        ev("S.logs = window.__logs; saveState(); A.openLogs()")
         run()
 
         print('Nutrición de los 7 días anteriores')
@@ -305,11 +349,11 @@ def main(path):
         days_ = [[sum(it['b'][i] * it['g'] / 100 for m in meals.get(day(n), {}).values() for it in m) for i in range(4)] for n in range(1, 8)]
         on = [t for t in days_ if t[0] > 50]
         in_goal = sum(1 for t in on if abs(t[0] - goals['k']) <= goals['k'] * .1)
-        card = text('.nwr')
+        card = text('.nutri-week')
         want = ['Hasta ayer, %d de 7 anotados' % len(on), '%d\nkcal de media\nObjetivo %d' % (jsround(sum(t[0] for t in on) / len(on)), goals['k']),
                 '%d g\nproteína de media\nObjetivo %d g' % (jsround(sum(t[2] for t in on) / len(on)), jsround(goals['k'] * goals['p'] / 400)), '%d de %d\ndías en objetivo' % (in_goal, len(on))]
         check('la media de kcal y de proteína de los días anotados y cuántos quedaron en objetivo', len(on) == 5 and all(w in card for w in want), '%s en %s' % (want, card))
-        ev("scrollTo(0, 400); document.querySelector('.nwr').click()")
+        ev("scrollTo(0, 400); document.querySelector('.nutri-week').click()")
         run()
         check('al tocarla se va a Nutrición, al día de hoy y arriba', ev("S.tab == 1 && nutriDayOffset == 0 && scrollY == 0"))
 
@@ -342,7 +386,8 @@ def main(path):
         check('al borrarlo, todo vuelve a como estaba', back == d, json.dumps({k: [back[k], d[k]] for k in d if back[k] != d[k]}, ensure_ascii=False)[:400])
 
         print('Exportar (CSV)')
-        ev("""(() => { window.__blobs = []; const o = URL.createObjectURL; URL.createObjectURL = b => { window.__blobs.push(b); return o.call(URL, b); }; })()""")
+        # lo que se descarga: los CSV (las figuras de los ejercicios también pasan por createObjectURL, y no son esto)
+        ev("""(() => { window.__blobs = []; const o = URL.createObjectURL; URL.createObjectURL = b => { if (/csv/.test(b.type)) window.__blobs.push(b); return o.call(URL, b); }; })()""")
 
         def csv(kind):
             ev("A.openCsvExport()")

@@ -2,6 +2,7 @@
    Pestaña Nutrición: el día (con su tipo, entreno o descanso), resumen de macros y comidas con sus botones.
    Define: MACRO_CLASSES, nutritionDayHead, nutritionTotals, macroBar, mealItemRow, mealButtons, mealCard, mealName, nutritionBase  · acciones/registros: 2
 */
+import { say, trAs } from '../core/i18n.js';
 import { clampNum, dayKey, fmtDate, round1, roundInt } from '../core/util.js';
 import { A, C } from '../core/registry.js';
 import { MEAL_NAMES, MEAL_SPLITS } from '../data/foods.js';
@@ -19,30 +20,91 @@ const MACRO_CLASSES = { c: ['c-ctx', 'bg-c'], p: ['c-ptx', 'bg-p'], g: ['c-gtx',
 /* la cabecera del día: «‹ día ›», si es de entreno o de descanso y «Mi nutrición» */
 const nutritionDayHead = (dt, t) => {
   const day = nutriDayOffset ? fmtDate(dt, { day: 'numeric', month: 'short' }) : 'Hoy';
-  return html`<div class="hd"><button data-a="nutritionDay" data-i="-1" aria-label="Día anterior" class="tz">‹</button><h1>${raw(day)}</h1><button data-a="nutritionDay" data-i="1" aria-label="Día siguiente" class="tz">›</button></div><div class="ndy"><span class="ndt">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span><button class="nmb" data-a="openMyNutrition" aria-label="Mi nutrición: objetivo de kcal y macros">${icon('fk', 22)}</button></div>`;
+  return html`
+    <div class="page-head">
+      <button data-a="nutritionDay" data-i="-1" aria-label="Día anterior" class="touch-target">‹</button>
+      <h1>${raw(day)}</h1>
+      <button data-a="nutritionDay" data-i="1" aria-label="Día siguiente" class="touch-target">›</button>
+    </div>
+    <div class="nutri-day">
+      <span class="day-type">${icon(t == 't' ? 'workout' : 'moon', 16)}${raw(t == 't' ? 'Día de entreno' : 'Día de descanso')}</span>
+      <button class="my-nutrition-btn" data-a="openMyNutrition" aria-label="Mi nutrición: objetivo de kcal y macros">
+        ${icon('fk', 22)}
+      </button>
+    </div>`;
 };
 /* lo comido frente al objetivo (los tres macros y las kcal), fijo arriba al desplazar */
-const nutritionTotals = (tt, tg) => html`<div class="cd pos-sticky top-6 z-3"><div class="mac">${macroBar('Hidratos', tt[1], tg[1], 'c')}${macroBar('Proteínas', tt[2], tg[2], 'p')}${macroBar('Grasas', tt[3], tg[3], 'g')}</div><div class="bar mt-8"><i class="bg-ac" data-style="width:${Math.min(100, tt[0] / tg[0] * 100 || 0)}%"></i></div><div class="ta-c"><b>${roundInt(tt[0])} / ${roundInt(tg[0])} kcal</b></div></div>`;
+const nutritionTotals = (tt, tg) => html`
+  <div class="card pos-sticky top-6 z-3">
+    <div class="macros">
+      ${macroBar('Hidratos', tt[1], tg[1], 'c')}
+      ${macroBar('Proteínas', tt[2], tg[2], 'p')}
+      ${macroBar('Grasas', tt[3], tg[3], 'g')}
+    </div>
+    <div class="bar mt-8"><i class="bg-ac" data-style="width:${Math.min(100, tt[0] / tg[0] * 100 || 0)}%"></i></div>
+    <div class="ta-c"><b>${roundInt(tt[0])} / ${roundInt(tg[0])} kcal</b></div>
+  </div>`;
 function macroBar(l, v, t, m) {
   const [text, bar] = MACRO_CLASSES[m];
-  return html`<div><span class="${text}">${raw(l)}</span><div class="bar"><i class="${bar}" data-style="width:${Math.min(100, v / t * 100 || 0)}%"></i></div><b>${roundInt(v)} / ${roundInt(t)} g</b></div>`;
+  return html`
+    <div>
+      <span class="${text}">${raw(l)}</span>
+      <div class="bar"><i class="${bar}" data-style="width:${Math.min(100, v / t * 100 || 0)}%"></i></div>
+      <b>${roundInt(v)} / ${roundInt(t)} g</b>
+    </div>`;
 }
 /* un alimento anotado: sus valores, sus gramos (que se pueden cambiar) y «✕» */
 const mealItemRow = (it, i, j) => {
   const v = itemMacros(it);
-  return html`<div class="it"><div>${it.n}<br><small>${roundInt(v[0])} kcal · C ${round1(v[1])} P ${round1(v[2])} G ${round1(v[3])}</small></div><input type="number" inputmode="decimal" min="0" max="5000" value="${it.g}" data-c="setItemGrams" data-i="${i}" data-j="${j}" aria-label="${'Gramos de ' + it.n}"><button data-a="removeMealItem" data-i="${i}" data-j="${j}" aria-label="${'Quitar ' + it.n}" class="p-2-6 tz">✕</button></div>`;
+  return html`
+    <div class="item">
+      <div>${it.n}<br><small>${roundInt(v[0])} kcal · C ${round1(v[1])} P ${round1(v[2])} G ${round1(v[3])}</small></div>
+      <input type="number" inputmode="decimal" min="0" max="5000" value="${it.g}" data-c="setItemGrams" data-i="${i}" data-j="${j}"
+          aria-label="${say `Gramos de ${it.n}`}">
+      <button data-a="removeMealItem" data-i="${i}" data-j="${j}" aria-label="${say `Quitar ${it.n}`}" class="p-2-6 touch-target">✕</button>
+    </div>`;
 };
 /* los botones de una comida: añadir, guardarla como plato, buscar en internet y escanear */
-const mealButtons = (i, nm) => html`<div class="mlb"><button class="mlp mli" data-a="openAddFood" data-i="${i}" aria-label="${'Añadir alimento, ' + nm}">${icon('plus', 20)}</button><button class="mlp mli" data-a="saveDishAsk" data-i="${i}" data-n="${nm}" aria-label="${'Guardar ' + nm + ' como plato'}">${icon('bkm', 18)}</button><button class="mlp" data-a="openFoodSearch" data-i="${i}" aria-label="${'Buscar alimento en internet, ' + nm}">${icon('srch', 17)}<span>Buscar</span></button><button class="mlp" data-a="openMealScanner" data-i="${i}" aria-label="${'Escanear código de barras, ' + nm}">${icon('bar', 17)}<span>Scan</span></button></div>`;
+const mealButtons = (i, nm) => html`
+  <div class="meal-actions">
+    <button class="meal-btn meal-btn-icon" data-a="openAddFood" data-i="${i}" aria-label="${say `Añadir alimento, ${nm}`}">
+      ${icon('plus', 20)}
+    </button>
+    <button class="meal-btn meal-btn-icon" data-a="saveDishAsk" data-i="${i}" data-n="${nm}" aria-label="${say `Guardar ${nm} como plato`}">
+      ${icon('bkm', 18)}
+    </button>
+    <button class="meal-btn" data-a="openFoodSearch" data-i="${i}" aria-label="${say `Buscar alimento en internet, ${nm}`}">
+      ${icon('srch', 17)}
+      <span>Buscar</span>
+    </button>
+    <button class="meal-btn" data-a="openMealScanner" data-i="${i}" aria-label="${say `Escanear código de barras, ${nm}`}">
+      ${icon('bar', 17)}
+      <span>Scan</span>
+    </button>
+  </div>`;
 /* la tarjeta de la comida `i`: sus alimentos, lo que suma (`v`) frente a su objetivo (`goal`: [kcal, C, P, G]; null en una
    comida de fuera del reparto del día, que no tiene) y sus botones */
 const mealCard = (m, i, nm, v, goal) => {
   const of = x => goal ? ' / ' + roundInt(goal[x]) : '';
-  const note = goal ? 'Objetivo ' + roundInt(goal[0]) + ' kcal' : 'Fuera de tus comidas del día';
-  return html`<div class="cd"><div class="row"><b>${raw(nm)}</b><small>${note}</small></div>${mealItems(m, i).map((it, j) => mealItemRow(it, i, j))}<div class="mac m-8-0"><b class="c-ctx">${roundInt(v[1])}${of(1)} C</b><b class="c-ptx">${roundInt(v[2])}${of(2)} P</b><b class="c-gtx">${roundInt(v[3])}${of(3)} G</b></div>${mealButtons(i, nm)}</div>`;
+  const note = goal ? say `Objetivo ${roundInt(goal[0])} kcal` : 'Fuera de tus comidas del día';
+  return html`
+    <div class="card">
+      <div class="row"><b>${raw(nm)}</b><small>${note}</small></div>
+      ${mealItems(m, i).map((it, j) => mealItemRow(it, i, j))}
+      <div class="macros m-8-0">
+        <b class="c-ctx">${roundInt(v[1])}${of(1)} C</b>
+        <b class="c-ptx">${roundInt(v[2])}${of(2)} P</b>
+        <b class="c-gtx">${roundInt(v[3])}${of(3)} G</b>
+      </div>
+      ${mealButtons(i, nm)}
+    </div>`;
 };
 /** Nombre de la comida `i` de `n` comidas al día (Desayuno, Comida, Cena…). */
-export const mealName = (i, n) => (n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x => n == 3 ? [0, 2, 4].includes(x) : n == 4 ? [0, 2, 3, 4].includes(x) : n == 2 ? [0, 4].includes(x) : 1)[i]] : MEAL_NAMES[i]) || 'Comida ' + (i + 1);
+export const mealName = (i, n) => {
+  const name = n <= 5 ? MEAL_NAMES[[0, 1, 2, 3, 4].filter(x => n == 3 ? [0, 2, 4].includes(x) : n == 4 ? [0, 2, 3, 4].includes(x) : n == 2 ? [0, 4].includes(x) : 1)[i]] : MEAL_NAMES[i];
+  /* «Comida» es aquí la del mediodía («Lunch»); suelta, una comida cualquiera («Meal») */
+  return name ? trAs('comida', name) : say `Comida ${i + 1}`;
+};
 /** Pestaña Nutrición; `water` es la tarjeta del agua (nutrition/water), que va tras el resumen. */
 export function nutritionBase(water) {
   const dt = nutriDate();
@@ -60,7 +122,7 @@ export function nutritionBase(water) {
   let h = html`${nutritionDayHead(dt, t)}${nutritionTotals(tt, tg)}${raw(water || '')}${templateCard(k)}`;
   for (let i = 0; i < n.n; i++)
     h += mealCard(m, i, mealName(i, n.n), mt[i], tg.map(v => v * w[i]));
-  extra.forEach((i, x) => h += mealCard(m, i, 'Comida ' + (i + 1), mt[n.n + x], null));
+  extra.forEach((i, x) => h += mealCard(m, i, say `Comida ${i + 1}`, mt[n.n + x], null));
   return h + nutritionWeekCard();
 }
 /* — manejadores de esta función (registros A / C / U) — */

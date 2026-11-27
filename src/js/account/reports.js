@@ -5,6 +5,7 @@
    al admin leerlos todos y cambiar el estado y la respuesta.
    Define: ADMIN_STATES, repState, repDate, repCounts, repCard, reportsAdminView, loadReports, repSync, repWrite  · acciones/registros: 5
 */
+import { say } from '../core/i18n.js';
 import { $, fmtDateShort, dayKey } from '../core/util.js';
 import { logError } from '../core/errors.js';
 import { A } from '../core/registry.js';
@@ -26,11 +27,39 @@ const repCard = d => {
   const on = repState.open == d.id;
   const kd = (REPORT_KINDS.find(k => k[0] == o.k) || REPORT_KINDS[0])[1];
   const st = ADMIN_STATES.find(x => x[0] == o.st) || ADMIN_STATES[0];
-  const head = html`<button class="adrh" data-a="reportsToggle" data-v="${d.id}" aria-expanded="${on ? 'true' : 'false'}"><span class="row"><b>${String(o.u || '—')}</b><span class="rps ${o.st == 'a' ? 'ok' : o.st == 'v' ? 'seen' : 'wait'}">${st[1]}</span></span><small class="mu">${kd}${o.a ? ' · ' + String(o.a) : ''} · ${repDate(o.ca)} · V${String(o.v || '')}${o.rp ? ' · contestada' : ''}</small><span class="rptx${on ? '' : ' cl'}">${String(o.t || '')}</span></button>`;
+  const head = html`
+    <button class="admin-report-head" data-a="reportsToggle" data-v="${d.id}" aria-expanded="${on ? 'true' : 'false'}">
+      <span class="row">
+        <b>${String(o.u || '—')}</b>
+        <span class="status-pill ${o.st == 'a' ? 'ok' : o.st == 'v' ? 'seen' : 'wait'}">${st[1]}</span>
+      </span>
+      <small class="muted">
+        ${kd}
+        ${o.a ? ' · ' + String(o.a) : ''} · ${repDate(o.ca)} · V${String(o.v || '')}
+        ${o.rp ? ' · contestada' : ''}
+      </small>
+      <span class="report-text${on ? '' : ' clamp'}">${String(o.t || '')}</span>
+    </button>`;
   if (!on)
-    return html`<div class="cd adr">${raw(head)}</div>`;
+    return html`<div class="card admin-report">${raw(head)}</div>`;
   const busy = repState.busy == d.id;
-  return html`<div class="cd adr on">${raw(head)}${o.dx ? html`<details><summary>Datos técnicos</summary><pre class="rpv">${String(o.dx)}</pre></details>` : ''}<label>Estado</label><div class="seg" role="radiogroup" aria-label="Estado">${ADMIN_STATES.map(x => html`<button class="${o.st == x[0] ? 'on' : ''}" data-a="reportsSetState" data-v="${d.id + ':' + x[0]}" role="radio" aria-checked="${o.st == x[0] ? 'true' : 'false'}"${busy ? ' disabled' : ''}>${x[1]}</button>`)}</div><label for="adrt">Respuesta o solución</label><textarea id="adrt" rows="4" maxlength="${REPORT_MAX}" placeholder="La verá el usuario en su Perfil">${String(o.rp || '')}</textarea><button class="pr w-full mt-8" data-a="reportsReply" data-v="${d.id}"${busy ? ' disabled' : ''}>${o.rp ? 'Cambiar la respuesta' : 'Enviar respuesta'}</button>${o.ra ? html`<small class="mu d-block mt-6">Contestada el ${repDate(o.ra)}</small>` : ''}</div>`;
+  return html`
+    <div class="card admin-report on">
+      ${raw(head)}
+      ${o.dx ? html`<details><summary>Datos técnicos</summary><pre class="report-tech">${String(o.dx)}</pre></details>` : ''}
+      <label>Estado</label>
+      <div class="segmented" role="radiogroup" aria-label="Estado">
+        ${ADMIN_STATES.map(x => html`
+          <button class="${o.st == x[0] ? 'on' : ''}" data-a="reportsSetState" data-v="${d.id + ':' + x[0]}" role="radio"
+              aria-checked="${o.st == x[0] ? 'true' : 'false'}"${busy ? ' disabled' : ''}>${x[1]}</button>`)}
+      </div>
+      <label for="adrt">Respuesta o solución</label>
+      <textarea id="adrt" rows="4" maxlength="${REPORT_MAX}" placeholder="La verá el usuario en su Perfil">${String(o.rp || '')}</textarea>
+      <button class="primary w-full mt-8" data-a="reportsReply" data-v="${d.id}"${busy ? ' disabled' : ''}>
+        ${o.rp ? 'Cambiar la respuesta' : 'Enviar respuesta'}
+      </button>
+      ${o.ra ? html`<small class="muted d-block mt-6">Contestada el ${repDate(o.ra)}</small>` : ''}
+    </div>`;
 };
 const reportsAdminView = () => {
   const s = repState;
@@ -42,7 +71,14 @@ const reportsAdminView = () => {
   /* el abierto sigue a la vista aunque cambie de estado (al abrir uno pendiente pasa a visto) */
   const L = s.list.filter(d => !s.f || d.data.st == s.f || d.id == s.open);
   const tabs = [['p', 'Pendientes', n.p], ['v', 'Vistas', n.v], ['a', 'Arregladas', n.a], ['', 'Todas', s.list.length]];
-  return html`${raw(head)}<div class="seg adrf" role="tablist" aria-label="Filtrar por estado">${tabs.map(x => html`<button class="${s.f == x[0] ? 'on' : ''}" data-a="reportsFilter" data-v="${x[0] || 'all'}" role="tab" aria-selected="${s.f == x[0] ? 'true' : 'false'}">${x[1]} (${x[2]})</button>`)}</div>${raw(L.length ? L.map(repCard).join('') : '<p class="mu m-14-2">No hay ninguno.</p>')}`;
+  return html`
+    ${raw(head)}
+    <div class="segmented admin-report-filter" role="tablist" aria-label="Filtrar por estado">
+      ${tabs.map(x => html`
+        <button class="${s.f == x[0] ? 'on' : ''}" data-a="reportsFilter" data-v="${x[0] || 'all'}" role="tab"
+            aria-selected="${s.f == x[0] ? 'true' : 'false'}">${x[1]} (${x[2]})</button>`)}
+    </div>
+    ${raw(L.length ? L.map(repCard).join('') : html`<p class="muted m-14-2">No hay ninguno.</p>`)}`;
 };
 const loadReports = async () => {
   try {
@@ -73,7 +109,7 @@ const repWrite = async (id, data) => {
     Object.assign(d.data, f);
   }
   catch (e) {
-    toast('No se ha podido guardar (' + (e.code || 'error') + ')');
+    toast(say `No se ha podido guardar (${e.code || 'error'})`);
   }
   repState.busy = '';
   repSync();

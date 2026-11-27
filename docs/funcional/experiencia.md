@@ -6,7 +6,8 @@ Lo que hace que StrataFit se maneje como una app del móvil, en iPhone y en Andr
 ## Logo e icono
 
 El logo de StrataFit tiene dos versiones, para el tema claro y para el oscuro. Dentro de la app (la bienvenida) sale el del tema que
-ves; el inicio de sesión, que siempre es oscuro, lleva el oscuro. El icono de la pantalla de inicio es el del tema claro: el móvil lo
+ves; el inicio de sesión, que siempre es oscuro (también su tarjeta, tenga el móvil el tema que tenga) y va sobre la foto de un
+gimnasio visto desde arriba, en gris y desenfocada, lleva el oscuro. El icono de la pantalla de inicio es el del tema claro: el móvil lo
 fija al instalar la app y no cambia con el tema.
 
 Con la app ya instalada antes de la V1.0.1, el icono nuevo llega así:
@@ -84,7 +85,7 @@ siendo desplazar la página.
 El botón o el gesto atrás del sistema cierra lo que haya abierto, de arriba abajo: una ventana de aviso (sin hacer nada), el menú,
 la página de dentro (volviendo a la anterior, como «←»), Overview o Evolución del peso. En Nutrición, Dashboard o Perfil, lleva a
 Workout; desde Workout, sin nada abierto, sale de la app, como siempre. Durante un entreno no sale: avisa de que sigue en marcha
-(para salir, «Salir y descartar» o «Log out»). En el navegador, el botón atrás hace lo mismo.
+(para salir, «Salir y descartar» o «Guardar entreno»). En el navegador, el botón atrás hace lo mismo.
 
 En la librería de ejercicios, «atrás» dentro de un grupo muscular vuelve a los grupos, y otro «atrás» la cierra.
 

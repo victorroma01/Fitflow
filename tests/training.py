@@ -244,21 +244,20 @@ def main(path):
         check('en su gráfica se ve el peso máximo, sin 1RM ni volumen', 'Se mide en tiempo o distancia' in prog and '32 kg' in prog and 'Peso máximo' in prog and '1RM' not in prog, prog[:200])
         ev("A.exerciseDetailByName(0, { dataset: { n: 'Farmers carry 200 m' } })")
         run(400)
-        check('y su ficha no enseña una mejor marca', 'TU MEJOR MARCA' not in text('#sh') and 'Farmers carry 200 m' in text('#sh'))
+        # (Farmers carry 200 m ya no está en la librería: era el Farmers carry, que queda; lo guardado con su nombre abre la ficha de este)
+        check('y su ficha, la del Farmers carry, no enseña una mejor marca', 'TU MEJOR MARCA' not in text('#sh') and ev("document.querySelector('#sh h2').textContent") == 'Farmers carry', text('#sh')[:120])
         ev("sheet(); A.openAnalysis()")
         run(400)
         ana = text('#sh')
         check('en el análisis del mes no cuenta como ejercicio con más volumen', 'Farmers' not in ana and 'Press banca' in ana, ana[:300])
         ev("sheet()")
 
-        set_day([dict(press, s=3)], history={})
+        set_day([dict(press, s=3, tk='DS')], history={})   # con drop set: tras la última serie sale su fila (workout/technique)
         ev("S.records = {}; saveState()")
         start()
         do(0, 0, 0, 200)   # sin repeticiones
         do(0, 1, 35, 50)   # más de 30
         do(0, 2, 5, 100)
-        ev("A.addDropSet(0, { dataset: { j: 2 } })")
-        run()
         do(0, 3, 20, 75)   # el drop set: 75 × 20 daría más 1RM que 100 × 5
         finish()
         r = ev("S.records['Press banca']")
@@ -268,7 +267,7 @@ def main(path):
         set_day([dict(press, s=3)], history={'Press banca': [{'d': '2026-11-05', 's': [[8, 60, 0, 0]]}]})
         start()
         toast = lambda: text('#tt')
-        click_done = lambda j: (ev("document.querySelector('.ck[data-i=\"0\"][data-j=\"%d\"]').click()" % j), run(200))
+        click_done = lambda j: (ev("document.querySelector('.check[data-i=\"0\"][data-j=\"%d\"]').click()" % j), run(200))
         ev("W.sets[0].forEach(s => { s.w = 70; s.r = 8; s.ws = 0; }); R()")
         click_done(0)
         first = toast()
@@ -329,14 +328,58 @@ def main(path):
         run()
         set_day([{'n': 'Press militar barra', 's': 3, 'rg': [6, 10]}], history={'Press militar barra': [{'d': '2026-11-05', 's': [[8, 15, 0, 0]]}]})
         start()
-        check('con menos peso que la barra no se proponen aproximaciones más pesadas que la serie', ev("!document.querySelector('.wup')") and 'movilidad' in text('#ex0'), text('#ex0')[:200])
+        check('con menos peso que la barra no se proponen aproximaciones más pesadas que la serie', ev("!document.querySelector('.warmup')") and 'movilidad' in text('#ex0'), text('#ex0')[:200])
         ev("A.discardWorkout()")
         set_day([{'n': 'Press militar barra', 's': 3, 'rg': [6, 10]}], history={'Press militar barra': [{'d': '2026-11-05', 's': [[8, 60, 0, 0]]}]})
         start()
-        chips = ev("[...document.querySelectorAll('.wup .chip')].map(b => b.textContent)")
+        chips = ev("[...document.querySelectorAll('.warmup .chip')].map(b => b.textContent)")
         check('y con 60 kg, de menos a más y todas por debajo', chips == ['10 × 20 kg', '8 × 30 kg', '5 × 42.5 kg', '2 × 50 kg'], str(chips))
         ev("A.discardWorkout()")
         run()
+
+        print('Ejercicios juntados')
+        # «Single unders» era la Comba y «Cinta inclinada», la Caminata inclinada (data/aliases: EX_RETIRED): en la librería
+        # queda uno de cada dos, y un día, un entreno o un historial guardados con el nombre que se quitó siguen como estaban
+        gone, kept = ['Single unders', 'Cinta inclinada'], ['Comba', 'Caminata inclinada']
+        check('los nombres que se quitan ya no están en la librería, y los que quedan, sí', ev("([gone, kept]) => gone.every(n => !exAll().some(e => e.n == n)) && kept.every(n => exAll().some(e => e.n == n))", [gone, kept]))
+        set_day([{'n': 'Single unders', 's': 2, 'rg': [60, 60]}, {'n': 'Cinta inclinada', 's': 1, 'rg': [12, 12], 'u': 'min'}],
+                history={'Single unders': [{'d': '2026-11-05', 's': [[60, 0, 0, 0], [55, 0, 0, 0]]}]})
+        ev("S.records = {}; saveState()")
+        got = ev("gone => gone.map(n => [exByName(n).n, exHasFigure(n), exByName(n).p.length > 0])", gone)
+        check('un día guardado con ellos tiene los músculos y la figura del que queda', got == [['Comba', True, True], ['Caminata inclinada', True, True]], str(got))
+        start()
+        heads = [text('#ex0'), text('#ex1')]
+        check('en el entreno salen con el nombre guardado y se miden como antes: en repeticiones y en minutos',
+              heads[0].startswith('SERIE A') and 'Single unders' in heads[0] and '2 × 60 reps' in heads[0] and 'Comba' not in heads[0]
+              and 'Cinta inclinada' in heads[1] and '1 × 12 min' in heads[1] and 'Caminata' not in heads[1], str([h[:120] for h in heads]))
+        do(0, 0, 60, 0)
+        do(0, 1, 58, 0)
+        do(1, 0, 12, 0)
+        finish()
+        check('lo hecho se guarda con ese nombre, junto a su historial de antes', len(hist('Single unders')) == 2 and rows('Single unders') == [[60, 0], [58, 0]] and rows('Cinta inclinada') == [[12, 0]]
+              and not hist('Comba') and not hist('Caminata inclinada'), '%s %s' % (hist('Single unders'), hist('Cinta inclinada')))
+        check('la cinta, que va en minutos, no da récord', ev("!S.records['Cinta inclinada'] && !bestOf('Cinta inclinada')"), str(ev("S.records")))
+        ev("A.exerciseDetailByName(0, { dataset: { n: 'Cinta inclinada' } })")
+        run(400)
+        check('su ficha es la de la Caminata inclinada', ev("document.querySelector('#sh h2').textContent") == 'Caminata inclinada', text('#sh')[:120])
+        ev("sheet(); A.openLibrary()")
+        run(400)
+        found = lambda q: (ev("q => U.librarySearch(q)", q), run(400), ev("[...document.querySelectorAll('#lr .exercise-text b')].map(b => b.textContent)"))[2]
+        got = [found('single unders'), found('cinta inclinada'), found('Saltar la cuerda')]
+        check('en la librería, buscar el nombre de antes encuentra el que queda', got == [['Comba'], ['Caminata inclinada'], ['Comba']], str(got))
+        ev("sheet()")
+        set_day([press], history={})
+        ev("A.openPicker()")
+        run(400)
+        pick = lambda q: (ev("q => { const i = document.querySelector('#sh input[data-u=pickerSearch]'); i.value = q; i.dispatchEvent(new Event('input', { bubbles: true })); }", q), run(400),
+                          ev("[...document.querySelectorAll('#pkr .exercise-text b')].map(b => b.textContent)"))[2]
+        got = [pick('single unders'), pick('cinta inclinada')]
+        check('y al añadir un ejercicio al día, también', got == [['Comba'], ['Caminata inclinada']], str(got))
+        ev("document.querySelector('#pkr [data-a=pickerAdd]').click()")
+        run(400)
+        added = ev("S.plan[0].ex[1]")
+        check('el que se añade es el que queda, en minutos como la cinta', ev("S.plan[0].ex.length") == 2 and added['n'] == 'Caminata inclinada' and added.get('u') == 'min' and added['rg'] == [30, 30], str(added))
+        ev("sheet()")
 
         print('Ejercicios propios')
         set_day([press], history={})
@@ -406,6 +449,19 @@ def main(path):
         check('con un entreno en curso no se toca un ejercicio', 'Termina o descarta antes el entreno en curso' in text('#tt') and idx('Mi ejercicio') >= 0 and ev("!document.querySelector('#dg').firstChild"))
         ev("A.discardWorkout()")
         run()
+        # library/model: exByName es lo mismo que buscar en exAll(), con la biblioteca por delante, también con un propio
+        # renombrado en su sitio y con uno que se llama como uno de la biblioteca
+        same = ev("""(() => { const all = exAll(), names = all.map(e => e.n).concat(['No existe', '']);
+          const ok = () => names.every(n => exByName(n) === all.find(x => x.n == n));
+          const before = ok(); const c = S.customExercises[0]; const was = c && c.n;
+          if (c) { c.n = 'Renombrado en su sitio'; names.push(c.n, was); }
+          const after = names.every(n => exByName(n) === exAll().find(x => x.n == n));
+          if (c) c.n = was;
+          S.customExercises.push({ n: 'Press banca', c: 'Propio', g: 'Propio' });
+          const dup = exByName('Press banca') === EXERCISES.find(x => x.n == 'Press banca');
+          S.customExercises.pop();
+          return [before, after, dup, !!c]; })()""")
+        check('buscar un ejercicio por su nombre da lo mismo que recorrer la lista (también un propio renombrado y uno repetido)', same == [True, True, True, True], str(same))
 
         print('Workouts propios y días')
         n_routines = ev("S.routines.length")

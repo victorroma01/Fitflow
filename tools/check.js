@@ -18,6 +18,11 @@
     10. Botones sin nombre accesible.
     11. Código muerto: declaraciones sin usar, exportaciones que nadie importa, acciones que nada lanza e iconos sin usar.
     12. CSS sin usar: clases, ids y animaciones que no aparecen en el código ni en la plantilla.
+    13. Estilos en línea (la CSP no los deja).
+    14. El motor 3D (src/fig3d): nada declarado y nunca leído.
+    15. La frontera con el sistema: lo que en una app nativa (iOS, Android) se cambia por lo suyo (guardar en el dispositivo,
+        compartir y copiar, avisos y globo, service worker, pantalla encendida, sonido y vibración, «atrás», cámara, App
+        Check, qué dispositivo es) solo lo usan sus módulos (docs/tecnica/movil.md).
 */
 const fs = require('fs'), path = require('path');
 function loadTS() {
@@ -376,6 +381,63 @@ for (const m of mods) {
   const tpl = fs.readFileSync(path.join(ROOT, 'src', 'index.html'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   if ((tpl.match(/(?<![\w-])style=["']/g) || []).length || (tpl.match(/<style[\s>]/gi) || []).length != 1)
     err('estilo en línea en src/index.html: solo vale el <style> de la hoja de la app');
+}
+
+// 14. el motor 3D (src/fig3d): son scripts clásicos que no pasan por las reglas de arriba; TypeScript (noUnusedLocals, sin
+//     mirar los tipos) dice lo declarado y nunca leído: variables, funciones y nombres de lo que se desestructura
+{
+  const dir = path.join(ROOT, 'src', 'fig3d');
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.js')).sort().map(f => path.join(dir, f));
+  const prog = ts.createProgram(files, { allowJs: true, checkJs: true, noEmit: true, noUnusedLocals: true, skipLibCheck: true, types: [], target: ts.ScriptTarget.ES2022, lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'] });
+  const UNUSED = new Set([6133, 6196, 6198, 6199, 6205]);
+  const mine = new Set(files.map(f => f.replace(/\\/g, '/')));
+  for (const sf of prog.getSourceFiles()) {
+    if (!mine.has(sf.fileName))
+      continue;
+    for (const d of prog.getSemanticDiagnostics(sf))
+      if (UNUSED.has(d.code))
+        err('motor 3D, sin usar: src/fig3d/' + path.basename(sf.fileName) + ':' + (sf.getLineAndCharacterOfPosition(d.start).line + 1) + ' ' + ts.flattenDiagnosticMessageText(d.messageText, ' '));
+  }
+}
+
+// 15. la frontera con el sistema: cada cosa del navegador que en una app nativa cambia por la suya va solo en su módulo, para
+//     que llevar la app a iOS y Android sea cambiar esos módulos y nada más (docs/tecnica/movil.md). En el código, no en los
+//     comentarios: navigator.<x>, history.<x>, los globales de la lista, el evento popstate y el nombre de una descarga
+const BORDER = {
+  localStorage: ['core/store.js', 'core/persist.js', 'core/util.js'],
+  sessionStorage: ['core/persist.js'],
+  indexedDB: ['core/idb.js'],
+  'navigator.storage': ['system/space.js'],
+  'navigator.share': ['system/files.js'], 'navigator.canShare': ['system/files.js'], 'navigator.clipboard': ['system/files.js'],
+  'navigator.standalone': ['system/files.js'], 'descarga (a.download)': ['system/files.js'],
+  'navigator.serviceWorker': ['system/updates.js'],
+  Notification: ['system/phone.js'], 'navigator.setAppBadge': ['system/phone.js'], 'navigator.clearAppBadge': ['system/phone.js'],
+  'navigator.wakeLock': ['workout/wake.js'],
+  'navigator.vibrate': ['profile/feedback.js'], AudioContext: ['profile/feedback.js'], webkitAudioContext: ['profile/feedback.js'],
+  history: ['core/back.js', 'system/phone.js'], 'evento popstate': ['core/back.js'],
+  'navigator.mediaDevices': ['extras/foods-online.js'], BarcodeDetector: ['extras/foods-online.js'],
+  grecaptcha: ['cloud/appcheck.js'],
+  'navigator.userAgent': ['core/platform.js'], 'navigator.maxTouchPoints': ['core/platform.js'], 'navigator.onLine': ['core/platform.js'],
+};
+const BORDER_IDS = new Set(Object.keys(BORDER).filter(k => /^\w+$/.test(k) && k != 'history'));
+for (const m of mods) {
+  const sf = parsed[m], seen = new Set();
+  (function w(n) {
+    if (ts.isPropertyAccessExpression(n)) {
+      const o = n.expression.getText(sf).replace(/^window\./, '');
+      if (o == 'navigator') seen.add('navigator.' + n.name.text);
+      if (o == 'history') seen.add('history');
+      if (n.name.text == 'download' && ts.isBinaryExpression(n.parent) && n.parent.left == n && n.parent.operatorToken.kind == ts.SyntaxKind.EqualsToken) seen.add('descarga (a.download)');
+    }
+    if (ts.isIdentifier(n) && BORDER_IDS.has(n.text) && !(ts.isPropertyAccessExpression(n.parent) && n.parent.name == n && n.parent.expression.getText(sf) != 'window'))
+      seen.add(n.text);
+    if (ts.isStringLiteral(n) && n.text == 'popstate' && ts.isCallExpression(n.parent) && /EventListener$/.test(n.parent.expression.getText(sf)))
+      seen.add('evento popstate');
+    ts.forEachChild(n, w);
+  })(sf);
+  for (const k of seen)
+    if (BORDER[k] && !BORDER[k].includes(m))
+      err('frontera con el sistema: ' + k + ' solo en ' + BORDER[k].join(', ') + ', y lo usa ' + m + ' (docs/tecnica/movil.md)');
 }
 
 // ---- resultado

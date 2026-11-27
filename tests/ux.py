@@ -27,7 +27,7 @@ def check(name, cond, info=''):
     print(('  ok   ' if cond else '  FALLA'), name, ('' if cond else info))
 
 
-BOX = "(e => { if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right), Math.round(r.height)]; })(document.querySelector('.tst'))"
+BOX = "(e => { if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right), Math.round(r.height)]; })(document.querySelector('.toast'))"
 
 
 def main(path):
@@ -71,10 +71,10 @@ def main(path):
         ev("document.querySelector('[data-a=removeMealItem]').click()")
         run(100)
         gone = ev("JSON.stringify(%s)" % day)
-        check('al quitar un alimento sale el aviso con «Deshacer»', gone != before and '«Arroz» quitado' in tt() and ev("!!document.querySelector('.tst [data-a=toastUndo]')"), tt())
+        check('al quitar un alimento sale el aviso con «Deshacer»', gone != before and '«Arroz» quitado' in tt() and ev("!!document.querySelector('.toast [data-a=toastUndo]')"), tt())
         # el aviso no recoge los toques (tapa el «←» y el título de una página): lo de debajo responde; su «Deshacer», también
         hit = ev("""(() => { const c = e => { const r = e.getBoundingClientRect(); return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); };
-          const t = document.querySelector('.tst'), u = t.querySelector('.tsu'), r = t.getBoundingClientRect(), under = document.elementFromPoint(r.left + 8, r.top + r.height / 2);
+          const t = document.querySelector('.toast'), u = t.querySelector('.toast-undo'), r = t.getBoundingClientRect(), under = document.elementFromPoint(r.left + 8, r.top + r.height / 2);
           return [!!under && !t.contains(under), c(u) == u]; })()""")
         check('el aviso no tapa los toques: lo de debajo responde, y su «Deshacer» se puede tocar', hit == [True, True], str(hit))
         run(2700)
@@ -152,13 +152,13 @@ def main(path):
         print('«Atrás»')
         ev("A.openLibrary(); A.libraryGroup(0, { dataset: { v: 'Pecho' } })")
         run(400)
-        check('en un grupo de la librería se ve el grupo', ev("document.querySelector('#sh .sp').textContent.includes('‹ Grupos')"))
+        check('en un grupo de la librería se ve el grupo', ev("document.querySelector('#sh .sheet').textContent.includes('‹ Grupos')"))
         ev("backTarget().go()")
         run(400)
-        check('«atrás» vuelve a los grupos (antes cerraba la librería)', ev("!!document.querySelector('#sh .sp .gg') && !document.querySelector('#sh .sp').textContent.includes('‹ Grupos')"))
+        check('«atrás» vuelve a los grupos (antes cerraba la librería)', ev("!!document.querySelector('#sh .sheet .cat-grid') && !document.querySelector('#sh .sheet').textContent.includes('‹ Grupos')"))
         ev("backTarget().go()")
         run(400)
-        check('y otro «atrás» cierra la librería', ev("!document.querySelector('#sh .sp')"))
+        check('y otro «atrás» cierra la librería', ev("!document.querySelector('#sh .sheet')"))
 
         check('sin errores de JavaScript', not errs, '; '.join(errs[:3]))
         c.close()
@@ -191,7 +191,7 @@ def main(path):
             pg.wait_for_timeout(800)
             first = pg.evaluate("document.querySelector('#tt').innerText")
             pg.wait_for_timeout(1500)
-            check('si tarda en descargarse, dice «Cargando…» y después se abre', 'Cargando' in first and pg.evaluate("document.querySelector('#sh .sp').textContent.includes('Temporizador WOD')"), first)
+            check('si tarda en descargarse, dice «Cargando…» y después se abre', 'Cargando' in first and pg.evaluate("document.querySelector('#sh .sheet').textContent.includes('Temporizador WOD')"), first)
             c.close()
             mode['fail'] = True
             c, pg = package()
@@ -203,7 +203,7 @@ def main(path):
             mode['fail'] = False
             pg.evaluate("document.querySelector('[data-a=openWod]').click()")
             pg.wait_for_timeout(2200)
-            check('y al volver a intentarlo con red, se abre', pg.evaluate("!!document.querySelector('#sh .sp') && document.querySelector('#sh .sp').textContent.includes('Temporizador WOD')"))
+            check('y al volver a intentarlo con red, se abre', pg.evaluate("!!document.querySelector('#sh .sheet') && document.querySelector('#sh .sheet').textContent.includes('Temporizador WOD')"))
             c.close()
         b.close()
     print('\n%d comprobaciones, %d fallan' % (len(passes) + len(fails), len(fails)))

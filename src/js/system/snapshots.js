@@ -9,6 +9,7 @@ import { $, APPV, dayKey } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
 import { idbStore } from '../core/idb.js';
+import { staleNow } from '../core/persist.js';
 import { A } from '../core/registry.js';
 import { S } from '../core/state.js';
 import { askRestore, backupDate, buildBackup, countOf, plural } from './backup.js';
@@ -45,6 +46,10 @@ export const takeSnapshot = async () => {
 let snapDay = '';
 /* la copia de hoy, si hoy aún no se ha intentado */
 const dailySnapshot = () => {
+  /* con la app abierta en otra ventana que ha guardado después (core/persist), esta no tiene lo último: la copia la hará
+     cuando se recargue */
+  if (staleNow())
+    return;
   const d = dayKey(new Date());
   if (snapDay == d)
     return;
@@ -63,7 +68,15 @@ export const startSnapshots = () => {
       dailySnapshot();
   });
 };
-const snapshotRows = l => l.length ? l.map(x => html`<div class="row p-8-0 bdt-1-solid-ln"><span><b>${backupDate(x.t, 1)}</b><br><small class="mu">${raw(plural(x.n || 0, 'entreno', 'entrenos'))} · versión ${x.v || ''}</small></span><button data-a="snapshotRestore" data-v="${x.d}">Restaurar</button></div>`).join('') : '<p class="mu fs-13 m-8-0-0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>';
+const snapshotRows = l => l.length ? l.map(x => html`
+  <div class="row p-8-0 bdt-1-solid-ln">
+    <span>
+      <b>${backupDate(x.t, 1)}</b><br>
+      <small class="muted">${raw(plural(x.n || 0, 'entreno', 'entrenos'))} · versión ${x.v || ''}</small>
+    </span>
+    <button data-a="snapshotRestore" data-v="${x.d}">Restaurar</button>
+  </div>
+`).join('') : html`<p class="muted fs-13 m-8-0-0">Todavía no hay copias automáticas. Se hace una al día cuando abres la app.</p>`;
 /** Rellena la lista de copias automáticas de la hoja de copia de seguridad (se carga aparte porque IndexedDB es asíncrono). */
 export const fillSnapshots = () => snapList().then(l => {
   const e = $('#snapl');
@@ -72,7 +85,7 @@ export const fillSnapshots = () => snapList().then(l => {
 }).catch(err => {
   const e = $('#snapl');
   if (e)
-    e.innerHTML = '<p class="mu fs-13 m-8-0-0">Este navegador no permite guardar copias automáticas.</p>';
+    e.innerHTML = html`<p class="muted fs-13 m-8-0-0">Este navegador no permite guardar copias automáticas.</p>`;
   logError('copias automáticas', err);
 });
 /* — manejadores de esta función (registros A / C / U) — */

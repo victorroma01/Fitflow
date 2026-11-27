@@ -8,9 +8,12 @@
 */
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
+import { idbDrop } from '../core/idb.js';
 import { dropSavedState } from '../core/persist.js';
 /** { uid, u: usuario, it: token de sesión, rt: token de renovación, exp: caducidad del token (ms), x: 1 si la sesión ya no
-  vale y hay que volver a entrar } o null. */
+  vale y hay que volver a entrar (2 si es porque la cuenta ya no existe), cs: constancia de la aceptación de las condiciones y del consentimiento (cloud/consent) } o
+  null.
+  @type {Account | null} */
 export let account = null;
 const readAccount = () => {
   try {
@@ -38,8 +41,12 @@ const acctClaims = () => {
 /** ¿Es la cuenta del admin? Lo dice el rol del token (custom claim), que solo se cambia desde GitHub (tools/admin). Las reglas
   de Firestore lo vuelven a comprobar: tocar la app no da acceso a nada. */
 export const isAdmin = () => acctClaims().role === 'admin';
-/** Guarda la sesión (tras entrar, renovar el token o cambiar la contraseña). */
+/** Guarda la sesión (tras entrar, renovar el token o cambiar la contraseña). La constancia de la aceptación y del
+    consentimiento (cs, y csu si aún no ha subido: cloud/consent) es de la cuenta, no de la sesión: si la sesión nueva es de la
+    misma cuenta y no la trae, sigue con ella. */
 export const acctSave = a => {
+  if (account && a && account.uid === a.uid && !('cs' in a) && account.cs)
+    a = { ...a, cs: account.cs, csu: account.csu };
   account = a;
   Store.set(Store.K.acct, JSON.stringify(a));
 };
@@ -66,7 +73,7 @@ export const wipeAccountData = () => {
       logError('borrar datos de la cuenta (' + k + ')', e);
     }
   try {
-    indexedDB.deleteDatabase('ffsnap');
+    idbDrop('ffsnap');
   }
   catch (e) {
     logError('borrar copias automáticas', e);

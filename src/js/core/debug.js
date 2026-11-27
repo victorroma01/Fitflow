@@ -5,32 +5,36 @@
    se añade aquí.
    Define: DEBUG_NAMES
 */
-import { APPV, dayKey, FFDEP } from './util.js';
+import { APPV, dayKey, FFDEP, LANG } from './util.js';
+import { say, tr } from './i18n.js';
 import { Store } from './store.js';
 import { clearErrorLog, errorLog, logError } from './errors.js';
-import { partSizes, partsLost, savesDone, stateRecovered } from './persist.js';
+import { instanceStale, partSizes, partsLost, savesBroken, savesDone, stateRecovered } from './persist.js';
 import { mealsPart } from './parts.js';
+import { repairState } from './repair.js';
 import { SCHEMA_TABLES, stateFromStored, stateToStored, workoutFromStored, workoutToStored } from './schema.js';
 import { A, C, U } from './registry.js';
-import { groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
+import { EXERCISES, groupOf, parseProgram, PROGRAM_NAMES, PROGRAMS } from '../data/library.js';
 import { EX_ALIASES } from '../data/aliases.js';
 import { FIG_POSES } from '../data/figposes.js';
-import { figPose } from '../extras/moves.js';
-import { exPicture } from '../extras/anatomy.js';
+import { exHasFigure, exMotion, exPicture } from '../extras/pictures.js';
+import { loadFigures } from './lazy.js';
 import { addState, applyTheme, flushState, markNewAccount, nutriDayOffset, overviewMode, S, saveState, setOverviewMode, setW, setWeightView, W, weightView } from './state.js';
 import { icon } from './icons.js';
 import { confirmDialog, dialog, sheet } from './ui.js';
 import { R } from './render.js';
-import { exAll, exSearchText } from '../library/model.js';
+import { exAll, exByName, exSearchText } from '../library/model.js';
 import { libBody, libState } from '../library/browse.js';
 import { clone, progDraft } from '../programs/create.js';
 import { levelPlan } from '../programs/levels.js';
 import { isDeloadWeek } from '../workout/deload.js';
+import { dayImage, photoUrl, routineImage } from '../workout/images.js';
+import { MEDIA } from '../data/media.js';
 import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
 import { snapList, snapTx, takeSnapshot } from '../system/snapshots.js';
 import { spaceCheck, spaceUse } from '../system/space.js';
-import { isNewerVersion, updatesOn } from '../system/updates.js';
+import { isNewerVersion, plainVersion, updatesOn } from '../system/updates.js';
 import { showSummary } from '../extras/summary.js';
 import { medalSvg } from '../extras/medals.js';
 import { ACHIEVEMENTS } from '../extras/achievements.js';
@@ -59,6 +63,9 @@ const DEBUG_NAMES = {
   addState: [() => addState],
   applyTheme: [() => applyTheme],
   APPV: [() => APPV],
+  LANG: [() => LANG],
+  tr: [() => tr],
+  say: [() => say],
   backTarget: [() => backTarget],
   buildBackup: [() => buildBackup],
   C: [() => C],
@@ -73,11 +80,14 @@ const DEBUG_NAMES = {
   errorLog: [() => errorLog],
   EX_ALIASES: [() => EX_ALIASES],
   exAll: [() => exAll],
+  exByName: [() => exByName],
+  EXERCISES: [() => EXERCISES],
+  exHasFigure: [() => exHasFigure],
+  exMotion: [() => exMotion],
   exPicture: [() => exPicture],
   exSearchText: [() => exSearchText],
   FFDEP: [() => FFDEP],
   FIG_POSES: [() => FIG_POSES],
-  figPose: [() => figPose],
   flushState: [() => flushState],
   FOOD_GROUPS: [() => FOOD_GROUPS],
   FOODS_SRC: [() => FOODS_SRC],
@@ -85,6 +95,7 @@ const DEBUG_NAMES = {
   icon: [() => icon],
   isDeloadWeek: [() => isDeloadWeek],
   levelPlan: [() => levelPlan],
+  loadFigures: [() => loadFigures],
   libBody: [() => libBody],
   libState: [() => libState],
   logError: [() => logError],
@@ -96,6 +107,8 @@ const DEBUG_NAMES = {
   parseProgram: [() => parseProgram],
   partSizes: [() => partSizes],
   partsLost: [() => partsLost],
+  instanceStale: [() => instanceStale],
+  savesBroken: [() => savesBroken],
   PROGRAM_NAMES: [() => PROGRAM_NAMES],
   PROGRAMS: [() => PROGRAMS],
   pendingDocs: [() => pendingDocs],
@@ -137,7 +150,13 @@ const DEBUG_NAMES = {
   workoutToStored: [() => workoutToStored],
   iconNoticeApplies: [() => iconNoticeApplies],
   iconNoticeCheck: [() => iconNoticeCheck],
-  isNewerVersion: [() => isNewerVersion]
+  isNewerVersion: [() => isNewerVersion],
+  plainVersion: [() => plainVersion],
+  dayImage: [() => dayImage],
+  photoUrl: [() => photoUrl],
+  routineImage: [() => routineImage],
+  MEDIA: [() => MEDIA],
+  repairState: [() => repairState],
 };
 for (const k in DEBUG_NAMES)
   Object.defineProperty(window, k, { get: DEBUG_NAMES[k][0], set: DEBUG_NAMES[k][1], configurable: true });

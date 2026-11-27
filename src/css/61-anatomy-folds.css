@@ -1,8 +1,8 @@
 /* ═══ css/61-anatomy-folds ═══ Mapa muscular, miniaturas de ejercicio y bloques plegables */
-.th {
+.thumb {
   background:radial-gradient(circle at 50% 30%,#2e3248,#0e0f15 80%)!important;
 }
-.anf {
+.anatomy-full {
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
@@ -13,15 +13,15 @@
   background:radial-gradient(120% 90% at 50% 0,#2a2e44,#0d0e14 85%);
   border:1px solid var(--ln);
 }
-.anf>div:not(.anl) {
+.anatomy-full>div:not(.anatomy-legend) {
   text-align:center;
   color:#8d93ad;
 }
-.anf svg {
+.anatomy-full svg {
   display:block;
   margin:auto;
 }
-.anf small {
+.anatomy-full small {
   display:block;
   margin-top:4px;
   color:#8d93ad;
@@ -29,7 +29,7 @@
   text-transform:uppercase;
   font-size:11px;
 }
-.anl {
+.anatomy-legend {
   width:100%;
   display:flex;
   justify-content:center;
@@ -38,7 +38,7 @@
   font-size:13px;
   font-weight:600;
 }
-.anl i {
+.anatomy-legend i {
   display:inline-block;
   width:12px;
   height:12px;
@@ -46,24 +46,10 @@
   margin-right:6px;
   vertical-align:-1px;
 }
-.eqi span {
+.filter-option span {
   white-space:nowrap;
 }
-.gg button svg {
-  margin:2px auto;
-}
-/* la figura de cada grupo no pasa del ancho de su tarjeta (en pantallas estrechas encoge, cuadrada) */
-.gg .anb {
-  width:min(88px,100%)!important;
-  height:auto!important;
-  aspect-ratio:1;
-}
-.gg .anb svg {
-  width:100%;
-  height:100%;
-  margin:0;
-}
-.anb {
+.anatomy-box {
   display:block;
   border-radius:16px;
   overflow:hidden;
@@ -71,16 +57,16 @@
   margin:0 auto;
   border:1px solid #ffffff12;
 }
-.anb svg {
+.anatomy-box svg,.anatomy-box img {
   display:block;
 }
-.exc {
+.exercise-cell {
   display:flex!important;
   gap:12px;
   align-items:flex-start;
   min-width:0;
 }
-.exth {
+.exercise-thumb {
   flex:none;
   width:48px;
   height:48px;
@@ -92,65 +78,58 @@
   border:1px solid #ffffff12;
   font-style:normal;
 }
-.exth svg {
+/* la miniatura del ejercicio (extras/pictures): la figura como imagen o, mientras se dibuja, su hueco */
+.exercise-thumb svg,.exercise-thumb img,.thumb>img {
   display:block;
 }
-.ext {
+.exercise-text {
   min-width:0;
   display:block;
 }
-.row .anb {
+.row .anatomy-box {
   margin:0;
 }
-.exr {
+.item-split {
   content-visibility:auto;
   contain-intrinsic-size:auto 72px;
 }
-.eqrow {
+.filter-row {
   position:relative;
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(0,1fr));
   gap:8px;
   margin:8px 0 4px;
 }
-.eqrow .eqd {
+.filter-row .filter-box {
   position:static;
   margin:0;
   min-width:0;
 }
-.eqrow .eqb {
+.filter-row .filter-btn {
   padding:11px 12px;
   gap:8px;
 }
-.eqrow .eqb span {
+.filter-row .filter-btn span {
   letter-spacing:.06em;
   font-size:12px;
 }
-.eqp {
+.filter-panel {
   max-height:62vh;
   overflow:auto;
   -webkit-overflow-scrolling:touch;
 }
-.eqf {
+.filter-foot {
   position:sticky;
   bottom:-6px;
   background:var(--cd);
   padding-bottom:6px;
 }
-.eqg.gr .eqi span {
+.filter-grid.groups .filter-option span {
   white-space:normal;
   line-height:1.15;
   font-size:14px;
 }
-.ver {
-  text-align:center;
-  font-size:11px;
-  color:var(--mu);
-  opacity:.75;
-  margin:18px 0 8px;
-  letter-spacing:.04em;
-}
-.fdb {
+.fold-btn {
   margin-left:auto;
   flex:none;
   border:0;
@@ -160,13 +139,13 @@
   color:var(--mu);
   line-height:0;
 }
-.fdb svg {
+.fold-btn svg {
   transition:transform .2s;
 }
-.xs.fd .fdb svg {
+.exercise.folded .fold-btn svg {
   transform:rotate(-90deg);
 }
-.xsm {
+.exercise-summary {
   display:none;
   justify-content:space-between;
   align-items:center;
@@ -175,29 +154,29 @@
   padding:2px 2px 6px;
   cursor:pointer;
 }
-.xs.fd>.xsm {
+.exercise.folded>.exercise-summary {
   display:flex;
 }
-.xsm b {
+.exercise-summary b {
   color:var(--tx);
 }
-.xs.fd>*:not(.sl):not(.xh):not(.xsm):not(.rr):not(small):not(br) {
+.exercise.folded>*:not(.series-label):not(.exercise-head):not(.exercise-summary):not(.rest-row):not(small):not(br) {
   display:none!important;
 }
-.xs.fd .xh>div:nth-child(2)>*:not(b) {
+.exercise.folded .exercise-head>div:nth-child(2)>*:not(b) {
   display:none!important;
 }
-.xs.fd .th {
+.exercise.folded .thumb {
   width:48px;
   height:48px;
   flex:none;
 }
-.xs.fd {
+.exercise.folded {
   padding-bottom:4px;
 }
-.xs.fd .xh {
+.exercise.folded .exercise-head {
   margin-bottom:2px;
 }
-.xs.dn .xh b {
+.exercise.done .exercise-head b {
   opacity:.6;
 }

@@ -1,11 +1,13 @@
 """Medidas de rendimiento (T-26) con muchos datos: unos 700 entrenos, el historial de 150 ejercicios y tres años de comidas
 (más de 1 MB). Mide el arranque hasta el primer pintado, lo que tarda un guardado (mirándolo todo y diciendo solo el núcleo:
-I-10), lo que calcula la sincronización antes de hablar con Firebase, lo que tarda en pintarse cada pestaña y lo que tarda en
-abrirse Registros (la página más larga: una fila por entreno). No es una prueba
+I-10), lo que calcula la sincronización antes de hablar con Firebase, lo que tarda en pintarse cada pestaña, cada letra del
+buscador de la Librería, lo que tarda en abrirse Registros (la página más larga: una fila por entreno) y lo que se comprueba de
+los datos al abrir (core/repair). No es una prueba
 que pase o falle: sirve para comparar dos compilaciones en el mismo ordenador (docs/tecnica/rendimiento.md). Una compilación
 anterior a la V1.0.2, con las claves cortas en S (hist, wt…), recibe los mismos datos con sus nombres (core/schema).
 
   python3 tests/perf.py dist/stratafit.html [otra.html …]       (PERF_ROUNDS=5 para más vueltas)
+  python3 tests/perf.py vieja/dist/app/index.html dist/app/index.html   (el paquete que se publica, con su service worker)
 Requiere:  pip install playwright  &&  playwright install chromium
 """
 import os, re, sys, json, statistics
@@ -76,10 +78,20 @@ def measure(path):
         out['ver qué hay que subir (ms)'] = round(pg.evaluate(TIMED % (15, 'pendingDocs()')), 1)
         for t, name in enumerate(['Workout', 'Nutrición', 'Dashboard', 'Perfil']):
             out['pintar %s (ms)' % name] = round(pg.evaluate(TIMED % (15, 'S.tab=%d;R()' % t)), 1)
-        # la página más larga de la app: Registros, con una fila por entreno (desde la V1.0.2, que es cuando se llama así)
+        # escribir en el buscador de la Librería: cada letra vuelve a buscar en los 529 ejercicios y pinta hasta 80 filas, con su
+        # figura (desde la V1.0.32)
+        pg.evaluate("sheet();A.openLibrary()")
+        out['buscar en la Librería (ms)'] = round(pg.evaluate(TIMED % (15, "const i=document.querySelector('#sh input');window.__q=(window.__q||0)+1;"
+                                                                      "i.value=['press','sentadilla','remo','curl','pecho'][window.__q%5];i.dispatchEvent(new Event('input',{bubbles:true}))")), 1)
+        pg.evaluate('sheet()')
+        # la página más larga de la app: Registros, con una fila por entreno (desde la V1.0.2, que es cuando se llama así; desde
+        # la V1.0.4 se pinta por tandas de 60)
         if pg.evaluate("typeof A.openLogs=='function'"):
             out['abrir Registros (ms)'] = round(pg.evaluate(TIMED_AFTER % (9, 'sheet()', 'A.openLogs()')), 1)
             pg.evaluate('sheet()')
+        # lo que se comprueba de los datos al abrir la app (core/repair; desde la V1.0.4 se puede medir suelto)
+        if pg.evaluate("typeof repairState=='function'"):
+            out['comprobar los datos (ms)'] = round(pg.evaluate(TIMED % (15, 'repairState()')), 1)
         b.close()
     return out
 
@@ -95,4 +107,6 @@ if __name__ == '__main__':
             runs[f].append(measure(f))
     for f in files:
         out = {k: statistics.median(r[k] for r in runs[f]) for k in runs[f][0]}
-        print(os.path.basename(f), json.dumps(out, ensure_ascii=False))
+        # el nombre del archivo; si dos se llaman igual (dos paquetes: index.html), su ruta
+        same = [os.path.basename(x) for x in files].count(os.path.basename(f)) > 1
+        print(f if same else os.path.basename(f), json.dumps(out, ensure_ascii=False))

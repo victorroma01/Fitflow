@@ -23,7 +23,25 @@
   - **Importar** o **compartir plan**: un programa viaja como código para copiarlo en otro móvil.
 - **Semana**: arriba se cambia de semana (‹ ›). Los 7 días de la semana salen como botones; los de descanso llevan una luna.
 - **Tarjeta del día**: el día elegido, con su número de ejercicios, series y minutos. **Overview** enseña los ejercicios y permite
-  editarlos; **Empezar** abre el entreno.
+  editarlos; **Empezar** abre el entreno. Desde la V1.0.4 es más alta, con la forma de su foto: el nombre arriba, las cifras y
+  los botones abajo (cada uno con su sombra, para leerse sobre cualquier foto) y, en medio, la foto. El nombre ocupa dos líneas
+  como mucho (uno más largo, el de un workout propio, acaba en «…»); si en un móvil pequeño no cabe todo, la tarjeta crece lo
+  justo para que los botones queden dentro.
+  - **Equipamiento**: al final del Overview, el material que piden los ejercicios del día, con sus iconos y cuántos son
+    («Equipamiento (4)»): sin repetir y en el orden en que sale. **Peso corporal** solo sale si no hace falta nada más, y un
+    ejercicio creado por ti no añade nada (la app no sabe con qué lo haces). Al tocarlo se abre la lista, con el icono y el
+    nombre de cada cosa («Material necesario para esta sesión»). Al editar el día no sale.
+- **Debajo del día**, cuatro tarjetas de dos en dos (desde la V1.0.4, como en la referencia del propietario): **Librería de
+  ejercicios**, **Workout personalizado**, **Temporizador WOD** y **Registrar cardio**, cada una con su icono arriba y su
+  línea. Al editar la semana no salen.
+- **La foto de cada día** va según el día: pecho, espalda, hombros, piernas, brazos… En los días de CrossFit, Hyrox y funcional,
+  la de su ejercicio principal (SkiErg y remo, trineo, wall balls, arrancada, thrusters, box jumps y burpees, carga de granjero),
+  y la simulación de Hyrox, la de una competición. Los días de descanso de esos programas (Hyrox / CrossFit, Híbrido) llevan una
+  foto propia, sentado en un cajón del gimnasio. Un día cuyo nombre no dice nada (los de Full Body) lleva la de su primer
+  ejercicio, que suele ser el principal, sin repetir la de otro día así de la semana. Las de carrera llevan un dibujo, igual
+  para todos.
+  - Con el perfil de **mujer** (Perfil → Datos biométricos → Sexo), todas son de una modelo, con los mismos ejercicios. La de
+    la competición, mientras no haya una suya, es la del trineo.
 - **Al completar un día** (guardando su entreno, o con **Completar descanso** en un día de descanso), queda elegido el siguiente
   día sin completar; tras el último de la semana, el primero de la semana siguiente. Un día de descanso no se salta: la app se
   queda en él hasta que lo marques como completado.
@@ -97,21 +115,27 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 - Cada serie se anota con sus repeticiones y su peso, y se marca hecha con ✓. Se pueden añadir o quitar series (al quitar una
   ya hecha, el aviso trae [«Deshacer»](experiencia.md#avisos-y-deshacer)). Al marcar la última
   serie que faltaba, sale **¿Guardar el entreno?**, con **Guardar y salir** y **Cancelar** (como con el botón de avance de abajo).
+- Al final de la pantalla hay dos botones: **Guardar entreno**, que hace esa misma pregunta en cualquier momento y registra las
+  series hechas, y **Salir y descartar**, que sale sin guardar nada (también pregunta antes).
 - **Esfuerzo (RPE)**: si lo activas en Ajustes → Ajustes avanzados, al marcar una serie salen debajo los números del 6 al 10 para
-  anotar lo dura que ha sido. Viene desactivado; **+ Drop set** sale siempre bajo la serie recién hecha que lleve peso.
+  anotar lo dura que ha sido. Viene desactivado. Hasta la V1.0.31 salía además, bajo la serie recién hecha, un botón
+  **+ Drop set** que añadía otra con menos peso; se quitó en la V1.0.4 (el drop set de un programa sigue saliendo solo).
 - **Peso sugerido**: al escribir el peso de una serie, las siguientes lo traen sugerido en gris oscuro, menos destacado que un
   peso ya registrado (en una pirámide, un escalón más en cada serie; en la bajada del drop set, un 25 % menos). Si cambias la
   serie 2, las siguientes sugieren el peso nuevo; una serie con el peso escrito a mano no cambia sola. El peso sugerido queda
   registrado al marcar la serie hecha. Lo que propone el historial llega también como sugerido.
 - **Descanso**: al marcar una serie empieza la cuenta atrás del descanso de ese ejercicio, con avisos sonoros (y vibración en los
   móviles que la permiten). El descanso y el tempo se cambian en sus desplegables, que solo dicen «Descanso» y «Tempo»: el valor
-  elegido se ve arriba, en el objetivo del ejercicio.
+  elegido se ve arriba, en el objetivo del ejercicio (el descanso de una superserie, en la columna «Desc.» de cada serie).
 - **Superseries y triseries**: se hacen por rondas. Tras la serie 1 del primer ejercicio van 10 s fijos y la serie 1 del
   siguiente; al acabar la ronda, su descanso, que es el del último ejercicio del bloque (el que diga el programa o elijas en su
   desplegable; si no hay ninguno, 2:30), y vuelta al primero. Al acabar cada descanso, la pantalla pasa sola a la serie que toca.
   Se montan al editar el día: **Unir al anterior** (en el Overview, **Enlazar**) junta un ejercicio con el de arriba (y con el
   que lleve unido detrás) y **Separar** parte el bloque por ese ejercicio. De cuatro ejercicios seguidos en adelante, es un
-  **circuito**, que se hace igual, por rondas.
+  **circuito**, que se hace igual, por rondas. Cada ejercicio del bloque lleva encima su etiqueta, con el bloque que es y su
+  puesto en él (**SUPERSERIE · 1/2**). Desde la V1.0.4, ni la etiqueta ni la línea del ejercicio repiten el descanso que le
+  sigue («10 s al siguiente», «Descanso de la ronda»): va en cada serie, en la columna «Desc.» (0:10 entre los ejercicios y,
+  en el último, el de la ronda).
 - **Tips** (el icono «i»): el consejo propio de cada ejercicio (no hay dos iguales). **Notas**, **Historial** de sus series
   anteriores, **Swap** para cambiarlo por otro parecido sin perder el historial (las series que ya llevaras hechas se guardan
   en el ejercicio con el que las hiciste) y **Discos** (el icono del disco), que calcula qué discos poner en cada lado de la
@@ -132,9 +156,20 @@ desde Workout → menú → **Rotar ejercicios**. En un plan sin barras ni máqu
 
 ## Librería de ejercicios
 
-Más de 550 ejercicios, cada uno con su figura haciéndolo y su mapa muscular, y filtros por grupo muscular y por equipo. La búsqueda ignora las tildes y entiende
-nombres habituales. La ficha de cada ejercicio trae su **consejo** y, al tocar su imagen, **cómo se hace**. Desde la ficha se añade
+Más de 500 ejercicios, cada uno con su figura haciéndolo y su mapa muscular, y filtros por grupo muscular y por equipo. La búsqueda ignora las tildes y entiende
+nombres habituales. Desde la V1.0.4 no hay ejercicios repetidos (el mismo con dos nombres, como la comba y los «single unders», o
+la caminata inclinada y la cinta inclinada): queda uno, que se encuentra también buscando el otro nombre, y un plan, un workout o
+un entreno guardado con el nombre que se quitó lo sigue enseñando, con la figura, los músculos y la ficha del que queda. La ficha de cada ejercicio trae su **consejo** y, al tocar su imagen, **cómo se hace**. Desde la ficha se añade
 al día con «+ Al día».
+
+**Los grupos**, al abrir la librería, van en tarjetas (desde la V1.0.4, con el diseño aprobado por el propietario): las 14 en
+su orden (Pecho, Espalda, Hombros, Bíceps, Tríceps, Antebrazos, Abdomen, Cuádriceps, Isquios y glúteos, Gemelos, CrossFit,
+Hyrox, Funcional y Cardio), cada una con su ilustración (en las musculares, el modelo con el músculo principal en rojo y el
+secundario en naranja; en las demás, su material), su icono, su nombre y cuántos ejercicios tiene. El icono y la raya que lo
+separa del nombre van en el color de la app (Perfil → Ajustes → Color de acento), aclarado si hace falta para que se vean sobre la
+tarjeta. Debajo, la leyenda de los dos colores de los músculos, y antes, si has creado alguno, **Mis ejercicios**. En el móvil van en dos columnas, con Funcional y Cardio
+anchas; en una pantalla más ancha (una tableta, el móvil en horizontal), en tres, como en el diseño. Las tarjetas son oscuras
+también en el tema claro.
 
 **Ejercicios propios**: se crean al añadir un ejercicio al día («Crear ejercicio nuevo»); si ya hay uno con ese nombre (sin mirar
 mayúsculas ni tildes), se añade ese en vez de duplicarlo. En su ficha de la librería se pueden **renombrar** (su historial, sus
@@ -145,7 +180,32 @@ con un entreno en curso no se toca ninguno.
 ## Workouts personalizados
 
 Bloques sueltos, superseries y triseries que puedes montar a tu gusto y usar después en un programa propio. Un workout que
-se deja sin crear no se queda en la lista, y «atrás» en el editor pregunta antes si se descartan los cambios.
+se deja sin crear no se queda en la lista, y «atrás» en el editor pregunta antes si se descartan los cambios. Cada uno lleva una
+foto: la que elijas en su editor entre todas las de los días (las de tu perfil) o, si no eliges ninguna, la de sus ejercicios.
+
+## Entrenos a la carta
+
+La última tarjeta de Workout («Entrenos a la carta: Elige tu sesión y empieza a entrenar»; en inglés, «On-Demand Workouts»)
+abre diez rutinas sueltas, de un día, para hacer cuando quieras sin tocar el programa: Armageddon, Shoulder Shredder, Chest
+Crusher, Leg Destroyer, Arm Assault, Pull Essentials, Arm Overload, Push Essentials, Back Builder y un calentamiento dinámico
+(Dynamic Warm-Up). Se llaman igual en los dos idiomas.
+
+- **La lista**: cada rutina con su portada (la de su primer grupo muscular; el calentamiento, la de funcional), su nivel si lo
+  tiene, sus grupos y sus ejercicios, series y minutos aproximados (los de la app, con sus descansos).
+- **Antes de empezar**: sus bloques en orden (A, B…), cada uno suelto o en superserie (2), triserie (3) o serie gigante (4), y
+  de cada ejercicio, las series, las repeticiones de cada una («12/10/8/6 reps» en una pirámide; «AMRAP», las máximas
+  posibles), el tempo si la rutina lo da y la variante de esa posición (la postura, el agarre o el banco: «Agarre prono», «En
+  banco inclinado»). La variante no cambia el ejercicio en el resto de la app: es lo que pide la rutina en ese punto. Una
+  rutina puede repetir un ejercicio en dos posiciones seguidas (el Pec deck de Chest Crusher, el remo posterior de Shoulder
+  Shredder): cada una va con sus series y su tempo.
+- **El entreno**: «Empezar entreno» pone la rutina sobre el día del plan mientras dura, como un workout personalizado; al
+  guardarlo o descartarlo vuelve el día del plan tal cual, y no lo da por hecho. Se guarda en Registros con el nombre de la
+  rutina. Cada serie sale con sus repeticiones y con el peso de la última vez; el objetivo va serie a serie y sin RIR (la
+  rutina no lo da). Una serie **AMRAP** sale en blanco: no se da por hecha (ni con su ✓ ni con «Siguiente serie») hasta que se
+  apuntan las repeticiones que han salido. El tempo de la rutina sale elegido en su desplegable; donde la rutina no lo da,
+  «Libre». Los descansos son los de la app: 10 s entre los ejercicios de un bloque y el de la ronda al acabarlo. En una semana
+  de descarga, como cualquier entreno: menos peso y 2 repeticiones menos (una AMRAP sigue siendo AMRAP).
+- **Back Builder** viene de una captura que puede no estar completa: acaba en el Face pull (7 series), y su tempo no se veía.
 
 ## Temporizador WOD y cardio
 

@@ -9,6 +9,7 @@
    Android, Chrome cambia el icono solo.
    Define: iconNoticeApplies, iconSyncInfo, iconNoticeBody, iconTries, iconNoticeCheck  · acciones/registros: 3
 */
+import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -48,19 +49,43 @@ const iconSyncInfo = () => {
   catch (e) {
     logError('aviso del icono nuevo: cambios por subir', e);
   }
-  return n || st != 'ok' ? [false, 'Quedan cambios por subir (' + syncLine() + '). Espera a tener conexión antes de quitar la app.'] : [true, 'Todo está sincronizado (' + syncLine() + ').'];
+  return n || st != 'ok' ? [false, say `Quedan cambios por subir (${syncLine()}). Espera a tener conexión antes de quitar la app.`] : [true, say `Todo está sincronizado (${syncLine()}).`];
 };
 /** La explicación con los pasos. withButtons: con «Más tarde» y «Entendido» (la ventana que sale sola); sin ellos, la página de
     Ajustes → App → El icono nuevo. */
 export const iconNoticeBody = withButtons => {
   const [ok, txt] = iconSyncInfo();
   const url = location.host + location.pathname.replace(/index\.html$/, '');
-  const syncStep = html`<li><b>Comprueba que todo está sincronizado.</b><span class="icst ${ok ? 'ok' : 'bad'}" role="status">${txt}</span>${ok ? '' : html`<button data-a="iconNoticeSync">Sincronizar ahora</button>`}</li>`;
-  const removeStep = html`<li><b>Quita la app de la pantalla de inicio:</b> mantén pulsado su icono y toca «Eliminar marcador» o «Eliminar app», según tu versión de iOS. Al quitarla, el iPhone borra lo guardado en ella: hazlo solo con todo sincronizado.</li>`;
+  const syncStep = html`
+    <li>
+      <b>Comprueba que todo está sincronizado.</b>
+      <span class="icon-notice-status ${ok ? 'ok' : 'bad'}" role="status">${txt}</span>
+      ${ok ? '' : html`<button data-a="iconNoticeSync">Sincronizar ahora</button>`}
+    </li>`;
+  const removeStep = html`
+    <li>
+      <b>Quita la app de la pantalla de inicio:</b> mantén pulsado su icono y toca «Eliminar marcador» o «Eliminar app», según tu versión de iOS. Al quitarla, el iPhone borra lo guardado en ella: hazlo solo con todo sincronizado.
+    </li>`;
   const addStep = html`<li><b>Vuelve a añadirla desde Safari:</b> abre ${url}, toca Compartir y luego «Añadir a pantalla de inicio».</li>`;
-  const openStep = html`<li><b>Ábrela desde el icono nuevo y entra con tu usuario.</b> Los ajustes que son solo de este móvil, como el globo del icono, se eligen otra vez.</li>`;
-  const buttons = withButtons ? html`<div class="g2"><button data-a="iconNoticeLater">Más tarde</button><button class="pr" data-a="iconNoticeDone">Entendido</button></div>` : '';
-  return html`<div class="icnw"><img class="brl icn" src="${BRAND_LOGOS.claro}" alt="El icono nuevo de StrataFit">${withButtons ? html`<h3>El icono nuevo de StrataFit</h3>` : ''}<p class="mu">StrataFit tiene un logo nuevo, pero el iPhone no cambia el icono de una app que ya estaba en la pantalla de inicio. Para verlo hay que volver a añadirla. Tus datos están en la nube y vuelven al entrar.</p><ol class="icns">${syncStep}${removeStep}${addStep}${openStep}</ol>${buttons}</div>`;
+  const openStep = html`
+    <li>
+      <b>Ábrela desde el icono nuevo y entra con tu usuario.</b> Los ajustes que son solo de este móvil, como el globo del icono, se eligen otra vez.
+    </li>`;
+  const buttons = withButtons ? html`
+    <div class="grid-2">
+      <button data-a="iconNoticeLater">Más tarde</button>
+      <button class="primary" data-a="iconNoticeDone">Entendido</button>
+    </div>` : '';
+  return html`
+    <div class="icon-notice">
+      <img class="brand-logo icon-notice-logo" src="${BRAND_LOGOS.claro}" alt="El icono nuevo de StrataFit">
+      ${withButtons ? html`<h3>El icono nuevo de StrataFit</h3>` : ''}
+      <p class="muted">
+        StrataFit tiene un logo nuevo, pero el iPhone no cambia el icono de una app que ya estaba en la pantalla de inicio. Para verlo hay que volver a añadirla. Tus datos están en la nube y vuelven al entrar.
+      </p>
+      <ol class="icon-notice-steps">${syncStep}${removeStep}${addStep}${openStep}</ol>
+      ${buttons}
+    </div>`;
 };
 /* intentos de enseñarla mientras la app está ocupada (un segundo cada uno) */
 let iconTries = 0;
@@ -87,10 +112,10 @@ export const iconNoticeCheck = () => {
 A.iconNoticeSync = async (i, b) => {
   if (b) {
     b.disabled = true;
-    b.textContent = 'Sincronizando…';
+    b.textContent = tr('Sincronizando…');
   }
   await syncNow();
-  const e = $('#sh .icnw');
+  const e = $('#sh .icon-notice');
   if (e)
     e.outerHTML = iconNoticeBody(!!e.querySelector('[data-a=iconNoticeDone]'));
 };

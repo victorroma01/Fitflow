@@ -2,6 +2,7 @@
    Logros.
    Define: achStats, ACHIEVEMENTS, checkAchievements, achProgress, achievementsPage  · acciones/registros: 1
 */
+import { listAnd, say } from '../core/i18n.js';
 import { dayKey, fmtDateShort, round1, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { logError } from '../core/errors.js';
@@ -61,7 +62,7 @@ export function checkAchievements() {
       saveState();
     }
     if (nw.length)
-      setTimeout(() => toast(nw.length == 1 ? 'Logro: ' + nw[0][1] : 'Logros: ' + nw.slice(0, 2).map(x => x[1]).join(' y ') + (nw.length > 2 ? ' y ' + (nw.length - 2) + ' más' : '')), 1900);
+      setTimeout(() => toast(nw.length == 1 ? say `Logro: ${nw[0][1]}` : say `Logros: ${listAnd(nw.slice(0, 2).map(x => x[1]))}${nw.length > 2 ? say ` y ${nw.length - 2} más` : ''}`), 1900);
   }
   catch (e) {
     logError('comprobar logros', e);
@@ -70,15 +71,37 @@ export function checkAchievements() {
 function achProgress(x, st) {
   const v = st[x[3]];
   const t = x[4];
-  return x[3] == 'vol' ? roundInt(v / 1000) + ' / ' + roundInt(t / 1000) + ' t' : x[3] == 'km' ? round1(v) + ' / ' + t + ' km' : Math.min(roundInt(v), t) + ' / ' + t;
+  return x[3] == 'vol' ? roundInt(v / 1000) + ' / ' + roundInt(t / 1000) + ' t' : x[3] == 'km' ? say `${round1(v)} / ${t} km` : Math.min(roundInt(v), t) + ' / ' + t;
 }
 function achievementsPage() {
   const st = achStats();
   const a = S.achievements || {};
   const dn = ACHIEVEMENTS.filter(x => a[x[0]]);
   const pd = ACHIEVEMENTS.filter(x => !a[x[0]]);
-  const row = (x, on) => html`<div class="f2ac${on ? ' on' : ''}"><span class="f2ai">${medalSvg(x[0], 58, on)}</span><span class="minw-0"><b>${raw(x[1])}</b><br><small>${raw(x[2])}</small>${on ? '' : html`<div class="bar"><i class="bg-a2" data-style="width:${Math.min(100, Math.round(st[x[3]] / x[4] * 100))}%"></i></div>`}</span><small class="ws-nowrap">${raw(on ? (a[x[0]] && a[x[0]] != '-' ? fmtDateShort(a[x[0]], { day: 'numeric', month: 'short', year: '2-digit' }) : 'Conseguido') : achProgress(x, st))}</small></div>`;
-  return html`${pgHead('Logros')}<div class="cd ta-c"><b class="fs-32">${dn.length} de ${ACHIEVEMENTS.length}</b><br><small>logros conseguidos</small><div class="bar mt-10"><i class="bg-a2" data-style="width:${Math.round(dn.length / ACHIEVEMENTS.length * 100)}%"></i></div>${dn.length ? html`<div class="mdv">${dn.map(x => medalSvg(x[0], 40, 1))}</div>` : ''}</div>${pd.length ? html`<div class="ph">Por conseguir</div>${raw(pd.map(x => row(x, 0)).join(''))}` : ''}${dn.length ? html`<div class="ph">Conseguidos</div>${raw(dn.map(x => row(x, 1)).join(''))}` : ''}<div class="h-30"></div>`;
+  const row = (x, on) => html`
+    <div class="achievement${on ? ' on' : ''}">
+      <span class="achievement-medal">${medalSvg(x[0], 58, on)}</span>
+      <span class="minw-0">
+        <b>${raw(x[1])}</b><br>
+        <small>${raw(x[2])}</small>
+        ${on ? '' : html`
+          <div class="bar"><i class="bg-a2" data-style="width:${Math.min(100, Math.round(st[x[3]] / x[4] * 100))}%"></i></div>`}
+      </span>
+      <small class="ws-nowrap">
+        ${raw(on ? (a[x[0]] && a[x[0]] != '-' ? fmtDateShort(a[x[0]], { day: 'numeric', month: 'short', year: '2-digit' }) : 'Conseguido') : achProgress(x, st))}
+      </small>
+    </div>`;
+  return html`
+    ${pgHead('Logros')}
+    <div class="card ta-c">
+      <b class="fs-32">${dn.length} de ${ACHIEVEMENTS.length}</b><br>
+      <small>logros conseguidos</small>
+      <div class="bar mt-10"><i class="bg-a2" data-style="width:${Math.round(dn.length / ACHIEVEMENTS.length * 100)}%"></i></div>
+      ${dn.length ? html`<div class="medal-row">${dn.map(x => medalSvg(x[0], 40, 1))}</div>` : ''}
+    </div>
+    ${pd.length ? html`<div class="section-label">Por conseguir</div>${raw(pd.map(x => row(x, 0)).join(''))}` : ''}
+    ${dn.length ? html`<div class="section-label">Conseguidos</div>${raw(dn.map(x => row(x, 1)).join(''))}` : ''}
+    <div class="h-30"></div>`;
 }
 A.openAchievements = () => {
   checkAchievements();

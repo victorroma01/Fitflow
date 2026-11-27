@@ -32,6 +32,9 @@ T0 = time.time()
 # la cabecera Cache-Control del servidor. Como GitHub Pages (10 minutos): el service worker debe saltarse la caché HTTP. Con
 # 'no-cache', como si ya hubiera caducado: lo normal días después de instalar la app
 CACHE = ['max-age=600']
+# los archivos de código (js/…) que hay ahora en el servidor (NOW) y los que ha habido con otras versiones (EVER); y las veces
+# que se ha pedido uno que ya no está (STALE): lo pide una página que sigue abierta con una versión anterior
+NOW, EVER, STALE = set(), set(), []
 HERE = os.path.dirname(os.path.abspath(__file__))
 # las copias del documento guardadas con parámetros en su dirección (no debe haber ninguna: static/sw.js, keyOf)
 STRAY = "caches.open('ff-app-2').then(c=>c.keys()).then(k=>k.map(r=>r.url.replace(location.origin,'')).filter(u=>u.includes('?')))"
@@ -55,6 +58,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Cache-Control', CACHE[0])
         super().end_headers()
+
+    def send_error(self, code, *a, **k):
+        name = os.path.basename(self.path.split('?')[0])
+        if code == 404 and name in EVER - NOW:
+            STALE.append(name)
+        super().send_error(code, *a, **k)
 
     def log_message(self, *a):
         pass
@@ -92,8 +101,11 @@ def reload(pg, notes):
 def deploy(orig, dest, ver=None, suffix=''):
     """Publica en `dest` el paquete `orig`; con `ver`, como una compilación nueva: el código con esa versión y cada archivo
     js/ con otro nombre (como hace esbuild cuando cambia el contenido), con todas sus referencias."""
-    v0 = json.load(open(os.path.join(orig, 'version.json'), encoding='utf-8'))['version']
+    v0 = json.load(open(os.path.join(orig, 'version.json'), encoding='utf-8'))['number']
     names = {f: (f[:-3] + suffix + '.js' if ver else f) for f in os.listdir(os.path.join(orig, 'js'))}
+    NOW.clear()
+    NOW.update(names.values())
+    EVER.update(names.values())
     def fix(t):
         for a, b in names.items():
             t = t.replace(a, b)
@@ -151,7 +163,7 @@ def from_previous(b, orig, log):
         reload(pg, log)
         pg.wait_for_load_state('load')
         try:
-            pg.wait_for_selector('#upd.update .updk', timeout=10000)
+            pg.wait_for_selector('#upd.update .update-box', timeout=10000)
         except Exception:
             pass
         check('viniendo del service worker anterior: abre la versión guardada y avisa de la nueva', ev(state) == v0 + ' con aviso', ev(state))
@@ -171,9 +183,9 @@ def from_previous(b, orig, log):
         check('con la versión nueva ya activa, la página abierta de la anterior aún carga lo que no había usado (WOD)', ev(WOD_OPEN) and ev('APPV') == v0,
               ev("document.querySelector('#tt')?document.querySelector('#tt').innerText.slice(0,120):''"))
         ev("sheet()")
-        if ev("!!document.querySelector('#upd .upb')"):
+        if ev("!!document.querySelector('#upd .update-btn')"):
             with pg.expect_navigation():
-                pg.click('#upd .upb')
+                pg.click('#upd .update-btn')
             pg.wait_for_load_state('load')
             pg.wait_for_timeout(1200)
         check('«Actualizar» carga la versión nueva (antes: seguía la vieja, con el aviso otra vez)', ev(state) == '9.9.9', ev(state))
@@ -197,6 +209,8 @@ def main(app):
     orig = os.path.join(site, 'orig')
     shutil.copytree(os.path.abspath(app), orig)
     shutil.copytree(orig, os.path.join(site, 'fitflow'))
+    NOW.update(os.listdir(os.path.join(orig, 'js')))
+    EVER.update(NOW)
     srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(Handler, directory=site))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     url = 'http://localhost:%d/fitflow/' % srv.server_address[1]
@@ -209,7 +223,22 @@ def main(app):
             errs = []
             pg.on('framenavigated', lambda f: log.append('navega ' + f.url[-50:]) if f == pg.main_frame else None)
             pg.on('pageerror', lambda e: errs.append('PAGEERR ' + str(e)[:200]))
-            pg.on('console', lambda m: errs.append('CONSOLE ' + m.text[:200]) if m.type == 'error' and 'Service Worker' not in m.text else None)
+
+            def console(m):
+                """Los errores de la consola de la página. Sin service worker (WebKit, en estas pruebas) nadie guarda el código de la
+                versión anterior: una página que sigue abierta con una versión que ya no está en el servidor no encuentra lo que
+                aún no había cargado (el motor de las figuras, que pide ella sola al rato de abrirse). No es un fallo de la app:
+                con service worker lo tiene en su caché, y ahí sí cuenta. Vale solo para un archivo de código de otra versión
+                (por su dirección o, si el aviso no la trae, porque el servidor acaba de negar uno)."""
+                if m.type != 'error' or 'Service Worker' in m.text:
+                    return
+                name = os.path.basename(((m.location or {}).get('url') or '').split('?')[0])
+                if not SW and '404' in m.text and (name in EVER - NOW if name else STALE):
+                    if not name:
+                        STALE.pop()
+                    return
+                errs.append('CONSOLE ' + m.text[:200] + (' · ' + name if name else ''))
+            pg.on('console', console)
             try:
                 pg.goto(url)
                 pg.wait_for_timeout(1500)
@@ -224,6 +253,18 @@ def main(app):
                 check('manifiesto válido, con los accesos directos del icono (F-39)', m == ['./', 'standalone', 3, './?a=entreno,./?a=comida,./?a=peso'], str(m))
                 ic = ev("""fetch('manifest.webmanifest').then(r=>r.json()).then(j=>Promise.all([...j.icons.map(i=>i.src+':'+(i.purpose||'any')),...j.shortcuts.map(s=>s.icons[0].src)].map(u=>fetch(u.split(':')[0]).then(r=>[u,r.ok,r.headers.get('content-type')]))))""")
                 check('iconos del logo nuevo: el de la app, el adaptable de Android y uno propio para cada acceso directo (F-40, I-15)', [x[0] for x in ic] == ['icon-192.png:any', 'icon-512.png:any', 'icon-512-maskable.png:maskable', 'atajo-entreno.png', 'atajo-comida.png', 'atajo-peso.png'] and all(x[1] and 'png' in (x[2] or '') for x in ic), str(ic))
+                # con la app en inglés (tests/english.py), el manifiesto es el inglés: el mismo, con los textos de los accesos en inglés
+                c2 = b.new_context(viewport={'width': 390, 'height': 844}, locale='en-US', **CTX)
+                c2.add_init_script(INIT)
+                p2 = c2.new_page()
+                p2.goto(url)
+                p2.wait_for_timeout(800)
+                check('en inglés, el manifiesto es el inglés', p2.evaluate("[document.documentElement.lang, ...[...document.querySelectorAll('link[rel=manifest]')].map(l=>l.getAttribute('href'))].join()") == 'en,manifest.en.webmanifest')
+                me = p2.evaluate("Promise.all(['manifest.webmanifest','manifest.en.webmanifest'].map(u=>fetch(u).then(r=>r.json())))")
+                shape = lambda j: [j['start_url'], j['scope'], j['display'], j['icons'], [[s['url'], s['icons']] for s in j['shortcuts']]]
+                check('que es el mismo, con los nombres de los accesos directos en inglés', shape(me[0]) == shape(me[1]) and [me[0]['lang'], me[1]['lang']] == ['es', 'en'] and [s['name'] for s in me[1]['shortcuts']] == ["Today's workout", "Today's nutrition", 'Log your weight'], str([s['name'] for s in me[1]['shortcuts']]))
+                loaded_en = p2.evaluate("performance.getEntriesByType('resource').map(e=>e.name.split('/').pop())")
+                c2.close()
                 code = ['js/' + f for f in os.listdir(os.path.join(orig, 'js'))]
                 if SW:
                     ev("navigator.serviceWorker.ready.then(()=>1)")
@@ -231,26 +272,32 @@ def main(app):
                     pg.wait_for_timeout(1200)
                     check('service worker controla la página', ev('!!navigator.serviceWorker.controller'))
                     cached = ev("caches.keys().then(k=>Promise.all(k.map(n=>caches.open(n).then(c=>c.keys()).then(r=>r.map(x=>x.url.split('/fitflow/')[1]))))).then(a=>a.flat())")
-                    need = ['index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', ''] + code
+                    need = ['index.html', 'manifest.webmanifest', 'manifest.en.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', ''] + code
                     check('precarga completa (también el código js/)', all(n in cached for n in need), str([n for n in need if n not in cached]))
                     # lo que pide la página pasa por el service worker: el código sale de la caché sin volver a pedirlo al servidor y un
                     # icono (o el documento, o una foto), de la caché pero revalidado (I-09)
                     del REQS[:]
-                    eager = sorted(f for f in code if not re.match(r'js/(wod|csv|foods-online|exinfo|analysis|pdf)-', f))[0]
+                    eager = sorted(f for f in code if not re.match(r'js/(wod|csv|foods-online|exinfo|analysis|pdf|legal|en-[a-z]+)-', f))[0]
                     ev("Promise.all([fetch('%s'),fetch('icon-192.png')]).then(()=>1)" % eager)
                     pg.wait_for_timeout(800)
                     check('el código sale de la caché sin pedirlo otra vez; un icono se revalida (I-09)', ('/fitflow/' + eager) not in REQS and '/fitflow/icon-192.png' in REQS, str(REQS[:12]))
                 else:
                     skipped('service worker y precarga')
                 # comprimido: líneas muy largas, de media más de 500 caracteres (los saltos que quedan son los de dentro de los textos;
-                # un archivo de menos de 5 KB no cuenta, ni el catálogo de ejercicios, que es texto, una línea por ejercicio)
+                # un archivo de menos de 5 KB no cuenta, ni lo que es texto: el catálogo de ejercicios, una línea por ejercicio, y los
+                # textos legales, un párrafo por línea)
                 check('el código va aparte y comprimido', bool(code) and ev("!!document.querySelector('script[type=module][src^=\"js/\"]')") and
-                      all(len(s) < 5000 or len(s) / (s.count('\n') + 1) > 500 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not f.startswith('js/exinfo-'))))
-                # lo poco usado (WOD, CSV, escáner, el catálogo de consejos y ejecución, el análisis mensual y el PDF) va aparte y no se
-                # descarga al arrancar
-                lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo|analysis|pdf)-', f)]
+                      all(len(s) < 5000 or len(s) / (s.count('\n') + 1) > 500 for s in (open(os.path.join(orig, f), encoding='utf-8').read() for f in code if not re.match(r'js/(en-)?(exinfo|legal)-', f))))
+                # lo poco usado (WOD, CSV, escáner, el catálogo de consejos y ejecución, el análisis mensual, el PDF y, desde la V1.0.4,
+                # los textos legales) va aparte y no se descarga al arrancar
+                lazy = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'(wod|csv|foods-online|exinfo|analysis|pdf|legal)-', f)]
                 loaded = ev("performance.getEntriesByType('resource').map(e=>e.name.split('/').pop())")
-                check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 6 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
+                check('lo poco usado va aparte y no se carga al arrancar', len(lazy) == 7 and not any(f in loaded for f in lazy), str(lazy) + ' ' + str(loaded))
+                # el inglés (el diccionario, en cinco trozos, los consejos y los textos legales): en español no se descarga; en inglés,
+                # el diccionario al arrancar y los consejos y los textos legales, como en español, al abrirlos
+                english = [f for f in os.listdir(os.path.join(orig, 'js')) if re.match(r'en-(ui|more|library|foods|programs|exinfo|legal)-', f)]
+                check('el inglés va aparte y, en español, no se carga', len(english) == 7 and not any(f in loaded for f in english), str(english))
+                check('en inglés se carga el diccionario al arrancar, y los consejos y los textos legales no', sorted(f for f in english if f in loaded_en) == sorted(f for f in english if not re.match(r'en-(exinfo|legal)-', f)), str(loaded_en))
                 assets = ev("[...new Set([...document.documentElement.outerHTML.matchAll(/(?:src=\"|url\\()((?:img)\\/[^\"')]+)/g)].map(m=>m[1]))]")
                 # sin conexión
                 if SW:
@@ -269,6 +316,24 @@ def main(app):
                         log.append('acceso directo sin conexión: error interno de WebKit al abrir la dirección')
                     pend = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const u of %s){if(!(await c.match(u,{ignoreSearch:true})))out.push(u)}return out})()" % repr(assets))
                     check('imágenes en caché para usar sin conexión', not pend, str(pend[:5]))
+                    # los iconos del material al final del Overview (V1.0.4): archivos del paquete (img/equipment) que se guardan al
+                    # instalar, así que sin conexión salen de la caché aunque no se hayan visto antes
+                    ev("(()=>{for(let j=0;j<7;j++)if(S.plan[planIndex(j)].ex.length){A.selectDay(j);break}})();A.openOverview(0)")
+                    pg.wait_for_timeout(800)
+                    eq = ev("[...document.querySelectorAll('#app .equip-ico')].map(i=>[i.getAttribute('src'),i.complete&&i.naturalWidth>0])")
+                    check('sin conexión, los iconos del material del Overview salen de la caché', bool(eq) and all(s.startswith('img/equipment/') and ok for s, ok in eq), str(eq[:4]))
+                    ev("A.overviewBack()")
+                    # y las tarjetas de la librería (V1.0.4): sus ilustraciones e iconos (img/catalog), también las de más abajo, que
+                    # cargan al acercarse (se lleva la página hasta ellas)
+                    ev("A.openLibrary()")
+                    pg.wait_for_timeout(600)
+                    ev("(s => { s.scrollTop = s.scrollHeight; })(document.querySelector('#sh .sheet'))")
+                    pg.wait_for_timeout(900)
+                    cat = ev("[...document.querySelectorAll('#sh .cat-card img')].map(i=>[i.getAttribute('src'),i.complete&&i.naturalWidth>0])")
+                    # los iconos son la máscara de su color (data-style): están en la caché
+                    ico = ev("(async()=>{const c=await caches.open((await caches.keys())[0]);const out=[];for(const e of document.querySelectorAll('#sh .cat-ico-mask')){const u=(e.getAttribute('data-style').match(/mask-image:url\\(([^)]+)\\)/)||[])[1]||'';out.push([u,!!(await c.match(u,{ignoreSearch:true}))])}return out})()")
+                    check('sin conexión, las 14 ilustraciones y los 14 iconos de las tarjetas de la librería salen de la caché', len(cat) == 14 and len(ico) == 14 and all(s.startswith('img/catalog/') and ok for s, ok in cat + ico), str([x for x in cat + ico if not x[1]][:4] or [len(cat), len(ico)]))
+                    ev("A.closeSheet()")
                     ev('A.openWod()')
                     pg.wait_for_timeout(300)
                     check('sin conexión también abre lo que se carga al usarlo (WOD)', ev(WOD_OPEN))
@@ -291,13 +356,15 @@ def main(app):
                 check('instalación nueva: no enseña novedades', ev("!document.getElementById('upd')"))
                 vj = os.path.join(site, 'fitflow', 'version.json')
                 vj0 = open(vj, encoding='utf-8').read()
-                check('version.json publicado con la versión de la app', json.loads(vj0)['version'] == ev('APPV'))
+                check('version.json publicado con la versión de la app', json.loads(vj0)['number'] == ev('APPV'))
+                # `version` es lo que leen las apps instaladas hasta la 1.0.31 (tests/aviso.test.mjs): dice la misma versión
+                check('y con lo que leen de ella las apps instaladas hasta la 1.0.31', ev('v => plainVersion(v)', json.loads(vj0)['version']) == ev('APPV'), json.loads(vj0)['version'])
                 # Perfil → Ajustes → Actualizaciones, sin versión nueva
                 ev("S.tab=3;R();A.openSettings()")
                 pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones: «Tienes la última versión»', ev("/Tienes la última versión/.test(document.body.innerText)"))
-                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updateCheck] .srv').textContent") == 'V' + ev('APPV'))
+                check('y la fila vuelve a decir la versión', ev("document.querySelector('#sh [data-a=updateCheck] .setting-value').textContent") == 'V' + ev('APPV'))
 
                 def publish(ver, items, code=True):
                     if code:
@@ -319,13 +386,13 @@ def main(app):
                     ev("A.openSettings()")
                     pg.click('#sh [data-a=updateCheck]')  # sin service worker, el aviso llega desde Ajustes → Actualizaciones
                 try:
-                    pg.wait_for_selector('#upd.update .updk', timeout=10000)
+                    pg.wait_for_selector('#upd.update .update-box', timeout=10000)
                 except Exception:
                     pass
                 print('   (aviso tras %s ms)' % ev("Math.round(performance.now())"))
                 check('abre al instante con la versión guardada', ev('APPV') == v0, ev('APPV'))
-                check('aparece el aviso de versión nueva', ev("!!document.querySelector('#upd.update .updk')"))
-                card = ev("""(()=>{const k=document.querySelector('#upd .updk'),b=k&&k.querySelector('.upb'),cs=x=>getComputedStyle(x);if(!k)return null;
+                check('aparece el aviso de versión nueva', ev("!!document.querySelector('#upd.update .update-box')"))
+                card = ev("""(()=>{const k=document.querySelector('#upd .update-box'),b=k&&k.querySelector('.update-btn'),cs=x=>getComputedStyle(x);if(!k)return null;
                   return {title:k.querySelector('h3').textContent,text:k.innerText,bg:cs(k).backgroundColor,fg:cs(k).color,
                           bbg:cs(b).backgroundColor,a1:getComputedStyle(document.documentElement).getPropertyValue('--a1').trim(),bfg:cs(b).color,up:cs(b).textTransform,label:b.innerText}})()""")
                 check('titulado con la versión nueva', bool(card) and card['title'] == 'Versión 9.9.9', str(card and card['title']))
@@ -344,7 +411,7 @@ def main(app):
                     have = ev(CODE_FILES)
                     check('al activarse la versión nueva, el código de la anterior se conserva', all(f in have for f in old_code) and any(f.endswith('-999.js') for f in have), str(sorted(have)[:4]))
                 with pg.expect_navigation():
-                    pg.click('#upd .upb')
+                    pg.click('#upd .update-btn')
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(1200)
                 check('«Actualizar» carga la versión nueva', ev('APPV') == '9.9.9', ev('APPV'))
@@ -357,13 +424,24 @@ def main(app):
                     pg.wait_for_timeout(1200)
                     check('la versión nueva abre sin conexión', ev('!!window.__ffok') and ev('APPV') == '9.9.9' and ev("!document.getElementById('ffe')"))
                     c.set_offline(False)
+                # la revisión de la versión instalada lleva una cuarta cifra, y se anuncia (hasta la V1.0.31 el aviso solo
+                # comparaba tres números: para él era la misma versión)
+                rev = ev('APPV') + '.1'
+                publish(rev, ['Un arreglo'], code=False)
+                ev("S.tab=3;R();A.openSettings()")
+                pg.click('#sh [data-a=updateCheck]')
+                pg.wait_for_timeout(800)
+                check('Ajustes → Actualizaciones encuentra la revisión de la versión instalada (una cuarta cifra: %s)' % rev, ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión ' + rev)
+                if ev("!!document.querySelector('#upd .update-close')"):
+                    pg.click('#upd .update-close')
+                    pg.wait_for_timeout(200)
                 # Ajustes → Actualizaciones cuando hay una versión nueva en el servidor
                 publish('9.9.10', ['Otra mejora'], code=False)
                 ev("S.tab=3;R();A.openSettings()")
                 pg.click('#sh [data-a=updateCheck]')
                 pg.wait_for_timeout(800)
                 check('Ajustes → Actualizaciones encuentra la versión nueva', ev("document.querySelector('#upd h3')&&document.querySelector('#upd h3').textContent") == 'Versión 9.9.10')
-                pg.click('#upd .updx')
+                pg.click('#upd .update-close')
                 pg.wait_for_timeout(200)
                 check('el aviso se puede cerrar', ev("!document.getElementById('upd')"))
                 # tras actualizar desde una versión antigua (sin haber visto el aviso): novedades una sola vez
@@ -372,10 +450,10 @@ def main(app):
                 pg.wait_for_load_state('load')
                 pg.wait_for_timeout(1500)
                 check('un móvil que ya tenía la app guarda la versión que tenía (la de su icono)', ev("localStorage.getItem('ffinst')") == '1.0.0', str(ev("localStorage.getItem('ffinst')")))
-                news = ev("(()=>{const k=document.querySelector('#upd.news .updk');return k?{title:k.querySelector('h3').textContent,btn:k.querySelector('.upb').innerText}:null})()")
+                news = ev("(()=>{const k=document.querySelector('#upd.news .update-box');return k?{title:k.querySelector('h3').textContent,btn:k.querySelector('.update-btn').innerText}:null})()")
                 check('tras actualizar enseña las novedades de la versión', bool(news) and news['title'].startswith('Versión ') and news['btn'] == 'ENTENDIDO', str(news))
                 if news:
-                    pg.click('#upd .upb')
+                    pg.click('#upd .update-btn')
                     pg.wait_for_timeout(200)
                 reload(pg, log)
                 pg.wait_for_load_state('load')
@@ -502,6 +580,63 @@ def main(app):
                 p5.wait_for_timeout(1000)
                 check('si lo que no carga es código de la propia app, sí sale la pantalla de error, con su «Reintentar»', p5.evaluate(broke) and 'No se ha podido cargar la app' in p5.evaluate("document.getElementById('ffem').textContent") and p5.evaluate("!!document.getElementById('ffe1')"))
                 c5.close()
+                # El motor de las figuras 3D se descarga la primera vez que hace falta una figura. Si no llega (sin conexión y
+                # sin el código guardado aún, o un servidor que falla), la app sigue, las miniaturas esperan en su hueco y el
+                # motor se pide otra vez al rato; no una vez por cada miniatura de la cola, que es lo que pasaba (tres peticiones
+                # por miniatura, sin pausa). Sin service worker, para que nada salga de su caché.
+                engine = [f for f in os.listdir(os.path.join(site, 'fitflow', 'js')) if f.startswith(('motor3d-', 'figure3d-', 'figboxes-'))]
+                FAIL.update('/js/' + f for f in engine)
+                c6 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, service_workers='block')
+                c6.add_init_script(INIT)
+                p6 = c6.new_page()
+                p6.goto(url)
+                p6.wait_for_timeout(800)
+                k0 = len(REQS)
+                asked6 = lambda: sum(1 for r in REQS[k0:] if os.path.basename(r) in engine)
+                state6 = """[!!window.__ffok, !!document.getElementById('ffe'), document.querySelectorAll('#sh .exercise-thumb').length,
+                  document.querySelectorAll('#sh svg[data-pic]').length, errorLog().map(x => x.w).join()]"""
+
+                def settles(n, limit=8000):
+                    """Espera a que el motor se haya pedido n veces (cada vez, sus tres archivos) y dice cuántas peticiones van un
+                    momento después: si no se quedan en esas, es que se sigue pidiendo."""
+                    for _ in range(limit // 100):
+                        if asked6() >= 3 * n:
+                            break
+                        p6.wait_for_timeout(100)
+                    p6.wait_for_timeout(700)
+                    return asked6()
+                p6.evaluate("A.openLibrary(); U.librarySearch('press')")   # una lista con decenas de miniaturas por dibujar
+                p6.wait_for_timeout(2500)
+                st, n1 = p6.evaluate(state6), asked6()
+                check('si el motor de las figuras no se puede descargar, la app sigue y las miniaturas esperan en su hueco', st[:2] == [True, False] and st[2] > 20 and st[3] == st[2], str(st))
+                check('y se pide una vez (sus tres archivos), no una por miniatura', len(engine) == 3 and n1 == 3, '%d peticiones con %d miniaturas en cola' % (n1, st[2]))
+                check('el fallo queda apuntado una vez', st[4] == 'motor de las figuras', str(st))
+                n2 = settles(2)
+                check('al rato (4 s) lo vuelve a pedir, una vez', n2 == 6, '%d peticiones' % n2)
+                # una figura grande que se abre la ha pedido el usuario: se intenta ya, una vez; volver a pintar la hoja no es otro intento
+                drawn6 = "!!document.querySelector('#sh .figure-stage svg[data-on]')"
+                p6.evaluate("A.exerciseHowTo(0, { dataset: { n: 'Press banca' } })")
+                n3 = settles(3, 3000)
+                p6.evaluate("document.querySelector('#sh .howto-text').append('')")
+                p6.wait_for_timeout(500)
+                n3, st = max(n3, asked6()), p6.evaluate(state6)
+                check('abrir «Cómo se hace» lo pide ya, una sola vez, y la hoja sale con su texto y el sitio de la figura', n3 == 9 and not p6.evaluate(drawn6) and p6.evaluate("document.querySelector('#sh .howto-text').innerText.length > 80 && !!document.querySelector('#sh .figure-stage')") and st[4] == 'motor de las figuras', '%d peticiones · %s' % (n3, st))
+                # al volver la conexión: se pide ya, la figura que esperaba se pone sola y las miniaturas se dibujan
+                FAIL.clear()
+                p6.evaluate("window.dispatchEvent(new Event('online'))")
+                for _ in range(40):
+                    if p6.evaluate(drawn6):
+                        break
+                    p6.wait_for_timeout(250)
+                check('al volver la conexión, la figura que esperaba se pone sola', p6.evaluate(drawn6), '%d peticiones' % asked6())
+                p6.evaluate("A.closeSheet(); A.openLibrary(); U.librarySearch('press')")
+                for _ in range(80):
+                    st = p6.evaluate(state6)
+                    if st[2] > 20 and not st[3]:
+                        break
+                    p6.wait_for_timeout(250)
+                check('y las miniaturas se dibujan', st[2] > 20 and st[3] == 0 and p6.evaluate("document.querySelectorAll('#sh .exercise-thumb img').length") == st[2], str(st))
+                c6.close()
                 # app instalada: compartir copia de seguridad
                 c2 = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=True, is_mobile=True, **CTX)
                 c2.add_init_script(INIT)

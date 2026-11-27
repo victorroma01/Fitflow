@@ -74,8 +74,88 @@ y `tests/calc.test.mjs` compara `fmtDate` con `toLocaleDateString` y `mondayKey`
 
 Además, al arrancar con datos nada da un salto en la pantalla (layout shift 0, que comprueba `tests/layout.py`).
 
+## Medido en la V1.0.32
+
+Medido el 17 de noviembre de 2026 con los mismos datos: mediana de 5 vueltas, alternando la V1.0.31 publicada y la V1.0.32. Este
+ordenador no es el de la V1.0.3: solo valen comparadas entre sí las dos columnas. La V1.0.32 trae 25 fotos de portada nuevas y
+el fondo del inicio de sesión. En el archivo único van incrustadas (pesa 1,58 MB, unos 420 KB más); en el paquete instalable
+son archivos aparte, que el service worker guarda en la primera actualización (unos 315 KB más) y que no se cargan al arrancar.
+Desde esta versión se mide también el buscador de la Librería.
+
+| Medida | V1.0.31 | V1.0.32 | Diferencia |
+| --- | ---: | ---: | --- |
+| Primer pintado | 115 ms | 113 ms | Igual |
+| Guardar, mirándolo todo | 7,1 ms | 6,6 ms | Igual |
+| Guardar, diciendo qué cambió | 0,5 ms | 0,5 ms | Igual |
+| Ver qué hay que subir | 20,7 ms | 9,9 ms | La mitad: la huella de cada elemento se recuerda con su texto |
+| Pintar Workout | 1,0 ms | 1,0 ms | Igual |
+| Pintar Nutrición | 1,0 ms | 1,0 ms | Igual |
+| Pintar Dashboard | 4,9 ms | 5,0 ms | Igual |
+| Pintar Perfil | 1,1 ms | 1,1 ms | Igual |
+| Buscar en la Librería (cada letra) | 3,9 ms | 3,2 ms | Un 18 % menos: el texto de búsqueda y el ejercicio de cada fila, sin recorrer la lista |
+| Abrir Registros (700 entrenos) | 33 ms | 33 ms | Igual |
+
+Con el perfil de CPU de Chromium: mirar qué hay que subir se iba casi todo en recalcular la huella de cada elemento (recorrer su
+texto entero), aunque no hubiera cambiado; buscar un ejercicio por su nombre juntaba la biblioteca con los propios y la
+recorría entera, en doce sitios, una vez por fila en las listas y en las figuras; y el buscador quitaba otra vez las tildes de
+los 551 ejercicios en cada letra. Lo que se pinta es lo mismo carácter a carácter: `tests/samehtml.py` compara el HTML de 106
+pantallas antes y después. El arranque no ha cambiado: casi todo es esperar a IndexedDB y lo que hace el navegador (leer el
+código, los estilos y colocar la página), no el código de la app.
+
+## Medido en la V1.0.4
+
+Medido el 27 de noviembre de 2026 con los mismos datos, después de la [optimización](revision-1.0.4.md#optimización-y-limpieza):
+mediana de 5 vueltas, alternando la V1.0.31 publicada y la V1.0.4. Desde esta versión se mide **el paquete que se publica**
+(`dist/app/index.html`, con su service worker), que es lo que abre quien usa la app; el archivo único lleva ahora incrustados
+el motor de las figuras 3D, el inglés y las 150 fotos (pesa 2,9 MB) y tarda más en pintar la primera vez (167 ms frente a 139
+en una medida de 3 vueltas), pero solo lo usan las pruebas. En el paquete, lo que se carga al arrancar es algo menos que en la
+V1.0.31 (540 KB de código frente a 562); el motor 3D (unos 350 KB) y el inglés se descargan la primera vez que hacen falta.
+
+| Medida | V1.0.31 | V1.0.4 | Diferencia |
+| --- | ---: | ---: | --- |
+| Primer pintado | 101 ms | 88 ms | Algo menos |
+| Guardar, mirándolo todo | 7,2 ms | 7,1 ms | Igual |
+| Guardar, diciendo qué cambió | 0,5 ms | 0,5 ms | Igual |
+| Ver qué hay que subir | 19,2 ms | 9,8 ms | La mitad (desde la V1.0.32) |
+| Pintar Workout | 0,5 ms | 0,5 ms | Igual |
+| Pintar Nutrición | 1,0 ms | 1,0 ms | Igual |
+| Pintar Dashboard | 4,5 ms | 4,9 ms | Igual (menos de medio milisegundo) |
+| Pintar Perfil | 1,0 ms | 1,1 ms | Igual |
+| Buscar en la Librería (cada letra) | 3,7 ms | 2,1 ms | Un 43 % menos (desde la V1.0.32) |
+| Abrir Registros (700 entrenos) | 34,2 ms | 33,6 ms | Igual |
+
+El primer pintado varía mucho de una medida a otra: en otra de 3 vueltas, con el ordenador más ocupado, salió al revés (114 y
+127 ms). Por debajo de unos 15 ms, la diferencia entre dos medidas es mayor que la que hay entre versiones. Con el perfil de
+CPU de Chromium (que lo hace todo algo más lento), casi todo el arranque es del navegador (leer el código y los estilos,
+colocar la página y pintarla); de la app, unos 25 ms: leer de IndexedDB las partes del estado (unos 9), comprobar los datos
+(`core/repair`, unos 6) y el primer pintado (`R()`, unos 8).
+
+Después de esa medida, a petición del propietario, dos cambios más (el mismo día, con los mismos datos; mediana de 9 a 15
+veces):
+
+| Medida | Antes | Después |
+| --- | ---: | ---: |
+| Abrir Registros (700 entrenos): el código | 32,4 ms | 4,3 ms |
+| Abrir Registros: hasta que se ve pintada | unos 70 ms | unos 15 ms |
+| Comprobar los datos al abrir (`core/repair`) | 2,8 ms | 1,5 ms |
+
+Registros se pinta por tandas de 60 (al llegar al final, o con «Ver más registros», la siguiente): abrirla ya no depende de
+cuántos entrenos hay, y con todas las tandas el HTML es el mismo que antes, carácter a carácter. La comprobación de los datos
+no se salta, aunque nada haya cambiado: casi todo su tiempo era el historial de cada ejercicio (todas sus series), donde ahora
+cada valor solo se reescribe si no es ya un número válido y las técnicas se buscan en un `Set` hecho una vez. Con lo poco que
+tarda, saltarla ahorraría un milisegundo y dejaría sin revisar unos datos que pudo cambiar otra versión de la app.
+`tests/perf.py` la mide ahora suelta («comprobar los datos»).
+
 ## Qué se hizo
 
+- **Mirar qué hay que subir (V1.0.32)**: `cloud/sync` recuerda, de cada elemento (un entreno, un día de comidas, el historial
+  de un ejercicio…), su texto y su huella. Si el texto es el mismo, la huella también, y no se vuelve a recorrer (`hashText`).
+  Un cambio hecho en su sitio cambia el texto y se nota igual (`tests/cloud.py`).
+- **Buscar un ejercicio por su nombre (V1.0.32)**: `exByName` (`library/model`) tiene la biblioteca en un índice por nombre,
+  que no cambia después de arrancar; los propios, que se renombran en su sitio, se buscan en su lista, que es corta. Da lo mismo
+  que recorrer las dos listas (`tests/training.py`).
+- **El buscador de la Librería (V1.0.32)**: el texto en el que busca cada ejercicio de la biblioteca (nombre, material, músculos
+  y otros nombres, también sin tildes) se calcula una vez; el de los propios, cada vez.
 - **Guardar solo lo que cambia (I-10)**: antes, cada guardado pasaba a texto todo el estado para saber qué había cambiado; ahora la
   acción dice qué partes tocó y solo esas se pasan a texto (las demás, en un repaso 2 s después, con la app parada).
 - **IndexedDB (I-04)**: escribir las partes ya no frena la pantalla (va en segundo plano y en orden). Leerlas al arrancar es asíncrono:

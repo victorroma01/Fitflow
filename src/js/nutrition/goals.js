@@ -4,6 +4,7 @@
    Mientras estén a mano (S.nutritionGoals.man), cambiar el peso o la actividad no los pisa (nutrition/diet, applyDiet).
    Define: ringSvg, macroCell, goalSelect, goalsRing, goalRow, goalsFields, myNutritionPage, refreshGoals, manualPage, manualValues  · acciones/registros: 9
 */
+import { say, tr } from '../core/i18n.js';
 import { $, clampInt, clampNum, roundInt } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C, U } from '../core/registry.js';
@@ -23,28 +24,58 @@ const ringSvg = n => {
   let at = 0;
   const arcs = parts.map(x => {
     const len = Math.max(.5, x[0] / tot * L - gap);
-    const a = html`<circle cx="64" cy="64" r="${r}" fill="none" stroke="${raw(x[1])}" stroke-width="13" stroke-linecap="round" stroke-dasharray="${len.toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-at - gap / 2).toFixed(2)}"/>`;
+    const a = html`
+      <circle cx="64" cy="64" r="${r}" fill="none" stroke="${raw(x[1])}" stroke-width="13" stroke-linecap="round"
+          stroke-dasharray="${len.toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-at - gap / 2).toFixed(2)}"/>`;
     at += x[0] / tot * L;
     return a;
   });
   return html`<svg viewBox="0 0 128 128" width="150" height="150" aria-hidden="true"><g transform="rotate(-90 64 64)">${arcs}</g></svg>`;
 };
 /* un macro bajo el anillo: su % de las kcal, los gramos y el nombre, con el color de su parte del anillo */
-const macroCell = (label, percent, grams, color) => html`<div class="mnq"><small class="${color}">${icon('tgt', 13)}${percent} %</small><b>${roundInt(grams)}</b><small>${raw(label)}</small></div>`;
+const macroCell = (label, percent, grams, color) => html`
+  <div class="goals-macro">
+    <small class="${color}">${icon('tgt', 13)}${percent} %</small>
+    <b>${roundInt(grams)}</b>
+    <small>${raw(label)}</small>
+  </div>`;
 /* un desplegable de «Mi nutrición» (C: goalsDiet, goalsActivity, goalsMeals) */
-const goalSelect = (change, label, options, current) => html`<select data-c="${change}" aria-label="${label}">${options.map((x, i) => html`<option value="${i}"${i == current ? ' selected' : ''}>${x}</option>`)}</select>`;
+const goalSelect = (change, label, options, current) => html`
+  <select data-c="${change}" aria-label="${label}">
+    ${options.map((x, i) => html`<option value="${i}"${i == current ? ' selected' : ''}>${x}</option>`)}
+  </select>`;
 /* el anillo con las kcal del día y los tres macros */
-const goalsRing = (goals, targets) => html`<div class="mnr"><div class="mnk">${ringSvg(goals)}<div class="mnc"><b>${roundInt(goals.k)}</b><small>kcal</small></div></div><div class="mnx">${macroCell('Hidratos', goals.c, targets[1], 'c-ctx')}${macroCell('Proteínas', goals.p, targets[2], 'c-ptx')}${macroCell('Grasas', goals.f, targets[3], 'c-gtx')}</div></div>`;
+const goalsRing = (goals, targets) => html`
+  <div class="goals-summary">
+    <div class="goals-ring">${ringSvg(goals)}<div class="goals-ring-center"><b>${roundInt(goals.k)}</b><small>kcal</small></div></div>
+    <div class="goals-macros">
+      ${macroCell('Hidratos', goals.c, targets[1], 'c-ctx')}
+      ${macroCell('Proteínas', goals.p, targets[2], 'c-ptx')}
+      ${macroCell('Grasas', goals.f, targets[3], 'c-gtx')}
+    </div>
+  </div>`;
 /* una fila con desplegable: su nombre, lo elegido (y, tras ello, `extra`) y el desplegable, que va encima, transparente */
-const goalRow = (label, value, select, extra = '') => html`<div class="mnw"><span>${label}</span><span class="mnv" aria-hidden="true"><b>${value}</b>${extra}${icon('chr', 16)}</span>${select}</div>`;
+const goalRow = (label, value, select, extra = '') => html`
+  <div class="goals-row">
+    <span>${label}</span>
+    <span class="goals-value" aria-hidden="true"><b>${value}</b>${extra}${icon('chr', 16)}</span>
+    ${select}
+  </div>`;
 /* lo que cambia los objetivos: peso, tipo de dieta (con la diferencia con el gasto), actividad y comidas al día */
 const goalsFields = (goals, diet, activity, diff) => {
-  const weight = html`<label class="mnw"><span>Peso</span><span class="mnv"><input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="goalsWeight" value="${S.biometrics.w || ''}" placeholder="—" aria-label="Peso en kg"> kg</span></label>`;
-  const gap = diff == null ? '' : html`<i class="mnd">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`;
+  const weight = html`
+    <label class="goals-row">
+      <span>Peso</span>
+      <span class="goals-value">
+        <input type="number" inputmode="decimal" step="0.1" min="30" max="300" data-c="goalsWeight" value="${S.biometrics.w || ''}"
+            placeholder="—" aria-label="Peso en kg"> kg
+      </span>
+    </label>`;
+  const gap = diff == null ? '' : html`<i class="goals-diff">${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)} kcal</i>`;
   const dietRow = goalRow('Objetivo', raw(DIET_TYPES[diet][0]), goalSelect('goalsDiet', 'Objetivo: tipo de dieta', DIET_TYPES.map(d => d[0]), diet), gap);
   const activityRow = goalRow('Actividad', raw(ACTIVITY_LEVELS[activity][0]), goalSelect('goalsActivity', 'Actividad diaria', ACTIVITY_LEVELS.map(a => a[0] + ' · ' + a[1]), activity));
   const mealsRow = goalRow('Comidas al día', goals.n, goalSelect('goalsMeals', 'Comidas al día', [2, 3, 4, 5, 6, 7, 8].map(String), goals.n - 2));
-  return html`<div class="mnl">${weight}${dietRow}${activityRow}${mealsRow}</div>`;
+  return html`<div class="goals-list">${weight}${dietRow}${activityRow}${mealsRow}</div>`;
 };
 /* «Mi nutrición»: los objetivos del día, de dónde salen (según el plan, a mano o por defecto) y lo que los cambia */
 function myNutritionPage() {
@@ -55,8 +86,20 @@ function myNutritionPage() {
   const activity = S.biometrics.act == null ? 1 : clampInt(S.biometrics.act, 0, ACTIVITY_LEVELS.length - 1, 1);
   const mode = goals.man ? 'A mano' : spend ? 'Según tu plan' : 'Por defecto';
   const diff = spend ? roundInt(goals.k - spend.td) : null;
-  const note = spend ? DIET_TYPES[diet][4] + '. Gasto diario estimado: ' + roundInt(spend.td) + ' kcal (metabolismo basal ' + roundInt(spend.bm) + ' kcal).' : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.';
-  return html`<div id="mny">${backRow()}<div class="mnh"><h1 class="pgt">Mi nutrición</h1><span class="mnm">${raw(mode)}${icon('fk', 18)}</span></div>${goalsRing(goals, targets)}${goalsFields(goals, diet, activity, diff)}<p class="mu mnp">${raw(note)}</p><div class="h-120"></div><div class="sb mnb"><button data-a="openManualGoals">Ajustar a mano</button><button class="pr" data-a="goalsRecalculate">Recalcular con mis datos</button></div></div>`;
+  const note = spend ? say `${DIET_TYPES[diet][4]}. Gasto diario estimado: ${roundInt(spend.td)} kcal (metabolismo basal ${roundInt(spend.bm)} kcal).` : 'Completa edad, altura y peso en Perfil, Datos biométricos, y tus objetivos se calcularán solos.';
+  return html`
+    <div id="mny">
+      ${backRow()}
+      <div class="goals-head"><h1 class="page-title">Mi nutrición</h1><span class="goals-mode">${raw(mode)}${icon('fk', 18)}</span></div>
+      ${goalsRing(goals, targets)}
+      ${goalsFields(goals, diet, activity, diff)}
+      <p class="muted goals-note">${raw(note)}</p>
+      <div class="h-120"></div>
+      <div class="sticky-btn goals-actions">
+        <button data-a="openManualGoals">Ajustar a mano</button>
+        <button class="primary" data-a="goalsRecalculate">Recalcular con mis datos</button>
+      </div>
+    </div>`;
 }
 /** Vuelve a pintar la página abierta («Mi nutrición» o «Ajustar a mano») y la pestaña de detrás. */
 const refreshGoals = () => {
@@ -67,8 +110,27 @@ const refreshGoals = () => {
 /* ajustar a mano: kcal y porcentajes; la vista previa dice los gramos y si los porcentajes suman 100 */
 const manualPage = () => {
   const n = S.nutritionGoals;
-  const f = (id, l, v, mn, mx) => html`<div><label for="${id}">${raw(l)}</label><input id="${id}" type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${v}" data-u="manualGoalsPreview"></div>`;
-  return html`<div id="mnm">${pgHead('Ajustar a mano', 'openMyNutrition')}<p class="mu m-n6-0-12">Elige tus kcal y el reparto de macros. Mientras estén a mano, cambiar tu peso o tu actividad no los cambia; para volver a tu plan, pulsa «Recalcular con mis datos».</p>${f('mnk', 'Kcal diarias', n.k, 800, 8000)}<div class="g2 cols-3">${f('mnc0', '% Hidratos', n.c, 0, 100)}${f('mnp0', '% Proteínas', n.p, 0, 100)}${f('mnf0', '% Grasas', n.f, 0, 100)}</div><p id="mnv" class="mu m-12-2"></p><div class="h-90"></div><div class="sb"><button class="pr w-full p-14" data-a="manualGoalsSave">Guardar</button></div></div>`;
+  const f = (id, l, v, mn, mx) => html`
+    <div>
+      <label for="${id}">${raw(l)}</label>
+      <input id="${id}" type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${v}" data-u="manualGoalsPreview">
+    </div>`;
+  return html`
+    <div id="mnm">
+      ${pgHead('Ajustar a mano', 'openMyNutrition')}
+      <p class="muted m-n6-0-12">
+        Elige tus kcal y el reparto de macros. Mientras estén a mano, cambiar tu peso o tu actividad no los cambia; para volver a tu plan, pulsa «Recalcular con mis datos».
+      </p>
+      ${f('mnk', 'Kcal diarias', n.k, 800, 8000)}
+      <div class="grid-2 cols-3">
+        ${f('mnc0', '% Hidratos', n.c, 0, 100)}
+        ${f('mnp0', '% Proteínas', n.p, 0, 100)}
+        ${f('mnf0', '% Grasas', n.f, 0, 100)}
+      </div>
+      <p id="mnv" class="muted m-12-2"></p>
+      <div class="h-90"></div>
+      <div class="sticky-btn"><button class="primary w-full p-14" data-a="manualGoalsSave">Guardar</button></div>
+    </div>`;
 };
 /** Valores del formulario «Ajustar a mano»: [kcal, % hidratos, % proteínas, % grasas] (NaN si no son válidos). */
 const manualValues = () => [['mnk', 800, 8000], ['mnc0', 0, 100], ['mnp0', 0, 100], ['mnf0', 0, 100]].map(x => clampInt(($('#' + x[0]) || {}).value, x[1], x[2], NaN));
@@ -84,11 +146,11 @@ U.manualGoalsPreview = () => {
     return;
   const [k, c, p, f] = manualValues();
   if ([k, c, p, f].some(isNaN)) {
-    e.textContent = 'Kcal entre 800 y 8000 y porcentajes entre 0 y 100.';
+    e.textContent = tr('Kcal entre 800 y 8000 y porcentajes entre 0 y 100.');
     return;
   }
   const s = c + p + f;
-  e.textContent = s != 100 ? 'Los porcentajes suman ' + s + ' %: tienen que sumar 100.' : 'Hidratos ' + roundInt(k * c / 400) + ' g · proteínas ' + roundInt(k * p / 400) + ' g · grasas ' + roundInt(k * f / 900) + ' g al día.';
+  e.textContent = s != 100 ? say `Los porcentajes suman ${s} %: tienen que sumar 100.` : say `Hidratos ${roundInt(k * c / 400)} g · proteínas ${roundInt(k * p / 400)} g · grasas ${roundInt(k * f / 900)} g al día.`;
 };
 A.manualGoalsSave = () => {
   const [k, c, p, f] = manualValues();

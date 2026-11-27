@@ -3,13 +3,15 @@ paso a paso, el DOM, el estado guardado y los pitidos. Sirve para demostrar que 
 
   python3 tests/walk.py run REFERENCIA.html CANDIDATA.html 0,1,2,3 150 [mapa.txt]
   Con mapa.txt (líneas «registro viejo nuevo», registro A, C o U), la referencia es de antes de renombrar acciones: sus nombres
-  se traducen a los nuevos para elegir lo mismo y comparar el mismo DOM.
+  se traducen a los nuevos para elegir lo mismo y comparar el mismo DOM. Con el registro K son clases CSS (tests/clases-1.0.32.txt):
+  las de la referencia se traducen antes de comparar («K dn@xs done»: «dn» pasa a «done» en un elemento que lleva también «xs»).
   python3 tests/walk.py trace ARCHIVO.html SEMILLA PASOS salida.json ; python3 tests/walk.py cmp a.json b.json
 Requiere:  pip install playwright  &&  playwright install chromium
 """
 import os,sys,json,random,hashlib,datetime,re
 from playwright.sync_api import sync_playwright
 from browser import app_url, context_opts
+from shots import class_lines
 HERE=os.path.dirname(os.path.abspath(__file__))
 def _rd(n):
     t=open(os.path.join(HERE,n),encoding='utf-8').read()
@@ -33,8 +35,23 @@ CLICK="""([k,key,idx,val,txt])=>{const sel=k=='a'?'[data-a]':(k=='c'?'[data-c]':
  else e.value=txt;
  e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}"""
 SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('script,canvas').forEach(x=>x.remove());
+ /* las figuras 3D se dibujan cuando llega el motor, que se descarga aparte (core/lazy), y cuando hay un rato: lo que se pilla de
+    ellas depende de lo que tarden, y dos pasadas de la misma compilación daban HTML distinto. Se compara qué figura va en cada
+    sitio, no si ya está ni en qué fotograma; cómo se dibujan lo prueban tests/figures.py y las capturas.
+    - la grande que se mueve (svg[data-f3], extras/figure3d) y la quieta (data-f3s): su nombre, sin el dibujo ni lo que se le
+      pone al arrancar (data-on, el encuadre y la clase «on»)
+    - cada miniatura (extras/pictures): su hueco (svg[data-pic]) se cambia por la imagen en cuanto se encuentra o se dibuja, y la
+      imagen lleva una dirección blob: distinta en cada pasada. Queda que hay una, y de qué tamaño
+    - los degradados de las figuras van en la página desde que llega el motor (un svg de 0 × 0 al principio): fuera, con los de
+      los músculos (extras/anatomy), que no cambian */
+ b.querySelectorAll('svg[data-f3]').forEach(x=>{x.innerHTML='';x.removeAttribute('data-on');x.removeAttribute('viewBox');x.classList.remove('on');if(!x.classList.length)x.removeAttribute('class')});
+ b.querySelectorAll('[data-f3s]').forEach(x=>{x.innerHTML='';x.removeAttribute('data-on')});
+ b.querySelectorAll('svg[data-pic],img[src^="blob:"]').forEach(x=>{const t=document.createElement('i');t.setAttribute('data-thumb',x.getAttribute('width')||'');x.replaceWith(t)});
+ b.querySelectorAll(':scope>svg[width="0"][height="0"]').forEach(x=>x.remove());
  if(ren){for(const [at,r] of [['data-a','A'],['data-enter','A'],['data-c','C'],['data-u','U']])b.querySelectorAll('['+at+']').forEach(e=>{const v=e.getAttribute(at);if(ren[r][v])e.setAttribute(at,ren[r][v])});
-  b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])})}
+  b.querySelectorAll('[data-a=dialogAnswer][data-v],[data-a=menuItem][data-v]').forEach(e=>{const v=e.getAttribute('data-v');if(ren.A[v])e.setAttribute('data-v',ren.A[v])});
+  /* las clases CSS renombradas (registro K): cada nombre por el nuevo, sin tocar los espacios */
+  b.querySelectorAll('[class]').forEach(e=>{const v=e.getAttribute('class'),t=v.split(/\\s+/);e.setAttribute('class',v.replace(/\\S+/g,c=>{const k=t.map(o=>c+'@'+o).find(x=>ren.K[x]);return k?ren.K[k]:ren.K[c]||c}))})}
  /* lo que mide el tiempo de verdad (Diagnóstico e informe de un fallo: «Tiempo de pintado») cambia en cada ejecución; y lo que
     ocupa cada dato y el espacio usado, según dónde se guarde (localStorage o IndexedDB: core/persist, I-04) */
  const h=b.innerHTML.replace(/Tiempo de pintado: [^\\n<]*/g,'Tiempo de pintado: …').replace(/(Almacenamiento|Espacio usado): [^\\n<]*\\n?/g,'');let ls='';try{const g=k=>localStorage.getItem(k);
@@ -43,24 +60,35 @@ SIG="""async (ren)=>{const b=document.body.cloneNode(true);b.querySelectorAll('s
   const can=v=>Array.isArray(v)?'['+v.map(can).join(',')+']':v&&typeof v=='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+can(v[k])).join(',')+'}':JSON.stringify(v);
   ls=(c?can(c):'')+'|'+(g('ffw')||'')}catch(e){ls='ERR '+e}
  const f=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x>>>0};
- return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps}}"""
+ /* y el HTML para enseñar la diferencia donde la haya (d), con cada imagen incrustada (data:) cambiada por su tipo y su huella */
+ const d=h.replace(/data:([\\w\\/+.-]*)[^"')\\s]*/g,(m,t)=>'data:'+t+'#'+f(m).toString(36));
+ return {h:f(h),l:f(ls),t:document.body.innerText.replace(/\\s+/g,' ').slice(0,260),n:h.length,b:window.__beeps,d}}"""
 WORDS=['a','Prueba','12','Pollo','Press','x y','0','99','Arroz','Mi plan']
-def load_map(path):
-    """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado)} de un mapa «registro viejo nuevo»."""
-    m={'A':{},'C':{},'U':{},'S':{},'W':{}}
+def load_map(path,ref):
+    """{'A': {viejo: nuevo}, 'C', 'U' (acciones), 'S', 'W' (claves del estado), 'K' (clases CSS)} de un mapa «registro viejo nuevo».
+    De las clases, solo las que la compilación ref tiene aún con el nombre viejo (tests/shots.py, class_lines)."""
+    m={'A':{},'C':{},'U':{},'S':{},'W':{},'K':dict(class_lines(path,ref))}
     for l in open(path,encoding='utf-8'):
         l=l.strip()
-        if l and not l.startswith('#'):
+        if l and not l.startswith('#') and not l.startswith('K '):
             r,o,n=l.split();m[r][o]=n
     return m
 def old_js(js,ren):
     """Un script de prueba con los nombres de antes del mapa: A.nuevo → A.viejo, S.nuevo → S.viejo, data-a=nuevo → data-a=viejo."""
     if not ren:
         return js
-    back={r:{n:o for o,n in d.items()} for r,d in ren.items()}
+    back={r:{n:o for o,n in d.items() if '@' not in o} for r,d in ren.items()}
     js=re.sub(r'(?<![\w.$])([ACUSW])\.(\w+)',lambda m:m.group(1)+'.'+back[m.group(1)].get(m.group(2),m.group(2)),js)
-    return re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
-def trace(file,seed,steps,ren=None):
+    js=re.sub(r'data-(a|c|u)=(\w+)',lambda m:'data-%s=%s'%(m.group(1),back[m.group(1).upper()].get(m.group(2),m.group(2))),js)
+    return old_classes(js,back['K'])
+def old_classes(js,back):
+    """Los selectores y los classList de un script, con las clases CSS de antes del mapa (back: nueva → vieja)."""
+    cls=lambda s:re.sub(r'\.(-?[A-Za-z_][\w-]*)',lambda m:'.'+back.get(m.group(1),m.group(1)),s)
+    js=re.sub(r'''((?:querySelector(?:All)?|closest|matches)\((['"]))(.*?)(\2)''',lambda m:m.group(1)+cls(m.group(3))+m.group(4),js)
+    return re.sub(r'''(classList\.\w+\(['"])([\w-]+)''',lambda m:m.group(1)+back.get(m.group(2),m.group(2)),js)
+def trace(file,seed,steps,ren=None,keep=False):
+    """keep: con el HTML de cada paso (d), para enseñar la diferencia (run); sin él, solo sus huellas"""
+    sig=lambda:(lambda s:s if keep else {k:v for k,v in s.items() if k!='d'})(pg.evaluate(SIG,ren))
     reg={'a':'A','c':'C','u':'U'}
     fwd=lambda k,v:ren[reg[k]].get(v,v) if ren else v                           # nombre de esta compilación → nuevo
     back=lambda k,v:{n:o for o,n in ren[reg[k]].items()}.get(v,v) if ren else v  # nuevo → el de esta compilación
@@ -88,7 +116,7 @@ def trace(file,seed,steps,ren=None):
         pg.clock.run_for(500)
         if scen==1:
             go=back('a','startWorkout');pg.evaluate("A.%s&&A.%s()"%(go,go));pg.clock.run_for(300)
-        res['steps'].append(['init',pg.evaluate(SIG,ren)])
+        res['steps'].append(['init',sig()])
         for st in range(steps):
             cs=[[x[0],fwd(x[0],x[1])]+x[2:] for x in pg.evaluate(CAND)]
             if ren:  # los botones de las ventanas y del menú llevan en data-v la acción que lanzan
@@ -109,13 +137,20 @@ def trace(file,seed,steps,ren=None):
             try:pg.clock.run_for(adv)
             except Exception as e:res['errs'].append('CLOCK '+str(e)[:100])
             pg.wait_for_timeout(25)  # tiempo real para lo asíncrono que no depende del reloj (IndexedDB: copias, fotos)
+            # las figuras pequeñas de las listas se pintan al acercarse a lo que se ve (extras/anatomy: IntersectionObserver), cuando
+            # el navegador avisa y no cuando lo dice el reloj: se espera a que haya avisado. Un vigilante nuevo recibe su primer
+            # aviso en la misma vuelta que los de la app, y después de ellos (se atienden por orden de creación)
+            pg.evaluate("(()=>{window.__io=0;const o=new IntersectionObserver(()=>{o.disconnect();window.__io=1});o.observe(document.documentElement)})()")
+            for _ in range(60):
+                if pg.evaluate("window.__io===1"):break
+                pg.wait_for_timeout(10)
             for _ in range(20):  # la lista de copias automáticas se rellena desde IndexedDB: esperar a que deje de decir «Cargando…»
                 if not pg.evaluate("(()=>{const e=document.querySelector('#snapl');return !!e&&/Cargando/.test(e.textContent)})()"):break
                 pg.wait_for_timeout(25)
             try:
-                sg=pg.evaluate(SIG,ren)
+                sg=sig()
             except Exception as e:
-                res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=pg.evaluate(SIG,ren)
+                res['errs'].append('SIG '+str(e)[:100]);pg.wait_for_timeout(300);sg=sig()
             miss=pg.evaluate("(window.__ffHintCheck||[]).splice(0)")
             if miss:
                 res['errs'].append('PISTA paso %d %s: %s'%(st,act[1] if len(act)>1 else act,';'.join(miss)))
@@ -132,6 +167,18 @@ def compare(a,b):
     if len(a['steps'])!=len(b['steps']):return ('LEN',len(a['steps']),len(b['steps']))
     if a['errs']!=b['errs']:return ('ERRS',a['errs'][:3],b['errs'][:3])
     return ('OK',n)
+def difference(x,y,most=14):
+    """lo que cambia en el paso en que divergen: las líneas distintas del HTML (una etiqueta por línea; las imágenes incrustadas,
+    por su tipo y su huella), o que lo distinto son los datos guardados o los pitidos"""
+    out=[]
+    if x.get('d') is not None and x.get('d')!=y.get('d'):
+        import difflib
+        cut=lambda s:s.replace('><','>\n<').split('\n')
+        lines=[l for l in difflib.unified_diff(cut(x['d']),cut(y['d']),'referencia','nueva',lineterm='',n=0) if not l.startswith(('---','+++','@@'))]
+        out+=['    '+l[:170] for l in lines[:most]]+(['    … y %d líneas más'%(len(lines)-most)] if len(lines)>most else [])
+    if x['l']!=y['l']:out.append('    los datos guardados son distintos')
+    if x['b']!=y['b']:out.append('    los pitidos: %s y %s'%(x['b'],y['b']))
+    return '\n'.join(out)
 if __name__=='__main__':
     cmd=sys.argv[1]
     if cmd=='trace':
@@ -141,10 +188,11 @@ if __name__=='__main__':
     elif cmd=='run':
         # run FILE_A FILE_B seeds steps [mapa]  → traza ambos y compara (el mapa traduce los nombres de FILE_A)
         fa,fb,sd,ns=sys.argv[2],sys.argv[3],sys.argv[4].split(','),int(sys.argv[5])
-        ren=load_map(sys.argv[6]) if len(sys.argv)>6 else None
+        ren=load_map(sys.argv[6],fa) if len(sys.argv)>6 else None
         bad=0
         for s in sd:
-            a=trace(fa,int(s),ns,ren);b=trace(fb,int(s),ns)
+            a=trace(fa,int(s),ns,ren,keep=True);b=trace(fb,int(s),ns,keep=True)
             r=compare(a,b);print('seed',s,r if r[0]!='OK' else r,'errsA',len(a['errs']),'errsB',len(b['errs']))
+            if r[0]=='DIVERGE':print(difference(a['steps'][r[1]][1],b['steps'][r[1]][1]))
             if r[0]!='OK':bad+=1
         sys.exit(1 if bad else 0)

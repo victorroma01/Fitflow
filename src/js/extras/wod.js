@@ -5,6 +5,7 @@
    animado en cada fotograma y la cuenta al día al volver a la app.
    Define: WOD_MODES, WOD_DEFAULTS, WOD_INFO, wodConfig, wodTotal, wodSetup, wodState, wodName, wodSkeleton, wodNext, wodFill, RING, wodRing, wodFrame, wodTick, wodStart, wodClose, wodEnd  · acciones/registros: 14
 */
+import { say, tr } from '../core/i18n.js';
 import { clampInt, dayKey, fmtClock } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { A, C } from '../core/registry.js';
@@ -27,19 +28,53 @@ const wodTotal = c => c.m == 'amrap' ? c.a * 60 : c.m == 'emom' ? c.en * c.ei : 
 const wodSetup = () => {
   const c = wodConfig();
   const m = c.m;
-  const num = (l, k, mn, mx) => html`<div><label>${raw(l)}</label><input type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${c[k]}" data-c="wodValue" data-k="${k}" aria-label="${l}"></div>`;
-  const sel = (l, k, o) => html`<div><label>${raw(l)}</label><select data-c="wodValue" data-k="${k}" aria-label="${l}">${o.map(x => html`<option value="${x[0]}"${c[k] == x[0] ? ' selected' : ''}>${raw(x[1])}</option>`)}</select></div>`;
+  const num = (l, k, mn, mx) => html`
+    <div>
+      <label>${raw(l)}</label>
+      <input type="number" inputmode="numeric" min="${mn}" max="${mx}" value="${c[k]}" data-c="wodValue" data-k="${k}" aria-label="${l}">
+    </div>`;
+  const sel = (l, k, o) => html`
+    <div>
+      <label>${raw(l)}</label>
+      <select data-c="wodValue" data-k="${k}" aria-label="${l}">
+        ${o.map(x => html`<option value="${x[0]}"${c[k] == x[0] ? ' selected' : ''}>${raw(x[1])}</option>`)}
+      </select>
+    </div>`;
   let f = '';
   if (m == 'amrap')
     f = num('Duración (min)', 'a', 1, 180);
   else if (m == 'emom')
-    f = html`<div class="g2">${raw(num('Rondas', 'en', 1, 120))}${raw(sel('Intervalo', 'ei', [[30, '30 s'], [45, '45 s'], [60, '1 min'], [90, '1:30'], [120, '2 min'], [180, '3 min']]))}</div>`;
+    f = html`
+      <div class="grid-2">
+        ${raw(num('Rondas', 'en', 1, 120))}
+        ${raw(sel('Intervalo', 'ei', [[30, '30 s'], [45, '45 s'], [60, '1 min'], [90, '1:30'], [120, '2 min'], [180, '3 min']]))}
+      </div>`;
   else if (m == 'tabata')
-    f = html`<div class="g2 cols-3">${raw(num('Trabajo (s)', 'tw', 5, 600))}${raw(num('Descanso (s)', 'tr', 0, 600))}${raw(num('Rondas', 'tn', 1, 99))}</div>`;
+    f = html`
+      <div class="grid-2 cols-3">
+        ${raw(num('Trabajo (s)', 'tw', 5, 600))}
+        ${raw(num('Descanso (s)', 'tr', 0, 600))}
+        ${raw(num('Rondas', 'tn', 1, 99))}
+      </div>`;
   else
     f = num('Tiempo límite (min, 0 = sin límite)', 'ct', 0, 180);
   const t = wodTotal(c);
-  return html`${pgHead('Temporizador WOD')}<div class="seg cols-4">${WOD_MODES.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="wodMode" data-v="${x[0]}">${raw(x[1])}</button>`)}</div><p class="mu fs-13 m-10-2-4">${raw(WOD_INFO[m])}</p>${raw(f)}<div class="g2 mt-2">${raw(sel('Cuenta atrás inicial', 'pre', [[0, 'Sin cuenta atrás'], [5, '5 s'], [10, '10 s'], [15, '15 s'], [30, '30 s']]))}<div><label>Duración total</label><div class="cd m-0 p-10 ta-c"><b id="f2tt">${raw(t ? fmtClock(t) : 'Sin límite')}</b></div></div></div><p class="mu fs-12 m-12-2-0">Suena un aviso en los últimos 3 segundos de cada tramo y al empezar el siguiente. La pantalla se mantiene encendida. Si bloqueas el móvil, el tiempo sigue corriendo pero el sonido solo se oye con la app abierta.</p><div class="h-90"></div><div class="sb"><button class="pr w-full p-14" data-a="wodGo">Empezar</button></div>`;
+  return html`
+    ${pgHead('Temporizador WOD')}
+    <div class="segmented cols-4">
+      ${WOD_MODES.map(x => html`<button class="${m == x[0] ? 'on' : ''}" data-a="wodMode" data-v="${x[0]}">${raw(x[1])}</button>`)}
+    </div>
+    <p class="muted fs-13 m-10-2-4">${raw(WOD_INFO[m])}</p>
+    ${raw(f)}
+    <div class="grid-2 mt-2">
+      ${raw(sel('Cuenta atrás inicial', 'pre', [[0, 'Sin cuenta atrás'], [5, '5 s'], [10, '10 s'], [15, '15 s'], [30, '30 s']]))}
+      <div><label>Duración total</label><div class="card m-0 p-10 ta-c"><b id="f2tt">${raw(t ? fmtClock(t) : 'Sin límite')}</b></div></div>
+    </div>
+    <p class="muted fs-12 m-12-2-0">
+      Suena un aviso en los últimos 3 segundos de cada tramo y al empezar el siguiente. La pantalla se mantiene encendida. Si bloqueas el móvil, el tiempo sigue corriendo pero el sonido solo se oye con la app abierta.
+    </p>
+    <div class="h-90"></div>
+    <div class="sticky-btn"><button class="primary w-full p-14" data-a="wodGo">Empezar</button></div>`;
 };
 A.openWod = () => fullPage(wodSetup());
 A.wodMode = (i, b) => {
@@ -59,7 +94,7 @@ C.wodValue = e => {
   const t = document.getElementById('f2tt');
   if (t) {
     const T = wodTotal(wodConfig());
-    t.textContent = T ? fmtClock(T) : 'Sin límite';
+    t.textContent = T ? fmtClock(T) : tr('Sin límite');
   }
 };
 function wodState() {
@@ -106,28 +141,68 @@ function wodSkeleton() {
   const c = wodRun.c;
   const m = c.m;
   o.dataset.ph = wodRun.done ? 'done' : wodRun.ph || 'pre';
-  o.classList.toggle('pz', !!wodRun.pa);
-  let h = html`<div class="f2hd"><button data-a="wodExit" aria-label="Cerrar" class="f2cl">${icon('x', 22)}</button><b id="f2wt">${wodName(c)}</b><span></span></div>`;
+  o.classList.toggle('paused', !!wodRun.pa);
+  let h = html`
+    <div class="wod-head">
+      <button data-a="wodExit" aria-label="Cerrar" class="wod-close">${icon('x', 22)}</button>
+      <b id="f2wt">${wodName(c)}</b>
+      <span></span>
+    </div>`;
   if (wodRun.done) {
     const f = wodRun.fin;
-    h += '<div class="f2dn"><small>Terminado</small>';
+    h += html`<div class="wod-done"><small>Terminado</small>`;
     if (m == 'amrap')
-      h += html`<b class="f2rs" id="f2rs">${raw(wodRun.r)}${wodRun.r == 1 ? ' ronda' : ' rondas'}</b><div class="g2 w-full mt-6"><div><label for="f2r">Rondas</label><input id="f2r" type="number" inputmode="numeric" min="0" max="999" value="${wodRun.r}"></div><div><label for="f2e">Repeticiones extra</label><input id="f2e" type="number" inputmode="numeric" min="0" max="999" value="0"></div></div>`;
+      h += html`
+        <b class="wod-result" id="f2rs">${raw(wodRun.r)}${wodRun.r == 1 ? ' ronda' : ' rondas'}</b>
+        <div class="grid-2 w-full mt-6">
+          <div><label for="f2r">Rondas</label><input id="f2r" type="number" inputmode="numeric" min="0" max="999" value="${wodRun.r}"></div>
+          <div>
+            <label for="f2e">Repeticiones extra</label>
+            <input id="f2e" type="number" inputmode="numeric" min="0" max="999" value="0">
+          </div>
+        </div>`;
     else if (m == 'ft')
-      h += html`<b class="f2rs">${raw(fmtClock(Math.round(f.t)))}</b><small>${raw(f.cap ? 'Tiempo límite alcanzado' : wodRun.r ? wodRun.r + (wodRun.r == 1 ? ' vuelta' : ' vueltas') : '')}</small>`;
+      h += html`
+        <b class="wod-result">${raw(fmtClock(Math.round(f.t)))}</b>
+        <small>${raw(f.cap ? 'Tiempo límite alcanzado' : wodRun.r ? wodRun.r + (wodRun.r == 1 ? ' vuelta' : ' vueltas') : '')}</small>`;
     else
-      h += html`<b class="f2rs">${raw(f.rd || '')}${f.rd ? (f.rd == 1 ? ' ronda' : ' rondas') : ''}</b><small>${f.early ? 'Terminado antes de tiempo' : 'Completado'} · ${raw(fmtClock(Math.round(f.t)))}</small>`;
-    h += '<input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" class="mt-12"><div class="g2 w-full mt-12"><button data-a="wodDiscard">Descartar</button><button class="pr" data-a="wodSave">Guardar</button></div></div>';
+      h += html`
+        <b class="wod-result">${raw(f.rd || '')}${f.rd ? (f.rd == 1 ? ' ronda' : ' rondas') : ''}</b>
+        <small>${f.early ? 'Terminado antes de tiempo' : 'Completado'} · ${raw(fmtClock(Math.round(f.t)))}</small>`;
+    h += html`
+      <input id="f2n" aria-label="Nota" maxlength="80" placeholder="Nota (opcional): nombre del WOD, movimientos…" class="mt-12">
+      <div class="grid-2 w-full mt-12">
+        <button data-a="wodDiscard">Descartar</button>
+        <button class="primary" data-a="wodSave">Guardar</button>
+      </div>
+      </div>`;
   }
   else {
-    h += '<div class="f2rg"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="f2rb" cx="60" cy="60" r="54"/><circle class="f2rp" id="f2rp" cx="60" cy="60" r="54"/></svg><div class="f2rc"><div class="f2p" id="f2p" aria-live="polite"></div><div class="f2t" id="f2t">0:00</div><div class="f2s" id="f2s"></div></div></div><div class="f2nx" id="f2nx"></div><div class="f2sp"></div>';
+    h += '<div class="wod-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="wod-ring-track" cx="60" cy="60" r="54"/><circle class="wod-ring-progress" id="f2rp" cx="60" cy="60" r="54"/></svg><div class="wod-ring-center"><div class="wod-phase" id="f2p" aria-live="polite"></div><div class="wod-time" id="f2t">0:00</div><div class="wod-status" id="f2s"></div></div></div><div class="wod-next" id="f2nx"></div><div class="wod-spacer"></div>';
     if (wodRun.ph == 'pre' && !wodRun.pa)
-      h += '<div class="ta-c"><button class="f2sk" data-a="wodSkipCountdown" id="f2sk">Saltar la cuenta atrás</button></div>';
+      h += html`<div class="ta-c"><button class="wod-skip" data-a="wodSkipCountdown" id="f2sk">Saltar la cuenta atrás</button></div>`;
     if (m == 'amrap')
-      h += html`<button class="f2big" data-a="wodRound" aria-label="Sumar una ronda"><small>Rondas</small><b id="f2rn">${raw(wodRun.r)}</b><small>Toca para sumar una</small></button><div class="ta-c"><button data-a="wodRoundUndo" class="f2sm">Restar una ronda</button></div>`;
+      h += html`
+        <button class="wod-count-btn" data-a="wodRound" aria-label="Sumar una ronda">
+          <small>Rondas</small>
+          <b id="f2rn">${raw(wodRun.r)}</b>
+          <small>Toca para sumar una</small>
+        </button>
+        <div class="ta-c"><button data-a="wodRoundUndo" class="wod-undo">Restar una ronda</button></div>`;
     else if (m == 'ft')
-      h += html`<button class="f2big" data-a="wodRound" aria-label="Marcar vuelta"><small>Vueltas</small><b id="f2rn">${raw(wodRun.r)}</b><small id="f2lp">${raw(wodRun.laps.length ? 'Última: ' + fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0)) : 'Toca para marcar una vuelta')}</small></button>`;
-    h += html`<div class="g2 f2ct"><button data-a="wodPause" id="f2pb">${wodRun.pa ? 'Seguir' : 'Pausa'}</button><button data-a="wodFinish">Terminar</button></div>`;
+      h += html`
+        <button class="wod-count-btn" data-a="wodRound" aria-label="Marcar vuelta">
+          <small>Vueltas</small>
+          <b id="f2rn">${raw(wodRun.r)}</b>
+          <small id="f2lp">
+            ${raw(wodRun.laps.length ? say `Última: ${fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0))}` : 'Toca para marcar una vuelta')}
+          </small>
+        </button>`;
+    h += html`
+      <div class="grid-2 wod-controls">
+        <button data-a="wodPause" id="f2pb">${wodRun.pa ? 'Seguir' : 'Pausa'}</button>
+        <button data-a="wodFinish">Terminar</button>
+      </div>`;
   }
   o.innerHTML = h;
 }
@@ -135,13 +210,13 @@ function wodSkeleton() {
 const wodNext = s => {
   const c = wodRun.c;
   const T = wodTotal(c);
-  const tot = s.t != null && T ? 'Total ' + fmtClock(Math.floor(s.t)) + ' de ' + fmtClock(T) : '';
+  const tot = s.t != null && T ? say `Total ${fmtClock(Math.floor(s.t))} de ${fmtClock(T)}` : '';
   if (s.ph == 'pre')
-    return 'Después: ' + (c.m == 'tabata' ? 'trabajo ' + fmtClock(c.tw) : c.m == 'emom' ? 'ronda 1 de ' + c.en : c.m == 'amrap' ? 'AMRAP ' + c.a + ' min' : 'cronómetro');
+    return say `Después: ${c.m == 'tabata' ? say `trabajo ${fmtClock(c.tw)}` : c.m == 'emom' ? say `ronda 1 de ${c.en}` : c.m == 'amrap' ? say `AMRAP ${c.a} min` : 'cronómetro'}`;
   if (c.m == 'tabata')
-    return (s.ph == 'work' ? (s.rd < s.tot && c.tr ? 'Después: descanso ' + fmtClock(c.tr) : s.rd < s.tot ? 'Después: ronda ' + (s.rd + 1) : 'Última ronda') : 'Después: trabajo ' + fmtClock(c.tw)) + ' · ' + tot;
+    return (s.ph == 'work' ? (s.rd < s.tot && c.tr ? say `Después: descanso ${fmtClock(c.tr)}` : s.rd < s.tot ? say `Después: ronda ${s.rd + 1}` : tr('Última ronda')) : say `Después: trabajo ${fmtClock(c.tw)}`) + ' · ' + tot;
   if (c.m == 'emom')
-    return (s.rd < s.tot ? 'Después: ronda ' + (s.rd + 1) : 'Última ronda') + ' · ' + tot;
+    return (s.rd < s.tot ? say `Después: ronda ${s.rd + 1}` : tr('Última ronda')) + ' · ' + tot;
   return '';
 };
 /** Fracción del reloj que se ve llena: en una cuenta atrás, lo que queda del tramo; en el For time, lo que va del límite o
@@ -167,7 +242,7 @@ function wodFrame() {
     return;
   if (!wodRun.pa)
     wodRing();
-  wodFrame.id = requestAnimationFrame(wodFrame);
+  /** @type {any} */ (wodFrame).id = requestAnimationFrame(wodFrame);
 }
 function wodTick() {
   if (!wodRun || wodRun.done)
@@ -190,8 +265,8 @@ function wodTick() {
   };
   const c = wodRun.c;
   set('f2t', s.up != null ? fmtClock(s.up) : fmtClock(s.rem));
-  set('f2p', wodRun.pa ? 'En pausa' : s.ph == 'pre' ? 'Prepárate' : s.ph == 'rest' ? 'Descanso' : c.m == 'ft' ? 'Cronómetro' : 'Trabajo');
-  set('f2s', s.rd ? 'Ronda ' + s.rd + ' de ' + s.tot : s.ph == 'pre' ? 'Empieza en ' + s.rem + ' s' : c.m == 'ft' && c.ct ? 'Límite ' + fmtClock(c.ct * 60) : c.m == 'amrap' && s.rem <= 60 && s.len > 120 ? 'Último minuto' : '');
+  set('f2p', tr(wodRun.pa ? 'En pausa' : s.ph == 'pre' ? 'Prepárate' : s.ph == 'rest' ? 'Descanso' : c.m == 'ft' ? 'Cronómetro' : 'Trabajo'));
+  set('f2s', s.rd ? say `Ronda ${s.rd} de ${s.tot}` : s.ph == 'pre' ? say `Empieza en ${s.rem} s` : c.m == 'ft' && c.ct ? say `Límite ${fmtClock(c.ct * 60)}` : c.m == 'amrap' && s.rem <= 60 && s.len > 120 ? tr('Último minuto') : '');
   set('f2nx', wodNext(s));
   /* el botón de saltar la cuenta atrás solo existe mientras dura */
   const sk = document.getElementById('f2sk');
@@ -234,12 +309,12 @@ function wodStart() {
   }
   wodSkeleton();
   o.focus({ preventScroll: true });
-  clearInterval(wodTick.iv);
-  wodTick.iv = setInterval(wodTick, 200);
+  clearInterval(/** @type {any} */ (wodTick).iv);
+  /** @type {any} */ (wodTick).iv = setInterval(wodTick, 200);
   wodTick();
   /* un solo bucle de fotogramas aunque se empiece otro WOD sin que haya acabado el anterior */
-  cancelAnimationFrame(wodFrame.id);
-  wodFrame.id = requestAnimationFrame(wodFrame);
+  cancelAnimationFrame(/** @type {any} */ (wodFrame).id);
+  /** @type {any} */ (wodFrame).id = requestAnimationFrame(wodFrame);
   beep(1);
   buzz([60]);
   keepAwake();
@@ -250,7 +325,7 @@ document.addEventListener('visibilitychange', () => {
     wodTick();
 });
 function wodClose() {
-  clearInterval(wodTick.iv);
+  clearInterval(/** @type {any} */ (wodTick).iv);
   setWodRun(null);
   const o = document.getElementById('f2w');
   if (o)
@@ -260,7 +335,7 @@ function wodClose() {
 function wodEnd(s, early) {
   if (!wodRun || wodRun.done)
     return;
-  clearInterval(wodTick.iv);
+  clearInterval(/** @type {any} */ (wodTick).iv);
   const c = wodRun.c;
   let t = s.t;
   if (early) {
@@ -291,7 +366,7 @@ A.wodRound = () => {
     wodRun.laps.push(Math.round(s.up != null ? s.up : 0));
     const l = document.getElementById('f2lp');
     if (l)
-      l.textContent = 'Última: ' + fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0));
+      l.textContent = say `Última: ${fmtClock(wodRun.laps[wodRun.laps.length - 1] - (wodRun.laps[wodRun.laps.length - 2] || 0))}`;
   }
   const n = document.getElementById('f2rn');
   if (n)
@@ -317,10 +392,10 @@ A.wodPause = () => {
     wodRun.pa = Date.now();
   const o = document.getElementById('f2w');
   if (o)
-    o.classList.toggle('pz', !!wodRun.pa);
+    o.classList.toggle('paused', !!wodRun.pa);
   const b = document.getElementById('f2pb');
   if (b)
-    b.textContent = wodRun.pa ? 'Seguir' : 'Pausa';
+    b.textContent = tr(wodRun.pa ? 'Seguir' : 'Pausa');
   wodTick();
   keepAwake();
 };

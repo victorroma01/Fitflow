@@ -1,0 +1,206 @@
+/* ═══ css/62-library-catalog ═══ Los grupos de la librería en tarjetas (library/catalog), con el diseño del propietario */
+/* La tarjeta es oscura en los dos temas, como las ilustraciones (fondo negro): el tema solo cambia la página de alrededor.
+   En el móvil, dos columnas (Funcional y Cardio, anchas, cada una en su fila); desde 520 px, tres, y Funcional y Cardio
+   juntas en la última, como en la referencia (6 columnas: 2 cada tarjeta, 3 las anchas). Las letras y el icono crecen con la
+   pantalla, para que quepan en las tarjetas del iPhone SE sin cortarse; en tres columnas, las tarjetas vuelven a ser
+   estrechas y llevan las de un móvil de 380 px. */
+.cat-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:8px;
+}
+.cat-grid .cat-card {
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  padding:0;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:16px;
+  background:#0a0a0b;
+  color:#fff;
+  text-align:left;
+}
+.cat-wide,.cat-own {
+  grid-column:1/-1;
+}
+/* la ilustración, entera y sin deformar, con el texto debajo como en la referencia; arriba se esconde la línea del borde que
+   algún recorte trae; abajo, un degradado negro que la funde con la zona del texto */
+.cat-art {
+  position:relative;
+  display:block;
+}
+.cat-art img {
+  display:block;
+  width:100%;
+  height:auto;
+  margin-top:-1px;
+}
+.cat-art::after {
+  content:"";
+  position:absolute;
+  right:0;
+  bottom:0;
+  left:0;
+  height:34%;
+  background:linear-gradient(rgba(10,10,11,0),#0a0a0b);
+}
+/* el icono, la raya roja inclinada y el nombre con su número: abajo, alineados en toda la fila */
+/* el icono a la escala de la referencia (su lienzo, de 54 px de alto en ella, en proporción a la tarjeta), en el color de la
+   app: el icono es la máscara (data-style, con su proporción) y el color, el fondo. Igual la raya y el «+» de Mis ejercicios */
+.cat-text {
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:clamp(5px,calc(2.5vw - 3px),9px);
+  margin-top:auto;
+  padding:clamp(4px,1.4vw,6px) clamp(8px,calc(4vw - 4.8px),13px) clamp(9px,3vw,13px);
+}
+.cat-ico {
+  display:block;
+  flex:none;
+  height:clamp(20px,calc(7.7vw - 4.6px),27px);
+}
+.cat-ico-mask {
+  background:var(--acd);
+  -webkit-mask-position:center;
+  mask-position:center;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+}
+.cat-ico-own {
+  display:grid;
+  place-items:center;
+  aspect-ratio:1;
+  color:var(--acd);
+}
+.cat-ico-own svg {
+  width:auto;
+  height:100%;
+}
+/* la raya: fina, inclinada y algo más alta que el nombre y el número */
+.cat-sep {
+  flex:none;
+  align-self:stretch;
+  width:1.5px;
+  margin:-3px 1.5px;
+  border-radius:1px;
+  background:var(--acd);
+  transform:skewX(-20deg);
+}
+.cat-label {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+.cat-name {
+  font-size:clamp(11px,calc(4vw - 1.6px),15px);
+  font-weight:800;
+  line-height:1.12;
+  letter-spacing:.01em;
+  text-transform:uppercase;
+  overflow-wrap:break-word;
+}
+.cat-count {
+  color:#c8c9ca;
+  font-size:clamp(9.5px,calc(3vw - .7px),12px);
+  font-weight:500;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.cat-own .cat-text {
+  padding:14px clamp(7px,2.6vw,12px);
+}
+@media(hover:hover) {
+  .cat-grid .cat-card:hover {
+    border-color:rgba(255,255,255,.62);
+  }
+}
+/* la leyenda de los colores del modelo, debajo; en el móvil, una línea por color; desde 520 px, los dos en una, con la raya
+   en medio (en rejilla: si un texto no cabe, se parte dentro de su columna y la raya sigue entre los dos) */
+.cat-legend {
+  display:grid;
+  justify-items:center;
+  align-items:center;
+  gap:8px 14px;
+  margin:12px 0 26px;
+  padding:10px 16px;
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:22px;
+  background:#0a0a0b;
+  color:#d2d3d3;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+.cat-key {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.cat-dot {
+  flex:none;
+  width:24px;
+  height:9px;
+  border-radius:5px;
+}
+.cat-dot-p {
+  background:#f51d24;
+}
+.cat-dot-s {
+  background:#fa8617;
+}
+.cat-legend-sep {
+  display:none;
+  align-self:stretch;
+  width:1px;
+  min-height:16px;
+  background:rgba(255,255,255,.4);
+}
+@media(min-width:520px) {
+  .cat-grid {
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:10px;
+  }
+  .cat-grid .cat-card {
+    grid-column:span 2;
+  }
+  .cat-grid .cat-wide {
+    grid-column:span 3;
+  }
+  .cat-grid .cat-own {
+    grid-column:1/-1;
+  }
+  /* las tarjetas de tres columnas miden lo mismo que las de dos en un móvil de 380 px: lo mismo que ellas */
+  .cat-text {
+    gap:6px;
+    padding:5px 9px 12px;
+  }
+  .cat-ico {
+    height:25px;
+  }
+  .cat-name {
+    font-size:14px;
+  }
+  .cat-count {
+    font-size:11px;
+  }
+  .cat-legend {
+    grid-template-columns:1fr auto 1fr;
+    border-radius:999px;
+  }
+  .cat-legend .cat-key:first-child {
+    justify-self:end;
+  }
+  .cat-legend .cat-key:last-child {
+    justify-self:start;
+  }
+  .cat-legend-sep {
+    display:block;
+  }
+}

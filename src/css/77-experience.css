@@ -1,19 +1,19 @@
 /* ═══ css/77-experience ═══ Experiencia (M6): color propio y vista previa (F-31), reducir animaciones, burbuja de las pestañas (F-38), deslizar para volver (F-37) y recorrido (F-36) */
 /* vista previa del color de acento (profile/appearance) */
-.acp {
+.accent-preview {
   margin:4px 0 14px;
   padding:12px;
   border-radius:20px;
   background:var(--cd);
   border:1px solid var(--ln);
 }
-.acph {
+.accent-preview-hero {
   padding:12px;
   border-radius:16px;
   background:radial-gradient(120% 100% at 0 0,var(--a3),var(--cd) 72%);
   border:1px solid color-mix(in srgb,var(--a2) 55%,transparent);
 }
-.acph small {
+.accent-preview-hero small {
   display:block;
   font-size:11px;
   font-weight:700;
@@ -21,38 +21,38 @@
   text-transform:uppercase;
   color:color-mix(in srgb,var(--a1) 55%,#fff);
 }
-.acph b {
+.accent-preview-hero b {
   display:block;
   margin:2px 0 8px;
   font-size:20px;
 }
-.acpr {
+.accent-preview-bar {
   display:block;
   height:6px;
   border-radius:6px;
   background:var(--ln);
   overflow:hidden;
 }
-.acpr i {
+.accent-preview-bar i {
   display:block;
   width:62%;
   height:100%;
   border-radius:6px;
   background:var(--a2);
 }
-.acpk {
+.accent-preview-row {
   display:flex;
   flex-wrap:wrap;
   align-items:center;
   gap:8px;
   margin-top:10px;
 }
-.acpk .chip {
+.accent-preview-row .chip {
   margin:0;
   padding:6px 12px;
   font-size:13px;
 }
-.acpb {
+.accent-preview-btn {
   padding:8px 16px;
   border-radius:12px;
   background:var(--ag);
@@ -60,7 +60,7 @@
   font-size:14px;
   font-weight:700;
 }
-.acpn {
+.accent-preview-nav {
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:4px;
@@ -70,33 +70,33 @@
   background:var(--ib);
   border:1px solid var(--ln);
 }
-.acpn span {
+.accent-preview-nav span {
   padding:7px 2px;
   border-radius:14px;
   font-size:11px;
   text-align:center;
   color:var(--mu);
 }
-.acpn span.on {
+.accent-preview-nav span.on {
   background:var(--a2);
   color:var(--ft);
   font-weight:700;
 }
 /* «Personalizado»: el círculo es el selector de color del sistema */
-.swc {
+.swatch-custom {
   position:relative;
   display:flex;
   margin:0;
   cursor:pointer;
 }
-.swc i {
+.swatch-custom i {
   position:relative;
   overflow:hidden;
 }
-.swc i.swr {
+.swatch-custom i.swatch-rainbow {
   background:conic-gradient(#ff5f6d,#ffc371,#c8ee62,#4fd6cf,#4da3ff,#b183ff,#ff8fc8,#ff5f6d);
 }
-.swc input {
+.swatch-custom input {
   position:absolute;
   inset:0;
   width:100%;
@@ -106,13 +106,13 @@
   opacity:0;
   cursor:pointer;
 }
-.acn {
+.accent-note {
   display:block;
   margin-top:12px;
   line-height:1.4;
 }
 /* reducir animaciones (Ajustes → Tema y estilo) */
-html.rm *,html.rm *::before,html.rm *::after {
+html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after {
   animation:none!important;
   transition:none!important;
 }
@@ -129,9 +129,9 @@ nav button {
   position:relative;
   z-index:1;
 }
-/* la burbuja: .nbb se desliza (en su propia capa, para que el movimiento no repinte la barra) y su ::before, que es lo que se
+/* la burbuja: .nav-bubble se desliza (en su propia capa, para que el movimiento no repinte la barra) y su ::before, que es lo que se
    ve, crece un poco al cogerla */
-.nbb {
+.nav-bubble {
   position:absolute;
   top:6px;
   bottom:6px;
@@ -142,7 +142,7 @@ nav button {
   pointer-events:none;
   will-change:transform;
 }
-.nbb::before {
+.nav-bubble::before {
   content:'';
   position:absolute;
   inset:0;
@@ -150,38 +150,38 @@ nav button {
   background:var(--a2);
   transition:transform .18s ease;
 }
-nav.nbon .nbb {
+nav.bubble-on .nav-bubble {
   opacity:1;
   transition:transform .34s cubic-bezier(.3,1.25,.5,1),width .34s ease;
 }
-nav.nbon button.on,html.gl nav.nbon button.on {
+nav.bubble-on button.on,html.glass nav.bubble-on button.on {
   background:none;
   box-shadow:none;
 }
-html.gl .nbb::before {
+html.glass .nav-bubble::before {
   border-radius:26px;
   background:linear-gradient(180deg,var(--a2),var(--age,var(--a2)));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 4px 14px color-mix(in srgb,var(--a2) 45%,transparent);
 }
 /* arrastrando, la burbuja va con el dedo, sin transición (core/tabbar la mueve en cada movimiento) */
-nav.drag .nbb {
+nav.drag .nav-bubble {
   transition:none;
 }
-nav.drag .nbb::before {
+nav.drag .nav-bubble::before {
   transform:scale(1.07);
 }
-nav.drag button.on:not(.hv) {
+nav.drag button.on:not(.hover) {
   color:inherit;
 }
-nav.drag button.hv {
+nav.drag button.hover {
   color:var(--ft);
 }
 /* el paso del recorrido que enseña la barra deja usarla */
-nav.trlv {
+nav.tour-live {
   z-index:19;
 }
 /* deslizar para volver (core/swipe): el gesto de lado es de la app; el vertical, del desplazamiento normal */
-#app,.sp,.msd {
+#app,.sheet,.menu-panel {
   touch-action:pan-y pinch-zoom;
 }
 /* recorrido (system/tour) */
@@ -190,11 +190,11 @@ nav.trlv {
   inset:0;
   z-index:18;
 }
-.trw {
+.intro-panel {
   padding:6px 4px 4px;
   text-align:center;
 }
-.trbg {
+.intro-icon {
   display:grid;
   place-items:center;
   width:60px;
@@ -204,38 +204,38 @@ nav.trlv {
   background:var(--ag);
   color:var(--ft);
 }
-.trw h3 {
+.intro-panel h3 {
   margin:0 0 6px;
   font-size:22px;
 }
-.trw p {
+.intro-panel p {
   margin:0 0 16px;
   font-size:14.5px;
   line-height:1.45;
 }
-.trw button {
+.intro-panel button {
   width:100%;
   padding:15px;
   border-radius:16px;
   font-size:16px;
 }
-.trw button+button {
+.intro-panel button+button {
   margin-top:10px;
   padding:14px;
 }
-.trbk {
+.tour-backdrop {
   position:absolute;
   inset:0;
   touch-action:none;
 }
-.trsp {
+.tour-spot {
   position:fixed;
   border-radius:22px;
   box-shadow:0 0 0 2px var(--a1),0 0 0 9999px rgba(0,0,0,.66);
   pointer-events:none;
   transition:left .25s,top .25s,width .25s,height .25s;
 }
-.trtp {
+.tour-tip {
   position:fixed;
   left:16px;
   right:16px;
@@ -249,51 +249,51 @@ nav.trlv {
   color:var(--tx);
   animation:rsi .25s;
 }
-.trst {
+.tour-step {
   font-size:12px;
   font-weight:800;
   letter-spacing:.08em;
   text-transform:uppercase;
   color:var(--at);
 }
-.trtp b {
+.tour-tip b {
   display:block;
   margin:4px 0 6px;
   font-size:17px;
 }
-.trtp p {
+.tour-tip p {
   margin:0 0 14px;
   font-size:14px;
   line-height:1.45;
   color:var(--mu);
 }
-.trft {
+.tour-foot {
   display:flex;
   align-items:center;
   gap:10px;
 }
-.trdt {
+.tour-dots {
   display:flex;
   flex:1;
   align-items:center;
   gap:5px;
 }
-.trdt i {
+.tour-dots i {
   width:7px;
   height:7px;
   border-radius:50%;
   background:color-mix(in srgb,var(--tx) 25%,transparent);
 }
-.trdt i.on {
+.tour-dots i.on {
   width:18px;
   border-radius:4px;
   background:var(--a1);
 }
-.trtp button {
+.tour-tip button {
   width:auto;
   margin:0;
 }
-.trtp .trsk {
+.tour-tip .tour-skip {
   padding:10px 8px;
   border:0;
   background:none;
@@ -301,11 +301,11 @@ nav.trlv {
   color:var(--mu);
   font-weight:600;
 }
-.trnx {
+.tour-next {
   padding:10px 18px;
   border-radius:12px;
 }
-.trar {
+.tour-arrow {
   position:absolute;
   top:-8px;
   width:14px;
@@ -315,7 +315,7 @@ nav.trlv {
   border-top:1px solid color-mix(in srgb,var(--tx) 14%,transparent);
   transform:rotate(45deg);
 }
-.trtp.up .trar {
+.tour-tip.up .tour-arrow {
   top:auto;
   bottom:-8px;
   transform:rotate(225deg);

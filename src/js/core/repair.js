@@ -164,7 +164,8 @@ const EXERCISE_UNITS = ['m', 's', 'min', 'cal', 'km'];
 const TEMPO_RE = /^(Libre|[0-9X]{1,2}(\/[0-9X]{1,2}){3})$/;
 const isRange = v => Array.isArray(v) && v.length == 2 && v.every(x => typeof x == 'number' && x > 0 && x < 1e6);
 /** Deja los ejercicios de un día (del plan, de un programa propio o de un entreno a medias) con cada dato del tipo que toca:
-    series, descanso, rango, unidad, tempo, técnica y bloque. Lo que no vale se quita, y la app usa lo de serie. Así nada de
+    series, descanso, rango, unidad, tempo, técnica, bloque y, en un entreno a la carta, las repeticiones de cada serie y la
+    variante. Lo que no vale se quita, y la app usa lo de serie. Así nada de
     una copia manipulada llega a una pantalla como texto donde va un número (lo que se importa con un código de programa ya
     lo comprueba programs/share). */
 export const cleanDay = d => {
@@ -190,7 +191,14 @@ export const cleanDay = d => {
     const ou = e.ou;
     if (ou != null && !(typeof ou == 'object' && (ou.u == null || EXERCISE_UNITS.includes(ou.u)) && (ou.rg == null || isRange(ou.rg))))
       delete e.ou;
+    /* las de un entreno a la carta (routines/ondemand): las repeticiones de cada serie (un número o AMRAP) y la variante */
+    if (e.rs != null && !(Array.isArray(e.rs) && e.rs.length > 0 && e.rs.length <= 99 && e.rs.every(x => x === 'AMRAP' || typeof x == 'number' && x > 0 && x < 1e6)))
+      delete e.rs;
+    if (e.nt != null && !(typeof e.nt == 'string' && e.nt.length <= 200))
+      delete e.nt;
   });
+  if (d.od != null && !(typeof d.od == 'string' && d.od.length <= 60))
+    delete d.od;
 };
 /* los días del plan y de los programas propios con datos válidos (cleanDay), descarga de los programas propios (F-20: 0 o
    2-16 semanas) y semanas de la descarga y la rotación (workout/deload, programs/rotation) */
@@ -248,22 +256,29 @@ const repairSettings = () => {
     delete S.notif;
     if (S.lastBackupDate != null && !(+S.lastBackupDate > 0))
       delete S.lastBackupDate;
-    Object.keys(S.exerciseHistory).forEach(n => {
+    /* es lo que más tarda al arrancar (todas las series de todos los ejercicios): las técnicas, buscadas en un Set hecho una
+       vez, y cada valor se reescribe solo si no es ya un número válido, que es lo normal */
+    const techs = new Set(Object.keys(TECHNIQUES));
+    for (const n of Object.keys(S.exerciseHistory)) {
       const h = S.exerciseHistory[n];
       if (!Array.isArray(h)) {
         delete S.exerciseHistory[n];
-        return;
+        continue;
       }
-      S.exerciseHistory[n] = h.filter(x => x && isDay(x.d) && Array.isArray(x.s) && x.s.every(y => Array.isArray(y)));
+      const ok = S.exerciseHistory[n] = h.filter(x => x && isDay(x.d) && Array.isArray(x.s) && x.s.every(y => Array.isArray(y)));
       /* de cada serie, repeticiones, peso, RPE y fila extra como números (se enseñan tal cual) y la técnica (quinto valor),
          solo si es una conocida */
-      S.exerciseHistory[n].forEach(x => x.s.forEach(y => {
-        for (let i = 0; i < Math.min(4, y.length); i++)
-          y[i] = +y[i] > 0 ? +y[i] : 0;
-        if (y.length > 4 && !Object.keys(TECHNIQUES).includes(y[4]))
-          y.length = 4;
-      }));
-    });
+      for (const x of ok)
+        for (const y of x.s) {
+          for (let i = 0, m = Math.min(4, y.length); i < m; i++) {
+            const v = y[i];
+            if (typeof v != 'number' || !(v > 0))
+              y[i] = +v > 0 ? +v : 0;
+          }
+          if (y.length > 4 && !techs.has(y[4]))
+            y.length = 4;
+        }
+    }
   }
   catch (e) {
     logError('reparar ajustes', e);

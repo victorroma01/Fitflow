@@ -2,6 +2,11 @@
 <style>@@CSS@@</style></head><body><div id="app"></div><div id="sh"></div>
 <script>
 (function(){var shown=0,T=function(m){var d=document.createElement('div');d.textContent=m;return d.innerHTML};
+/* el idioma, decidido como en la app (core/util, LANG): el elegido en Ajustes ('fflang') o, si no hay, el primero de los del
+   móvil que sea español o inglés. Con la app en inglés la página lo dice (lang), el manifiesto es el inglés (el paquete: los
+   accesos directos del icono) y la pantalla de error de abajo sale en inglés: L(español, inglés) */
+var en=(function(){var c='',l,i,p;try{c=localStorage.getItem('fflang')}catch(e){}if(c=='en'||c=='es')return c=='en';l=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language];for(i=0;i<l.length;i++){p=String(l[i]||'').slice(0,2).toLowerCase();if(p=='en'||p=='es')return p=='en'}return false})(),L=function(es,e){return en?e:es};
+if(en){document.documentElement.lang='en';var mf=document.querySelector('link[rel=manifest]');if(mf&&mf.getAttribute('href')=='manifest.webmanifest')mf.setAttribute('href','manifest.en.webmanifest')}
 /* estado guardado completo, sin depender del código de la app: el núcleo 'ff' más sus partes 'ff:…', de IndexedDB (base
    «ffdata») o de localStorage, según diga el núcleo (ver core/persist); si algo no se puede leer, el texto de cada clave tal
    cual. cb(texto) */
@@ -11,14 +16,14 @@ function data(cb){idbParts(function(q){var c=localStorage.getItem('ff'),l=lsPart
 a=o&&o._parts>=2?q:l;b=a===q?l:q;for(k in b)if(!(k in a))a[k]=b[k];p=Object.keys(a).sort();if(!p.length)return cb(c);
 try{if(o&&o._parts){delete o._parts;delete o._pk;for(i=0;i<p.length;i++){k=p[i];v=JSON.parse(a[k]);if(k.indexOf('ff:meals:')==0){for(d in v)m[d]=v[d]}else if(o[k.slice(3)]===k)o[k.slice(3)]=v}if(o.meals==='ff:meals')o.meals=m;return cb(JSON.stringify(o))}}catch(e){}
 o={ff:c};for(i=0;i<p.length;i++)o[p[i]]=a[p[i]];cb(JSON.stringify(o))})}
-function fail(m){if(shown)return;shown=1;var d=document.createElement('div');d.id='ffe';d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99;background:#0b0b0d;color:#f4f4f6;padding:28px 20px;overflow:auto;font:15px/1.45 system-ui,-apple-system,sans-serif';
-d.innerHTML='<h2 id="ffeh">StrataFit no ha podido iniciarse</h2><p id="ffep">Esto es lo que ha fallado. Si sigue ocurriendo, envíame una captura de este mensaje.</p><pre id="ffem">'+T(m)+'</pre><button id="ffe1">Reintentar</button><button id="ffe2">Ver mis datos (copia de seguridad)</button><button id="ffe3">Restablecer y abrir de nuevo</button><textarea id="ffe4" readonly></textarea>';
+function fail(m){if(shown)return;shown=1;var d=document.createElement('div');d.id='ffe';d.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99;background:#000;color:#f4f4f6;padding:28px 20px;overflow:auto;font:15px/1.45 system-ui,-apple-system,sans-serif';
+d.innerHTML='<h2 id="ffeh">'+L('StrataFit no ha podido iniciarse','StrataFit couldn’t start')+'</h2><p id="ffep">'+L('Esto es lo que ha fallado. Si sigue ocurriendo, envíame una captura de este mensaje.','This is what went wrong. If it keeps happening, send me a screenshot of this message.')+'</p><pre id="ffem">'+T(m)+'</pre><button id="ffe1">'+L('Reintentar','Try again')+'</button><button id="ffe2">'+L('Ver mis datos (copia de seguridad)','See my data (backup)')+'</button><button id="ffe3">'+L('Restablecer y abrir de nuevo','Reset and open again')+'</button><textarea id="ffe4" readonly></textarea>';
 document.body.appendChild(d);
 /* el aspecto, con el CSSOM: la política de seguridad (CSP) no deja style="…" (I-14) */
 var st={ffeh:'margin:24px 0 8px;font-size:22px',ffep:'color:#9a9aa6;margin:0 0 12px',ffem:'white-space:pre-wrap;word-break:break-word;background:#17171b;border-radius:12px;padding:12px;font-size:12px;color:#ffb4c0',ffe1:'width:100%;padding:15px;border-radius:14px;border:0;background:#fff;color:#111;font:700 16px system-ui;margin:10px 0',ffe2:'width:100%;padding:15px;border-radius:14px;border:1px solid #2a2a31;background:#17171b;color:#f4f4f6;font:600 15px system-ui;margin:0 0 10px',ffe3:'width:100%;padding:15px;border-radius:14px;border:1px solid #5a2030;background:#17171b;color:#ff8da1;font:600 15px system-ui',ffe4:'display:none;width:100%;height:180px;margin-top:12px;background:#17171b;color:#f4f4f6;border:1px solid #2a2a31;border-radius:12px;padding:10px;font-size:11px'};
 for(var k in st)document.getElementById(k).style.cssText=st[k];
 document.getElementById('ffe1').onclick=function(){location.reload()};
-document.getElementById('ffe2').onclick=function(){var t=document.getElementById('ffe4');var show=function(v){t.value=v;t.style.display='block';t.focus();t.select()};try{data(function(r){show(r||'(sin datos)')})}catch(e){show('(no se puede leer el almacenamiento)')}};
+document.getElementById('ffe2').onclick=function(){var t=document.getElementById('ffe4');var show=function(v){t.value=v;t.style.display='block';t.focus();t.select()};try{data(function(r){show(r||L('(sin datos)','(no data)'))})}catch(e){show(L('(no se puede leer el almacenamiento)','(the storage can’t be read)'))}};
 /* «Restablecer»: aparta lo guardado y empieza de cero (las partes de IndexedDB las vacía la app al arrancar sin núcleo). Sin
    'ffsync', la sincronización no ve el móvil vacío como un borrado: vuelve a bajar lo de la cuenta */
 document.getElementById('ffe3').onclick=function(){var go=function(r){try{if(r)localStorage.setItem('ffbad',JSON.stringify({t:Date.now(),k:'ff',raw:r}))}catch(e){}try{Object.keys(lsParts()).concat('ff','ffw','ffsync').forEach(function(k){localStorage.removeItem(k)})}catch(e){}location.reload()};try{data(go)}catch(e){go(null)}};
@@ -29,14 +34,18 @@ window.__ffe=fail;
    Solo cuenta el código de la propia app, el de su mismo servidor. Un script de fuera que no carga no es un fallo de arranque:
    reCAPTCHA, que App Check pide a Google, no llega sin conexión ni con un bloqueador, y la app sigue sin él (cloud/appcheck) */
 var own=function(u){try{return new URL(u,location.href).origin==location.origin}catch(e){return true}};
-window.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName=='SCRIPT'&&own(t.src))fail('No se ha podido cargar la app. Comprueba la conexión y pulsa Reintentar.')},true);
+window.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName=='SCRIPT'&&own(t.src))fail(L('No se ha podido cargar la app. Comprueba la conexión y pulsa Reintentar.','The app couldn’t be loaded. Check your connection and tap Try again.'))},true);
 var last='';window.addEventListener('error',function(e){var m=(e.message||'Error')+(e.filename?'\n'+String(e.filename).split('/').pop()+':'+e.lineno+':'+e.colno:'');last=m;if(window.__ffok)return;if(window.__ffs||/SyntaxError|Unexpected|Invalid or unexpected/.test(m))fail(m)});
 
 /* si no termina de arrancar: 7 s después de cargar el documento y su código (DOMContentLoaded espera al módulo) o, si el
    código no llega nunca, a los 30 s */
-var late=function(){if(!window.__ffok)fail((last?last+'\n\n':'')+'La aplicación no terminó de arrancar (tiempo agotado).')};
+var late=function(){if(!window.__ffok)fail((last?last+'\n\n':'')+L('La aplicación no terminó de arrancar (tiempo agotado).','The app didn’t finish starting (timed out).'))};
 document.addEventListener('DOMContentLoaded',function(){setTimeout(late,7000)});setTimeout(late,30000)})();
 </script>
 <nav><button data-a="selectTab" data-i="0"><span></span>Workout</button><button data-a="selectTab" data-i="1"><span></span>Nutrición</button><button data-a="selectTab" data-i="2"><span></span>Dashboard</button><button data-a="selectTab" data-i="3"><span></span>Perfil</button></nav>
+<script>
+/* las pestañas, en inglés desde antes de que arranque la app (que las vuelve a pintar: core/tabbar) */
+if(document.documentElement.lang=='en')(function(b){b[1].lastChild.data='Nutrition';b[3].lastChild.data='Profile'})(document.querySelectorAll('nav button'));
+</script>
 <script>
 @@JS@@</script></body></html>

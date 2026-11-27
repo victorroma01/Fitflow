@@ -3,6 +3,7 @@
    (F-29), que antes intenta subir lo pendiente y luego borra del móvil los datos de la cuenta.
    Define: syncShort, infoRow, accountPage, pwMsg, passwordPage  · acciones/registros: 4
 */
+import { say, tr } from '../core/i18n.js';
 import { $ } from '../core/util.js';
 import { Store } from '../core/store.js';
 import { lockSaves, reloadApp } from '../core/persist.js';
@@ -12,17 +13,40 @@ import { confirmDialog } from '../core/ui.js';
 import { plural } from '../system/backup.js';
 import { account, acctDrop, acctName, acctSave, isAdmin, wipeAccountData } from '../cloud/session.js';
 import { authMessage, changePassword, passProblem, signIn } from '../cloud/auth.js';
-import { pendingDocs, stopSync, syncLine, syncNow, syncState } from '../cloud/sync.js';
+import { everSynced, pendingDocs, stopSync, syncLine, syncNow, syncState } from '../cloud/sync.js';
+import { consentPending } from '../cloud/consent.js';
 import { html, raw } from '../core/html.js';
 /** Estado de la sincronización en una palabra (valor de la fila de Ajustes). */
 export const syncShort = () => account && (account.x || syncState().st == 'dead') ? 'Vuelve a entrar' : { run: 'Sincronizando…', off: 'Sin conexión', wait: 'Tras el entreno', err: 'Reintentando' }[syncState().st] || 'Al día';
-const infoRow = (l, v) => html`<div class="it cols-auto-1fr gap-12"><span>${raw(l)}</span><b class="ta-r ow-anywhere">${v}</b></div>`;
+const infoRow = (l, v) => html`<div class="item cols-auto-1fr gap-12"><span>${raw(l)}</span><b class="ta-r ow-anywhere">${v}</b></div>`;
 /** Página «Cuenta» de Ajustes. */
-export const accountPage = () => html`<div class="cd acl">${raw(infoRow('Usuario', acctName()))}${raw(infoRow('Tipo de cuenta', isAdmin() ? 'Administrador' : 'Usuario'))}${raw(infoRow('Sincronización', syncLine()))}</div>${account && account.x ? html`<button class="pr w-full m-4-0-8" data-a="reloginShow">Volver a entrar</button>` : html`<button data-a="accountSyncNow" class="w-full m-4-0-8">Sincronizar ahora</button>`}<button data-a="openSettingsPage" data-v="clave" class="w-full">Cambiar contraseña</button><p class="mu fs-13 m-14-2">Tus datos se guardan en este móvil y en tu cuenta. Sin conexión todo sigue funcionando: lo que hagas se sube solo al volver la red.</p>`;
+export const accountPage = () => html`
+  <div class="card account-list">
+    ${raw(infoRow('Usuario', acctName()))}
+    ${raw(infoRow('Tipo de cuenta', isAdmin() ? 'Administrador' : 'Usuario'))}
+    ${raw(infoRow('Sincronización', syncLine()))}
+  </div>
+  ${account && account.x ? html`<button class="primary w-full m-4-0-8" data-a="reloginShow">Volver a entrar</button>` : html`<button data-a="accountSyncNow" class="w-full m-4-0-8">Sincronizar ahora</button>`}
+  <button data-a="openSettingsPage" data-v="clave" class="w-full">Cambiar contraseña</button>
+  <p class="muted fs-13 m-14-2">
+    Tus datos se guardan en este móvil y en tu cuenta. Sin conexión todo sigue funcionando: lo que hagas se sube solo al volver la red.
+  </p>
+  <button data-a="openDeleteAccount" class="w-full danger-btn mt-12">Eliminar cuenta</button>`;
 /* el último aviso de «Cambiar contraseña» (la página se vuelve a pintar con cada R(): así no se pierde) */
 let pwMsg = '';
 /** Página «Cambiar contraseña». */
-export const passwordPage = () => html`<label for="acp0">Contraseña actual</label><input id="acp0" type="password" autocomplete="current-password" maxlength="100"><label for="acp1">Contraseña nueva</label><input id="acp1" type="password" autocomplete="new-password" maxlength="100"><label for="acp2">Repite la nueva</label><input id="acp2" type="password" autocomplete="new-password" maxlength="100" data-enter="accountChangePassword"><p id="ace" class="lge" role="alert">${pwMsg}</p><button class="pr w-full mt-8" data-a="accountChangePassword">Cambiar contraseña</button><p class="mu fs-13 m-12-2">De 8 caracteres o más. Al cambiarla se cierra la sesión en tus otros móviles: allí tendrás que volver a entrar.</p>`;
+export const passwordPage = () => html`
+  <label for="acp0">Contraseña actual</label>
+  <input id="acp0" type="password" autocomplete="current-password" maxlength="100">
+  <label for="acp1">Contraseña nueva</label>
+  <input id="acp1" type="password" autocomplete="new-password" maxlength="100">
+  <label for="acp2">Repite la nueva</label>
+  <input id="acp2" type="password" autocomplete="new-password" maxlength="100" data-enter="accountChangePassword">
+  <p id="ace" class="form-error" role="alert">${pwMsg}</p>
+  <button class="primary w-full mt-8" data-a="accountChangePassword">Cambiar contraseña</button>
+  <p class="muted fs-13 m-12-2">
+    De 8 caracteres o más. Al cambiarla se cierra la sesión en tus otros móviles: allí tendrás que volver a entrar.
+  </p>`;
 /* — manejadores de esta función (registros A / C / U) — */
 A.accountSyncNow = async () => {
   if (account && account.x) {
@@ -31,7 +55,7 @@ A.accountSyncNow = async () => {
   }
   toast('Sincronizando…');
   await syncNow();
-  toast(syncState().st == 'ok' ? 'Todo al día' : 'No se pudo: ' + syncLine());
+  toast(syncState().st == 'ok' ? 'Todo al día' : say `No se pudo: ${syncLine()}`);
 };
 A.accountChangePassword = async () => {
   const v = id => ($('#' + id) || {}).value || '';
@@ -39,7 +63,7 @@ A.accountChangePassword = async () => {
     pwMsg = t;
     const e = $('#ace');
     if (e)
-      e.textContent = t;
+      e.textContent = tr(t);
   };
   const pr = !v('acp0') ? 'Escribe tu contraseña actual.' : passProblem(v('acp1')) || (v('acp1') !== v('acp2') ? 'Las dos contraseñas nuevas no coinciden.' : '');
   if (pr) {
@@ -66,13 +90,16 @@ A.accountChangePassword = async () => {
   A.openSettings();
 };
 A.signOut = async () => {
-  if (account && !account.x && pendingDocs()) {
+  /* en la pantalla de la aceptación (account/login) no se sube nada: lo que haya solo en este dispositivo se queda sin subir */
+  const gate = consentPending();
+  if (account && !account.x && !gate && pendingDocs()) {
     toast('Subiendo tus cambios…');
     await syncNow();
   }
-  const n = pendingDocs();
+  /* (recién entrado y sin haber bajado nada, este dispositivo no tiene nada de la cuenta que perder) */
+  const n = gate && !everSynced() ? 0 : pendingDocs();
   const t = n ? 'Hay cambios sin subir' : '¿Cerrar sesión?';
-  const p = n ? 'No se han podido subir a tu cuenta (' + plural(n, 'parte', 'partes') + ')' + (account && account.x ? ' porque la sesión ha caducado: vuelve a entrar primero' : ': prueba con conexión') + '. Si cierras la sesión ahora, se perderán.' : 'Tus datos están en tu cuenta. Se borran de este móvil hasta que vuelvas a entrar.';
+  const p = n && gate ? 'Lo que has hecho en este dispositivo y aún no estaba en tu cuenta no se sube sin tu aceptación. Si cierras la sesión ahora, se perderá.' : n ? say `No se han podido subir a tu cuenta (${plural(n, 'parte', 'partes')})${account && account.x ? ' porque la sesión ha caducado: vuelve a entrar primero' : ': prueba con conexión'}. Si cierras la sesión ahora, se perderán.` : 'Tus datos están en tu cuenta. Se borran de este móvil hasta que vuelvas a entrar.';
   confirmDialog(t, p, 'signOutConfirmed', n ? 'Cerrar igualmente' : 'Cerrar sesión');
 };
 A.signOutConfirmed = () => {

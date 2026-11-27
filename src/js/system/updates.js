@@ -1,8 +1,9 @@
 /* ═══ system/updates ═══
    Actualización de la app: service worker, uso sin conexión, Ajustes → Actualizaciones y aviso de versión nueva con sus novedades.
-   Define: swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, isNewerVersion, fetchVersionInfo, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
+   Define: swState, offlineText, offlineNote, updatesOn, updateReady, updateCheckedAt, updateInfo, OLD_REVISIONS, plainVersion, versionKey, isNewerVersion, fetchVersionInfo, notesOf, sectionHtml, releaseNotesHtml, releaseNotePage, updatePopupHtml, showPopup, showUpdatePopup, updateFound, onUpdateFound, whatsNewDue, whatsNewPending, showWhatsNew, updatePopupSync  · acciones/registros: 3
 */
-import { APPV, FFDEP, X } from '../core/util.js';
+import { EN, say, tr } from '../core/i18n.js';
+import { APPV, FFDEP, LOCALE, X } from '../core/util.js';
 import { toast } from '../core/toast.js';
 import { Store } from '../core/store.js';
 import { logError } from '../core/errors.js';
@@ -36,7 +37,7 @@ let swState = 0;
           x.drawImage(im, 0, 0, 180, 180);
           const ic = c.toDataURL('image/png');
           mk('link', { rel: 'apple-touch-icon', href: ic });
-          const mf = { name: 'StrataFit', short_name: 'StrataFit', display: 'standalone', start_url: location.href.split('#')[0], background_color: '#0b0b0d', theme_color: '#0b0b0d', icons: [{ src: ic, sizes: '180x180', type: 'image/png' }] };
+          const mf = { name: 'StrataFit', short_name: 'StrataFit', display: 'standalone', start_url: location.href.split('#')[0], background_color: '#000000', theme_color: '#000000', icons: [{ src: ic, sizes: '180x180', type: 'image/png' }] };
           mk('link', { rel: 'manifest', href: URL.createObjectURL(new Blob([JSON.stringify(mf)], { type: 'application/manifest+json' })) });
         }
         catch (e) {
@@ -75,17 +76,33 @@ export const offlineText = () => {
   const on = typeof navigator != 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller;
   return swState < 0 ? 'Uso sin conexión: no disponible en este entorno. Tus datos sí quedan guardados en el dispositivo, pero la app necesita internet para abrirse.' : on ? 'Uso sin conexión: activo. Si pierdes la cobertura, StrataFit se abre con la última versión que cargaste.' : 'Uso sin conexión: se prepara tras cargar la app una vez con conexión y volver a abrirla.';
 };
-export const offlineNote = () => html`<small class="mu d-block mt-10">${offlineText()}</small>${raw(isStandalone() ? '' : '<small class="mu d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>')}`;
+export const offlineNote = () => html`
+  <small class="muted d-block mt-10">${offlineText()}</small>
+  ${raw(isStandalone() ? '' : html`
+    <small class="muted d-block mt-4">Para tenerla como app: Compartir, Añadir a pantalla de inicio.</small>`)}`;
 export let updatesOn = FFDEP;
 let updateReady = 0;
 let updateCheckedAt = 0;
 /** Versión publicada que se está anunciando (contenido de version.json) o null si no se pudo leer. */
 let updateInfo = null;
-/** ¿La versión a es posterior a b? Compara número a número: 1.10.0 es posterior a 1.9.3. */
+/* las revisiones de la 1.0.3 se numeraron añadiendo una cifra a su tercer número: la 1.0.31 y la 1.0.32 son la 1.0.3.1 y la
+   1.0.3.2, anteriores a la 1.0.4 (build.py, OLD_REVISIONS) */
+const OLD_REVISIONS = { '1.0.31': '1.0.3.1', '1.0.32': '1.0.3.2' };
+/** La versión que dice un texto escrito para las apps instaladas hasta la 1.0.31 («1.0.4 de nov. 2026» → 1.0.4: build.py,
+    legacy_version). Esas apps anotan ese texto como la versión cuyas novedades ya se vieron en el aviso; una versión
+    escrita tal cual se queda como está. */
+export const plainVersion = v => String(v || '').split(/\s/)[0].replace(/\u2024\u2060?/g, '.');
+/* las cifras de una versión, para compararla con otra */
+const versionKey = v => (OLD_REVISIONS[plainVersion(v)] || plainVersion(v)).split('.').map(Number);
+/** ¿La versión a es posterior a b? Compara número a número, tengan los que tengan: 1.10.0 es posterior a 1.9.3, y la
+    revisión de una versión, que lleva una cuarta cifra (1.1.0.1), es posterior a ella (1.1.0) y anterior a la siguiente
+    (1.1.1). Las revisiones de la 1.0.3 (1.0.31, 1.0.32) cuentan como 1.0.3.1 y 1.0.3.2. Hasta la V1.0.31 solo se miraban
+    tres números, y para una 1.0.31 instalada la 1.0.4 no sería posterior: por eso version.json lleva en `version` un texto
+    que sí lo es para ella (build.py, legacy_version) y, en `number`, la versión de verdad, que es la que se compara aquí. */
 export const isNewerVersion = (a, b) => {
-  const x = String(a || '').split('.').map(Number);
-  const y = String(b || '').split('.').map(Number);
-  for (let i = 0; i < 3; i++)
+  const x = versionKey(a);
+  const y = versionKey(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++)
     if ((x[i] || 0) != (y[i] || 0))
       return (x[i] || 0) > (y[i] || 0);
   return false;
@@ -99,33 +116,66 @@ const fetchVersionInfo = async () => {
     if (!r.ok)
       return null;
     const j = await r.json();
-    return j && typeof j.version == 'string' ? j : null;
+    if (!j || typeof j.version != 'string')
+      return null;
+    /* `version` es lo que leen las apps instaladas hasta la 1.0.31; la versión, desde la 1.0.4, va en `number` */
+    if (typeof j.number == 'string')
+      j.version = j.number;
+    return j;
   }
   catch (e) {
     logError('comprobar versión', e);
     return null;
   }
 };
+/** Los apartados de la nota de una versión en el idioma de la app: en inglés, los que trae escritos en inglés (`en`: build.py,
+    de CHANGELOG.en.md) y, si no los trae (las versiones anteriores a la 1.0.4), los de siempre, en español. */
+const notesOf = v => EN && Array.isArray(v.en) && v.en.length ? v.en : v.sections || [];
+/** Un apartado de la nota de una versión: su título y su lista (hasta `max` puntos; sin `max`, todos). La cabecera de la
+    versión (su primer apartado, marcado `lead`: build.py, changelog) va destacada, con su título y su texto, sin lista. */
+const sectionHtml = (s, max) => s.lead ? html`
+  <p class="notes-lead"><b>${s.title}</b>${(s.items || []).map(i => html`<span>${i}</span>`)}</p>
+` : html`
+  <p class="notes-heading">${s.title}</p>
+  <ul>${(max ? (s.items || []).slice(0, max) : s.items || []).map(i => html`<li>${i}</li>`)}</ul>`;
 /** Lista de cambios de una o varias versiones (si se saltaron versiones, se enseñan todas las posteriores a la instalada). */
 const releaseNotesHtml = (info, current) => {
   const all = info && Array.isArray(info.history) && info.history.length ? info.history : (info ? [info] : []);
   const list = current ? all : all.filter(v => isNewerVersion(v.version, APPV));
   const shown = list.length ? list.slice(0, 4) : (info ? [info] : []);
-  const notes = shown.map(v => (shown.length > 1 ? html`<p class="upv">Versión ${v.version}</p>` : '') + (v.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).slice(0, 8).map(i => html`<li>${i}</li>`)}</ul>`).join('')).join('');
-  return notes || '<ul><li>Mejoras y correcciones.</li></ul>';
+  const notes = shown.map(v => (shown.length > 1 ? html`
+    <p class="update-version">Versión ${plainVersion(v.version)}</p>
+  ` : '') + notesOf(v).map(s => sectionHtml(s, 8)).join('')).join('');
+  return notes || html`<ul><li>Mejoras y correcciones.</li></ul>`;
 };
 /** Ajustes → «Ver nota de actualización» (F-28): la nota de la versión instalada, solo la última, con todos sus cambios y,
     debajo, un «Cerrar» pequeño que vuelve a Ajustes. */
 export const releaseNotePage = () => {
   const r = RELEASE;
-  const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-  const body = (r.sections || []).map(s => html`<p class="ups">${s.title}</p><ul>${(s.items || []).map(i => html`<li>${i}</li>`)}</ul>`).join('');
-  return html`<div class="cd rnp"><b class="rnv">Versión ${r.version || APPV}</b>${d ? html`<small class="mu">${d}</small>` : ''}${raw(body || '<ul><li>Mejoras y correcciones.</li></ul>')}</div><div class="rnc"><button class="lnk" data-a="openSettings">Cerrar</button></div>`;
+  const d = /^\d{4}-\d\d-\d\d$/.test(r.date || '') ? new Date(r.date + 'T12:00:00').toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const body = notesOf(r).map(s => sectionHtml(s, 0)).join('');
+  return html`
+    <div class="card release-notes">
+      <b class="release-version">Versión ${r.version || APPV}</b>
+      ${d ? html`<small class="muted">${d}</small>` : ''}
+      ${raw(body || html`<ul><li>Mejoras y correcciones.</li></ul>`)}
+    </div>
+    <div class="release-close"><button class="link-btn" data-a="openSettings">Cerrar</button></div>`;
 };
 /** Tarjeta negra del aviso: «update» antes de actualizar (botón Actualizar) o «news» tras actualizar (botón Entendido). */
 const updatePopupHtml = (info, mode) => {
   const v = info && info.version ? info.version : '';
-  return html`<div class="updb" data-a="updateLater"></div><div class="updk" role="dialog" aria-modal="true" aria-labelledby="updt"><button class="updx" data-a="updateLater" aria-label="Cerrar">×</button><small class="upe">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small><h3 id="updt">${raw(v ? 'Versión ' + X(v) : 'Versión nueva')}</h3><div class="upn">${raw(releaseNotesHtml(info, mode == 'news'))}</div><button class="upb" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">${mode == 'news' ? 'Entendido' : 'Actualizar'}</button></div>`;
+  return html`
+    <div class="update-backdrop" data-a="updateLater"></div>
+    <div class="update-box" role="dialog" aria-modal="true" aria-labelledby="updt">
+      <button class="update-close" data-a="updateLater" aria-label="Cerrar">×</button>
+      <small class="update-label">${mode == 'news' ? 'Novedades' : 'Nueva versión disponible'}</small>
+      <h3 id="updt">${raw(v ? say `Versión ${X(v)}` : 'Versión nueva')}</h3>
+      <div class="update-notes">${raw(releaseNotesHtml(info, mode == 'news'))}</div>
+      <button class="update-btn" data-a="${mode == 'news' ? 'updateLater' : 'updateApply'}">
+        ${mode == 'news' ? 'Entendido' : 'Actualizar'}
+      </button>
+    </div>`;
 };
 const showPopup = (info, mode) => {
   const old = document.getElementById('upd');
@@ -190,7 +240,8 @@ export const whatsNewDue = () => {
   catch (e) {
     logError('versión de partida', e);
   }
-  return updated && seen != APPV && RELEASE.sections.length > 0;
+  /* una 1.0.31 anota como vistas las novedades con el texto que lee en version.json (plainVersion) */
+  return updated && plainVersion(seen) != APPV && RELEASE.sections.length > 0;
 };
 /** 1 si las novedades esperan a que termine el entreno en curso. */
 let whatsNewPending = 0;
@@ -216,7 +267,7 @@ export const showWhatsNew = () => {
 A.updateApply = async (i, b) => {
   if (b) {
     b.disabled = true;
-    b.textContent = 'Actualizando…';
+    b.textContent = tr('Actualizando…');
   }
   try {
     await Promise.all(['./', 'index.html'].map(u => fetch(u + '?fresh=' + Date.now(), { cache: 'reload' })));
@@ -246,11 +297,11 @@ A.updateCheck = async (i, b) => {
     return;
   }
   /* en la fila de Ajustes cambia solo el valor de la derecha; en un botón normal, su texto */
-  const tx = b && (b.querySelector('.srv') || b);
+  const tx = b && (b.querySelector('.setting-value') || b);
   const label = tx ? tx.textContent : '';
   if (b) {
     b.disabled = true;
-    tx.textContent = 'Comprobando…';
+    tx.textContent = tr('Comprobando…');
   }
   const info = await fetchVersionInfo();
   if (b) {
@@ -262,7 +313,7 @@ A.updateCheck = async (i, b) => {
     return;
   }
   if (!isNewerVersion(info.version, APPV)) {
-    toast('Tienes la última versión (' + APPV + ')');
+    toast(say `Tienes la última versión (${APPV})`);
     return;
   }
   updateInfo = info;

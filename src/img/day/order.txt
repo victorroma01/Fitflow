@@ -1,4 +1,6 @@
-# Fotos de portada de los días (src/img/day/<clave>.jpg), en el orden en que aparecen en el selector
+# Portadas de los días: src/img/day/<clave>.webp o .jpg y, para los perfiles de mujer, src/img/day/mujer/<clave> (las que haya;
+# tools/portadas.py). En este orden salen en el selector de los workouts personalizados, sin los descansos. Qué día lleva
+# cada una: data/photos.
 pecho
 espalda
 hombros
@@ -6,9 +8,18 @@ piernas
 brazos
 torso
 legs
-descanso
+skierg
+trineo
+wallballs
+snatch
+thrusters
+boxjumps
+granjero
+competencia
 crossfit
 hyrox
 cardio
 core
 funcional
+descanso
+descanso2

@@ -48,7 +48,44 @@ quitar el silencio, la búsqueda de alimentos, el color propio, la barra de pest
 cuenta nueva, empezar sin programa, el logo nuevo, el paso al día siguiente, el RPE opcional, el Nutri-Score, «Mis alimentos» y el
 recuento de iPhone y Android en Administración.
 
-La **V1.0.2**, la publicada, es sobre todo por dentro: tus datos tienen sitio para años de uso y se guardan más rápido, la
+La **V1.0.2** es sobre todo por dentro: tus datos tienen sitio para años de uso y se guardan más rápido, la
 app avisa si queda poco espacio, se maneja mejor con VoiceOver, abre sin volver a descargar su código y, en un iPhone con el icono
-de antes, explica cómo poner el nuevo. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md); lo
-pendiente, en los milestones de GitHub (App móvil e Ideas futuras).
+de antes, explica cómo poner el nuevo.
+
+La **V1.0.3** cambió las fotos de los ejercicios por una figura que hace cada uno de los 551, con los músculos que trabajan en
+color y en movimiento, y trajo la semana en Nutrición, renombrar y eliminar ejercicios propios, el historial de pesajes,
+«Deshacer» en los avisos, el contraste comprobado en todo el texto y la validación de lo que se escribe, además de las
+correcciones de una auditoría técnica completa.
+
+La **V1.0.31** y la **V1.0.32**, la publicada, son las dos revisiones de la V1.0.3. La primera rehace las figuras del remo, el
+SkiErg, el saco de boxeo, la bici de aire y la comba tras probarlas en un iPhone; la segunda llama «Guardar entreno» al botón
+que guarda el entreno, que antes ponía «Log out», pone detrás del inicio de sesión la imagen de un gimnasio, deja liso el fondo de la app (negro, en el tema oscuro), trae las fotos de los días de CrossFit y Hyrox y, con el perfil de mujer, las de una modelo, y cambia por dentro cómo se identifica cada cuenta, sin que
+haya que hacer nada. No son otra versión: la app
+enseña sus arreglos en la misma tarjeta que las novedades de la V1.0.3. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md).
+
+<br clear="right">
+
+## Versiones
+
+La **V1.0.0** trajo las cuentas con usuario y contraseña y los datos en la nube, programas nuevos con técnicas de intensidad,
+semana de descarga y rotación, la pantalla de entrenamiento renovada, el seguimiento (pesaje, análisis mensual, fallos y
+sugerencias, copia en la nube) y el manejo de una app del móvil.
+
+La **V1.0.1** corrigió lo encontrado al probarla en el iPhone (pantalla en negro al volver con el dedo, el sonido tras
+quitar el silencio, la búsqueda de alimentos, el color propio, la barra de pestañas…) y trajo la bienvenida con los datos de una
+cuenta nueva, empezar sin programa, el logo nuevo, el paso al día siguiente, el RPE opcional, el Nutri-Score, «Mis alimentos» y el
+recuento de iPhone y Android en Administración.
+
+La **V1.0.2** es sobre todo por dentro: tus datos tienen sitio para años de uso y se guardan más rápido, la
+app avisa si queda poco espacio, se maneja mejor con VoiceOver, abre sin volver a descargar su código y, en un iPhone con el icono
+de antes, explica cómo poner el nuevo.
+
+La **V1.0.3** cambió las fotos de los ejercicios por una figura que hace cada uno de los 551, con los músculos que trabajan en
+color y en movimiento, y trajo la semana en Nutrición, renombrar y eliminar ejercicios propios, el historial de pesajes,
+«Deshacer» en los avisos, el contraste comprobado en todo el texto y la validación de lo que se escribe, además de las
+correcciones de una auditoría técnica completa.
+
+La **V1.0.31**, la publicada, es la primera revisión de la V1.0.3: rehace las figuras del remo, el SkiErg, el saco de boxeo, la
+bici de aire y la comba tras probarlas en un iPhone. No es otra versión: la app enseña sus arreglos en la misma tarjeta que las
+novedades de la V1.0.3. Lo que cambia en cada versión está en el [historial de cambios](../../CHANGELOG.md); lo pendiente, en los
+milestones de GitHub (App móvil e Ideas futuras).

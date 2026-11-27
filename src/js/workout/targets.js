@@ -1,14 +1,15 @@
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitOf, targetRange, UNIT_HEADS, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
+   Define: repClass, unitOf, targetRange, UNIT_HEADS, AMRAP, setReps, isAmrap, repsText, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
 */
+import { say, tr } from '../core/i18n.js';
 import { fmtMinSec } from '../core/util.js';
 import { unitFromName } from '../core/calc.js';
 import { C } from '../core/registry.js';
 import { groupOf } from '../data/library.js';
 import { S, saveState, W } from '../core/state.js';
 import { R } from '../core/render.js';
-import { exAll } from '../library/model.js';
+import { exByName } from '../library/model.js';
 import { inSuperset } from './day.js';
 import { blockEnd, COMPOUND_RE, restAt } from './rest.js';
 import { warmupHtml } from './warmup.js';
@@ -33,7 +34,25 @@ export const targetRange = e => {
   return t == 8 ? [6, 10] : t == 12 ? [10, 15] : [8, 12];
 };
 const UNIT_HEADS = { m: 'Dist.', s: 'Seg', min: 'Min', cal: 'Cal', km: 'Km' };
+/** Una serie sin número fijo de repeticiones: las máximas posibles (entrenos a la carta). Se escribe igual en inglés. */
+export const AMRAP = 'AMRAP';
+/** Las repeticiones de cada una de las series de un ejercicio que las trae de su rutina (rs: entrenos a la carta,
+    routines/ondemand), una por serie: un número o AMRAP. null si no las trae, si va en tiempo o distancia o si son todas el
+    mismo número: entonces manda su rango (rg), como en cualquier otro ejercicio. */
+export const setReps = e => {
+  if (!Array.isArray(e.rs) || !e.rs.length || unitOf(e))
+    return null;
+  const a = Array.from({ length: Math.max(1, e.s) }, (_, j) => e.rs[Math.min(j, e.rs.length - 1)]);
+  return a.every(x => x === a[0]) && a[0] != AMRAP ? null : a;
+};
+/** ¿Es AMRAP la serie `j` del ejercicio `e`? (las que se añaden de más, como la última) */
+export const isAmrap = (e, j) => !unitOf(e) && Array.isArray(e.rs) && e.rs.length > 0 && e.rs[Math.min(j, e.rs.length - 1)] == AMRAP;
+/* «12/10/8/6 reps»; si todas son AMRAP, «AMRAP» */
+const repsText = p => p.every(x => x == AMRAP) ? AMRAP : p.join('/') + ' reps';
 export const targetText = e => {
+  const p = setReps(e);
+  if (p)
+    return repsText(p);
   const U = unitOf(e);
   const r = targetRange(e);
   return (r[0] == r[1] ? r[0] : r[0] + '-' + r[1]) + (U ? ' ' + U : ' reps');
@@ -83,6 +102,7 @@ export const fixUnits = nn => {
 };
 export const newPlanEx = n => {
   const u = unitFromName(n);
+  /** @type {PlanExercise} */
   const o = { n, s: u ? (u.u == 'min' ? 1 : 3) : 3 };
   if (u) {
     o.u = u.u;
@@ -99,7 +119,9 @@ export const dayMinutes = d => {
   d.ex.forEach((e, i) => {
     const U = unitOf(e);
     const r = targetRange(e);
-    const v = (r[0] + r[1]) / 2;
+    /* con repeticiones distintas en cada serie, su media; una AMRAP, como las de su rango */
+    const p = setReps(e);
+    const v = p ? p.reduce((s, x) => s + (x == AMRAP ? (r[0] + r[1]) / 2 : +x), 0) / p.length : (r[0] + r[1]) / 2;
     const w = U ? (U == 'm' ? (v <= 100 ? 45 : v / 3) : U == 's' ? v : U == 'min' ? v * 60 : v * 3) : v * 3 + 12;
     t += e.s * (w + restAt(d, i));
   });
@@ -110,15 +132,21 @@ const weeklySets = pl => {
   pl.forEach(d => d.ex.forEach(e => {
     if (unitOf(e))
       return;
-    const x = exAll().find(y => y.n == e.n);
+    const x = exByName(e.n);
     const g = x ? groupOf(x) : 'Otros';
     o[g] = (o[g] || 0) + e.s;
   }));
   /* en un ciclo de otra longitud que la semana (workout/week), la media por semana */
   const f = pl.length ? 7 / pl.length : 1;
-  return Object.entries(o).map(([g, n]) => [g, Math.round(n * f)]).sort((a, b) => b[1] - a[1]);
+  return Object.entries(o).map(([g, n]) => /** @type {[string, number]} */ ([g, Math.round(n * f)])).sort((a, b) => b[1] - a[1]);
 };
-export const weeklySetsCard = pl => html`<div class="cd m-8-0"><b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b><div class="d-flex wrap gap-6 mt-8">${weeklySets(pl).map(o => html`<span class="p-4-10 r-12 bg-gray-18 fs-12">${o[0]} · ${raw(o[1])}</span>`)}</div></div>`;
+export const weeklySetsCard = pl => html`
+  <div class="card m-8-0">
+    <b>Series directas por semana${isCycle(pl) ? ' (media del ciclo)' : ''}</b>
+    <div class="d-flex wrap gap-6 mt-8">
+      ${weeklySets(pl).map(o => html`<span class="p-4-10 r-12 bg-gray-18 fs-12">${o[0]} · ${raw(o[1])}</span>`)}
+    </div>
+  </div>`;
 export const usesWeight = e => !unitOf(e) || /Sled|Farmers|Sandbag|Carry|chaleco|con peso|con balón|arrastre|Lunges/i.test(e.n);
 /** Repeticiones de cada serie de una pirámide: del tope del rango al mínimo (12, 10, 8, 6 con un rango de 6-12). */
 export const pyramidReps = (rg, n) => Array.from({ length: n }, (_, j) => n < 2 ? rg[1] : Math.round(rg[1] - (rg[1] - rg[0]) * j / (n - 1)));
@@ -128,12 +156,12 @@ const TECH_TAIL = { DS: ' + drop set', RP: ' + rest-pause', PAR: ' + parciales' 
 export const planLine = e => {
   const [a, f] = (unitOf(e) ? '' : e.tk || '').split('+');
   if (a == 'PIR')
-    return e.s + ' × ' + pyramidReps(targetRange(e), e.s).join('/') + ' reps' + (TECH_TAIL[f] || '');
+    return say `${e.s} × ${pyramidReps(targetRange(e), e.s).join('/')} reps${TECH_TAIL[f] || ''}`;
   if (a == 'MYO' && e.s > 1)
-    return targetText(e) + ' + ' + (e.s - 1) + ' mini series de 3-5';
+    return say `${targetText(e)} + ${e.s - 1} mini series de 3-5`;
   if (a == 'CL')
-    return e.s + ' × ' + targetText(e) + ' en bloques de 2-3';
-  return e.s + ' × ' + targetText(e) + (TECH_TAIL[a] || '');
+    return say `${e.s} × ${targetText(e)} en bloques de 2-3`;
+  return e.s + ' × ' + targetText(e) + tr(TECH_TAIL[a] || '');
 };
 /* un dato con su nombre («RIR 1-2», «Descanso 3:00»), que no se parte entre dos líneas. Con dot, lleva pegado el punto que
    lo separa del siguiente: si la línea se parte ahí, el punto se queda al final de la primera y no al principio de la otra */
@@ -146,25 +174,37 @@ const thenDot = t => {
 export const targetLine = (e, i) => {
   const U = unitOf(e);
   const dl = !!(W && W.deload);
-  /* la segunda línea: el descanso y el tempo, cada uno [lo que puede partirse, lo que va junto] */
+  /* la segunda línea: el descanso y el tempo, cada uno en una pieza que no se parte. En una superserie, una triserie o un
+     circuito el descanso no se dice aquí (son 10 s hasta el siguiente ejercicio y, al acabar la ronda, el suyo): va en cada
+     serie, en la columna «Desc.» */
   const p = [];
-  if (e.s > 1) {
-    const rest = fmtMinSec(restAt(S.plan[S.selectedDay], i));
-    p.push(inSuperset(i) ? ['', '10 s al siguiente'] : blockEnd(S.plan[S.selectedDay], i) ? ['Descanso de la ', 'ronda ' + rest] : ['', 'Descanso ' + rest]);
-  }
+  if (e.s > 1 && !inSuperset(i) && !blockEnd(S.plan[S.selectedDay], i))
+    p.push(say `Descanso ${fmtMinSec(restAt(S.plan[S.selectedDay], i))}`);
   if (!U)
-    p.push(['', 'Tempo ' + tempoOf(e)]);
-  /* en la semana de descarga, 2 repeticiones menos, sin técnica y lejos del fallo */
+    p.push(say `Tempo ${tempoOf(e)}`);
+  /* en la semana de descarga, 2 repeticiones menos (una AMRAP sigue siendo AMRAP), sin técnica y lejos del fallo */
   const [a, b] = targetRange(e).map(x => Math.max(1, x - 2));
-  const ob = U ? planLine(e) : dl ? html`${thenDot(e.s + ' × ' + (a == b ? a : a + '-' + b) + ' reps')}${together('RIR 3-4')}` : html`${thenDot(planLine(e))}${together('RIR ' + rirOf(e))}`;
-  return html`<div class="mu">Objetivo: ${ob}</div>${p.length ? html`<div class="mu">${p.map(([head, pair], k) => html`${head}${together(pair, k < p.length - 1)}`)}</div>` : ''}${raw(warmupHtml(e, i))}`;
+  const ps = setReps(e);
+  const low = ps ? e.s + ' × ' + repsText(ps.map(x => x == AMRAP ? x : Math.max(1, +x - 2))) : say `${e.s} × ${a == b ? a : a + '-' + b} reps`;
+  /* un entreno a la carta no lleva RIR: su rutina no lo da, y una serie AMRAP llega al fallo */
+  const od = !!S.plan[S.selectedDay].od;
+  const ob = U ? planLine(e) : od ? (dl ? low : planLine(e)) : dl ? html`${thenDot(low)}${together('RIR 3-4')}` : html`
+    ${thenDot(planLine(e))}
+    ${together('RIR ' + rirOf(e))}`;
+  return html`
+    <div class="muted">Objetivo: ${ob}</div>
+    ${p.length ? html`<div class="muted">${p.map((t, k) => together(t, k < p.length - 1))}</div>` : ''}
+    ${raw(warmupHtml(e, i))}`;
 };
 const RANGE_OPTIONS = ['3-5', '5-8', '6-10', '8-10', '8-12', '10-12', '10-15', '12-15', '15-20'];
 export const rangeSelect = (e, i) => {
   if (unitOf(e))
     return '';
   const c = targetRange(e).join('-');
-  return html`<select data-c="setRepRange" data-i="${i}" aria-label="${'Repeticiones objetivo, ' + e.n}" class="w-auto p-5-10 fs-13">${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}</select>`;
+  return html`
+    <select data-c="setRepRange" data-i="${i}" aria-label="${say `Repeticiones objetivo, ${e.n}`}" class="w-auto p-5-10 fs-13">
+      ${(RANGE_OPTIONS.includes(c) ? RANGE_OPTIONS : RANGE_OPTIONS.concat([c])).map(v => html`<option value="${v}"${v == c ? ' selected' : ''}>${raw(v)} reps</option>`)}
+    </select>`;
 };
 C.setRepRange = (e, i) => {
   const x = S.plan[S.selectedDay].ex[i];
@@ -174,6 +214,8 @@ C.setRepRange = (e, i) => {
   if (r.length < 2)
     r.push(r[0]);
   x.rg = r;
+  /* el rango elegido manda sobre las repeticiones de cada serie que traía de su rutina */
+  delete x.rs;
   saveState();
   R();
 };

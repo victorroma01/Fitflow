@@ -10,20 +10,32 @@
 import { Store } from './store.js';
 /** Colecciones de S que se guardan en su propia clave (las comidas, además, una clave por mes). */
 export const STATE_PARTS = ['logs', 'hist', 'meals'];
-/** Clave de una parte: partKey('logs') → 'ff:logs'; partKey('') es el prefijo común. */
+/** Clave de una parte: partKey('logs') → 'ff:logs'; partKey('') es el prefijo común.
+    @param {string} k */
 export const partKey = k => Store.K.app + ':' + k;
-/* mes de las comidas de un día ('otros' si la clave no es una fecha) */
+/** Mes de las comidas de un día ('otros' si la clave no es una fecha).
+    @param {string} d */
 const monthKey = d => /^\d{4}-\d\d-\d\d$/.test(d) ? d.slice(0, 7) : 'otros';
-/** La parte con las comidas de un día, para saveState: mealsPart('2026-10-29') → 'meals:2026-10'. */
+/** La parte con las comidas de un día, para saveState: mealsPart('2026-10-29') → 'meals:2026-10'.
+    @param {string} d */
 export const mealsPart = d => 'meals:' + monthKey(d);
 /** El estado `s`, ya con las claves guardadas, dividido en claves de Store: { out: { clave: texto JSON }, keys: claves de
   todas las partes que tiene }. Del núcleo siempre sale el texto; de las partes, solo de las de `want` (de todas si es null).
   El núcleo lleva la marca _parts (2 si las partes van en IndexedDB, `inIdb`; 1 si en localStorage) y, en IndexedDB, la lista
-  _pk. Una colección que no tiene la forma de su parte (una lista para `logs`, un objeto para el resto) se queda en el núcleo. */
+  _pk. Una colección que no tiene la forma de su parte (una lista para `logs`, un objeto para el resto) se queda en el núcleo.
+  @param {Record<string, any>} s
+  @param {Set<string> | null} want
+  @param {any} inIdb
+  @returns {StateSplit} */
 export const splitState = (s, want, inIdb) => {
+  /** @type {Record<string, string>} */
   const out = {};
+  /** @type {string[]} */
   const keys = [];
+  /** @type {Record<string, any>} */
   const core = {};
+  /** @param {string} k
+      @param {any} v */
   const part = (k, v) => {
     keys.push(k);
     if (!want || want.has(k))
@@ -40,6 +52,7 @@ export const splitState = (s, want, inIdb) => {
       part(partKey(k), v);
       continue;
     }
+    /** @type {Record<string, DayMeals>} */
     const months = {};
     for (const d in v)
       (months[monthKey(d)] = months[monthKey(d)] || {})[d] = v[d];
@@ -52,7 +65,9 @@ export const splitState = (s, want, inIdb) => {
   out[Store.K.app] = JSON.stringify(core);
   return { out, keys };
 };
-/** Texto de una parte → su valor (lista para `logs`, objeto para el resto), o undefined si falta o está dañada. */
+/** Texto de una parte → su valor (lista para `logs`, objeto para el resto), o undefined si falta o está dañada.
+    @param {string} k
+    @param {any} raw */
 export const readPart = (k, raw) => {
   try {
     const v = JSON.parse(raw);

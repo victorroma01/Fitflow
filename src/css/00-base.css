@@ -7,10 +7,11 @@
    --ag: el degradado del color de acento para lo que lleva texto encima (botón principal, día elegido…): del tono principal a
    --age (uno más oscuro si el texto es blanco y más claro si es oscuro: profile/appearance), para que el texto (--ft) tenga
    4,5 o más en todo el botón. --gmid: el color de acento
-   para lo que queda detrás del texto (el brillo de fondo de Cristal, la fila de la serie en curso), acotado por
-   profile/appearance (--gd2 en oscuro, --gl2 en claro). tests/contrast.py lo mide todo. */
+   para lo que queda detrás del texto (la fila de la serie en curso), acotado por profile/appearance (--gd2 en oscuro, --gl2
+   en claro). tests/contrast.py lo mide todo. --bg, el fondo de la app, va liso: negro en el tema oscuro y gris muy claro en el
+   claro, con cualquier estilo y color de acento. */
 :root {
-  --bg:#0b0b0d;
+  --bg:#000;
   --cd:#17171b;
   --tx:#f4f4f6;
   --mu:#8b8b96;
@@ -73,7 +74,7 @@
   color-scheme:light;
 }
 :root[data-theme="dark"] {
-  --bg:#0b0b0d;
+  --bg:#000;
   --cd:#17171b;
   --tx:#f4f4f6;
   --mu:#8b8b96;
@@ -124,6 +125,10 @@ input,select,textarea {
   padding:8px;
   width:100%;
   min-width:0;
+}
+/* lo que no cabe en un campo (el texto de ayuda de un buscador, en un móvil de 320 px) acaba en «…», no a media letra */
+input {
+  text-overflow:ellipsis;
 }
 /* el texto de ayuda de un campo, con el gris del texto secundario: el de serie del navegador no llega al contraste */
 ::placeholder {

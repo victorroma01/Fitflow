@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """StrataFit · build
 
-Compila src/ en la app. Necesita Python 3 y esbuild («npm install»), que une los módulos ES y comprime el código.
+Compila src/ en la app. Necesita Python 3, node y los paquetes de «npm install»: esbuild, que une los módulos ES y comprime
+el código, y typescript, con el que tools/templates.js lee las plantillas html`…` para dejarlas en una línea antes de compilar.
 
   python3 build.py                 → dist/app/  (index.html + js/ + sw.js + version.json + manifiesto + iconos + img/, para GitHub Pages)
                                      dist/stratafit.html  (archivo único con todo incrustado, sin service worker)
@@ -16,12 +17,17 @@ Estructura (todo vive en src/):
   src/css/NN-nombre.css   trozos de CSS; se concatenan por orden alfabético (el orden importa por la cascada)
   src/js/main.js          punto de entrada: importa los módulos en orden de carga (cada uno registra sus manejadores)
   src/js/<area>/<m>.js    módulos ES (import/export); esbuild los une: en un solo <script> (archivo único) o en js/
-                          con lo poco usado en archivos aparte que se cargan al usarlo (paquete)
+                          con lo poco usado en archivos aparte que se cargan al usarlo (paquete). Sus plantillas html`…`
+                          pueden ocupar varias líneas: esos saltos no llegan a la app (flat_js)
   src/js/data/media.js    molde que el build sustituye por las fotos de src/img/ (rutas o base64 según la variante)
   src/js/data/release.js  molde que el build sustituye por las novedades de la versión actual (de CHANGELOG.md)
+  src/fig3d/              el motor de las figuras 3D: scripts clásicos «(function (G) {…})(window);», en el orden de FIG3D_FILES,
+                          que también usan las páginas de revisión de tools/figuras3d
+  src/js/extras/motor3d.js  molde que el build sustituye por ese motor, metido en una función (se carga al usarlo: core/lazy)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
                           (la revisión de una versión enseña sus arreglos junto con las novedades de la que revisa)
-  src/img/day/            portadas de los días (.jpg) y order.txt
+  src/img/day/            portadas de los días (.webp o .jpg), en el orden de order.txt; las de mujer, en mujer/ (tools/portadas.py)
+  src/img/login/          fondo del inicio de sesión (fondo.webp, que prepara tools/fondo.py)
   static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
 
 Las dos variantes solo se diferencian en:
@@ -39,8 +45,16 @@ IMG = os.path.join(SRC, 'img')
 ENTRY = 'main.js'
 MEDIA_MODULE = 'data/media.js'
 RELEASE_MODULE = 'data/release.js'
+FIG3D_MODULE = 'extras/motor3d.js'
+FIG3D = os.path.join(SRC, 'fig3d')
+# los archivos del motor 3D, en el orden en que se cargan: cada uno usa lo que dejan los anteriores en Fig3D
+FIG3D_FILES = ('fig3d.js', 'gear3d.js', 'mov3d.js', 'tiron3d.js', 'piernas3d.js', 'brazos3d.js', 'hombros3d.js', 'core3d.js', 'funcional3d.js', 'cardio3d.js')
 CHANGELOG = os.path.join(ROOT, 'CHANGELOG.md')
+CHANGELOG_EN = os.path.join(ROOT, 'CHANGELOG.en.md')
 USER_SECTIONS = ('Novedades', 'Mejoras', 'Correcciones')  # apartados que la app enseña al usuario
+# los mismos apartados en CHANGELOG.en.md (las notas de cada versión en inglés), con el nombre del que son en español
+EN_SECTIONS = {"What's new": 'Novedades', 'Improvements': 'Mejoras', 'Fixes': 'Correcciones'}
+VERSION = r'\d+\.\d+\.\d+(?:\.\d+)?'  # 1.1.0 o, la revisión de una versión, 1.1.0.1
 
 
 def read(p):
@@ -95,6 +109,8 @@ def check_tree(mods):
     for gm in (MEDIA_MODULE, RELEASE_MODULE):
         if gm not in seen:
             die('main.js debe importar ' + gm)
+    if FIG3D_MODULE not in lazy_modules():
+        die('core/lazy.js debe cargar ' + FIG3D_MODULE)
 
 
 # ── fotos ──────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -104,41 +120,107 @@ def list_lines(p):
 
 
 BRAND_LOGOS = ('claro', 'oscuro')
+LOGIN_PHOTO = 'img/login/fondo.webp'
+EQUIPMENT_MODULE = os.path.join(SRC, 'js', 'data', 'equipment.js')
+CATALOG_MODULE = os.path.join(SRC, 'js', 'data', 'catalog.js')
+
+
+def catalog_ids():
+    """Los ids de las imágenes de las tarjetas de la librería que nombra data/catalog.js («'Pecho': ['chest', 339, 192]»)."""
+    ids = re.findall(r"'[^']+': \['([\w-]+)', \d+, \d+", read(CATALOG_MODULE))
+    if not ids:
+        die('no encuentro los grupos de las tarjetas de la librería en ' + os.path.relpath(CATALOG_MODULE, ROOT))
+    return ids
+
+
+def equipment_icons():
+    """Los iconos que nombra data/equipment.js (el segundo texto de cada material: «'id': ['Nombre', 'icono']»)."""
+    names = re.findall(r"'[\w-]+': \['[^']+', '([\w-]+)'\]", read(EQUIPMENT_MODULE))
+    if not names:
+        die('no encuentro los iconos del equipamiento en ' + os.path.relpath(EQUIPMENT_MODULE, ROOT))
+    return sorted(set(names))
+
+
+def cover_file(folder, k):
+    """El archivo de la portada `k` en una carpeta de src/img/day: <k>.webp o <k>.jpg (None si no está)."""
+    found = [k + ext for ext in ('.webp', '.jpg') if os.path.isfile(os.path.join(folder, k + ext))]
+    if len(found) > 1:
+        die('la portada %s está dos veces en %s (%s): deja una' % (k, folder, ' y '.join(found)))
+    return found[0] if found else None
 
 
 def media():
-    """Lee src/img: las portadas de día (order.txt) y el logo. Devuelve la lista de fotos y los enlaces."""
-    files, day = [], []
-    for k in list_lines(os.path.join(IMG, 'day', 'order.txt')):
-        p = os.path.join(IMG, 'day', k + '.jpg')
-        if not os.path.isfile(p):
-            die('falta la portada ' + p)
-        day.append(k)
-        files.append(('img/day/' + k + '.jpg', p))
+    """Lee src/img: las portadas de día (order.txt; las de mujer, en src/img/day/mujer, las que haya), el logo, el fondo del
+    inicio de sesión, los iconos del equipamiento y las imágenes de las tarjetas de la librería. Devuelve la lista de imágenes
+    y los enlaces de cada portada, de cada icono y de cada tarjeta (clave → img/…)."""
+    files, day, day_f = [], {}, {}
+    base = os.path.join(IMG, 'day')
+    for k in list_lines(os.path.join(base, 'order.txt')):
+        f = cover_file(base, k)
+        if not f:
+            die('falta la portada src/img/day/%s.webp (o .jpg)' % k)
+        day[k] = 'img/day/' + f
+        files.append((day[k], os.path.join(base, f)))
+        f = cover_file(os.path.join(base, 'mujer'), k)
+        if f:
+            day_f[k] = 'img/day/mujer/' + f
+            files.append((day_f[k], os.path.join(base, 'mujer', f)))
     # el logo dentro de la app (core/brand): claro y oscuro. Las fuentes (fuente-*.png) no se publican: son de tools/marca.py
     for k in BRAND_LOGOS:
         p = os.path.join(IMG, 'brand', 'logo-%s.webp' % k)
         if not os.path.isfile(p):
             die('falta el logo %s (python3 tools/marca.py)' % p)
         files.append(('img/brand/logo-%s.webp' % k, p))
-    used = {os.path.basename(p) for _, p in files}
-    for f in sorted(os.listdir(os.path.join(IMG, 'day'))):
-        if f.endswith('.jpg') and f not in used:
-            print('  aviso: src/img/day/%s no está en su lista y no se usa' % f)
-    return {'files': files, 'day': day}
+    # el fondo del inicio de sesión (account/login, F-33): ya desenfocado y en gris (tools/fondo.py)
+    p = os.path.join(SRC, *LOGIN_PHOTO.split('/'))
+    if not os.path.isfile(p):
+        die('falta el fondo del inicio de sesión %s (python3 tools/fondo.py foto.jpg)' % p)
+    files.append((LOGIN_PHOTO, p))
+    # los iconos del equipamiento (workout/equipment): los del catálogo en WebP (tools/equipamiento.py) y los dibujados en SVG
+    equip, folder = {}, os.path.join(IMG, 'equipment')
+    for k in equipment_icons():
+        found = [k + ext for ext in ('.webp', '.svg') if os.path.isfile(os.path.join(folder, k + ext))]
+        if len(found) != 1:
+            die('el icono de equipamiento %s tiene que estar una vez en src/img/equipment (.webp o .svg): %s' % (k, found or 'no está'))
+        equip[k] = 'img/equipment/' + found[0]
+        files.append((equip[k], os.path.join(folder, found[0])))
+    # las tarjetas de los grupos de la librería (library/catalog): la ilustración y el icono de cada uno (tools/catalogo.py)
+    cat, cat_icon, cfolder = {}, {}, os.path.join(IMG, 'catalog')
+    for k in catalog_ids():
+        for out, name in ((cat, k + '.webp'), (cat_icon, k + '-icono.webp')):
+            p = os.path.join(cfolder, name)
+            if not os.path.isfile(p):
+                die('falta la imagen de la tarjeta %s (python3 tools/catalogo.py paquete)' % os.path.relpath(p, ROOT))
+            out[k] = 'img/catalog/' + name
+            files.append((out[k], p))
+    used = {p for _, p in files}
+    for folder, why in ((folder, 'data/equipment.js'), (cfolder, 'data/catalog.js')):
+        for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            if os.path.join(folder, f) not in used:
+                print('  aviso: %s no lo nombra %s y no se usa' % (os.path.relpath(os.path.join(folder, f), ROOT), why))
+    for folder in (base, os.path.join(base, 'mujer')):
+        for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            if f.endswith(('.jpg', '.webp')) and os.path.join(folder, f) not in used:
+                print('  aviso: %s no está en su lista y no se usa' % os.path.relpath(os.path.join(folder, f), ROOT))
+    return {'files': files, 'day': day, 'dayF': day_f, 'equip': equip, 'cat': cat, 'catIcon': cat_icon}
 
 
 def media_js(m, inline):
     def url(rel, p):
         if not inline:
             return rel
-        mime = 'image/jpeg' if p.endswith('.jpg') else 'image/webp'
+        mime = 'image/jpeg' if p.endswith('.jpg') else 'image/svg+xml' if p.endswith('.svg') else 'image/webp'
         with open(p, 'rb') as f:
             return 'data:%s;base64,%s' % (mime, base64.b64encode(f.read()).decode('ascii'))
     src = dict(m['files'])
     obj = {
-        'day': {k: url('img/day/%s.jpg' % k, src['img/day/%s.jpg' % k]) for k in m['day']},
+        'day': {k: url(rel, src[rel]) for k, rel in m['day'].items()},
+        'dayF': {k: url(rel, src[rel]) for k, rel in m['dayF'].items()},
         'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
+        'login': url(LOGIN_PHOTO, src[LOGIN_PHOTO]),
+        'equip': {k: url(rel, src[rel]) for k, rel in m['equip'].items()},
+        'cat': {k: url(rel, src[rel]) for k, rel in m['cat'].items()},
+        'catIcon': {k: url(rel, src[rel]) for k, rel in m['catIcon'].items()},
     }
     return 'export const MEDIA = ' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')) + ';'
 
@@ -151,36 +233,86 @@ def plain(s):
     return re.sub(r'\*\*|__|`', '', s).strip()
 
 
-def changelog():
+# las revisiones de la 1.0.3 se numeraron añadiendo una cifra a su tercer número: la 1.0.31 y la 1.0.32 son la 1.0.3.1 y la
+# 1.0.3.2, anteriores a la 1.0.4 (lo mismo en la app: system/updates, isNewerVersion)
+OLD_REVISIONS = {'1.0.31': '1.0.3.1', '1.0.32': '1.0.3.2'}
+
+
+def version_key(v):
+    """Las cifras de una versión, para compararla con otra como lo hace el aviso de versión nueva de la app."""
+    return [int(x) for x in OLD_REVISIONS.get(v, v).split('.')]
+
+
+def changelog(path=None, titles=USER_SECTIONS):
     """Versiones de CHANGELOG.md, de la más nueva a la más antigua: [{version, date, sections: [{title, items}]}].
-    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. La revisión de una versión dice cuál
-    revisa antes de su primer apartado («Revisión de la [1.0.3]…») y lo lleva en `base`."""
+    (Con `path` y `titles`, las de otro archivo con otros nombres de apartado: CHANGELOG.en.md, las notas en inglés.)
+    Solo los apartados que ve el usuario; «Interno» y las entradas sin fecha se ignoran. Antes del primer apartado, las líneas
+    que empiezan por «> » son la cabecera de la versión: la primera, su título, y las demás, su texto. Es un apartado más, el
+    primero y marcado (`lead`): la app lo enseña destacado encima de los otros, y una instalada anterior a la 1.0.4, que no
+    sabe de cabeceras, como un apartado cualquiera. La revisión de una versión lleva en `base` la que revisa: la de sus tres
+    primeras cifras si tiene cuatro (1.1.0.1 revisa la 1.1.0) o la que diga antes de su primer apartado («Revisión de la
+    [1.0.3]…»: las de la 1.0.3, que se numeraron 1.0.31 y 1.0.32)."""
     out, cur, sec, head = [], None, None, False
-    for raw in read(CHANGELOG).splitlines():
+    for raw in read(path or CHANGELOG).splitlines():
         l = raw.rstrip()
         if l.startswith('## '):
-            m = re.match(r'^## \[(\d+\.\d+\.\d+)\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})$', l)
+            m = re.match(r'^## \[(' + VERSION + r')\]\s*[—–-]\s*(\d{4}-\d{2}-\d{2})$', l)
             cur = {'version': m.group(1), 'date': m.group(2), 'sections': []} if m else None
             if cur:
                 out.append(cur)
+                if cur['version'].count('.') == 3:
+                    cur['base'] = cur['version'].rsplit('.', 1)[0]
             sec, head = None, True
         elif cur is None:
             continue
         elif l.startswith('### '):
             title = l[4:].strip()
-            sec = {'title': title, 'items': []} if title in USER_SECTIONS else None
+            sec = {'title': title, 'items': []} if title in titles else None
             if sec:
                 cur['sections'].append(sec)
             head = False
-        elif head and re.match(r'^Revisión de la \[(\d+\.\d+\.\d+)\]', l):
-            cur['base'] = re.match(r'^Revisión de la \[(\d+\.\d+\.\d+)\]', l).group(1)
+        elif head and l.startswith('> '):
+            lead = next((s for s in cur['sections'] if s.get('lead')), None)
+            if lead is None:
+                cur['sections'].insert(0, {'title': plain(l[2:]), 'items': [], 'lead': True})
+            elif lead['items']:
+                lead['items'][-1] += ' ' + plain(l[2:])
+            else:
+                lead['items'].append(plain(l[2:]))
+        elif head and re.match(r'^Revisión de la \[(' + VERSION + r')\]', l):
+            said = re.match(r'^Revisión de la \[(' + VERSION + r')\]', l).group(1)
+            if cur.get('base', said) != said:
+                die('CHANGELOG.md: la %s es, por su número, una revisión de la %s, y dice que lo es de la %s' % (cur['version'], cur['base'], said))
+            cur['base'] = said
         elif sec is not None and re.match(r'^[-*] ', l):
             sec['items'].append(plain(l[2:]))
         elif sec is not None and l.strip() and sec['items'] and raw.startswith('  '):
             sec['items'][-1] += ' ' + plain(l)
     for e in out:
-        e['sections'] = [s for s in e['sections'] if s['items']]
+        e['sections'] = [s for s in e['sections'] if s['items'] or s.get('lead')]
     return out
+
+
+def english(entries):
+    """Pone a cada versión sus notas en inglés (`en`: los apartados de su entrada en CHANGELOG.en.md), que son las que enseña
+    la app cuando está en inglés. La entrada en inglés tiene que decir lo mismo que la de CHANGELOG.md: los mismos apartados,
+    en el mismo orden y con los mismos puntos (y su cabecera, si la tiene). Una versión sin entrada en inglés se enseña en
+    español; solo las hay desde la 1.0.4, que es la primera con la app en inglés."""
+    en = {e['version']: e for e in changelog(CHANGELOG_EN, tuple(EN_SECTIONS))} if os.path.exists(CHANGELOG_EN) else {}
+    known = {e['version'] for e in entries}
+    for v in en:
+        if v not in known:
+            die('CHANGELOG.en.md: la versión %s no está en CHANGELOG.md' % v)
+    shape = lambda sections, name: [('cabecera' if s.get('lead') else name(s['title']), len(s['items'])) for s in sections]
+    for e in entries:
+        x = en.get(e['version'])
+        if x is None:
+            continue
+        a, b = shape(e['sections'], lambda t: t), shape(x['sections'], lambda t: EN_SECTIONS[t])
+        if a != b or x['date'] != e['date']:
+            die('CHANGELOG.en.md: la %s no dice lo mismo que en CHANGELOG.md (apartados y puntos de cada uno: %s en español y %s en inglés)' % (e['version'], a, b))
+        e['en'] = x['sections']
+    return entries
 
 
 def cards(entries):
@@ -194,6 +326,8 @@ def cards(entries):
             continue
         if not e.get('base'):
             out.append({'version': e['version'], 'date': e['date'], 'sections': e['sections']})
+            if e.get('en'):
+                out[-1]['en'] = e['en']
             continue
         # de la revisión a la versión que revisa, pasando por las revisiones anteriores de la misma
         chain = [e]
@@ -205,8 +339,16 @@ def cards(entries):
                 die('CHANGELOG.md: entre la revisión %s y la %s que revisa está la %s, que no es otra revisión suya' % (e['version'], e['base'], x['version']))
         if chain[-1]['version'] != e['base'] or len(chain) < 2:
             die('CHANGELOG.md: la %s dice que revisa la %s, que no está más abajo' % (e['version'], e['base']))
+        # la cabecera de la tarjeta: la de la revisión o, si no tiene, la de la versión que revisa; va delante y sin apellido
+        leads = [s for x in chain for s in x['sections'] if s.get('lead')]
         out.append({'version': e['version'], 'date': e['date'],
-                    'sections': [{'title': '%s de la %s' % (s['title'], x['version']), 'items': s['items']} for x in chain for s in x['sections']]})
+                    'sections': leads[:1] + [{'title': '%s de la %s' % (s['title'], x['version']), 'items': s['items']}
+                                             for x in chain for s in x['sections'] if not s.get('lead')]})
+        # y lo mismo en inglés, si todas las de la tarjeta tienen sus notas en inglés
+        if all(x.get('en') for x in chain):
+            leads = [s for x in chain for s in x['en'] if s.get('lead')]
+            out[-1]['en'] = leads[:1] + [{'title': '%s in %s' % (s['title'], x['version']), 'items': s['items']}
+                                         for x in chain for s in x['en'] if not s.get('lead')]
         covered.update(x['version'] for x in chain[1:])
     return out
 
@@ -214,7 +356,7 @@ def cards(entries):
 def release_for(entries, ver):
     if not entries or entries[0]['version'] != ver:
         die('CHANGELOG.md debe empezar por la entrada de la versión %s («## [%s] — AAAA-MM-DD»)' % (ver, ver))
-    if not entries[0]['sections']:
+    if not [s for s in entries[0]['sections'] if not s.get('lead')]:
         die('la entrada %s de CHANGELOG.md no tiene Novedades, Mejoras ni Correcciones que enseñar' % ver)
     return entries[0]
 
@@ -231,14 +373,80 @@ def release_js(rel):
     return 'export const RELEASE = ' + json.dumps(rel, ensure_ascii=False, separators=(',', ':')) + ';'
 
 
+def old_newer(a, b):
+    """¿La versión a es posterior a b para el aviso de versión nueva de las apps instaladas hasta la 1.0.31? Es su comparador,
+    tal cual (system/updates de la 1.0.31): parte el texto por los puntos y compara como números los tres primeros trozos; uno
+    que no es un número cuenta como 0."""
+    def nums(v):
+        out = []
+        for p in str(v or '').split('.'):
+            p = p.strip()  # Number() no mira los espacios de los lados (tampoco los de no separación)
+            out.append(float(p) if re.fullmatch(r'\d+(\.\d+)?', p) else 0.0)
+        return out + [0.0, 0.0, 0.0]
+    x, y = nums(a), nums(b)
+    for i in range(3):
+        if x[i] != y[i]:
+            return x[i] > y[i]
+    return False
+
+
+# la última versión con ese comparador de tres cifras, y el punto que no parte el texto: U+2024 («one dot leader»), que se ve
+# como un punto y el comparador no toma por uno, seguido de U+2060 («word joiner», sin ancho), para que el título no se
+# pueda partir de línea detrás de él (se leería «Versión 1.0.» y, debajo, «4 de nov. 2026»)
+LAST_OLD = '1.0.31'
+DOT = '\u2024\u2060'
+MONTHS = ('ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic')
+
+
+def legacy_version(ver, date):
+    """El campo `version` de version.json: lo que comparan con la suya, y enseñan en el título del aviso («Versión …»), las apps
+    instaladas hasta la 1.0.31. Para ellas, que solo miran tres cifras, la 1.0.4 es anterior a la 1.0.31 (4 < 31) y no
+    avisarían. Mientras la versión no sea posterior a la 1.0.31 también para ese comparador (lo será desde la 1.0.32 o la
+    1.1.0), se escribe de modo que lo sea y se lea igual: «1.0.4 de nov. 2026», con el segundo punto (y los siguientes) de
+    los que no parten el texto y, tras el punto de la abreviatura del mes, el año. Ese comparador ve [1, 0, 2026]: posterior a
+    cualquier 1.0.x. Los espacios de «de nov. 2026» son de no separación: si no cabe en una línea, se parte antes de «de».
+    Las apps desde la 1.0.4 no usan este campo: leen la versión de verdad en `number`. (Las versiones hasta la 1.0.31 se
+    publicaron con su número tal cual, y así se quedan.)"""
+    if old_newer(ver, LAST_OLD) or version_key(ver) <= version_key(LAST_OLD):
+        return ver
+    y, m, _ = date.split('-')
+    head, _, rest = ver.partition('.')
+    out = '%s.%s de\u00a0%s.\u00a0%s' % (head, rest.replace('.', DOT), MONTHS[int(m) - 1], y)
+    if not old_newer(out, LAST_OLD):
+        die('no se ha podido escribir la versión %s para el aviso de las apps instaladas hasta la %s' % (ver, LAST_OLD))
+    return out
+
+
 def version_json(entries):
-    """version.json del paquete: la versión publicada con sus novedades y las de las anteriores (por si alguien salta varias)."""
+    """version.json del paquete: la versión publicada con sus novedades y las de las anteriores (por si alguien salta varias).
+    `number` es la versión; `version`, lo que leen de ella las apps instaladas hasta la 1.0.31 (legacy_version)."""
     top = entries[0]
-    return json.dumps({'version': top['version'], 'date': top['date'], 'sections': top['sections'], 'history': entries[:6]},
-                      ensure_ascii=False, indent=1) + '\n'
+    out = {'version': legacy_version(top['version'], top['date']), 'number': top['version'], 'date': top['date'],
+           'sections': top['sections'], 'history': entries[:6]}
+    # las notas en inglés (`en`, arriba y en cada versión de la lista): las apps instaladas hasta la 1.0.31 no las miran
+    if top.get('en'):
+        out['en'] = top['en']
+    return json.dumps(out, ensure_ascii=False, indent=1) + '\n'
 
 
 # ── compilación ────────────────────────────────────────────────────────────────────────────────────────────────────
+
+def motor3d_js():
+    """El módulo del motor 3D (extras/motor3d): los archivos de src/fig3d, cada uno con su «(function (G) {…})(window);», dentro
+    de una función que les pasa, en vez de window, un objeto con el mapa muscular y las regiones de cada músculo (lo que en las
+    páginas de revisión está en window.FIG_MAP y window.FIG_REG), y que devuelve Fig3D. Así el motor no toca window y va en
+    modo estricto, como el resto del código."""
+    have = sorted(f for f in os.listdir(FIG3D) if f.endswith('.js'))
+    if have != sorted(FIG3D_FILES):
+        die('src/fig3d debe tener justo estos archivos: ' + ', '.join(FIG3D_FILES))
+    body = []
+    for f in FIG3D_FILES:
+        t = read(os.path.join(FIG3D, f)).rstrip()
+        if t.count('})(window);') != 1 or not t.endswith('})(window);') or len(re.findall(r'^\(function \(G\) \{$', t, re.M)) != 1:
+            die('src/fig3d/%s debe ser una sola función «(function (G) {» … «})(window);»' % f)
+        body.append(t[:-len('})(window);')] + '})(G);')
+    return 'export const motor3d = (FIG_MAP, FIG_REG) => {\nconst G = { FIG_MAP, FIG_REG };\n' + '\n'.join(body) + '\nreturn G.Fig3D;\n};'
+
 
 def esbuild_bin():
     """esbuild de node_modules (npm install) o el indicado en la variable ESBUILD."""
@@ -261,12 +469,37 @@ def run_esbuild(args, stdin=None):
     return r.stdout
 
 
+def flat_js():
+    """Copia de src/js con cada plantilla html`…` en una línea (tools/templates.js): de ella parte cada variante.
+
+    En src/js una plantilla larga va en varias líneas, y esos saltos de línea no forman parte del HTML: aquí se quitan, así
+    que la app compilada es la misma, byte a byte, se escriba una plantilla en una línea o en veinte. Un salto de línea que
+    cambiaría el HTML (entre dos palabras, dentro del valor de un atributo) para la compilación con su archivo y su línea.
+    Se prepara una vez por compilación, en dist/.flat, que se borra al terminar."""
+    flat = os.path.join(DIST, '.flat')
+    if not FLAT_DONE:
+        shutil.rmtree(flat, ignore_errors=True)
+        shutil.copytree(os.path.join(SRC, 'js'), flat)
+        node = shutil.which('node')
+        if not node:
+            die('falta node: lo necesita tools/templates.js para preparar las plantillas html`…`')
+        r = subprocess.run([node, os.path.join(ROOT, 'tools', 'templates.js'), '--flat', flat], capture_output=True, text=True)
+        if r.returncode:
+            die('plantillas html`…` (tools/templates.js):\n' + (r.stderr or r.stdout).strip())
+        FLAT_DONE.append(1)
+    return flat
+
+
+FLAT_DONE = []
+
+
 def stage(generated, deploy, emu=False, appcheck=False):
-    """Copia src/js a una carpeta temporal con los moldes generados (data/media, data/release) y, en el paquete, FFDEP = 1."""
+    """Copia el código (flat_js) a una carpeta temporal con los moldes generados (data/media, data/release) y, en el
+    paquete, FFDEP = 1."""
     # siempre la misma carpeta: esbuild tiene en cuenta las rutas al calcular los nombres de los archivos, y así salen iguales
     st = os.path.join(DIST, '.stage')
     shutil.rmtree(st, ignore_errors=True)
-    shutil.copytree(os.path.join(SRC, 'js'), st)
+    shutil.copytree(flat_js(), st)
     for m, code in generated.items():
         p = os.path.join(st, m)
         t = read(p)
@@ -320,7 +553,10 @@ def bundle_app(st, outdir):
                  '--chunk-names=[name]-[hash]', '--metafile=' + meta] + ESBUILD_COMMON)
     outs = json.loads(read(meta))['outputs']
     rel = lambda p: 'js/' + os.path.basename(p)
-    entry = next(p for p, o in outs.items() if o.get('entryPoint'))
+    # la entrada es la de main.js: los import() dinámicos también salen como entradas (extras/figure3d, data/exinfo…) y el orden
+    # en que esbuild las lista no es el de siempre
+    main_in = rel_root(os.path.join(st, ENTRY)).replace(os.sep, '/')
+    entry = next(p for p, o in outs.items() if o.get('entryPoint') == main_in)
     eager, todo = [], [entry]
     while todo:
         for i in outs[todo.pop()].get('imports', []):
@@ -353,7 +589,7 @@ HEAD_TAGS = '''<link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="StrataFit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f3f3f7" media="(prefers-color-scheme: light)">'''
 # theme-color: el color de la barra del sistema sigue al tema del móvil (el primero cuyo media encaja); si el tema se elige
 # a mano en Ajustes, core/state applyTheme() pone delante otra etiqueta sin media con el color de ese tema
@@ -462,6 +698,30 @@ def static_files():
     return {n: os.path.join(ROOT, 'static', n) for n in sorted(os.listdir(os.path.join(ROOT, 'static'))) if n != 'sw.js'}
 
 
+# Los textos del manifiesto (static/manifest.webmanifest: los accesos directos del icono, en Android), en inglés
+MANIFEST_EN = {
+    'Entreno de hoy': "Today's workout", 'Entreno': 'Workout', 'Abre el entreno que toca hoy': "Opens today's workout",
+    'Nutrición de hoy': "Today's nutrition", 'Nutrición': 'Nutrition', 'Abre las comidas de hoy': "Opens today's meals",
+    'Registrar el peso': 'Log your weight', 'Peso': 'Weight', 'Abre Evolución del peso': 'Opens Weight over time',
+}
+
+
+def manifest_en():
+    """manifest.en.webmanifest: el manifiesto del paquete con sus textos en inglés. La plantilla (src/index.html) lo pone en
+    lugar del otro cuando la app está en inglés. Es el mismo en todo lo demás (misma dirección de inicio: la misma app)."""
+    m = json.loads(read(os.path.join(ROOT, 'static', 'manifest.webmanifest')))
+    if m.get('lang') != 'es':
+        die('static/manifest.webmanifest debe decir "lang": "es"')
+    m['lang'] = 'en'
+    for s in m.get('shortcuts', []):
+        for k in ('name', 'short_name', 'description'):
+            if k in s:
+                if s[k] not in MANIFEST_EN:
+                    die('falta en build.py (MANIFEST_EN) el inglés de «%s», del manifiesto' % s[k])
+                s[k] = MANIFEST_EN[s[k]]
+    return json.dumps(m, ensure_ascii=False, indent=2) + '\n'
+
+
 def static_checks(js, html):
     """Comprobaciones baratas, sin dependencias externas."""
     if len(re.findall(r'window\.__ffok\s*=\s*1\b', js)) != 1:
@@ -499,7 +759,9 @@ def main():
     mods = module_list()
     check_tree(mods)
     m = media()
-    entries = cards(changelog())
+    entries = cards(english(changelog()))
+    if not entries or not entries[0].get('en'):
+        die('CHANGELOG.en.md debe tener la entrada de la versión %s, con sus notas en inglés (es lo que enseña la app en inglés)' % (entries[0]['version'] if entries else '?'))
     css = compile_css()
     tpl = read(os.path.join(SRC, 'index.html'))
     if tpl.count('@@CSS@@') != 1 or tpl.count('@@JS@@') != 1:
@@ -507,8 +769,9 @@ def main():
     os.makedirs(DIST, exist_ok=True)
     ver = app_version(read(os.path.join(SRC, 'js', 'core', 'util.js')))
     rel_js = release_js(release_for(entries, ver))
+    m3 = motor3d_js()
     if a.emulador:
-        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False, emu=True)
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js, FIG3D_MODULE: m3}, deploy=False, emu=True)
         try:
             js = bundle_single(st)
         finally:
@@ -518,7 +781,7 @@ def main():
         print('  dist/emu/stratafit.html  (archivo único con el emulador de Firebase: %s y %s)' % (EMU_AUTH, EMU_FIRESTORE))
         return
     if a.appcheck:
-        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False, appcheck=True)
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js, FIG3D_MODULE: m3}, deploy=False, appcheck=True)
         try:
             js = bundle_single(st)
         finally:
@@ -528,7 +791,7 @@ def main():
         print('  dist/appcheck/stratafit.html  (archivo único con App Check configurado con valores de prueba)')
         return
     if a.only != 'app':
-        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js}, deploy=False)
+        st = stage({MEDIA_MODULE: media_js(m, inline=True), RELEASE_MODULE: rel_js, FIG3D_MODULE: m3}, deploy=False)
         try:
             js = bundle_single(st)
         finally:
@@ -542,7 +805,7 @@ def main():
         out = os.path.join(DIST, 'app')
         shutil.rmtree(out, ignore_errors=True)
         os.makedirs(out)
-        st = stage({MEDIA_MODULE: media_js(m, inline=False), RELEASE_MODULE: rel_js}, deploy=True)
+        st = stage({MEDIA_MODULE: media_js(m, inline=False), RELEASE_MODULE: rel_js, FIG3D_MODULE: m3}, deploy=True)
         try:
             entry, eager, js_files = bundle_app(st, os.path.join(out, 'js'))
         finally:
@@ -554,6 +817,7 @@ def main():
         write(os.path.join(out, 'version.json'), version_json(entries))
         for n, p in static_files().items():
             shutil.copy(p, os.path.join(out, n))
+        write(os.path.join(out, 'manifest.en.webmanifest'), manifest_en())
         size = 0
         for rel, p in m['files']:
             os.makedirs(os.path.dirname(os.path.join(out, rel)), exist_ok=True)
@@ -563,8 +827,8 @@ def main():
         later = sum(os.path.getsize(os.path.join(out, f)) for f in js_files) - start
         print('  dist/app/            index.html %d bytes + js/ (%d KB al arrancar, %d KB al usarlo, %d archivos) + sw.js, version.json, manifiesto e iconos + %d fotos en img/ (%d KB)' % (
             os.path.getsize(os.path.join(out, 'index.html')), start // 1024, later // 1024, len(js_files), len(m['files']), size // 1024))
-    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas de día' % (
-        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day'])))
+    print('StrataFit %s · %d módulos JS (%d al usarlos) · %d trozos CSS · %d portadas de día (%d de mujer)' % (
+        ver, len(mods) + len(lazy_modules()), len(lazy_modules()), len([f for f in os.listdir(os.path.join(SRC, 'css')) if f.endswith('.css')]), len(m['day']), len(m['dayF'])))
     if a.check:
         tool = os.path.join(ROOT, 'tools', 'check.js')
         if not os.path.isfile(tool):
@@ -575,4 +839,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    finally:
+        shutil.rmtree(os.path.join(DIST, '.flat'), ignore_errors=True)

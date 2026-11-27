@@ -33,15 +33,65 @@ historial por año, las comidas por mes, las preferencias en el perfil y la foto
 | `ffseen` (`seen`) | Versión cuyas novedades ya se enseñaron, para no repetirlas. |
 | `fficon` (`icon`) | 1 cuando ya se dio por visto el aviso del icono nuevo en el iPhone (`system/iconnotice`, F-48). |
 | `ffinst` (`inst`) | Versión con la que empezó la app en este dispositivo (V1.0.1); si ya tenía otra, esa, y `0` si era anterior a la 1.19.0. Sirve para saber si el icono de la pantalla de inicio es el de antes del logo nuevo. |
-| `ffacct` (`acct`) | Sesión de la cuenta: `{ uid, u: usuario, it: token de sesión, rt: token de renovación, exp, x: 1 si caducó, mc: 1 o 2 si hay que cambiar una contraseña temporal }` (`cloud/session`). No se sincroniza. |
+| `fflang` (`lang`) | El idioma elegido en Ajustes → Idiomas para este dispositivo: `es` o `en`. Si falta, manda el idioma del móvil ([Idiomas](idiomas.md)). No se sincroniza y se conserva al cerrar sesión. |
+| `ffacct` (`acct`) | Sesión de la cuenta: `{ uid, u: usuario, it: token de sesión, rt: token de renovación, exp, x: 1 si caducó o 2 si la cuenta ya no existe, mc: 1 o 2 si hay que cambiar una contraseña temporal, cs: lo aceptado (condiciones y consentimiento, como en el perfil), csu: 1 si falta subirlo }` (`cloud/session`, `cloud/consent`; [Condiciones y consentimiento](backend.md#condiciones-y-consentimiento)). No se sincroniza. |
 | `ffown` (`own`) | uid de la cuenta cuyos datos hay en el móvil. Si entra otra, se borran antes de leer el estado. |
 | `ffsync` (`sync`) | Sincronización (`cloud/sync`): `{ dev: id del dispositivo, base: { parte: { r: versión, h: huellas de cada elemento } }, lt: último cambio local por tipo, pt: de las preferencias, fresh: 1 tras entrar, last: última sincronización }`. |
 | `fflgn` (`lgn`) | Intentos fallidos de entrar `{ n, t }`, para la espera creciente (`account/login`). |
+| `ffgone` (`gone`) | 1 justo después de eliminar la cuenta en este dispositivo: al abrirse la app, ya sin sesión, lo dice una vez y lo borra (`account/privacy`). |
 | `ffspace` (`space`) | Cuándo se avisó por última vez de que queda poco espacio (`system/space`, I-04): como mucho, una vez a la semana. No se sincroniza. |
+| `ffrev` (`rev`) | Marca de lo último guardado: cambia con cada guardado, y por ella una apertura de la app sabe si otra ha guardado después ([la app abierta dos veces](#la-app-abierta-dos-veces)). Empieza por el identificador de la apertura que la deja. No es un dato: no se sincroniza ni entra en las copias. |
 
 En IndexedDB: `ffdata` (almacén `parts`: las partes del estado, con las mismas claves `ff:logs`, `ff:hist` y `ff:meals:AAAA-MM`, su
 texto JSON tal cual; almacén `aside`: lo grande que no es del estado, como la copia previa a restaurar) y `ffsnap` (copias automáticas diarias, las 7 últimas; se borran al cerrar sesión). La base `ffph` de las
 fotos de progreso de la serie de prueba se borra al arrancar.
+
+En `sessionStorage` (de la pestaña: sobrevive a una recarga y no lo ven las demás): `ffbye`, el identificador de la apertura
+de la app que se acaba de cerrar en esa pestaña, para que la que carga a continuación sepa que quien termina de guardar es su
+anterior y no otra ventana ([una recarga no es otra ventana](#la-app-abierta-dos-veces)). Es un identificador al azar de esa
+apertura: no dice nada de nadie.
+
+### Si un guardado falla
+
+Cada guardado escribe primero las partes que cambian, después el núcleo y al final borra las que sobran: así el núcleo nunca
+nombra una parte que no esté escrita (si la nombrara, al abrir la app faltaría y saldría «No se pudieron leer tus datos»). Los
+guardados se deciden al momento, dando por escrito lo que el anterior todavía está escribiendo, y se escriben en orden. Por eso,
+si uno falla (sin sitio, sobre todo), los que se decidieron detrás ya no se escriben: contaban con lo que no llegó a escribirse.
+Lo que se sabe de cada clave vuelve a lo que hay escrito de verdad y el siguiente guardado lo mira todo otra vez (se reintenta
+solo a los 5 s, hasta tres veces seguidas, y al salir de la app). Mientras tanto consta que hay cosas sin guardar
+(`savesBroken`): la app lo avisa y la sincronización no apunta nada como sincronizado
+([Sincronización](backend.md#sincronización-cloudsync)).
+
+### La app abierta dos veces
+
+La app puede estar abierta dos veces sobre lo mismo guardado: dos pestañas del navegador o, en Android, la app instalada y una
+pestaña (en el iPhone, la app instalada guarda aparte de Safari). Cada apertura tiene su `S` en memoria, así que si las dos
+guardaran, la segunda pisaría con lo suyo lo que guardó la primera. Por eso **guarda una sola cada vez** (`core/persist`):
+
+- Lo guardado lleva una marca (`ffrev`) y cada apertura recuerda la última que leyó o dejó ella. Antes de escribir mira que la
+  marca siga siendo esa y deja una nueva, al empezar a escribir y al terminar; si no lo es, otra ha guardado después y esta
+  **se queda atrás** (`instanceStale`).
+- La que se queda atrás no vuelve a escribir nada de lo que comparten: ni el estado, ni lo sincronizado (`ffsync`), ni el
+  entreno en curso (`ffw`), ni la copia automática del día. Tampoco sincroniza.
+- Se entera al momento (el evento `storage`, que llega a las demás ventanas cuando una escribe) o, si el navegador la tenía
+  parada, al volver a ella o al ir a guardar. `core/boot` la recarga con lo último: sola, si no se estaba viendo; si se está
+  viendo, con el aviso «La app está abierta en otra ventana», que solo se quita recargando.
+- El entreno en curso lo lleva una sola: la que lo empieza o lo reanuda se queda con lo guardado (como si acabara de guardar)
+  y la otra se queda atrás; al recargarse, se le ofrece reanudarlo, como cuando el móvil cierra la app.
+- **Una recarga no es otra ventana.** Al recargar, la página anterior de la pestaña sigue viva un momento, y dos cosas
+  suyas pueden llegarle a la nueva: el aviso (`storage`) de lo que guardó justo antes de cerrarse, y lo que termine de
+  guardar con la nueva ya abierta (lo que va a IndexedDB no se escribe al instante). Lo primero no cuenta: si lo que el aviso
+  anuncia es el núcleo que esta apertura leyó al arrancar, o el que ella dejó en su último guardado, nadie le ha cambiado
+  nada. Lo segundo sí la deja atrás, y con razón (puede haber leído el núcleo de antes y las partes de después), pero no hay
+  otra ventana: se recarga sola, sin aviso. Lo sabe porque cada marca empieza por el identificador de quien la deja y la
+  página que se cierra deja dicho en la pestaña quién era (`ffbye`, en `sessionStorage`, que sobrevive a la recarga y no ven
+  las demás pestañas): si la marca nueva es de la anterior, es una recarga (`savedByPredecessor`). Vale una vez por cierre.
+  Antes, recargar a los pocos segundos de guardar algo enseñaba a veces «La app está abierta en otra ventana» con una sola
+  abierta: la mitad de las veces, en la prueba, si quedaba pendiente el repaso con un cambio del núcleo.
+- Cuando es la propia app la que se recarga (tras actualizar, entrar, cerrar sesión o restaurar: `reloadApp`), hace antes el
+  repaso pendiente y espera a que quede escrito.
+
+Con una sola apertura, que es lo normal, nada de esto se nota: la marca son dos escrituras de 25 caracteres por guardado.
 
 ## El estado `S`
 
@@ -70,6 +120,11 @@ t?: tempo, b?: bloque (superseries y triseries: los ejercicios seguidos con el m
 ronda, y si no tiene, 2:30), tk?: técnica de intensidad (`DS`, `RP`, `SS`, `CL`, `PAR`, `MYO`, `PRE`, `POST`, `PIR`,
 `PIR+DS`, `PIR+PAR`: `data/techniques`), o?: nombre original si se cambió (swap), img?/cu?: portada propia }`. En los programas
 predefinidos, `ta` es la técnica del nivel avanzado; `programs/levels` la aplica y la quita, y no llega a guardarse.
+Un entreno a la carta (`routines/ondemand`), mientras dura, pone sobre el día del plan el de su rutina, que lleva además, en el
+día, `od` (la clave de la rutina: su objetivo va sin RIR) y, en cada ejercicio, `rs` (las repeticiones de cada serie: un número
+o `'AMRAP'`, las máximas posibles; su `rg` va de la menor a la mayor) y `nt?` (la variante de esa posición). `core/repair` los
+comprueba (en el plan, en `planBackup` y en el entreno a medias); al acabar vuelve el día del plan, así que no se quedan en él.
+En el entreno, una serie AMRAP sale con `r: ''` hasta que se apuntan las repeticiones, y sin ellas no se da por hecha.
 
 **Serie del entreno en curso** (`W.x[ejercicio][serie]`): `{ r: reps, w: kg, ok, q?: esfuerzo (RPE, solo con `rpe`), k?: técnica de
 la serie, t?: 1 fila del drop set, 2 bloque del rest-pause, ws?: 1 si el peso es sugerido (del historial o de la serie anterior) y aún
@@ -96,7 +151,7 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `ach` (`achievements`) | `{ id: valor }` | Logros conseguidos (ver `ACHIEVEMENTS`). |
 | `stz` (`stagnationDismissed`) | `{ ejercicio: fecha (ms) }` | Avisos de estancamiento descartados. |
 | `wr` (`weighReminder`) | `{ n, u: 'd' \| 'w' \| 'm', t, sh?, sn?, c? }` | Recordatorio de pesaje (`dashboard/reminder`): cada `n` días, semanas o meses, desde el último pesaje o desde `t` (cuándo se activó, ms) si es posterior; `sh` último día en que se avisó, `sn` pospuesto hasta ese día, `c` id del evento de calendario. Sin él, no hay recordatorio. |
-| `rp` (`reports`) | `[{ id, k, a, t, ca, s, st?, rp?, ra?, sn?, dx? }]` | Fallos y sugerencias enviados desde la cuenta (`system/report`), los más nuevos primero (30 como mucho): id `uid-ms`, tipo (`f` / `s`), dónde, texto, cuándo, `s` 1 si ya llegó a la nube, estado, respuesta y cuándo, `sn` 1 si la respuesta ya se vio y `dx` los datos técnicos hasta enviarlo. |
+| `rp` (`reports`) | `[{ id, k, a, t, ca, s, st?, rp?, ra?, sn?, dx? }]` | Fallos y sugerencias enviados desde la cuenta (`system/report`), los más nuevos primero (30 como mucho): id `uid-ms`, tipo (`f` fallo / `s` sugerencia / `p` privacidad y datos, desde la V1.0.4), dónde, texto, cuándo, `s` 1 si ya llegó a la nube, estado, respuesta y cuándo, `sn` 1 si la respuesta ya se vio y `dx` los datos técnicos hasta enviarlo. |
 
 ### Programas y ejercicios propios
 
@@ -128,7 +183,7 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 | `acc` (`accent`) | Color de acento: índice en `ACCENTS` (11 de serie), o `-1` con un color propio. |
 | `acx` (`accentColor`) | El color propio, `'#rrggbb'` (con `acc: -1`); sus tonos y el color del texto encima se calculan (`customAccent`). |
 | `gm` / `gl` / `gk` (`glassLevel` / `glassOn` / `glassLastLevel`) | Estilo Cristal: nivel 0–3, activado, último nivel elegido. |
-| `rm` (`reduceMotion`) | 1 para reducir animaciones (`html.rm`). |
+| `rm` (`reduceMotion`) | 1 para reducir animaciones (`html.reduce-motion`). |
 | `st0` (`startTab`) | Pestaña al abrir la app (0–3); sin ella, la última que se usó (`core/tabbar`). |
 | `tour` (`tourSeen`) | 1 si ya se vio (o se omitió) el recorrido de la primera vez (`system/tour`). |
 | `rpe` (`logRpe`) | 1 si se registra el esfuerzo de cada serie (RPE; Ajustes avanzados, F-42). Sin él, desactivado. Va con el núcleo, no con las preferencias del perfil. |
@@ -155,7 +210,8 @@ hacen las series (por rondas dentro de un bloque) lo da `workout/order`; no se g
 ## El entreno en curso `W`
 
 `W` (`core/state`) solo existe durante un entreno. Se guarda en `ffw` con el día y la semana para reanudarlo (`workout/resume`),
-con las claves cortas (`core/schema`).
+con las claves cortas (`core/schema`). Con [la app abierta dos veces](#la-app-abierta-dos-veces), lo escribe y lo borra solo la
+que lo lleva.
 
 | Clave guardada (nombre en el programa) | Qué es |
 |---|---|

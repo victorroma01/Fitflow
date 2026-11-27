@@ -86,3 +86,38 @@ test('ningún consejo ni ninguna ejecución parece copiada de otra', () => {
   assert.deepEqual(similar(1, .5), [], 'consejos parecidos');
   assert.deepEqual(similar(2, .5), [], 'ejecuciones parecidas');
 });
+
+// ── el catálogo en inglés (src/js/i18n/en-exinfo.js): el mismo de cada ejercicio, con su nombre en español de clave ──
+const EN_SRC = readFileSync(new URL('../src/js/i18n/en-exinfo.js', import.meta.url), 'utf8');
+const EN_ROWS = ((EN_SRC.match(/setExInfo\(`([\s\S]*)`\);/) || [])[1] || '').trim().split('\n').filter(Boolean).map(l => l.split('|'));
+const EN_BY = new Map(EN_ROWS.map(r => [r[0], r]));
+
+test('en inglés: cada ejercicio de la librería tiene su entrada, con sus tres campos, y no hay de más ni repetidas', () => {
+  assert.ok(EN_ROWS.length > 0, 'catálogo vacío');
+  const names = new Set(EXERCISES.map(e => e.n));
+  assert.deepEqual(EN_ROWS.filter(r => r.length != 3 || r.some(x => !x.trim()) || r.some(x => x != x.trim())).map(r => r[0]), [], 'líneas mal formadas');
+  assert.deepEqual(EN_ROWS.map(r => r[0]).filter(n => !names.has(n)), [], 'entradas de ejercicios que no existen');
+  assert.equal(EN_BY.size, EN_ROWS.length, 'ejercicio con dos entradas');
+  assert.deepEqual([...names].filter(n => !EN_BY.has(n)), [], 'ejercicios sin su texto en inglés');
+});
+
+test('en inglés: los textos son frases completas, de una longitud parecida a la del español, y están en inglés', () => {
+  const bad = [];
+  for (const [n, tip, how] of EN_ROWS) {
+    const es = BY.get(n);
+    if (!/[.!]$/.test(tip) || !/[.!]$/.test(how)) bad.push(n + ': sin punto final');
+    if (es && (tip.length < es[1].length * .5 || tip.length > es[1].length * 1.9 || how.length < es[2].length * .5 || how.length > es[2].length * 1.9)) bad.push(n + ': longitud muy distinta de la del español');
+    // letras y palabras que el inglés no lleva: una línea sin traducir, o traducida a medias
+    if (/[áéíóúñ¿¡]/i.test(tip + how) || /\b(el|la|los|las|con|para|una|hasta|hacia|pero|cuando|mientras)\b/i.test(tip + ' ' + how)) bad.push(n + ': parece español');
+  }
+  assert.deepEqual(bad, []);
+});
+
+test('en inglés: no hay dos consejos iguales ni dos ejecuciones iguales', () => {
+  for (const k of [1, 2]) {
+    const seen = new Map();
+    const dup = [];
+    EN_ROWS.forEach(r => { const t = r[k].toLowerCase(); if (seen.has(t)) dup.push(seen.get(t) + ' = ' + r[0]); seen.set(t, r[0]); });
+    assert.deepEqual(dup, [], k == 1 ? 'consejos repetidos' : 'ejecuciones repetidas');
+  }
+});

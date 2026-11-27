@@ -7,11 +7,15 @@ fallos=0
 # Cada prueba tiene un tiempo máximo (SF_LIMIT, en segundos; la más larga, la del contraste, tarda unos 4 minutos en GitHub):
 # una que se quede colgada se para y falla con su nombre, en vez de agotar el tiempo de todo el trabajo sin decir cuál era.
 limite=${SF_LIMIT:-900}
+# Al final de cada prueba, lo que ha tardado (en segundos), para saber cuáles alargan la batería.
+inicio_bateria=$SECONDS
 run() {
   echo; echo "── $*"
+  local desde=$SECONDS
   local out; out=$(timeout -k 20 "$limite" "$@" 2>&1); local code=$?
   if [ $code -eq 124 ] || [ $code -eq 137 ]; then out="$out"$'\n'"FALLA: no ha terminado en $limite s y se ha parado"; fi
   echo "$out"
+  echo "   ($((SECONDS - desde)) s)"
   if [ $code -ne 0 ]; then
     fallos=$((fallos + 1))
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
@@ -24,14 +28,28 @@ run() {
 run node tools/format.js --check
 run node tools/format_css.js --check
 run node tools/modindex.js --check
-run node tools/figure.js --check
+run node tools/figboxes.js --check
 run python3 build.py --check
+run node tools/types.js
+run node tools/classes.js --check tests/clases-1.0.32.txt
+run node tools/i18n.js --check
 run python3 tests/changelog.py
+run node --test --test-reporter=dot tests/aviso.test.mjs
+run node --test --test-reporter=dot tests/templates.test.mjs
+run node --test --test-reporter=dot tests/classes.test.mjs
 run node --test --test-reporter=dot tests/merge.test.mjs
 run node --test --test-reporter=dot tests/exinfo.test.mjs
+run node --test --test-reporter=dot tests/library.test.mjs
+run node --test --test-reporter=dot tests/ondemand.test.mjs
 run node --test --test-reporter=dot tests/calc.test.mjs
 run node --test --test-reporter=dot tests/parts.test.mjs
-run node --test --test-reporter=dot tests/rig.test.mjs
+run node --test --test-reporter=dot tests/fig3d.test.mjs
+run node --test --test-reporter=dot tests/dominio.test.mjs
+run node --test --test-reporter=dot tests/limpieza.test.mjs
+run node --test --test-reporter=dot tests/legal.test.mjs
+run node --test --test-reporter=dot tests/equipment.test.mjs
+run node --test --test-reporter=dot tests/catalog.test.mjs
+run node --test --test-reporter=dot tests/i18n.test.mjs
 run python3 tests/smoke.py dist/stratafit.html
 run python3 tests/smoke.py dist/app/index.html
 run python3 tests/figures.py dist/stratafit.html
@@ -45,6 +63,7 @@ run python3 tests/foods.py dist/stratafit.html
 run python3 tests/programs.py dist/stratafit.html
 run python3 tests/session.py dist/stratafit.html
 run python3 tests/training.py dist/stratafit.html
+run python3 tests/ondemand.py dist/stratafit.html
 run python3 tests/followup.py dist/stratafit.html
 run python3 tests/experience.py dist/stratafit.html
 run python3 tests/ux.py dist/stratafit.html
@@ -53,9 +72,18 @@ run python3 tests/storage.py dist/stratafit.html
 run python3 tests/calc.py dist/stratafit.html
 run python3 tests/dashboard.py dist/stratafit.html
 run python3 tests/render.py dist/stratafit.html
+run python3 tests/english.py dist/stratafit.html
+# con la app en inglés los textos miden otra cosa: los tamaños de pantalla y las zonas táctiles, también en inglés
+run env SF_LOCALE=en-US python3 tests/layout.py dist/stratafit.html
+run env SF_LOCALE=en-US python3 tests/a11y.py dist/stratafit.html
 # la app con App Check configurado con valores de prueba y su CSP (dist/appcheck/): la usa tests/cloud.py
 run python3 build.py --appcheck
 run python3 tests/cloud.py dist/stratafit.html
+# pruebas al azar del guardado y la sincronización: diez semillas (cada una, una secuencia distinta de 80 pasos con fallos)
+run python3 tests/syncfuzz.py dist/stratafit.html 1-10 80
+run python3 tests/login.py dist/stratafit.html
+run python3 tests/covers.py dist/stratafit.html
 run python3 tests/deploy.py dist/app
 echo
+echo "La batería entera: $(( (SECONDS - inicio_bateria) / 60 )) min $(( (SECONDS - inicio_bateria) % 60 )) s"
 if [ $fallos -eq 0 ]; then echo "Todas las pruebas correctas"; else echo "$fallos pruebas fallan"; exit 1; fi
