@@ -127,6 +127,7 @@ nav span {
   z-index:9;
   max-width:560px;
   margin:auto;
+  overscroll-behavior:contain;
 }
 .bar {
   height:8px;

@@ -8,7 +8,13 @@
    Mientras algo sigue al dedo, <html> lleva la clase «sliding»: lo que se mueve va sin desenfoque de fondo ni transparencia
    (en iPhone, mover una capa con desenfoque la deja en negro a ratos; I-20). Si es una subpágina, debajo se ve la página a la
    que se vuelve (showPageBelow) y no la pestaña.
-   Define: SWIPE_KINDS, SWIPE_SKIP, swipe, swipeEnd, scrollsSideways, swipeMove, swipeReset, swipeStop
+   Deslizar hacia abajo cierra una ventana que sube desde abajo (no las páginas: #sh.full), como en el iPhone, también durante un
+   entreno: si está arriba del todo y el dedo baja más que de lado, la ventana lo sigue, y se cierra si se suelta pasada la cuarta
+   parte de su altura o con un gesto rápido. Mientras, lo de detrás no se mueve. Va con eventos táctiles, escuchados en #sh y no
+   en todo el documento: para que la ventana no rebote ni arrastre la página de detrás, ese movimiento se cancela, y eso solo se
+   puede en un touchmove que no sea pasivo. Si la ventana tiene un paso atrás dentro (data-back), no se cierra así.
+   Define: SWIPE_KINDS, SWIPE_SKIP, swipe, swipeEnd, scrollsSideways, swipeMove, swipeReset, swipeStop, drop, dropTarget, scrolledInside, dropMove, dropStop, sheetHost
+   scrolledInside, dropMove, dropStop
 */
 import { $ } from './util.js';
 import { backTarget } from './back.js';
@@ -155,3 +161,130 @@ document.addEventListener('click', e => {
     e.preventDefault();
   }
 }, true);
+/* gesto hacia abajo en curso: { id (el dedo), x0, y0, t (de backTarget), on (ya es nuestro), dy, h (alto de la ventana), vy,
+   py, pt, also (los botones fijos de abajo, que van con ella), bk (el fondo oscuro) } */
+let drop = null;
+/* lo que se cierra deslizando hacia abajo: una ventana que sube desde abajo, sin un paso atrás dentro */
+const dropTarget = () => {
+  const t = backTarget();
+  return t && t.k == 'hoja' && t.el && $('#sh').className != 'full' && !t.el.querySelector('[data-back]') ? t : null;
+};
+/* ¿hay entre el dedo y la ventana algo que se desplaza en vertical y no está arriba del todo? (ese gesto es suyo) */
+const scrolledInside = (el, top) => {
+  for (let e = el; e && e != top; e = e.parentElement)
+    if (e.scrollTop > 0 && e.scrollHeight > e.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(e).overflowY))
+      return true;
+  return false;
+};
+/* la ventana (y sus botones fijos) a dy píxeles hacia abajo; el fondo oscuro se aclara a la vez */
+const dropMove = (d, dy) => {
+  [d.t.el, ...d.also].forEach(e => e.style.transform = 'translateY(' + dy + 'px)');
+  if (d.bk)
+    d.bk.style.opacity = String(Math.max(0, 1 - dy / d.h));
+};
+/* al soltar: se cierra si ha bajado la cuarta parte (o el gesto es rápido); si no, vuelve a su sitio */
+const dropStop = go => {
+  const d = drop;
+  drop = null;
+  if (!d || !d.on)
+    return;
+  swipeEnd = Date.now();
+  const fast = d.vy > .45 && Date.now() - d.pt < 120;
+  const done = go && (d.dy > Math.max(80, d.h * .25) || fast && d.dy > 30);
+  const calm = document.documentElement.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const els = [d.t.el, ...d.also];
+  if (!calm) {
+    els.forEach(e => e.style.transition = done ? 'transform .18s ease-out' : 'transform .24s cubic-bezier(.2,.8,.2,1)');
+    if (d.bk)
+      d.bk.style.transition = 'opacity .18s ease-out';
+    dropMove(d, done ? d.h + 40 : 0);
+  }
+  setTimeout(() => {
+    els.forEach(e => {
+      e.style.transition = '';
+      e.style.transform = '';
+      e.style.willChange = '';
+    });
+    if (d.bk) {
+      d.bk.style.transition = '';
+      d.bk.style.opacity = '';
+    }
+    document.documentElement.classList.remove('sliding');
+    if (done)
+      d.t.go();
+  }, calm ? 0 : done ? 180 : 240);
+};
+const sheetHost = $('#sh');
+sheetHost.addEventListener('touchstart', e => {
+  drop = null;
+  /* (el de volver también empieza a mirar este dedo, en pointerdown: el primero que vea su dirección se lo queda) */
+  if (e.touches.length != 1 || swipe && swipe.on)
+    return;
+  const t = dropTarget();
+  const g = e.target;
+  if (!t || !(g instanceof Element) || g.closest(SWIPE_SKIP))
+    return;
+  const inside = t.el.contains(g) || !!g.closest('#sh > .sticky-btn');
+  if (!inside || t.el.scrollTop > 0 || scrolledInside(g, t.el))
+    return;
+  const p = e.touches[0];
+  drop = { id: p.identifier, x0: p.clientX, y0: p.clientY, t, on: 0, dy: 0, h: t.el.offsetHeight || innerHeight, vy: 0, py: p.clientY, pt: Date.now(), also: [], bk: null };
+}, { passive: true });
+sheetHost.addEventListener('touchmove', e => {
+  const d = drop;
+  if (!d)
+    return;
+  const p = [...e.touches].find(x => x.identifier == d.id);
+  if (!p)
+    return;
+  const dx = p.clientX - d.x0;
+  const dy = p.clientY - d.y0;
+  if (!d.on) {
+    /* hacia arriba, o si la ventana ya se ha desplazado: es un desplazamiento normal */
+    if (dy < 0 || d.t.el.scrollTop > 0) {
+      drop = null;
+      return;
+    }
+    /* de lado, de momento: aún no es nuestro (y si se aleja de lado, ya no lo será) */
+    if (dy == 0) {
+      if (Math.abs(dx) >= 10)
+        drop = null;
+      return;
+    }
+    /* arriba del todo, bajar el dedo solo haría rebotar la ventana o mover lo de detrás: se cancela desde el primer movimiento,
+       que es cuando el navegador decide si se desplaza */
+    if (e.cancelable)
+      e.preventDefault();
+    if (Math.abs(dx) < 10 && dy < 10)
+      return;
+    /* más de lado que hacia abajo: es el de volver (el de arriba) o un toque que se ha movido */
+    if (dy < Math.abs(dx) * 1.2) {
+      drop = null;
+      return;
+    }
+    d.on = 1;
+    document.documentElement.classList.add('sliding');
+    d.also = [...document.querySelectorAll('#sh > .sticky-btn')];
+    d.bk = $('#sh .backdrop');
+    [d.t.el, ...d.also].forEach(x => {
+      x.style.transition = 'none';
+      x.style.willChange = 'transform';
+    });
+  }
+  if (e.cancelable)
+    e.preventDefault();
+  /* velocidad (px/ms), suavizada: un gesto rápido cierra aunque sea corto */
+  const now = Date.now();
+  if (now > d.pt) {
+    d.vy = .6 * ((p.clientY - d.py) / (now - d.pt)) + .4 * d.vy;
+    d.py = p.clientY;
+    d.pt = now;
+  }
+  d.dy = Math.max(0, dy);
+  dropMove(d, d.dy);
+}, { passive: false });
+sheetHost.addEventListener('touchend', e => {
+  if (drop && ![...e.touches].some(x => x.identifier == drop.id))
+    dropStop(1);
+}, { passive: true });
+sheetHost.addEventListener('touchcancel', () => dropStop(0), { passive: true });

@@ -184,6 +184,12 @@ nav.tour-live {
 #app,.sheet,.menu-panel {
   touch-action:pan-y pinch-zoom;
 }
+/* lo que está detrás de una ventana no se mueve con el dedo: ni arrastrando en su fondo oscuro (que, por llevar data-a, tendría
+   «manipulation», de css/93-glass-shapes: de ahí #sh) ni al llegar arriba o abajo del todo dentro de la ventana
+   (overscroll-behavior, en .sheet de css/10-components) */
+#sh .backdrop {
+  touch-action:none;
+}
 /* recorrido (system/tour) */
 #tour {
   position:fixed;

@@ -282,9 +282,9 @@ def main():
     check('cada apartado cabe entero en el aviso (ocho cambios)', all(len(x['items']) <= 8 for x in cards[0]['sections']), str([len(x['items']) for x in cards[0]['sections']]))
     base = entries[0].get('base')
     if base:
-        # sin la cabecera, que es la de la versión que revisa y va encima de todo (la revisión no lleva la suya)
+        # sin la cabecera, que va encima de todo: la de la revisión o, si no lleva, la de la versión que revisa
         t = [x['title'] for x in cards[0]['sections'] if not x.get('lead')]
-        own = [x['title'] + ' de la ' + ver for x in entries[0]['sections']]
+        own = [x['title'] + ' de la ' + ver for x in entries[0]['sections'] if not x.get('lead')]
         check('%s es una revisión de la %s: su tarjeta enseña primero lo suyo y después lo de esa versión, que ya no sale aparte' % (ver, base), t[:len(own)] == own and t[-1].endswith(' de la ' + base) and base not in versions, str(t) + ' ' + str(versions[:4]))
         earlier = [e['version'] for e in entries[1:] if e.get('base') == base]
         check('ni sus revisiones anteriores (%s), que van en la misma tarjeta' % (', '.join(earlier) or 'ninguna'), all(v not in versions and any(x.endswith(' de la ' + v) for x in t) for v in earlier), str(t))

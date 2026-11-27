@@ -670,6 +670,45 @@ def main(path):
             pg.wait_for_timeout(300)
             run(400)
             check('deslizar hacia arriba desplaza la página con normalidad y no vuelve', ev("(e=>e?e.textContent:'')(document.querySelector('#lgl .page-title'))") == 'Política de privacidad de StrataFit' and ev("document.querySelector('#sh .sheet').scrollTop") > 50, str(ev("document.querySelector('#sh .sheet').scrollTop")))
+            # «Cómo se hace» en un entreno, una ventana que sube desde abajo: deslizar hacia abajo la cierra, también empezando sobre
+            # la figura (su dibujo se cambia en cada fotograma), y el entreno de detrás no se mueve (antes se movía él)
+            ev("A.closeSheet();S.tab=0;R();A.startWorkout()")
+            run(600)
+            ev("window.scrollTo(0, 260)")
+            run()
+            y0 = ev('scrollY')
+            ev("(e => A.exerciseHowTo(0, e))(document.querySelector('#app [data-a=exerciseHowTo]'))")
+            run()
+            pg.wait_for_timeout(450)
+            top = ev("document.querySelector('#sh .sheet').getBoundingClientRect().top")
+
+            def drag_down(y_from, dist, steps=10):
+                touch('touchStart', 195, y_from)
+                for i in range(1, steps + 1):
+                    run(16)
+                    touch('touchMove', 195, y_from + dist * i / steps)
+                touch('touchEnd')
+                pg.wait_for_timeout(300)
+                run(400)
+
+            drag_down(top + 140, 40)
+            check('«Cómo se hace» en un entreno: bajar un poco el dedo sobre la figura la deja en su sitio, y el entreno no se mueve',
+                  ev("!!document.querySelector('#sh .sheet') && document.querySelector('#sh .sheet').style.transform == ''") and ev('scrollY') == y0, str(ev('scrollY')))
+            drag_down(top + 140, 330)
+            check('y deslizar hacia abajo la cierra, con el entreno de detrás en su sitio y en marcha',
+                  not ev("!!document.querySelector('#sh .sheet')") and ev('scrollY') == y0 and ev('!!W'), str([ev("!!document.querySelector('#sh .sheet')"), ev('scrollY'), y0]))
+            ev("(e => A.exerciseHowTo(0, e))(document.querySelector('#app [data-a=exerciseHowTo]'))")
+            run()
+            pg.wait_for_timeout(450)
+            touch('touchStart', 195, 80)
+            for i in range(1, 11):
+                run(16)
+                touch('touchMove', 195, 80 + 22 * i)
+            touch('touchEnd')
+            run(400)
+            check('arrastrar el dedo en el fondo oscuro tampoco mueve el entreno', ev('scrollY') == y0, str(ev('scrollY')))
+            ev("A.closeSheet();A.discardWorkout()")
+            run(400)
             ev("A.closeSheet()")
             run()
         else:

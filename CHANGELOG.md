@@ -20,15 +20,22 @@ revisión y, debajo, los de la versión que revisa (y los de sus revisiones ante
   la versión («1.0.4 de nov. 2026»: sus tres números son 1, 0 y 2026), y el número de verdad en `number`, que es el que
   miran la 1.0.4 y las siguientes. Así la 1.0.31 instalada también avisa, con las novedades, antes de actualizar.
 - Antes del primer apartado, una línea que empieza por «> » es el **titular** de la versión: la app lo enseña encima de sus
-  apartados.
+  apartados. Una revisión puede llevar el suyo (la 1.0.4.1, «Corrección de errores»); si no lo lleva, su tarjeta enseña el de la
+  versión que revisa.
 
 El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y la numeración sigue
 [versionado semántico](https://semver.org/lang/es/).
 
 ## [1.0.4.1] — 2026-11-27
 
+> Corrección de errores
+>
+> Arregla lo que ha salido al usar la 1.0.4.
+
 ### Correcciones
 - Condiciones y privacidad: el texto que pide aceptar es más claro e impersonal.
+- Las ventanas que suben desde abajo, como «Cómo se hace» durante un entreno, se cierran deslizando hacia abajo, y lo que hay
+  detrás ya no se mueve.
 
 ### Interno
 - Pasar las cuentas al dominio nuevo: la cuenta de prueba del ensayo entra por la API pública como desde un navegador (diciendo
