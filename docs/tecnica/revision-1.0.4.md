@@ -278,10 +278,11 @@ nuevo la siguiente vez.
 - **Lo que pesa**: el paquete guarda para usar sin conexión 434 KB más (las 29 fotos, una vez); el código, apenas nada (las
   listas de las fotos). La app que se publica tarda lo mismo en pintar por primera vez, con muchos datos (`tests/perf.py`, cinco
   vueltas: 100 ms antes y 112 después, y en otra medida 145 y 119: lo que varía de una vez a otra), y lo demás no cambia.
-- **Las series al fallo, en AMRAP**, como las de Entrenos a la carta (lo pidió el propietario): la última de un drop set y su
-  bajada (D), la última de un rest-pause y su bloque (+) y la última de unas parciales. `workout/targets` dice cuáles
-  (`amrapSet`: las AMRAP de una rutina a la carta y, en un programa, las filas con la técnica de la última serie o una fila
-  extra); `workout/progression` las deja en blanco y `workout/session` les pone «AMRAP» y no las da por hechas sin las
-  repeticiones (`amrapPending`). Antes, la bajada salía con las repeticiones de su serie y el bloque con un tercio, como si
-  hubiera que hacer justo esas. «+ Serie» tras una aún en blanco añade una normal con el número de la última que lo tiene. En la
-  descarga no hay técnicas: ninguna va en AMRAP. La ventana de cada técnica lo dice («Las dos llegan al fallo (AMRAP)…»).
+- **Las filas extra de las técnicas, en AMRAP**, como las de Entrenos a la carta (lo pidió el propietario): la bajada de un
+  drop set (D) y el bloque de un rest-pause (+), que llegan al fallo. `workout/targets` dice cuáles (`amrapSet`: las AMRAP de una
+  rutina a la carta y, en un programa, las filas extra); `workout/progression` las deja en blanco y `workout/session` les pone
+  «AMRAP» y no las da por hechas sin las repeticiones (`amrapPending`). Antes, la bajada salía con las repeticiones de su serie y
+  el bloque con un tercio, como si hubiera que hacer justo esas. La serie de antes sale con sus repeticiones, como las demás:
+  primero también iba en AMRAP (y la última de unas parciales), pero el propietario la quiere con su número. En la descarga no
+  hay técnicas: ninguna va en AMRAP. La ventana del drop set y la del rest-pause lo dicen («…, en AMRAP: apunta las repeticiones
+  que salgan»).
