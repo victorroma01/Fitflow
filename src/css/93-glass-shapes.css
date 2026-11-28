@@ -40,9 +40,6 @@ html.glass input,html.glass select,html.glass textarea {
 html.glass .sheet {
   border-radius:34px 34px 0 0;
 }
-html.glass .wide-btn {
-  border-radius:22px;
-}
 html.glass .thumb {
   border-radius:20px;
 }

@@ -28,7 +28,7 @@ import { libBody, libState } from '../library/browse.js';
 import { clone, progDraft } from '../programs/create.js';
 import { levelPlan } from '../programs/levels.js';
 import { isDeloadWeek } from '../workout/deload.js';
-import { dayImage, photoUrl, routineImage } from '../workout/images.js';
+import { coverStyle, dayImage, photosOf, photoUrl, routineImage } from '../workout/images.js';
 import { MEDIA } from '../data/media.js';
 import { planIndex, syncSel } from '../workout/week.js';
 import { buildBackup, parseBackup, pendingRestore, restoreBackup, setPendingRestore } from '../system/backup.js';
@@ -153,6 +153,8 @@ const DEBUG_NAMES = {
   isNewerVersion: [() => isNewerVersion],
   plainVersion: [() => plainVersion],
   dayImage: [() => dayImage],
+  photosOf: [() => photosOf],
+  coverStyle: [() => coverStyle],
   photoUrl: [() => photoUrl],
   routineImage: [() => routineImage],
   MEDIA: [() => MEDIA],

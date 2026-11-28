@@ -1,6 +1,8 @@
 /* ═══ programs/manager ═══
-   Lista de programas, vista previa y activación.
-   Define: previewProgram, presetRow, presetList  · acciones/registros: 5
+   Lista de programas, vista previa y activación. En la lista, cada programa es una tarjeta con su foto, como las de Entrenos a la
+   carta (programCard): la de serie, la suya (data/photos, PROGRAM_COVERS); uno propio, la de su primer día de entreno, en
+   otra foto que los de serie si la hay.
+   Define: previewProgram, programCard, presetRow, presetList  · acciones/registros: 5
 */
 import { say } from '../core/i18n.js';
 import { X } from '../core/util.js';
@@ -11,6 +13,7 @@ import { LEVEL_NAMES, LEVEL_PROGRAM_NOTES } from '../data/levels.js';
 import { profileSex, S, saveState, W } from '../core/state.js';
 import { confirmDialog, fullPage, pgHead, sheet, sheetToTop } from '../core/ui.js';
 import { dropResume } from '../workout/resume.js';
+import { programCoverStyle } from '../workout/images.js';
 import { perWeekText } from '../workout/week.js';
 import { programDaysHtml, startPlanFromWeekOne, syncCustomProgram } from './create.js';
 import { isLevel, levelPlan, levelSegment, levelTag, previewLevel, programRow, setPreviewLevel } from './levels.js';
@@ -40,20 +43,22 @@ A.openProgramPreview = (i, b) => {
       <button class="sticky-btn primary p-16 fs-16 r-16" data-a="programSelect" data-i="${i}">Cambiar plan de entrenamiento</button>`)}`);
   sheetToTop();
 };
-/** Fila de un programa predefinido en la lista de Programas. */
+/* la tarjeta de un programa en la lista, como las de Entrenos a la carta: su portada (`cover`: workout/images,
+   programCoverStyle), oscurecida, y encima, abajo, su nombre con su nivel (`row`) y sus cifras; si es el plan actual, lo dice.
+   Al tocarla, `a` con `i` (su vista previa o el programa propio) */
+const programCard = (a, i, row, act, pl, cover) => html`
+  <button class="card hero pg-card" data-a="${a}" data-i="${i}" data-style="${cover}">
+    ${raw(row)}
+    <small>
+      ${raw(act ? html`<b>Plan actual</b> · ` : '')}
+      ${perWeekText(pl)} · ${raw(pl.reduce((s, d) => s + d.ex.length, 0))} ejercicios
+    </small>
+  </button>`;
+/** Tarjeta de un programa predefinido en la lista de Programas. */
 const presetRow = i => {
   const act = !S.noProgram && S.ownProgramIndex < 0 && S.program == i;
   const pl = act ? S.plan : levelPlan(parseProgram(i), S.level, i);
-  return html`
-    <button class="wide-btn pgc" data-a="openProgramPreview" data-i="${i}">
-      <span class="fx-1 minw-0">
-        ${programRow(PROGRAM_NAMES[i], levelTag(S.level))}
-        <small>
-          ${raw(act ? html`<b class="c-at">Plan actual</b> · ` : '')}
-          ${perWeekText(pl)} · ${raw(pl.reduce((s, d) => s + d.ex.length, 0))} ejercicios
-        </small>
-      </span>›
-    </button>`;
+  return programCard('openProgramPreview', i, programRow(PROGRAM_NAMES[i], levelTag(S.level)), act, pl, programCoverStyle(i));
 };
 /** Predefinidos según el sexo del perfil (F-05): arriba los preferentes y debajo el resto. Sin sexo elegido, se pregunta. */
 const presetList = () => {
@@ -83,16 +88,7 @@ A.openPrograms = () => fullPage(html`
   <div class="grid-2 m-0-0-6"><button data-a="openImport">Importar</button><button data-a="sharePlan">Compartir plan</button></div>
   ${raw(S.ownPrograms.length ? html`
     <div class="section-label">Mis programas</div>
-    ${S.ownPrograms.map((p, k) => html`
-      <button class="wide-btn pgc" data-a="openOwnProgram" data-i="${k}">
-        <span class="fx-1 minw-0">
-          ${programRow(p.n, p.o && isLevel(p.o.niv) ? levelTag(p.o.niv) : '')}
-          <small>
-            ${raw(S.ownProgramIndex == k ? html`<b class="c-at">Plan actual</b> · ` : '')}
-            ${perWeekText(p.plan)} · ${raw(p.plan.reduce((s, d) => s + d.ex.length, 0))} ejercicios
-          </small>
-        </span>›
-      </button>`)}` : '')}
+    ${S.ownPrograms.map((p, k) => programCard('openOwnProgram', k, programRow(p.n, p.o && isLevel(p.o.niv) ? levelTag(p.o.niv) : ''), S.ownProgramIndex == k, p.plan, programCoverStyle(-1, k)))}` : '')}
   ${presetList()}`);
 A.programsSex = (i, b) => {
   const v = b.dataset.v;

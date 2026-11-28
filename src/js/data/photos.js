@@ -1,14 +1,23 @@
 /* ═══ data/photos ═══
-   Fotos: portadas de los días (DAY_PHOTOS; las de mujer, DAY_PHOTOS_F) con sus reglas de asignación por el nombre del día
-   (DAY_PHOTO_RULES) y por el ejercicio (EXERCISE_PHOTO_RULES), el logo (BRAND_LOGOS) y el fondo del inicio de sesión
+   Fotos: portadas de los días (DAY_PHOTOS; las de mujer, DAY_PHOTOS_F; sus otras versiones, DAY_PHOTOS_MORE y
+   DAY_PHOTOS_MORE_F) con sus reglas de asignación por el nombre del día (DAY_PHOTO_RULES) y por el ejercicio
+   (EXERCISE_PHOTO_RULES), la de cada programa de serie (PROGRAM_COVERS), el logo (BRAND_LOGOS) y el fondo del inicio de sesión
    (LOGIN_PHOTO). Vienen de data/media. Qué portada lleva cada día lo decide workout/images.
-   Define: DAY_PHOTOS, DAY_PHOTOS_F, PHOTO_ALIAS_F, BRAND_LOGOS, LOGIN_PHOTO, DAY_PHOTO_RULES, EXERCISE_PHOTO_RULES
+   Define: DAY_PHOTOS, DAY_PHOTOS_F, DAY_PHOTOS_MORE, DAY_PHOTOS_MORE_F, PROGRAM_COVERS, PHOTO_ALIAS_F, BRAND_LOGOS, LOGIN_PHOTO, DAY_PHOTO_RULES, EXERCISE_PHOTO_RULES
 */
 import { MEDIA } from './media.js';
 /** clave de portada → URL de la foto (pecho, espalda… descanso): las de hombre y las que no llevan a nadie (cardio, core…) */
 export const DAY_PHOTOS = MEDIA.day;
 /** las de mujer (la modelo), con las mismas claves; la que no tiene la suya usa la de PHOTO_ALIAS_F o, si no, la de DAY_PHOTOS */
 export const DAY_PHOTOS_F = MEDIA.dayF;
+/** las otras versiones de cada portada (tools/variantes.py), clave → [URL…]: las del modelo (y las que no llevan a nadie) y las
+    de la modelo. Qué versión lleva cada día lo decide workout/images */
+export const DAY_PHOTOS_MORE = MEDIA.dayMore;
+export const DAY_PHOTOS_MORE_F = MEDIA.dayMoreF;
+/** la portada de cada programa de serie en Programas (programs/manager), por su nombre: [clave, versión]. Si la portada tiene
+    menos versiones con el perfil (las de la modelo), se vuelve a contar desde la primera. Un programa propio lleva la de su
+    primer día de entreno (workout/images, planImage) */
+export const PROGRAM_COVERS = { 'Bro Split': ['pecho', 0], 'Hyrox / CrossFit': ['trineo', 1], 'Torso / Pierna': ['torso', 0], 'Push Pull Leg': ['espalda', 1], 'Híbrido': ['cardio', 1], 'Full Body': ['piernas', 0], 'Glúteo y pierna': ['legs', 0] };
 /** mientras no haya foto de mujer de una portada, la que la sustituye: la de competición, la del trineo */
 export const PHOTO_ALIAS_F = { competencia: 'trineo' };
 /** el logo: { claro, oscuro } → URL (core/brand) */

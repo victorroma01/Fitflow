@@ -5,13 +5,17 @@
   · los descansos: los de una semana con CrossFit, Hyrox o funcional llevan los suyos (descanso2), y los demás, los de siempre;
   · un día cuyo nombre no dice nada (Full Body) lleva la de su primer ejercicio; un workout personalizado, la elegida o la de sus
     ejercicios, y su selector enseña las del perfil;
+  · las otras versiones de las portadas (tools/variantes.py): las del modelo con el perfil de hombre y las de la modelo con el de
+    mujer, sin mezclar; un día lleva otra cada semana, y dos días con la misma portada en una semana, distintas (los dos de
+    empuje, los descansos); siempre la misma al volver a pintar, y la del día es la de su Overview; en Entrenos a la carta, cada
+    rutina la suya; y cada programa de Programas, su foto;
   · todas las fotos cargan y el paquete las guarda para abrir sin conexión;
   · el texto de la tarjeta del día se lee (AA) sobre cada portada, en las de hombre y en las de mujer (medido como en
     tests/contrast.py).
 
   python3 tests/covers.py dist/stratafit.html
 """
-import os, sys
+import os, re, sys
 from playwright.sync_api import sync_playwright
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -33,6 +37,10 @@ WEEKS = {
 ALIAS_F = {'competencia': 'trineo'}
 # las que no llevan a nadie: las mismas para todos
 NEUTRAL = ['crossfit', 'hyrox', 'cardio', 'core', 'funcional']
+# las otras versiones de cada portada, como las hace tools/variantes.py (VARIANTES: id → clave; el id empieza por male o female)
+VARIANTS = {'M': {}, 'F': {}}
+for _id, _key in re.findall(r"\('((?:male|female)_\w+)', '(\w+)'\)", open(os.path.join(ROOT, 'tools', 'variantes.py'), encoding='utf-8').read()):
+    VARIANTS['F' if _id.startswith('female') else 'M'].setdefault(_key, []).append(_id)
 # al medir el contraste, todo escondido menos la tarjeta del día (con el CSSOM: la política de seguridad no deja <style>)
 ONLY_HERO = 'body *{visibility:hidden!important}.card.hero,.card.hero *{visibility:visible!important}'
 
@@ -81,6 +89,75 @@ def main(path):
           const i = new Image(); i.onload = () => r([i.naturalWidth, i.naturalHeight]); i.onerror = () => r(null); i.src = u; })))""")
         check('todas cargan (%d)' % len(loaded), all(loaded), str(loaded))
         check('las nuevas miden 704 × 440', sum(1 for x in loaded if x == [704, 440]) == len(F) + 9, str(loaded))
+
+        print('Las otras versiones (tools/variantes.py)')
+        MM, FM = ev("MEDIA.dayMore"), ev("MEDIA.dayMoreF")
+        check('las del modelo: %s' % ', '.join('%s %d' % (k, len(v)) for k, v in VARIANTS['M'].items()),
+              {k: len(v) for k, v in MM.items()} == {k: len(v) for k, v in VARIANTS['M'].items()}, str({k: len(v) for k, v in MM.items()}))
+        check('las de la modelo: %s' % ', '.join('%s %d' % (k, len(v)) for k, v in VARIANTS['F'].items()),
+              {k: len(v) for k, v in FM.items()} == {k: len(v) for k, v in VARIANTS['F'].items()}, str({k: len(v) for k, v in FM.items()}))
+        more = [u for v in list(MM.values()) + list(FM.values()) for u in v]
+        sizes = ev("us => Promise.all(us.map(u => new Promise(r => { const i = new Image(); i.onload = () => r([i.naturalWidth, i.naturalHeight]); i.onerror = () => r(null); i.src = u; })))", more)
+        check('todas cargan y miden 704 × 440 (%d)' % len(more), all(x == [704, 440] for x in sizes), str(sizes))
+        for sex, mine, other in (('M', MM, FM), ('F', FM, MM)):
+            ev("S.biometrics=S.biometrics||{};S.biometrics.sex='%s'" % sex)
+            lists = ev("ks => ks.map(k => photosOf(k))", order)
+            got = dict(zip(order, lists))
+            theirs = {u for v in other.values() for u in v}
+            check('con el perfil de %s, cada portada: la de siempre y las suyas, ninguna del otro' % ('mujer' if sex == 'F' else 'hombre'),
+                  all(got[k][1:] == mine.get(k, []) and not theirs & set(got[k]) for k in order), str([k for k in order if got[k][1:] != mine.get(k, [])]))
+        ev("S.biometrics.sex='F'")
+        check('con el de mujer, Cardio: la de siempre (no lleva a nadie) y las de la modelo en la cinta', ev("photosOf('cardio')") == [M['cardio']] + FM['cardio'])
+
+        print('Cada semana, otra; en la misma semana, sin repetir')
+        photo = "(d => (coverStyle(d.n, d).match(/url\\(([^)]+)\\)/) || [])[1] || '')"
+        for sex in ('M', 'F'):
+            use(ev, 0, sex)
+            weeks = [ev("w => { S.week = w; return S.plan.map(%s); }" % photo, w) for w in (1, 2, 3)]
+            rest = [i for i, d in enumerate(ev("S.plan.map(d => d.ex.length)")) if not d]
+            pec = [w[0] for w in weeks]
+            n = len(ev("photosOf('pecho')"))
+            check('Bro Split, %s: Pecho lleva otra cada semana (%d fotos) y los dos descansos de una semana, distintas' % ('mujer' if sex == 'F' else 'hombre', n),
+                  len(set(pec)) == min(3, n) and all(w[rest[0]] != w[rest[1]] for w in weeks) and all(all(w) for w in weeks), str([[u[-20:] for u in w] for w in weeks]))
+        use(ev, 3, 'M')
+        ppl = ev("S.plan.map(%s)" % photo)
+        names = ev("S.plan.map(d => d.n)")
+        check('Push Pull Leg: Push A y Push B, distintas; Pull A y Pull B, también', ppl[names.index('Push A')] != ppl[names.index('Push B')] and ppl[names.index('Pull A')] != ppl[names.index('Pull B')])
+        ev("S.week = 2; S.selectedWeekday = 0; syncSel(); R()")
+        a = ev("getComputedStyle(document.querySelector('.card.hero')).backgroundImage")
+        ev("R()")
+        b2 = ev("getComputedStyle(document.querySelector('.card.hero')).backgroundImage")
+        ev("A.openOverview()")
+        o = ev("getComputedStyle(document.querySelector('#app .card.hero')).backgroundImage")
+        ev("A.overviewBack()")
+        check('al volver a pintar, la misma; y la del día es la de su Overview', a == b2 == o and 'url(' in a, str([a[-40:], b2[-40:], o[-40:]]))
+
+        print('Entrenos a la carta y Programas')
+        ev("S.biometrics.sex='M';A.openOnDemand()")
+        pg.wait_for_timeout(200)
+        od = ev("[...document.querySelectorAll('#sh .od-card')].map(c => [c.querySelector('b').textContent, +c.dataset.i, getComputedStyle(c).backgroundImage.slice(-40)])")
+        arms = [u for nm, _, u in od if nm in ('Armageddon', 'Arm Assault')]
+        check('dos rutinas de brazos, dos fotos distintas', len(arms) == 2 and arms[0] != arms[1], str(od))
+        i, bg = [(i, u) for nm, i, u in od if nm == 'Arm Assault'][0]
+        ev("A.onDemandShow(%d)" % i)
+        pg.wait_for_timeout(100)
+        hero = ev("getComputedStyle(document.querySelector('#sh .od-hero')).backgroundImage.slice(-40)")
+        check('y la vista previa, la de su tarjeta', hero == bg, str([hero, bg]))
+        for sex in ('M', 'F'):
+            ev("sheet();S.biometrics.sex='%s';S.ownPrograms=[{n:'Mío',plan:levelPlan(parseProgram(2),'int',2)}];A.openPrograms()" % sex)
+            pg.wait_for_timeout(200)
+            cards = ev("[...document.querySelectorAll('#sh .pg-card')].map(c => [c.dataset.a, +c.dataset.i, getComputedStyle(c).backgroundImage])")
+            urls = [re.search(r'url\("?([^")]+)', bg).group(1) if 'url(' in bg else '' for _, _, bg in cards]
+            mine = FM if sex == 'F' else MM
+            base = F if sex == 'F' else M
+            ok_sex = all(u in set(base.values()) | {x for v in mine.values() for x in v} | {M[k] for k in NEUTRAL} for u in urls)
+            own = urls[[a for a, _, _ in cards].index('openOwnProgram')]
+            torso = urls[[(a, i) for a, i, _ in cards].index(('openProgramPreview', ev("PROGRAM_NAMES.indexOf('Torso / Pierna')")))]
+            # el propio (un Torso / Pierna) lleva otra foto del torso que el de serie; la modelo solo tiene una
+            check('Programas, %s: cada programa con su foto (los 7 y el propio), del perfil, sin repetir mientras quede otra' % ('mujer' if sex == 'F' else 'hombre'),
+                  len(cards) == 8 and all(urls) and ok_sex and len(set(urls)) == (7 if sex == 'F' else 8) and (own == torso) == (sex == 'F'),
+                  str([(a, i, u[-24:]) for (a, i, _), u in zip(cards, urls)]))
+        ev("sheet();S.ownPrograms=[]")
 
         print('Con el perfil de mujer, las de la modelo')
         ev("S.biometrics=S.biometrics||{};S.biometrics.sex='F'")
@@ -141,25 +218,29 @@ def main(path):
         check('la elegida, marcada', ev("document.querySelector('#sh [data-v=snatch]').className.includes('bd-2-solid-a2')"))
         ev("sheet()")
 
-        print('El texto de la tarjeta del día sobre cada portada (AA)')
+        print('El texto de la tarjeta del día sobre cada portada (AA), en cada una de sus fotos')
         for sex in ('M', 'F'):
-            bad = []
+            bad, n = [], 0
             for key in order:
-                if key.startswith('descanso'):
-                    use(ev, 1 if key == 'descanso2' else 0, sex)
-                    ev("S.selectedWeekday=2;syncSel();R()")
-                else:
-                    use(ev, 0, sex)
-                    ev("S.plan[0]=Object.assign({},S.plan[0],{cu:1,img:'%s'});R()" % key)
-                pg.evaluate('window.scrollTo(0, 0)')
-                # solo el texto de la tarjeta del día, que es lo que va sobre la portada: lo demás se esconde mientras se mide
-                # (el resto de la pantalla lo mide tests/contrast.py)
-                pg.evaluate("css => { const s = new CSSStyleSheet(); s.replaceSync(css); document.adoptedStyleSheets = [...document.adoptedStyleSheets, s]; window.__only = s; }", ONLY_HERO)
-                for r in measure(pg):
-                    if r[0] < r[1] - .005:
-                        bad.append('%s: «%s» %.2f:1 (pide %.1f) sobre %s' % (key, r[2][:22], r[0], r[1], r[5]))
-                pg.evaluate("document.adoptedStyleSheets = document.adoptedStyleSheets.filter(s => s !== window.__only)")
-            check('%d portadas, %s: todo el texto se lee' % (len(order), 'mujer' if sex == 'F' else 'hombre'), not bad, '; '.join(bad[:6]))
+                ev("S.biometrics=S.biometrics||{};S.biometrics.sex='%s'" % sex)
+                for v in range(len(ev("photosOf('%s')" % key))):
+                    n += 1
+                    # la foto v: la que lleva ese día en la semana v + 1 (es el primero con esa portada de la semana)
+                    if key.startswith('descanso'):
+                        use(ev, 1 if key == 'descanso2' else 0, sex)
+                        ev("S.week=%d;S.selectedWeekday=2;syncSel();R()" % (v + 1))
+                    else:
+                        use(ev, 0, sex)
+                        ev("S.week=%d;S.plan[0]=Object.assign({},S.plan[0],{cu:1,img:'%s'});R()" % (v + 1, key))
+                    pg.evaluate('window.scrollTo(0, 0)')
+                    # solo el texto de la tarjeta del día, que es lo que va sobre la portada: lo demás se esconde mientras se mide
+                    # (el resto de la pantalla lo mide tests/contrast.py)
+                    pg.evaluate("css => { const s = new CSSStyleSheet(); s.replaceSync(css); document.adoptedStyleSheets = [...document.adoptedStyleSheets, s]; window.__only = s; }", ONLY_HERO)
+                    for r in measure(pg):
+                        if r[0] < r[1] - .005:
+                            bad.append('%s (%d): «%s» %.2f:1 (pide %.1f) sobre %s' % (key, v + 1, r[2][:22], r[0], r[1], r[5]))
+                    pg.evaluate("document.adoptedStyleSheets = document.adoptedStyleSheets.filter(s => s !== window.__only)")
+            check('%d fotos de las %d portadas, %s: todo el texto se lee' % (n, len(order), 'mujer' if sex == 'F' else 'hombre'), not bad, '; '.join(bad[:6]))
         c.close()
         b.close()
 
@@ -169,8 +250,9 @@ def main(path):
         sw = open(os.path.join(app, 'sw.js'), encoding='utf-8').read()
         files = ['img/day/' + f for f in os.listdir(os.path.join(app, 'img', 'day')) if not os.path.isdir(os.path.join(app, 'img', 'day', f))]
         files += ['img/day/mujer/' + f for f in os.listdir(os.path.join(app, 'img', 'day', 'mujer'))]
-        check('las %d portadas son archivos del paquete y el service worker las guarda para abrir sin conexión' % len(files),
-              len(files) == len(order) + len(women) and all(f in sw for f in files), str([f for f in files if f not in sw]))
+        extra = sum(len(v) for v in VARIANTS['M'].values()) + sum(len(v) for v in VARIANTS['F'].values())
+        check('las %d portadas (con sus %d otras fotos) son archivos del paquete y el service worker las guarda para abrir sin conexión' % (len(files), extra),
+              len(files) == len(order) + len(women) + extra and all(f in sw for f in files), str([f for f in files if f not in sw]))
     else:
         print('  (sin dist/app: no se mira)')
     check('sin errores de JS', not errs, str(errs[:3]))

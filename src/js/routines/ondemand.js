@@ -8,7 +8,7 @@
    rango (rg: de la menor a la mayor, para la progresión), su tempo («Libre» si la rutina no lo da) y su variante (nt); en
    cada bloque, el mismo número de bloque (b). Los descansos son los de la app (workout/rest): la rutina no los da. Su
    portada, la de su primer grupo (workout/images); la de cuerpo completo, la de funcional.
-   Define: onDemandDay, odCover, odCard, odListPage, odExercise, odBlock, odPreviewPage  · acciones/registros: 3
+   Define: onDemandDay, odCover, odVariant, odCard, odListPage, odExercise, odBlock, odPreviewPage  · acciones/registros: 3
 */
 import { A } from '../core/registry.js';
 import { S, saveState, W } from '../core/state.js';
@@ -42,11 +42,15 @@ const onDemandDay = r => {
 };
 /* la portada: la de su primer grupo; la de cuerpo completo (que no es un grupo de la librería), la de funcional */
 const odCover = r => groupImage(r.g[0]) || 'funcional';
+/* qué foto de su portada lleva la rutina i (workout/images): la primera con esa portada, la de siempre; la siguiente, otra… Así
+   dos rutinas de espalda no llevan la misma, y cada una lleva siempre la suya, en la lista y en su vista previa */
+const odVariant = i => ONDEMAND.slice(0, i).filter(r => odCover(r) == odCover(ONDEMAND[i])).length;
 /* una rutina en la lista: su portada, su nivel (si lo tiene), su nombre, su subtítulo, sus grupos y sus cifras */
 const odCard = (r, i) => {
   const d = onDemandDay(r);
   return html`
-    <div class="card hero od-card" data-a="onDemandShow" data-i="${i}" role="button" tabindex="0" data-style="${coverStyle(d.n, d)}">
+    <div class="card hero od-card" data-a="onDemandShow" data-i="${i}" role="button" tabindex="0"
+        data-style="${coverStyle(d.n, d, false, odVariant(i))}">
       ${r.lv ? html`<span class="od-level">${levelTag(r.lv)}</span>` : ''}
       <b>${r.n}</b>
       ${r.t ? html`<small>${r.t}</small>` : ''}
@@ -87,7 +91,7 @@ const odPreviewPage = i => {
   return html`
     ${pgHead(r.n, 'openOnDemand')}
     ${r.t ? html`<p class="muted m-n6-0-10">${r.t}</p>` : ''}
-    <div class="card hero od-hero" data-style="${coverStyle(d.n, d)}">${dayStats(d)}</div>
+    <div class="card hero od-hero" data-style="${coverStyle(d.n, d, false, odVariant(i))}">${dayStats(d)}</div>
     <div class="od-meta">${r.lv ? levelTag(r.lv) : ''}<span>${r.g.join(' · ')}</span></div>
     ${r.d ? html`<p class="muted fs-14">${r.d}</p>` : ''}
     ${dayBlocks(d).map((k, n) => odBlock(d, k, n))}

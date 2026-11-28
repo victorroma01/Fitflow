@@ -247,7 +247,9 @@ nuevo la siguiente vez.
   fondo, su botón de abajo y una sombra; en Chrome de Android, que agrandaba el área de lo fijo al salirse la página por un lado,
   la página ya no ensancha la pantalla (`overflow-x: clip`). Overview y Evolución del peso se abren arriba del todo y, al volver,
   la pestaña queda donde estaba (`openPage`, `closePage`). Y en un paso con su «‹ …» dentro (un grupo de la librería, el editor
-  de un workout), debajo se ve el paso al que se vuelve (`core/ui`, `stepBelow`), no la pestaña.
+  de un workout), debajo se ve el paso al que se vuelve (`core/ui`, `stepBelow`), no la pestaña. La barra de debajo es aparte
+  (`core/tabbar`, `tabbarCopy`): la de la página solo marca sus botones (`tabButtons`), y si se vuelve a marcar en pleno gesto
+  (al cambiar el tamaño de la ventana), la de debajo no pierde su pestaña (en Firefox, a veces, se quedaba sin ella).
 - **El título y los botones de arriba, borrosos por arriba**: es el difuminado que iOS 26 pone bajo la barra de estado de una app
   instalada. Una banda fija del color del fondo en ese borde (`#edge`, solo en el iPhone y el iPad) hace que el sistema alargue
   ese color en vez de difuminar ([detalle](movil.md#lo-que-ya-está)).
@@ -262,3 +264,17 @@ nuevo la siguiente vez.
 - **Las miniaturas de los ejercicios, más definidas**: se marcan sus bordes al dibujarlas (`extras/figure3d`, `sharpen`) y,
   como la huella de las figuras (`data/figstamp`) lleva también lo que las dibuja, las guardadas en el móvil se dibujan otra
   vez.
+- **Más fotos en las tarjetas de los días**, para que no salgan siempre las mismas: el propietario mandó 30 (hechas con IA, en
+  blanco y negro). `tools/variantes.py` prepara 29 como las demás portadas (recorte de 1,6:1, gris, 704 × 440, los claros
+  bajados si hace falta para el texto blanco, WebP): de 3,6 MB quedan en 434 KB. La que el catálogo del paquete no deja elegir
+  sola (la tercera de la cinta, con otra cara) se queda fuera. En la del trineo, la marca HYROX de la pared se borra antes
+  (`BORRAR`: la pared de alrededor, con su grano), porque es una marca registrada; STRATAFIT, en la ropa y el trineo, se queda. Cada una va con la portada de lo que se ve en ella: pecho,
+  espalda, torso, hombros, brazos, trineo, carrera y descanso con el modelo; espalda, piernas, glúteo, hombros, carrera y
+  descanso con la modelo. `workout/images` elige cuál lleva cada día: otra cada semana del programa y, en la misma semana, una
+  distinta para cada día con la misma portada (`dayVariant`); en Entrenos a la carta, una para cada rutina (`odVariant`).
+- **Programas, con fotos**: cada programa es una tarjeta con su foto, como las de Entrenos a la carta (`programs/manager`,
+  `programCard`): la de serie, la de `PROGRAM_COVERS` (`data/photos`); uno propio, la de su primer día de entreno, en otra foto
+  que los de serie si la hay. Con ella se va el botón a lo ancho (`wide-btn`), que ya no usaba nada más.
+- **Lo que pesa**: el paquete guarda para usar sin conexión 434 KB más (las 29 fotos, una vez); el código, apenas nada (las
+  listas de las fotos). La app que se publica tarda lo mismo en pintar por primera vez, con muchos datos (`tests/perf.py`, cinco
+  vueltas: 100 ms antes y 112 después, y en otra medida 145 y 119: lo que varía de una vez a otra), y lo demás no cambia.

@@ -222,8 +222,16 @@ def main(path, shots=None):
         pg.clock.run_for(800)
         ev(open_group)
         pg.clock.run_for(200)
-        again = ev("""new Promise(r => { const q = indexedDB.open('fffig'); q.onsuccess = () => { const st = q.result.transaction('mini').objectStore('mini'), k = st.getAllKeys(), v = st.get('\\0de');
-          v.onsuccess = () => { r([k.result.length, v.result]); q.result.close(); }; }; })""")
+        AGAIN = """new Promise(r => { const q = indexedDB.open('fffig'); q.onsuccess = () => { const st = q.result.transaction('mini').objectStore('mini'), k = st.getAllKeys(), v = st.get('\\0de');
+          v.onsuccess = () => { r([k.result.length, v.result]); q.result.close(); }; }; })"""
+        again = ev(AGAIN)
+        # (la base de datos del navegador va a su ritmo, no al del reloj de prueba: en WebKit, una vez, aún no se había tirado)
+        for _ in range(30):
+            if again[1] != 'otras 144':
+                break
+            pg.wait_for_timeout(100)
+            pg.clock.run_for(100)
+            again = ev(AGAIN)
         check('lo guardado de otras figuras (otra huella) se tira', again[0] < saved[0] and again[1] == FIG_STAMP + ' 144', str(again))
         check('y se dibujan otra vez, con el motor', settle(HOLES + " == 0", 400) and ev("!!document.getElementById('g3Ne0')") and ev(ROWS + ".every(r => " + IS_PICTURE + "(r))"), 'huecos: %d' % ev(HOLES))
         check('la huella de las figuras no lleva la versión de la app', APPV not in FIG_STAMP and re.fullmatch(r'[0-9a-f]{20}', FIG_STAMP) is not None, FIG_STAMP)

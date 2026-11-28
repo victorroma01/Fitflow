@@ -26,7 +26,8 @@ Estructura (todo vive en src/):
   src/js/extras/motor3d.js  molde que el build sustituye por ese motor, metido en una función (se carga al usarlo: core/lazy)
   CHANGELOG.md            historial de versiones: la entrada de APPV es obligatoria; de aquí salen las novedades y version.json
                           (la revisión de una versión enseña sus arreglos junto con las novedades de la que revisa)
-  src/img/day/            portadas de los días (.webp o .jpg), en el orden de order.txt; las de mujer, en mujer/ (tools/portadas.py)
+  src/img/day/            portadas de los días (.webp o .jpg), en el orden de order.txt; las de mujer, en mujer/ (tools/portadas.py);
+                          sus otras fotos, <clave>-2.webp… (tools/variantes.py)
   src/img/login/          fondo del inicio de sesión (fondo.webp, que prepara tools/fondo.py)
   static/                 sw.js (plantilla: la lista de precarga se completa con las fotos), manifiesto e iconos
 
@@ -149,11 +150,21 @@ def cover_file(folder, k):
     return found[0] if found else None
 
 
+def cover_variants(folder, rel, k):
+    """Las otras versiones de la portada `k` en una carpeta de src/img/day (tools/variantes.py): <k>-2.webp, <k>-3.webp… seguidas,
+    como enlaces img/…; [] si no tiene."""
+    out, n = [], 2
+    while os.path.isfile(os.path.join(folder, '%s-%d.webp' % (k, n))):
+        out.append('%s%s-%d.webp' % (rel, k, n))
+        n += 1
+    return out
+
+
 def media():
-    """Lee src/img: las portadas de día (order.txt; las de mujer, en src/img/day/mujer, las que haya), el logo, el fondo del
-    inicio de sesión, los iconos del equipamiento y las imágenes de las tarjetas de la librería. Devuelve la lista de imágenes
-    y los enlaces de cada portada, de cada icono y de cada tarjeta (clave → img/…)."""
-    files, day, day_f = [], {}, {}
+    """Lee src/img: las portadas de día (order.txt; las de mujer, en src/img/day/mujer, las que haya; y sus otras versiones,
+    <clave>-2.webp…), el logo, el fondo del inicio de sesión, los iconos del equipamiento y las imágenes de las tarjetas de la
+    librería. Devuelve la lista de imágenes y los enlaces de cada portada, de cada icono y de cada tarjeta (clave → img/…)."""
+    files, day, day_f, more, more_f = [], {}, {}, {}, {}
     base = os.path.join(IMG, 'day')
     for k in list_lines(os.path.join(base, 'order.txt')):
         f = cover_file(base, k)
@@ -165,6 +176,11 @@ def media():
         if f:
             day_f[k] = 'img/day/mujer/' + f
             files.append((day_f[k], os.path.join(base, 'mujer', f)))
+        for folder, rel, out in ((base, 'img/day/', more), (os.path.join(base, 'mujer'), 'img/day/mujer/', more_f)):
+            v = cover_variants(folder, rel, k)
+            if v:
+                out[k] = v
+                files.extend((r, os.path.join(folder, r.split('/')[-1])) for r in v)
     # el logo dentro de la app (core/brand): claro y oscuro. Las fuentes (fuente-*.png) no se publican: son de tools/marca.py
     for k in BRAND_LOGOS:
         p = os.path.join(IMG, 'brand', 'logo-%s.webp' % k)
@@ -201,7 +217,7 @@ def media():
         for f in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
             if f.endswith(('.jpg', '.webp')) and os.path.join(folder, f) not in used:
                 print('  aviso: %s no está en su lista y no se usa' % os.path.relpath(os.path.join(folder, f), ROOT))
-    return {'files': files, 'day': day, 'dayF': day_f, 'equip': equip, 'cat': cat}
+    return {'files': files, 'day': day, 'dayF': day_f, 'dayMore': more, 'dayMoreF': more_f, 'equip': equip, 'cat': cat}
 
 
 def media_js(m, inline):
@@ -215,6 +231,8 @@ def media_js(m, inline):
     obj = {
         'day': {k: url(rel, src[rel]) for k, rel in m['day'].items()},
         'dayF': {k: url(rel, src[rel]) for k, rel in m['dayF'].items()},
+        'dayMore': {k: [url(rel, src[rel]) for rel in v] for k, v in m['dayMore'].items()},
+        'dayMoreF': {k: [url(rel, src[rel]) for rel in v] for k, v in m['dayMoreF'].items()},
         'brand': {k: url('img/brand/logo-%s.webp' % k, src['img/brand/logo-%s.webp' % k]) for k in BRAND_LOGOS},
         'login': url(LOGIN_PHOTO, src[LOGIN_PHOTO]),
         'equip': {k: url(rel, src[rel]) for k, rel in m['equip'].items()},

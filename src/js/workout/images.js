@@ -5,10 +5,15 @@
    personalizado, la que se elija o, si no, la de sus ejercicios (la que más se repite). Los
    descansos de una semana con CrossFit, Hyrox o funcional llevan la suya (descanso2). Con el perfil de mujer, todas son las de
    la modelo (DAY_PHOTOS_F; mientras falte alguna, la que la sustituye: PHOTO_ALIAS_F).
-   Define: GROUP_IMAGE, REST_IMAGES, CONDITIONING, photoUrl, groupImage, exerciseImage, imageOfExercises, nameImage, unnamedImage, baseImage, dayImage, coverStyle, routineImage, IMAGE_LABELS, IMAGE_LABELS_F, imagePicker  · acciones/registros: 1
+   Muchas portadas tienen más de una foto (tools/variantes.py: un remo, un jalón y un remo en polea en Espalda; cafés en casa en
+   Descanso…): cada semana del programa un día lleva otra, y en la misma semana dos días con la misma portada llevan distintas
+   (dayVariant); en Entrenos a la carta, cada rutina la suya. Con el perfil de mujer, solo las de la modelo. Y la portada de cada
+   programa en Programas (programCoverStyle).
+   Define: GROUP_IMAGE, REST_IMAGES, CONDITIONING, photoUrl, photosOf, photoVariant, groupImage, exerciseImage, imageOfExercises, nameImage, unnamedImage, baseImage, dayImage, dayVariant, coverBackground, coverStyle, planImage, presetCover, ownCover, programCoverStyle, routineImage, IMAGE_LABELS, IMAGE_LABELS_F, imagePicker  · acciones/registros: 1
 */
 import { A } from '../core/registry.js';
-import { DAY_PHOTO_RULES, DAY_PHOTOS, DAY_PHOTOS_F, EXERCISE_PHOTO_RULES, PHOTO_ALIAS_F } from '../data/photos.js';
+import { DAY_PHOTO_RULES, DAY_PHOTOS, DAY_PHOTOS_F, DAY_PHOTOS_MORE, DAY_PHOTOS_MORE_F, EXERCISE_PHOTO_RULES, PHOTO_ALIAS_F, PROGRAM_COVERS } from '../data/photos.js';
+import { PROGRAM_NAMES } from '../data/library.js';
 import { profileSex, S, saveState } from '../core/state.js';
 import { sheet } from '../core/ui.js';
 import { groupOfName } from '../library/model.js';
@@ -22,6 +27,18 @@ const REST_IMAGES = ['descanso', 'descanso2'];
 const CONDITIONING = ['skierg', 'trineo', 'wallballs', 'snatch', 'thrusters', 'boxjumps', 'granjero', 'competencia', 'crossfit', 'hyrox', 'funcional'];
 /** La foto de una portada para este perfil: con el de mujer, la de la modelo (o la que la sustituye); si no, la de serie. */
 export const photoUrl = k => (profileSex() == 'F' && (DAY_PHOTOS_F[k] || DAY_PHOTOS_F[PHOTO_ALIAS_F[k]])) || DAY_PHOTOS[k] || '';
+/** Las fotos de una portada para este perfil: la de siempre (photoUrl) y sus otras versiones (tools/variantes.py). Con el perfil
+    de mujer, solo las de la modelo; en una portada que no lleva a nadie (Cardio), la de siempre es la misma para todos. */
+export const photosOf = k => {
+  const base = photoUrl(k);
+  const more = (profileSex() == 'F' ? DAY_PHOTOS_MORE_F : DAY_PHOTOS_MORE)[k] || [];
+  return base ? [base, ...more] : more;
+};
+/** La versión v de la portada k (la 0 es la de siempre; si tiene menos, se vuelve a contar desde la primera); '' si no hay. */
+const photoVariant = (k, v) => {
+  const l = photosOf(k);
+  return l.length ? l[(v % l.length + l.length) % l.length] : '';
+};
 /** La portada de un grupo de ejercicios ('' si no tiene: routines/ondemand pone entonces la de funcional). */
 export const groupImage = g => GROUP_IMAGE[g] || '';
 /* la portada de un ejercicio: la de su grupo o, en CrossFit, Hyrox, funcional y cardio, la suya si la tiene */
@@ -75,13 +92,50 @@ export const dayImage = (n, d) => {
   const k = baseImage(n, d);
   return k == 'descanso' && (S.plan || []).some(x => x && CONDITIONING.includes(baseImage(x.n, x))) ? 'descanso2' : k;
 };
-/** El fondo de la tarjeta del día: su portada, oscurecida lo justo para que su texto blanco se lea (AA) sobre cualquiera
-    (tests/covers.py). Con el 13 % de antes arriba, el nombre del día no llegaba sobre la de espalda ni sobre las más claras.
-    La del día que se entrena (`tall`: workout/day, más alta) apenas se oscurece: lo que va encima lleva su propia sombra, que
-    mide lo que el texto (css/79-workout-hub), y en medio, sin texto, se ve la foto. */
-export const coverStyle = (n, d, tall) => {
-  const u = photoUrl(dayImage(n, d));
-  return u ? 'background:linear-gradient(180deg,' + (tall ? '#0002,#0002' : '#0007,#000b') + '),url(' + u + ') center/cover' : '';
+/* qué versión de su portada lleva un día del plan: otra cada semana del programa (S.week) y, en la misma semana, otra en cada día
+   que lleva la misma portada (los dos días de empuje, los descansos), por su orden en el plan. Así no sale la misma foto toda la
+   semana ni semana tras semana, y no cambia al volver a pintar: el día y su Overview llevan siempre la misma */
+const dayVariant = (n, d, k) => {
+  const plan = S.plan || [];
+  let at = d ? plan.indexOf(d) : -1;
+  if (at < 0)
+    at = plan.findIndex(x => x && x.n == n);
+  const before = at < 0 ? 0 : plan.slice(0, at).filter(x => x && dayImage(x.n, x) == k).length;
+  return Math.max(0, (S.week || 1) - 1) + before;
+};
+/* una foto como fondo de tarjeta, oscurecida para su texto blanco (`light`: lo justo, en la del día que se entrena) */
+const coverBackground = (u, light) => u ? 'background:linear-gradient(180deg,' + (light ? '#0002,#0002' : '#0007,#000b') + '),url(' + u + ') center/cover' : '';
+/** El fondo de la tarjeta del día: su portada (en la versión que le toca: `v`, si se da; si no, la de esa semana), oscurecida
+    lo justo para que su texto blanco se lea (AA) sobre cualquiera (tests/covers.py). Con el 13 % de antes arriba, el nombre del
+    día no llegaba sobre la de espalda ni sobre las más claras. La del día que se entrena (`tall`: workout/day, más alta) apenas
+    se oscurece: lo que va encima lleva su propia sombra, que mide lo que el texto (css/79-workout-hub), y en medio, sin texto,
+    se ve la foto. */
+export const coverStyle = (n, d, tall, v) => {
+  const k = dayImage(n, d);
+  return coverBackground(photoVariant(k, v == null ? dayVariant(n, d, k) : v), tall);
+};
+/** La portada de un plan: la de su primer día de entreno (su nombre o su primer ejercicio). */
+const planImage = plan => {
+  const d = (plan || []).find(x => x && x.ex && x.ex.length);
+  return d ? nameImage(d.n) || exerciseImage(d.ex[0].n) : 'torso';
+};
+/* la portada de un programa de serie y cuál de sus fotos (data/photos, PROGRAM_COVERS) */
+const presetCover = i => PROGRAM_COVERS[PROGRAM_NAMES[i]] || ['torso', 0];
+/* la de un programa propio (`j`, el suyo en S.ownPrograms): la de su primer día de entreno, en una foto que no lleve ningún
+   programa de serie (si queda alguna) y, entre los propios con la misma portada, una distinta en cada uno */
+const ownCover = j => {
+  const k = planImage(S.ownPrograms[j].plan);
+  const all = [...Array(photosOf(k).length || 1).keys()];
+  const taken = PROGRAM_NAMES.map((_, i) => presetCover(i)).filter(c => c[0] == k).map(c => c[1] % all.length);
+  const free = all.filter(v => !taken.includes(v));
+  const same = S.ownPrograms.slice(0, j).filter(p => planImage(p.plan) == k).length;
+  return [k, (free.length ? free : all)[same % (free.length || all.length)]];
+};
+/** El fondo de la tarjeta de un programa en Programas (programs/manager): el de serie `i` o, con `i` -1, el propio `j`. Así no
+    salen dos programas con la misma foto mientras quede otra. */
+export const programCoverStyle = (i, j) => {
+  const [k, v] = i >= 0 ? presetCover(i) : ownCover(j);
+  return coverBackground(photoVariant(k, v));
 };
 /** La portada de un workout personalizado: la elegida o, si no eligió ninguna, la de sus ejercicios. */
 export const routineImage = r => {
