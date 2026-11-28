@@ -247,7 +247,9 @@ nuevo la siguiente vez.
   fondo, su botón de abajo y una sombra; en Chrome de Android, que agrandaba el área de lo fijo al salirse la página por un lado,
   la página ya no ensancha la pantalla (`overflow-x: clip`). Overview y Evolución del peso se abren arriba del todo y, al volver,
   la pestaña queda donde estaba (`openPage`, `closePage`). Y en un paso con su «‹ …» dentro (un grupo de la librería, el editor
-  de un workout), debajo se ve el paso al que se vuelve (`core/ui`, `stepBelow`), no la pestaña.
+  de un workout), debajo se ve el paso al que se vuelve (`core/ui`, `stepBelow`), no la pestaña. La barra de debajo es aparte
+  (`core/tabbar`, `tabbarCopy`): la de la página solo marca sus botones (`tabButtons`), y si se vuelve a marcar en pleno gesto
+  (al cambiar el tamaño de la ventana), la de debajo no pierde su pestaña (en Firefox, a veces, se quedaba sin ella).
 - **El título y los botones de arriba, borrosos por arriba**: es el difuminado que iOS 26 pone bajo la barra de estado de una app
   instalada. Una banda fija del color del fondo en ese borde (`#edge`, solo en el iPhone y el iPad) hace que el sistema alargue
   ese color en vez de difuminar ([detalle](movil.md#lo-que-ya-está)).

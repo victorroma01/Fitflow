@@ -349,6 +349,12 @@ def main(path):
             document.documentElement.classList.contains('sliding-page'), getComputedStyle(document.getElementById('app')).backgroundColor]; })()""")
         check('mientras Overview se desliza, debajo se ve Workout donde se dejó, con su barra de pestañas (no un hueco en negro), y la página lleva su fondo y su botón',
               under == [True, True, True, '-1', 'translateY(-%dpx)' % y_tab, 'translateX(120px)', 390, True, 'rgb(0, 0, 0)'], str(under))
+        # si entretanto la barra de la página vuelve a marcar su pestaña (al cambiar el tamaño de la ventana: girar el móvil), la
+        # de debajo no pierde la suya (antes, en Firefox, a veces: core/tabbar marcaba los botones de las dos barras como uno solo)
+        ev("window.dispatchEvent(new Event('resize'))")
+        run(100)
+        check('y si entretanto cambia el tamaño de la ventana, la barra de debajo sigue marcando Workout',
+              ev("[...document.querySelectorAll('.screen-under nav button.on')].map(b => b.dataset.i)") == ['0'])
         ev("__pe('pointerup',__g,%f,%f)" % (x0 + 120, y0))
         run(300)
         check('Overview vuelve al Workout, en el punto en que se dejó, y la capa de debajo se quita',

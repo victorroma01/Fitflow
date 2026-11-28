@@ -27,7 +27,10 @@ const TAB_GRAB_MS = 140;
 let tabDrag = null;
 /* cuándo acabó el último arrastre: el toque que lo termina no debe pulsar nada */
 let tabDragEnd = 0;
-const tabButtons = () => [...document.querySelectorAll('nav button')];
+/* los botones de la barra de la página: no los de la que se pone debajo de Overview mientras se desliza (tabbarCopy), que
+   tiene su pestaña marcada y no se toca. Antes, si la barra se volvía a marcar en pleno gesto (al cambiar el tamaño de la
+   ventana), las dos contaban como una de ocho botones y la de debajo se quedaba sin su pestaña */
+const tabButtons = () => [...$('nav').querySelectorAll('button')];
 /* medidas de la barra: { xs: dónde empieza cada pestaña dentro de la barra, w: ancho de una pestaña }. Se toman una vez y valen
    hasta que la ventana o la barra cambian de tamaño; con la barra oculta (en el entreno) no se toman */
 let tabGeo = null;

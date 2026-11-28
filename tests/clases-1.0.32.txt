@@ -22,7 +22,8 @@ K av avatar
 # K gg group-grid — la rejilla de los grupos de la librería ya no existe desde la V1.0.4: la sustituyen las tarjetas
 # de library/catalog (cat-grid). Sin esta línea, la «gg» de la 1.0.31 se queda sin traducir al comparar, y no importa:
 # esa pantalla es distinta.
-K mb wide-btn
+# K mb wide-btn — el botón a lo ancho ya no existe desde la 1.0.4.1: los programas van en tarjetas con su foto (pg-card).
+# Sin esta línea, la «mb» de la 1.0.31 se queda sin traducir al comparar, y no importa: esa pantalla es distinta.
 K th thumb
 K sb sticky-btn
 K xs exercise
