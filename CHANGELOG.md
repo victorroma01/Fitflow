@@ -44,8 +44,9 @@ El formato se inspira en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1
   dejaba borrosos los títulos y los botones de arriba; la leyenda de los colores de la librería, alineada; las tarjetas de la
   librería, sin el icono pequeño ni la raya: solo el nombre del grupo y su número, sobre su ilustración; las miniaturas de los
   ejercicios, más definidas; en las tarjetas de los días, 29 fotos más del propietario (hechas con IA): cada semana el día
-  lleva otra y dos días con la misma portada en una semana no la repiten; y en Programas, cada programa con su foto, como en
-  Entrenos a la carta
+  lleva otra y dos días con la misma portada en una semana no la repiten; en Programas, cada programa con su foto, como en
+  Entrenos a la carta; y las series que llegan al fallo (la última de un drop set y su bajada, la de un rest-pause y su bloque,
+  la última de parciales), en AMRAP, como las de Entrenos a la carta
   ([detalle](docs/tecnica/revision-1.0.4.md#después-sin-cambiar-de-versión)).
 - Pasar las cuentas al dominio nuevo: la cuenta de prueba del ensayo entra por la API pública como desde un navegador (diciendo
   venir solo del origen de la app y, si la clave no lo admite, de su dirección entera: `tools/admin/web.mjs`), y si no puede,

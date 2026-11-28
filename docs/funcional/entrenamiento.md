@@ -70,15 +70,21 @@ Desde la V1.0.1, las series de trabajo (las normales, las de una pirámide y la 
 **WKT**; la fila extra del drop set lleva **DS** y la del rest-pause, **RP**. Al tocar WKT en una serie de pirámide, la ventana
 explica la pirámide.
 
+Desde la 1.0.4.1, las series que llegan al fallo van en **AMRAP** (tantas repeticiones como puedas), como las de Entrenos a la
+carta: la última de un drop set y su fila DS, la última de un rest-pause y su bloque RP y la última de unas parciales. Salen en
+blanco, con «AMRAP», y no se dan por hechas (ni con su ✓ ni con «Siguiente serie») hasta que se apuntan las repeticiones que han
+salido. «+ Serie» tras una de ellas aún en blanco añade una serie normal, con su número. En la semana de descarga no hay
+técnicas, así que ninguna va en AMRAP.
+
 | Etiqueta | Técnica | En el entreno |
 | --- | --- | --- |
 | WKT | Serie normal | Series y descanso normales. |
 | WKT | Pirámide | Repeticiones que bajan en cada serie (12, 10, 8, 6) con más peso en cada una. |
-| DS | Drop set | La última serie (WKT) acaba al fallo y, sin descanso, sigue una fila DS con un 25 % menos de peso. |
-| RP | Rest-pause | Tras la última serie (WKT), 20 s de descanso y una fila RP, un bloque corto con el mismo peso. |
+| DS | Drop set | La última serie (WKT) acaba al fallo y, sin descanso, sigue una fila DS con un 25 % menos de peso. Las dos, en AMRAP. |
+| RP | Rest-pause | Tras la última serie (WKT), 20 s de descanso y una fila RP, un bloque corto con el mismo peso. Las dos, en AMRAP. |
 | MYO | Myo-reps | Una serie de activación y después mini series de 3-5 repeticiones con 15 s de descanso. |
 | CL | Cluster | Cada serie se hace en bloques de 2-3 repeticiones con micropausas de 15 s. |
-| PAR | Parciales | La última serie se alarga con repeticiones cortas en la posición de estiramiento. |
+| PAR | Parciales | La última serie (en AMRAP: se apuntan las completas) se alarga con repeticiones cortas en la posición de estiramiento. |
 | SS | Superserie antagonista | Dos ejercicios de músculos opuestos por rondas, con 10 s entre ellos y el descanso al acabar la ronda. |
 | PRE | Pre-agotamiento | Un aislamiento y, sin descanso, el multiarticular del mismo músculo. |
 | POST | Post-agotamiento | Un multiarticular y, sin descanso, un aislamiento que termina el músculo. |

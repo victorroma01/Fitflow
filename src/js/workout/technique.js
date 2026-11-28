@@ -4,6 +4,8 @@
    Las filas del entreno (W.sets) llevan k (código de la técnica, si no es una serie normal) y t (1 drop set, 2 rest-pause).
    La etiqueta de cada fila (setLabel; I-25, I-27): WKT en las series de trabajo (normales, de pirámide y la principal de un
    drop set o un rest-pause), DS o RP en la fila extra que va debajo y su abreviatura en el resto de técnicas (CL, MYO, PAR…).
+   Las que llegan al fallo (la última de un drop set, de un rest-pause o de parciales y las filas extra) van en AMRAP, sin un
+   número (workout/targets: amrapSet; workout/progression las deja en blanco).
    Lo guardado no cambia: la serie principal de un drop set sigue llevando k = 'DS'.
    Define: LAST_SET, setTech, techLabel, WORK_SET, setLabel, setTechnique, dropWeight, withTechnique, restAfterSet
 */
@@ -49,9 +51,9 @@ export const withTechnique = (e, a) => {
   });
   const l = a[n - 1];
   if (l && l.k == 'DS')
-    a.push({ r: l.r, w: +l.w > 0 ? dropWeight(l.w) : '', ws: 1, ok: 0, t: 1, k: 'DS' });
+    a.push({ r: '', w: +l.w > 0 ? dropWeight(l.w) : '', ws: 1, ok: 0, t: 1, k: 'DS' });
   else if (l && l.k == 'RP')
-    a.push({ r: Math.max(2, Math.round(l.r / 3)), w: l.w, ws: 1, ok: 0, t: 2, k: 'RP' });
+    a.push({ r: '', w: l.w, ws: 1, ok: 0, t: 2, k: 'RP' });
   return a;
 };
 /** Segundos de descanso tras la serie `j` del ejercicio `i` del entreno en curso: ninguno antes del drop set, 20 s antes del
