@@ -267,7 +267,8 @@ nuevo la siguiente vez.
 - **Más fotos en las tarjetas de los días**, para que no salgan siempre las mismas: el propietario mandó 30 (hechas con IA, en
   blanco y negro). `tools/variantes.py` prepara 29 como las demás portadas (recorte de 1,6:1, gris, 704 × 440, los claros
   bajados si hace falta para el texto blanco, WebP): de 3,6 MB quedan en 434 KB. La que el catálogo del paquete no deja elegir
-  sola (la tercera de la cinta, con otra cara) se queda fuera. Cada una va con la portada de lo que se ve en ella: pecho,
+  sola (la tercera de la cinta, con otra cara) se queda fuera. En la del trineo, la marca HYROX de la pared se borra antes
+  (`BORRAR`: la pared de alrededor, con su grano), porque es una marca registrada; STRATAFIT, en la ropa y el trineo, se queda. Cada una va con la portada de lo que se ve en ella: pecho,
   espalda, torso, hombros, brazos, trineo, carrera y descanso con el modelo; espalda, piernas, glúteo, hombros, carrera y
   descanso con la modelo. `workout/images` elige cuál lleva cada día: otra cada semana del programa y, en la misma semana, una
   distinta para cada día con la misma portada (`dayVariant`); en Entrenos a la carta, una para cada rutina (`odVariant`).
