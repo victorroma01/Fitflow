@@ -4,8 +4,8 @@
    Las filas del entreno (W.sets) llevan k (código de la técnica, si no es una serie normal) y t (1 drop set, 2 rest-pause).
    La etiqueta de cada fila (setLabel; I-25, I-27): WKT en las series de trabajo (normales, de pirámide y la principal de un
    drop set o un rest-pause), DS o RP en la fila extra que va debajo y su abreviatura en el resto de técnicas (CL, MYO, PAR…).
-   Las que llegan al fallo (la última de un drop set, de un rest-pause o de parciales y las filas extra) van en AMRAP, sin un
-   número (workout/targets: amrapSet; workout/progression las deja en blanco).
+   Las filas extra (la bajada del drop set y el bloque del rest-pause) van en AMRAP, sin un número (workout/targets: amrapSet;
+   workout/progression las deja en blanco); la serie de antes, con sus repeticiones.
    Lo guardado no cambia: la serie principal de un drop set sigue llevando k = 'DS'.
    Define: LAST_SET, setTech, techLabel, WORK_SET, setLabel, setTechnique, dropWeight, withTechnique, restAfterSet
 */
