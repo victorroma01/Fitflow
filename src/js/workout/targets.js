@@ -1,6 +1,6 @@
 /* ═══ workout/targets ═══
    Unidades, repeticiones objetivo, duración y volumen semanal.
-   Define: repClass, unitOf, targetRange, UNIT_HEADS, AMRAP, setReps, isAmrap, repsText, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
+   Define: repClass, unitOf, targetRange, UNIT_HEADS, AMRAP, setReps, isAmrap, TO_FAILURE, amrapSet, repsText, targetText, unitHead, UNIT_NAMES, unitName, rirOf, tempoOf, MAX_SETS, lastHistory, weightStep, fixUnits, newPlanEx, dayMinutes, weeklySets, weeklySetsCard, usesWeight, pyramidReps, TECH_TAIL, planLine, together, thenDot, targetLine, RANGE_OPTIONS, rangeSelect  · acciones/registros: 1
 */
 import { say, tr } from '../core/i18n.js';
 import { fmtMinSec } from '../core/util.js';
@@ -47,6 +47,13 @@ export const setReps = e => {
 };
 /** ¿Es AMRAP la serie `j` del ejercicio `e`? (las que se añaden de más, como la última) */
 export const isAmrap = (e, j) => !unitOf(e) && Array.isArray(e.rs) && e.rs.length > 0 && e.rs[Math.min(j, e.rs.length - 1)] == AMRAP;
+/* las técnicas cuya última serie llega al fallo (workout/technique): drop set, rest-pause y parciales */
+const TO_FAILURE = new Set(['DS', 'RP', 'PAR']);
+/** ¿Va en AMRAP la fila `s` (la `j`) del ejercicio `e` en el entreno? Las AMRAP de su rutina en un entreno a la carta
+    (isAmrap) y, desde la 1.0.4.1, las de un programa que llegan al fallo: la última de un drop set, de un rest-pause o de
+    parciales y las filas extra de los dos primeros (D y +). Sin un número: se apuntan las repeticiones que salgan. En la
+    semana de descarga no hay técnicas, así que ninguna de estas. */
+export const amrapSet = (e, s, j) => isAmrap(e, j) || !unitOf(e) && !!s && (!!s.t || TO_FAILURE.has(s.k));
 /* «12/10/8/6 reps»; si todas son AMRAP, «AMRAP» */
 const repsText = p => p.every(x => x == AMRAP) ? AMRAP : p.join('/') + ' reps';
 export const targetText = e => {

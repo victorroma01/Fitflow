@@ -6,7 +6,7 @@ import { say } from '../core/i18n.js';
 import { A } from '../core/registry.js';
 import { S, W } from '../core/state.js';
 import { R } from '../core/render.js';
-import { AMRAP, lastHistory, pyramidReps, setReps, targetRange, unitOf, weightStep } from './targets.js';
+import { AMRAP, amrapSet, lastHistory, pyramidReps, setReps, targetRange, unitOf, weightStep } from './targets.js';
 import { dropWeight } from './technique.js';
 import { isDeloadWeek } from './deload.js';
 import { toDisplayWeight, usesLb, weightUnit } from '../profile/units.js';
@@ -26,7 +26,8 @@ const stepUp = (w, e) => stepUpWeight(w, weightStep(e), usesLb());
 const deloadOf = w => deloadWeight(w, usesLb());
 /** Repeticiones y peso de cada serie según la última vez, la progresión, la técnica (pirámide, myo-reps) y la semana de
     descarga (65 % del peso y 2 repeticiones menos, mismas series). Cada serie parte del peso que tuvo la última vez: si se
-    bajó o se subió de una serie a otra, se respeta. Las filas extra (drop set, rest-pause) siguen a su serie. */
+    bajó o se subió de una serie a otra, se respeta. Las filas extra (drop set, rest-pause) siguen a su serie. Las que llegan
+    al fallo, en blanco: son AMRAP (targets: amrapSet). */
 export function prefillSets(e, a) {
   const h = lastHistory(e);
   const hs = h ? h.s.filter(x => !x[3]) : [];
@@ -74,6 +75,9 @@ export function prefillSets(e, a) {
       w = l[1];
     if (t == 'MYO' && j > 0)
       r = 4;
+    /* la última de un drop set, de un rest-pause o de parciales llega al fallo: AMRAP, en blanco (targets: amrapSet) */
+    if (amrapSet(e, q, j))
+      r = '';
     if (dl) {
       if (!U && r !== '')
         r = Math.max(1, +r - 2);
@@ -89,13 +93,14 @@ export function prefillSets(e, a) {
     const p = a[j - 1];
     if (!q.t || q.ok || !p)
       return;
+    /* la fila extra también llega al fallo: AMRAP, en blanco (con tiempo o distancia, como antes) */
     if (q.t == 1) {
-      q.r = p.r;
+      q.r = U ? p.r : '';
       if (+p.w > 0)
         q.w = dropWeight(+p.w);
     }
     else {
-      q.r = Math.max(2, Math.round(p.r / 3));
+      q.r = U ? Math.max(2, Math.round(p.r / 3)) : '';
       q.w = p.w;
     }
     q.ws = +q.w > 0 ? 1 : 0;

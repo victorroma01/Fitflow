@@ -12,7 +12,7 @@ import { dialog, sheet } from '../core/ui.js';
 import { R } from '../core/render.js';
 import { restorePlanBackup } from '../routines/builder.js';
 import { blockBadge, dayBlocks, exToolsHtml } from './day.js';
-import { isAmrap, targetLine, targetText, unitHead, unitName, unitOf, usesWeight } from './targets.js';
+import { amrapSet, isAmrap, targetLine, targetRange, targetText, unitHead, unitName, unitOf, usesWeight } from './targets.js';
 import { lastTimeLine, prefillSets, setText, suggestAfter } from './progression.js';
 import { usesBarbell } from './plates.js';
 import { deloadStrip, isDeloadWeek } from './deload.js';
@@ -65,7 +65,7 @@ const setRow = (exercise, exIndex, set, setIndex, isCurrent) => {
       <span>${raw(setNo(W.sets[exIndex], setIndex))}</span>
       ${raw(setLabelButton(set))}
       <input type="number" inputmode="decimal" data-c="setReps" data-i="${exIndex}" data-j="${setIndex}"
-          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')}${raw(isAmrap(exercise, setIndex) ? ' placeholder="AMRAP"' : '')}
+          value="${set.r}"${raw(W.deload && !set.ok ? ' class="deload-weight"' : '')}${raw(amrapSet(exercise, set, setIndex) ? ' placeholder="AMRAP"' : '')}
           aria-label="${say `${unitName(exercise)}, ${name}`}">
       ${raw(!usesWeight(exercise) ? '<span class="muted ta-c">–</span>' : weightInput)}
       <span class="fs-13">${raw(rest ? fmtMinSec(rest) : '–')}</span>
@@ -281,12 +281,13 @@ A.discardWorkout = () => {
   restorePlanBackup();
   R();
 };
-/* una serie AMRAP (entrenos a la carta) no tiene un número que dar por bueno: no se marca hecha hasta que se apuntan las
-   repeticiones que han salido (las escritas en su casilla, aunque aún no se haya salido de ella) */
+/* una serie AMRAP (las de un entreno a la carta y, en un programa, las que llegan al fallo: targets, amrapSet) no tiene un
+   número que dar por bueno: no se marca hecha hasta que se apuntan las repeticiones que han salido (las escritas en su
+   casilla, aunque aún no se haya salido de ella) */
 const amrapPending = (i, j) => {
   const e = S.plan[S.selectedDay].ex[i];
   const s = W.sets[i] && W.sets[i][j];
-  if (!e || !s || s.ok || s.t || !isAmrap(e, j) || +s.r > 0)
+  if (!e || !s || s.ok || !amrapSet(e, s, j) || +s.r > 0)
     return false;
   const f = /** @type {HTMLInputElement} */ ($(`[data-c="setReps"][data-i="${i}"][data-j="${j}"]`));
   const v = f ? clampNum(typedNum(f.value), 0, 1e5, 0) : 0;
@@ -518,7 +519,11 @@ A.addSet = i => {
   /* una serie más como la última normal (sin copiar el drop set ni el rest-pause, ni su técnica si es solo de la última) */
   const m = a.filter(x => !x.t).pop() || a[a.length - 1];
   const k = m.k && !['DS', 'RP', 'PAR'].includes(m.k) ? m.k : '';
-  a.push(k ? { r: m.r, w: m.w, ws: 1, ok: 0, k } : { r: m.r, w: m.w, ws: 1, ok: 0 });
+  /* tras una al fallo aún en blanco (AMRAP), la nueva es normal: lleva las repeticiones de la última serie con número o, si no
+     hay, las del objetivo. En un entreno a la carta, si la de más va en AMRAP (como la última), sigue en blanco */
+  const e = S.plan[S.selectedDay].ex[i];
+  const r = m.r !== '' || isAmrap(e, a.length) ? m.r : (a.filter(x => !x.t && x.r !== '').pop() || { r: targetRange(e)[0] }).r;
+  a.push(k ? { r, w: m.w, ws: 1, ok: 0, k } : { r, w: m.w, ws: 1, ok: 0 });
   R();
 };
 /* «− Serie» quita la última; si ya estaba hecha, se puede deshacer */
